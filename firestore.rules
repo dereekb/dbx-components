@@ -73,7 +73,8 @@ service cloud.firestore {
 
 
     match /nu/{notificationUser} {
-      allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
+      // users can read themselves. A NotificationUser's document id is the user's uid, not a twoWayKey.
+      allow read: if resourceIsOwnedByAuthUserId();
     }
 
     match /ns/{notificationSummary} {

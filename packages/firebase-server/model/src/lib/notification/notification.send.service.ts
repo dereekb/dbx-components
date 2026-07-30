@@ -1,5 +1,6 @@
 import { type NotificationSummaryIdForUidFunction, type NotificationMessage, type NotificationSendEmailMessagesResult, type NotificationSendNotificationSummaryMessagesResult, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
 import { type NotificationSendMessagesInstance } from './notification.send';
+import { type NotificationEmailSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from './notification.healthcheck.service';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -49,6 +50,13 @@ export interface NotificationEmailSendService {
    * Can throw an error if the messages cannot be sent or generated properly due to a configuration error.
    */
   buildSendInstanceForEmailNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>>;
+  /**
+   * Optional. Contributes provider-specific diagnostics for the email channel to a notification
+   * delivery health check.
+   *
+   * When absent, a health check reports only what it can determine from configuration and send history.
+   */
+  readonly healthCheckService?: Maybe<NotificationEmailSendServiceHealthCheckService>;
 }
 
 /**
@@ -61,6 +69,13 @@ export interface NotificationTextSendService {
    * Can throw an error if the messages cannot be sent or generated properly due to a configuration error.
    */
   buildSendInstanceForTextNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
+  /**
+   * Optional. Contributes provider-specific diagnostics for the text/SMS channel to a notification
+   * delivery health check.
+   *
+   * When absent, a health check reports only what it can determine from configuration and send history.
+   */
+  readonly healthCheckService?: Maybe<NotificationTextSendServiceHealthCheckService>;
 }
 
 /**
@@ -73,4 +88,11 @@ export interface NotificationSummarySendService {
    * Can throw an error if the messages cannot be sent or generated properly due to a configuration error.
    */
   buildSendInstanceForNotificationSummaryMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendNotificationSummaryMessagesResult>>;
+  /**
+   * Optional. Contributes diagnostics for the in-app notification summary channel to a notification
+   * delivery health check.
+   *
+   * When absent, a health check reports only what it can determine from configuration and send history.
+   */
+  readonly healthCheckService?: Maybe<NotificationSummarySendServiceHealthCheckService>;
 }

@@ -8,6 +8,9 @@ import {
   type FirebaseAuthUserId,
   NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
   NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
 } from '@dereekb/firebase';
@@ -115,6 +118,67 @@ export function notificationBoxRecipientDoesNotExistsError() {
   return preconditionConflictError({
     message: `An existing NotificationBox recipient for the target does not exist. You must pass insert=true to create a new recipient.`,
     code: NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE
+  });
+}
+
+/**
+ * Creates an error indicating that a health check was run again before its throttle window passed.
+ *
+ * Thrown by the {@link NotificationUser} health check when the stored check is too recent.
+ *
+ * @param nextRunAt - The time the next health check may be run.
+ * @returns A precondition conflict error with the health-check-throttled error code.
+ */
+export function notificationUserHealthCheckThrottledError(nextRunAt: Date) {
+  return preconditionConflictError({
+    message: `A notification delivery health check was run too recently. The next one can be run at ${nextRunAt.toISOString()}.`,
+    code: NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
+    data: {
+      // serialized: the error's data travels to the client as JSON
+      nextRunAt: nextRunAt.toISOString()
+    }
+  });
+}
+
+/**
+ * Creates an error indicating that a test message was requested again before its throttle window passed.
+ *
+ * Thrown by the {@link NotificationUser} health check when a probe was dispatched too recently. Separate
+ * from {@link notificationUserHealthCheckThrottledError}: running the check does not consume the test
+ * message allowance.
+ *
+ * @param nextProbeAt - The time the next test message may be dispatched.
+ * @returns A precondition conflict error with the probe-throttled error code.
+ */
+export function notificationUserHealthCheckProbeThrottledError(nextProbeAt: Date) {
+  return preconditionConflictError({
+    message: `A notification delivery test message was sent too recently. The next one can be sent at ${nextProbeAt.toISOString()}.`,
+    code: NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
+    data: {
+      // serialized: the error's data travels to the client as JSON
+      nextProbeAt: nextProbeAt.toISOString()
+    }
+  });
+}
+
+/**
+ * Creates an error indicating that pending probes were verified again before their throttle window passed.
+ *
+ * Thrown by the {@link NotificationUser} health check on a `verifyPendingProbesOnly` run that arrives too
+ * soon after the last one. Separate from {@link notificationUserHealthCheckThrottledError}: verifying an
+ * in-flight test message is a poll, so it neither answers to nor consumes the user's run allowance.
+ *
+ * @param nextVerifyAt - The time the next verification may be run.
+ * @returns A precondition conflict error with the verify-throttled error code.
+ */
+export function notificationUserHealthCheckVerifyThrottledError(nextVerifyAt: Date) {
+  return preconditionConflictError({
+    message: `The pending notification delivery test messages were verified too recently. The next verification can be run at ${nextVerifyAt.toISOString()}.`,
+    code: NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
+    data: {
+      // serialized: the error's data travels to the client as JSON
+      nextVerifyAt: nextVerifyAt.toISOString()
+    }
   });
 }
 

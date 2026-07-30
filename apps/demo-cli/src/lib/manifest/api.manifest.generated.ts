@@ -13,6 +13,7 @@ import {
   downloadStorageFileParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
+  notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
   readStorageFileMetadataParamsType,
@@ -226,6 +227,52 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'flagAllRead', typeText: 'Maybe<boolean>' },
       { name: 'setReadAtTime', typeText: 'Maybe<Date>' }
+    ]
+  },
+  {
+    model: 'notificationUser',
+    verb: 'invoke',
+    specifier: 'healthCheck',
+    paramsTypeName: 'NotificationUserHealthCheckParams',
+    paramsValidator: notificationUserHealthCheckParamsType,
+    resultTypeName: 'NotificationUserHealthCheckResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription: "Used for running a notification delivery health check for a user.\n\nThe check always inspects the user's configuration, their notification box subscriptions, and whatever\nread-only diagnostics each configured delivery method's send service offers. Actually dispatching a\ntest message is opt-in via `sendProbe`, since that delivers real mail/SMS to the user.",
+    paramsFields: [
+      { name: 'methods', typeText: 'Maybe<NotificationDeliveryMethod[]>', description: 'Restrict the check to these delivery methods. Defaults to every method the server has a send\nservice configured for.' },
+      { name: 'sendProbe', typeText: 'Maybe<boolean>', description: 'Dispatch a real test message through each checked method that supports probing.\n\nDefaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still\npending when the check returns and is resolved by a later {@link verifyPendingProbesOnly} run.' },
+      {
+        name: 'verifyPendingProbesOnly',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Only resolve probes left pending by the previous check, skipping the configuration, history, and\nprovider diagnostics.\n\nDefaults to false. This is the POLL that settles an in-flight test message, and it is deliberately\ncheap enough to be called repeatedly: it consults a provider only for a method that actually has a\nprobe in flight, and touches nothing else. It answers to its own short window rather than the run\nwindow, and advances the stored check's `vat` rather than its `at`, so polling a test message never\nconsumes the user's allowance for running the check itself."
+      },
+      { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>', description: "The notification template type to evaluate per-template configuration against.\n\nDefaults to the app's default template type." },
+      { name: 'skipSubscriptionChecks', typeText: 'Maybe<boolean>', description: "Skip inspecting the user's notification box subscriptions.\n\nDefaults to false. Skipping avoids a document read per subscription, at the cost of not detecting\na subscription that is broken, still being set up, or out of sync with the user's settings." },
+      {
+        name: 'force',
+        typeText: 'Maybe<boolean>',
+        description:
+          'Ignore the run and test message throttle windows.\n\nPRIVILEGED — admin only. The windows exist to stop a user from repeatedly hammering the delivery\nproviders and their own inbox, so this must never be honoured for an ordinary caller. The action\nitself cannot tell who is calling, so the API layer that can is responsible for clearing this\nbefore the params reach it:\n\n```ts\nconst params = isAdminInRequest(request) ? data : { ...data, force: undefined };\n```\n\nDefaults to false.'
+      },
+      {
+        name: 'returnFullHealthCheck',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Return the complete health check rather than just the part the call was about.\n\nA `sendProbe` call is about one delivery method's test message, so by default its result carries only\nthe methods it actually probed — the caller already has the rest, and a client rendering the report\nreads it from the {@link NotificationUser} document instead. Set this to get the whole check back.\n\nDefaults to false. Has no effect on a plain run, which always returns everything, and never affects\nwhat is persisted: the stored check is always the complete picture."
+      }
+    ],
+    resultTypeDescription: 'The result of a `healthCheck` invocation.',
+    resultFields: [
+      {
+        name: 'healthCheck',
+        typeText: 'NotificationHealthCheck',
+        description:
+          "The health check that was produced.\n\nThe COMPLETE check is always persisted to the {@link NotificationUser}'s `hc` field. What comes back\nhere can be narrower: a `sendProbe` call is about one delivery method's test message, so unless\n`returnFullHealthCheck` was set its result carries only the methods that were actually probed, with\n`s` rolled up over just those and the account-wide findings left out. Read the document for the\nwhole picture — see {@link NotificationUserHealthCheckParams.returnFullHealthCheck}."
+      },
+      { name: 'probesDispatched', typeText: 'number', description: 'The number of probes dispatched by this run.' },
+      { name: 'probesResolved', typeText: 'number', description: 'The number of previously-pending probes this run resolved to a final status.' }
     ]
   },
   {
@@ -788,7 +835,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         ],
         nestedIsArray: true
       },
-      { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' }
+      { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' },
+      { name: 'hc', longName: 'healthCheck', tsType: 'Maybe<NotificationHealthCheck>', optional: true, description: 'The result of the most recent notification delivery health check run for this user.' }
     ],
     read: 'system',
     serviceFactory: { exportName: 'notificationUserFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

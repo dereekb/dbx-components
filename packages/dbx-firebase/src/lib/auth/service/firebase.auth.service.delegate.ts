@@ -1,4 +1,4 @@
-import { addToSetCopy, type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, filterMaybeArrayValues } from '@dereekb/util';
+import { addToSetCopy, type AuthClaims, type AuthClaimsObject, type AuthRole, type AuthRoleClaimsService, type AuthRoleSet, filterMaybeArrayValues } from '@dereekb/util';
 import { map, type Observable, switchMap } from 'rxjs';
 import { authUserStateFromFirebaseAuthServiceFunction, stateFromTokenForLoggedInUserFunction, type StateFromTokenFunction } from './firebase.auth.rxjs';
 import { type AuthUserStateObsFunction, type DbxFirebaseAuthService, type DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
@@ -35,7 +35,13 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
   const { addAuthUserStateToRoles: addAuthUserState, claimsService } = config;
 
   return (dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet> => {
-    let obs = dbxFirebaseAuthService.idTokenResult$.pipe(map((x) => claimsService.toRoles(x.claims as AuthClaims<T>)));
+    /**
+     * Sourced from currentIdTokenResult$ instead of idTokenResult$ so the logged-out null is not swallowed by that
+     * stream's filterMaybe(): the claim-derived roles have to CLEAR when there is no token. Otherwise they persist
+     * through the entire logged-out window and on into the next user's session, and a role guard evaluated in that
+     * window passes on the PREVIOUS user's roles.
+     */
+    let obs = dbxFirebaseAuthService.currentIdTokenResult$.pipe(map((x) => (x == null ? new Set<AuthRole>() : claimsService.toRoles(x.claims as AuthClaims<T>))));
 
     if (addAuthUserState) {
       obs = obs.pipe(switchMap((authRoleSet: AuthRoleSet) => dbxFirebaseAuthService.authUserState$.pipe(map((userState) => addToSetCopy(authRoleSet, [userState])))));

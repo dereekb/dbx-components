@@ -16,6 +16,7 @@ import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
+import { type NotificationHealthCheck, NotificationDeliveryMethod } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -141,6 +142,112 @@ export { targetModelParamsType as resyncNotificationUserParamsType } from '../..
 
 export interface ResyncNotificationUserResult {
   readonly notificationBoxesUpdated: number;
+}
+
+/**
+ * Used for running a notification delivery health check for a user.
+ *
+ * The check always inspects the user's configuration, their notification box subscriptions, and whatever
+ * read-only diagnostics each configured delivery method's send service offers. Actually dispatching a
+ * test message is opt-in via `sendProbe`, since that delivers real mail/SMS to the user.
+ */
+export interface NotificationUserHealthCheckParams extends TargetModelParams {
+  /**
+   * Restrict the check to these delivery methods. Defaults to every method the server has a send
+   * service configured for.
+   */
+  readonly methods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
+   * Dispatch a real test message through each checked method that supports probing.
+   *
+   * Defaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still
+   * pending when the check returns and is resolved by a later {@link verifyPendingProbesOnly} run.
+   */
+  readonly sendProbe?: Maybe<boolean>;
+  /**
+   * Only resolve probes left pending by the previous check, skipping the configuration, history, and
+   * provider diagnostics.
+   *
+   * Defaults to false. This is the POLL that settles an in-flight test message, and it is deliberately
+   * cheap enough to be called repeatedly: it consults a provider only for a method that actually has a
+   * probe in flight, and touches nothing else. It answers to its own short window rather than the run
+   * window, and advances the stored check's `vat` rather than its `at`, so polling a test message never
+   * consumes the user's allowance for running the check itself.
+   */
+  readonly verifyPendingProbesOnly?: Maybe<boolean>;
+  /**
+   * The notification template type to evaluate per-template configuration against.
+   *
+   * Defaults to the app's default template type.
+   */
+  readonly notificationTemplateType?: Maybe<NotificationTemplateType>;
+  /**
+   * Skip inspecting the user's notification box subscriptions.
+   *
+   * Defaults to false. Skipping avoids a document read per subscription, at the cost of not detecting
+   * a subscription that is broken, still being set up, or out of sync with the user's settings.
+   */
+  readonly skipSubscriptionChecks?: Maybe<boolean>;
+  /**
+   * Ignore the run and test message throttle windows.
+   *
+   * PRIVILEGED — admin only. The windows exist to stop a user from repeatedly hammering the delivery
+   * providers and their own inbox, so this must never be honoured for an ordinary caller. The action
+   * itself cannot tell who is calling, so the API layer that can is responsible for clearing this
+   * before the params reach it:
+   *
+   * ```ts
+   * const params = isAdminInRequest(request) ? data : { ...data, force: undefined };
+   * ```
+   *
+   * Defaults to false.
+   */
+  readonly force?: Maybe<boolean>;
+  /**
+   * Return the complete health check rather than just the part the call was about.
+   *
+   * A `sendProbe` call is about one delivery method's test message, so by default its result carries only
+   * the methods it actually probed — the caller already has the rest, and a client rendering the report
+   * reads it from the {@link NotificationUser} document instead. Set this to get the whole check back.
+   *
+   * Defaults to false. Has no effect on a plain run, which always returns everything, and never affects
+   * what is persisted: the stored check is always the complete picture.
+   */
+  readonly returnFullHealthCheck?: Maybe<boolean>;
+}
+
+export const notificationUserHealthCheckParamsType = targetModelParamsType.merge({
+  'methods?': clearable(type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY).array()),
+  'sendProbe?': clearable('boolean'),
+  'verifyPendingProbesOnly?': clearable('boolean'),
+  'notificationTemplateType?': clearable('string > 0'),
+  'skipSubscriptionChecks?': clearable('boolean'),
+  'force?': clearable('boolean'),
+  'returnFullHealthCheck?': clearable('boolean')
+}) as Type<NotificationUserHealthCheckParams>;
+
+/**
+ * The result of a `healthCheck` invocation.
+ */
+export interface NotificationUserHealthCheckResult {
+  /**
+   * The health check that was produced.
+   *
+   * The COMPLETE check is always persisted to the {@link NotificationUser}'s `hc` field. What comes back
+   * here can be narrower: a `sendProbe` call is about one delivery method's test message, so unless
+   * `returnFullHealthCheck` was set its result carries only the methods that were actually probed, with
+   * `s` rolled up over just those and the account-wide findings left out. Read the document for the
+   * whole picture — see {@link NotificationUserHealthCheckParams.returnFullHealthCheck}.
+   */
+  readonly healthCheck: NotificationHealthCheck;
+  /**
+   * The number of probes dispatched by this run.
+   */
+  readonly probesDispatched: number;
+  /**
+   * The number of previously-pending probes this run resolved to a final status.
+   */
+  readonly probesResolved: number;
 }
 
 export interface ResyncAllNotificationUserParams {}
@@ -435,6 +542,9 @@ export type NotificationBoxModelCrudFunctionsConfig = {
       _: UpdateNotificationUserParams;
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
     };
+    invoke: {
+      healthCheck: [NotificationUserHealthCheckParams, NotificationUserHealthCheckResult];
+    };
   };
   readonly notificationSummary: {
     update: {
@@ -458,7 +568,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
-  notificationUser: ['update:_,resync'],
+  notificationUser: ['update:_,resync', 'invoke:healthCheck'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
   notification: ['update:send']
@@ -475,6 +585,9 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
     updateNotificationUser: {
       update: ModelFirebaseCrudFunction<UpdateNotificationUserParams>;
       resync: ModelFirebaseCrudFunction<ResyncNotificationUserParams, ResyncNotificationUserResult>;
+    };
+    invokeNotificationUser: {
+      healthCheck: ModelFirebaseCrudFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult>;
     };
   };
   abstract notificationSummary: {

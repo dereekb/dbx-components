@@ -4,7 +4,12 @@
       <dbx-section header="Linked Providers">
         <dbx-firebase-manage-auth-providers></dbx-firebase-manage-auth-providers>
       </dbx-section>
-      <dbx-section header="Notifications"></dbx-section>
+      <dbx-section header="Notifications" hint="Check whether notifications can actually reach you.">
+        <!-- a NotificationUser's document id is the uid, so the directive's documentId takes it directly -->
+        <div dbxFirebaseNotificationUserDocument [documentId]="uidSignal()">
+          <dbx-firebase-notification-healthcheck-dialog-button></dbx-firebase-notification-healthcheck-dialog-button>
+        </div>
+      </dbx-section>
       <dbx-section header="Token">
         <dbx-content-pit style="overflow: hidden">
           <dbx-label-block>{{ currentIdTokenStringSignal() }}</dbx-label-block>

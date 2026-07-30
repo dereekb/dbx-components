@@ -1,7 +1,37 @@
 import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, type NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, firestoreModelId, firestoreModelKeyParentKey, readFirestoreModelKey, type ReadFirestoreModelKeyInput } from '@dereekb/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
 import { type Guestbook, type GuestbookEntry, type GuestbookEntryKey, type GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Minutes, type Seconds } from '@dereekb/util';
+
+// MARK: Delivery Health Check
+/**
+ * How long a demo user must wait between delivery health check test messages on a single method.
+ *
+ * Declared here rather than on either side alone because BOTH need it: demo-api passes it to
+ * `notificationServerActions` (which enforces the window) and the demo app passes it to
+ * `provideDbxFirebaseNotifications` (which counts down to it to disable the button). Writing the number
+ * down twice is how the UI ends up offering a test message the server rejects.
+ */
+export const DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES: Minutes = 5;
+
+/**
+ * How long a demo user must wait between delivery health check runs.
+ *
+ * Shared by both sides for the same reason as
+ * {@link DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES}.
+ */
+export const DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES: Minutes = 2;
+
+/**
+ * How long a demo client must wait between verifications of an in-flight delivery health check test
+ * message.
+ *
+ * Shared by both sides for the same reason as
+ * {@link DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES}, and more sharply here: this is also
+ * the cadence the client polls at, so a client pacing faster than the server allows would have every
+ * other poll rejected.
+ */
+export const DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS: Seconds = 15;
 
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';

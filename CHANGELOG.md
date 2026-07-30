@@ -1,3 +1,21 @@
+# [13.32.0](https://github.com/dereekb/dbx-components/compare/v13.31.0-dev...v13.32.0) (2026-07-30)
+
+
+### Bug Fixes
+
+- **dbx-firebase:** scope per-user auth streams to the signed-in uid ([bc5f314a](https://github.com/dereekb/dbx-components/commit/bc5f314a5c1f5df714b7b60c4d8d13f2c4ddfe58))
+
+
+### Checkpoints
+
+- notification delivery self-check ([822bd981](https://github.com/dereekb/dbx-components/commit/822bd98199a9f3c16810d78cdf5a0c7c97deaff0))
+
+
+### Features
+
+- **notification:** per-delivery-method health check + Mailgun probe ([003f6451](https://github.com/dereekb/dbx-components/commit/003f6451e33402ca8ce6c0574cb199ec0588e94d))
+- **notification:** resolve delivery probes without a re-run ([99419d82](https://github.com/dereekb/dbx-components/commit/99419d82b645164c67d0db08554c8b7d7df36188))
+
 # [13.31.0](https://github.com/dereekb/dbx-components/compare/v13.30.0-dev...v13.31.0) (2026-07-28)
 
 
