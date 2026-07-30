@@ -138,6 +138,54 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
   }
 };
 
+// MARK: Per-User Streams
+/**
+ * Configuration for {@link sharedObservableForUidFunction}.
+ */
+interface SharedObservableForUidFunctionConfig<I, T> {
+  /**
+   * Reads the uid that the input's observable is scoped to.
+   */
+  readonly uidForInput: (input: I) => Maybe<AuthUserIdentifier>;
+  /**
+   * Creates the observable for the input. Invoked once per uid change.
+   */
+  readonly factoryForInput: (input: I) => Observable<T>;
+}
+
+/**
+ * Creates a function that returns a shared observable scoped to the input's uid, discarding and rebuilding it
+ * whenever the uid changes.
+ *
+ * Exists because a `shareReplay()` buffer cannot be cleared: a shared stream that outlives the signed-in user
+ * hands the NEXT user's subscribers a value derived from the PREVIOUS user's token, synchronously. Any consumer
+ * that reads the first emission — the UIRouter auth transition hooks, for instance — then acts on data belonging
+ * to a different user. Rebuilding per-uid gives a same-page re-login (log out, log back in as someone else
+ * without reloading) the same cold-start behavior as a page reload.
+ *
+ * The per-uid observable should use `refCount: true` so the discarded uid's source is torn down rather than
+ * leaking one live subscription per user switch. That is safe here because the returned observable is only
+ * consumed through a `switchMap`, so its reference count tracks the outer subscribers exactly.
+ *
+ * @param config - The uid reader and the per-uid observable factory.
+ * @returns Function that returns the shared observable for the input.
+ */
+function sharedObservableForUidFunction<I, T>(config: SharedObservableForUidFunctionConfig<I, T>): (input: I) => Observable<T> {
+  const { uidForInput, factoryForInput } = config;
+
+  let current: Maybe<{ readonly uid: Maybe<AuthUserIdentifier>; readonly obs: Observable<T> }>;
+
+  return (input: I) => {
+    const uid = uidForInput(input);
+
+    if (current == null || current.uid !== uid) {
+      current = { uid, obs: factoryForInput(input) };
+    }
+
+    return current.obs;
+  };
+}
+
 // MARK: Service
 @Injectable()
 export class DbxFirebaseAuthService implements DbxAuthService {
@@ -202,20 +250,59 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    */
   readonly userIdentifier$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.uid$;
 
-  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = firebaseIdToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
+  /**
+   * The current ID token string, or null while logged out.
+   *
+   * Scoped per-uid via {@link sharedObservableForUidFunction} so the replay buffer can never hand a subscriber
+   * the PREVIOUS user's token after a same-page re-login.
+   */
+  readonly currentIdTokenString$: Observable<Maybe<FirebaseAuthIdToken>> = (() => {
+    const sharedForUid = sharedObservableForUidFunction<Maybe<AuthUserIdentifier>, Maybe<FirebaseAuthIdToken>>({
+      uidForInput: (uid) => uid,
+      factoryForInput: (uid) => (uid == null ? of(null) : firebaseIdToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay({ bufferSize: 1, refCount: true })))
+    });
+
+    return this.currentUid$.pipe(switchMap((uid) => sharedForUid(uid)));
+  })();
+
   readonly idTokenString$: Observable<FirebaseAuthIdToken> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
 
-  readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = this.currentAuthUser$.pipe(
-    switchMap((x) => (x ? this.currentIdTokenString$.pipe(switchMap((y) => (y ? x.getIdTokenResult() : of(null)))) : of(null))),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  /**
+   * The current user's decoded ID token, or null while logged out.
+   *
+   * Scoped per-uid via {@link sharedObservableForUidFunction}. Token refreshes still flow through, as they arrive
+   * on {@link currentIdTokenString$}; only a uid change rebuilds the stream.
+   */
+  readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = (() => {
+    const sharedForUser = sharedObservableForUidFunction<Maybe<User>, Maybe<IdTokenResult>>({
+      uidForInput: (user) => user?.uid,
+      factoryForInput: (user) =>
+        user == null
+          ? of(null)
+          : this.currentIdTokenString$.pipe(
+              switchMap((token) => (token ? user.getIdTokenResult() : of(null))),
+              distinctUntilChanged(),
+              shareReplay({ bufferSize: 1, refCount: true })
+            )
+    });
+
+    return this.currentAuthUser$.pipe(
+      distinctUntilChanged((a, b) => a?.uid === b?.uid),
+      switchMap((user) => sharedForUser(user))
+    );
+  })();
+
   readonly idTokenResult$: Observable<IdTokenResult> = this.currentIdTokenResult$.pipe(filterMaybe());
 
+  /**
+   * The current user's token claims, or null while logged out.
+   *
+   * Intentionally not replayed: {@link currentIdTokenResult$} is already shared per-uid, and a buffer here would
+   * reintroduce the cross-user staleness that scoping removes.
+   */
   readonly currentClaims$: Observable<Maybe<ParsedToken>> = this.currentIdTokenResult$.pipe(
     map((x) => (x ? x.claims : null)),
-    distinctUntilChanged(),
-    shareReplay(1)
+    distinctUntilChanged()
   );
   readonly claims$: Observable<ParsedToken> = this.currentClaims$.pipe(filterMaybe());
 
@@ -225,27 +312,41 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   );
   readonly authContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthContextInfo$.pipe(filterMaybe());
 
+  /**
+   * The current {@link AuthUserState}.
+   *
+   * The delegate's state stream is scoped per-uid via {@link sharedObservableForUidFunction}, so it is rebuilt
+   * whenever the signed-in uid changes. Without that, a subscriber attaching right after a same-page re-login is
+   * served the prior session's state synchronously from the replay buffer — and every consumer that reads the
+   * first emission, including the UIRouter auth transition hooks, then routes on it. The delegate factory is
+   * re-invoked per uid so the delegate's own internal replay is discarded along with it.
+   */
   readonly authUserState$: Observable<AuthUserState> = (() => {
-    const delegateAuthUserStateObs: Observable<AuthUserState> = this.delegate.authUserStateObs(this).pipe(
-      catchError(() => of('error' as AuthUserState)),
-      distinctUntilChanged(),
-      shareReplay(1)
+    const fullControlOfAuthUserState = Boolean(this.delegate.fullControlOfAuthUserState);
+
+    const sharedDelegateStateForUid = sharedObservableForUidFunction<Maybe<User>, AuthUserState>({
+      uidForInput: (user) => user?.uid,
+      factoryForInput: (user) => {
+        let obs: Observable<AuthUserState>;
+
+        if (user == null && !fullControlOfAuthUserState) {
+          obs = of<AuthUserState>('none');
+        } else {
+          obs = this.delegate.authUserStateObs(this).pipe(
+            catchError(() => of('error' as AuthUserState)),
+            distinctUntilChanged(),
+            shareReplay({ bufferSize: 1, refCount: true })
+          );
+        }
+
+        return obs;
+      }
+    });
+
+    return this._authState$.pipe(
+      distinctUntilChanged((a, b) => a?.uid === b?.uid),
+      switchMap((user) => sharedDelegateStateForUid(user))
     );
-
-    let obs: Observable<AuthUserState>;
-
-    if (this.delegate.fullControlOfAuthUserState) {
-      obs = delegateAuthUserStateObs;
-    } else {
-      obs = this._authState$.pipe(
-        distinctUntilChanged(),
-        switchMap((x) => {
-          return x == null ? of<AuthUserState>('none') : delegateAuthUserStateObs;
-        })
-      );
-    }
-
-    return obs;
   })();
 
   readonly authRoles$: Observable<AuthRoleSet> = this.delegate.authRolesObs(this);
