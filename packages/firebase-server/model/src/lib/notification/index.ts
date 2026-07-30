@@ -3,6 +3,8 @@ export * from './notification.action.server.init';
 export * from './notification.config.service';
 export * from './notification.config';
 export * from './notification.create.run';
+export * from './notification.healthcheck';
+export * from './notification.healthcheck.service';
 export * from './notification.module';
 export * from './notification.send.service.notificationsummary';
 export * from './notification.send.service.text';

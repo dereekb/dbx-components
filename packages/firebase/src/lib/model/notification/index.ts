@@ -9,6 +9,7 @@ export * from './notification.create.loggedevent';
 export * from './notification.loggedevent.loader';
 export * from './notification.create.task';
 export * from './notification.details';
+export * from './notification.healthcheck';
 export * from './notification.item';
 export * from './notification.id';
 export * from './notification.message';

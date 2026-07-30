@@ -28,6 +28,8 @@ import {
   updateNotificationBoxParamsType,
   type UpdateNotificationBoxRecipientParams,
   updateNotificationBoxRecipientParamsType,
+  type NotificationUserHealthCheckParams,
+  type NotificationUserHealthCheckResult,
   type UpdateNotificationUserParams,
   updateNotificationUserParamsType,
   firestoreDummyKey,
@@ -108,6 +110,7 @@ import { type NotificationTemplateServiceInstance, type NotificationTemplateServ
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
+import { notificationUserHealthCheckFactory } from './notification.healthcheck';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
@@ -158,6 +161,7 @@ export abstract class NotificationServerActions {
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
   abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
   abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
+  abstract notificationUserHealthCheck(params: NotificationUserHealthCheckParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckResult>>>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract updateNotificationSummary(params: UpdateNotificationSummaryParams): AsyncNotificationSummaryUpdateAction<UpdateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
@@ -189,6 +193,7 @@ export function notificationServerActions(context: NotificationServerActionsCont
     updateNotificationUser: updateNotificationUserFactory(context),
     resyncNotificationUser: resyncNotificationUserFactory(context),
     resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
+    notificationUserHealthCheck: notificationUserHealthCheckFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
     updateNotificationSummary: updateNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),

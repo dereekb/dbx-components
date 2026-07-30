@@ -1,4 +1,4 @@
-import { type MailgunNotificationEmailSendService, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService } from '@dereekb/firebase-server/model';
+import { type MailgunNotificationEmailSendService, type MailgunNotificationHealthCheckProbeBuilderInput, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService, mailgunNotificationEmailSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
 import { type ArrayOrValue } from '@dereekb/util';
@@ -23,6 +23,35 @@ export const DEMO_NOTIFICATION_SENDER_RECIPIENT: MailgunRecipient = {
  * @param mailgunService
  * @returns
  */
+/**
+ * Builds the test email dispatched when a user runs a delivery health check with probing enabled.
+ *
+ * This arrives in a real inbox because someone asked the system to check whether their email works, so
+ * it says exactly that rather than looking like an ordinary notification.
+ *
+ * @param input - The probe recipient and Mailgun service.
+ * @returns The probe email request.
+ */
+export function demoNotificationHealthCheckProbeRequest(input: MailgunNotificationHealthCheckProbeBuilderInput): MailgunTemplateEmailRequest {
+  const { mailgunService, recipient } = input;
+  const title = 'Email delivery test';
+
+  const userVariables: DemoMailgunBasicTemplateData = {
+    title,
+    line1: 'This is a test message confirming that we can deliver email to this address. No action is needed.',
+    text: DEFAULT_NOTIFICATION_ACTION_BUTTON_TEXT,
+    url: `${mailgunService.mailgunApi.clientUrl}/home`
+  };
+
+  return {
+    to: { ...recipient, userVariables: { subject: title, ...userVariables } },
+    replyTo: DEMO_NOTIFICATION_REPLY_TO_RECIPIENT,
+    from: DEMO_NOTIFICATION_SENDER_RECIPIENT,
+    template: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
+    subject: `%recipient.subject%`
+  };
+}
+
 export function demoNotificationMailgunSendService(mailgunService: MailgunService): MailgunNotificationEmailSendService {
   const DEFAULT_ACTION_URL = `${mailgunService.mailgunApi.clientUrl}/home`;
 
@@ -71,5 +100,11 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
     }
   });
 
-  return mailgunSendService;
+  return {
+    ...mailgunSendService,
+    healthCheckService: mailgunNotificationEmailSendServiceHealthCheckService({
+      mailgunService,
+      probeBuilder: demoNotificationHealthCheckProbeRequest
+    })
+  };
 }

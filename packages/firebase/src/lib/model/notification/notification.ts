@@ -54,6 +54,7 @@ import {
   type PagedItemPageData,
   defaultPagedItemPageDataConverter
 } from '../../common';
+import { type NotificationHealthCheck, optionalFirestoreNotificationHealthCheck } from './notification.healthcheck';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
 /**
@@ -180,6 +181,16 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * @dbxModelVariable needsConfigSync
    */
   ns?: Maybe<NeedsSyncBoolean>;
+  /**
+   * The result of the most recent notification delivery health check run for this user.
+   *
+   * Persisted rather than returned-and-forgotten because delivery confirmation is asynchronous:
+   * a probe dispatched by one health check run is resolved by a later one. Absent until a check
+   * has been run at least once.
+   *
+   * @dbxModelVariable healthCheck
+   */
+  hc?: Maybe<NotificationHealthCheck>;
 }
 
 export type NotificationUserRoles = 'sync' | GrantedUpdateRole | GrantedReadRole;
@@ -203,7 +214,8 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
     bc: firestoreObjectArray({
       objectField: firestoreNotificationUserNotificationBoxRecipientConfig
     }),
-    ns: optionalFirestoreBoolean()
+    ns: optionalFirestoreBoolean(),
+    hc: optionalFirestoreNotificationHealthCheck
   }
 });
 
