@@ -2,12 +2,14 @@ import { DemoOnboardLayoutComponent } from './container/layout.component';
 import { DemoOnboardTosComponent } from './container/tos.component';
 import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoOnboardUserComponent } from './container/user.component';
+import { DEMO_ONBOARD_STATE_DATA } from './demo.onboard.router.auth';
 
 export const ONBOARD_STATE: Ng2StateDeclaration = {
   url: '/onboard?target',
   name: 'demo.onboard',
   redirectTo: 'demo.onboard.user',
-  component: DemoOnboardLayoutComponent
+  component: DemoOnboardLayoutComponent,
+  data: DEMO_ONBOARD_STATE_DATA
 };
 
 export const ONBOARD_TOS_STATE: Ng2StateDeclaration = {
