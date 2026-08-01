@@ -1,6 +1,7 @@
 import { HttpsError } from 'firebase-functions/https';
 import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 import { forbiddenError, notFoundError } from '../../../function/error';
+import { nestFirebaseDoesNotExistError } from '../../model/permission.error';
 import { ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure } from './model.api.get.service';
 import { type ModelApiDispatchConfig } from './model.api.dispatch';
 
@@ -76,6 +77,62 @@ describe('modelAccessReadErrorFromUseMultipleModelsFailure()', () => {
 
     expect(mapped.message).toBe('the document is gone');
     expect(mapped.code).toBe('NOT_FOUND');
+  });
+
+  // MODEL_NOT_AVAILABLE is the code a genuinely missing document produces here — the per-key
+  // existence check throws nestFirebaseDoesNotExistError() === modelNotAvailableError(). It was
+  // absent from the code-derived fallback, so a messageless miss read as "unknown error".
+  it('derives "not found" from the MODEL_NOT_AVAILABLE server error code when no message is present', () => {
+    const mapped = modelAccessReadErrorFromUseMultipleModelsFailure({ key: 'gb/abc', error: messagelessHttpsError({ code: 'internal', details: { status: 404, code: 'MODEL_NOT_AVAILABLE' } }) });
+
+    expect(mapped.message).toBe('not found');
+    expect(mapped.code).toBe('MODEL_NOT_AVAILABLE');
+  });
+
+  it('maps the real missing-document error a failed read produces to a not-found message', () => {
+    const mapped = modelAccessReadErrorFromUseMultipleModelsFailure({ key: 'jd/abc', error: nestFirebaseDoesNotExistError({ data: { document: { key: 'jd/abc', modelType: 'jobDistrict' } } } as any) });
+
+    expect(mapped.key).toBe('jd/abc');
+    expect(mapped.message).toBe('model was not available');
+    expect(mapped.code).toBe('MODEL_NOT_AVAILABLE');
+  });
+});
+
+// MARK: Per-key error reporting on the multi-read (/get) path
+// REGRESSION: a missing document reported a bare "unknown error" for every model. The root cause was
+// upstream — performAsyncTasks discarded the caught error, so useMultipleModels handed this path a
+// failure entry whose `error` was undefined and no message or code could survive. These assert the
+// readDocuments wiring turns a real failure entry into an actionable { message, code }.
+describe('ModelApiGetService — readDocuments per-key errors', () => {
+  function buildServiceWithFailures(errors: { key: string; error: unknown }[]) {
+    const useMultipleModels = vi.fn(async (_modelType: any, opts: any) => opts.use([], { errors, abortedEarly: false }));
+    const config: ModelApiDispatchConfig = {
+      callModelFn: (() => undefined) as any,
+      makeNestContext: (() => ({ useMultipleModels })) as any
+    };
+
+    return new ModelApiGetService(config, {} as any);
+  }
+
+  it('reports a missing document as not-found rather than a generic "unknown error"', async () => {
+    const service = buildServiceWithFailures([{ key: 'jd/missing', error: nestFirebaseDoesNotExistError({ data: { document: { key: 'jd/missing', modelType: 'jobDistrict' } } } as any) }]);
+    const result = await service.readDocuments('jobDistrict', ['jd/missing'], undefined);
+
+    expect(result.results).toEqual([]);
+    expect(result.errors.length).toBe(1);
+    expect(result.errors[0].key).toBe('jd/missing');
+    expect(result.errors[0].code).toBe('MODEL_NOT_AVAILABLE');
+    expect(result.errors[0].message).not.toBe('unknown error');
+  });
+
+  it('keeps a permission failure distinct from a missing document', async () => {
+    const service = buildServiceWithFailures([
+      { key: 'jd/missing', error: nestFirebaseDoesNotExistError({ data: { document: { key: 'jd/missing', modelType: 'jobDistrict' } } } as any) },
+      { key: 'jd/forbidden', error: forbiddenError('forbidden') }
+    ]);
+    const result = await service.readDocuments('jobDistrict', ['jd/missing', 'jd/forbidden'], undefined);
+
+    expect(result.errors.map((x) => x.code)).toEqual(['MODEL_NOT_AVAILABLE', 'FORBIDDEN']);
   });
 });
 
