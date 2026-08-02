@@ -82,7 +82,7 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
           @if (clientNameSignal()) {
             <p class="dbx-firebase-oauth-consent-prompt">
               <strong>{{ clientNameSignal() }}</strong>
-              is requesting these permissions:
+              wants access to your account.
             </p>
           }
 

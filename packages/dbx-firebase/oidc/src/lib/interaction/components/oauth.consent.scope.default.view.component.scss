@@ -1,0 +1,12 @@
+// Required (always-granted) scopes render as DISABLED selection rows so they cannot be deselected.
+// Material's disabled treatment assumes "unavailable" and drops the label to 30% opacity with a
+// greyed checkbox, which makes an always-granted row nearly unreadable — the row is informational,
+// not unavailable. Retune the disabled tokens here: custom properties inherit down the DOM, so the
+// values reach the nested list/checkbox components even though they render in child components.
+.dbx-firebase-oauth-consent-scopes-pit {
+  --mat-list-list-item-disabled-label-text-opacity: 1;
+  // Muted rather than `primary` so the locked checkbox still reads as non-interactive next to the
+  // selectable rows, while staying legible.
+  --mat-checkbox-disabled-selected-icon-color: var(--mat-sys-on-surface-variant);
+  --mat-checkbox-disabled-selected-checkmark-color: var(--mat-sys-surface);
+}

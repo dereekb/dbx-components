@@ -18,7 +18,7 @@
     </doc-feature-example>
 
     <!-- Consent View -->
-    <doc-feature-example header="dbx-firebase-oauth-consent-view" hint="Presentational consent component with scope display. Submission progress and errors are surfaced via the inner dbxAction contexts.">
+    <doc-feature-example header="dbx-firebase-oauth-consent-view" hint="Presentational consent component with scope display. The requested scopes sit in a collapsed dbx-content-pit summarized by a single underlined line — clicking it expands the height-capped, scrollable selection list so Approve/Deny stay reachable on small screens. Submission progress and errors are surfaced via the inner dbxAction contexts.">
       <h3>no_user (not logged in)</h3>
       <dbx-firebase-oauth-consent-view [details]="exampleDetails" [consentStateCase]="'no_user'" [scopeInjectionConfig]="customScopeConfig" [approveHandler]="noopApproveHandler" [denyHandler]="noopDenyHandler">
         <app-login-view></app-login-view>
