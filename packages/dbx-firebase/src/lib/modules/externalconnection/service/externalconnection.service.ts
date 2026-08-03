@@ -207,6 +207,10 @@ export class DbxFirebaseExternalConnectionService {
    * An AUTHENTICATED call, which is the entire point of it: the top-level navigation that follows
    * carries no Firebase ID token, so this is the only place the server learns who is connecting.
    *
+   * Requires the user to already have a connection document — the server asserts a role against it,
+   * and a role map is only consulted for a document that exists. `DbxFirebaseExternalConnectionsComponent`
+   * creates it on load; a custom UI that reaches this call by another route has to create it too.
+   *
    * @param providerType - The provider the state is for.
    * @returns The state to send on the authorize request.
    */

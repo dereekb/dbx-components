@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { map, type Observable, shareReplay } from 'rxjs';
-import { type LoadingState, successResult } from '@dereekb/rxjs';
+import { filter, first, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { isLoadingStateLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { type DocumentDataWithIdAndKey, FIRESTORE_PERMISSION_DENIED_ERROR_CODE, type UserExternalConnection, type UserExternalConnectionEntryMap } from '@dereekb/firebase';
+import { type DocumentDataWithIdAndKey, FIRESTORE_PERMISSION_DENIED_ERROR_CODE, type OnCallCreateModelResult, type UserExternalConnection, type UserExternalConnectionEntryMap } from '@dereekb/firebase';
 import { DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR } from '../../../model/error';
 import { UserExternalConnectionDocumentStore } from './userexternalconnection.document.store';
 
@@ -39,6 +39,22 @@ export function externalConnectionsLoadingStateFromDocumentLoadingState(state: L
 }
 
 /**
+ * Decides whether a document load means the user has no connection document and needs one created.
+ *
+ * Only a definitive does-not-exist counts. A state that is still loading carries no value and would
+ * otherwise read as missing — creating on it would fail for every user who does have a document. A
+ * denied read is a rules problem rather than an absent document, so it does not create either.
+ *
+ * Pure and exported so it is unit-testable without a TestBed.
+ *
+ * @param state - The document store's data loading state.
+ * @returns True when the document is known not to exist.
+ */
+export function shouldCreateUserExternalConnectionForDocumentLoadingState(state: LoadingState<DocumentDataWithIdAndKey<UserExternalConnection>>): boolean {
+  return !isLoadingStateLoading(state) && state.value == null && state.error?.code === DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR;
+}
+
+/**
  * Derived state for the signed-in user's external connections.
  *
  * Holds THE shared subscription: one document read fanned out to every provider row, instead of one
@@ -52,6 +68,27 @@ export class DbxFirebaseUserExternalConnectionsStore {
    * The user's per-provider entries. A missing document (or a denied read) resolves to an empty map.
    */
   readonly entriesLoadingState$: Observable<LoadingState<UserExternalConnectionEntryMap>> = this.userExternalConnectionDocumentStore.dataLoadingState$.pipe(map(externalConnectionsLoadingStateFromDocumentLoadingState), shareReplay(1));
+
+  /**
+   * Creates the user's connection document if they do not have one, and does nothing if they do.
+   *
+   * Waits for a settled load before deciding, because a loading state carries no value and would
+   * otherwise read as "missing" for a user who does have a document. Only the definitive
+   * does-not-exist error creates: a denied read is a rules problem, not an absent document.
+   *
+   * The create runs through the document store, so a rejection (including losing the race with
+   * another tab, which the server reports as already-exists) arrives as `error` on the returned
+   * loading state rather than as a thrown error.
+   *
+   * @returns The loading state of the create, or a state with no value when one already exists.
+   */
+  createIfMissing(): Observable<Maybe<LoadingState<OnCallCreateModelResult>>> {
+    return this.userExternalConnectionDocumentStore.dataLoadingState$.pipe(
+      filter((x) => !isLoadingStateLoading(x)),
+      first(),
+      switchMap((state) => (shouldCreateUserExternalConnectionForDocumentLoadingState(state) ? this.userExternalConnectionDocumentStore.createUserExternalConnection({}) : of(undefined)))
+    );
+  }
 
   /**
    * Sets the uid whose connection document is loaded. The document id IS the uid.

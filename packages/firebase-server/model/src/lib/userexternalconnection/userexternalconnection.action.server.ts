@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { applyUserExternalConnectionEntry, type FirebaseAuthUserId, type FirestoreContextReference, type UserExternalConnectionDocument, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, userExternalConnectionEntryForOutcome } from '@dereekb/firebase';
+import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type FirebaseAuthUserId, type FirestoreContextReference, type UserExternalConnectionDocument, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, userExternalConnectionEntryForOutcome } from '@dereekb/firebase';
 import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections, userExternalConnectionGrantSummaryFromCredentials } from './userexternalconnection.private';
+import { userExternalConnectionAlreadyExistsError } from './userexternalconnection.error';
 
 /**
  * Context required by {@link userExternalConnectionServerActions}.
@@ -67,6 +68,17 @@ export interface UserExternalConnectionDisconnectParams {
 }
 
 /**
+ * Parameters for creating a user's connection document.
+ */
+export interface UserExternalConnectionCreateParams {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * Optional instant to stamp the new document with. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
  * Parameters for deleting a user's entire connection pair.
  */
 export interface UserExternalConnectionDeleteAllParams {
@@ -90,6 +102,7 @@ export interface UserExternalConnectionReadCredentialsParams {
  * reconciliation, or drift-detection process to maintain.
  */
 export abstract class UserExternalConnectionServerActions {
+  abstract createUserExternalConnection(params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument>;
   abstract connectUserExternalConnection(params: UserExternalConnectionConnectParams): Promise<UserExternalConnectionDocument>;
   abstract refreshUserExternalConnectionCredentials(params: UserExternalConnectionRefreshCredentialsParams): Promise<UserExternalConnectionDocument>;
   abstract markUserExternalConnectionError(params: UserExternalConnectionMarkErrorParams): Promise<UserExternalConnectionDocument>;
@@ -108,12 +121,44 @@ export function userExternalConnectionServerActions(context: UserExternalConnect
   const writePair = writeUserExternalConnectionPairInTransactionFactory(context);
 
   return {
+    createUserExternalConnection: createUserExternalConnectionFactory(context),
     connectUserExternalConnection: (params) => writePair({ ...params, outcome: 'connected' }),
     refreshUserExternalConnectionCredentials: (params) => writePair({ ...params, outcome: 'connected' }),
     markUserExternalConnectionError: (params) => writePair({ ...params, outcome: 'error' }),
     disconnectUserExternalConnection: (params) => writePair({ ...params, outcome: 'disconnected' }),
     deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context),
     readUserExternalConnectionCredentials: readUserExternalConnectionCredentialsFactory(context)
+  };
+}
+
+/**
+ * Creates a function that creates a user's connection document.
+ *
+ * Only the public half is written: the private half exists to hold credentials, and the paired write
+ * creates it on the first connect. Creation runs in a transaction so two concurrent calls cannot both
+ * see an absent document and both write one.
+ *
+ * @param context - The context carrying both halves of the pair.
+ * @returns A function that creates the document for a uid, throwing if it already exists.
+ */
+export function createUserExternalConnectionFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionCollection, firestoreContext } = context;
+
+  return async (params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument> => {
+    const { uid } = params;
+    const now = params.now ?? new Date();
+
+    return firestoreContext.runTransaction(async (transaction) => {
+      const document = userExternalConnectionCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+      const exists = await document.accessor.exists();
+
+      if (exists) {
+        throw userExternalConnectionAlreadyExistsError(uid);
+      }
+
+      await document.accessor.set(emptyUserExternalConnection({ uid, now }));
+      return document;
+    });
   };
 }
 

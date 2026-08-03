@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
 import { beginLoading, isLoadingStateLoading, type LoadingState } from '@dereekb/rxjs';
 import { type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType } from '@dereekb/firebase';
@@ -60,6 +60,13 @@ export class DbxFirebaseExternalConnectionsComponent {
     // currentUid$ rather than userIdentifier$: the latter substitutes NO_AUTH_USER_IDENTIFIER ('0')
     // when signed out, which would ask Firestore for uec/0.
     this.dbxFirebaseUserExternalConnectionsStore.setUid(this.dbxFirebaseAuthService.currentUid$);
+
+    // The connection document has to exist before a provider can be connected: the server asserts a
+    // role against it, and a role map is only consulted for a document that exists. This page is where
+    // it gets created — the user is present and known to want the feature, and creating it is gated
+    // server-side in one place instead of being a side effect of the OAuth handoff. Nothing is created
+    // for a signed-out user: no uid means no document ref, so the load never settles.
+    this.dbxFirebaseUserExternalConnectionsStore.createIfMissing().pipe(takeUntilDestroyed()).subscribe();
   }
 
   private readonly _currentUidSignal = toSignal(this.dbxFirebaseAuthService.currentUid$, { initialValue: undefined });

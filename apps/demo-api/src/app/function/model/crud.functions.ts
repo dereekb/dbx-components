@@ -26,6 +26,7 @@ import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
+import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -47,7 +48,8 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryCreateClient
-  })
+  }),
+  userExternalConnection: userExternalConnectionCreate
 };
 
 // MARK: Read

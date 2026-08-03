@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { type UserExternalConnection, type UserExternalConnectionDocument, type UserExternalConnectionFirestoreCollection, type UserExternalConnectionFirestoreCollections, UserExternalConnectionFunctions } from '@dereekb/firebase';
-import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
 
 /**
  * Injection token for the app's UserExternalConnection collection.
@@ -25,6 +25,15 @@ export class UserExternalConnectionDocumentStore extends AbstractDbxFirebaseDocu
   constructor() {
     super({ firestoreCollection: inject(DbxFirebaseUserExternalConnectionCollections).userExternalConnectionCollection });
   }
+
+  /**
+   * Creates the user's connection document.
+   *
+   * Required before any provider can be connected: the server asserts a role against this document,
+   * and a role map is only consulted for a document that exists. Throws when the user already has
+   * one, so call it only for a user known not to.
+   */
+  readonly createUserExternalConnection = firebaseDocumentStoreCreateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.createUserExternalConnection);
 
   /**
    * Disconnects the user from a provider. The only write a client can make to the connection pair.

@@ -6,6 +6,7 @@ import {
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
+  createUserExternalConnectionParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
@@ -612,6 +613,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'read', typeText: 'boolean' },
       { name: 'message', typeText: 'string' }
     ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'create',
+    paramsTypeName: 'CreateUserExternalConnectionParams',
+    paramsValidator: createUserExternalConnectionParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
+    paramsTypeDescription: "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation."
   },
   {
     model: 'userExternalConnection',
