@@ -40,6 +40,7 @@ import {
   DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
   DEMO_APP_OAUTH_INTERACTION_PATH,
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, UserExternalConnectionFunctions, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -77,7 +78,23 @@ export const DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnec
   }
 };
 
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER];
+/**
+ * Discord requests only `identify`, which is also what populates the row's detail line with the
+ * linked account's display name.
+ *
+ * `icon` is a Material Symbols name: the brand icon set the login registry uses has no Discord mark,
+ * so a real logo would need a new asset. Swap in `assets.logoUrl` if one is ever added.
+ */
+export const DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Discord',
+    icon: 'forum',
+    description: 'Link your Discord account.'
+  }
+};
+
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER];
 
 // MARK: DbxAnalytics
 /**
@@ -417,31 +434,45 @@ export const APP_CONFIG: ApplicationConfig = {
       const iconRegistry = inject(MatIconRegistry);
       iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
     }),
-    // Re-registers Cal.com with a connect() that mints the handoff state first. Done here rather
-    // than in DEMO_EXTERNAL_CONNECTION_PROVIDERS because connect() needs the callable, and the
+    // Re-registers every provider with a connect() that mints the handoff state first. Done here
+    // rather than in DEMO_EXTERNAL_CONNECTION_PROVIDERS because connect() needs the callable, and the
     // provider catalog is a plain value with no injector of its own.
     provideAppInitializer(() => {
       const externalConnectionService = inject(DbxFirebaseExternalConnectionService);
       const userExternalConnectionFunctions = inject(UserExternalConnectionFunctions);
 
-      externalConnectionService.register({
-        ...DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER,
-        connect: async ({ providerType, navigate }) => {
-          // an authenticated call, so the server knows who is connecting without the redirect
-          // ever carrying an ID token
-          const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
-          const authorizeUrl = externalConnectionService.authorizeUrlForProvider(providerType);
+      /**
+       * Re-registers a provider with a connect() that mints the handoff state first.
+       *
+       * The body is provider-agnostic — providerType comes from the context, not the closure — so
+       * iterating the catalog means the next provider needs no edit here. Without this the service
+       * falls through to its default bare redirect, which carries no state and the server bounces
+       * straight to the failure URL.
+       *
+       * @param provider - The catalog entry to re-register.
+       */
+      const registerWithMintedState = (provider: DbxFirebaseExternalConnectionProvider) => {
+        externalConnectionService.register({
+          ...provider,
+          connect: async ({ providerType, navigate }) => {
+            // an authenticated call, so the server knows who is connecting without the redirect
+            // ever carrying an ID token
+            const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
+            const authorizeUrl = externalConnectionService.authorizeUrlForProvider(providerType);
 
-          if (authorizeUrl == null) {
-            throw new Error(`No authorize url could be resolved for provider "${providerType}".`);
+            if (authorizeUrl == null) {
+              throw new Error(`No authorize url could be resolved for provider "${providerType}".`);
+            }
+
+            const url = new URL(authorizeUrl);
+            url.searchParams.set('state', state);
+
+            navigate(url.toString());
           }
+        });
+      };
 
-          const url = new URL(authorizeUrl);
-          url.searchParams.set('state', state);
-
-          navigate(url.toString());
-        }
-      });
+      DEMO_EXTERNAL_CONNECTION_PROVIDERS.forEach(registerWithMintedState);
     })
   ]
 };

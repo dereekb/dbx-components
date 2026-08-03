@@ -6,6 +6,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 
 const CALCOM = 'calcom';
+const DISCORD = 'discord';
 const ZOOM = 'zoom';
 
 function testCredentials(overrides: Partial<UserExternalConnectionCredentials> = {}): UserExternalConnectionCredentials {
@@ -222,6 +223,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })?.uid).toBe(u.uid);
         });
 
+        it('should mint a state for every registered provider, not just the first', async () => {
+          const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: DISCORD };
+          const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
+
+          expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: DISCORD })?.uid).toBe(u.uid);
+          // the secret is shared, so a discord state must not open as a calcom one
+          expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })).toBeUndefined();
+        });
+
         it('should bind the state to the provider it was minted for', async () => {
           const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: CALCOM };
           const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
@@ -248,6 +258,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const registry = f.nest.get(UserExternalConnectionOAuthProviderRegistry);
 
           expect(registry.hasAuthorizeFlowForProviderType(CALCOM)).toBe(true);
+          expect(registry.hasAuthorizeFlowForProviderType(DISCORD)).toBe(true);
           expect(registry.hasAuthorizeFlowForProviderType(ZOOM)).toBe(false);
         });
       });

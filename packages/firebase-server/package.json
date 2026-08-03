@@ -15,6 +15,12 @@
       "import": "./calcom/index.cjs.mjs",
       "default": "./calcom/index.cjs.js"
     },
+    "./discord": {
+      "module": "./discord/index.esm.js",
+      "types": "./discord/index.d.ts",
+      "import": "./discord/index.cjs.mjs",
+      "default": "./discord/index.cjs.js"
+    },
     "./mailgun": {
       "module": "./mailgun/index.esm.js",
       "types": "./mailgun/index.d.ts",
@@ -60,6 +66,7 @@
     "@dereekb/calcom": "13.32.0",
     "@dereekb/date": "13.32.0",
     "@dereekb/dbx-core": "13.32.0",
+    "@dereekb/discord": "13.32.0",
     "@dereekb/firebase": "13.32.0",
     "@dereekb/model": "13.32.0",
     "@dereekb/nestjs": "13.32.0",
