@@ -2,7 +2,7 @@ import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalytic
 import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
-import { environment, EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN, OIDC_API_ORIGIN } from './environments/environment';
+import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import {
   DbxFirebaseAnalyticsUserSource,
@@ -12,8 +12,7 @@ import {
   type DbxFirebaseModelEntitiesWidgetServiceConfig,
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
-  type DbxFirebaseExternalConnectionProvider,
-  DbxFirebaseExternalConnectionService,
+  type DbxFirebaseExternalConnectionProviderEntry,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   provideDbxFirebase,
   provideDbxFirebaseAuthImpersonation,
@@ -44,7 +43,7 @@ import {
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
-import { type FirestoreContext, type FirestoreModelKey, UserExternalConnectionFunctions, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
+import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { provideDbxFormConfiguration, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
@@ -67,51 +66,15 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
 /**
  * Third-party services the demo app offers to connect an account to.
  *
- * The provider TYPE comes from demo-firebase, because demo-api's OAuth controller writes the same
- * string into the connection entry map. Only the presentation lives here.
- */
-export const DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
-  providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-  assets: {
-    providerName: 'Cal.com',
-    icon: 'event',
-    description: 'Schedule and manage bookings from your Cal.com account.'
-  }
-};
-
-/**
- * Discord requests only `identify`, which is also what populates the row's detail line with the
- * linked account's display name.
+ * Just the provider types demo-api mounts an OAuth controller for: dbx-firebase carries each known
+ * provider's presentation and the whole connect flow, so this list is the entire client-side
+ * configuration. Pass `dbxFirebaseKnownExternalConnectionProvider({ providerType, assets })` in place
+ * of a type to reword one of them.
  *
- * `icon` is a Material Symbols name: the brand icon set the login registry uses has no Discord mark,
- * so a real logo would need a new asset. Swap in `assets.logoUrl` if one is ever added.
+ * The types come from demo-firebase, because demo-api's OAuth controller writes the same string into
+ * the connection entry map.
  */
-export const DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
-  providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-  assets: {
-    providerName: 'Discord',
-    icon: 'forum',
-    description: 'Link your Discord account.'
-  }
-};
-
-/**
- * Zoho requests only `AaaServer.profile.READ`, which is also what populates the row's detail line
- * with the linked account's email.
- *
- * `icon` is a Material Symbols name: the brand icon set the login registry uses has no Zoho mark, so
- * a real logo would need a new asset. Swap in `assets.logoUrl` if one is ever added.
- */
-export const DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
-  providerType: DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-  assets: {
-    providerName: 'Zoho',
-    icon: 'work',
-    description: 'Connect your Zoho account.'
-  }
-};
-
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER, DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER];
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE];
 
 // MARK: DbxAnalytics
 /**
@@ -430,7 +393,7 @@ export const APP_CONFIG: ApplicationConfig = {
       appCollectionClass: DemoFirestoreCollections,
       // The connect redirect targets the hosting origin that fronts the API, since the OAuth
       // controller is not served by `ng serve`. Undefined in production, where they share an origin.
-      authorizeOrigin: EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN,
+      authorizeOrigin: environment.externalConnections.authorizeOrigin,
       providers: DEMO_EXTERNAL_CONNECTION_PROVIDERS
     }),
     provideDbxFirebaseOidc({
@@ -443,54 +406,13 @@ export const APP_CONFIG: ApplicationConfig = {
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
-        oidcApiOrigin: OIDC_API_ORIGIN
+        oidcApiOrigin: environment.oidc.apiOrigin
       }
     }),
     // App initializers
     provideAppInitializer(() => {
       const iconRegistry = inject(MatIconRegistry);
       iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
-    }),
-    // Re-registers every provider with a connect() that mints the handoff state first. Done here
-    // rather than in DEMO_EXTERNAL_CONNECTION_PROVIDERS because connect() needs the callable, and the
-    // provider catalog is a plain value with no injector of its own.
-    provideAppInitializer(() => {
-      const externalConnectionService = inject(DbxFirebaseExternalConnectionService);
-      const userExternalConnectionFunctions = inject(UserExternalConnectionFunctions);
-
-      /**
-       * Re-registers a provider with a connect() that mints the handoff state first.
-       *
-       * The body is provider-agnostic — providerType comes from the context, not the closure — so
-       * iterating the catalog means the next provider needs no edit here. Without this the service
-       * falls through to its default bare redirect, which carries no state and the server bounces
-       * straight to the failure URL.
-       *
-       * @param provider - The catalog entry to re-register.
-       */
-      const registerWithMintedState = (provider: DbxFirebaseExternalConnectionProvider) => {
-        externalConnectionService.register({
-          ...provider,
-          connect: async ({ providerType, navigate }) => {
-            // an authenticated call, so the server knows who is connecting without the redirect
-            // ever carrying an ID token
-            const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
-            const authorizeUrl = externalConnectionService.authorizeUrlForProvider(providerType);
-
-            if (authorizeUrl == null) {
-              throw new Error(`No authorize url could be resolved for provider "${providerType}".`);
-            }
-
-            const url = new URL(authorizeUrl);
-            url.searchParams.set('state', state);
-
-            // awaited so the connect action stays working until the authorize page is really opening
-            await navigate(url.toString());
-          }
-        });
-      };
-
-      DEMO_EXTERNAL_CONNECTION_PROVIDERS.forEach(registerWithMintedState);
     })
   ]
 };

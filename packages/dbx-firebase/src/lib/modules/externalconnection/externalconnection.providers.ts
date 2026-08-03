@@ -26,6 +26,10 @@ export interface ProvideDbxFirebaseExternalConnectionsConfig extends DbxFirebase
  * rather than part of it: it requires an app-supplied provider catalog and depends on
  * `provideDbxFirestoreCollection()` having run.
  *
+ * Naming a known provider type is all an app needs to offer that service: the library carries the
+ * presentation, and the connect flow — minting the signed `state`, then redirecting to the authorize
+ * url carrying it — is the library's default. Nothing about it belongs in an app's config.
+ *
  * @param config - The provider catalog and authorize configuration.
  * @returns EnvironmentProviders.
  *
@@ -34,7 +38,13 @@ export interface ProvideDbxFirebaseExternalConnectionsConfig extends DbxFirebase
  * provideDbxFirebaseExternalConnections({
  *   appCollectionClass: DemoFirestoreCollections,
  *   authorizeOrigin: environment.externalConnectionAuthorizeOrigin,
- *   providers: [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER]
+ *   providers: [
+ *     CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+ *     // start from a known provider and reword one line
+ *     dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, assets: { description: 'Link Discord to get notified in your server.' } }),
+ *     // or declare a service the library has no defaults for
+ *     APP_INTERNAL_EXTERNAL_CONNECTION_PROVIDER
+ *   ]
  * })
  * ```
  */

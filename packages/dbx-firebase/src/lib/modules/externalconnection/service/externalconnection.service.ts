@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { addToSet, type ArrayOrValue, filterMaybeArrayValues, mapIterable, type Maybe, removeFromSet } from '@dereekb/util';
-import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
+import { addToSet, type ArrayOrValue, filterMaybeArrayValues, fixExtraQueryParameters, mapIterable, type Maybe, removeFromSet } from '@dereekb/util';
+import { UserExternalConnectionFunctions, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY, type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
+import { dbxFirebaseExternalConnectionProviderForEntry } from './externalconnection.default';
 
 /**
  * How long {@link DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION} waits for the browser to leave the
@@ -90,6 +91,13 @@ export const DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION = (url: string) => {
 export class DbxFirebaseExternalConnectionService {
   readonly config = inject(DbxFirebaseExternalConnectionsConfig);
 
+  /**
+   * Optional so the registry is usable — and testable — in an app that has not wired the
+   * userExternalConnection callables. Only state minting needs them, and it says so when they are
+   * missing rather than failing every injection of this service.
+   */
+  private readonly _userExternalConnectionFunctions = inject(UserExternalConnectionFunctions, { optional: true });
+
   private readonly _providers = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProvider>();
   private readonly _assets = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProviderAssets>();
 
@@ -99,7 +107,7 @@ export class DbxFirebaseExternalConnectionService {
   constructor() {
     const { providers, enabledProviders } = this.config;
 
-    providers.forEach((x) => this.register(x, false));
+    providers.forEach((x) => this.register(dbxFirebaseExternalConnectionProviderForEntry(x), false));
 
     if (enabledProviders == null || enabledProviders === true) {
       this._enableAll = true;
@@ -185,7 +193,57 @@ export class DbxFirebaseExternalConnectionService {
 
   // MARK: Connect
   /**
-   * Resolves the authorize url for a provider.
+   * Whether the connect flow mints a signed `state` and carries it on the authorize request.
+   *
+   * @returns True when state minting is enabled, which is the default.
+   */
+  get mintsAuthorizeState(): boolean {
+    return this.config.mintAuthorizeState ?? true;
+  }
+
+  /**
+   * Mints the short-lived signed `state` that begins a provider's OAuth handoff.
+   *
+   * An AUTHENTICATED call, which is the entire point of it: the top-level navigation that follows
+   * carries no Firebase ID token, so this is the only place the server learns who is connecting.
+   *
+   * @param providerType - The provider the state is for.
+   * @returns The state to send on the authorize request.
+   */
+  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+    const userExternalConnectionFunctions = this._userExternalConnectionFunctions;
+
+    if (!userExternalConnectionFunctions) {
+      throw new Error(`DbxFirebaseExternalConnectionService: cannot mint an authorize state for "${providerType}" because UserExternalConnectionFunctions was not provided. Add the userExternalConnection functions to the app's functions config map, or configure mintAuthorizeState: false.`);
+    }
+
+    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
+    return state;
+  }
+
+  /**
+   * Resolves the authorize url for a provider, carrying a freshly minted `state` when state minting
+   * is enabled.
+   *
+   * @param providerType - The provider to resolve.
+   * @returns The authorize url, or null when the provider is not registered.
+   */
+  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType): Promise<Maybe<string>> {
+    const authorizeUrl = this.authorizeUrlForProvider(providerType);
+    let result = authorizeUrl;
+
+    if (authorizeUrl && this.mintsAuthorizeState) {
+      const state = await this.mintAuthorizeStateForProvider(providerType);
+      // appended as text rather than through URL, since an app that shares an origin with its API
+      // configures no authorizeOrigin and the path stays relative
+      result = fixExtraQueryParameters(`${authorizeUrl}?state=${encodeURIComponent(state)}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolves the authorize url for a provider, WITHOUT a `state`.
    *
    * @param providerType - The provider to resolve.
    * @returns The authorize url, or null when the provider is not registered.
@@ -206,8 +264,11 @@ export class DbxFirebaseExternalConnectionService {
   /**
    * Starts the connect flow for a provider.
    *
-   * Uses the provider's own `connect` handler when it declares one, otherwise navigates to the
-   * resolved authorize url.
+   * Uses the provider's own `connect` handler when it declares one, otherwise mints the `state` and
+   * navigates to the authorize url carrying it. The mint is deliberately part of the default rather
+   * than something each app re-implements: the app's authorize endpoint bounces a stateless request
+   * straight to its failure url, so a "connect" that skipped it would look like it worked and land
+   * the user back on the settings page unconnected.
    *
    * @param providerType - The provider to connect.
    * @returns Resolves once the authorize page is actually opening, and rejects when it never opened.
@@ -220,14 +281,23 @@ export class DbxFirebaseExternalConnectionService {
     }
 
     const navigate = this.config.navigate ?? DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION;
-    const authorizeUrl = this.authorizeUrlForProvider(providerType);
 
     if (provider.connect) {
-      await provider.connect({ providerType, provider, authorizeUrl, navigate });
-    } else if (authorizeUrl) {
-      await navigate(authorizeUrl);
+      await provider.connect({
+        providerType,
+        provider,
+        authorizeUrl: this.authorizeUrlForProvider(providerType),
+        mintAuthorizeState: () => this.mintAuthorizeStateForProvider(providerType),
+        navigate
+      });
     } else {
-      throw new Error(`DbxFirebaseExternalConnectionService: no authorize url could be resolved for "${providerType}".`);
+      const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType);
+
+      if (!authorizeUrl) {
+        throw new Error(`DbxFirebaseExternalConnectionService: no authorize url could be resolved for "${providerType}".`);
+      }
+
+      await navigate(authorizeUrl);
     }
   }
 }
