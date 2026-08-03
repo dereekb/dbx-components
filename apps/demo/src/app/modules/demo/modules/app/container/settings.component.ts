@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { makeUserAvatarFileStoragePath } from 'demo-firebase';
-import { map, switchMap } from 'rxjs';
+import { map, of, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective],
+  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -17,10 +17,13 @@ export class DemoAppSettingsComponent {
 
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
-  readonly uidSignal = toSignal(this.dbxFirebaseAuthService.userIdentifier$);
+  // currentUid$ rather than userIdentifier$: this page is dbxAppContextState="public", so a signed-out
+  // visitor genuinely reaches it, and userIdentifier$ would substitute NO_AUTH_USER_IDENTIFIER ('0')
+  // and ask Firestore for nu/0.
+  readonly uidSignal = toSignal(this.dbxFirebaseAuthService.currentUid$);
 
-  readonly file$ = this.dbxFirebaseAuthService.userIdentifier$.pipe(map((uid) => this.storageService.file(makeUserAvatarFileStoragePath(uid))));
-  readonly avatarUrlSignal$ = this.file$.pipe(switchMap((file) => file?.getDownloadUrl()));
+  readonly file$ = this.dbxFirebaseAuthService.currentUid$.pipe(map((uid) => (uid ? this.storageService.file(makeUserAvatarFileStoragePath(uid)) : undefined)));
+  readonly avatarUrlSignal$ = this.file$.pipe(switchMap((file) => (file ? file.getDownloadUrl() : of(undefined))));
 
   readonly avatarUrlSignal = toSignal(this.avatarUrlSignal$);
 

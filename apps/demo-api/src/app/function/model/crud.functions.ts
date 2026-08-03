@@ -24,6 +24,7 @@ import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
 import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
 import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
+import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -107,6 +108,9 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryUpdateClient,
     rotateClientSecret: oidcEntryRotateClientSecret
+  }),
+  userExternalConnection: onCallSpecifierHandler({
+    disconnect: userExternalConnectionUpdateDisconnect
   })
 };
 

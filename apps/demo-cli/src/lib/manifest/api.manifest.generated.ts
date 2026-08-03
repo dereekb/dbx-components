@@ -9,6 +9,7 @@ import {
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
+  disconnectUserExternalConnectionParamsType,
   downloadMultipleStorageFilesParamsType,
   downloadStorageFileParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
@@ -610,6 +611,18 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'read', typeText: 'boolean' },
       { name: 'message', typeText: 'string' }
     ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'update',
+    specifier: 'disconnect',
+    paramsTypeName: 'DisconnectUserExternalConnectionParams',
+    paramsValidator: disconnectUserExternalConnectionParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result.",
+    paramsTypeDescription: "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
+    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to disconnect from.' }]
   }
 ];
 
@@ -977,6 +990,24 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
     read: 'system',
     serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'userExternalConnection',
+    modelName: 'UserExternalConnection',
+    modelGroup: 'UserExternalConnection',
+    identityConst: 'userExternalConnectionIdentity',
+    collectionPrefix: 'uec',
+    description: "The client-readable half of a user's third-party OAuth connection state.",
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.ts',
+    fields: [
+      { name: 'uid', longName: 'uid', optional: false },
+      { name: 'e', longName: 'entries', tsType: 'UserExternalConnectionEntryMap', optional: false, description: 'Per-provider connection state, keyed by provider type.' },
+      { name: 'c', longName: 'connectedProviderTypes', tsType: 'UserExternalConnectionProviderType[]', optional: false, description: 'DERIVED from `e`: every provider type whose entry status is `connected`.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Date this document was last updated at.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'userExternalConnectionFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   }
 ];
 

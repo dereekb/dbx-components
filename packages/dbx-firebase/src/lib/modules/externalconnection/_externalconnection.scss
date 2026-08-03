@@ -1,0 +1,22 @@
+@use '../../style/theming';
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-firebase-external-connection {
+    // the provider logo is projected into the icon tile, so constrain it to the tile's icon size.
+    .dbx-firebase-external-connection-tile img {
+      height: var(--dbx-icon-tile-icon-size, 24px);
+      width: auto;
+      object-fit: contain;
+    }
+  }
+
+  .dbx-firebase-external-connections {
+    .dbx-firebase-external-connection-row + .dbx-firebase-external-connection-row {
+      margin-top: 16px;
+    }
+  }
+}
+
+@mixin theme($theme-config) {
+}

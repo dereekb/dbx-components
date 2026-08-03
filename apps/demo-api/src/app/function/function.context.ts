@@ -27,7 +27,7 @@ import {
 } from '@dereekb/firebase-server';
 import { type OnCallCreateModelResult, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
-import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions, UserExternalConnectionServerActions } from '@dereekb/firebase-server/model';
 import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';
 import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
@@ -75,6 +75,10 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get oidcModelServerActions(): OidcModelServerActions {
     return this.nestApplication.get(OidcModelServerActions);
+  }
+
+  get userExternalConnectionActions(): UserExternalConnectionServerActions {
+    return this.nestApplication.get(UserExternalConnectionServerActions);
   }
 
   get firebaseModelsService() {

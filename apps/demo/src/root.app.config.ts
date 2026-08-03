@@ -2,9 +2,23 @@ import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalytic
 import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
-import { environment, OIDC_API_ORIGIN } from './environments/environment';
+import { environment, EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN, OIDC_API_ORIGIN } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseAuthImpersonation, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
+import {
+  DbxFirebaseAnalyticsUserSource,
+  type DbxFirebaseAuthServiceDelegate,
+  DbxFirebaseModelEntitiesDebugWidgetComponent,
+  type DbxFirebaseModelEntitiesWidgetEntry,
+  type DbxFirebaseModelEntitiesWidgetServiceConfig,
+  type DbxFirebaseModelTypesServiceConfig,
+  type DbxFirebaseModelTypesServiceEntry,
+  type DbxFirebaseExternalConnectionProvider,
+  defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
+  provideDbxFirebase,
+  provideDbxFirebaseAuthImpersonation,
+  provideDbxFirebaseExternalConnections,
+  provideDbxFirebaseLogin
+} from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
 import {
   DEMO_AUTH_CLAIMS_SERVICE,
@@ -24,6 +38,7 @@ import {
   DEMO_OIDC_PROVIDER_PROFILE_DETAILS,
   DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
   DEMO_APP_OAUTH_INTERACTION_PATH,
+  DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -44,6 +59,24 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { STATES } from './app/app.router';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
 import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
+
+// MARK: External Connections
+/**
+ * Third-party services the demo app offers to connect an account to.
+ *
+ * The provider TYPE comes from demo-firebase, because demo-api's OAuth controller writes the same
+ * string into the connection entry map. Only the presentation lives here.
+ */
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [
+  {
+    providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    assets: {
+      providerName: 'Cal.com',
+      icon: 'event',
+      description: 'Schedule and manage bookings from your Cal.com account.'
+    }
+  }
+];
 
 // MARK: DbxAnalytics
 /**
@@ -356,6 +389,15 @@ export const APP_CONFIG: ApplicationConfig = {
     }),
     // Enables client-side impersonation ("view as another user"), consumed by dbxAuthImpersonationQuerySync (?imp=<uid>).
     provideDbxFirebaseAuthImpersonation(),
+    // A sibling of provideDbxFirebase() because it needs an app-supplied provider catalog and depends
+    // on provideDbxFirestoreCollection() having run.
+    provideDbxFirebaseExternalConnections({
+      appCollectionClass: DemoFirestoreCollections,
+      // The connect redirect targets the hosting origin that fronts the API, since the OAuth
+      // controller is not served by `ng serve`. Undefined in production, where they share an origin.
+      authorizeOrigin: EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN,
+      providers: DEMO_EXTERNAL_CONNECTION_PROVIDERS
+    }),
     provideDbxFirebaseOidc({
       appCollectionClass: DemoFirestoreCollections,
       oidcConfig: {

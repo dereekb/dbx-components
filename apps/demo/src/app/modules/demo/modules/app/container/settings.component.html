@@ -1,8 +1,12 @@
 <dbx-content-page dbxAppContextState="public">
   <dbx-content-container>
     <dbx-section-page header="Settings">
-      <dbx-section header="Linked Providers">
+      <dbx-section header="Linked Login Providers" hint="Sign-in providers linked to this account.">
         <dbx-firebase-manage-auth-providers></dbx-firebase-manage-auth-providers>
+      </dbx-section>
+      <dbx-section header="Connected Apps" hint="Third-party services this account is connected to.">
+        <!-- Deliberately distinct from "Linked Login Providers" above: that is how you sign in, this is what you have connected. -->
+        <dbx-firebase-external-connections></dbx-firebase-external-connections>
       </dbx-section>
       <dbx-section header="Notifications" hint="Check whether notifications can actually reach you.">
         <!-- a NotificationUser's document id is the uid, so the directive's documentId takes it directly -->

@@ -23,7 +23,7 @@
  * - **Primitives**: `firestoreString`, `firestoreNumber`, `firestoreBoolean`, `firestoreEnum`
  * - **Dates**: `firestoreDate` (ISO8601), `firestoreDateNumber` (unix seconds)
  * - **Arrays**: `firestoreArray`, `firestoreUniqueArray`, `firestoreEnumArray`, `firestoreEncodedArray`
- * - **Maps**: `firestoreMap`, `firestoreEncodedObjectMap`, `firestoreArrayMap`
+ * - **Maps**: `firestoreMap`, `firestoreEncodedObjectMap`, `firestoreObjectMap`, `firestoreArrayMap`
  * - **Objects**: `firestoreSubObject`, `firestoreObjectArray`
  * - **Specialized**: `firestoreUID`, `firestoreLatLngString`, `firestoreWebsiteLink`,
  *   `firestoreDateCellRange`, `firestoreBitwiseSet`, `firestoreUnitedStatesAddress`
@@ -1957,9 +1957,11 @@ export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extend
  * // Nested address object with its own converters
  * const addressField = firestoreSubObject<Address>({
  *   objectField: {
- *     street: firestoreString(),
- *     city: firestoreString(),
- *     zip: firestoreString()
+ *     fields: {
+ *       street: firestoreString(),
+ *       city: firestoreString(),
+ *       zip: firestoreString()
+ *     }
  *   }
  * });
  * ```
@@ -1983,6 +1985,79 @@ export function firestoreSubObject<T extends object, O extends object = Firestor
     build: (x) => {
       x.mapFunctions = mapFunctions;
     }
+  });
+}
+
+/**
+ * A Firestore map type where each value is an object that is converted using its own set of field converters.
+ */
+export type FirestoreObjectMapFieldValueType<T extends object, S extends string = string> = Record<S, T>;
+
+/**
+ * firestoreObjectMap configuration
+ */
+export type FirestoreObjectMapFieldConfig<T extends object, O extends object = FirestoreModelData<T>, S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<FirestoreObjectMapFieldValueType<T, S>, FirestoreMapFieldType<O, S>> &
+  (FirestoreObjectArrayFieldConfigObjectFieldInput<T, O> | FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>) & {
+    /**
+     * Optional filter to apply when saving to data.
+     *
+     * By default filters all empty values from the map. Objects with no keys are considered empty.
+     */
+    readonly mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<O, S>>;
+  };
+
+/**
+ * Creates a field mapping configuration for a Firestore map whose values are complex objects.
+ *
+ * This is the map-keyed counterpart to {@link firestoreObjectArray}: each value in the map is
+ * converted using its own set of field converters (via `objectField` or `firestoreField`), so
+ * nested `Date`/enum/array fields round-trip properly.
+ *
+ * On write, null/undefined values are filtered from each object to match Firestore semantics, and
+ * empty values (including objects with no keys) are removed from the map entirely.
+ *
+ * NOTE: this exists instead of passing a sub-object's `mapFunctions.to`/`.from` directly to
+ * {@link firestoreEncodedObjectMap}. That encoder is invoked as `mapFn(value, key)` by
+ * `mapObjectMap()`, while a `ModelMapFunctions`' second parameter is the accumulator *target* — so
+ * the map key string would be used as the write target and the conversion would throw at runtime.
+ * The arity is wrapped here, once, rather than at each call site.
+ *
+ * @param config - Configuration including the per-value conversions and optional map filtering.
+ * @returns A field mapping configuration for object map values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory map
+ * @dbxModelSnapshotFieldTags map, record, dictionary, object, nested, embedded, structured, factory
+ * @dbxModelSnapshotFieldRelated firestore-sub-object, firestore-object-array
+ * @template T - The value model type
+ * @template O - The value Firestore data type (defaults to FirestoreModelData<T>)
+ * @template S - Key type (string, defaults to string)
+ *
+ * @example
+ * ```ts
+ * // Map of provider id -> connection entry
+ * const entriesField = firestoreObjectMap<UserExternalConnectionEntry, FirestoreModelData<UserExternalConnectionEntry>, UserExternalConnectionProviderType>({
+ *   objectField: { fields: userExternalConnectionEntryFields }
+ * });
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function firestoreObjectMap<T extends object, O extends object = FirestoreModelData<T>, S extends string = string>(config: FirestoreObjectMapFieldConfig<T, O, S>) {
+  const { mapFilter = KeyValueTypleValueFilter.EMPTY_STRICT } = config;
+  const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
+  const { from, to } = toModelMapFunctions<T, O>(objectField);
+
+  // wrap to arity-1 map functions. See the note above.
+  const decoder: MapFunction<O, T> = (x) => from(x);
+  const encoder: MapFunction<T, O> = (x) => filterNullAndUndefinedValues(to(x));
+
+  return firestoreEncodedObjectMap<T, O, S>({
+    default: config.default ?? ((() => ({})) as Getter<FirestoreObjectMapFieldValueType<T, S>>),
+    defaultBeforeSave: config.defaultBeforeSave,
+    mapFilter,
+    encoder,
+    decoder
   });
 }
 

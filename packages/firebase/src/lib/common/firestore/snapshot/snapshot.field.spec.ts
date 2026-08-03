@@ -28,6 +28,8 @@ import {
   firestoreDencoderArray,
   firestoreModelKeyEncodedGrantedRoleMap,
   firestoreDencoderMap,
+  firestoreObjectMap,
+  type FirestoreObjectMapFieldValueType,
   type FirestoreEncodedObjectMapFieldValueType,
   firestoreBitwiseObjectMap,
   optionalFirestoreString,
@@ -1332,6 +1334,109 @@ describe('firestoreBitwiseObjectMap()', () => {
       expect(decoded.value.y.one).toBe(true);
       expect(decoded.value.y.three).toBe(true);
     });
+  });
+});
+
+export interface TestFirestoreSubObjectParentWithMap {
+  objects: FirestoreObjectMapFieldValueType<TestFirestoreSubObject>;
+}
+
+export interface TestFirestoreObjectMapOptionalValue {
+  optionalStringField?: Maybe<string>;
+}
+
+export interface TestFirestoreObjectMapOptionalValueParent {
+  objects: FirestoreObjectMapFieldValueType<TestFirestoreObjectMapOptionalValue>;
+}
+
+describe('firestoreObjectMap()', () => {
+  const converter = snapshotConverterFunctions<TestFirestoreSubObjectParentWithMap>({
+    fields: {
+      objects: firestoreObjectMap<TestFirestoreSubObject>({
+        objectField: testFirestoreSubObjectDefaultsConverter
+      })
+    }
+  });
+
+  const date = new Date();
+  const parent: TestFirestoreSubObjectParentWithMap = {
+    objects: {
+      a: { i: 1, date, uniqueStringArray: ['a', 'b'] },
+      b: { i: 2, date, uniqueStringArray: ['c'] }
+    }
+  };
+
+  it('should convert a map of sub objects to data', () => {
+    const data = converter.mapFunctions.to(parent);
+
+    expect(data.objects).toBeDefined();
+    expect(Object.keys(data.objects)).toContain('a');
+    expect(Object.keys(data.objects)).toContain('b');
+
+    // dates are encoded as ISO8601 strings
+    expect(typeof data.objects['a'].date).toBe('string');
+    expect(data.objects['a'].i).toBe(1);
+    expect(data.objects['a'].uniqueStringArray).toContain('a');
+    expect(data.objects['a'].uniqueStringArray).toContain('b');
+    expect(data.objects['a'].optionalStringField).not.toBeDefined();
+
+    expect(typeof data.objects['b'].date).toBe('string');
+    expect(data.objects['b'].i).toBe(2);
+    expect(data.objects['b'].uniqueStringArray).toContain('c');
+    expect(data.objects['b'].optionalStringField).not.toBeDefined();
+  });
+
+  it('should convert a map of sub objects from data', () => {
+    const data = converter.mapFunctions.to(parent);
+    const result = converter.mapFunctions.from(data);
+
+    expect(result.objects).toBeDefined();
+    expect(Object.keys(result.objects).length).toBe(2);
+
+    expect(result.objects['a'].date).toBeDefined();
+    expect(result.objects['a'].date).toBeSameSecondAs(date);
+    expect(result.objects['a'].i).toBe(1);
+    expect(result.objects['a'].uniqueStringArray).toContain('a');
+    expect(result.objects['a'].uniqueStringArray).toContain('b');
+
+    expect(result.objects['b'].date).toBeDefined();
+    expect(result.objects['b'].date).toBeSameSecondAs(date);
+    expect(result.objects['b'].i).toBe(2);
+    expect(result.objects['b'].uniqueStringArray).toContain('c');
+  });
+
+  it('should convert from an empty data object and return an empty map', () => {
+    const result = converter.mapFunctions.from({});
+
+    expect(result.objects).toBeDefined();
+    expect(Object.keys(result.objects).length).toBe(0);
+  });
+
+  it('should not retain keys that were removed from the map', () => {
+    const data = converter.mapFunctions.to({ objects: { a: parent.objects['a'] } });
+
+    expect(Object.keys(data.objects).length).toBe(1);
+    expect(Object.keys(data.objects)).toContain('a');
+    expect(Object.keys(data.objects)).not.toContain('b');
+  });
+
+  it('should filter out empty object values from the map', () => {
+    const emptyValueConverter = snapshotConverterFunctions<TestFirestoreObjectMapOptionalValueParent>({
+      fields: {
+        objects: firestoreObjectMap<TestFirestoreObjectMapOptionalValue>({
+          objectField: snapshotConverterFunctions<TestFirestoreObjectMapOptionalValue>({
+            fields: {
+              optionalStringField: optionalFirestoreString()
+            }
+          })
+        })
+      }
+    });
+
+    const data = emptyValueConverter.mapFunctions.to({ objects: { a: { optionalStringField: 'a' }, b: {} } });
+
+    expect(Object.keys(data.objects)).toContain('a');
+    expect(Object.keys(data.objects)).not.toContain('b');
   });
 });
 

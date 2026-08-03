@@ -25,3 +25,10 @@ export const environment: DemoEnvironment = {
  * bypassing the Firebase Hosting cookie strip at `components.dereekb.com`.
  */
 export const OIDC_API_ORIGIN = 'https://api.components.dereekb.com';
+
+/**
+ * Origin the external-connection authorize paths are resolved against.
+ *
+ * Production serves the app and the API from the same origin, so the paths stay relative.
+ */
+export const EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN: string | undefined = undefined;

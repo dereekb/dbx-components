@@ -61,6 +61,10 @@
             "command": "npx nx run-tests firebase-server"
           },
           {
+            "description": "run firebase-server-model tests",
+            "command": "npx nx test firebase-server-model"
+          },
+          {
             "description": "run firebase-server-test tests",
             "command": "npx nx run-tests firebase-server-test"
           }

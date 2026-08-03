@@ -82,7 +82,14 @@ import {
   type OidcEntryDocument,
   type OidcEntryRoles,
   type OidcModelFirestoreCollections,
-  firestoreModelKey
+  firestoreModelKey,
+  type UserExternalConnection,
+  type UserExternalConnectionDocument,
+  type UserExternalConnectionFirestoreCollection,
+  type UserExternalConnectionFirestoreCollections,
+  type UserExternalConnectionRoles,
+  type UserExternalConnectionTypes,
+  userExternalConnectionFirestoreCollection
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
@@ -90,7 +97,7 @@ import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -113,6 +120,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
+  abstract readonly userExternalConnectionCollection: UserExternalConnectionFirestoreCollection;
 }
 
 /**
@@ -147,7 +155,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
-    oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext })
+    oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext }),
+    userExternalConnectionCollection: userExternalConnectionFirestoreCollection(firestoreContext)
   };
 }
 
@@ -372,8 +381,19 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
   getFirestoreCollection: (c) => c.app.oidcEntryCollection
 });
 
+// MARK: UserExternalConnection
+/**
+ * @dbxModelServiceFactory userExternalConnection
+ */
+export const userExternalConnectionFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, UserExternalConnection, UserExternalConnectionDocument, UserExternalConnectionRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<UserExternalConnection, UserExternalConnectionDocument>, context: DemoFirebaseContext, model: UserExternalConnectionDocument): PromiseOrValue<GrantedRoleMap<UserExternalConnectionRoles>> {
+    return grantFullAccessIfAuthUserRelated({ context, document: model });
+  },
+  getFirestoreCollection: (c) => c.app.userExternalConnectionCollection
+});
+
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes | UserExternalConnectionTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -394,7 +414,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
-  oidcEntry: oidcEntryFirebaseModelServiceFactory
+  oidcEntry: oidcEntryFirebaseModelServiceFactory,
+  userExternalConnection: userExternalConnectionFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;
