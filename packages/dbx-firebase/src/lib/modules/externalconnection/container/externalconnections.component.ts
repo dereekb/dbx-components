@@ -127,8 +127,12 @@ export class DbxFirebaseExternalConnectionsComponent {
   /**
    * Starts the connect flow for a provider.
    *
+   * The action stays working until the authorize page is actually opening, rather than succeeding the
+   * moment the redirect is requested — the page the user is looking at has not changed yet, so a
+   * success there reads as "nothing happened".
+   *
    * @param providerType - The provider to connect.
-   * @returns A promise that resolves once the flow has been started.
+   * @returns Resolves once the authorize page is actually opening.
    */
   async connectToProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
     await this.dbxFirebaseExternalConnectionService.connectToProvider(providerType);

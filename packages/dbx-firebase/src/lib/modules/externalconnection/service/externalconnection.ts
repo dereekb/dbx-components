@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType, userExternalConnectionEntryIsConnected } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
@@ -46,8 +46,13 @@ export interface DbxFirebaseExternalConnectionProviderAssets {
 /**
  * Navigates the browser to the given url. Exists as a seam so tests (and apps that route through
  * their own navigation service) never need to touch `window.location`.
+ *
+ * Returns a promise that settles on the outcome of the navigation, NOT on the request to navigate
+ * having been made: it resolves once the new page is actually opening, and rejects when it never
+ * does. Callers must await it — that is what keeps the connect action working until the authorize
+ * page is really on its way, instead of reporting success against a page that has not moved.
  */
-export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => void;
+export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => PromiseOrValue<void>;
 
 /**
  * Context handed to a provider's custom {@link DbxFirebaseExternalConnectionConnectFunction}.
@@ -60,7 +65,9 @@ export interface DbxFirebaseExternalConnectionConnectContext {
    */
   readonly authorizeUrl: Maybe<string>;
   /**
-   * Navigates the browser. Use this rather than `window.location` directly.
+   * Navigates the browser. Use this rather than `window.location` directly, and AWAIT it: it settles
+   * on the new page actually opening, which is what holds the connect action in its working state
+   * until then.
    */
   readonly navigate: DbxFirebaseExternalConnectionNavigateFunction;
 }
@@ -72,6 +79,9 @@ export interface DbxFirebaseExternalConnectionConnectContext {
  * this when connecting needs more than a redirect — most importantly, when the server must mint a
  * short-lived signed `state` first, because a top-level navigation carries no Firebase ID token and
  * the server otherwise cannot know who is connecting. Do NOT append the ID token as a query param.
+ *
+ * The returned promise must not resolve before the authorize page is opening, so await the context's
+ * `navigate` rather than calling it and returning.
  */
 export type DbxFirebaseExternalConnectionConnectFunction = (context: DbxFirebaseExternalConnectionConnectContext) => Promise<void> | void;
 
@@ -139,6 +149,9 @@ export abstract class DbxFirebaseExternalConnectionsConfig {
   readonly authorizePathFactory?: Maybe<(providerType: UserExternalConnectionProviderType) => string>;
   /**
    * Navigation seam used by the default connect behavior.
+   *
+   * Defaults to {@link DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION}. An override owns the same
+   * contract: settle only once the new page is actually opening.
    */
   readonly navigate?: Maybe<DbxFirebaseExternalConnectionNavigateFunction>;
 }

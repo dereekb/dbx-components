@@ -484,7 +484,8 @@ export const APP_CONFIG: ApplicationConfig = {
             const url = new URL(authorizeUrl);
             url.searchParams.set('state', state);
 
-            navigate(url.toString());
+            // awaited so the connect action stays working until the authorize page is really opening
+            await navigate(url.toString());
           }
         });
       };
