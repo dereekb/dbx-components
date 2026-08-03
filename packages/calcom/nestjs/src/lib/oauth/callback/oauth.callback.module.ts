@@ -3,9 +3,20 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type Maybe } from '@dereekb/util';
 import { CalcomOAuthCallbackController } from './oauth.callback.controller';
 import { CalcomOAuthCallbackService } from './oauth.callback.service';
-import { calcomOAuthCallbackServiceConfigFactory, CalcomOAuthCallbackServiceConfig } from './oauth.callback.config';
+import { CALCOM_OAUTH_CALLBACK_CONTROLLER_PATH, calcomOAuthCallbackServiceConfigFactory, CalcomOAuthCallbackServiceConfig } from './oauth.callback.config';
 
 export type CalcomOAuthCallbackServiceConfigFactory = (configService: ConfigService) => CalcomOAuthCallbackServiceConfig;
+
+/**
+ * Routes to exclude from an app's global API route prefix, so the callback controller stays mounted
+ * at `/oauth/calcom/*`.
+ *
+ * Spread this into the `exclude` list of the app's `globalApiRoutePrefix` config, alongside
+ * `FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE`. Without it a `/api` prefix moves the
+ * routes to `/api/oauth/calcom/*`, which breaks the redirect URI registered with Cal.com — and the
+ * redirect URI must match byte-for-byte, so this is not something the provider tolerates.
+ */
+export const CALCOM_OAUTH_CALLBACK_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = [`${CALCOM_OAUTH_CALLBACK_CONTROLLER_PATH}/{*path}`];
 
 // MARK: App Calcom OAuth Callback Module
 export interface ProvideAppCalcomOAuthCallbackMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {

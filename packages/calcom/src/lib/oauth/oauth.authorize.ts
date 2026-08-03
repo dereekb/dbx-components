@@ -3,11 +3,29 @@ import { type CalcomOAuthClientId } from '../calcom.config';
 import { CALCOM_OAUTH_AUTHORIZE_URL } from './oauth.config';
 
 /**
- * A granular Cal.com OAuth scope.
+ * Every granular Cal.com OAuth scope.
+ *
+ * A runtime list rather than a bare type union, so a configured scope can be validated instead of
+ * being passed through to the consent screen and refused there.
  *
  * @see https://cal.com/docs/api-reference/v2/oauth
  */
-export type CalcomOAuthScope = 'PROFILE_READ' | 'PROFILE_WRITE' | 'BOOKING_READ' | 'BOOKING_WRITE' | 'SCHEDULE_READ' | 'SCHEDULE_WRITE' | 'EVENT_TYPE_READ' | 'EVENT_TYPE_WRITE' | 'APPS_READ' | 'APPS_WRITE' | 'WEBHOOK_READ' | 'WEBHOOK_WRITE';
+export const ALL_CALCOM_OAUTH_SCOPES = ['PROFILE_READ', 'PROFILE_WRITE', 'BOOKING_READ', 'BOOKING_WRITE', 'SCHEDULE_READ', 'SCHEDULE_WRITE', 'EVENT_TYPE_READ', 'EVENT_TYPE_WRITE', 'APPS_READ', 'APPS_WRITE', 'WEBHOOK_READ', 'WEBHOOK_WRITE'] as const;
+
+/**
+ * A granular Cal.com OAuth scope.
+ */
+export type CalcomOAuthScope = (typeof ALL_CALCOM_OAUTH_SCOPES)[number];
+
+/**
+ * Returns whether the input is a known {@link CalcomOAuthScope}.
+ *
+ * @param value - The value to check.
+ * @returns True when the value is a known Cal.com OAuth scope.
+ */
+export function isCalcomOAuthScope(value: string): value is CalcomOAuthScope {
+  return (ALL_CALCOM_OAUTH_SCOPES as readonly string[]).includes(value);
+}
 
 /**
  * The delimiter used to join scopes in the `scope` query parameter.

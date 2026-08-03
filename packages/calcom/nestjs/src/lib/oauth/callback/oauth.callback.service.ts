@@ -30,9 +30,31 @@ export interface CalcomOAuthCallbackConnectedInput {
   readonly accessToken: CalcomAccessToken;
 }
 
+/**
+ * An error Cal.com reported on the redirect back, rather than one thrown on our side.
+ *
+ * Per RFC 6749 4.1.2.1 the authorization server redirects to the `redirect_uri` with these instead
+ * of a `code` when it refuses the request.
+ */
+export interface CalcomOAuthProviderError {
+  /**
+   * The OAuth error code, e.g. `invalid_request`, `invalid_scope`, `access_denied`.
+   */
+  readonly error: string;
+  /**
+   * The provider's human-readable explanation, when it sent one.
+   */
+  readonly errorDescription?: Maybe<string>;
+}
+
 export interface CalcomOAuthCallbackFailureInput {
   readonly actor?: Maybe<CalcomOAuthCallbackActor>;
   readonly error: unknown;
+  /**
+   * Set when the failure was reported BY Cal.com on the redirect, rather than thrown locally. Lets
+   * an app record why the provider refused instead of a generic failure.
+   */
+  readonly providerError?: Maybe<CalcomOAuthProviderError>;
 }
 
 /**
@@ -66,6 +88,25 @@ export interface CalcomOAuthCallbackDelegate {
    * Optional hook invoked when the handoff fails.
    */
   readonly onFailure?: Maybe<(input: CalcomOAuthCallbackFailureInput) => Promise<void>>;
+}
+
+export interface CalcomOAuthHandleCallbackInput {
+  /**
+   * The authorization code, present when Cal.com approved the request.
+   */
+  readonly code?: Maybe<string>;
+  /**
+   * The state echoed back, identifying who is connecting.
+   */
+  readonly state?: Maybe<CalcomOAuthState>;
+  /**
+   * The OAuth error code, present when Cal.com refused the request instead of issuing a code.
+   */
+  readonly error?: Maybe<string>;
+  /**
+   * Cal.com's explanation of the refusal.
+   */
+  readonly errorDescription?: Maybe<string>;
 }
 
 export interface CalcomOAuthCallbackResult {
@@ -164,15 +205,18 @@ export class CalcomOAuthCallbackService {
   /**
    * Verifies the returned state, exchanges the authorization code, and hands the token to the app.
    *
+   * A refusal reported by Cal.com (`error` / `error_description`) is surfaced as the failure reason,
+   * so a rejected scope or a denied consent is not misreported as a missing code.
+   *
    * @param input - The query parameters returned by Cal.com.
-   * @param input.code - The authorization code to exchange.
-   * @param input.state - The state to verify, identifying who is connecting.
    * @returns Where to redirect the user, and whether the handoff succeeded.
    */
-  async handleCallback(input: { readonly code: Maybe<string>; readonly state: Maybe<CalcomOAuthState> }): Promise<CalcomOAuthCallbackResult> {
-    const { code, state } = input;
+  async handleCallback(input: CalcomOAuthHandleCallbackInput): Promise<CalcomOAuthCallbackResult> {
+    const { code, state, error: errorCode, errorDescription } = input;
     const { redirectUri, successUrl } = this.config.calcomOAuthCallback;
     const { verifyCallbackState, onConnected, onFailure } = this.delegate;
+
+    const providerError: Maybe<CalcomOAuthProviderError> = errorCode ? { error: errorCode, errorDescription } : undefined;
 
     let actor: Maybe<CalcomOAuthCallbackActor>;
     let success = false;
@@ -182,6 +226,13 @@ export class CalcomOAuthCallbackService {
 
       if (actor == null) {
         throw new Error('Cal.com OAuth callback state could not be verified.');
+      }
+
+      // check what Cal.com reported BEFORE the missing-code check, otherwise a refusal is reported
+      // as an absent code and the provider's actual reason is lost
+      if (providerError != null) {
+        const description = providerError.errorDescription ? ` — ${providerError.errorDescription}` : '';
+        throw new Error(`Cal.com refused the authorization request: ${providerError.error}${description}`);
       }
 
       if (!code) {
@@ -196,7 +247,7 @@ export class CalcomOAuthCallbackService {
       this.logger.error('Failed completing the Cal.com OAuth handoff: ', e);
 
       if (onFailure != null) {
-        await onFailure({ actor, error: e }).catch((failureError: unknown) => {
+        await onFailure({ actor, error: e, providerError }).catch((failureError: unknown) => {
           this.logger.error('Cal.com OAuth onFailure handler threw: ', failureError);
         });
       }
