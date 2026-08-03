@@ -63,7 +63,10 @@ function capturingServerActions() {
     },
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
-    }
+    },
+    // Cal.com always returns a rotated refresh token, so the framework's retention read is never
+    // reached here — stubbed anyway so this stays a faithful stand-in for the real actions.
+    readUserExternalConnectionCredentials: async () => undefined
   } as unknown as UserExternalConnectionServerActions;
 
   return { actions, connects, errors };

@@ -22,6 +22,19 @@ export interface UserExternalConnectionOAuthActor {
   readonly uid: FirebaseAuthUserId;
 }
 
+/**
+ * The raw callback query, as the provider sent it.
+ *
+ * Kept open rather than narrowed to the four RFC 6749 parameters, because providers send more than
+ * those and some of the extras are load-bearing: Zoho's `accounts-server` names the datacenter that
+ * issued the code, and an exchange sent to the wrong one fails. Nest's keyless `@Query()` already
+ * receives every parameter — only the typed view was dropping them.
+ *
+ * Declared here rather than beside the controller's typed view so the service does not have to
+ * import from the controller that imports it.
+ */
+export type UserExternalConnectionOAuthCallbackQueryValues = Record<string, Maybe<string>>;
+
 export interface UserExternalConnectionOAuthExchangeInput {
   /**
    * The authorization code the provider issued.
@@ -32,6 +45,14 @@ export interface UserExternalConnectionOAuthExchangeInput {
    * to match the one used on the authorize request.
    */
   readonly redirectUri: WebsiteUrl;
+  /**
+   * The raw callback query, for a provider whose exchange needs a parameter beyond `code`.
+   *
+   * Optional, and most providers ignore it. Anything read from here arrived on a redirect the user's
+   * browser followed, so treat it as untrusted input — in particular, never use a value from here as
+   * a request target without checking it against an allowlist first.
+   */
+  readonly query?: Maybe<UserExternalConnectionOAuthCallbackQueryValues>;
 }
 
 export interface UserExternalConnectionOAuthHandleCallbackInput {
@@ -51,6 +72,21 @@ export interface UserExternalConnectionOAuthHandleCallbackInput {
    * The provider's explanation of the refusal.
    */
   readonly errorDescription?: Maybe<string>;
+  /**
+   * The raw callback query, passed through to the exchange unchanged.
+   */
+  readonly query?: Maybe<UserExternalConnectionOAuthCallbackQueryValues>;
+}
+
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.credentialsRetainingStoredRefreshToken}.
+ */
+export interface UserExternalConnectionOAuthRetainRefreshTokenInput {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The credentials the exchange produced.
+   */
+  readonly credentials: UserExternalConnectionCredentials;
 }
 
 export interface UserExternalConnectionOAuthCallbackResult {
@@ -132,10 +168,44 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * {@link UserExternalConnectionCredentials}. When a provider rotates its refresh token, the
    * rotated one must be the one returned here — the token the exchange started with is spent.
    *
-   * @param input - The authorization code and the redirect URI it was issued against.
+   * @param input - The authorization code, the redirect URI it was issued against, and the raw
+   *   callback query.
    * @returns The credentials to persist.
    */
   protected abstract credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials>;
+
+  /**
+   * Carries the stored refresh token forward when a provider's exchange returned none.
+   *
+   * The paired write replaces a provider's credentials wholesale, so persisting an exchange that
+   * omitted `refresh_token` would DESTROY a working one while leaving the entry `connected` — a
+   * connection that can never be refreshed again and does not look broken. Providers that do not
+   * rotate their refresh token (Zoho, and others that issue one only on first consent) hit this on
+   * every reconnect; a rotating provider never reaches the read.
+   *
+   * A read failure is deliberately allowed to propagate: failing the handoff loudly is strictly
+   * better than clobbering the stored token.
+   *
+   * @param input - The acting user and the credentials the exchange produced.
+   * @returns The credentials to persist, with a stored refresh token retained when the exchange
+   *   returned none.
+   */
+  protected async credentialsRetainingStoredRefreshToken(input: UserExternalConnectionOAuthRetainRefreshTokenInput): Promise<UserExternalConnectionCredentials> {
+    const { uid, credentials } = input;
+    let result = credentials;
+
+    if (!credentials.refreshToken) {
+      const providerType = this.providerType;
+      const previous = await this.userExternalConnectionActions.readUserExternalConnectionCredentials({ uid, providerType });
+
+      if (previous?.refreshToken) {
+        this.logger.log(`The "${providerType}" exchange returned no refresh token; retained the stored one.`);
+        result = { ...credentials, refreshToken: previous.refreshToken };
+      }
+    }
+
+    return result;
+  }
 
   /**
    * Builds the authorize URL to redirect an incoming `/authorize` request to.
@@ -166,7 +236,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * @returns Where to redirect the user, and whether the handoff succeeded.
    */
   async handleCallback(input: UserExternalConnectionOAuthHandleCallbackInput): Promise<UserExternalConnectionOAuthCallbackResult> {
-    const { code, state, error: errorCode, errorDescription } = input;
+    const { code, state, error: errorCode, errorDescription, query } = input;
     const { providerType, redirectUri, successUrl } = this.config.userExternalConnectionOAuth;
 
     const providerError: Maybe<UserExternalConnectionOAuthProviderError> = errorCode ? { error: errorCode, errorDescription } : undefined;
@@ -192,7 +262,8 @@ export abstract class AbstractUserExternalConnectionOAuthService {
         throw new Error(`The "${providerType}" OAuth callback did not include an authorization code.`);
       }
 
-      const credentials = await this.credentialsForAuthorizationCode({ code, redirectUri });
+      const exchanged = await this.credentialsForAuthorizationCode({ code, redirectUri, query });
+      const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
 
       await this.userExternalConnectionActions.connectUserExternalConnection({ uid: actor.uid, providerType, credentials });
       this.logger.log(`Connected "${providerType}" for uid "${actor.uid}".`);

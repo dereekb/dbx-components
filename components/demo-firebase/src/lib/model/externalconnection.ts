@@ -1,4 +1,4 @@
-import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 
 /**
  * Provider type for the demo app's Cal.com integration.
@@ -18,3 +18,8 @@ export const DEMO_ZOOM_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnection
  * Provider type for the demo app's Discord integration.
  */
 export const DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnectionProviderType = DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
+
+/**
+ * Provider type for the demo app's Zoho integration.
+ */
+export const DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE: UserExternalConnectionProviderType = ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;

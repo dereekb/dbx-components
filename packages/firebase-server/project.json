@@ -18,10 +18,10 @@
             "command": "npx nx run firebase-server-mailgun:build-base"
           },
           {
-            "command": "npx nx run firebase-server-zoho:build-base"
+            "command": "npx nx run firebase-server-model:build-base"
           },
           {
-            "command": "npx nx run firebase-server-model:build-base"
+            "command": "npx nx run firebase-server-zoho:build-base"
           },
           {
             "command": "npx nx run firebase-server-calcom:build-base"

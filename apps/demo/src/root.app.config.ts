@@ -41,6 +41,7 @@ import {
   DEMO_APP_OAUTH_INTERACTION_PATH,
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, UserExternalConnectionFunctions, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -94,7 +95,23 @@ export const DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConne
   }
 };
 
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER];
+/**
+ * Zoho requests only `AaaServer.profile.READ`, which is also what populates the row's detail line
+ * with the linked account's email.
+ *
+ * `icon` is a Material Symbols name: the brand icon set the login registry uses has no Zoho mark, so
+ * a real logo would need a new asset. Swap in `assets.logoUrl` if one is ever added.
+ */
+export const DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Zoho',
+    icon: 'work',
+    description: 'Connect your Zoho account.'
+  }
+};
+
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER, DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER];
 
 // MARK: DbxAnalytics
 /**

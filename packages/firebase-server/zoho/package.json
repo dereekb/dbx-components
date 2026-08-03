@@ -8,7 +8,10 @@
     "@dereekb/nestjs": "13.32.0",
     "@dereekb/rxjs": "13.32.0",
     "@dereekb/firebase": "13.32.0",
+    "@dereekb/firebase-server": "13.32.0",
     "@dereekb/util": "13.32.0",
-    "@dereekb/zoho": "13.32.0"
+    "@dereekb/zoho": "13.32.0",
+    "@nestjs/common": "^11.1.19",
+    "express": "^5.2.1"
   }
 }

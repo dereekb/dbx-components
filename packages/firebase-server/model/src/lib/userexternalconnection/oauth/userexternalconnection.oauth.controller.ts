@@ -1,7 +1,7 @@
 import { Get, Query, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { type Maybe } from '@dereekb/util';
-import { type AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthState } from './userexternalconnection.oauth.service';
+import { type AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthState } from './userexternalconnection.oauth.service';
 
 /**
  * HTTP status used for the handoff redirects.
@@ -17,7 +17,7 @@ export const USER_EXTERNAL_CONNECTION_OAUTH_REDIRECT_STATUS = 302;
  * Snake-cased because these are the wire names — `error_description` is what RFC 6749 4.1.2.1
  * specifies, so it is read as-is rather than renamed at the boundary.
  */
-export interface UserExternalConnectionOAuthCallbackQuery {
+export interface UserExternalConnectionOAuthCallbackQuery extends UserExternalConnectionOAuthCallbackQueryValues {
   readonly code?: Maybe<string>;
   readonly state?: Maybe<UserExternalConnectionOAuthState>;
   readonly error?: Maybe<string>;
@@ -70,7 +70,8 @@ export abstract class AbstractUserExternalConnectionOAuthController {
    * is indistinguishable from a missing code.
    *
    * @param query - The callback query parameters: `code` + `state` on approval, or `error` +
-   *   `error_description` on refusal.
+   *   `error_description` on refusal. Passed through whole, so a provider adapter can read the
+   *   extras its exchange needs.
    * @param response - The response to issue the redirect on.
    */
   @Get('callback')
@@ -79,7 +80,8 @@ export abstract class AbstractUserExternalConnectionOAuthController {
       code: query.code,
       state: query.state,
       error: query.error,
-      errorDescription: query.error_description
+      errorDescription: query.error_description,
+      query
     });
 
     response.redirect(USER_EXTERNAL_CONNECTION_OAUTH_REDIRECT_STATUS, redirectUrl);

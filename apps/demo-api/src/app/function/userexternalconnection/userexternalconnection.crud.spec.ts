@@ -7,6 +7,7 @@ import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demo
 
 const CALCOM = 'calcom';
 const DISCORD = 'discord';
+const ZOHO = 'zoho';
 const ZOOM = 'zoom';
 
 function testCredentials(overrides: Partial<UserExternalConnectionCredentials> = {}): UserExternalConnectionCredentials {
@@ -259,6 +260,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           expect(registry.hasAuthorizeFlowForProviderType(CALCOM)).toBe(true);
           expect(registry.hasAuthorizeFlowForProviderType(DISCORD)).toBe(true);
+          expect(registry.hasAuthorizeFlowForProviderType(ZOHO)).toBe(true);
           expect(registry.hasAuthorizeFlowForProviderType(ZOOM)).toBe(false);
         });
       });
