@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ZOHO_ACCOUNTS_API_URLS, zohoAccountsApiUrlKeyForApiUrl, zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoAccountsApiUrl, type ZohoAccountsAuthorizeUrlFactory, type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse, type ZohoAccountsUserInfoResponse } from '@dereekb/zoho';
 import { ZohoAccountsOAuthApi } from '@dereekb/zoho/nestjs';
-import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
+import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { ZohoUserExternalConnectionOAuthServiceConfig } from './zoho.oauth.connection.config';
 
@@ -14,6 +14,24 @@ export const ZOHO_OAUTH_CALLBACK_ACCOUNTS_SERVER_PARAM = 'accounts-server';
  * The callback parameter naming the datacenter's short location code, e.g. `us`.
  */
 export const ZOHO_OAUTH_CALLBACK_LOCATION_PARAM = 'location';
+
+/**
+ * `extra` key holding the api domain a Zoho access token is usable against.
+ *
+ * Named constants because these keys are written on connect and read back on refresh — a literal in
+ * one place and a typo in the other would silently send the refresh to the wrong datacenter.
+ */
+export const ZOHO_EXTRA_API_DOMAIN_KEY = 'apiDomain';
+
+/**
+ * `extra` key holding the accounts host a later refresh must be sent to.
+ */
+export const ZOHO_EXTRA_ACCOUNTS_SERVER_KEY = 'accountsServer';
+
+/**
+ * `extra` key holding Zoho's short location code for the datacenter.
+ */
+export const ZOHO_EXTRA_LOCATION_KEY = 'location';
 
 export interface ZohoUserExternalConnectionCredentialsInput {
   /**
@@ -68,9 +86,9 @@ export function zohoUserExternalConnectionCredentials(input: ZohoUserExternalCon
     externalAccountId: zuid == null ? undefined : String(zuid),
     label: userInfo?.Email ?? userInfo?.Display_Name ?? undefined,
     extra: {
-      apiDomain: api_domain,
-      accountsServer: accountsApiUrl,
-      location
+      [ZOHO_EXTRA_API_DOMAIN_KEY]: api_domain,
+      [ZOHO_EXTRA_ACCOUNTS_SERVER_KEY]: accountsApiUrl,
+      [ZOHO_EXTRA_LOCATION_KEY]: location
     }
   };
 }
@@ -95,6 +113,7 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
     @Inject(ZohoUserExternalConnectionOAuthServiceConfig) readonly config: ZohoUserExternalConnectionOAuthServiceConfig,
     @Inject(UserExternalConnectionStateCoder) readonly stateCoder: UserExternalConnectionStateCoder,
     @Inject(UserExternalConnectionServerActions) readonly userExternalConnectionActions: UserExternalConnectionServerActions,
+    @Inject(UserExternalConnectionAccessor) readonly userExternalConnectionAccessor: UserExternalConnectionAccessor,
     @Inject(ZohoAccountsOAuthApi) readonly oauthApi: ZohoAccountsOAuthApi
   ) {
     super();
@@ -137,28 +156,63 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
     return zohoUserExternalConnectionCredentials({ response, accountsApiUrl, location: query?.[ZOHO_OAUTH_CALLBACK_LOCATION_PARAM], userInfo });
   }
 
+  override async refreshCredentials(input: UserExternalConnectionOAuthRefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
+    const { credentials } = input;
+    const { refreshToken, extra } = credentials;
+
+    if (!refreshToken) {
+      throw new Error('ZohoUserExternalConnectionOAuthService.refreshCredentials: the stored credentials carry no refresh token.');
+    }
+
+    // the grant lives at ONE datacenter — a refresh token issued by `accounts.zoho.eu` is not honored
+    // by `accounts.zoho.com` — so the stored accounts server is what the refresh must be sent to. It is
+    // re-resolved through the allowlist rather than used verbatim: the value originally arrived on a
+    // browser redirect, and it is the POST target the client secret travels to.
+    const storedAccountsServer = extra?.[ZOHO_EXTRA_ACCOUNTS_SERVER_KEY];
+    const accountsApiUrl = this.allowlistedAccountsApiUrl(storedAccountsServer == null ? undefined : String(storedAccountsServer)) ?? this.accountsApiUrl;
+
+    const response = await this.oauthApi.refreshUserAccessToken({ refreshToken, accountsApiUrl });
+
+    // `location` is carried forward from the stored credentials rather than re-derived: it only ever
+    // arrives on the callback, and the framework's merge would otherwise see an undefined value.
+    const location = extra?.[ZOHO_EXTRA_LOCATION_KEY];
+
+    // the response has no `refresh_token`, which the framework's merge retains — and `api_domain` may
+    // legitimately differ from the one issued on connect, so it is taken from the response
+    return zohoUserExternalConnectionCredentials({ response, accountsApiUrl, location: location == null ? undefined : String(location) });
+  }
+
   /**
    * The accounts host to exchange against, taken from Zoho's `accounts-server` callback parameter.
-   *
-   * Only an allowlisted Zoho host is honored. The value arrives on a redirect an attacker can
-   * compose, and it is used as the POST target the CLIENT SECRET is sent to, so an unchecked value
-   * here would hand out the secret. An unrecognized value is dropped (and logged) rather than
-   * trusted.
    *
    * @param query - The raw callback query.
    * @returns The allowlisted accounts host the callback named, if any.
    */
   protected accountsApiUrlForCallbackQuery(query: Maybe<UserExternalConnectionOAuthCallbackQueryValues>): Maybe<ZohoAccountsApiUrl> {
-    const accountsServer = query?.[ZOHO_OAUTH_CALLBACK_ACCOUNTS_SERVER_PARAM];
+    return this.allowlistedAccountsApiUrl(query?.[ZOHO_OAUTH_CALLBACK_ACCOUNTS_SERVER_PARAM]);
+  }
+
+  /**
+   * Resolves an untrusted accounts-host string back to one of the canonical Zoho hosts.
+   *
+   * Only an allowlisted Zoho host is honored. Every value passed here originated on a redirect an
+   * attacker can compose — either the live callback query or a value persisted from an earlier one —
+   * and it becomes the POST target the CLIENT SECRET is sent to, so an unchecked value would hand out
+   * the secret. Resolving through the allowlist rather than comparing to it also guarantees the host
+   * used is a canonical constant and never a caller-shaped variant of one. An unrecognized value is
+   * dropped (and logged) rather than trusted.
+   *
+   * @param accountsServer - The untrusted host string, if any.
+   * @returns The allowlisted accounts host, or null when there was none or it was not recognized.
+   */
+  protected allowlistedAccountsApiUrl(accountsServer: Maybe<string>): Maybe<ZohoAccountsApiUrl> {
     let result: Maybe<ZohoAccountsApiUrl>;
 
     if (accountsServer) {
-      // resolved back through the allowlist rather than used verbatim, so the exchanged host is
-      // always one of the canonical constants and never a caller-shaped variant of one
       const key = zohoAccountsApiUrlKeyForApiUrl(accountsServer);
 
       if (key == null) {
-        this.logger.warn(`Ignored an unrecognized Zoho "${ZOHO_OAUTH_CALLBACK_ACCOUNTS_SERVER_PARAM}" callback value of "${accountsServer}"; exchanging against the configured host instead.`);
+        this.logger.warn(`Ignored an unrecognized Zoho accounts host of "${accountsServer}"; using the configured host instead.`);
       } else {
         result = ZOHO_ACCOUNTS_API_URLS[key];
       }

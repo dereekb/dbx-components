@@ -16,7 +16,7 @@ import {
   userExternalConnectionIdentity
 } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionAccessor, UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 
@@ -37,6 +37,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('userExternalConnection', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     function serverActions(): UserExternalConnectionServerActions {
       return f.nest.get(UserExternalConnectionServerActions);
+    }
+
+    function accessor(): UserExternalConnectionAccessor {
+      return f.nest.get(UserExternalConnectionAccessor);
     }
 
     async function loadPublic(uid: string): Promise<Maybe<UserExternalConnection>> {
@@ -187,14 +191,31 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       describe('readUserExternalConnectionCredentials', () => {
         it('should return the decrypted credentials', async () => {
           await serverActions().connectUserExternalConnection({ uid: u.uid, providerType: CALCOM, credentials: testCredentials() });
-          const result = await serverActions().readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
+          const result = await accessor().readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
 
           expect(result?.accessToken).toBe('access-token');
         });
 
         it('should return nothing for a provider that is not connected', async () => {
-          const result = await serverActions().readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
+          const result = await accessor().readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
           expect(result).not.toBeDefined();
+        });
+      });
+
+      describe('readUserExternalConnectionForProvider', () => {
+        it('should return both halves for a connected provider', async () => {
+          await serverActions().connectUserExternalConnection({ uid: u.uid, providerType: CALCOM, credentials: testCredentials() });
+          const result = await accessor().readUserExternalConnectionForProvider({ uid: u.uid, providerType: CALCOM });
+
+          expect(result.entry?.st).toBe('connected');
+          expect(result.credentials?.accessToken).toBe('access-token');
+        });
+
+        it('should return both halves as null when the user has no connection document', async () => {
+          const result = await accessor().readUserExternalConnectionForProvider({ uid: u.uid, providerType: CALCOM });
+
+          expect(result.entry).not.toBeTruthy();
+          expect(result.credentials).not.toBeTruthy();
         });
       });
 

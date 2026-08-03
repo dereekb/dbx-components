@@ -1,5 +1,23 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type ZohoAccessTokenString, type ZohoAccountsApiUrl, type ZohoAccountsConfigApiUrlInput, type ZohoAccountsOAuthClientContext, type ZohoAccountsOAuthClientFactory, type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse, type ZohoAccountsUserInfoResponse, type ZohoAuthorizationCode, type ZohoOAuthClientId, type ZohoOAuthClientSecret, zohoAccountsConfigApiUrl, zohoAccountsOAuthClientFactory, zohoAccountsRefreshTokenFromAuthorizationCode, zohoAccountsUserInfo } from '@dereekb/zoho';
+import {
+  type ZohoAccessTokenString,
+  type ZohoAccountsAccessTokenResponse,
+  type ZohoAccountsApiUrl,
+  type ZohoAccountsConfigApiUrlInput,
+  type ZohoAccountsOAuthClientContext,
+  type ZohoAccountsOAuthClientFactory,
+  type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse,
+  type ZohoAccountsUserInfoResponse,
+  type ZohoAuthorizationCode,
+  type ZohoOAuthClientId,
+  type ZohoOAuthClientSecret,
+  type ZohoRefreshToken,
+  zohoAccountsConfigApiUrl,
+  zohoAccountsOAuthClientFactory,
+  zohoAccountsRefreshTokenFromAuthorizationCode,
+  zohoAccountsUserAccessToken,
+  zohoAccountsUserInfo
+} from '@dereekb/zoho';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { ZohoAccountsOAuthServiceConfig } from './accounts.oauth.config';
 
@@ -29,9 +47,23 @@ export interface ZohoAccountsUserInfoApiInput {
   readonly accountsApiUrl?: Maybe<ZohoAccountsConfigApiUrlInput>;
 }
 
+export interface ZohoAccountsRefreshUserAccessTokenInput {
+  /**
+   * The user's refresh token.
+   */
+  readonly refreshToken: ZohoRefreshToken;
+  /**
+   * The accounts host to refresh against. Defaults to the configured datacenter.
+   *
+   * Should be the datacenter the grant was created at — a refresh token issued by one datacenter is
+   * not honored by another.
+   */
+  readonly accountsApiUrl?: Maybe<ZohoAccountsConfigApiUrlInput>;
+}
+
 /**
- * The two Zoho Accounts endpoints a per-user connect flow needs: the authorization-code exchange and
- * the identity lookup that labels the connection.
+ * The Zoho Accounts endpoints a per-user connect flow needs: the authorization-code exchange, the
+ * per-user token refresh, and the identity lookup that labels the connection.
  *
  * Deliberately separate from {@link ZohoAccountsApi}, which requires a server refresh token and a
  * token cache. A per-user handoff has neither — the handoff is how a refresh token is obtained.
@@ -117,6 +149,22 @@ export class ZohoAccountsOAuthApi {
     const { code, redirectUri, accountsApiUrl } = input;
     const context = this.oauthClientContextForApiUrl(accountsApiUrl ?? this.apiUrl);
     return zohoAccountsRefreshTokenFromAuthorizationCode(context)({ code, redirectUri });
+  }
+
+  /**
+   * Exchanges a user's refresh token for a new access token.
+   *
+   * Zoho does not rotate refresh tokens, so the token passed in stays valid and the response carries
+   * no replacement — the caller keeps the one it already has. The response DOES carry `api_domain`,
+   * which is the host the new access token is usable against, so persist it.
+   *
+   * @param input - The user's refresh token and the optional accounts host.
+   * @returns The Zoho access token response.
+   */
+  refreshUserAccessToken(input: ZohoAccountsRefreshUserAccessTokenInput): Promise<ZohoAccountsAccessTokenResponse> {
+    const { refreshToken, accountsApiUrl } = input;
+    const context = this.oauthClientContextForApiUrl(accountsApiUrl ?? this.apiUrl);
+    return zohoAccountsUserAccessToken(context)({ refreshToken });
   }
 
   /**

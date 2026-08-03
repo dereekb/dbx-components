@@ -117,6 +117,74 @@ export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: 
   };
 }
 
+// MARK: Per-User Access Token
+/**
+ * Input for exchanging a specific user's refresh token for a new access token.
+ *
+ * Unlike {@link ZohoAccountsAccessTokenInput}, the refresh token is REQUIRED: there is no config-level
+ * token to fall back to, because the whole point is that the token belongs to a user rather than to
+ * the app.
+ */
+export interface ZohoAccountsUserAccessTokenInput {
+  /**
+   * The user's long-lived refresh token.
+   */
+  readonly refreshToken: ZohoRefreshToken;
+  /**
+   * Override client credentials. Falls back to the context config's `clientId`/`clientSecret`.
+   */
+  readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;
+}
+
+/**
+ * Exchanges a user's refresh token for a new access token.
+ */
+export type ZohoAccountsUserAccessTokenFunction = (input: ZohoAccountsUserAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse>;
+
+/**
+ * Creates a function that exchanges a SPECIFIC USER's refresh token for a new access token.
+ *
+ * The per-user counterpart of {@link zohoAccountsAccessToken}, and narrowed the same way
+ * {@link zohoAccountsRefreshTokenFromAuthorizationCode} is: it takes a
+ * {@link ZohoAccountsOAuthClientContext} rather than a full {@link ZohoAccountsContext}. That matters
+ * because a `ZohoAccountsContext`'s config REQUIRES a `refreshToken` — the app's own — so it cannot
+ * describe a client that refreshes on behalf of many users. A full context stays structurally
+ * assignable, so this is usable from either.
+ *
+ * Zoho does not rotate refresh tokens and its refresh response carries NO `refresh_token`, so the
+ * token passed in here stays valid and must be retained by the caller. The response does carry
+ * `api_domain`, which can differ from the one the grant was created with, so persist it.
+ *
+ * @param context - A Zoho Accounts client context providing fetch and client credentials.
+ * @returns Function that exchanges a user's refresh token for an access token.
+ *
+ * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token-expiry.html
+ *
+ * @example
+ * ```typescript
+ * const userAccessToken = zohoAccountsUserAccessToken(accountsClientContext);
+ * const { access_token, api_domain, expires_in } = await userAccessToken({ refreshToken: user.zohoRefreshToken });
+ * ```
+ */
+export function zohoAccountsUserAccessToken(context: ZohoAccountsOAuthClientContext): ZohoAccountsUserAccessTokenFunction {
+  return (input: ZohoAccountsUserAccessTokenInput) => {
+    const { clientId: configClientId, clientSecret: configClientSecret } = context.config;
+    const { client, refreshToken } = input;
+
+    const clientId = client?.clientId ?? configClientId;
+    const clientSecret = client?.clientSecret ?? configClientSecret;
+
+    const params = makeUrlSearchParams({
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken
+    });
+
+    return context.fetchJson<ZohoAccountsAccessTokenResponse>(`${ZOHO_ACCOUNTS_TOKEN_PATH}?${params}`, zohoAccountsApiFetchJsonInput('POST'));
+  };
+}
+
 // MARK: Authorization Code → Refresh Token
 /**
  * OAuth authorization code received from the Zoho authorization server

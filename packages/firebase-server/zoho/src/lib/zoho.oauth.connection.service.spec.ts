@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ZOHO_ACCOUNTS_EU_API_URL, ZOHO_ACCOUNTS_US_API_URL, type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse, type ZohoAccountsUserInfoResponse } from '@dereekb/zoho';
+import { ZOHO_ACCOUNTS_EU_API_URL, ZOHO_ACCOUNTS_US_API_URL, type ZohoAccountsAccessTokenResponse, type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse, type ZohoAccountsUserInfoResponse } from '@dereekb/zoho';
 import { ZohoAccountsOAuthApi, type ZohoAccountsOAuthServiceConfig, appZohoAccountsOAuthModuleMetadata } from '@dereekb/zoho/nestjs';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { DEFAULT_ZOHO_OAUTH_SCOPES, ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from './zoho.oauth.connection.config';
 import { ZohoUserExternalConnectionOAuthController } from './zoho.oauth.connection.controller';
@@ -81,10 +81,16 @@ function capturingServerActions(stored?: Maybe<UserExternalConnectionCredentials
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
     },
-    readUserExternalConnectionCredentials: async () => stored
+    refreshUserExternalConnectionCredentials: async (params: CapturedConnect) => {
+      connects.push(params);
+    }
   } as unknown as UserExternalConnectionServerActions;
 
-  return { actions, connects, errors };
+  const accessor = {
+    readUserExternalConnectionCredentials: async () => stored
+  } as unknown as UserExternalConnectionAccessor;
+
+  return { actions, accessor, connects, errors };
 }
 
 interface StubbedExchange {
@@ -155,7 +161,8 @@ describe('ZohoUserExternalConnectionOAuthService', () => {
     const providers: Provider[] = [
       { provide: FirebaseServerEnvService, useValue: makeEnvService() },
       { provide: UserExternalConnectionStateCoder, useValue: stateCoder },
-      { provide: UserExternalConnectionServerActions, useValue: captured.actions }
+      { provide: UserExternalConnectionServerActions, useValue: captured.actions },
+      { provide: UserExternalConnectionAccessor, useValue: captured.accessor }
     ];
 
     const rootModule: DynamicModule = {
@@ -402,6 +409,97 @@ describe('ZohoUserExternalConnectionOAuthService', () => {
 
       expect(result.success).toBe(true);
       expect(captured.connects[0].credentials.refreshToken).toBe('stored-refresh-token');
+    });
+  });
+
+  describe('refreshCredentials()', () => {
+    const ACCESS_TOKEN_RESPONSE: ZohoAccountsAccessTokenResponse = {
+      access_token: 'refreshed-access-token',
+      scope: 'AaaServer.profile.READ,ZohoCRM.modules.READ',
+      api_domain: 'https://www.zohoapis.com',
+      token_type: 'Bearer',
+      expires_in: 3600
+    };
+
+    interface StubbedRefresh {
+      readonly seenApiUrls: Maybe<string>[];
+      readonly seenRefreshTokens: string[];
+    }
+
+    function stubRefresh(response: ZohoAccountsAccessTokenResponse = ACCESS_TOKEN_RESPONSE): StubbedRefresh {
+      const seenApiUrls: Maybe<string>[] = [];
+      const seenRefreshTokens: string[] = [];
+
+      api.refreshUserAccessToken = async (input) => {
+        seenApiUrls.push(input.accountsApiUrl);
+        seenRefreshTokens.push(input.refreshToken);
+        return response;
+      };
+
+      return { seenApiUrls, seenRefreshTokens };
+    }
+
+    function storedCredentials(accountsServer?: Maybe<string>): UserExternalConnectionCredentials {
+      return {
+        accessToken: 'old-access-token',
+        refreshToken: 'stored-refresh-token',
+        issuedAt: new Date().toISOString(),
+        extra: { accountsServer, apiDomain: 'https://www.zohoapis.com', location: 'eu' }
+      };
+    }
+
+    it('should refresh with the stored refresh token', async () => {
+      const stubbed = stubRefresh();
+      const result = await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_US_API_URL) });
+
+      expect(result.accessToken).toBe('refreshed-access-token');
+      expect(stubbed.seenRefreshTokens).toEqual(['stored-refresh-token']);
+    });
+
+    it('should refresh against the datacenter recorded on the credentials', async () => {
+      // a refresh token issued by one Zoho datacenter is not honored by another
+      const stubbed = stubRefresh();
+      await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_EU_API_URL) });
+
+      expect(stubbed.seenApiUrls).toEqual([ZOHO_ACCOUNTS_EU_API_URL]);
+    });
+
+    it('should IGNORE a stored accounts host that is not an allowlisted Zoho host', async () => {
+      // the value originally arrived on a browser redirect and is the POST target the client secret
+      // travels to, so an unrecognized one must never be honored
+      const stubbed = stubRefresh();
+      await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials('https://evil.example.com') });
+
+      expect(stubbed.seenApiUrls).toEqual([ZOHO_ACCOUNTS_US_API_URL]);
+    });
+
+    it('should fall back to the configured host when no accounts host was recorded', async () => {
+      const stubbed = stubRefresh();
+      await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(null) });
+
+      expect(stubbed.seenApiUrls).toEqual([ZOHO_ACCOUNTS_US_API_URL]);
+    });
+
+    it('should carry the stored location forward rather than dropping it', async () => {
+      // location only ever arrives on the callback, so an undefined here would let the framework's
+      // merge see a key it could erase
+      stubRefresh();
+      const result = await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_EU_API_URL) });
+
+      expect(result.extra?.location).toBe('eu');
+      expect(result.extra?.accountsServer).toBe(ZOHO_ACCOUNTS_EU_API_URL);
+    });
+
+    it('should take the api domain from the refresh response', async () => {
+      stubRefresh({ ...ACCESS_TOKEN_RESPONSE, api_domain: 'https://www.zohoapis.eu' });
+      const result = await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_EU_API_URL) });
+
+      expect(result.extra?.apiDomain).toBe('https://www.zohoapis.eu');
+    });
+
+    it('should throw when the stored credentials carry no refresh token', async () => {
+      stubRefresh();
+      await expect(service.refreshCredentials({ uid: TEST_UID, credentials: { accessToken: 'old', issuedAt: new Date().toISOString() } })).rejects.toThrow('no refresh token');
     });
   });
 });

@@ -3,6 +3,7 @@ import { type Request } from 'express';
 import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { cachedGetter, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
+import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.server';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthProviderError, userExternalConnectionErrorCodeForOAuthProviderError } from './userexternalconnection.oauth.error';
@@ -89,6 +90,21 @@ export interface UserExternalConnectionOAuthRetainRefreshTokenInput {
   readonly credentials: UserExternalConnectionCredentials;
 }
 
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.refreshCredentials}.
+ *
+ * Carries no `providerType` — the service already knows its own, and taking one would create a
+ * parameter that could disagree with it.
+ */
+export interface UserExternalConnectionOAuthRefreshCredentialsInput {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The credentials currently stored for this provider, carrying the refresh token and any
+   * provider-specific `extra` the exchange needs.
+   */
+  readonly credentials: UserExternalConnectionCredentials;
+}
+
 export interface UserExternalConnectionOAuthCallbackResult {
   readonly success: boolean;
   /**
@@ -119,13 +135,21 @@ export function userExternalConnectionOAuthStateForRequest(request: Request): Ma
  * credentials, recording the failure code, and choosing the redirect. A provider adapter extends
  * this and supplies only the OAuth mechanics its service actually differs on.
  *
- * Subclasses expose `config`, `stateCoder`, and `userExternalConnectionActions` as injected
- * constructor properties.
+ * Subclasses expose `config`, `stateCoder`, `userExternalConnectionActions`, and
+ * `userExternalConnectionAccessor` as injected constructor properties.
  */
 export abstract class AbstractUserExternalConnectionOAuthService {
   abstract readonly config: UserExternalConnectionOAuthServiceConfig;
   abstract readonly stateCoder: UserExternalConnectionStateCoder;
   abstract readonly userExternalConnectionActions: UserExternalConnectionServerActions;
+  /**
+   * The read half of the pair.
+   *
+   * Deliberately the accessor rather than `UserExternalConnectionReader`: the reader can refresh, and
+   * it finds its refresh path through the registry these services are registered in — so depending on
+   * it here would be a cycle. This service needs only the raw read.
+   */
+  abstract readonly userExternalConnectionAccessor: UserExternalConnectionAccessor;
 
   // lazy, because `providerType` reads a subclass constructor property that is not assigned yet
   // while this class's own fields initialize
@@ -175,6 +199,24 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   protected abstract credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials>;
 
   /**
+   * PROVIDER (optional): exchanges the stored refresh token for new credentials.
+   *
+   * Optional because not every provider has a refresh path worth wiring — and because a provider that
+   * does not implement this stays correct rather than silently broken: `UserExternalConnectionReader`
+   * treats its absence as "cannot renew" and makes the user reconnect.
+   *
+   * PUBLIC, unlike the two abstract members above, because the reader reaches it through the provider
+   * registry rather than through a subclass.
+   *
+   * Implementations return what the provider issued and do NOT need to carry forward values the
+   * response omitted — the reader merges every result over the stored credentials.
+   *
+   * @param input - The acting user and the credentials currently stored.
+   * @returns The refreshed credentials.
+   */
+  refreshCredentials?(input: UserExternalConnectionOAuthRefreshCredentialsInput): Promise<UserExternalConnectionCredentials>;
+
+  /**
    * Carries the stored refresh token forward when a provider's exchange returned none.
    *
    * The paired write replaces a provider's credentials wholesale, so persisting an exchange that
@@ -196,7 +238,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
     if (!credentials.refreshToken) {
       const providerType = this.providerType;
-      const previous = await this.userExternalConnectionActions.readUserExternalConnectionCredentials({ uid, providerType });
+      const previous = await this.userExternalConnectionAccessor.readUserExternalConnectionCredentials({ uid, providerType });
 
       if (previous?.refreshToken) {
         this.logger.log(`The "${providerType}" exchange returned no refresh token; retained the stored one.`);

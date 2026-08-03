@@ -133,8 +133,8 @@ export function exchangeAuthorizationCode(context: DiscordOAuthContext): (input:
  * rather than assuming the sent one stays valid. That is correct for rotating and non-rotating
  * providers alike.
  *
- * NOTE: nothing calls this yet — the external-connection framework has no refresh path for any
- * provider. It ships because it is the other half of the token endpoint.
+ * Reached through `DiscordUserExternalConnectionOAuthService.refreshCredentials`, which the external
+ * connection reader dispatches to when a user's stored Discord credentials are near expiration.
  *
  * @param context - The Discord OAuth context providing the authenticated fetch.
  * @returns Refreshes an access token using the given refresh token.

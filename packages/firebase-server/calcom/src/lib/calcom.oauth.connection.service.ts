@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CALCOM_OAUTH_SCOPE_DELIMITER, type CalcomAccessToken, type CalcomOAuthAuthorizeUrlFactory, calcomOAuthAuthorizeUrlFactory } from '@dereekb/calcom';
+import { CALCOM_OAUTH_SCOPE_DELIMITER, type CalcomAccessToken, type CalcomOAuthAuthorizeUrlFactory, calcomAccessTokenFromTokenResponse, calcomOAuthAuthorizeUrlFactory, refreshAccessToken } from '@dereekb/calcom';
 import { CalcomOAuthApi } from '@dereekb/calcom/nestjs';
-import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
+import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
 import { type WebsiteUrl } from '@dereekb/util';
 import { CalcomUserExternalConnectionOAuthServiceConfig } from './calcom.oauth.connection.config';
 
@@ -43,6 +43,7 @@ export class CalcomUserExternalConnectionOAuthService extends AbstractUserExtern
     @Inject(CalcomUserExternalConnectionOAuthServiceConfig) readonly config: CalcomUserExternalConnectionOAuthServiceConfig,
     @Inject(UserExternalConnectionStateCoder) readonly stateCoder: UserExternalConnectionStateCoder,
     @Inject(UserExternalConnectionServerActions) readonly userExternalConnectionActions: UserExternalConnectionServerActions,
+    @Inject(UserExternalConnectionAccessor) readonly userExternalConnectionAccessor: UserExternalConnectionAccessor,
     @Inject(CalcomOAuthApi) readonly oauthApi: CalcomOAuthApi
   ) {
     super();
@@ -73,5 +74,19 @@ export class CalcomUserExternalConnectionOAuthService extends AbstractUserExtern
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {
     const accessToken = await this.oauthApi.exchangeAuthorizationCodeToAccessToken({ code: input.code, redirectUri: input.redirectUri });
     return calcomUserExternalConnectionCredentials(accessToken);
+  }
+
+  override async refreshCredentials(input: UserExternalConnectionOAuthRefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
+    const { refreshToken } = input.credentials;
+
+    if (!refreshToken) {
+      throw new Error('CalcomUserExternalConnectionOAuthService.refreshCredentials: the stored credentials carry no refresh token.');
+    }
+
+    // the low-level exchange rather than `oauthApi.userAccessToken()`: that path layers an in-memory
+    // tier and a token cache on top, and here the connection pair IS the cache. Going through it would
+    // mean two stores deciding independently which token is current.
+    const response = await refreshAccessToken(this.oauthApi.oauthContext)({ refreshToken });
+    return calcomUserExternalConnectionCredentials(calcomAccessTokenFromTokenResponse(response));
   }
 }

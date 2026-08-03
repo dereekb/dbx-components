@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
+import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.server';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { userExternalConnectionStateCoder, type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthServiceConfig } from './userexternalconnection.oauth.config';
@@ -38,6 +39,7 @@ interface CapturedError {
 
 interface CapturingServerActions {
   readonly actions: UserExternalConnectionServerActions;
+  readonly accessor: UserExternalConnectionAccessor;
   readonly connects: CapturedConnect[];
   readonly errors: CapturedError[];
   readonly reads: { readonly uid: string; readonly providerType: string }[];
@@ -45,20 +47,21 @@ interface CapturingServerActions {
 
 interface CapturingServerActionsConfig {
   /**
-   * The credentials `readUserExternalConnectionCredentials` resolves with.
+   * The credentials the accessor's credentials read resolves with.
    */
   readonly stored?: Maybe<UserExternalConnectionCredentials>;
   /**
-   * When true, `readUserExternalConnectionCredentials` rejects instead of resolving.
+   * When true, the accessor's credentials read rejects instead of resolving.
    */
   readonly readFails?: boolean;
 }
 
 /**
- * Stub actions capturing every write, standing in for the real Firestore-backed pair.
+ * Stub actions and accessor capturing every write and read, standing in for the real Firestore-backed
+ * pair.
  *
  * @param config - What the credentials read should resolve with, if anything.
- * @returns The stub actions plus the captured calls.
+ * @returns The stub actions and accessor plus the captured calls.
  */
 function capturingServerActions(config: CapturingServerActionsConfig = {}): CapturingServerActions {
   const connects: CapturedConnect[] = [];
@@ -71,7 +74,10 @@ function capturingServerActions(config: CapturingServerActionsConfig = {}): Capt
     },
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
-    },
+    }
+  } as unknown as UserExternalConnectionServerActions;
+
+  const accessor = {
     readUserExternalConnectionCredentials: async (params: { uid: string; providerType: string }) => {
       reads.push(params);
 
@@ -81,9 +87,9 @@ function capturingServerActions(config: CapturingServerActionsConfig = {}): Capt
 
       return config.stored;
     }
-  } as unknown as UserExternalConnectionServerActions;
+  } as unknown as UserExternalConnectionAccessor;
 
-  return { actions, connects, errors, reads };
+  return { actions, accessor, connects, errors, reads };
 }
 
 /**
@@ -99,7 +105,8 @@ class TestUserExternalConnectionOAuthService extends AbstractUserExternalConnect
   constructor(
     readonly config: UserExternalConnectionOAuthServiceConfig,
     readonly stateCoder: UserExternalConnectionStateCoder,
-    readonly userExternalConnectionActions: UserExternalConnectionServerActions
+    readonly userExternalConnectionActions: UserExternalConnectionServerActions,
+    readonly userExternalConnectionAccessor: UserExternalConnectionAccessor
   ) {
     super();
   }
@@ -122,7 +129,7 @@ describe('AbstractUserExternalConnectionOAuthService', () => {
   }
 
   function makeService(captured: CapturingServerActions): TestUserExternalConnectionOAuthService {
-    return new TestUserExternalConnectionOAuthService(TEST_CONFIG, stateCoder, captured.actions);
+    return new TestUserExternalConnectionOAuthService(TEST_CONFIG, stateCoder, captured.actions, captured.accessor);
   }
 
   describe('handleCallback() refresh token retention', () => {

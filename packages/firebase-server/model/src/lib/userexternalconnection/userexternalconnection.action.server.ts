@@ -85,21 +85,17 @@ export interface UserExternalConnectionDeleteAllParams {
   readonly uid: FirebaseAuthUserId;
 }
 
-/**
- * Parameters for reading a provider's stored credentials.
- */
-export interface UserExternalConnectionReadCredentialsParams {
-  readonly uid: FirebaseAuthUserId;
-  readonly providerType: UserExternalConnectionProviderType;
-}
-
 // MARK: Actions
 /**
  * Server-only actions for the UserExternalConnection document pair.
  *
- * This is the ENTIRE write surface. The two collections are never exposed for independent mutation,
- * so there is no way for a caller to write one document without the other — and therefore no sync,
- * reconciliation, or drift-detection process to maintain.
+ * This is the ENTIRE write surface, and ONLY the write surface. The two collections are never exposed
+ * for independent mutation, so there is no way for a caller to write one document without the other —
+ * and therefore no sync, reconciliation, or drift-detection process to maintain.
+ *
+ * Reading is `UserExternalConnectionAccessor` (raw) or `UserExternalConnectionReader` (the one a
+ * consumer wants). A read used to live here too, which meant every path that only needed to look at a
+ * user's credentials had to hold the write surface to do it.
  */
 export abstract class UserExternalConnectionServerActions {
   abstract createUserExternalConnection(params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument>;
@@ -108,7 +104,6 @@ export abstract class UserExternalConnectionServerActions {
   abstract markUserExternalConnectionError(params: UserExternalConnectionMarkErrorParams): Promise<UserExternalConnectionDocument>;
   abstract disconnectUserExternalConnection(params: UserExternalConnectionDisconnectParams): Promise<UserExternalConnectionDocument>;
   abstract deleteAllUserExternalConnectionsForUser(params: UserExternalConnectionDeleteAllParams): Promise<void>;
-  abstract readUserExternalConnectionCredentials(params: UserExternalConnectionReadCredentialsParams): Promise<Maybe<UserExternalConnectionCredentials>>;
 }
 
 /**
@@ -126,8 +121,7 @@ export function userExternalConnectionServerActions(context: UserExternalConnect
     refreshUserExternalConnectionCredentials: (params) => writePair({ ...params, outcome: 'connected' }),
     markUserExternalConnectionError: (params) => writePair({ ...params, outcome: 'error' }),
     disconnectUserExternalConnection: (params) => writePair({ ...params, outcome: 'disconnected' }),
-    deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context),
-    readUserExternalConnectionCredentials: readUserExternalConnectionCredentialsFactory(context)
+    deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context)
   };
 }
 
@@ -269,25 +263,5 @@ export function deleteAllUserExternalConnectionsForUserFactory(context: UserExte
       await publicDocument.accessor.delete();
       await privateDocument.accessor.delete();
     });
-  };
-}
-
-/**
- * Creates a function that reads a provider's stored credentials in plaintext.
- *
- * Server paths that need credentials load both documents; the client can only ever load the public
- * one. The pairing is a WRITE invariant — reads are asymmetric by design.
- *
- * @param context - The context carrying both halves of the pair.
- * @returns A function that returns the decrypted credentials for a provider, if any.
- */
-export function readUserExternalConnectionCredentialsFactory(context: UserExternalConnectionServerActionsContext) {
-  const { userExternalConnectionPrivateCollection } = context;
-
-  return async (params: UserExternalConnectionReadCredentialsParams): Promise<Maybe<UserExternalConnectionCredentials>> => {
-    const { uid, providerType } = params;
-    const document = userExternalConnectionPrivateCollection.documentAccessor().loadDocumentForId(uid);
-    const data = await document.snapshotData();
-    return data?.cr?.[providerType];
   };
 }

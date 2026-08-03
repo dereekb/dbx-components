@@ -5,7 +5,7 @@ import { type CalcomAccessToken, isCalcomOAuthScope } from '@dereekb/calcom';
 import { CalcomOAuthAccessTokenCacheService, CalcomOAuthApi, type CalcomOAuthServiceConfig, appCalcomOAuthModuleMetadata, memoryCalcomOAuthAccessTokenCacheService } from '@dereekb/calcom/nestjs';
 import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, DEFAULT_CALCOM_OAUTH_SCOPES } from './calcom.oauth.connection.config';
 import { CalcomUserExternalConnectionOAuthController } from './calcom.oauth.connection.controller';
 import { appCalcomUserExternalConnectionOAuthModuleMetadata } from './calcom.oauth.connection.module';
@@ -64,12 +64,19 @@ function capturingServerActions() {
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
     },
-    // Cal.com always returns a rotated refresh token, so the framework's retention read is never
-    // reached here — stubbed anyway so this stays a faithful stand-in for the real actions.
-    readUserExternalConnectionCredentials: async () => undefined
+    refreshUserExternalConnectionCredentials: async (params: CapturedConnect) => {
+      connects.push(params);
+    }
   } as unknown as UserExternalConnectionServerActions;
 
-  return { actions, connects, errors };
+  // Cal.com always returns a rotated refresh token, so the framework's retention read is never
+  // reached here — stubbed anyway so this stays a faithful stand-in for the real accessor.
+  const accessor = {
+    readUserExternalConnectionCredentials: async () => undefined,
+    readUserExternalConnectionForProvider: async () => ({ uid: TEST_UID, providerType: CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, entry: undefined, credentials: undefined })
+  } as unknown as UserExternalConnectionAccessor;
+
+  return { actions, accessor, connects, errors };
 }
 
 /**
@@ -106,7 +113,8 @@ describe('CalcomUserExternalConnectionOAuthService', () => {
       { provide: CalcomOAuthAccessTokenCacheService, useValue: memoryCalcomOAuthAccessTokenCacheService() },
       { provide: FirebaseServerEnvService, useValue: makeEnvService() },
       { provide: UserExternalConnectionStateCoder, useValue: stateCoder },
-      { provide: UserExternalConnectionServerActions, useValue: captured.actions }
+      { provide: UserExternalConnectionServerActions, useValue: captured.actions },
+      { provide: UserExternalConnectionAccessor, useValue: captured.accessor }
     ];
 
     const rootModule: DynamicModule = {

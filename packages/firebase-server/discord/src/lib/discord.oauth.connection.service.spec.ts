@@ -6,7 +6,7 @@ import { isDiscordOAuthScope, type DiscordAccessToken, type DiscordOAuthCurrentU
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { DEFAULT_DISCORD_OAUTH_SCOPES, DISCORD_CLIENT_ID_CONFIG_KEY, DISCORD_CLIENT_SECRET_CONFIG_KEY, DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, discordUserExternalConnectionOAuthServiceConfigFactory } from './discord.oauth.connection.config';
 import { DiscordUserExternalConnectionOAuthController } from './discord.oauth.connection.controller';
 import { appDiscordUserExternalConnectionOAuthModuleMetadata } from './discord.oauth.connection.module';
@@ -94,10 +94,17 @@ function capturingServerActions() {
     },
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
+    },
+    refreshUserExternalConnectionCredentials: async (params: CapturedConnect) => {
+      connects.push(params);
     }
   } as unknown as UserExternalConnectionServerActions;
 
-  return { actions, connects, errors };
+  const accessor = {
+    readUserExternalConnectionCredentials: async () => undefined
+  } as unknown as UserExternalConnectionAccessor;
+
+  return { actions, accessor, connects, errors };
 }
 
 /**
@@ -159,7 +166,8 @@ describe('DiscordUserExternalConnectionOAuthService', () => {
     const providers: Provider[] = [
       { provide: FirebaseServerEnvService, useValue: makeEnvService() },
       { provide: UserExternalConnectionStateCoder, useValue: stateCoder },
-      { provide: UserExternalConnectionServerActions, useValue: captured.actions }
+      { provide: UserExternalConnectionServerActions, useValue: captured.actions },
+      { provide: UserExternalConnectionAccessor, useValue: captured.accessor }
     ];
 
     const rootModule: DynamicModule = {
@@ -381,6 +389,31 @@ describe('DiscordUserExternalConnectionOAuthService', () => {
       expect(captured.connects[0].credentials.accessToken).toBe('access-token');
       expect(captured.connects[0].credentials.externalAccountId).toBeUndefined();
       expect(captured.connects[0].credentials.label).toBeUndefined();
+    });
+  });
+
+  describe('refreshCredentials()', () => {
+    it('should exchange the stored refresh token at the token endpoint', async () => {
+      const result = await service.refreshCredentials({ uid: TEST_UID, credentials: { accessToken: 'old-access-token', refreshToken: 'stored-refresh-token', issuedAt: new Date().toISOString() } });
+
+      expect(result.accessToken).toBe('access-token');
+
+      const tokenRequest = fetches.requests.find((x) => !new URL(x.url).pathname.endsWith('/users/@me'));
+      const body = await (tokenRequest as Request).text();
+
+      expect(body).toContain('grant_type=refresh_token');
+      expect(body).toContain('refresh_token=stored-refresh-token');
+    });
+
+    it('should not spend a request re-reading the identity', async () => {
+      // the label was resolved on connect and the framework's merge carries it forward
+      await service.refreshCredentials({ uid: TEST_UID, credentials: { accessToken: 'old-access-token', refreshToken: 'stored-refresh-token', issuedAt: new Date().toISOString() } });
+
+      expect(fetches.requests.filter((x) => new URL(x.url).pathname.endsWith('/users/@me'))).toHaveLength(0);
+    });
+
+    it('should throw when the stored credentials carry no refresh token', async () => {
+      await expect(service.refreshCredentials({ uid: TEST_UID, credentials: { accessToken: 'old-access-token', issuedAt: new Date().toISOString() } })).rejects.toThrow('no refresh token');
     });
   });
 });
