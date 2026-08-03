@@ -2,9 +2,9 @@ import { Logger } from '@nestjs/common';
 import { MS_IN_MINUTE, type Maybe, type Milliseconds, expirationDetails } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
 import { type FirebaseAuthUserId, type UserExternalConnectionEntry, type UserExternalConnectionErrorCode, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { type UserExternalConnectionAccessor, type UserExternalConnectionForProvider, type UserExternalConnectionReadParams } from './userexternalconnection.accessor.server';
+import { type UserExternalConnectionAccessor, type UserExternalConnectionForProvider, type UserExternalConnectionReadParams } from './userexternalconnection.accessor.service';
 import { type UserExternalConnectionCredentials, mergeRefreshedUserExternalConnectionCredentials } from './userexternalconnection.private';
-import { type UserExternalConnectionCredentialsRefresher } from './userexternalconnection.refresh.server';
+import { type UserExternalConnectionCredentialsRefresher } from './userexternalconnection.refresh.service';
 import { type UserExternalConnectionServerActions } from './userexternalconnection.action.server';
 import { userExternalConnectionCredentialsExpiredError, userExternalConnectionProviderNotConnectedError } from './userexternalconnection.error';
 

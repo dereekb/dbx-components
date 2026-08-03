@@ -6,8 +6,8 @@ import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerEnvService, FirebaseSer
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
 import { UserExternalConnectionServerActions, type UserExternalConnectionServerActionsContext, userExternalConnectionServerActions } from './userexternalconnection.action.server';
-import { UserExternalConnectionAccessor, userExternalConnectionAccessor } from './userexternalconnection.accessor.server';
-import { UserExternalConnectionReader, userExternalConnectionReader } from './userexternalconnection.reader.server';
+import { UserExternalConnectionAccessor, userExternalConnectionAccessor } from './userexternalconnection.accessor.service';
+import { UserExternalConnectionReader, userExternalConnectionReader } from './userexternalconnection.reader.service';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, userExternalConnectionOAuthRegistryCredentialsRefresher, userExternalConnectionStateCoderFactory } from './oauth';
 
 // MARK: Environment Variable Keys

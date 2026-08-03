@@ -3,7 +3,7 @@ import { type Request } from 'express';
 import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { cachedGetter, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
-import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.server';
+import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthProviderError, userExternalConnectionErrorCodeForOAuthProviderError } from './userexternalconnection.oauth.error';

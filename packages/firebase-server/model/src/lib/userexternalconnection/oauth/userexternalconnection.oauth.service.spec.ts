@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
-import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.server';
+import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { userExternalConnectionStateCoder, type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthServiceConfig } from './userexternalconnection.oauth.config';

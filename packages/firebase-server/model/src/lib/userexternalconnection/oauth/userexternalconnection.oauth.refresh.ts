@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
-import { type UserExternalConnectionCredentialsRefresher, type UserExternalConnectionRefreshCredentialsInput } from '../userexternalconnection.refresh.server';
+import { type UserExternalConnectionCredentialsRefresher, type UserExternalConnectionRefreshCredentialsInput } from '../userexternalconnection.refresh.service';
 import { type UserExternalConnectionOAuthProviderRegistry } from './userexternalconnection.oauth.registry';
 
 /**
