@@ -1,5 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
-import { type DisconnectUserExternalConnectionParams, type UserExternalConnection, onCallUpdateModelParams, userExternalConnectionIdentity } from '@dereekb/firebase';
+import { type DisconnectUserExternalConnectionParams, type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnection, type UserExternalConnectionAuthorizeStateResult, onCallReadModelParams, onCallUpdateModelParams, userExternalConnectionIdentity } from '@dereekb/firebase';
+import { DemoApiCalcomOAuthStateCoder } from '../../api/calcom';
 import { type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
@@ -209,6 +210,29 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(Object.keys(publicData?.e ?? {})).not.toContain(CALCOM);
           expect(publicData?.c.length).toBe(0);
           expect(Object.keys(privateData?.cr ?? {})).not.toContain(CALCOM);
+        });
+      });
+
+      describe('read:authorizeState callable', () => {
+        it('should mint a state that resolves back to the calling user', async () => {
+          const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: CALCOM };
+          const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
+
+          expect(result.state).toBeDefined();
+          // only the server can open it, so verify through the coder rather than by inspection
+          expect(f.nest.get(DemoApiCalcomOAuthStateCoder).verifyState(result.state)?.uid).toBe(u.uid);
+        });
+
+        it('should not embed the uid in a readable form', async () => {
+          const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: CALCOM };
+          const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
+
+          expect(result.state).not.toContain(u.uid);
+        });
+
+        it('should reject a provider with no authorize flow configured', async () => {
+          const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: ZOOM };
+          await expect(u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))).rejects.toThrow();
         });
       });
     });

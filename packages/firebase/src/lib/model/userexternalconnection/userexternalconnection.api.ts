@@ -28,6 +28,39 @@ export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferr
   })
 ) as Type<DisconnectUserExternalConnectionParams>;
 
+// MARK: Read
+/**
+ * Parameters for beginning an OAuth connect handoff for a provider.
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadUserExternalConnectionAuthorizeStateParams extends InferredTargetModelParams {
+  /**
+   * The provider type to begin connecting to.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+}
+
+export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    providerType: 'string'
+  })
+) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
+
+/**
+ * The opaque, short-lived `state` to carry through a provider's OAuth handoff.
+ *
+ * Minting it requires an authenticated call, because a top-level navigation to the provider's
+ * authorize endpoint carries no credentials and the server must already know who is connecting. The
+ * client's only job is to pass this through — it must never append its ID token to the redirect.
+ */
+export interface UserExternalConnectionAuthorizeStateResult {
+  /**
+   * The state to send on the authorize request.
+   */
+  readonly state: string;
+}
+
 // MARK: Functions
 /**
  * Custom (non-CRUD) function type map for UserExternalConnection. There are none.
@@ -41,6 +74,15 @@ export const USER_EXTERNAL_CONNECTION_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunction
  */
 export type UserExternalConnectionModelCrudFunctionsConfig = {
   readonly userExternalConnection: {
+    read: {
+      /**
+       * Mints the short-lived `state` that begins an OAuth connect handoff for a provider.
+       *
+       * A read rather than an update: it changes nothing, it just proves who is asking. The app
+       * decides how the state is signed and how long it lives.
+       */
+      authorizeState: [ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult];
+    };
     update: {
       /**
        * Disconnects the current user from the given provider.
@@ -54,7 +96,7 @@ export type UserExternalConnectionModelCrudFunctionsConfig = {
 };
 
 export const USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<UserExternalConnectionModelCrudFunctionsConfig, UserExternalConnectionTypes> = {
-  userExternalConnection: ['update:disconnect']
+  userExternalConnection: ['read:authorizeState', 'update:disconnect']
 };
 
 /**
@@ -64,6 +106,9 @@ export const USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebase
  */
 export abstract class UserExternalConnectionFunctions implements ModelFirebaseFunctionMap<UserExternalConnectionFunctionTypeMap, UserExternalConnectionModelCrudFunctionsConfig> {
   abstract userExternalConnection: {
+    readUserExternalConnection: {
+      authorizeState: ModelFirebaseCrudFunction<ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult>;
+    };
     updateUserExternalConnection: {
       disconnect: ModelFirebaseCrudFunction<DisconnectUserExternalConnectionParams>;
     };

@@ -720,6 +720,44 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     archetypes: ['system-state-singleton']
   },
   {
+    name: 'UserExternalConnection',
+    identityConst: 'userExternalConnectionIdentity',
+    modelType: 'userExternalConnection',
+    collectionPrefix: 'uec',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.ts',
+    fields: [
+      {
+        name: 'uid',
+        longName: 'uid',
+        converter: 'firestoreUID()',
+        optional: false
+      },
+      {
+        name: 'e',
+        longName: 'entries',
+        converter: 'firestoreObjectMap<UserExternalConnectionEntry',
+        tsType: 'UserExternalConnectionEntryMap',
+        optional: false,
+        description: 'Per-provider connection state, keyed by provider type.'
+      },
+      {
+        name: 'objectField',
+        longName: 'objectField',
+        converter: '{ fields: userExternalConnectionEntryFields } }), c: firestoreEnumArray<UserExternalConnectionProviderType>(), uat: firestoreDate({ saveDefaultAsNow: true })',
+        optional: false
+      }
+    ],
+    enums: [],
+    detectionHints: ['e', 'objectField'],
+    description: "The client-readable half of a user's third-party OAuth connection state.",
+    modelGroup: 'UserExternalConnection',
+    collectionKind: 'root',
+    userKeyedById: true,
+    hasUserUidField: true,
+    archetypes: ['user-keyed-entity-root']
+  },
+  {
     name: 'Notification',
     identityConst: 'notificationIdentity',
     modelType: 'notification',
@@ -1100,5 +1138,13 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     description: 'Abstract base providing access to the SystemState Firestore collection.',
     modelNames: ['SystemState']
+  },
+  {
+    name: 'UserExternalConnection',
+    containerName: 'UserExternalConnectionFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.ts',
+    description: 'Provides access to the {@link UserExternalConnection} collection.',
+    modelNames: ['UserExternalConnection']
   }
 ];

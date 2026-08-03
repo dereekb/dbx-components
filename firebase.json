@@ -32,6 +32,10 @@
         "function": "api"
       },
       {
+        "source": "/oauth/**",
+        "function": "api"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

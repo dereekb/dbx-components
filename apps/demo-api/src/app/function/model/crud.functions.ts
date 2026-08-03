@@ -25,6 +25,7 @@ import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidc
 import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
+import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -62,6 +63,9 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive
+  }),
+  userExternalConnection: onCallSpecifierHandler({
+    authorizeState: userExternalConnectionReadAuthorizeState
   })
 };
 

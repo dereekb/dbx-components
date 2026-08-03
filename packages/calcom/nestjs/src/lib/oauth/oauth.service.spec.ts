@@ -1,6 +1,6 @@
 import { addSeconds } from 'date-fns';
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
-import { CalcomOAuthAccessTokenCacheService, fileCalcomOAuthAccessTokenCacheService, memoryCalcomOAuthAccessTokenCacheService, mergeCalcomOAuthAccessTokenCacheServices } from './oauth.service';
+import { CalcomOAuthAccessTokenCacheService, calcomAccessTokenCacheFileKey, fileCalcomOAuthAccessTokenCacheService, memoryCalcomOAuthAccessTokenCacheService, mergeCalcomOAuthAccessTokenCacheServices } from './oauth.service';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type CalcomAccessToken } from '@dereekb/calcom';
 import { appCalcomOAuthModuleMetadata } from './oauth.module';
@@ -185,6 +185,109 @@ describe('mergeCalcomOAuthAccessTokenCacheServices()', () => {
       // this one should return the result from the memory cache
       const resultFromMemory = await cache.loadCachedToken();
       expect(resultFromMemory).toBe(DUMMY_TOKEN_RESULT);
+    });
+  });
+
+  describe('cacheForKey', () => {
+    it('should be provided when at least one merged service supports it', () => {
+      const instance = mergeCalcomOAuthAccessTokenCacheServices([memoryCalcomOAuthAccessTokenCacheService()]);
+      expect(instance.cacheForKey).toBeDefined();
+    });
+
+    it('should be undefined when no merged service supports it', () => {
+      const instance = mergeCalcomOAuthAccessTokenCacheServices([
+        {
+          loadCalcomAccessTokenCache: () => ({
+            loadCachedToken: async () => undefined,
+            updateCachedToken: async () => undefined
+          })
+        }
+      ]);
+
+      expect(instance.cacheForKey).toBeUndefined();
+    });
+
+    it('should read back a token written under the same key', async () => {
+      const instance = mergeCalcomOAuthAccessTokenCacheServices([memoryCalcomOAuthAccessTokenCacheService()]);
+      const token: CalcomAccessToken = { accessToken: 'a', refreshToken: 'r', expiresIn: 3600, expiresAt: addSeconds(new Date(), 3600), scope: '' };
+
+      await instance.cacheForKey!(STABLE_CACHE_KEY).updateCachedToken(token);
+
+      expect(await instance.cacheForKey!(STABLE_CACHE_KEY).loadCachedToken()).toBe(token);
+    });
+  });
+});
+
+// MARK: Keyed caches
+const STABLE_CACHE_KEY = 'profile-id-1234';
+
+/**
+ * A token and the token it rotated into, as Cal.com would return across two refreshes.
+ */
+function rotatingTokens(): { readonly first: CalcomAccessToken; readonly rotated: CalcomAccessToken } {
+  const expiresAt = addSeconds(new Date(), 3600);
+
+  return {
+    first: { accessToken: 'access-1', refreshToken: 'refresh-1', expiresIn: 3600, expiresAt, scope: '' },
+    rotated: { accessToken: 'access-2', refreshToken: 'refresh-2', expiresIn: 3600, expiresAt, scope: '' }
+  };
+}
+
+describe('calcomAccessTokenCacheFileKey()', () => {
+  it('should leave an already filesystem-safe key unchanged', () => {
+    expect(calcomAccessTokenCacheFileKey('abc123_-XYZ')).toBe('abc123_-XYZ');
+  });
+
+  it('should replace unsafe characters and disambiguate with a hash', () => {
+    const result = calcomAccessTokenCacheFileKey('a/b');
+
+    expect(result.includes('/')).toBe(false);
+    expect(result.startsWith('a_b-')).toBe(true);
+  });
+
+  it('should not collapse two different unsafe keys onto the same file key', () => {
+    expect(calcomAccessTokenCacheFileKey('a/b')).not.toBe(calcomAccessTokenCacheFileKey('a:b'));
+  });
+});
+
+describe('memoryCalcomOAuthAccessTokenCacheService()', () => {
+  describe('cacheForKey()', () => {
+    it('should keep the same entry after the refresh token rotates', async () => {
+      const service = memoryCalcomOAuthAccessTokenCacheService();
+      const { first, rotated } = rotatingTokens();
+      const cache = service.cacheForKey!(STABLE_CACHE_KEY);
+
+      await cache.updateCachedToken(first);
+      await cache.updateCachedToken(rotated);
+
+      // the key never moved, so the rotated token is found where the original was stored
+      expect(await service.cacheForKey!(STABLE_CACHE_KEY).loadCachedToken()).toBe(rotated);
+    });
+
+    it('should isolate entries stored under different keys', async () => {
+      const service = memoryCalcomOAuthAccessTokenCacheService();
+      const { first, rotated } = rotatingTokens();
+
+      await service.cacheForKey!('key-a').updateCachedToken(first);
+      await service.cacheForKey!('key-b').updateCachedToken(rotated);
+
+      expect(await service.cacheForKey!('key-a').loadCachedToken()).toBe(first);
+      expect(await service.cacheForKey!('key-b').loadCachedToken()).toBe(rotated);
+    });
+  });
+
+  describe('cacheForRefreshToken()', () => {
+    it('should lose the entry once the rotated token is used as the key (F4)', async () => {
+      const service = memoryCalcomOAuthAccessTokenCacheService();
+      const { first, rotated } = rotatingTokens();
+
+      // stored under the ORIGINAL refresh token, as a first connect would
+      await service.cacheForRefreshToken!(first.refreshToken).updateCachedToken(rotated);
+
+      // a later boot only has the ROTATED token to look up with, which is a different key
+      expect(await service.cacheForRefreshToken!(rotated.refreshToken).loadCachedToken()).toBeUndefined();
+      // the entry is still there under the old key — orphaned
+      expect(await service.cacheForRefreshToken!(first.refreshToken).loadCachedToken()).toBe(rotated);
     });
   });
 });

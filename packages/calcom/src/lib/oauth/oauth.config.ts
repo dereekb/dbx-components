@@ -1,12 +1,22 @@
 import { type FactoryWithInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type CalcomApiKey, type CalcomAuthClientIdAndSecretPair, type CalcomRefreshToken } from '../calcom.config';
-import { type CalcomAccessTokenCache, type CalcomAccessTokenFactory } from './oauth';
+import { type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomAccessTokenFactory } from './oauth';
 
 /**
- * The Cal.com OAuth token endpoint URL.
+ * The Cal.com OAuth API base URL.
+ *
+ * Endpoint paths are appended to this base, so it intentionally carries no endpoint segment of
+ * its own. This is the single place the OAuth host and prefix are encoded.
  */
-export const CALCOM_OAUTH_TOKEN_URL = 'https://api.cal.com/v2/oauth/token';
+export const CALCOM_OAUTH_API_URL = 'https://api.cal.com/v2/auth/oauth2';
+
+export type CalcomOAuthApiUrl = typeof CALCOM_OAUTH_API_URL;
+
+/**
+ * The Cal.com OAuth token endpoint path, relative to {@link CALCOM_OAUTH_API_URL}.
+ */
+export const CALCOM_OAUTH_TOKEN_PATH = '/token';
 
 /**
  * The Cal.com OAuth authorize URL.
@@ -41,6 +51,14 @@ export type CalcomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, CalcomOA
 export type CalcomOAuthMakeUserAccessTokenFactoryInput = {
   readonly refreshToken: CalcomRefreshToken;
   readonly userAccessTokenCache?: Maybe<CalcomAccessTokenCache>;
+  /**
+   * Optional stable, caller-owned key identifying whose token this is.
+   *
+   * Used to memoize the produced factory so its in-memory tier is shared across calls. Prefer an
+   * id the caller already owns (a user/profile id) over anything derived from the refresh token,
+   * which Cal.com rotates on every use.
+   */
+  readonly key?: Maybe<CalcomAccessTokenCacheKey>;
 };
 
 export type CalcomOAuthMakeUserAccessTokenFactory = FactoryWithRequiredInput<CalcomAccessTokenFactory, CalcomOAuthMakeUserAccessTokenFactoryInput>;
@@ -59,3 +77,10 @@ export interface CalcomOAuthContext {
 export interface CalcomOAuthContextRef {
   readonly oauthContext: CalcomOAuthContext;
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use {@link CALCOM_OAUTH_API_URL} instead. This was previously used as the fetch base
+ * URL while the endpoint path `/oauth/token` was also appended, resolving to a doubly-pathed URL.
+ */
+export const CALCOM_OAUTH_TOKEN_URL = `${CALCOM_OAUTH_API_URL}${CALCOM_OAUTH_TOKEN_PATH}`;

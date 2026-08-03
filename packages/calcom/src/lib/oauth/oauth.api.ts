@@ -1,5 +1,5 @@
 import { type FetchJsonInput } from '@dereekb/util/fetch';
-import { type CalcomOAuthContext } from './oauth.config';
+import { CALCOM_OAUTH_TOKEN_PATH, type CalcomOAuthContext } from './oauth.config';
 import { type CalcomRefreshToken } from '../calcom.config';
 import { type CalcomAccessTokenScopesString, type CalcomAccessTokenString } from './oauth';
 import { type Maybe, type Seconds } from '@dereekb/util';
@@ -56,7 +56,7 @@ export function refreshAccessToken(context: CalcomOAuthContext): (input?: Calcom
       })
     };
 
-    return context.fetchJson('/oauth/token', fetchJsonInput);
+    return context.fetchJson(CALCOM_OAUTH_TOKEN_PATH, fetchJsonInput);
   };
 }
 
@@ -93,6 +93,6 @@ export function exchangeAuthorizationCode(context: CalcomOAuthContext): (input: 
       })
     };
 
-    return context.fetchJson('/oauth/token', fetchJsonInput);
+    return context.fetchJson(CALCOM_OAUTH_TOKEN_PATH, fetchJsonInput);
   };
 }

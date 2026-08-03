@@ -1,5 +1,6 @@
-import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { CALCOM_OAUTH_TOKEN_URL, type CalcomOAuthConfig, type CalcomOAuthContext, type CalcomOAuthContextRef, type CalcomOAuthFetchFactory, type CalcomOAuthFetchFactoryInput, type CalcomOAuthMakeUserAccessTokenFactory, type CalcomOAuthMakeUserAccessTokenFactoryInput } from './oauth.config';
+import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { CALCOM_OAUTH_API_URL, type CalcomOAuthConfig, type CalcomOAuthContext, type CalcomOAuthContextRef, type CalcomOAuthFetchFactory, type CalcomOAuthFetchFactoryInput, type CalcomOAuthMakeUserAccessTokenFactory, type CalcomOAuthMakeUserAccessTokenFactoryInput } from './oauth.config';
+import { type CalcomRefreshToken } from '../calcom.config';
 import { type LogCalcomServerErrorFunction } from '../calcom.error.api';
 import { CalcomOAuthAuthFailureError, handleCalcomOAuthErrorFetch } from './oauth.error.api';
 import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenFactory, type CalcomAccessTokenRefresher } from './oauth';
@@ -9,11 +10,43 @@ import { refreshAccessToken, type CalcomOAuthTokenResponse } from './oauth.api';
 
 export type CalcomOAuth = CalcomOAuthContextRef;
 
+/**
+ * Maps a {@link CalcomOAuthTokenResponse} to a {@link CalcomAccessToken}.
+ *
+ * Pure: the caller owns the rotated refresh token that comes back on the result, so each token
+ * scope (server-level vs per-user) tracks its own rotation instead of sharing one variable.
+ *
+ * @param response - The token response returned by the Cal.com token endpoint.
+ * @returns The equivalent CalcomAccessToken, with `expiresAt` resolved against the current time.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calcomAccessTokenFromTokenResponse(response: CalcomOAuthTokenResponse): CalcomAccessToken {
+  const createdAt = Date.now();
+  const { access_token, refresh_token, scope, expires_in } = response;
+
+  const accessToken: CalcomAccessToken = {
+    accessToken: access_token,
+    refreshToken: refresh_token,
+    expiresIn: expires_in,
+    expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
+    scope: scope ?? ''
+  };
+
+  return accessToken;
+}
+
 export interface CalcomOAuthFactoryConfig {
   /**
    * Creates a new fetch instance to use when making calls.
    */
   readonly fetchFactory?: CalcomOAuthFetchFactory;
+  /**
+   * Custom FetchHandler to use with the default fetchFactory.
+   *
+   * Defaults to a {@link calcomRateLimitedFetchHandler}. Ignored when a `fetchFactory` is provided.
+   */
+  readonly fetchHandler?: Maybe<FetchHandler>;
   /**
    * Custom log error function.
    */
@@ -33,13 +66,13 @@ export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): CalcomOAuthFactory {
-  const fetchHandler = calcomRateLimitedFetchHandler();
+  const fetchHandler = factoryConfig.fetchHandler ?? calcomRateLimitedFetchHandler();
 
   const {
     logCalcomServerErrorFunction,
     fetchFactory = (_?: CalcomOAuthFetchFactoryInput) =>
       fetchApiFetchService.makeFetch({
-        baseUrl: CALCOM_OAUTH_TOKEN_URL,
+        baseUrl: CALCOM_OAUTH_API_URL,
         baseRequest: {
           headers: {
             'Content-Type': 'application/json'
@@ -99,31 +132,20 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
 
     // MARK: OAuth Auth (refresh token flow)
     /**
-     * Tracks the latest refresh token since Cal.com rotates them.
+     * Tracks the latest server-level refresh token since Cal.com rotates them on every use.
+     *
+     * Scoped to the server-level refresher only — each per-user refresher tracks its own rotation,
+     * so refreshing one user never overwrites the server-level token.
      */
     let latestRefreshToken = config.refreshToken;
 
-    function accessTokenFromTokenResponse(result: CalcomOAuthTokenResponse): CalcomAccessToken {
-      const createdAt = Date.now();
-      const { access_token, refresh_token, scope, expires_in } = result;
+    const tokenRefresher: CalcomAccessTokenRefresher = async () => {
+      const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: latestRefreshToken ?? undefined });
+      const accessToken = calcomAccessTokenFromTokenResponse(response);
 
-      // Store the new refresh token for next use
-      latestRefreshToken = refresh_token;
-
-      const accessToken: CalcomAccessToken = {
-        accessToken: access_token,
-        refreshToken: refresh_token,
-        expiresIn: expires_in,
-        expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
-        scope: scope ?? ''
-      };
+      latestRefreshToken = accessToken.refreshToken;
 
       return accessToken;
-    }
-
-    const tokenRefresher: CalcomAccessTokenRefresher = async () => {
-      const accessToken: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: latestRefreshToken ?? undefined });
-      return accessTokenFromTokenResponse(accessToken);
     };
 
     const loadAccessToken: CalcomAccessTokenFactory = calcomOAuthAccessTokenFactory({
@@ -133,14 +155,18 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
 
     // User Access Token
     const makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory = (input: CalcomOAuthMakeUserAccessTokenFactoryInput) => {
-      let userLatestRefreshToken: string | undefined = input.refreshToken;
+      /**
+       * Tracks this user's rotated refresh token, independently of the server-level token.
+       */
+      let userLatestRefreshToken: CalcomRefreshToken = input.refreshToken;
 
-      const userTokenRefresher = async () => {
-        const tokenResponse: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: userLatestRefreshToken });
-        const token = accessTokenFromTokenResponse(tokenResponse);
-        // Track the rotated refresh token for this user
-        userLatestRefreshToken = token.refreshToken;
-        return token;
+      const userTokenRefresher: CalcomAccessTokenRefresher = async () => {
+        const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: userLatestRefreshToken });
+        const accessToken = calcomAccessTokenFromTokenResponse(response);
+
+        userLatestRefreshToken = accessToken.refreshToken;
+
+        return accessToken;
       };
 
       return calcomOAuthAccessTokenFactory({

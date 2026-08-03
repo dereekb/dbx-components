@@ -13,6 +13,7 @@ import {
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
   type DbxFirebaseExternalConnectionProvider,
+  DbxFirebaseExternalConnectionService,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   provideDbxFirebase,
   provideDbxFirebaseAuthImpersonation,
@@ -41,7 +42,7 @@ import {
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
-import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
+import { type FirestoreContext, type FirestoreModelKey, UserExternalConnectionFunctions, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
 import { provideDbxFormConfiguration, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
@@ -67,16 +68,16 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * The provider TYPE comes from demo-firebase, because demo-api's OAuth controller writes the same
  * string into the connection entry map. Only the presentation lives here.
  */
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [
-  {
-    providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-    assets: {
-      providerName: 'Cal.com',
-      icon: 'event',
-      description: 'Schedule and manage bookings from your Cal.com account.'
-    }
+export const DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER: DbxFirebaseExternalConnectionProvider = {
+  providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: {
+    providerName: 'Cal.com',
+    icon: 'event',
+    description: 'Schedule and manage bookings from your Cal.com account.'
   }
-];
+};
+
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER];
 
 // MARK: DbxAnalytics
 /**
@@ -415,6 +416,32 @@ export const APP_CONFIG: ApplicationConfig = {
     provideAppInitializer(() => {
       const iconRegistry = inject(MatIconRegistry);
       iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
+    }),
+    // Re-registers Cal.com with a connect() that mints the handoff state first. Done here rather
+    // than in DEMO_EXTERNAL_CONNECTION_PROVIDERS because connect() needs the callable, and the
+    // provider catalog is a plain value with no injector of its own.
+    provideAppInitializer(() => {
+      const externalConnectionService = inject(DbxFirebaseExternalConnectionService);
+      const userExternalConnectionFunctions = inject(UserExternalConnectionFunctions);
+
+      externalConnectionService.register({
+        ...DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER,
+        connect: async ({ providerType, navigate }) => {
+          // an authenticated call, so the server knows who is connecting without the redirect
+          // ever carrying an ID token
+          const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
+          const authorizeUrl = externalConnectionService.authorizeUrlForProvider(providerType);
+
+          if (authorizeUrl == null) {
+            throw new Error(`No authorize url could be resolved for provider "${providerType}".`);
+          }
+
+          const url = new URL(authorizeUrl);
+          url.searchParams.set('state', state);
+
+          navigate(url.toString());
+        }
+      });
     })
   ]
 };
