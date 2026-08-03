@@ -1,8 +1,16 @@
-import { type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnectionAuthorizeStateResult, readUserExternalConnectionAuthorizeStateParamsType } from '@dereekb/firebase';
+import { type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnectionAuthorizeStateResult, type UserExternalConnectionProviderType, readUserExternalConnectionAuthorizeStateParamsType } from '@dereekb/firebase';
 import { preconditionConflictError, withApiDetails } from '@dereekb/firebase-server';
 import { DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 import { type DemoReadModelFunction } from '../function.context';
 import { userExternalConnectionUidForRequest } from './userexternalconnection.util';
+
+/**
+ * The providers this app has an OAuth authorize/callback flow wired for.
+ *
+ * A provider absent from this set has no endpoint to send the user to, so minting a state for it
+ * would hand back something unusable.
+ */
+export const DEMO_EXTERNAL_CONNECTION_AUTHORIZE_PROVIDER_TYPES: ReadonlySet<UserExternalConnectionProviderType> = new Set([DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE]);
 
 /**
  * Raised when a client asks to connect a provider the app has no OAuth handoff wired for.
@@ -10,7 +18,7 @@ import { userExternalConnectionUidForRequest } from './userexternalconnection.ut
  * @param providerType - The unsupported provider type.
  * @returns The error to throw.
  */
-export function userExternalConnectionProviderHasNoAuthorizeFlowError(providerType: string) {
+export function userExternalConnectionProviderHasNoAuthorizeFlowError(providerType: UserExternalConnectionProviderType) {
   return preconditionConflictError(`The provider "${providerType}" has no OAuth authorize flow configured.`);
 }
 
@@ -26,16 +34,13 @@ export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<Rea
   fn: async (request) => {
     const { nest, data } = request;
     const { providerType } = data;
-    const uid = await userExternalConnectionUidForRequest(request);
-    let state: string;
 
-    switch (providerType) {
-      case DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE:
-        state = nest.calcomOAuthService.mintState(uid);
-        break;
-      default:
-        throw userExternalConnectionProviderHasNoAuthorizeFlowError(providerType);
+    if (!DEMO_EXTERNAL_CONNECTION_AUTHORIZE_PROVIDER_TYPES.has(providerType)) {
+      throw userExternalConnectionProviderHasNoAuthorizeFlowError(providerType);
     }
+
+    const uid = await userExternalConnectionUidForRequest(request);
+    const state = nest.userExternalConnectionStateCoder.mintState({ uid, providerType });
 
     return { state };
   }

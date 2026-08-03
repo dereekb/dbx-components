@@ -2,11 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type CalcomAccessToken } from '@dereekb/calcom';
 import { CalcomOAuthCallbackService, type CalcomOAuthCallbackActor, type CalcomOAuthState } from '@dereekb/calcom/nestjs';
 import { UserExternalConnectionServerActions, type UserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
-import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
-import { type DemoCalcomOAuthStateCoder } from './calcom.state';
-import { DemoApiCalcomOAuthStateCoder } from './calcom.config';
+import { DemoApiUserExternalConnectionStateCoder } from '../../common/model/userexternalconnection';
 
 /**
  * Maps an exchanged Cal.com token to the credentials stored on the private connection document.
@@ -42,7 +40,7 @@ export class DemoApiCalcomOAuthService {
   constructor(
     @Inject(CalcomOAuthCallbackService) readonly calcomOAuthCallbackService: CalcomOAuthCallbackService,
     @Inject(UserExternalConnectionServerActions) readonly userExternalConnectionActions: UserExternalConnectionServerActions,
-    @Inject(DemoApiCalcomOAuthStateCoder) readonly stateCoder: DemoCalcomOAuthStateCoder
+    @Inject(DemoApiUserExternalConnectionStateCoder) readonly stateCoder: DemoApiUserExternalConnectionStateCoder
   ) {
     calcomOAuthCallbackService.configure({
       verifyCallbackState: async (state) => this.verifyState(state),
@@ -71,22 +69,14 @@ export class DemoApiCalcomOAuthService {
   }
 
   /**
-   * Mints the state a client navigates to the authorize endpoint with.
-   *
-   * @param uid - The signed-in user beginning the handoff.
-   * @returns The minted state.
-   */
-  mintState(uid: FirebaseAuthUserId): CalcomOAuthState {
-    return this.stateCoder.mintState(uid);
-  }
-
-  /**
    * Resolves the user a returned state belongs to.
    *
+   * Scoped to the Cal.com provider, so a state minted for another provider is rejected here.
+   *
    * @param state - The state Cal.com echoed back.
-   * @returns The acting user, or null when the state is invalid or expired.
+   * @returns The acting user, or null when the state is invalid, expired, or for another provider.
    */
   verifyState(state: Maybe<CalcomOAuthState>): Maybe<CalcomOAuthCallbackActor> {
-    return this.stateCoder.verifyState(state);
+    return this.stateCoder.verifyState({ state, providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE });
   }
 }

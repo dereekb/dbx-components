@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { type DisconnectUserExternalConnectionParams, type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnection, type UserExternalConnectionAuthorizeStateResult, onCallReadModelParams, onCallUpdateModelParams, userExternalConnectionIdentity } from '@dereekb/firebase';
-import { DemoApiCalcomOAuthStateCoder } from '../../api/calcom';
+import { DemoApiUserExternalConnectionStateCoder } from '../../common/model/userexternalconnection';
 import { type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
@@ -220,7 +220,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           expect(result.state).toBeDefined();
           // only the server can open it, so verify through the coder rather than by inspection
-          expect(f.nest.get(DemoApiCalcomOAuthStateCoder).verifyState(result.state)?.uid).toBe(u.uid);
+          expect(f.nest.get(DemoApiUserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })?.uid).toBe(u.uid);
+        });
+
+        it('should bind the state to the provider it was minted for', async () => {
+          const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: CALCOM };
+          const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
+
+          // the state secret is shared across providers, so the provider must be bound into the state
+          expect(f.nest.get(DemoApiUserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOOM })).toBeUndefined();
         });
 
         it('should not embed the uid in a readable form', async () => {

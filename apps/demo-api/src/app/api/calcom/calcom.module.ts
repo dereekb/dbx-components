@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { ConfigModule } from '@nestjs/config';
 import { CalcomOAuthAccessTokenCacheService, appCalcomOAuthCallbackModuleMetadata, appCalcomOAuthModuleMetadata, fileCalcomOAuthAccessTokenCacheService, memoryCalcomOAuthAccessTokenCacheService, mergeCalcomOAuthAccessTokenCacheServices } from '@dereekb/calcom/nestjs';
 import { DemoApiFirestoreModule } from '../../common/firebase/firestore.module';
-import { UserExternalConnectionModule } from '../../common/model/userexternalconnection/userexternalconnection.module';
+import { UserExternalConnectionModule } from '../../common/model/userexternalconnection';
 import { DemoApiCalcomOAuthService } from './calcom.oauth.service';
-import { DemoApiCalcomOAuthStateCoder, demoApiCalcomOAuthStateCoderFactory } from './calcom.config';
 
 export const demoCalcomAccessTokenCacheServiceFactory = () => {
   const memoryCache = memoryCalcomOAuthAccessTokenCacheService();
@@ -21,14 +19,9 @@ export const demoCalcomAccessTokenCacheServiceFactory = () => {
       provide: CalcomOAuthAccessTokenCacheService,
       useFactory: demoCalcomAccessTokenCacheServiceFactory,
       inject: []
-    },
-    {
-      provide: DemoApiCalcomOAuthStateCoder,
-      useFactory: demoApiCalcomOAuthStateCoderFactory,
-      inject: [ConfigService, FirebaseServerEnvService]
     }
   ],
-  exports: [CalcomOAuthAccessTokenCacheService, DemoApiCalcomOAuthStateCoder]
+  exports: [CalcomOAuthAccessTokenCacheService]
 })
 export class DemoApiCalcomDependencyModule {}
 
@@ -38,7 +31,8 @@ export class DemoCalcomOAuthModule {}
 @Module(
   appCalcomOAuthCallbackModuleMetadata({
     dependencyModule: DemoCalcomOAuthModule,
-    imports: [DemoApiCalcomDependencyModule, UserExternalConnectionModule],
+    // UserExternalConnectionModule supplies both the persistence actions and the shared state coder
+    imports: [UserExternalConnectionModule],
     providers: [DemoApiCalcomOAuthService],
     exports: [DemoApiCalcomOAuthService]
   })
