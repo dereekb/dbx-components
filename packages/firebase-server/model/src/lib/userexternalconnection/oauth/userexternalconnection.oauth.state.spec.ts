@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { type ConfigService } from '@nestjs/config';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOOM } from '@dereekb/firebase';
 import { TESTING_USER_EXTERNAL_CONNECTION_STATE_SECRET, USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY, userExternalConnectionStateCoder, userExternalConnectionStateCoderFactory } from './userexternalconnection.oauth.state';
 
 const TEST_SECRET = 'a'.repeat(64);
 const OTHER_SECRET = 'b'.repeat(64);
 const TEST_UID = 'test-uid-1234';
-const CALCOM = 'calcom';
-const ZOOM = 'zoom';
 
 function makeConfigService(value?: string): ConfigService {
   return {

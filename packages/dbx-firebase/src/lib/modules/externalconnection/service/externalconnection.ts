@@ -247,6 +247,17 @@ export interface DbxFirebaseExternalConnectionActionConfig {
 }
 
 /**
+ * One rendered list item: a row plus the actions currently available for it.
+ *
+ * The actions are paired with the row here rather than derived by the item component because building them needs
+ * the connect/disconnect handlers, which belong to the container that owns the stores.
+ */
+export interface DbxFirebaseExternalConnectionListItemValue {
+  readonly row: DbxFirebaseExternalConnectionRow;
+  readonly actions?: Maybe<DbxFirebaseExternalConnectionActionConfig[]>;
+}
+
+/**
  * Derives a row's presentation status from its entry.
  *
  * @param entry - The user's entry for the provider, if any.

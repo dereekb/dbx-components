@@ -4,6 +4,7 @@
 // MARK: Variables
 $icon-to-avatar-size-ratio: 0.65;
 $initials-to-avatar-size-ratio: 0.4;
+$tile-padding-to-avatar-size-ratio: 0.15;
 
 // MARK: Mixin
 @mixin core() {
@@ -12,28 +13,41 @@ $initials-to-avatar-size-ratio: 0.4;
   /// @role layout
   /// @component DbxAvatarViewComponent
   /// @scope component-class
-  /// @see-also avatar-small, avatar-large, avatar-view-circle, avatar-view-square
+  /// @see-also avatar-small, avatar-large, avatar-view-circle, avatar-view-square, avatar-view-tile
   .dbx-avatar-view {
+    /// Resolved avatar box size. Every avatar measurement derives from this one value so the small/large
+    /// variants and the tile presentation each have a single number to scale from. Apps override the
+    /// public `--dbx-avatar-size` (or the small/large tokens) rather than this.
+    /// @role size
+    /// @intent resolved avatar size, current avatar diameter
+    --dbx-avatar-view-size: var(#{theming.$dbx-avatar-size-var}, 64px);
+
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    width: var(#{theming.$dbx-avatar-size-var}, 64px);
-    height: var(#{theming.$dbx-avatar-size-var}, 64px);
+    width: var(--dbx-avatar-view-size);
+    height: var(--dbx-avatar-view-size);
+    background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
 
-    .mat-icon {
-      font-size: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
-      width: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
-      height: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
+    // (0,3,0) so the glyph keeps its avatar-proportional size even when `.dbx-icon-tile .mat-icon`
+    // (0,2,0, and emitted later — see _layout.scss) also matches, i.e. in tile mode or when an
+    // avatar is nested inside an icon tile.
+    .dbx-avatar-view-fallback .mat-icon {
+      font-size: calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio});
+      width: calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio});
+      height: calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio});
     }
 
     .dbx-avatar-view-initials {
-      font-size: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$initials-to-avatar-size-ratio});
+      font-size: calc(var(--dbx-avatar-view-size) * #{$initials-to-avatar-size-ratio});
     }
   }
 
-  .dbx-avatar-view-hide-avatar {
+  // (0,2,0): `.dbx-icon-tile { display: flex }` is emitted after this partial and would otherwise
+  // win, leaving `hideOnError` unable to hide a tile-mode avatar.
+  .dbx-avatar-view.dbx-avatar-view-hide-avatar {
     display: none;
   }
 
@@ -43,18 +57,7 @@ $initials-to-avatar-size-ratio: 0.4;
   /// @parent avatar-view
   /// @see-also avatar-view, avatar-large
   .dbx-avatar-small .dbx-avatar-view {
-    width: var(#{theming.$dbx-avatar-small-size-var}, 32px);
-    height: var(#{theming.$dbx-avatar-small-size-var}, 32px);
-
-    .mat-icon {
-      font-size: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
-      width: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
-      height: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
-    }
-
-    .dbx-avatar-view-initials {
-      font-size: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$initials-to-avatar-size-ratio});
-    }
+    --dbx-avatar-view-size: var(#{theming.$dbx-avatar-small-size-var}, 32px);
   }
 
   /// @dbx-utility avatar-large
@@ -63,18 +66,7 @@ $initials-to-avatar-size-ratio: 0.4;
   /// @parent avatar-view
   /// @see-also avatar-view, avatar-small
   .dbx-avatar-large .dbx-avatar-view {
-    width: var(#{theming.$dbx-avatar-large-size-var}, 128px);
-    height: var(#{theming.$dbx-avatar-large-size-var}, 128px);
-
-    .mat-icon {
-      font-size: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
-      width: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
-      height: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
-    }
-
-    .dbx-avatar-view-initials {
-      font-size: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$initials-to-avatar-size-ratio});
-    }
+    --dbx-avatar-view-size: var(#{theming.$dbx-avatar-large-size-var}, 128px);
   }
 
   .dbx-avatar-view-img {
@@ -82,6 +74,16 @@ $initials-to-avatar-size-ratio: 0.4;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  /// @dbx-utility avatar-view-img-contain
+  /// @intent fits the whole avatar image inside the box instead of cropping it — the default in tile mode, where the image is a brand logo
+  /// @role layout
+  /// @parent avatar-view
+  /// @component DbxAvatarViewComponent
+  /// @see-also avatar-view-tile
+  .dbx-avatar-view-img-contain {
+    object-fit: contain;
   }
 
   .dbx-avatar-view-fallback {
@@ -117,6 +119,20 @@ $initials-to-avatar-size-ratio: 0.4;
     @include style.dbx-color-surface();
   }
 
+  // Colored avatar surface. `<dbx-avatar-view>` hosts `[dbxColor]` and pushes its resolved color into it, so
+  // the marker is on the avatar element itself. Scoped on the marker (the `mat-card.dbx-color` model) so an
+  // avatar inside a `[dbxColor]` section doesn't repaint from inherited tokens, and guarded with
+  // `:not(.dbx-default)` because a nullish color still resolves to the token-less `dbx-default` class.
+  // In tile mode `.dbx-icon-tile.dbx-color:not(.dbx-default)` in `_text.scss` matches the same element and
+  // paints identically — this rule covers the non-tile case.
+  .dbx-avatar-view.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
   /// @dbx-utility avatar-view-circle
   /// @intent circle modifier for `.dbx-avatar-view` — `border-radius: 50%`
   /// @role layout
@@ -135,8 +151,69 @@ $initials-to-avatar-size-ratio: 0.4;
     border-radius: var(--dbx-avatar-square-container-shape, var(--mat-sys-corner-medium));
   }
 
-  .dbx-avatar-view {
-    background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  // MARK: Tile presentation
+  // `<dbx-avatar-view>` in tile mode carries `.dbx-icon-tile` alongside this marker, so every
+  // `--dbx-icon-tile-*` customization and the tile's `[dbxColor]` surface apply to the avatar as-is.
+  /// @dbx-utility avatar-view-tile
+  /// @intent icon-tile presentation for `.dbx-avatar-view` — the avatar keeps its box size while `.dbx-icon-tile` supplies padding, shape and the `[dbxColor]` surface. Customize with `--dbx-avatar-tile-padding` / `--dbx-avatar-tile-icon-size`.
+  /// @role layout
+  /// @parent avatar-view
+  /// @component DbxAvatarViewComponent
+  /// @see-also icon-tile, avatar-view, avatar-view-img-contain
+  // Points the tile's own tokens at avatar-scoped override points, so a tile avatar's padding and glyph
+  // scale with the avatar box instead of taking the icon tile's flat 8px/24px defaults.
+  //
+  // `--dbx-avatar-tile-*` are CONSUMED here, never declared: a declaration on this element would beat an
+  // inherited one and make an ancestor (or an inline style on `<dbx-avatar>`) unable to override them.
+  .dbx-avatar-view-tile {
+    /// Icon tile padding, as a tile avatar resolves it. See `--dbx-avatar-tile-padding` to override.
+    /// @role spacing
+    /// @intent icon tile padding, tile inset
+    --dbx-icon-tile-padding: var(--dbx-avatar-tile-padding, calc(var(--dbx-avatar-view-size) * #{$tile-padding-to-avatar-size-ratio}));
+    /// Icon tile glyph size, as a tile avatar resolves it. See `--dbx-avatar-tile-icon-size` to override.
+    /// @role size
+    /// @intent icon tile icon size, tile glyph size
+    --dbx-icon-tile-icon-size: var(--dbx-avatar-tile-icon-size, calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio}));
+  }
+
+  // `.dbx-icon-tile` is emitted AFTER this partial (`_layout.scss` includes `avatar.core()` before
+  // `text.core()`), so it wins every (0,1,0) property the two share. Everything the avatar must keep
+  // owning is re-declared here at (0,2,0) rather than left to source order — in particular
+  // `width`/`height`, which the tile sets from the undefined `--dbx-icon-tile-width`/`-height` (no
+  // fallback, so the declaration is invalid at computed-value time), collapsing the box to `auto`;
+  // and `display`, which would otherwise also beat `.dbx-avatar-view-hide-avatar`.
+  // `:not(…)` rather than a bare `display: inline-flex` in the block below: `.dbx-avatar-view-hide-avatar`
+  // is also (0,2,0), so without it whichever rule happened to come last would decide whether a hidden
+  // tile avatar stays hidden.
+  .dbx-avatar-view.dbx-avatar-view-tile:not(.dbx-avatar-view-hide-avatar) {
+    display: inline-flex;
+  }
+
+  .dbx-avatar-view.dbx-avatar-view-tile {
+    box-sizing: border-box;
+    width: var(--dbx-avatar-view-size);
+    height: var(--dbx-avatar-view-size);
+    min-width: var(--dbx-avatar-view-size);
+    // an uncolored tile paints nothing, matching `<dbx-icon-tile>`
+    background-color: transparent;
+  }
+
+  // Shape in tile mode. Without these the tile's own `border-radius` would win over the style modifiers
+  // and silently ignore `--dbx-avatar-square-container-shape`.
+  .dbx-avatar-view.dbx-avatar-view-tile.dbx-avatar-view-circle {
+    border-radius: 50%;
+  }
+
+  .dbx-avatar-view.dbx-avatar-view-tile.dbx-avatar-view-square {
+    border-radius: var(--dbx-avatar-square-container-shape, var(--mat-sys-corner-medium));
+  }
+
+  // (0,4,0), so the tile's glyph size wins over the avatar's own (0,3,0) proportional rule above.
+  // Without this the tile token resolves but is never read, and `--dbx-avatar-tile-icon-size` is dead.
+  .dbx-avatar-view.dbx-avatar-view-tile .dbx-avatar-view-fallback .mat-icon {
+    font-size: var(--dbx-icon-tile-icon-size);
+    width: var(--dbx-icon-tile-icon-size);
+    height: var(--dbx-icon-tile-icon-size);
   }
 }
 

@@ -1,1 +1,1 @@
-export * from './externalconnection.component';
+export * from './externalconnection.list.component';

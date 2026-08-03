@@ -2,18 +2,15 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-firebase-external-connection {
-    // the provider logo is projected into the icon tile, so constrain it to the tile's icon size.
-    .dbx-firebase-external-connection-tile img {
-      height: var(--dbx-icon-tile-icon-size, 24px);
-      width: auto;
-      object-fit: contain;
-    }
+  .dbx-firebase-external-connection-list {
+    // the rows are cards; keep the gap the settings page had before they were a list.
+    --dbx-list-card-items-list-gap: var(--dbx-padding-3);
   }
 
-  .dbx-firebase-external-connections {
-    .dbx-firebase-external-connection-row + .dbx-firebase-external-connection-row {
-      margin-top: 16px;
+  .dbx-firebase-external-connection-item {
+    // `<dbx-avatar>` owns the logo image and its `contain` fit — only the tile size is set here.
+    .dbx-firebase-external-connection-tile {
+      --dbx-avatar-size: 40px;
     }
   }
 }

@@ -12,6 +12,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 export class DocLayoutAvatarComponent {
   readonly demoAvatarUrl = 'https://www.gravatar.com/avatar/205d5c6f1f0075bf8cb6a6021b223206';
   readonly demoBrokenAvatarUrl = 'https://components.dereeekb.com/assets/images/avatars/doesNotExist.jpg';
+  readonly demoLogoUrl = 'https://cdn.jsdelivr.net/npm/@firebase-oss/ui-core/brands/google/logo.svg';
 
   readonly demoAvatarNames = ['Michelle B', 'John Smith', 'Derek Burgman', 'Zoe Quinn', 'Wendy Carlos', 'Alan Turing', 'Grace Hopper', 'Quinn T'];
   readonly demoAvatarCharacters = ['A', 'BB', 'CD', 'Z'];

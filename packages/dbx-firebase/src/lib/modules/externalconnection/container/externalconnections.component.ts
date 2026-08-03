@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
-import { beginLoading, isLoadingStateLoading, type LoadingState } from '@dereekb/rxjs';
+import { beginLoading, isLoadingStateLoading, type ListLoadingState, type LoadingState, successResult } from '@dereekb/rxjs';
 import { type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxErrorComponent, DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { DbxFirebaseExternalConnectionComponent } from '../component/externalconnection.component';
-import { type DbxFirebaseExternalConnectionActionConfig, type DbxFirebaseExternalConnectionRow, dbxFirebaseExternalConnectionRows } from '../service/externalconnection';
+import { DbxFirebaseExternalConnectionListComponent } from '../component/externalconnection.list.component';
+import { type DbxFirebaseExternalConnectionActionConfig, type DbxFirebaseExternalConnectionListItemValue, type DbxFirebaseExternalConnectionRow, dbxFirebaseExternalConnectionRows } from '../service/externalconnection';
 import { DbxFirebaseExternalConnectionService } from '../service/externalconnection.service';
 import { UserExternalConnectionDocumentStore } from '../store/userexternalconnection.document.store';
 import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalconnection.store';
@@ -30,13 +30,11 @@ import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalco
       @if (errorSignal(); as error) {
         <dbx-error [error]="error"></dbx-error>
       } @else {
-        @for (row of rowsSignal(); track row.providerType) {
-          <div class="dbx-firebase-external-connection-row">
-            <dbx-firebase-external-connection [row]="row" [actions]="actionsForRow(row)"></dbx-firebase-external-connection>
-          </div>
-        } @empty {
-          <p class="dbx-hint no-margin">There are no apps available to connect.</p>
-        }
+        <dbx-firebase-external-connection-list [state]="listStateSignal()">
+          <dbx-list-empty-content empty>
+            <p class="dbx-hint no-margin">There are no apps available to connect.</p>
+          </dbx-list-empty-content>
+        </dbx-firebase-external-connection-list>
       }
     } @else {
       <p class="dbx-hint no-margin">Sign in to connect your apps.</p>
@@ -46,7 +44,7 @@ import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalco
     class: 'd-block dbx-firebase-external-connections'
   },
   standalone: true,
-  imports: [DbxErrorComponent, DbxFirebaseExternalConnectionComponent],
+  imports: [DbxErrorComponent, DbxFirebaseExternalConnectionListComponent, DbxListEmptyContentComponent],
   providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -90,6 +88,14 @@ export class DbxFirebaseExternalConnectionsComponent {
       loading: isLoadingStateLoading(state)
     });
   });
+
+  /**
+   * The list's state.
+   *
+   * Always a success result, never a loading one: a row carries its own `loading` status and renders a "Loading"
+   * chip, which reads better here than the list swapping itself out for a spinner and then reflowing.
+   */
+  readonly listStateSignal = computed<ListLoadingState<DbxFirebaseExternalConnectionListItemValue>>(() => successResult(this.rowsSignal().map((row) => ({ row, actions: this.actionsForRow(row) }))));
 
   /**
    * Builds the actions for a row.

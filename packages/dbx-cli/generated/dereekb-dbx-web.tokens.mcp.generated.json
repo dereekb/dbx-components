@@ -253,6 +253,48 @@
       "componentScope": "avatar"
     },
     {
+      "cssVariable": "--dbx-avatar-tile-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "avatar tile icon size",
+        "tile glyph size"
+      ],
+      "description": "Glyph size inside a tile avatar. Defaults to a share of the avatar size rather than the icon tile's flat 24px.",
+      "defaults": {
+        "light": "calc(var(--dbx-avatar-view-size) * 0.65)"
+      },
+      "componentScope": "avatar"
+    },
+    {
+      "cssVariable": "--dbx-avatar-tile-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "avatar tile padding",
+        "tile inset"
+      ],
+      "description": "Padding between a tile avatar's edge and its glyph or logo. Defaults to a share of the avatar size.",
+      "defaults": {
+        "light": "calc(var(--dbx-avatar-view-size) * 0.15)"
+      },
+      "componentScope": "avatar"
+    },
+    {
+      "cssVariable": "--dbx-avatar-view-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "resolved avatar size",
+        "current avatar diameter"
+      ],
+      "description": "Resolved avatar box size. Every avatar measurement derives from this one value so the small/large variants and the tile presentation each have a single number to scale from. Apps override the public `--dbx-avatar-size` (or the small/large tokens) rather than this.",
+      "defaults": {
+        "light": "var(#{theming.$dbx-avatar-size-var}, 64px)"
+      },
+      "componentScope": "avatar"
+    },
+    {
       "cssVariable": "--dbx-bg-color-current",
       "scssVariable": "$dbx-bg-color-var",
       "source": "dbx-web",
