@@ -18,6 +18,7 @@ import {
   DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   provideDbxListView,
+  type DbxActionConfirmConfig,
   type DbxThemeColor,
   type DbxValueAsListItem,
   type DbxValueListViewConfig
@@ -44,6 +45,14 @@ const CONNECTION_STATUS_COLORS: Record<DbxFirebaseExternalConnectionRow['status'
  * Fallback icon for a provider whose assets declare neither a logo nor an icon.
  */
 const DEFAULT_CONNECTION_ICON = 'link';
+
+/**
+ * Used by actions that declare no confirm config, such as Connect, so they run without a dialog.
+ *
+ * The directive prompts with its defaults for a nullish config, which is not what an action with nothing to
+ * confirm wants.
+ */
+const AUTO_CONFIRM_CONFIG: DbxActionConfirmConfig = { autoConfirm: true };
 
 /**
  * Renders every third-party connection as a card row.
@@ -137,8 +146,8 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
       @if (actions.length) {
         <div class="dbx-flex-bar dbx-pt2">
           @for (action of actions; track action.label) {
-            <!-- dbxActionValue is not used: each action's handler takes no input and the confirm (when present) marks it ready -->
-            <div dbxAction [dbxActionHandler]="action.handler" [dbxActionConfirm]="action.confirm">
+            <!-- dbxActionValue is not used: each action's handler takes no input and the confirm marks it ready, dialog or not -->
+            <div dbxAction [dbxActionHandler]="action.handler" [dbxActionConfirm]="action.confirm ?? autoConfirmConfig">
               <dbx-button dbxActionButton [stroked]="true" [text]="action.label" [icon]="action.icon"></dbx-button>
               <dbx-error dbxActionError></dbx-error>
             </div>
@@ -153,6 +162,7 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
 })
 export class DbxFirebaseExternalConnectionListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseExternalConnectionListItemValue> {
   readonly defaultIcon = DEFAULT_CONNECTION_ICON;
+  readonly autoConfirmConfig = AUTO_CONFIRM_CONFIG;
 
   get row(): DbxFirebaseExternalConnectionRow {
     return this.itemValue.row;

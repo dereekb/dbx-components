@@ -12,7 +12,7 @@
       "selector": "[dbxActionConfirm]",
       "className": "DbxActionConfirmDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Displays a confirmation dialog when the action is triggered. If the user confirms,\nthe configured ready value is passed to the action. If the user cancels, the action is rejected.\n\nThis directive works with action triggering only, not button clicks.\nFor button-based confirmation, use an appPromptConfirmButton directive instead.",
+      "description": "Displays a confirmation dialog when the action is triggered. If the user confirms,\nthe configured ready value is passed to the action. If the user cancels, the action is rejected.\n\nA config with `autoConfirm` true shows no dialog and marks the action ready immediately. This lets a\ntemplate bind the same input for actions that need confirmation and actions that do not.\n\nThis directive works with action triggering only, not button clicks.\nFor button-based confirmation, use an appPromptConfirmButton directive instead.",
       "inputs": [
         {
           "name": "dbxActionConfirm",

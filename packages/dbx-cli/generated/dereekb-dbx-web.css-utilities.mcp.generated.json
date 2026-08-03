@@ -268,23 +268,15 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 163,
+      "line": 168,
       "declarations": [
         {
-          "property": "--dbx-avatar-tile-padding",
-          "value": "calc(var(--dbx-avatar-view-size) * #{$tile-padding-to-avatar-size-ratio})"
-        },
-        {
-          "property": "--dbx-avatar-tile-icon-size",
-          "value": "calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio})"
-        },
-        {
           "property": "--dbx-icon-tile-padding",
-          "value": "var(--dbx-avatar-tile-padding)"
+          "value": "var(--dbx-avatar-tile-padding, calc(var(--dbx-avatar-view-size) * #{$tile-padding-to-avatar-size-ratio}))"
         },
         {
           "property": "--dbx-icon-tile-icon-size",
-          "value": "var(--dbx-avatar-tile-icon-size)"
+          "value": "var(--dbx-avatar-tile-icon-size, calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio}))"
         }
       ],
       "role": "layout",
@@ -302,8 +294,6 @@
         "--dbx-avatar-view-size"
       ],
       "tokensSet": [
-        "--dbx-avatar-tile-icon-size",
-        "--dbx-avatar-tile-padding",
         "--dbx-icon-tile-icon-size",
         "--dbx-icon-tile-padding"
       ]
