@@ -1,10 +1,28 @@
-import { userExternalConnectionStateCoder } from './userexternalconnection.state';
+import { describe, expect, it } from 'vitest';
+import { type ConfigService } from '@nestjs/config';
+import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { TESTING_USER_EXTERNAL_CONNECTION_STATE_SECRET, USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY, userExternalConnectionStateCoder, userExternalConnectionStateCoderFactory } from './userexternalconnection.oauth.state';
 
 const TEST_SECRET = 'a'.repeat(64);
 const OTHER_SECRET = 'b'.repeat(64);
 const TEST_UID = 'test-uid-1234';
 const CALCOM = 'calcom';
 const ZOOM = 'zoom';
+
+function makeConfigService(value?: string): ConfigService {
+  return {
+    get: (key: string) => (key === USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY ? value : undefined)
+  } as unknown as ConfigService;
+}
+
+function makeEnvService(overrides: Partial<FirebaseServerEnvService> = {}): FirebaseServerEnvService {
+  return {
+    isProduction: true,
+    isStaging: false,
+    isTestingEnv: false,
+    ...overrides
+  } as unknown as FirebaseServerEnvService;
+}
 
 describe('userExternalConnectionStateCoder()', () => {
   const coder = userExternalConnectionStateCoder({ secret: TEST_SECRET });
@@ -59,5 +77,31 @@ describe('userExternalConnectionStateCoder()', () => {
     const state = expiringCoder.mintState({ uid: TEST_UID, providerType: CALCOM });
 
     expect(expiringCoder.verifyState({ state, providerType: CALCOM })).toBeUndefined();
+  });
+});
+
+describe('userExternalConnectionStateCoderFactory()', () => {
+  it('uses the configured secret', () => {
+    const coder = userExternalConnectionStateCoderFactory(makeConfigService(TEST_SECRET), makeEnvService());
+    const state = coder.mintState({ uid: TEST_UID, providerType: CALCOM });
+
+    expect(userExternalConnectionStateCoder({ secret: TEST_SECRET }).verifyState({ state, providerType: CALCOM })?.uid).toBe(TEST_UID);
+  });
+
+  it('falls back to the testing secret in a testing environment', () => {
+    // an unconfigured `.env` reaches here as a `placeholder` sentinel, which would otherwise throw
+    // at Nest startup because the encryption validates its key eagerly
+    const coder = userExternalConnectionStateCoderFactory(makeConfigService('placeholder'), makeEnvService({ isTestingEnv: true }));
+    const state = coder.mintState({ uid: TEST_UID, providerType: CALCOM });
+
+    expect(userExternalConnectionStateCoder({ secret: TESTING_USER_EXTERNAL_CONNECTION_STATE_SECRET }).verifyState({ state, providerType: CALCOM })?.uid).toBe(TEST_UID);
+  });
+
+  it('throws when the secret is missing outside a testing environment', () => {
+    expect(() => userExternalConnectionStateCoderFactory(makeConfigService(), makeEnvService())).toThrow();
+  });
+
+  it('throws when the secret is not 64 hex characters outside a testing environment', () => {
+    expect(() => userExternalConnectionStateCoderFactory(makeConfigService('placeholder'), makeEnvService())).toThrow();
   });
 });

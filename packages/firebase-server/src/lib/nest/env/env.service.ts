@@ -31,6 +31,10 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
     return (this.env as FirebaseServerEnvironmentConfig).appMcpUrl;
   }
 
+  get appOAuthUrl(): Maybe<WebsiteUrl> {
+    return (this.env as FirebaseServerEnvironmentConfig).appOAuthUrl;
+  }
+
   get appWebhookUrl(): Maybe<WebsiteUrl> {
     return (this.env as FirebaseServerEnvironmentConfig).appWebhookUrl;
   }

@@ -31,6 +31,21 @@ export interface FirebaseServerEnvironmentConfig extends ServerEnvironmentConfig
    */
   readonly appMcpUrl?: Maybe<WebsiteUrlWithPrefix>;
   /**
+   * The origin external-connection OAuth endpoints are reachable at (e.g. 'https://example.com').
+   *
+   * The `/oauth/<providerType>/{authorize,callback}` routes are excluded from the global API route
+   * prefix, so they are served from the site origin rather than from `appApiUrl`. The redirect URI
+   * registered with each provider is derived from this value, and providers require a byte-identical
+   * match.
+   *
+   * Set explicitly when those routes are not reachable at `appUrl` — in local development `appUrl`
+   * is typically the Angular dev server while the `/oauth/**` hosting rewrite is served by the
+   * hosting emulator on another port. In production the two normally coincide, so it can be omitted.
+   *
+   * When omitted, modules fall back to `appUrl`.
+   */
+  readonly appOAuthUrl?: Maybe<WebsiteUrlWithPrefix>;
+  /**
    * The webhook URL. When not set explicitly, `buildNestServerRootModule()` computes
    * it from `appUrl + /webhook`.
    */

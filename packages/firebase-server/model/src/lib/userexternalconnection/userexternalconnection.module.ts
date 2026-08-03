@@ -6,6 +6,7 @@ import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerEnvService, FirebaseSer
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
 import { UserExternalConnectionServerActions, type UserExternalConnectionServerActionsContext, userExternalConnectionServerActions } from './userexternalconnection.action.server';
+import { UserExternalConnectionStateCoder, userExternalConnectionStateCoderFactory } from './oauth';
 
 // MARK: Environment Variable Keys
 /**
@@ -122,6 +123,7 @@ export interface ProvideAppUserExternalConnectionModuleMetadataConfig extends Pi
  * - UserExternalConnectionServerActions
  * - UserExternalConnectionServerFirestoreCollections
  * - UserExternalConnectionModuleConfig
+ * - UserExternalConnectionStateCoder
  *
  * @param config - The module configuration.
  * @returns The assembled {@link ModuleMetadata}.
@@ -132,11 +134,18 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, ...(exports ?? [])],
+    exports: [UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, UserExternalConnectionStateCoder, ...(exports ?? [])],
     providers: [
       {
         provide: UserExternalConnectionModuleConfig,
         useFactory: userExternalConnectionModuleConfigFactory,
+        inject: [ConfigService, FirebaseServerEnvService]
+      },
+      {
+        // provider-agnostic: the OAuth `state` is a feature of the authorization-code flow itself,
+        // not of any one provider, so every registered provider shares this coder and its secret
+        provide: UserExternalConnectionStateCoder,
+        useFactory: userExternalConnectionStateCoderFactory,
         inject: [ConfigService, FirebaseServerEnvService]
       },
       {

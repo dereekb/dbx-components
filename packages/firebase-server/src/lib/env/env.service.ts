@@ -57,6 +57,13 @@ export abstract class FirebaseServerEnvService {
    */
   abstract readonly appMcpUrl: Maybe<WebsiteUrl>;
   /**
+   * The origin external-connection OAuth endpoints are reachable at (e.g., 'https://app.example.com').
+   *
+   * Used to derive each provider's registered redirect URI. When omitted, modules fall back to
+   * `appUrl`.
+   */
+  abstract readonly appOAuthUrl: Maybe<WebsiteUrl>;
+  /**
    * The full webhook URL (e.g., 'https://app.example.com/webhook').
    */
   abstract readonly appWebhookUrl: Maybe<WebsiteUrl>;

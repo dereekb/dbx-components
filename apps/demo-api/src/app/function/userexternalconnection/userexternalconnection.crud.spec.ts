@@ -1,8 +1,7 @@
 import { demoCallModel } from './../model/crud.functions';
 import { type DisconnectUserExternalConnectionParams, type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnection, type UserExternalConnectionAuthorizeStateResult, onCallReadModelParams, onCallUpdateModelParams, userExternalConnectionIdentity } from '@dereekb/firebase';
-import { DemoApiUserExternalConnectionStateCoder } from '../../common/model/userexternalconnection';
 import { type Maybe } from '@dereekb/util';
-import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections } from '@dereekb/firebase-server/model';
+import { type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 
@@ -220,7 +219,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           expect(result.state).toBeDefined();
           // only the server can open it, so verify through the coder rather than by inspection
-          expect(f.nest.get(DemoApiUserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })?.uid).toBe(u.uid);
+          expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })?.uid).toBe(u.uid);
         });
 
         it('should bind the state to the provider it was minted for', async () => {
@@ -228,7 +227,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
 
           // the state secret is shared across providers, so the provider must be bound into the state
-          expect(f.nest.get(DemoApiUserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOOM })).toBeUndefined();
+          expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOOM })).toBeUndefined();
         });
 
         it('should not embed the uid in a readable form', async () => {
@@ -241,6 +240,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         it('should reject a provider with no authorize flow configured', async () => {
           const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: ZOOM };
           await expect(u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))).rejects.toThrow();
+        });
+
+        it('should offer exactly the providers whose oauth modules are mounted', () => {
+          // the registry is built from the mounted services, so it cannot drift from the modules the
+          // app actually imports the way a hand-maintained allowlist could
+          const registry = f.nest.get(UserExternalConnectionOAuthProviderRegistry);
+
+          expect(registry.hasAuthorizeFlowForProviderType(CALCOM)).toBe(true);
+          expect(registry.hasAuthorizeFlowForProviderType(ZOOM)).toBe(false);
         });
       });
     });

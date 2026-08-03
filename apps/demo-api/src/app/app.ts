@@ -4,7 +4,7 @@ import { type NestAppPromiseGetter, nestServerInstance, type NestServerInstanceC
 import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, applyOidcAuthMiddleware, applyOidcCorsMiddleware } from '@dereekb/firebase-server/oidc';
 import { FIREBASE_SERVER_MCP_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/mcp';
-import { CALCOM_OAUTH_CALLBACK_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/calcom/nestjs';
+import { CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/calcom';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
@@ -15,7 +15,7 @@ export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppMod
   configureWebhooks: true,
   globalApiRoutePrefix: {
     globalApiRoutePrefix: '/api',
-    exclude: [...FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, ...FIREBASE_SERVER_MCP_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, ...CALCOM_OAUTH_CALLBACK_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE]
+    exclude: [...FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, ...FIREBASE_SERVER_MCP_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, ...CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE]
   },
   configureNestServerInstance: (nestApp: INestApplication) => {
     applyOidcCorsMiddleware(nestApp);

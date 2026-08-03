@@ -4,7 +4,7 @@
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
+  "implicitDependencies": ["calcom", "zoho", "util", "!util-test", "!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -22,6 +22,9 @@
           },
           {
             "command": "npx nx run firebase-server-model:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-calcom:build-base"
           },
           {
             "command": "npx nx run firebase-server-twilio:build-base"
@@ -63,6 +66,10 @@
           {
             "description": "run firebase-server-model tests",
             "command": "npx nx test firebase-server-model"
+          },
+          {
+            "description": "run firebase-server-calcom tests",
+            "command": "npx nx test firebase-server-calcom"
           },
           {
             "description": "run firebase-server-test tests",

@@ -81,16 +81,22 @@ export interface UserExternalConnectionStateCoderConfig {
   readonly expiresIn?: Maybe<Milliseconds>;
 }
 
-export interface UserExternalConnectionStateCoder {
+/**
+ * Mints and verifies the OAuth `state` for external-connection handoffs.
+ *
+ * Declared as an abstract class so it is its own injection token, matching
+ * `UserExternalConnectionModuleConfig`. One coder is shared by every registered provider.
+ */
+export abstract class UserExternalConnectionStateCoder {
   /**
    * Mints a short-lived state for a user's connect handoff with a provider.
    */
-  readonly mintState: (input: MintUserExternalConnectionStateInput) => string;
+  abstract readonly mintState: (input: MintUserExternalConnectionStateInput) => string;
   /**
    * Resolves the user a state belongs to, or null when it is absent, tampered with, expired, or was
    * minted for a different provider.
    */
-  readonly verifyState: (input: VerifyUserExternalConnectionStateInput) => Maybe<UserExternalConnectionStateActor>;
+  abstract readonly verifyState: (input: VerifyUserExternalConnectionStateInput) => Maybe<UserExternalConnectionStateActor>;
 }
 
 /**
@@ -153,17 +159,6 @@ export function userExternalConnectionStateCoder(config: UserExternalConnectionS
   return { mintState, verifyState };
 }
 
-// MARK: Config
-/**
- * Injection token for the app's {@link UserExternalConnectionStateCoder}.
- *
- * Declared as an abstract class so it is its own token, matching `UserExternalConnectionModuleConfig`.
- */
-export abstract class DemoApiUserExternalConnectionStateCoder implements UserExternalConnectionStateCoder {
-  abstract readonly mintState: UserExternalConnectionStateCoder['mintState'];
-  abstract readonly verifyState: UserExternalConnectionStateCoder['verifyState'];
-}
-
 /**
  * Builds the external-connection state coder from the environment.
  *
@@ -172,14 +167,14 @@ export abstract class DemoApiUserExternalConnectionStateCoder implements UserExt
  * @returns The state coder.
  * @throws {Error} When the configured secret is invalid outside a testing environment.
  */
-export function demoApiUserExternalConnectionStateCoderFactory(configService: ConfigService, envService: FirebaseServerEnvService): DemoApiUserExternalConnectionStateCoder {
+export function userExternalConnectionStateCoderFactory(configService: ConfigService, envService: FirebaseServerEnvService): UserExternalConnectionStateCoder {
   let secret: AES256GCMEncryptionSecret = configService.get<string>(USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY) ?? '';
 
   if (!isValidAES256GCMEncryptionSecret(secret)) {
     if (envService.isTestingEnv) {
       secret = TESTING_USER_EXTERNAL_CONNECTION_STATE_SECRET;
     } else {
-      throw new Error(`demoApiUserExternalConnectionStateCoderFactory: The secret provided by ${USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY} is not valid. Expected a 64-character hexadecimal string.`);
+      throw new Error(`userExternalConnectionStateCoderFactory: The secret provided by ${USER_EXTERNAL_CONNECTION_STATE_SECRET_CONFIG_KEY} is not valid. Expected a 64-character hexadecimal string.`);
     }
   }
 
