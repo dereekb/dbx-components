@@ -1,13 +1,13 @@
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { type CalcomAccessToken } from '@dereekb/calcom';
+import { type CalcomAccessToken, isCalcomOAuthScope } from '@dereekb/calcom';
 import { CalcomOAuthAccessTokenCacheService, memoryCalcomOAuthAccessTokenCacheService } from '../oauth.service';
 import { type CalcomOAuthServiceConfig } from '../oauth.config';
 import { appCalcomOAuthModuleMetadata } from '../oauth.module';
 import { CalcomOAuthApi } from '../oauth.api';
 import { CALCOM_OAUTH_CALLBACK_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, appCalcomOAuthCallbackModuleMetadata } from './oauth.callback.module';
 import { CalcomOAuthCallbackController } from './oauth.callback.controller';
-import { CalcomOAuthCallbackServiceConfig, DEFAULT_CALCOM_OAUTH_SCOPES, calcomOAuthScopesFromEnvValue } from './oauth.callback.config';
+import { CalcomOAuthCallbackServiceConfig, DEFAULT_CALCOM_OAUTH_SCOPES } from './oauth.callback.config';
 import { CalcomOAuthCallbackService, type CalcomOAuthCallbackActor, type CalcomOAuthCallbackConnectedInput, type CalcomOAuthProviderError } from './oauth.callback.service';
 
 const TEST_CLIENT_ID = 'test-client-id';
@@ -82,29 +82,9 @@ describe('CalcomOAuthCallbackService', () => {
     it('should not request PROFILE_READ, which is only needed to label the connection', () => {
       expect(DEFAULT_CALCOM_OAUTH_SCOPES).not.toContain('PROFILE_READ');
     });
-  });
 
-  describe('calcomOAuthScopesFromEnvValue()', () => {
-    it('should parse a space-delimited list', () => {
-      expect(calcomOAuthScopesFromEnvValue('BOOKING_READ BOOKING_WRITE')).toEqual(['BOOKING_READ', 'BOOKING_WRITE']);
-    });
-
-    it('should parse a comma-delimited list', () => {
-      expect(calcomOAuthScopesFromEnvValue('BOOKING_READ, BOOKING_WRITE')).toEqual(['BOOKING_READ', 'BOOKING_WRITE']);
-    });
-
-    it('should return nothing for an absent or blank value, so the default applies', () => {
-      expect(calcomOAuthScopesFromEnvValue(undefined)).toBeUndefined();
-      expect(calcomOAuthScopesFromEnvValue('   ')).toBeUndefined();
-    });
-
-    it('should drop the .env placeholder sentinel rather than request it as a scope', () => {
-      // the committed .env uses `placeholder` as its sentinel and those values DO reach process.env
-      expect(calcomOAuthScopesFromEnvValue('placeholder')).toBeUndefined();
-    });
-
-    it('should drop unknown tokens but keep valid ones', () => {
-      expect(calcomOAuthScopesFromEnvValue('BOOKING_READ NOT_A_SCOPE')).toEqual(['BOOKING_READ']);
+    it('should only contain real Cal.com scopes', () => {
+      expect(DEFAULT_CALCOM_OAUTH_SCOPES.every(isCalcomOAuthScope)).toBe(true);
     });
   });
 
