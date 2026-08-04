@@ -98,6 +98,7 @@ import {
   UserExternalConnectionServerActions,
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
 import { type FirebaseServerEnvironmentConfig, assertSnapshotData } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
@@ -138,6 +139,7 @@ export interface DemoApiContext {
   get userExternalConnectionServerActions(): UserExternalConnectionServerActions;
   get userExternalConnectionAccessor(): UserExternalConnectionAccessor;
   get userExternalConnectionReader(): UserExternalConnectionReader;
+  get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService;
 }
 
 // MARK: Admin
@@ -216,6 +218,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get userExternalConnectionReader() {
     return this.instance.userExternalConnectionReader;
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.instance.userExternalConnectionCalcomUserContextService;
   }
 }
 
@@ -298,6 +304,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get userExternalConnectionReader() {
     return this.get(UserExternalConnectionReader);
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.get(UserExternalConnectionCalcomUserContextService);
   }
 }
 
@@ -402,6 +412,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
   get userExternalConnectionReader() {
     return this.instance.userExternalConnectionReader;
   }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.instance.userExternalConnectionCalcomUserContextService;
+  }
 }
 
 export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextInstance<F> implements DemoApiContext {
@@ -483,6 +497,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get userExternalConnectionReader() {
     return this.get(UserExternalConnectionReader);
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.get(UserExternalConnectionCalcomUserContextService);
   }
 }
 

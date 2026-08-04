@@ -86,13 +86,21 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
   } = factoryConfig;
 
   return (config: CalcomOAuthConfig) => {
-    const useApiKey = !!config.apiKey;
+    const apiKey = config.apiKey;
+    /**
+     * Whether the per-user path is available.
+     *
+     * Tracked separately from how SERVER-level calls authenticate, because the two are independent: an
+     * app can hold an API key for its own calls and an OAuth client for its users' connections, and
+     * before this was separated a configured API key silently disabled every per-user context.
+     */
+    const hasOAuthClient = !!config.clientId && !!config.clientSecret;
 
-    if (!useApiKey) {
-      if (!config.clientId) {
-        throw new Error('CalcomOAuthConfig missing clientId. Provide clientId+clientSecret for OAuth or apiKey for API key auth.');
-      } else if (!config.clientSecret) {
+    if (!apiKey && !hasOAuthClient) {
+      if (config.clientId) {
         throw new Error('CalcomOAuthConfig missing clientSecret.');
+      } else {
+        throw new Error('CalcomOAuthConfig missing clientId. Provide clientId+clientSecret for OAuth or apiKey for API key auth.');
       }
     }
 
@@ -103,34 +111,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 
-    // MARK: API Key Auth (static token, no refresh)
-    if (useApiKey) {
-      const apiKeyToken: CalcomAccessToken = {
-        accessToken: config.apiKey,
-        refreshToken: '',
-        expiresIn: Number.MAX_SAFE_INTEGER,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
-        scope: ''
-      };
-
-      const loadAccessToken: CalcomAccessTokenFactory = async () => apiKeyToken;
-
-      const makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory = () => {
-        throw new Error('makeUserAccessTokenFactory is not available when using API key auth. Use OAuth for per-user contexts.');
-      };
-
-      const oauthContext: CalcomOAuthContext = {
-        fetch,
-        fetchJson,
-        loadAccessToken,
-        makeUserAccessTokenFactory,
-        config
-      };
-
-      return { oauthContext };
-    }
-
-    // MARK: OAuth Auth (refresh token flow)
+    // MARK: Server Access Token
     /**
      * Tracks the latest server-level refresh token since Cal.com rotates them on every use.
      *
@@ -148,13 +129,34 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
       return accessToken;
     };
 
-    const loadAccessToken: CalcomAccessTokenFactory = calcomOAuthAccessTokenFactory({
-      tokenRefresher,
-      accessTokenCache: config.accessTokenCache
-    });
+    // an API key acts as the user who created it and does not expire, so it is handed back as a static
+    // token with nothing to refresh. It takes precedence for server-level calls when configured
+    const apiKeyToken: Maybe<CalcomAccessToken> = apiKey
+      ? {
+          accessToken: apiKey,
+          refreshToken: '',
+          expiresIn: Number.MAX_SAFE_INTEGER,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
+          scope: ''
+        }
+      : undefined;
 
-    // User Access Token
+    const loadAccessToken: CalcomAccessTokenFactory =
+      apiKeyToken == null
+        ? calcomOAuthAccessTokenFactory({
+            tokenRefresher,
+            accessTokenCache: config.accessTokenCache
+          })
+        : async () => apiKeyToken;
+
+    // MARK: User Access Token
     const makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory = (input: CalcomOAuthMakeUserAccessTokenFactoryInput) => {
+      // an access token for a USER can only come from that user's refresh token, exchanged against the
+      // OAuth client. An API key is the app's own identity and cannot stand in for it
+      if (!hasOAuthClient) {
+        throw new Error('makeUserAccessTokenFactory requires clientId+clientSecret. An api-key-only Cal.com configuration cannot create per-user contexts.');
+      }
+
       /**
        * Tracks this user's rotated refresh token, independently of the server-level token.
        */

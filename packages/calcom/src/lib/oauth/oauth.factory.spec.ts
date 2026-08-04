@@ -122,8 +122,28 @@ describe('calcomOAuthFactory()', () => {
 
   describe('api key auth', () => {
     it('should not expose a per-user token factory', () => {
+      // an api key is the app's own identity, and cannot be exchanged for a token that acts as a user
       const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key' });
       expect(() => oauthContext.makeUserAccessTokenFactory({ refreshToken: USER_REFRESH_TOKEN })).toThrow();
+    });
+
+    it('should authenticate server calls with the api key', async () => {
+      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key' });
+      expect((await oauthContext.loadAccessToken()).accessToken).toBe('test-api-key');
+    });
+
+    it('should STILL expose a per-user token factory when an oauth client is also configured', () => {
+      // the two are independent: an app holds an api key for its own calls and an oauth client for its
+      // users' connections. Treating a configured api key as exclusive silently disabled every
+      // per-user context, which is the only way a stored user connection can be used at all
+      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key', clientId: 'test-client-id', clientSecret: 'test-client-secret' });
+      expect(oauthContext.makeUserAccessTokenFactory({ refreshToken: USER_REFRESH_TOKEN })).toBeDefined();
+    });
+
+    it('should still authenticate server calls with the api key when an oauth client is configured', async () => {
+      // the api key takes precedence for the app's own calls, which need no refresh loop
+      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key', clientId: 'test-client-id', clientSecret: 'test-client-secret' });
+      expect((await oauthContext.loadAccessToken()).accessToken).toBe('test-api-key');
     });
   });
 });

@@ -1,9 +1,12 @@
-import { type ModuleMetadata } from '@nestjs/common';
+import { type ModuleMetadata, type Provider } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { type CalcomOAuthScope } from '@dereekb/calcom';
+import { CalcomApi } from '@dereekb/calcom/nestjs';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { CalcomUserExternalConnectionOAuthServiceConfig, calcomUserExternalConnectionOAuthServiceConfigFactory } from './calcom.oauth.connection.config';
+import { UserExternalConnectionCalcomUserContextService, userExternalConnectionCalcomUserContextService } from './calcom.oauth.connection.context';
 import { CalcomUserExternalConnectionOAuthController } from './calcom.oauth.connection.controller';
 import { CalcomUserExternalConnectionOAuthService } from './calcom.oauth.connection.service';
 
@@ -61,5 +64,29 @@ export function appCalcomUserExternalConnectionOAuthModuleMetadata(config: Provi
       CalcomUserExternalConnectionOAuthService,
       ...(providers ?? [])
     ]
+  };
+}
+
+// MARK: Calcom User Context Service
+/**
+ * Creates the NestJS provider for the {@link UserExternalConnectionCalcomUserContextService}.
+ *
+ * A provider rather than a module, because the three tokens it needs are never declared together:
+ * `CalcomApi` comes from the app's Cal.com module and the accessor and actions from its
+ * UserExternalConnection module. Declare this in a module that imports both.
+ *
+ * Separate from {@link appCalcomUserExternalConnectionOAuthModuleMetadata} on purpose — that module
+ * needs only `CalcomOAuthApi`, and folding this in would force every app running the connect flow to
+ * also provide `CalcomApi` whether it makes outbound Cal.com calls or not.
+ *
+ * @returns The NestJS provider.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionCalcomUserContextServiceProvider(): Provider {
+  return {
+    provide: UserExternalConnectionCalcomUserContextService,
+    useFactory: (calcomApi: CalcomApi, accessor: UserExternalConnectionAccessor, actions: UserExternalConnectionServerActions) => userExternalConnectionCalcomUserContextService({ calcomApi, accessor, actions }),
+    inject: [CalcomApi, UserExternalConnectionAccessor, UserExternalConnectionServerActions]
   };
 }

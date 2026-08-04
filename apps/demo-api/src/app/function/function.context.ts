@@ -28,6 +28,7 @@ import {
 import { type OnCallCreateModelResult, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions, UserExternalConnectionAccessor, UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader, UserExternalConnectionServerActions, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
 import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';
 import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
@@ -95,6 +96,20 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get userExternalConnectionReader(): UserExternalConnectionReader {
     return this.nestApplication.get(UserExternalConnectionReader);
+  }
+
+  /**
+   * The Cal.com sibling of {@link userExternalConnectionReader}: a uid in, a Cal.com API instance
+   * acting as that user out.
+   *
+   * Cal.com manages its own token refresh, so this is the surface to use for Cal.com calls — NOT
+   * `userExternalConnectionReader`'s `readUsableUserExternalConnectionCredentials()`, which would
+   * refresh a second time and spend a rotated refresh token twice.
+   *
+   * @returns The app's Cal.com user context service.
+   */
+  get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService {
+    return this.nestApplication.get(UserExternalConnectionCalcomUserContextService);
   }
 
   get firebaseModelsService() {
