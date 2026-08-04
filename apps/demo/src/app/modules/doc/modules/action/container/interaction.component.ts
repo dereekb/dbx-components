@@ -55,6 +55,10 @@ export class DocActionInteractionComponent {
     cancelText: 'Cancel Customized'
   };
 
+  readonly autoConfirmConfig: DbxActionConfirmConfig<unknown> = {
+    autoConfirm: true
+  };
+
   readonly customEchoConfig: DbxActionButtonEchoConfig = {
     onSuccess: { icon: 'thumb_up', color: 'ok', iconOnly: true, duration: 3000 },
     onError: { icon: 'warning', color: 'warn', iconOnly: true, duration: 3000 }

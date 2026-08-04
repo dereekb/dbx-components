@@ -31,17 +31,19 @@ export interface OAuthConsentScopesFormValue {
 /**
  * Configuration for the consent scopes form.
  *
- * Required scopes are filtered out by the caller before being passed in —
- * required scopes are surfaced separately as a static "Always granted" line
- * because they are not user-selectable.
+ * Required scopes are included in the list rather than filtered out — they render as
+ * selected-and-disabled rows so their description stays visible while remaining
+ * non-deselectable. They are always part of the submitted value; the server force-grants them
+ * regardless.
  */
 export interface OAuthConsentScopesFormFieldsConfig {
   /**
-   * Optional scopes the user can choose to grant.
+   * Scopes to render. Entries flagged `required` are selected and locked on.
    */
-  readonly optionalScopes: readonly OAuthConsentScope[];
+  readonly scopes: readonly OAuthConsentScope[];
   /**
-   * Initial selection set. Defaults to every optional scope being selected.
+   * Initial selection set. Defaults to every scope being selected. Required scopes are always
+   * selected regardless of what is passed here.
    */
   readonly initiallySelected?: readonly OidcScope[];
 }
@@ -55,20 +57,30 @@ export interface OAuthConsentScopesFormFieldsConfig {
  * The list renders bare (no Material form-field wrapper) and without the
  * default 300px height cap so it grows to fit the scope list.
  *
+ * Required scopes are seeded into the initial value and rendered as disabled rows, so they cannot
+ * be deselected. Because they are always present in the value, the "select at least one" validator
+ * compares against the required count rather than zero — and is skipped entirely when every
+ * requested scope is required (there would be nothing left to select).
+ *
  * @param config - The consent scopes form fields configuration.
  * @returns A `FormConfig` whose single field selects an `OidcScope[]` of granted scopes.
  */
 export function oauthConsentScopesFormConfig(config: OAuthConsentScopesFormFieldsConfig): FormConfig {
-  const { optionalScopes, initiallySelected } = config;
-  const value: OidcScope[] = (initiallySelected ?? optionalScopes.map((scope) => scope.name)).slice();
-  const optionalScopesArray = optionalScopes.slice();
-  const validators: ValidatorConfig[] = [
-    {
-      type: 'custom',
-      expression: 'fieldValue && fieldValue.length > 0',
-      kind: OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_KIND
-    }
-  ];
+  const { scopes, initiallySelected } = config;
+  const scopesArray = scopes.slice();
+  const requiredScopeNames = scopesArray.filter((scope) => scope.required).map((scope) => scope.name);
+  const selectedScopeNames = initiallySelected ?? scopesArray.map((scope) => scope.name);
+  const value: OidcScope[] = Array.from(new Set<OidcScope>([...requiredScopeNames, ...selectedScopeNames]));
+  const hasOptionalScopes = requiredScopeNames.length < scopesArray.length;
+  const validators: ValidatorConfig[] = hasOptionalScopes
+    ? [
+        {
+          type: 'custom',
+          expression: `fieldValue && fieldValue.length > ${requiredScopeNames.length}`,
+          kind: OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_KIND
+        }
+      ]
+    : [];
 
   return {
     fields: [
@@ -82,7 +94,7 @@ export function oauthConsentScopesFormConfig(config: OAuthConsentScopesFormField
         props: {
           listComponentClass: of(DbxFirebaseOAuthConsentScopeListComponent),
           readKey: (scope) => scope.name,
-          state$: of(successResult(optionalScopesArray)),
+          state$: of(successResult(scopesArray)),
           wrapped: false,
           maxHeight: 'none'
         }

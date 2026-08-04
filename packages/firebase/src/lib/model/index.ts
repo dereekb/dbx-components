@@ -4,3 +4,4 @@ export * from './notification';
 export * from './oidcmodel';
 export * from './storagefile';
 export * from './system';
+export * from './userexternalconnection';

@@ -6,9 +6,11 @@ import {
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
+  createUserExternalConnectionParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
+  disconnectUserExternalConnectionParamsType,
   downloadMultipleStorageFilesParamsType,
   downloadStorageFileParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
@@ -17,6 +19,7 @@ import {
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
   readStorageFileMetadataParamsType,
+  readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   resyncNotificationUserParamsType,
   rotateOidcClientSecretParamsType,
@@ -610,6 +613,43 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'read', typeText: 'boolean' },
       { name: 'message', typeText: 'string' }
     ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'create',
+    paramsTypeName: 'CreateUserExternalConnectionParams',
+    paramsValidator: createUserExternalConnectionParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
+    paramsTypeDescription: "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation."
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'read',
+    specifier: 'authorizeState',
+    paramsTypeName: 'ReadUserExternalConnectionAuthorizeStateParams',
+    paramsValidator: readUserExternalConnectionAuthorizeStateParamsType,
+    resultTypeName: 'UserExternalConnectionAuthorizeStateResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Mints the short-lived `state` that begins an OAuth connect handoff for a provider.\n\nA read rather than an update: it changes nothing, it just proves who is asking. The app\ndecides how the state is signed and how long it lives.',
+    paramsTypeDescription: 'Parameters for beginning an OAuth connect handoff for a provider.',
+    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' }],
+    resultTypeDescription: "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
+    resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'update',
+    specifier: 'disconnect',
+    paramsTypeName: 'DisconnectUserExternalConnectionParams',
+    paramsValidator: disconnectUserExternalConnectionParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result.",
+    paramsTypeDescription: "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
+    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to disconnect from.' }]
   }
 ];
 
@@ -977,6 +1017,24 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
     read: 'system',
     serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'userExternalConnection',
+    modelName: 'UserExternalConnection',
+    modelGroup: 'UserExternalConnection',
+    identityConst: 'userExternalConnectionIdentity',
+    collectionPrefix: 'uec',
+    description: "The client-readable half of a user's third-party OAuth connection state.",
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.ts',
+    fields: [
+      { name: 'uid', longName: 'uid', optional: false },
+      { name: 'e', longName: 'entries', tsType: 'UserExternalConnectionEntryMap', optional: false, description: 'Per-provider connection state, keyed by provider type.' },
+      { name: 'c', longName: 'connectedProviderTypes', tsType: 'UserExternalConnectionProviderType[]', optional: false, description: 'DERIVED from `e`: every provider type whose entry status is `connected`.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Date this document was last updated at.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'userExternalConnectionFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   }
 ];
 

@@ -17,6 +17,7 @@ import { STATES } from './app/app.router';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
 import { APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE, APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN, APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG, APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'FIREBASE_COMPONENTS_NAME';
 // @dbx-addon:oidc:root-config:imports
+// @dbx-addon:externalconnection:root-config:imports
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -190,6 +191,10 @@ export const appConfig: ApplicationConfig = {
     }),
     // provideDbxFirebaseOidc(...) must come AFTER provideDbxFirebase(...).
     // @dbx-addon:oidc:root-config:providers
+    // provideDbxFirebaseExternalConnections(...) registers the third-party services users can connect
+    // their account to (Cal.com, Zoom, ...). Like the OIDC provider it is a sibling of
+    // provideDbxFirebase(...) and must come after it, since it depends on the app's Firestore collections.
+    // @dbx-addon:externalconnection:root-config:providers
     provideDbxFirebaseLogin({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,
       termsOfServiceUrls: {

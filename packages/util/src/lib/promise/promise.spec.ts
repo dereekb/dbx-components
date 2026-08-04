@@ -1,6 +1,6 @@
 import { range } from '../array/array.number';
 import { isEvenNumber, randomNumberFactory } from '../number';
-import { performAsyncTasks, performTasksFromFactoryInParallelFunction, performTasksInParallel } from './promise';
+import { performAsyncTask, performAsyncTasks, performTasksFromFactoryInParallelFunction, performTasksInParallel } from './promise';
 import { waitForMs } from './wait';
 import { callbackTest } from '@dereekb/util/test';
 
@@ -148,6 +148,67 @@ describe('performAsyncTasks()', () => {
       expect(result.results.length).toBe(tasksToRun - 1);
       expect(result.errors.length).toBe(1);
     });
+
+    // REGRESSION: the failure tuple used to be built as [value, undefined, false], discarding the
+    // caught error, so every entry in `errors` was [input, undefined] despite the declared
+    // [I, unknown][] contract. Callers reporting per-item failures (e.g. a multi-key model read)
+    // could only ever emit a generic "unknown error".
+    it('should retain the caught error for each failed task.', async () => {
+      const testError = new Error('test error');
+
+      const result = await performAsyncTasks(
+        [0, 1, 2],
+        (x) => {
+          return x === 1 ? Promise.reject(testError) : Promise.resolve(true);
+        },
+        {
+          throwError: false
+        }
+      );
+
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0][0]).toBe(1);
+      expect(result.errors[0][1]).toBe(testError);
+    });
+
+    it('should retain a non-Error thrown value for each failed task.', async () => {
+      const result = await performAsyncTasks([0], () => Promise.reject('a string failure'), { throwError: false });
+
+      expect(result.errors[0][1]).toBe('a string failure');
+    });
+
+    it('should retain only the final error when retries are exhausted.', async () => {
+      const errors = [new Error('first'), new Error('second')];
+      let attempt = 0;
+
+      const result = await performAsyncTasks([0], () => Promise.reject(errors[attempt++]), {
+        throwError: false,
+        retriesAllowed: 1,
+        retryWait: 0
+      });
+
+      expect(attempt).toBe(2);
+      expect(result.errors[0][1]).toBe(errors[1]);
+    });
+  });
+});
+
+describe('performAsyncTask()', () => {
+  it('should return the value and success on a successful task.', async () => {
+    const result = await performAsyncTask(() => Promise.resolve(1));
+
+    expect(result.success).toBe(true);
+    expect(result.value).toBe(1);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return the caught error on a failed task when not throwing.', async () => {
+    const testError = new Error('test error');
+    const result = await performAsyncTask(() => Promise.reject(testError), { throwError: false });
+
+    expect(result.success).toBe(false);
+    expect(result.value).toBeUndefined();
+    expect(result.error).toBe(testError);
   });
 });
 

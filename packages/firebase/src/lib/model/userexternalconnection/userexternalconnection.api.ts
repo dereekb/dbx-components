@@ -1,0 +1,146 @@
+import { type, type Type } from 'arktype';
+import { type InferredTargetModelParams, inferredTargetModelParamsType } from '../../common/model/model/model.param';
+import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { type UserExternalConnectionTypes } from './userexternalconnection';
+import { type UserExternalConnectionProviderType } from './userexternalconnection.id';
+
+// MARK: Create
+/**
+ * Parameters for creating the calling user's connection document.
+ *
+ * Deliberately empty: the document is keyed by uid, so there is nothing to target and nothing to
+ * seed it with — providers arrive one at a time through the OAuth flow, never at creation.
+ *
+ * @dbxModelApiParams
+ */
+export interface CreateUserExternalConnectionParams {}
+
+export const createUserExternalConnectionParamsType = /* @__PURE__ */ type({}) as Type<CreateUserExternalConnectionParams>;
+
+// MARK: Update
+/**
+ * Parameters for disconnecting the current user from a third-party provider.
+ *
+ * This is the ONLY write path a client has to the connection pair. There is deliberately no connect
+ * or update params type here: connecting requires credentials, which only the server ever sees.
+ *
+ * If no target model is provided, the current user's connection document is assumed.
+ *
+ * @dbxModelApiParams
+ */
+export interface DisconnectUserExternalConnectionParams extends InferredTargetModelParams {
+  /**
+   * The provider type to disconnect from.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+}
+
+export const disconnectUserExternalConnectionParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    providerType: 'string'
+  })
+) as Type<DisconnectUserExternalConnectionParams>;
+
+// MARK: Read
+/**
+ * Parameters for beginning an OAuth connect handoff for a provider.
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadUserExternalConnectionAuthorizeStateParams extends InferredTargetModelParams {
+  /**
+   * The provider type to begin connecting to.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+}
+
+export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    providerType: 'string'
+  })
+) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
+
+/**
+ * The opaque, short-lived `state` to carry through a provider's OAuth handoff.
+ *
+ * Minting it requires an authenticated call, because a top-level navigation to the provider's
+ * authorize endpoint carries no credentials and the server must already know who is connecting. The
+ * client's only job is to pass this through — it must never append its ID token to the redirect.
+ */
+export interface UserExternalConnectionAuthorizeStateResult {
+  /**
+   * The state to send on the authorize request.
+   */
+  readonly state: string;
+}
+
+// MARK: Functions
+/**
+ * Custom (non-CRUD) function type map for UserExternalConnection. There are none.
+ */
+export type UserExternalConnectionFunctionTypeMap = {};
+
+export const USER_EXTERNAL_CONNECTION_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMap<UserExternalConnectionFunctionTypeMap> = {};
+
+/**
+ * CRUD function configuration map for the UserExternalConnection model.
+ */
+export type UserExternalConnectionModelCrudFunctionsConfig = {
+  readonly userExternalConnection: {
+    /**
+     * Creates the calling user's connection document.
+     *
+     * Every other client-reachable operation asserts a role against this document, so it must exist
+     * before a user can begin a connect. Creating it is its own call — rather than a side effect of
+     * the first connect — so that "may this user have external connections at all?" is decided in
+     * one place instead of being folded into the OAuth handoff.
+     *
+     * Throws when the document already exists.
+     */
+    create: CreateUserExternalConnectionParams;
+    read: {
+      /**
+       * Mints the short-lived `state` that begins an OAuth connect handoff for a provider.
+       *
+       * A read rather than an update: it changes nothing, it just proves who is asking. The app
+       * decides how the state is signed and how long it lives.
+       */
+      authorizeState: [ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult];
+    };
+    update: {
+      /**
+       * Disconnects the current user from the given provider.
+       *
+       * Removes the provider's credentials and its entry in one transaction, and recomputes the
+       * connected-provider array from the result.
+       */
+      disconnect: DisconnectUserExternalConnectionParams;
+    };
+  };
+};
+
+export const USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<UserExternalConnectionModelCrudFunctionsConfig, UserExternalConnectionTypes> = {
+  userExternalConnection: ['create', 'read:authorizeState', 'update:disconnect']
+};
+
+/**
+ * Abstract class defining all callable UserExternalConnection cloud functions.
+ *
+ * Implement this in your app module to wire up the function endpoints.
+ */
+export abstract class UserExternalConnectionFunctions implements ModelFirebaseFunctionMap<UserExternalConnectionFunctionTypeMap, UserExternalConnectionModelCrudFunctionsConfig> {
+  abstract userExternalConnection: {
+    createUserExternalConnection: ModelFirebaseCreateFunction<CreateUserExternalConnectionParams>;
+    readUserExternalConnection: {
+      authorizeState: ModelFirebaseCrudFunction<ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult>;
+    };
+    updateUserExternalConnection: {
+      disconnect: ModelFirebaseCrudFunction<DisconnectUserExternalConnectionParams>;
+    };
+  };
+}
+
+/**
+ * Used to generate the UserExternalConnectionFunctions map for a Functions instance.
+ */
+export const userExternalConnectionFunctionMap = callModelFirebaseFunctionMapFactory(USER_EXTERNAL_CONNECTION_FUNCTION_TYPE_CONFIG_MAP, USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG);

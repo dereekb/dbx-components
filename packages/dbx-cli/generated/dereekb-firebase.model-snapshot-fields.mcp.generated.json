@@ -871,8 +871,45 @@
         "sub",
         "firestoresubobject"
       ],
-      "example": "// Nested address object with its own converters\nconst addressField = firestoreSubObject<Address>({\n  objectField: {\n    street: firestoreString(),\n    city: firestoreString(),\n    zip: firestoreString()\n  }\n});",
+      "example": "// Nested address object with its own converters\nconst addressField = firestoreSubObject<Address>({\n  objectField: {\n    fields: {\n      street: firestoreString(),\n      city: firestoreString(),\n      zip: firestoreString()\n    }\n  }\n});",
       "relatedSlugs": [
+        "firestore-object-array"
+      ]
+    },
+    {
+      "slug": "firestore-object-map",
+      "name": "firestoreObjectMap",
+      "kind": "factory",
+      "category": "map",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "firestoreObjectMap(config: FirestoreObjectMapFieldConfig<T, O, S>): ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>",
+      "description": "Creates a field mapping configuration for a Firestore map whose values are complex objects.\n\nThis is the map-keyed counterpart to {@link firestoreObjectArray}: each value in the map is\nconverted using its own set of field converters (via `objectField` or `firestoreField`), so\nnested `Date`/enum/array fields round-trip properly.\n\nOn write, null/undefined values are filtered from each object to match Firestore semantics, and\nempty values (including objects with no keys) are removed from the map entirely.\n\nNOTE: this exists instead of passing a sub-object's `mapFunctions.to`/`.from` directly to\n{@link firestoreEncodedObjectMap}. That encoder is invoked as `mapFn(value, key)` by\n`mapObjectMap()`, while a `ModelMapFunctions`' second parameter is the accumulator *target* — so\nthe map key string would be used as the write target and the conversion would throw at runtime.\nThe arity is wrapped here, once, rather than at each call site.",
+      "optional": false,
+      "params": [
+        {
+          "name": "config",
+          "type": "FirestoreObjectMapFieldConfig<T, O, S>",
+          "description": "- Configuration including the per-value conversions and optional map filtering.",
+          "optional": false
+        }
+      ],
+      "returns": "A field mapping configuration for object map values.",
+      "tags": [
+        "map",
+        "record",
+        "dictionary",
+        "object",
+        "nested",
+        "embedded",
+        "structured",
+        "factory",
+        "firestore",
+        "firestoreobjectmap"
+      ],
+      "example": "// Map of provider id -> connection entry\nconst entriesField = firestoreObjectMap<UserExternalConnectionEntry, FirestoreModelData<UserExternalConnectionEntry>, UserExternalConnectionProviderType>({\n  objectField: { fields: userExternalConnectionEntryFields }\n});",
+      "relatedSlugs": [
+        "firestore-sub-object",
         "firestore-object-array"
       ]
     },

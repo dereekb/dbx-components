@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CalcomServiceConfig } from './calcom.config';
-import { type Calcom, type CalcomContext, type CalcomServerContext, type CalcomUserContext, type CalcomUserContextFactoryInput, calcomFactory, getMe, getSchedules, getAvailableSlots, createBooking, getBooking, cancelBooking, getEventTypes, createEventType, updateEventType, deleteEventType, getCalendars, getBusyTimes, createWebhook, getWebhooks, getWebhook, updateWebhook, deleteWebhook } from '@dereekb/calcom';
+import { type Calcom, type CalcomContext, type CalcomServerContext, type CalcomUserContext, type CalcomRefreshTokenCredential, calcomFactory, getMe, getSchedules, getAvailableSlots, createBooking, getBooking, cancelBooking, getEventTypes, createEventType, updateEventType, deleteEventType, getCalendars, getBusyTimes, createWebhook, getWebhooks, getWebhook, updateWebhook, deleteWebhook } from '@dereekb/calcom';
 import { cachedGetter } from '@dereekb/util';
 import { CalcomOAuthApi } from '../oauth';
 
@@ -74,7 +74,7 @@ export class CalcomApi {
    * resolved from the cache service using an md5 hash of the refresh token as the key.
    * This ensures tokens persist across requests and server restarts without collisions.
    *
-   * @param input - The user context factory input containing the refresh token and optional cache.
+   * @param credential - The user's refresh token credential, with an optional cache scoped to that grant.
    * @returns A new CalcomApiContextInstance scoped to the user.
    *
    * @example
@@ -91,19 +91,11 @@ export class CalcomApi {
    * });
    * ```
    */
-  makeUserContextInstance(input: CalcomUserContextFactoryInput): CalcomApiContextInstance {
-    const contextInput = { ...input };
+  makeUserContextInstance(credential: CalcomRefreshTokenCredential): CalcomApiContextInstance {
+    // auto-resolve a per-user cache from the refresh token when none was given
+    const accessTokenCache = credential.accessTokenCache ?? this.calcomOAuthApi.cacheForRefreshToken(credential.refreshToken);
+    const userContext: CalcomUserContext = this.calcom.calcomServerContext.makeUserContext({ ...credential, accessTokenCache });
 
-    // Auto-resolve per-user cache from the refresh token if no explicit cache was given
-    if (!contextInput.accessTokenCache && contextInput.refreshToken) {
-      const userCache = this.calcomOAuthApi.cacheForRefreshToken(contextInput.refreshToken);
-
-      if (userCache) {
-        contextInput.accessTokenCache = userCache;
-      }
-    }
-
-    const userContext: CalcomUserContext = this.calcom.calcomServerContext.makeUserContext(contextInput);
     return this.makeContextInstance(userContext);
   }
 
@@ -121,11 +113,11 @@ export class CalcomApi {
    * Creates a raw {@link CalcomUserContext} from a refresh token, without wrapping in a {@link CalcomApiContextInstance}.
    * Prefer {@link makeUserContextInstance} unless you need direct context access.
    *
-   * @param input - The user context factory input containing the refresh token and optional cache.
+   * @param credential - The user's refresh token credential, with the cache scoped to that grant.
    * @returns A CalcomUserContext for the given user.
    */
-  makeUserContext(input: CalcomUserContextFactoryInput) {
-    return this.calcom.calcomServerContext.makeUserContext(input);
+  makeUserContext(credential: CalcomRefreshTokenCredential) {
+    return this.calcom.calcomServerContext.makeUserContext(credential);
   }
 }
 

@@ -98,6 +98,67 @@
         <dbx-avatar [avatarUrl]="demoBrokenAvatarUrl" avatarStyle="square" avatarName="John Smith"></dbx-avatar>
       </div>
     </doc-feature-example>
+    <doc-feature-example header="Tile avatars" hint="With avatarTile the avatar takes the <dbx-icon-tile> presentation: the icon-tile CSS variables apply, and avatarColor/avatarColorTone paint the surface.">
+      <h3>Tile with a color</h3>
+      <p>Use a tile avatar for a brand or an integration rather than a person &mdash; a logo image when there is one, and a Material icon when there is not.</p>
+      <p>
+        Set
+        <code>avatarColorTone</code>
+        for the tonal surface that leading icons use throughout the app.
+      </p>
+      <div class="avatar-example-row">
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarSize="small" avatarIcon="link" avatarColor="primary" [avatarColorTone]="18"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarIcon="event" avatarColor="success" [avatarColorTone]="18"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarIcon="videocam" avatarColor="warn" [avatarColorTone]="18"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarIcon="forum" avatarColor="tertiary" [avatarColorTone]="18"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarSize="large" avatarIcon="work" avatarColor="primary"></dbx-avatar>
+      </div>
+      <h3>Tile with a logo</h3>
+      <p>
+        A tile avatar fits its image with
+        <code>object-fit: contain</code>
+        by default, so a wide brand mark is never cropped. Override it with
+        <code>avatarImageFit</code>
+        , and recolor a single-color mark with
+        <code>avatarImageFilter</code>
+        .
+      </p>
+      <p>
+        Set
+        <code>avatarIgnoreDefaultUrl</code>
+        so a provider without a logo falls through to its icon rather than to the app-wide default avatar image.
+      </p>
+      <div class="avatar-example-row">
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarSize="small" [avatarUrl]="demoLogoUrl" [avatarIgnoreDefaultUrl]="true" avatarIcon="link"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" [avatarUrl]="demoLogoUrl" [avatarIgnoreDefaultUrl]="true" avatarIcon="link"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" [avatarUrl]="demoLogoUrl" [avatarIgnoreDefaultUrl]="true" avatarColor="grey" [avatarColorTone]="18"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" [avatarUrl]="demoLogoUrl" [avatarIgnoreDefaultUrl]="true" avatarColor="primary" avatarImageFilter="brightness(0) invert(1)"></dbx-avatar>
+      </div>
+      <h3>Customization</h3>
+      <p>
+        A tile avatar sizes from
+        <code>--dbx-avatar-size</code>
+        , and its padding and glyph size derive from it. Override either directly with
+        <code>--dbx-avatar-tile-padding</code>
+        and
+        <code>--dbx-avatar-tile-icon-size</code>
+        .
+      </p>
+      <div class="avatar-example-row">
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarIcon="bolt" avatarColor="primary" [avatarColorTone]="18" style="--dbx-avatar-size: 40px"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarStyle="square" avatarIcon="bolt" avatarColor="primary" [avatarColorTone]="18" style="--dbx-avatar-size: 40px; --dbx-avatar-tile-icon-size: 18px"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarTile]="true" avatarIcon="bolt" avatarColor="primary" [avatarColorTone]="18" style="--dbx-avatar-size: 56px; --dbx-avatar-tile-padding: 4px"></dbx-avatar>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header="DbxAvatarViewService" hint="Service that contains the configuration for avatar customization.">
       <h4>DbxAvatarViewServiceConfig</h4>
       <p>You can provide this configuration in root.app.config.ts to configure the DbxAvatarViewService.</p>

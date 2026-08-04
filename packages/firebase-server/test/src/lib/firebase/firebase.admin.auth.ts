@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- file intentionally exposes gen 1 wrapped-function overloads for backward-compatible test fixtures */
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
-import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomPhoneNumberFactory } from '@dereekb/util';
+import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomNumberFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildTestContextFixture, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { type FirebaseAdminTestContext } from './firebase.admin';
 import { type CreateRequest, type UserRecord, type DecodedIdToken, type Auth } from 'firebase-admin/auth';
@@ -467,11 +467,21 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
 }
 
 /**
+ * Random component of a generated test uid.
+ *
+ * The counter and the timestamp alone are not enough to keep uids unique: the counter is per-module, so
+ * every spec FILE starts it at 1, and two files whose first user is created in the same millisecond
+ * would otherwise be handed the identical uid — which fails as "the user with the provided uid already
+ * exists" in whichever file loses. Kept numeric so a uid stays digits-only.
+ */
+const testUidRandomFactory = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' });
+
+/**
  * Incrementing number factory for generating test UID values.
  *
- * Has the format 'test-uid-<number>'
+ * Has the format '<timestamp>0<counter><random>'
  */
-export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `${Date.now()}0${i}`);
+export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `${Date.now()}0${i}${testUidRandomFactory()}`);
 
 // MARK: Utility
 /**

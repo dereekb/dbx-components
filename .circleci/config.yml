@@ -165,7 +165,7 @@ jobs:
           command: npx nx test dbx-form
       - store_test_results:
           path: ~/code/.reports/junit/
-  # Runs tests for nestjs and standalone API integration packages (zoho, zoom, calcom)
+  # Runs tests for nestjs and standalone API integration packages (zoho, zoom, calcom, discord)
   test-with-node-nestjs:
     <<: *defaults
     environment:
@@ -186,6 +186,9 @@ jobs:
       - run:
           name: run calcom tests
           command: npx nx run-all-tests calcom
+      - run:
+          name: run discord tests
+          command: npx nx run-all-tests discord
       - run:
           name: run trello tests
           command: npx nx run-all-tests trello

@@ -1,4 +1,4 @@
-import { DiscordApi } from '@dereekb/nestjs/discord';
+import { DiscordApi } from '@dereekb/discord/nestjs';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()

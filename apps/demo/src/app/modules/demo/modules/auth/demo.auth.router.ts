@@ -5,12 +5,14 @@ import { DemoAuthLayoutComponent } from './container/layout.component';
 import { DemoAuthLoggedOutComponent } from './container/loggedout.component';
 import { DemoAuthLoginComponent } from './container/login.component';
 import { DemoAuthResetPasswordComponent } from './container/reset.component';
+import { DEMO_AUTH_STATE_DATA } from './demo.auth.router.auth';
 
 export const AUTH_STATE: Ng2StateDeclaration = {
   url: '/auth?target',
   name: 'demo.auth',
   redirectTo: 'demo.auth.login',
-  component: DemoAuthLayoutComponent
+  component: DemoAuthLayoutComponent,
+  data: DEMO_AUTH_STATE_DATA
 };
 
 export const AUTH_LOGIN_STATE: Ng2StateDeclaration = {

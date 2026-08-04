@@ -1,4 +1,4 @@
-import { computed, Directive, inject, input, model } from '@angular/core';
+import { computed, Directive, inject, model } from '@angular/core';
 import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from './style';
 import { DbxColorService } from './style.color.service';
 import { type Maybe } from '@dereekb/util';
@@ -64,8 +64,12 @@ export class DbxColorDirective {
   /**
    * Background tone level (0-100). When set, the background becomes semi-transparent
    * and text color switches to the vibrant theme color for a tonal appearance.
+   *
+   * Declared as a `model` for the same reason as {@link dbxColor}: a colored-surface component on the same host (e.g.
+   * `dbx-avatar-view`) resolves its tone from its own inputs/context and pushes it here, keeping this directive the
+   * single token provider on the element.
    */
-  readonly dbxColorTone = input<Maybe<DbxColorTone>>();
+  readonly dbxColorTone = model<Maybe<DbxColorTone>>();
 
   /**
    * Whether a color is currently bound. When nothing is bound the directive is fully inert — it adds no marker class

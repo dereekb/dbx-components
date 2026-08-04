@@ -225,10 +225,6 @@ export class LandingLayoutComponent {
         {
           name: '@dereekb/nestjs/typeform',
           description: 'Typeform form submission handling'
-        },
-        {
-          name: '@dereekb/nestjs/discord',
-          description: 'Discord bot and webhook support'
         }
       ]
     },
@@ -297,6 +293,23 @@ export class LandingLayoutComponent {
         {
           name: '@dereekb/calcom/nestjs',
           description: 'NestJS Cal.com module'
+        }
+      ]
+    },
+    {
+      name: '@dereekb/discord',
+      description: 'Discord integration providing OAuth 2.0 client access, plus bot and webhook support.',
+      packages: [
+        {
+          title: 'discord.js',
+          url: 'https://discord.js.org/',
+          target: '_blank'
+        }
+      ],
+      children: [
+        {
+          name: '@dereekb/discord/nestjs',
+          description: 'NestJS Discord bot, webhook, and OAuth modules'
         }
       ]
     },

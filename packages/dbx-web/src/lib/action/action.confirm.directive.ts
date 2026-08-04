@@ -13,11 +13,23 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
    * Value to pass to the action's ready state when the user confirms.
    */
   readonly readyValue?: T;
+  /**
+   * Whether to confirm the action immediately instead of showing the dialog.
+   *
+   * Useful for actions that need no confirmation but are rendered by the same template as actions that do,
+   * and for passing a readyValue through without prompting.
+   *
+   * Defaults to false.
+   */
+  readonly autoConfirm?: boolean;
 }
 
 /**
  * Displays a confirmation dialog when the action is triggered. If the user confirms,
  * the configured ready value is passed to the action. If the user cancels, the action is rejected.
+ *
+ * A config with `autoConfirm` true shows no dialog and marks the action ready immediately. This lets a
+ * template bind the same input for actions that need confirmation and actions that do not.
  *
  * This directive works with action triggering only, not button clicks.
  * For button-based confirmation, use an appPromptConfirmButton directive instead.
@@ -55,7 +67,7 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
     cleanSubscriptionWithLockSet({
       lockSet: this.source.lockSet,
       sub: this.source.triggered$.subscribe(() => {
-        const skip = this.dbxActionConfirmSkip();
+        const skip = this.dbxActionConfirmSkip() || this.dbxActionConfirm()?.autoConfirm === true;
 
         if (skip) {
           this._handleDialogResult(true);

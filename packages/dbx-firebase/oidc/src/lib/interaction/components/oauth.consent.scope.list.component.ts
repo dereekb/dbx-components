@@ -46,6 +46,10 @@ export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelect
  * Selection list view that pairs with `DbxFirebaseOAuthConsentScopeListComponent`.
  * Maps each `OAuthConsentScope` to a `DbxValueListItem` keyed by the scope name
  * and renders it through `DbxFirebaseOAuthConsentScopeListItemComponent`.
+ *
+ * Scopes flagged `required` map to disabled rows so they render selected but cannot be toggled
+ * off — the surrounding `dbxListItemIsSelectedModifier` owns the `selected` flag (driven by the
+ * form value), and only `disabled` is set here.
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent-scope-list-view',
@@ -58,7 +62,7 @@ export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelect
 export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSelectionListViewDirective<OAuthConsentScope> {
   readonly config: DbxSelectionValueListViewConfig<OAuthConsentScope> = {
     componentClass: DbxFirebaseOAuthConsentScopeListItemComponent,
-    mapValuesToItemValues: (values) => of(values.map((scope) => ({ ...scope, key: scope.name, itemValue: scope })))
+    mapValuesToItemValues: (values) => of(values.map((scope) => ({ ...scope, key: scope.name, itemValue: scope, disabled: scope.required === true })))
   };
 }
 
@@ -67,6 +71,9 @@ export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSe
  * row for both selected and unselected scopes — the selection chrome (the
  * leading checkbox/highlight) is provided by the wrapping
  * `dbx-selection-list-view`.
+ *
+ * Required scopes get an extra "Always granted" note so the row explains why its checkbox is
+ * locked on.
  */
 @Component({
   template: `
@@ -75,6 +82,9 @@ export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSe
         <div class="mat-subtitle-2">{{ name }}</div>
         @if (description) {
           <div class="item-details">{{ description }}</div>
+        }
+        @if (required) {
+          <div class="item-details dbx-hint">Always granted</div>
         }
       </div>
     </div>
@@ -89,5 +99,9 @@ export class DbxFirebaseOAuthConsentScopeListItemComponent extends AbstractDbxVa
 
   get description() {
     return this.itemValue.description;
+  }
+
+  get required() {
+    return this.itemValue.required === true;
   }
 }

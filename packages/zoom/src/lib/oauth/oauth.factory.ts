@@ -1,5 +1,5 @@
-import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { ZOOM_OAUTH_API_URL, type ZoomOAuthConfig, type ZoomOAuthContext, type ZoomOAuthContextRef, type ZoomOAuthFetchFactory, type ZoomOAuthMakeUserAccessTokenFactory, type ZoomOAuthMakeUserAccessTokenFactoryParams } from './oauth.config';
+import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { ZOOM_OAUTH_API_URL, isZoomRefreshTokenCredential, zoomOAuthConfigAccountCredential, type ZoomAuthCredential, type ZoomOAuthConfig, type ZoomOAuthContext, type ZoomOAuthContextRef, type ZoomOAuthFetchFactory, type ZoomOAuthMakeAccessTokenFactory } from './oauth.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { ZoomOAuthAuthFailureError, handleZoomOAuthErrorFetch } from './oauth.error.api';
 import { type ZoomAccessToken, type ZoomAccessTokenCache, type ZoomAccessTokenFactory, type ZoomAccessTokenRefresher } from './oauth';
@@ -9,11 +9,40 @@ import { serverAccessToken, userAccessToken, type ZoomOAuthAccessTokenResponse }
 
 export type ZoomOAuth = ZoomOAuthContextRef;
 
+/**
+ * Maps a {@link ZoomOAuthAccessTokenResponse} to a {@link ZoomAccessToken}.
+ *
+ * @param response - The token response returned by the Zoom token endpoint.
+ * @returns The equivalent ZoomAccessToken, with `expiresAt` resolved against the current time.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function zoomAccessTokenFromTokenResponse(response: ZoomOAuthAccessTokenResponse): ZoomAccessToken {
+  const createdAt = Date.now();
+  const { access_token, api_url, scope, expires_in } = response;
+
+  const accessToken: ZoomAccessToken = {
+    accessToken: access_token,
+    apiDomain: api_url,
+    expiresIn: expires_in,
+    expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
+    scope
+  };
+
+  return accessToken;
+}
+
 export interface ZoomOAuthFactoryConfig {
   /**
    * Creates a new fetch instance to use when making calls.
    */
   readonly fetchFactory?: ZoomOAuthFetchFactory;
+  /**
+   * Custom FetchHandler to use with the default fetchFactory.
+   *
+   * Defaults to a {@link zoomRateLimitedFetchHandler}. Ignored when a `fetchFactory` is provided.
+   */
+  readonly fetchHandler?: Maybe<FetchHandler>;
   /**
    * Custom log error function.
    */
@@ -31,7 +60,7 @@ export type ZoomOAuthFactory = (config: ZoomOAuthConfig) => ZoomOAuth;
  * @__NO_SIDE_EFFECTS__
  */
 export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAuthFactory {
-  const fetchHandler = zoomRateLimitedFetchHandler();
+  const fetchHandler = factoryConfig.fetchHandler ?? zoomRateLimitedFetchHandler();
 
   const {
     logZoomServerErrorFunction,
@@ -66,49 +95,35 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 
-    function accessTokenFromTokenResponse(result: ZoomOAuthAccessTokenResponse): ZoomAccessToken {
-      const createdAt = Date.now();
-      const { access_token, api_url, scope, expires_in } = result;
+    // MARK: Access Token
+    // both grants are Basic-authed with the SAME client pair (see zoomOAuthApiFetchJsonInput), and the
+    // guards above already require it — so unlike Cal.com there is no credential this context cannot
+    // exchange. All a credential selects is which grant is used
+    const makeAccessTokenFactory: ZoomOAuthMakeAccessTokenFactory = (credential: ZoomAuthCredential) => {
+      let tokenRefresher: ZoomAccessTokenRefresher;
 
-      const accessToken: ZoomAccessToken = {
-        accessToken: access_token,
-        apiDomain: api_url,
-        expiresIn: expires_in,
-        expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
-        scope
-      };
-
-      return accessToken;
-    }
-
-    const tokenRefresher: ZoomAccessTokenRefresher = async () => {
-      const accessToken: ZoomOAuthAccessTokenResponse = await serverAccessToken(oauthContext)();
-      return accessTokenFromTokenResponse(accessToken);
-    };
-
-    const loadAccessToken: ZoomAccessTokenFactory = zoomOAuthZoomAccessTokenFactory({
-      tokenRefresher,
-      accessTokenCache: config.accessTokenCache
-    });
-
-    // User Access Token
-    const makeUserAccessTokenFactory: ZoomOAuthMakeUserAccessTokenFactory = (input: ZoomOAuthMakeUserAccessTokenFactoryParams) => {
-      const userTokenRefresher = async () => {
-        const accessToken: ZoomOAuthAccessTokenResponse = await userAccessToken(oauthContext)(input);
-        return accessTokenFromTokenResponse(accessToken);
-      };
+      if (isZoomRefreshTokenCredential(credential)) {
+        const { refreshToken } = credential;
+        tokenRefresher = async () => zoomAccessTokenFromTokenResponse(await userAccessToken(oauthContext)({ refreshToken }));
+      } else {
+        const { accountId } = credential;
+        tokenRefresher = async () => zoomAccessTokenFromTokenResponse(await serverAccessToken(oauthContext)({ accountId }));
+      }
 
       return zoomOAuthZoomAccessTokenFactory({
-        tokenRefresher: userTokenRefresher,
-        accessTokenCache: input.userAccessTokenCache
+        tokenRefresher,
+        accessTokenCache: credential.accessTokenCache
       });
     };
+
+    // built once, so the account credential's in-memory tier is shared across the whole context
+    const loadAccessToken: ZoomAccessTokenFactory = makeAccessTokenFactory(zoomOAuthConfigAccountCredential(config));
 
     const oauthContext: ZoomOAuthContext = {
       fetch,
       fetchJson,
       loadAccessToken,
-      makeUserAccessTokenFactory,
+      makeAccessTokenFactory,
       config
     };
 

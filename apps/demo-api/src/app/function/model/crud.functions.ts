@@ -24,6 +24,9 @@ import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
 import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
 import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
+import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
+import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
+import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -45,7 +48,8 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryCreateClient
-  })
+  }),
+  userExternalConnection: userExternalConnectionCreate
 };
 
 // MARK: Read
@@ -61,6 +65,9 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive
+  }),
+  userExternalConnection: onCallSpecifierHandler({
+    authorizeState: userExternalConnectionReadAuthorizeState
   })
 };
 
@@ -107,6 +114,9 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryUpdateClient,
     rotateClientSecret: oidcEntryRotateClientSecret
+  }),
+  userExternalConnection: onCallSpecifierHandler({
+    disconnect: userExternalConnectionUpdateDisconnect
   })
 };
 

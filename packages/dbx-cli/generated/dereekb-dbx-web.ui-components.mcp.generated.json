@@ -12,7 +12,7 @@
       "selector": "[dbxActionConfirm]",
       "className": "DbxActionConfirmDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Displays a confirmation dialog when the action is triggered. If the user confirms,\nthe configured ready value is passed to the action. If the user cancels, the action is rejected.\n\nThis directive works with action triggering only, not button clicks.\nFor button-based confirmation, use an appPromptConfirmButton directive instead.",
+      "description": "Displays a confirmation dialog when the action is triggered. If the user confirms,\nthe configured ready value is passed to the action. If the user cancels, the action is rejected.\n\nA config with `autoConfirm` true shows no dialog and marks the action ready immediately. This lets a\ntemplate bind the same input for actions that need confirmation and actions that do not.\n\nThis directive works with action triggering only, not button clicks.\nFor button-based confirmation, use an appPromptConfirmButton directive instead.",
       "inputs": [
         {
           "name": "dbxActionConfirm",
@@ -981,6 +981,122 @@
       "minimalExample": "<dbx-prompt-confirm [config]=\"cfg\"></dbx-prompt-confirm>"
     },
     {
+      "slug": "avatar",
+      "category": "layout",
+      "kind": "component",
+      "selector": "dbx-avatar",
+      "className": "DbxAvatarComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Renders an avatar by dynamically injecting the appropriate avatar view component based on the provided context.\n\nMerges individual input properties with the optional `context` input and delegates rendering\nto the component resolved by {@link DbxAvatarViewService}. Supports size variants via CSS classes.\n\nRenders an image when one is available, then name initials on a curated color, then a Material icon.\nWith `[avatarTile]` the avatar takes the `<dbx-icon-tile>` presentation — every `--dbx-icon-tile-*`\ncustomization applies and `[avatarColor]` / `[avatarColorTone]` paint the tile surface — which makes\nit the right choice for a branded row (a connected app, an integration) rather than a person.",
+      "inputs": [
+        {
+          "name": "context",
+          "type": "DbxAvatarContext",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarSelector",
+          "type": "Maybe<DbxAvatarSelector>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarUid",
+          "type": "Maybe<AuthUserIdentifier>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarUrl",
+          "type": "Maybe<WebsiteUrlWithPrefix>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarName",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarKey",
+          "type": "Maybe<DbxAvatarKey>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarIcon",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarStyle",
+          "type": "Maybe<DbxAvatarStyle>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarSize",
+          "type": "Maybe<DbxAvatarSize>",
+          "description": "",
+          "required": false,
+          "default": "undefined"
+        },
+        {
+          "name": "avatarHideOnError",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarTile",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarColor",
+          "type": "Maybe<DbxColorInput>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarColorTone",
+          "type": "Maybe<DbxColorTone>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarImageFit",
+          "type": "Maybe<DbxAvatarImageFit>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarImageFilter",
+          "type": "Maybe<string>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "avatarIgnoreDefaultUrl",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "icon-tile",
+        "dbx-color",
+        "avatar-view"
+      ],
+      "example": "<dbx-avatar [avatarUrl]=\"user.photoUrl\" [avatarStyle]=\"'circle'\" [avatarSize]=\"'large'\"></dbx-avatar>",
+      "minimalExample": "<dbx-avatar [avatarUrl]=\"user.photoUrl\"></dbx-avatar>"
+    },
+    {
       "slug": "bar",
       "category": "layout",
       "kind": "directive",
@@ -1913,14 +2029,7 @@
       "className": "DbxColorDirective",
       "module": "@dereekb/dbx-web",
       "description": "Provides themed color *tokens* to the host element — it never paints a background itself.\n\nAccepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'success'`) or a {@link DbxColorConfig}\nobject carrying arbitrary CSS color values (any hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.).\nThe directive sets the `--dbx-bg-color-current` / `--dbx-color-current` (and tone) custom properties and adds the\n`.dbx-color` marker class, leaving the actual painting to either the explicit `.dbx-color-bg` utility on the same\nelement or a colored-surface component's own `.dbx-color`-scoped SCSS (e.g. `<dbx-bar>`, `<dbx-button>`, `<dbx-loading>`,\n`<dbx-icon-tile>`, `<mat-card>`) that reads the inherited tokens.\n\nOptionally set {@link dbxColorTone} (0-100) to control background opacity for a tonal/muted appearance.\nWhen tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule overrides the text\ncolor to the vibrant color (via `--dbx-bg-color-current`).\n\nThe standalone `[dbxColorTone]` input wins over `config.tone` when both are set; the same precedence\napplies to tonal mode.",
-      "inputs": [
-        {
-          "name": "dbxColorTone",
-          "type": "Maybe<DbxColorTone>",
-          "description": "Background tone level (0-100). When set, the background becomes semi-transparent\nand text color switches to the vibrant theme color for a tonal appearance.",
-          "required": false
-        }
-      ],
+      "inputs": [],
       "outputs": [],
       "relatedSlugs": [
         "text-color",

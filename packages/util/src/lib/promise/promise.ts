@@ -90,6 +90,13 @@ export interface PerformAsyncTaskResult<O> {
    * Whether the task completed successfully.
    */
   readonly success: boolean;
+  /**
+   * The error thrown by the final attempt when `success` is false, or undefined when the task succeeded.
+   *
+   * Only populated when the task was configured not to throw (`throwError: false`); a throwing task
+   * surfaces its error to the caller instead.
+   */
+  readonly error?: unknown;
 }
 
 /**
@@ -160,7 +167,7 @@ export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = P
  */
 export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks, nonConcurrentTaskKeyFactory } = config;
-  const taskResults: [I, O, boolean][] = [];
+  const taskResults: PerformAsyncTaskOutcome<I, O>[] = [];
 
   await performTasksInParallelFunction({
     nonConcurrentTaskKeyFactory,
@@ -186,7 +193,7 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
       results.push([x[0], x[1]]);
     } else {
       failed.push(x[0]);
-      errors.push([x[0], x[1]]);
+      errors.push([x[0], x[3]]);
     }
   });
 
@@ -212,11 +219,19 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
  * @dbxUtilRelated perform-async-tasks, run-async-task-for-value
  */
 export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: PerformAsyncTaskConfig<0>): Promise<PerformAsyncTaskResult<O>> {
-  const [, value, success] = await _performAsyncTask(0, () => taskFn(), config);
-  return { value, success };
+  const [, value, success, error] = await _performAsyncTask(0, () => taskFn(), config);
+  return { value, success, error };
 }
 
-async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
+/**
+ * Internal outcome tuple of {@link _performAsyncTask}: `[input, output, success, error]`.
+ *
+ * `output` is undefined when `success` is false, and `error` is the error thrown by the final
+ * attempt — retained rather than discarded so non-throwing callers can report *why* a task failed.
+ */
+type PerformAsyncTaskOutcome<I, O> = [I, O, boolean, unknown];
+
+async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<PerformAsyncTaskOutcome<I, O>> {
   const { throwError: inputThrowError, retriesAllowed: inputRetriesAllowed, retryWait = 200, beforeRetry } = config;
   const throwError = inputThrowError ?? true; // throw errors by default
   const retriesAllowed = inputRetriesAllowed || 0;
@@ -234,7 +249,7 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
     return outcome;
   }
 
-  async function iterateTask(value: I, tryNumber: number): Promise<[I, O, boolean]> {
+  async function iterateTask(value: I, tryNumber: number): Promise<PerformAsyncTaskOutcome<I, O>> {
     const result = await tryTask(value, tryNumber);
     const success = result[1];
 
@@ -248,10 +263,10 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
       return iterateTask(value, tryNumber + 1);
     }
 
-    let iterationResult: [I, O, boolean];
+    let iterationResult: PerformAsyncTaskOutcome<I, O>;
 
     if (success) {
-      iterationResult = [value, ...result];
+      iterationResult = [value, result[0] as O, true, undefined];
     } else {
       const retriesRemaining = retriesAllowed - tryNumber;
 
@@ -263,7 +278,8 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
           throw result[0];
         }
 
-        iterationResult = [value, undefined as unknown as O, false];
+        // retain the final error so non-throwing callers can report why the task failed
+        iterationResult = [value, undefined as unknown as O, false, result[0]];
       }
     }
 

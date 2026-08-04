@@ -18,12 +18,16 @@ import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/contai
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionOidcComponent {
+  /**
+   * Requests every scope in `DEMO_OIDC_AVAILABLE_SCOPES` that a normal client can ask for, so the
+   * consent example exercises a long scope list — the case the collapsed scope pit exists for.
+   */
   readonly exampleDetails: OAuthInteractionLoginDetails = {
     client_id: 'example-client-id',
     client_name: 'Example OAuth Client',
     client_uri: 'https://example.com',
     logo_uri: 'https://example.com/logo.png',
-    scopes: 'openid profile email'
+    scopes: 'openid profile email offline_access demo model.create model.read model.update model.delete model.query'
   };
 
   readonly exampleError = 'Something went wrong. Please try again.';

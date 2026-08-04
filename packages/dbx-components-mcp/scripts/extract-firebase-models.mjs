@@ -599,10 +599,24 @@ function parseFieldsBody(body) {
     i += km[0].length;
     const exprStart = i;
     let depth = 0;
+    /**
+     * Depth of open type-argument lists (`<...>`), tracked separately from bracket
+     * depth so that a comma *inside* a generic argument list does not end the field
+     * expression. Without this, `e: firestoreObjectMap<A, FirestoreModelData<A>, B>({ ... })`
+     * truncates at the first type-argument comma and the remainder of the fields
+     * object is re-parsed as bogus additional fields.
+     *
+     * A `<` only opens a level when it directly follows an identifier character or a
+     * closing `>`, and a `>` only closes one when a level is open and the previous
+     * character is not `=`. That keeps `a < b` comparisons and the `>` in `=>`
+     * (e.g. `firestoreNumber({ default: () => yearWeekCode(new Date()) })`) from
+     * being mistaken for type arguments.
+     */
+    let angleDepth = 0;
     let inString = null;
     while (i < body.length) {
       const c = body[i];
-      const prev = body[i - 1];
+      const prev = body[i - 1] ?? '';
       if (inString) {
         if (c === inString && prev !== '\\') inString = null;
         i++;
@@ -615,7 +629,9 @@ function parseFieldsBody(body) {
       }
       if (c === '{' || c === '(' || c === '[') depth++;
       else if (c === '}' || c === ')' || c === ']') depth--;
-      else if (c === ',' && depth === 0) break;
+      else if (c === '<' && /[\w$>]/.test(prev)) angleDepth++;
+      else if (c === '>' && angleDepth > 0 && prev !== '=') angleDepth--;
+      else if (c === ',' && depth === 0 && angleDepth === 0) break;
       i++;
     }
     const expr = body.slice(exprStart, i).replaceAll(/\s+/g, ' ').trim();

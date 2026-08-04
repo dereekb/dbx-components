@@ -1,0 +1,19 @@
+@use '../../style/theming';
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-firebase-external-connection-list {
+    // the rows are cards; keep the gap the settings page had before they were a list.
+    --dbx-list-card-items-list-gap: var(--dbx-padding-3);
+  }
+
+  .dbx-firebase-external-connection-item {
+    // `<dbx-avatar>` owns the logo image and its `contain` fit — only the tile size is set here.
+    .dbx-firebase-external-connection-tile {
+      --dbx-avatar-size: 40px;
+    }
+  }
+}
+
+@mixin theme($theme-config) {
+}

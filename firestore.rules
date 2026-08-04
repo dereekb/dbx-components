@@ -77,6 +77,25 @@ service cloud.firestore {
       allow read: if resourceIsOwnedByAuthUserId();
     }
 
+    // MARK: UserExternalConnection
+    match /uec/{userExternalConnection} {
+      // The document id IS the user's uid. Use the path variable, not resourceIsOwnedByAuthUserId():
+      // that helper requires resource != null, so it would deny a user who has connected nothing
+      // (the common case — no document exists yet) with permission-denied instead of an empty read.
+      allow get: if request.auth != null && request.auth.uid == userExternalConnection;
+
+      // Exactly one document per user, always loaded by id. Denying list keeps the connected-provider
+      // array (`c`) queryable server-side only.
+      allow list: if false;
+
+      // No write grant: disconnect goes through the update:disconnect callable, which is the only
+      // way to keep this document consistent with its server-only credentials counterpart.
+    }
+
+    // NOTE: there is deliberately NO match block for /uecp (UserExternalConnectionPrivate).
+    // Firestore rules do not cascade, so the implicit default-deny is what protects it; a block here
+    // would only create an opportunity to accidentally grant access. Asserted by firestore.rules.spec.ts.
+
     match /ns/{notificationSummary} {
       allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }

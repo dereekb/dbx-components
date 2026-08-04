@@ -1,8 +1,9 @@
 import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
-import { type HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
 import { DEMO_APP_STATE_DATA } from './modules/app/demo.app.router.auth';
+import { DEMO_AUTH_STATE_DATA } from './modules/auth/demo.auth.router.auth';
+import { DEMO_ONBOARD_STATE_DATA } from './modules/onboard/demo.onboard.router.auth';
 
 export const LAYOUT_STATE: Ng2StateDeclaration = {
   parent: 'root',
@@ -28,25 +29,14 @@ export const DEMO_AUTH_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.auth.**',
   url: '/auth',
   loadChildren: () => import('./modules/auth/demo.auth.module').then((m) => m.DemoAuthModule),
-  data: {
-    authStates: 'none', // User who aren't logged in.
-    redirectTo: redirectBasedOnAuthUserState({
-      new: { ref: 'demo.onboard' },
-      user: { ref: 'demo.app' }
-    })
-  } as HasAuthStateData
+  data: DEMO_AUTH_STATE_DATA
 };
 
 export const DEMO_ONBOARD_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.onboard.**',
   url: '/onboard',
   loadChildren: () => import('./modules/onboard/demo.onboard.module').then((m) => m.DemoOnboardModule),
-  data: {
-    authStates: 'new', // New users only
-    redirectTo: redirectBasedOnAuthUserState({
-      user: { ref: 'demo.app' }
-    })
-  } as HasAuthStateData
+  data: DEMO_ONBOARD_STATE_DATA
 };
 
 export const DEMO_APP_FUTURE_STATE: Ng2StateDeclaration = {

@@ -1,0 +1,1 @@
+export const HTTP_UNAUTHORIZED_STATUS_CODE = 401;

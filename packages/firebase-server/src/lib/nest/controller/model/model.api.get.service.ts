@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
@@ -78,8 +78,13 @@ export function modelAccessReadErrorFromUseMultipleModelsFailure(entry: ModelAcc
 
 /**
  * Derives a fallback read-error message from a resolved error code, distinguishing not-found from
- * permission-denied. Accepts both the server-error form (`NOT_FOUND` / `PERMISSION_DENIED` /
- * `FORBIDDEN`) and the Firebase HttpsError form (`not-found` / `permission-denied`).
+ * permission-denied. Accepts both the server-error form (`NOT_FOUND` / `MODEL_NOT_AVAILABLE` /
+ * `PERMISSION_DENIED` / `FORBIDDEN`) and the Firebase HttpsError form (`not-found` /
+ * `permission-denied`).
+ *
+ * `MODEL_NOT_AVAILABLE` is the code a missing document actually produces on this path — the
+ * per-key existence check throws {@link nestFirebaseDoesNotExistError}, i.e. `modelNotAvailableError()`
+ * — so it must map to not-found rather than falling through to the generic message.
  *
  * @param code - The resolved error code (`serverErrorCode ?? firebaseErrorCode`), if any.
  * @returns `'not found'`, `'permission denied'`, or a generic `'unknown error'` fallback.
@@ -87,7 +92,7 @@ export function modelAccessReadErrorFromUseMultipleModelsFailure(entry: ModelAcc
 function modelAccessReadErrorMessageFromCode(code: Maybe<string>): string {
   let message: string;
 
-  if (code === NOT_FOUND_ERROR_CODE || code === 'not-found') {
+  if (code === NOT_FOUND_ERROR_CODE || code === MODEL_NOT_AVAILABLE_ERROR_CODE || code === 'not-found') {
     message = 'not found';
   } else if (code === PERMISSION_DENIED_ERROR_CODE || code === FORBIDDEN_ERROR_CODE || code === 'permission-denied') {
     message = 'permission denied';

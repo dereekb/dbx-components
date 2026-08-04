@@ -33,6 +33,14 @@ export interface CalcomAccessToken {
 }
 
 /**
+ * A stable key identifying a cached CalcomAccessToken.
+ *
+ * Should be owned by the caller (a user/profile id) rather than derived from the refresh token,
+ * since Cal.com rotates refresh tokens on every use and a token-derived key changes with them.
+ */
+export type CalcomAccessTokenCacheKey = string;
+
+/**
  * Used for retrieving and storing CalcomAccessToken values.
  */
 export interface CalcomAccessTokenCache {

@@ -64,11 +64,41 @@ import {
   type StorageFileGroupId,
   type StorageFileGroupFirestoreCollection,
   type SyncAllFlaggedStorageFilesWithGroupsResult,
-  type RegenerateAllFlaggedStorageFileGroupsContentResult
+  type RegenerateAllFlaggedStorageFileGroupsContentResult,
+  type UserExternalConnection,
+  type UserExternalConnectionDocument,
+  type UserExternalConnectionFirestoreCollection,
+  type UserExternalConnectionProviderType,
+  CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE
 } from '@dereekb/firebase';
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory } from '@dereekb/util';
-import { markStorageFileForDeleteTemplate, NotificationExpediteService, NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
+import {
+  markStorageFileForDeleteTemplate,
+  NotificationExpediteService,
+  NotificationInitServerActions,
+  NotificationSendService,
+  NotificationServerActions,
+  NotificationTaskService,
+  StorageFileInitServerActions,
+  StorageFileServerActions,
+  UserExternalConnectionAccessor,
+  type UserExternalConnectionConnectParams,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionCredentialsRefresher,
+  type UserExternalConnectionDisconnectParams,
+  type UserExternalConnectionMarkErrorParams,
+  type UserExternalConnectionPrivate,
+  type UserExternalConnectionPrivateDocument,
+  type UserExternalConnectionPrivateFirestoreCollection,
+  UserExternalConnectionReader,
+  userExternalConnectionReader,
+  type UserExternalConnectionReaderProviderInstance,
+  type UserExternalConnectionRefreshCredentialsInput,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionServerFirestoreCollections
+} from '@dereekb/firebase-server/model';
+import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
 import { type FirebaseServerEnvironmentConfig, assertSnapshotData } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
@@ -105,6 +135,11 @@ export interface DemoApiContext {
   get notificationSendService(): NotificationSendService;
   get notificationTaskService(): NotificationTaskService;
   get storageFileServerActions(): StorageFileServerActions;
+  get userExternalConnectionServerFirestoreCollections(): UserExternalConnectionServerFirestoreCollections;
+  get userExternalConnectionServerActions(): UserExternalConnectionServerActions;
+  get userExternalConnectionAccessor(): UserExternalConnectionAccessor;
+  get userExternalConnectionReader(): UserExternalConnectionReader;
+  get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService;
 }
 
 // MARK: Admin
@@ -167,6 +202,26 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get guestbookServerActions() {
     return this.instance.guestbookServerActions;
+  }
+
+  get userExternalConnectionServerFirestoreCollections() {
+    return this.instance.userExternalConnectionServerFirestoreCollections;
+  }
+
+  get userExternalConnectionServerActions() {
+    return this.instance.userExternalConnectionServerActions;
+  }
+
+  get userExternalConnectionAccessor() {
+    return this.instance.userExternalConnectionAccessor;
+  }
+
+  get userExternalConnectionReader() {
+    return this.instance.userExternalConnectionReader;
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.instance.userExternalConnectionCalcomUserContextService;
   }
 }
 
@@ -233,6 +288,26 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get guestbookServerActions() {
     return this.get(GuestbookServerActions);
+  }
+
+  get userExternalConnectionServerFirestoreCollections() {
+    return this.get(UserExternalConnectionServerFirestoreCollections);
+  }
+
+  get userExternalConnectionServerActions() {
+    return this.get(UserExternalConnectionServerActions);
+  }
+
+  get userExternalConnectionAccessor() {
+    return this.get(UserExternalConnectionAccessor);
+  }
+
+  get userExternalConnectionReader() {
+    return this.get(UserExternalConnectionReader);
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.get(UserExternalConnectionCalcomUserContextService);
   }
 }
 
@@ -321,6 +396,26 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
   get guestbookServerActions() {
     return this.instance.guestbookServerActions;
   }
+
+  get userExternalConnectionServerFirestoreCollections() {
+    return this.instance.userExternalConnectionServerFirestoreCollections;
+  }
+
+  get userExternalConnectionServerActions() {
+    return this.instance.userExternalConnectionServerActions;
+  }
+
+  get userExternalConnectionAccessor() {
+    return this.instance.userExternalConnectionAccessor;
+  }
+
+  get userExternalConnectionReader() {
+    return this.instance.userExternalConnectionReader;
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.instance.userExternalConnectionCalcomUserContextService;
+  }
 }
 
 export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextInstance<F> implements DemoApiContext {
@@ -386,6 +481,26 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get guestbookServerActions() {
     return this.get(GuestbookServerActions);
+  }
+
+  get userExternalConnectionServerFirestoreCollections() {
+    return this.get(UserExternalConnectionServerFirestoreCollections);
+  }
+
+  get userExternalConnectionServerActions() {
+    return this.get(UserExternalConnectionServerActions);
+  }
+
+  get userExternalConnectionAccessor() {
+    return this.get(UserExternalConnectionAccessor);
+  }
+
+  get userExternalConnectionReader() {
+    return this.get(UserExternalConnectionReader);
+  }
+
+  get userExternalConnectionCalcomUserContextService() {
+    return this.get(UserExternalConnectionCalcomUserContextService);
   }
 }
 
@@ -1177,6 +1292,332 @@ export const demoStorageFileGroupContextFactory = () =>
   });
 
 export const demoStorageFileGroupContext = demoStorageFileGroupContextFactory();
+
+// MARK: UserExternalConnection
+/**
+ * Credentials for connecting a test user to a provider.
+ *
+ * The timestamps are relative to now rather than fixed, so the credentials are LIVE — a spec that
+ * exercises the reader gets usable credentials without having to say so, and one that needs them
+ * expired says so by overriding `expiresAt`.
+ *
+ * @param overrides - Values to apply over the defaults.
+ * @returns Credentials to connect with.
+ */
+export function demoUserExternalConnectionTestCredentials(overrides: Partial<UserExternalConnectionCredentials> = {}): UserExternalConnectionCredentials {
+  return {
+    accessToken: 'access-token',
+    refreshToken: 'refresh-token',
+    issuedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + MS_IN_MINUTE * 30).toISOString(),
+    scopes: ['booking:read'],
+    externalAccountId: 'cal-123',
+    label: 'user@example.com',
+    ...overrides
+  };
+}
+
+/**
+ * Parameters for connecting a fixture's user to a provider, or for replacing that provider's
+ * credentials after a refresh.
+ *
+ * The uid comes from the fixture, and the credentials default to
+ * {@link demoUserExternalConnectionTestCredentials}.
+ */
+export type DemoApiUserExternalConnectionConnectTestParams = Omit<UserExternalConnectionConnectParams, 'uid' | 'credentials'> & {
+  readonly credentials?: Maybe<UserExternalConnectionCredentials>;
+};
+
+export interface DemoApiUserExternalConnectionTestContextParams {
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  /**
+   * Whether or not to create the UserExternalConnection. Defaults to false.
+   *
+   * Only the public half is ever created here: the private half exists to hold credentials, and the
+   * paired write creates it on the first connect.
+   */
+  readonly createIfNeeded?: boolean;
+}
+
+export class DemoApiUserExternalConnectionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<UserExternalConnection, UserExternalConnectionDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiUserExternalConnectionTestContextInstance<F>> {
+  async loadUserExternalConnection(): Promise<Maybe<UserExternalConnection>> {
+    return this.instance.loadUserExternalConnection();
+  }
+
+  async loadUserExternalConnectionPrivate(): Promise<Maybe<UserExternalConnectionPrivate>> {
+    return this.instance.loadUserExternalConnectionPrivate();
+  }
+
+  async deleteUserExternalConnectionPrivate(): Promise<void> {
+    return this.instance.deleteUserExternalConnectionPrivate();
+  }
+
+  async createUserExternalConnection(): Promise<UserExternalConnectionDocument> {
+    return this.instance.createUserExternalConnection();
+  }
+
+  async connect(params: DemoApiUserExternalConnectionConnectTestParams): Promise<UserExternalConnectionDocument> {
+    return this.instance.connect(params);
+  }
+
+  async refreshCredentials(params: DemoApiUserExternalConnectionConnectTestParams): Promise<UserExternalConnectionDocument> {
+    return this.instance.refreshCredentials(params);
+  }
+
+  async markError(params: Omit<UserExternalConnectionMarkErrorParams, 'uid'>): Promise<UserExternalConnectionDocument> {
+    return this.instance.markError(params);
+  }
+
+  async disconnect(params: Omit<UserExternalConnectionDisconnectParams, 'uid'>): Promise<UserExternalConnectionDocument> {
+    return this.instance.disconnect(params);
+  }
+
+  async deleteAllUserExternalConnections(): Promise<void> {
+    return this.instance.deleteAllUserExternalConnections();
+  }
+}
+
+export class DemoApiUserExternalConnectionTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<UserExternalConnection, UserExternalConnectionDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Loads the client-readable half of the connection pair.
+   *
+   * @returns The UserExternalConnection, or undefined if it does not exist.
+   */
+  async loadUserExternalConnection(): Promise<Maybe<UserExternalConnection>> {
+    return this.document.snapshotData();
+  }
+
+  /**
+   * Loads the server-only half of the connection pair.
+   *
+   * The private collection is provided ONLY by the UserExternalConnectionModule, so it is reached
+   * through the module's collections rather than the app's shared DemoFirestoreCollections.
+   *
+   * @returns The UserExternalConnectionPrivate, or undefined if it does not exist.
+   */
+  async loadUserExternalConnectionPrivate(): Promise<Maybe<UserExternalConnectionPrivate>> {
+    return this.testContext.userExternalConnectionServerFirestoreCollections.userExternalConnectionPrivateCollection.documentAccessor().loadDocumentForId(this.documentId).snapshotData();
+  }
+
+  /**
+   * Deletes ONLY the server-only half of the pair.
+   *
+   * Deliberately reaches around {@link UserExternalConnectionServerActions}, which has no way to write
+   * one half without the other. Exists to stage the half-written pair that no supported write can
+   * produce, so a reader can be tested against it.
+   */
+  async deleteUserExternalConnectionPrivate(): Promise<void> {
+    await this.testContext.userExternalConnectionServerFirestoreCollections.userExternalConnectionPrivateCollection.documentAccessor().loadDocumentForId(this.documentId).accessor.delete();
+  }
+
+  async createUserExternalConnection(): Promise<UserExternalConnectionDocument> {
+    return this.testContext.userExternalConnectionServerActions.createUserExternalConnection({ uid: this.documentId });
+  }
+
+  async connect(params: DemoApiUserExternalConnectionConnectTestParams): Promise<UserExternalConnectionDocument> {
+    return this.testContext.userExternalConnectionServerActions.connectUserExternalConnection({ ...params, credentials: params.credentials ?? demoUserExternalConnectionTestCredentials(), uid: this.documentId });
+  }
+
+  async refreshCredentials(params: DemoApiUserExternalConnectionConnectTestParams): Promise<UserExternalConnectionDocument> {
+    return this.testContext.userExternalConnectionServerActions.refreshUserExternalConnectionCredentials({ ...params, credentials: params.credentials ?? demoUserExternalConnectionTestCredentials(), uid: this.documentId });
+  }
+
+  async markError(params: Omit<UserExternalConnectionMarkErrorParams, 'uid'>): Promise<UserExternalConnectionDocument> {
+    return this.testContext.userExternalConnectionServerActions.markUserExternalConnectionError({ ...params, uid: this.documentId });
+  }
+
+  async disconnect(params: Omit<UserExternalConnectionDisconnectParams, 'uid'>): Promise<UserExternalConnectionDocument> {
+    return this.testContext.userExternalConnectionServerActions.disconnectUserExternalConnection({ ...params, uid: this.documentId });
+  }
+
+  async deleteAllUserExternalConnections(): Promise<void> {
+    return this.testContext.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: this.documentId });
+  }
+}
+
+export const demoUserExternalConnectionContextFactory = () =>
+  modelTestContextFactory<
+    UserExternalConnection,
+    UserExternalConnectionDocument,
+    DemoApiUserExternalConnectionTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiUserExternalConnectionTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiUserExternalConnectionTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    UserExternalConnectionFirestoreCollection
+  >({
+    makeFixture: (f) => new DemoApiUserExternalConnectionTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.userExternalConnectionCollection,
+    collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.userExternalConnectionCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiUserExternalConnectionTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params) => {
+      // the pair is keyed by the user's uid on both halves
+      return collection.documentAccessor().documentRefForId(params.u.uid);
+    },
+    initDocument: async (instance, params) => {
+      if (params.createIfNeeded === true) {
+        const exists = await instance.document.exists();
+
+        if (!exists) {
+          await instance.createUserExternalConnection();
+        }
+      }
+    }
+  });
+
+export const demoUserExternalConnectionContext = demoUserExternalConnectionContextFactory();
+
+// MARK: UserExternalConnectionPrivate
+/**
+ * How the refresher a {@link DemoApiUserExternalConnectionPrivateTestContextInstance.testReader} is
+ * built with should behave.
+ */
+export interface DemoApiUserExternalConnectionTestReaderConfig {
+  /**
+   * What the refresher resolves with. Omit for a reader with NO refresher at all; pass `'none'` for a
+   * refresher that reports the provider has no refresh path.
+   */
+  readonly refreshResult?: UserExternalConnectionCredentials | 'none';
+  /**
+   * When set, the refresher rejects with this instead of resolving.
+   */
+  readonly refreshError?: Error;
+  /**
+   * Delays the refresher's resolution, so concurrent callers overlap.
+   */
+  readonly refreshDelayMs?: Milliseconds;
+}
+
+export interface DemoApiUserExternalConnectionTestReader {
+  readonly reader: UserExternalConnectionReader;
+  /**
+   * Every input the refresher was called with.
+   */
+  readonly refreshInputs: UserExternalConnectionRefreshCredentialsInput[];
+}
+
+export interface DemoApiUserExternalConnectionPrivateTestContextParams {
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+}
+
+export class DemoApiUserExternalConnectionPrivateTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<UserExternalConnectionPrivate, UserExternalConnectionPrivateDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiUserExternalConnectionPrivateTestContextInstance<F>> {
+  testReader(config: DemoApiUserExternalConnectionTestReaderConfig = {}): DemoApiUserExternalConnectionTestReader {
+    return this.instance.testReader(config);
+  }
+
+  readerFor(reader: UserExternalConnectionReader, providerType?: UserExternalConnectionProviderType): UserExternalConnectionReaderProviderInstance {
+    return this.instance.readerFor(reader, providerType);
+  }
+
+  appReaderFor(providerType?: UserExternalConnectionProviderType): UserExternalConnectionReaderProviderInstance {
+    return this.instance.appReaderFor(providerType);
+  }
+}
+
+export class DemoApiUserExternalConnectionPrivateTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<UserExternalConnectionPrivate, UserExternalConnectionPrivateDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Builds a reader over the app's REAL accessor and server actions, with a refresher this test
+   * controls.
+   *
+   * The reader's policy — what counts as usable, when to renew, what to persist, what to record on a
+   * failure — is only meaningful in terms of what ends up in the two documents, so it is worth
+   * exercising against the emulator-backed pair rather than over stubs. The ONE thing faked here is the
+   * provider's token exchange, which cannot be real in a test at all; {@link appReaderFor} is the app's
+   * own reader, wired to the registry-backed refresher, for wherever the refresh outcome does not need
+   * to be steered.
+   *
+   * @param config - How the refresher should behave. Omit it entirely for a reader with none.
+   * @returns The reader plus every input its refresher saw.
+   */
+  testReader(config: DemoApiUserExternalConnectionTestReaderConfig = {}): DemoApiUserExternalConnectionTestReader {
+    const { refreshResult, refreshError, refreshDelayMs } = config;
+    const refreshInputs: UserExternalConnectionRefreshCredentialsInput[] = [];
+    let refresher: Maybe<UserExternalConnectionCredentialsRefresher>;
+
+    if (refreshResult != null || refreshError != null) {
+      refresher = {
+        refreshUserExternalConnectionCredentials: async (input) => {
+          refreshInputs.push(input);
+
+          if (refreshDelayMs != null) {
+            await waitForMs(refreshDelayMs);
+          }
+
+          if (refreshError != null) {
+            throw refreshError;
+          }
+
+          return refreshResult === 'none' ? null : refreshResult;
+        }
+      };
+    }
+
+    const reader = userExternalConnectionReader({
+      accessor: this.testContext.userExternalConnectionAccessor,
+      actions: this.testContext.userExternalConnectionServerActions,
+      refresher
+    });
+
+    return { reader, refreshInputs };
+  }
+
+  /**
+   * Narrows a reader to this fixture's user and one provider.
+   *
+   * @param reader - The reader to narrow. A {@link testReader} one, or the app's own.
+   * @param providerType - The provider to target. Defaults to `calcom`.
+   * @returns That reader for this user and provider.
+   */
+  readerFor(reader: UserExternalConnectionReader, providerType: UserExternalConnectionProviderType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE): UserExternalConnectionReaderProviderInstance {
+    return reader.readerForUser({ uid: this.documentId })(providerType);
+  }
+
+  /**
+   * {@link readerFor} over the app's own reader, which is wired to the registry-backed refresher.
+   *
+   * @param providerType - The provider to target. Defaults to `calcom`.
+   * @returns The app's reader for this user and provider.
+   */
+  appReaderFor(providerType?: UserExternalConnectionProviderType): UserExternalConnectionReaderProviderInstance {
+    return this.readerFor(this.testContext.userExternalConnectionReader, providerType);
+  }
+}
+
+/**
+ * Context over the SERVER-ONLY half of a user's connection pair.
+ *
+ * Separate from {@link demoUserExternalConnectionContext} because the two halves are not
+ * interchangeable: that context is the client-readable document and the write surface that maintains
+ * it, while this one is the encrypted credentials document — and therefore the natural home for the
+ * readers, which exist to get credentials out of it.
+ *
+ * The document is NOT created here. It only ever comes into being through the paired write, so a spec
+ * stages it by connecting a provider through the public context.
+ *
+ * @returns The context factory to wrap a spec's tests with.
+ */
+export const demoUserExternalConnectionPrivateContextFactory = () =>
+  modelTestContextFactory<
+    UserExternalConnectionPrivate,
+    UserExternalConnectionPrivateDocument,
+    DemoApiUserExternalConnectionPrivateTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiUserExternalConnectionPrivateTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiUserExternalConnectionPrivateTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    UserExternalConnectionPrivateFirestoreCollection
+  >({
+    makeFixture: (f) => new DemoApiUserExternalConnectionPrivateTestContextFixture(f),
+    getCollection: (fi) => fi.userExternalConnectionServerFirestoreCollections.userExternalConnectionPrivateCollection,
+    collectionForDocument: (fi, _doc) => fi.userExternalConnectionServerFirestoreCollections.userExternalConnectionPrivateCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiUserExternalConnectionPrivateTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params) => {
+      // keyed by the user's uid, the same as the public half
+      return collection.documentAccessor().documentRefForId(params.u.uid);
+    }
+  });
+
+export const demoUserExternalConnectionPrivateContext = demoUserExternalConnectionPrivateContextFactory();
 
 // MARK: Oidc
 /**

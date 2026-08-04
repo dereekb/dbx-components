@@ -3,6 +3,12 @@
   "kind": "dbx-components",
   "project": "dbx-components",
   "capabilities": ["audit", "dbx-components"],
+  "commit": {
+    "autoCommit": {
+      "enabled": true,
+      "branches": ["develop", "claude/**", "feat/**"]
+    }
+  },
   "tests": {
     "default": { "runner": "npx nx" }
   }

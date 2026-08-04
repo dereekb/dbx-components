@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomRefreshToken } from '@dereekb/calcom';
+import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomRefreshToken } from '@dereekb/calcom';
 import { type AsyncValueCache, type Maybe, filterMaybeArrayValues, inMemoryAsyncKeyedValueCache, inMemoryAsyncValueCache, isExpired, mergeAsyncValueCaches } from '@dereekb/util';
 import { createMemoizedJsonFileAsyncValueCache } from '@dereekb/nestjs';
 import { createHash } from 'node:crypto';
@@ -10,7 +10,8 @@ import { join } from 'node:path';
  *
  * Implementations store and retrieve OAuth access tokens (and the rotated refresh tokens
  * embedded in them). The service supports both a server-level cache and per-user caches
- * keyed by the user's initial refresh token.
+ * keyed either by a caller-owned key ({@link cacheForKey}) or by the user's refresh token
+ * ({@link cacheForRefreshToken}).
  */
 @Injectable()
 export abstract class CalcomOAuthAccessTokenCacheService {
@@ -19,16 +20,29 @@ export abstract class CalcomOAuthAccessTokenCacheService {
    */
   abstract loadCalcomAccessTokenCache(): CalcomAccessTokenCache;
   /**
-   * Creates or retrieves a cache for a specific user context, keyed by the refresh token.
+   * Creates or retrieves a cache for a specific user context, keyed by a stable caller-owned key.
    *
-   * The refresh token is hashed to derive a stable cache key. Even though Cal.com
-   * rotates refresh tokens, the cache instance persists the updated token in-place,
-   * so subsequent reads return the latest token regardless of rotation.
+   * Prefer this over {@link cacheForRefreshToken}: a key the caller already owns (a user or
+   * profile id) survives refresh-token rotation, so the same entry is found on every boot.
+   */
+  abstract cacheForKey?(key: CalcomAccessTokenCacheKey): CalcomAccessTokenCache;
+  /**
+   * Creates or retrieves a cache for a specific user context, keyed by a hash of the refresh token.
+   *
+   * The cache instance persists the rotated token in-place, so reads return the latest token for
+   * as long as the *original* refresh token keeps being used as the lookup key. Because Cal.com
+   * rotates the refresh token on every use, that only holds within a single process lifetime:
+   * once a rotated token is persisted and then used as the key, the key changes and the previous
+   * entry is orphaned.
+   *
+   * Prefer {@link cacheForKey} with a stable id for anything that outlives one process.
    */
   abstract cacheForRefreshToken?(refreshToken: CalcomRefreshToken): CalcomAccessTokenCache;
 }
 
-export type CalcomOAuthAccessTokenCacheServiceWithRefreshToken = Required<CalcomOAuthAccessTokenCacheService>;
+export type CalcomOAuthAccessTokenCacheServiceWithRefreshToken = Required<Pick<CalcomOAuthAccessTokenCacheService, 'cacheForRefreshToken'>> & CalcomOAuthAccessTokenCacheService;
+
+export type CalcomOAuthAccessTokenCacheServiceWithKey = Required<Pick<CalcomOAuthAccessTokenCacheService, 'cacheForKey'>> & CalcomOAuthAccessTokenCacheService;
 
 /**
  * Derives a short, filesystem-safe cache key from a refresh token.
@@ -40,6 +54,26 @@ export type CalcomOAuthAccessTokenCacheServiceWithRefreshToken = Required<Calcom
  */
 export function calcomRefreshTokenCacheKey(refreshToken: string): string {
   return createHash('sha256').update(refreshToken).digest('hex').substring(0, 16);
+}
+
+/**
+ * Matches any character that is unsafe in a filesystem path segment.
+ */
+const UNSAFE_CALCOM_CACHE_FILE_KEY_CHARACTERS_REGEX = /[^a-zA-Z0-9_-]/g;
+
+/**
+ * Converts a cache key into a filesystem-safe path segment.
+ *
+ * A key that is already safe (such as the hex output of {@link calcomRefreshTokenCacheKey}) is
+ * returned unchanged. Otherwise the unsafe characters are replaced and a hash of the original key
+ * is appended, so two different keys can never collapse onto the same file.
+ *
+ * @param key - The cache key to convert.
+ * @returns A filesystem-safe path segment for the key.
+ */
+export function calcomAccessTokenCacheFileKey(key: CalcomAccessTokenCacheKey): string {
+  const safeKey = key.replaceAll(UNSAFE_CALCOM_CACHE_FILE_KEY_CHARACTERS_REGEX, '_');
+  return safeKey === key ? key : `${safeKey}-${createHash('sha256').update(key).digest('hex').substring(0, 8)}`;
 }
 
 // MARK: Merge
@@ -124,6 +158,7 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
 
   const allServiceAccessTokenCaches = allServices.map((x) => x.loadCalcomAccessTokenCache());
   const allServicesWithCacheForRefreshToken = allServices.filter((x) => x.cacheForRefreshToken != null) as CalcomOAuthAccessTokenCacheServiceWithRefreshToken[];
+  const allServicesWithCacheForKey = allServices.filter((x) => x.cacheForKey != null) as CalcomOAuthAccessTokenCacheServiceWithKey[];
 
   const cacheForRefreshToken =
     allServicesWithCacheForRefreshToken.length > 0
@@ -133,8 +168,17 @@ export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: C
         }
       : undefined;
 
+  const cacheForKey =
+    allServicesWithCacheForKey.length > 0
+      ? (key: CalcomAccessTokenCacheKey): CalcomAccessTokenCache => {
+          const allCaches = allServicesWithCacheForKey.map((x) => x.cacheForKey(key));
+          return mergeCachesForService(allCaches);
+        }
+      : undefined;
+
   const service: CalcomOAuthAccessTokenCacheService = {
     loadCalcomAccessTokenCache: () => mergeCachesForService(allServiceAccessTokenCaches),
+    cacheForKey,
     cacheForRefreshToken
   };
 
@@ -190,12 +234,14 @@ export function memoryCalcomOAuthAccessTokenCacheService(existingToken?: Maybe<C
     };
   }
 
+  function cacheForKey(key: CalcomAccessTokenCacheKey): CalcomAccessTokenCache {
+    return calcomAccessTokenCacheFromAsyncValueCache(userCacheView(key), logAccessToConsole);
+  }
+
   return {
     loadCalcomAccessTokenCache: () => calcomAccessTokenCacheFromAsyncValueCache(serverCache, logAccessToConsole),
-    cacheForRefreshToken: (refreshToken: CalcomRefreshToken) => {
-      const key = calcomRefreshTokenCacheKey(refreshToken);
-      return calcomAccessTokenCacheFromAsyncValueCache(userCacheView(key), logAccessToConsole);
-    }
+    cacheForKey,
+    cacheForRefreshToken: (refreshToken: CalcomRefreshToken) => cacheForKey(calcomRefreshTokenCacheKey(refreshToken))
   };
 }
 
@@ -291,9 +337,14 @@ export function fileCalcomOAuthAccessTokenCacheService(cacheDir: string = DEFAUL
     };
   }
 
+  function cacheForCallerKey(key: CalcomAccessTokenCacheKey): CalcomAccessTokenCache {
+    return makeCacheForKey(`user-${calcomAccessTokenCacheFileKey(key)}`);
+  }
+
   return {
     cacheDir,
     loadCalcomAccessTokenCache: () => makeCacheForKey(CALCOM_SERVER_TOKEN_FILE_KEY),
-    cacheForRefreshToken: (refreshToken: CalcomRefreshToken) => makeCacheForKey(`user-${calcomRefreshTokenCacheKey(refreshToken)}`)
+    cacheForKey: cacheForCallerKey,
+    cacheForRefreshToken: (refreshToken: CalcomRefreshToken) => cacheForCallerKey(calcomRefreshTokenCacheKey(refreshToken))
   };
 }
