@@ -1,11 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { MS_IN_MINUTE, type Maybe, type Milliseconds, expirationDetails } from '@dereekb/util';
+import { MS_IN_MINUTE, type FactoryWithRequiredInput, type Maybe, type Milliseconds, expirationDetails } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
-import { type FirebaseAuthUserId, type UserExternalConnectionEntry, type UserExternalConnectionErrorCode, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type FirebaseAuthUserIdRef, type UserExternalConnectionEntry, type UserExternalConnectionErrorCode, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type UserExternalConnectionAccessor, type UserExternalConnectionForProvider, type UserExternalConnectionReadParams } from './userexternalconnection.accessor.service';
 import { type UserExternalConnectionCredentials, mergeRefreshedUserExternalConnectionCredentials } from './userexternalconnection.private';
 import { type UserExternalConnectionCredentialsRefresher } from './userexternalconnection.refresh.service';
-import { type UserExternalConnectionServerActions } from './userexternalconnection.action.server';
+import { type UserExternalConnectionCredentialsAndFailureWriter } from './userexternalconnection.action.server';
 import { userExternalConnectionCredentialsExpiredError, userExternalConnectionProviderNotConnectedError } from './userexternalconnection.error';
 
 /**
@@ -60,11 +60,15 @@ export interface UserExternalConnectionReaderConfig {
   readonly accessor: UserExternalConnectionAccessor;
   /**
    * Used to persist a refresh and to record a failure. Both go through the paired write.
+   *
+   * Narrowed to those two writes: a full `UserExternalConnectionServerActions` satisfies it, and
+   * a caller wiring a reader over something else does not have to implement writes it never reaches.
    */
-  readonly actions: UserExternalConnectionServerActions;
+  readonly actions: UserExternalConnectionCredentialsAndFailureWriter;
   /**
    * Optional. Without one, expired credentials cannot be renewed and
-   * {@link UserExternalConnectionReader.readUsableUserExternalConnectionCredentials} throws instead.
+   * {@link UserExternalConnectionReaderProviderInstance.readUsableUserExternalConnectionCredentials}
+   * throws instead.
    */
   readonly refresher?: Maybe<UserExternalConnectionCredentialsRefresher>;
   /**
@@ -75,17 +79,72 @@ export interface UserExternalConnectionReaderConfig {
 }
 
 /**
- * Parameters for reporting that a provider rejected a user's credentials.
+ * Why a provider rejected a user's credentials.
  */
-export interface UserExternalConnectionReportFailureParams {
-  readonly uid: FirebaseAuthUserId;
-  readonly providerType: UserExternalConnectionProviderType;
+export interface UserExternalConnectionReportFailureInput {
   /**
    * Why the credentials were rejected. Defaults to `unauthorized`, the code for the 401 this is
    * almost always called in response to.
    */
   readonly error?: Maybe<UserExternalConnectionErrorCode>;
 }
+
+/**
+ * Parameters for reporting that a provider rejected a user's credentials.
+ */
+export interface UserExternalConnectionReportFailureParams extends UserExternalConnectionReadParams, UserExternalConnectionReportFailureInput {}
+
+/**
+ * Input identifying the user a {@link UserExternalConnectionReaderUserInstance} reads for.
+ */
+export interface UserExternalConnectionReaderUserInput extends FirebaseAuthUserIdRef {}
+
+/**
+ * A {@link UserExternalConnectionReader} narrowed to ONE user and ONE provider.
+ *
+ * The reader's entire read surface, with `{ uid, providerType }` already applied — so a consumer acting
+ * as one user against one provider, the normal case for code making provider API calls, states that
+ * pair once instead of at every call and cannot accidentally mix two providers up.
+ */
+export interface UserExternalConnectionReaderProviderInstance {
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Loads both halves of the pair, applying no policy. Never throws for an absent or unusable
+   * connection.
+   */
+  readUserExternalConnectionForProvider(): Promise<UserExternalConnectionForProvider>;
+  /**
+   * Loads the stored credentials as-is, applying no policy. They may be expired.
+   */
+  readUserExternalConnectionCredentials(): Promise<Maybe<UserExternalConnectionCredentials>>;
+  /**
+   * Returns credentials that are safe to attempt a provider call with, renewing them first if needed.
+   *
+   * @throws When the user is not connected to the provider, or the credentials have expired and could
+   *   not be renewed.
+   */
+  readUsableUserExternalConnectionCredentials(): Promise<UserExternalConnectionCredentials>;
+  /**
+   * Records that the provider rejected these credentials, moving the entry to the `error` status.
+   *
+   * Exists so a caller that gets a 401 mid-call can report it without reaching for the write surface.
+   * Never throws — a failure to record a failure is logged and swallowed, because the caller is already
+   * handling an error and losing that error to this one would be worse.
+   *
+   * @param input - Why the credentials were rejected. Defaults to `unauthorized`.
+   */
+  reportUserExternalConnectionFailure(input?: Maybe<UserExternalConnectionReportFailureInput>): Promise<void>;
+}
+
+/**
+ * A {@link UserExternalConnectionReader} narrowed to one user, awaiting the provider to target.
+ *
+ * The second of the reader's two factory levels. Splitting them this way is what lets ONE reader — the
+ * app has a single provider-agnostic instance — be narrowed to a user once and then used against any
+ * number of that user's providers.
+ */
+export type UserExternalConnectionReaderUserInstance = FactoryWithRequiredInput<UserExternalConnectionReaderProviderInstance, UserExternalConnectionProviderType>;
 
 /**
  * Reads a user's third-party credentials for a specific provider, and keeps them usable.
@@ -95,34 +154,26 @@ export interface UserExternalConnectionReportFailureParams {
  * usable, whether the credentials are near enough to expiring to renew, renewing them, persisting the
  * result, and recording a failure.
  *
- * A consumer that has this does not need {@link UserExternalConnectionServerActions} at all, which is
+ * A consumer that has this does not need `UserExternalConnectionServerActions` at all, which is
  * the point — that class is the write surface.
  */
 export abstract class UserExternalConnectionReader {
   /**
-   * Loads both halves of the pair for one provider, applying no policy. Never throws for an absent or
-   * unusable connection.
-   */
-  abstract readUserExternalConnectionForProvider(params: UserExternalConnectionReadParams): Promise<UserExternalConnectionForProvider>;
-  /**
-   * Loads the stored credentials as-is, applying no policy. They may be expired.
-   */
-  abstract readUserExternalConnectionCredentials(params: UserExternalConnectionReadParams): Promise<Maybe<UserExternalConnectionCredentials>>;
-  /**
-   * Returns credentials that are safe to attempt a provider call with, renewing them first if needed.
+   * Narrows this reader to one user, returning a factory that narrows it further to one provider.
    *
-   * @throws When the user is not connected to the provider, or the credentials have expired and could
-   *   not be renewed.
-   */
-  abstract readUsableUserExternalConnectionCredentials(params: UserExternalConnectionReadParams): Promise<UserExternalConnectionCredentials>;
-  /**
-   * Records that the provider rejected these credentials, moving the entry to the `error` status.
+   * The reader's only entry point. Every read and the failure report live on the narrowed instance, so
+   * a caller states the user and provider it is acting for once instead of threading that pair through
+   * each call:
    *
-   * Exists so a caller that gets a 401 mid-call can report it without reaching for the write surface.
-   * Never throws — a failure to record a failure is logged and swallowed, because the caller is already
-   * handling an error and losing that error to this one would be worse.
+   * ```ts
+   * const connections = reader.readerForUser({ uid });
+   * const credentials = await connections(CALCOM).readUsableUserExternalConnectionCredentials();
+   * ```
+   *
+   * @param input - The user to read for.
+   * @returns A factory producing a reader for whichever of that user's providers is needed.
    */
-  abstract reportUserExternalConnectionFailure(params: UserExternalConnectionReportFailureParams): Promise<void>;
+  abstract readerForUser(input: UserExternalConnectionReaderUserInput): UserExternalConnectionReaderUserInstance;
 }
 
 /**
@@ -233,8 +284,8 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
   }
 
   async function readUsableUserExternalConnectionCredentials(params: UserExternalConnectionReadParams): Promise<UserExternalConnectionCredentials> {
-    const { providerType } = params;
-    const { entry, credentials } = await accessor.readUserExternalConnectionForProvider(params);
+    const { uid, providerType } = params;
+    const { entry, credentials } = await accessor.accessorForUser({ uid })(providerType).readUserExternalConnectionForProvider();
 
     // an absent entry, an absent set of credentials, or an explicit disconnect all mean the same thing
     // to a caller: there is nothing here to act with, and the remedy is for the user to connect
@@ -260,10 +311,28 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
     });
   }
 
+  function readerForUser(input: UserExternalConnectionReaderUserInput): UserExternalConnectionReaderUserInstance {
+    const { uid } = input;
+
+    const accessorForUser = accessor.accessorForUser({ uid });
+
+    return (providerType) => {
+      const params: UserExternalConnectionReadParams = { uid, providerType };
+      // the raw reads are the accessor's, narrowed the same way — this tier only adds the policy
+      const accessorForProvider = accessorForUser(providerType);
+
+      return {
+        uid,
+        providerType,
+        readUserExternalConnectionForProvider: () => accessorForProvider.readUserExternalConnectionForProvider(),
+        readUserExternalConnectionCredentials: () => accessorForProvider.readUserExternalConnectionCredentials(),
+        readUsableUserExternalConnectionCredentials: () => readUsableUserExternalConnectionCredentials(params),
+        reportUserExternalConnectionFailure: (failureInput) => reportUserExternalConnectionFailure({ ...params, error: failureInput?.error })
+      };
+    };
+  }
+
   return {
-    readUserExternalConnectionForProvider: (params) => accessor.readUserExternalConnectionForProvider(params),
-    readUserExternalConnectionCredentials: (params) => accessor.readUserExternalConnectionCredentials(params),
-    readUsableUserExternalConnectionCredentials,
-    reportUserExternalConnectionFailure
+    readerForUser
   };
 }

@@ -159,13 +159,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         describe('readUserExternalConnectionCredentials', () => {
           it('should return the decrypted credentials', async () => {
             await uec.connect({ providerType: CALCOM });
-            const result = await f.userExternalConnectionAccessor.readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
+            const result = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(CALCOM).readUserExternalConnectionCredentials();
 
             expect(result?.accessToken).toBe('access-token');
           });
 
           it('should return nothing for a provider that is not connected', async () => {
-            const result = await f.userExternalConnectionAccessor.readUserExternalConnectionCredentials({ uid: u.uid, providerType: CALCOM });
+            const result = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(CALCOM).readUserExternalConnectionCredentials();
             expect(result).not.toBeDefined();
           });
         });
@@ -173,14 +173,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         describe('readUserExternalConnectionForProvider', () => {
           it('should return both halves for a connected provider', async () => {
             await uec.connect({ providerType: CALCOM });
-            const result = await f.userExternalConnectionAccessor.readUserExternalConnectionForProvider({ uid: u.uid, providerType: CALCOM });
+            const result = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(CALCOM).readUserExternalConnectionForProvider();
 
             expect(result.entry?.st).toBe('connected');
             expect(result.credentials?.accessToken).toBe('access-token');
           });
 
           it('should return both halves as null when the user has no connection document', async () => {
-            const result = await f.userExternalConnectionAccessor.readUserExternalConnectionForProvider({ uid: u.uid, providerType: CALCOM });
+            const result = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(CALCOM).readUserExternalConnectionForProvider();
 
             expect(result.entry).not.toBeTruthy();
             expect(result.credentials).not.toBeTruthy();

@@ -71,10 +71,16 @@ function capturingServerActions() {
 
   // Cal.com always returns a rotated refresh token, so the framework's retention read is never
   // reached here — stubbed anyway so this stays a faithful stand-in for the real accessor.
-  const accessor = {
-    readUserExternalConnectionCredentials: async () => undefined,
-    readUserExternalConnectionForProvider: async () => ({ uid: TEST_UID, providerType: CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, entry: undefined, credentials: undefined })
-  } as unknown as UserExternalConnectionAccessor;
+  const accessor: UserExternalConnectionAccessor = {
+    accessorForUser:
+      ({ uid }) =>
+      (providerType) => ({
+        uid,
+        providerType,
+        readUserExternalConnectionCredentials: async () => undefined,
+        readUserExternalConnectionForProvider: async () => ({ uid, providerType, entry: undefined, credentials: undefined })
+      })
+  };
 
   return { actions, accessor, connects, errors };
 }

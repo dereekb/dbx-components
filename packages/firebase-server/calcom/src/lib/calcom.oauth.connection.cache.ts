@@ -1,6 +1,6 @@
 import { CALCOM_OAUTH_SCOPE_DELIMITER, type CalcomAccessToken, type CalcomAccessTokenCache } from '@dereekb/calcom';
 import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type FirebaseAuthUserId } from '@dereekb/firebase';
-import { type UserExternalConnectionCredentials, type UserExternalConnectionReader, type UserExternalConnectionServerActions, mergeRefreshedUserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
+import { type UserExternalConnectionAccessor, type UserExternalConnectionCredentials, type UserExternalConnectionCredentialsWriter, mergeRefreshedUserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type Seconds } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
 import { calcomUserExternalConnectionCredentials } from './calcom.oauth.connection.service';
@@ -40,12 +40,16 @@ export function calcomAccessTokenFromUserExternalConnectionCredentials(credentia
 export interface UserExternalConnectionCalcomAccessTokenCacheConfig {
   /**
    * Used to read the user's currently stored Cal.com credentials.
+   *
+   * The accessor rather than `UserExternalConnectionReader`: the contract below is explicitly that an
+   * EXPIRED token may be returned, so a surface that could refresh would be the wrong tool — see
+   * `loadCachedToken`.
    */
-  readonly reader: UserExternalConnectionReader;
+  readonly accessor: UserExternalConnectionAccessor;
   /**
    * Used to persist a rotated token back onto the connection pair.
    */
-  readonly actions: UserExternalConnectionServerActions;
+  readonly actions: UserExternalConnectionCredentialsWriter;
   readonly uid: FirebaseAuthUserId;
 }
 
@@ -65,24 +69,25 @@ export interface UserExternalConnectionCalcomAccessTokenCacheConfig {
  * is keyed by an opaque string, whereas this cache is per-user and needs a uid. Build one per user at
  * the call site and pass it in explicitly.
  *
- * @param config - The reader, the actions, and the user the cache is for.
+ * @param config - The accessor, the actions, and the user the cache is for.
  * @returns A CalcomAccessTokenCache reading and writing the user's connection pair.
  */
 export function userExternalConnectionCalcomAccessTokenCache(config: UserExternalConnectionCalcomAccessTokenCacheConfig): CalcomAccessTokenCache {
-  const { reader, actions, uid } = config;
+  const { accessor, actions, uid } = config;
   const providerType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
+  const connection = accessor.accessorForUser({ uid })(providerType);
 
   async function loadCachedToken(): Promise<Maybe<CalcomAccessToken>> {
     // the raw read, not `readUsableUserExternalConnectionCredentials`: this cache is what Cal.com's own
     // factory consults BEFORE deciding to refresh, and the contract is explicitly that the returned
     // token may be expired. Renewing here would pre-empt the caller's own refresh path and could
     // recurse back into it.
-    const credentials = await reader.readUserExternalConnectionCredentials({ uid, providerType });
+    const credentials = await connection.readUserExternalConnectionCredentials();
     return calcomAccessTokenFromUserExternalConnectionCredentials(credentials);
   }
 
   async function updateCachedToken(accessToken: CalcomAccessToken): Promise<void> {
-    const previous = await reader.readUserExternalConnectionCredentials({ uid, providerType });
+    const previous = await connection.readUserExternalConnectionCredentials();
     const refreshed = calcomUserExternalConnectionCredentials(accessToken);
 
     // merged rather than written verbatim, because the paired write replaces the provider's credentials

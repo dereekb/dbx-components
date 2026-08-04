@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ZOHO_ACCOUNTS_US_API_URL, type ZohoAccessToken } from '@dereekb/zoho';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
-import { type UserExternalConnectionCredentials, type UserExternalConnectionReader, type UserExternalConnectionServerActions } from '@dereekb/firebase-server/model';
+import { type UserExternalConnectionAccessor, type UserExternalConnectionCredentials, type UserExternalConnectionCredentialsWriter } from '@dereekb/firebase-server/model';
 import { MS_IN_MINUTE, type Maybe } from '@dereekb/util';
 import { userExternalConnectionZohoAccessTokenCache, zohoAccessTokenFromUserExternalConnectionCredentials } from './zoho.oauth.connection.cache';
 
@@ -31,17 +31,24 @@ function makeStoredCredentials(overrides?: Partial<UserExternalConnectionCredent
 function makeCache(stored: Maybe<UserExternalConnectionCredentials>) {
   const writes: CapturedWrite[] = [];
 
-  const reader = {
-    readUserExternalConnectionCredentials: async () => stored
-  } as unknown as UserExternalConnectionReader;
+  const accessor: UserExternalConnectionAccessor = {
+    accessorForUser:
+      ({ uid }) =>
+      (providerType) => ({
+        uid,
+        providerType,
+        readUserExternalConnectionCredentials: async () => stored,
+        readUserExternalConnectionForProvider: async () => ({ uid, providerType, entry: undefined, credentials: stored })
+      })
+  };
 
-  const actions = {
-    refreshUserExternalConnectionCredentials: async (params: CapturedWrite) => {
+  const actions: UserExternalConnectionCredentialsWriter = {
+    refreshUserExternalConnectionCredentials: async (params) => {
       writes.push(params);
     }
-  } as unknown as UserExternalConnectionServerActions;
+  };
 
-  return { cache: userExternalConnectionZohoAccessTokenCache({ reader, actions, uid: TEST_UID }), writes };
+  return { cache: userExternalConnectionZohoAccessTokenCache({ accessor, actions, uid: TEST_UID }), writes };
 }
 
 describe('zohoAccessTokenFromUserExternalConnectionCredentials()', () => {

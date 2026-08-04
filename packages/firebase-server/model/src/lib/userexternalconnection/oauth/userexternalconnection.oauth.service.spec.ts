@@ -77,17 +77,24 @@ function capturingServerActions(config: CapturingServerActionsConfig = {}): Capt
     }
   } as unknown as UserExternalConnectionServerActions;
 
-  const accessor = {
-    readUserExternalConnectionCredentials: async (params: { uid: string; providerType: string }) => {
-      reads.push(params);
+  const accessor: UserExternalConnectionAccessor = {
+    accessorForUser:
+      ({ uid }) =>
+      (providerType) => ({
+        uid,
+        providerType,
+        readUserExternalConnectionCredentials: async () => {
+          reads.push({ uid, providerType });
 
-      if (config.readFails) {
-        throw new Error('read failed');
-      }
+          if (config.readFails) {
+            throw new Error('read failed');
+          }
 
-      return config.stored;
-    }
-  } as unknown as UserExternalConnectionAccessor;
+          return config.stored;
+        },
+        readUserExternalConnectionForProvider: async () => ({ uid, providerType, entry: undefined, credentials: config.stored })
+      })
+  };
 
   return { actions, accessor, connects, errors, reads };
 }

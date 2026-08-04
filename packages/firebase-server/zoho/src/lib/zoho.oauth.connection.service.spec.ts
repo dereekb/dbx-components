@@ -86,9 +86,16 @@ function capturingServerActions(stored?: Maybe<UserExternalConnectionCredentials
     }
   } as unknown as UserExternalConnectionServerActions;
 
-  const accessor = {
-    readUserExternalConnectionCredentials: async () => stored
-  } as unknown as UserExternalConnectionAccessor;
+  const accessor: UserExternalConnectionAccessor = {
+    accessorForUser:
+      ({ uid }) =>
+      (providerType) => ({
+        uid,
+        providerType,
+        readUserExternalConnectionCredentials: async () => stored,
+        readUserExternalConnectionForProvider: async () => ({ uid, providerType, entry: undefined, credentials: stored })
+      })
+  };
 
   return { actions, accessor, connects, errors };
 }

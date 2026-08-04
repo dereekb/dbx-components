@@ -238,7 +238,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
     if (!credentials.refreshToken) {
       const providerType = this.providerType;
-      const previous = await this.userExternalConnectionAccessor.readUserExternalConnectionCredentials({ uid, providerType });
+      const previous = await this.userExternalConnectionAccessor.accessorForUser({ uid })(providerType).readUserExternalConnectionCredentials();
 
       if (previous?.refreshToken) {
         this.logger.log(`The "${providerType}" exchange returned no refresh token; retained the stored one.`);

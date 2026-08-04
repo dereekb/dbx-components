@@ -1,6 +1,6 @@
 import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenCache } from '@dereekb/zoho';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type FirebaseAuthUserId } from '@dereekb/firebase';
-import { type UserExternalConnectionCredentials, type UserExternalConnectionReader, type UserExternalConnectionServerActions, mergeRefreshedUserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
+import { type UserExternalConnectionAccessor, type UserExternalConnectionCredentials, type UserExternalConnectionCredentialsWriter, mergeRefreshedUserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type Seconds } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
 import { ZOHO_EXTRA_API_DOMAIN_KEY } from './zoho.oauth.connection.service';
@@ -41,12 +41,16 @@ export function zohoAccessTokenFromUserExternalConnectionCredentials(credentials
 export interface UserExternalConnectionZohoAccessTokenCacheConfig {
   /**
    * Used to read the user's currently stored Zoho credentials.
+   *
+   * The accessor rather than `UserExternalConnectionReader`: the contract below is explicitly that an
+   * EXPIRED token may be returned, so a surface that could refresh would be the wrong tool — see
+   * `loadCachedToken`.
    */
-  readonly reader: UserExternalConnectionReader;
+  readonly accessor: UserExternalConnectionAccessor;
   /**
    * Used to persist a renewed token back onto the connection pair, and to record a cleared one.
    */
-  readonly actions: UserExternalConnectionServerActions;
+  readonly actions: UserExternalConnectionCredentialsWriter;
   readonly uid: FirebaseAuthUserId;
 }
 
@@ -62,22 +66,23 @@ export interface UserExternalConnectionZohoAccessTokenCacheConfig {
  * Function instance holds its own in-memory token and refreshes independently, so a user's grant is
  * exercised once per instance per hour rather than once per hour.
  *
- * @param config - The reader, the actions, and the user the cache is for.
+ * @param config - The accessor, the actions, and the user the cache is for.
  * @returns A ZohoAccessTokenCache reading and writing the user's connection pair.
  */
 export function userExternalConnectionZohoAccessTokenCache(config: UserExternalConnectionZohoAccessTokenCacheConfig): ZohoAccessTokenCache {
-  const { reader, actions, uid } = config;
+  const { accessor, actions, uid } = config;
   const providerType = ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
+  const connection = accessor.accessorForUser({ uid })(providerType);
 
   async function loadCachedToken(): Promise<Maybe<ZohoAccessToken>> {
     // the raw read: this cache is consulted by Zoho's own factory BEFORE it decides to refresh, and its
     // contract is explicitly that the returned token may be expired
-    const credentials = await reader.readUserExternalConnectionCredentials({ uid, providerType });
+    const credentials = await connection.readUserExternalConnectionCredentials();
     return zohoAccessTokenFromUserExternalConnectionCredentials(credentials);
   }
 
   async function updateCachedToken(accessToken: ZohoAccessToken): Promise<void> {
-    const previous = await reader.readUserExternalConnectionCredentials({ uid, providerType });
+    const previous = await connection.readUserExternalConnectionCredentials();
 
     if (previous == null) {
       // nothing to merge onto, and a Zoho access token carries no refresh token — writing it alone
@@ -99,7 +104,7 @@ export function userExternalConnectionZohoAccessTokenCache(config: UserExternalC
   }
 
   async function clearCachedToken(): Promise<void> {
-    const previous = await reader.readUserExternalConnectionCredentials({ uid, providerType });
+    const previous = await connection.readUserExternalConnectionCredentials();
 
     if (previous == null) {
       return;

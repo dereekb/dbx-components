@@ -1,5 +1,5 @@
-import { type Maybe } from '@dereekb/util';
-import { type FirebaseAuthUserId, type UserExternalConnectionEntry, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type FirebaseAuthUserId, type FirebaseAuthUserIdRef, type UserExternalConnectionEntry, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections } from './userexternalconnection.private';
 
 /**
@@ -42,6 +42,34 @@ export interface UserExternalConnectionForProvider {
 }
 
 /**
+ * Input identifying the user a {@link UserExternalConnectionAccessorUserInstance} reads for.
+ */
+export interface UserExternalConnectionAccessorUserInput extends FirebaseAuthUserIdRef {}
+
+/**
+ * A {@link UserExternalConnectionAccessor} narrowed to ONE user and ONE provider.
+ *
+ * The accessor's entire read surface with `{ uid, providerType }` already applied.
+ */
+export interface UserExternalConnectionAccessorProviderInstance {
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Loads both halves of the pair.
+   */
+  readUserExternalConnectionForProvider(): Promise<UserExternalConnectionForProvider>;
+  /**
+   * Loads only the stored credentials.
+   */
+  readUserExternalConnectionCredentials(): Promise<Maybe<UserExternalConnectionCredentials>>;
+}
+
+/**
+ * A {@link UserExternalConnectionAccessor} narrowed to one user, awaiting the provider to target.
+ */
+export type UserExternalConnectionAccessorUserInstance = FactoryWithRequiredInput<UserExternalConnectionAccessorProviderInstance, UserExternalConnectionProviderType>;
+
+/**
  * Server-only read surface for the UserExternalConnection document pair.
  *
  * Deliberately the whole read surface and nothing more: no expiration policy, no refresh, no
@@ -53,13 +81,20 @@ export interface UserExternalConnectionForProvider {
  */
 export abstract class UserExternalConnectionAccessor {
   /**
-   * Loads both halves of the pair for one provider.
+   * Narrows this accessor to one user, returning a factory that narrows it further to one provider.
+   *
+   * The accessor's only entry point, and the same two levels
+   * {@link UserExternalConnectionReader.readerForUser} has, so a caller holding either states the user
+   * and provider it is reading for once:
+   *
+   * ```ts
+   * const credentials = await accessor.accessorForUser({ uid })(CALCOM).readUserExternalConnectionCredentials();
+   * ```
+   *
+   * @param input - The user to read for.
+   * @returns A factory producing an accessor for whichever of that user's providers is needed.
    */
-  abstract readUserExternalConnectionForProvider(params: UserExternalConnectionReadParams): Promise<UserExternalConnectionForProvider>;
-  /**
-   * Loads only the stored credentials for one provider.
-   */
-  abstract readUserExternalConnectionCredentials(params: UserExternalConnectionReadParams): Promise<Maybe<UserExternalConnectionCredentials>>;
+  abstract accessorForUser(input: UserExternalConnectionAccessorUserInput): UserExternalConnectionAccessorUserInstance;
 }
 
 /**
@@ -105,5 +140,20 @@ export function userExternalConnectionAccessor(context: UserExternalConnectionAc
     };
   }
 
-  return { readUserExternalConnectionForProvider, readUserExternalConnectionCredentials };
+  function accessorForUser(input: UserExternalConnectionAccessorUserInput): UserExternalConnectionAccessorUserInstance {
+    const { uid } = input;
+
+    return (providerType) => {
+      const params: UserExternalConnectionReadParams = { uid, providerType };
+
+      return {
+        uid,
+        providerType,
+        readUserExternalConnectionForProvider: () => readUserExternalConnectionForProvider(params),
+        readUserExternalConnectionCredentials: () => readUserExternalConnectionCredentials(params)
+      };
+    };
+  }
+
+  return { accessorForUser };
 }

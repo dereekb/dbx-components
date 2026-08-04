@@ -107,6 +107,29 @@ export abstract class UserExternalConnectionServerActions {
 }
 
 /**
+ * The single write a per-user token cache needs: persisting credentials the provider just issued.
+ *
+ * Narrower than {@link UserExternalConnectionServerActions} on purpose. A token cache has no business
+ * connecting, disconnecting, or deleting anything, and the resolved document is of no use to it — hence
+ * the unconstrained result, which also means a caller can satisfy this without producing a document it
+ * would only throw away.
+ */
+export interface UserExternalConnectionCredentialsWriter {
+  refreshUserExternalConnectionCredentials(params: UserExternalConnectionRefreshCredentialsParams): Promise<unknown>;
+}
+
+/**
+ * The two writes a reader performs: persisting a refresh, and recording that a provider rejected the
+ * credentials.
+ *
+ * Also narrower than {@link UserExternalConnectionServerActions} on purpose — a read surface has no
+ * business creating or deleting a connection — and for the same reason unconstrained in its results.
+ */
+export interface UserExternalConnectionCredentialsAndFailureWriter extends UserExternalConnectionCredentialsWriter {
+  markUserExternalConnectionError(params: UserExternalConnectionMarkErrorParams): Promise<unknown>;
+}
+
+/**
  * Creates a {@link UserExternalConnectionServerActions} bound to the given context.
  *
  * @param context - The context carrying both halves of the connection pair.
