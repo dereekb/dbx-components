@@ -1,5 +1,5 @@
-import { type Maybe } from '@dereekb/util';
-import { type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType, userExternalConnectionEntryIsConnected } from '@dereekb/firebase';
+import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type KnownUserExternalConnectionProviderType, type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType, userExternalConnectionEntryIsConnected } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
 
@@ -46,8 +46,26 @@ export interface DbxFirebaseExternalConnectionProviderAssets {
 /**
  * Navigates the browser to the given url. Exists as a seam so tests (and apps that route through
  * their own navigation service) never need to touch `window.location`.
+ *
+ * Returns a promise that settles on the outcome of the navigation, NOT on the request to navigate
+ * having been made: it resolves once the new page is actually opening, and rejects when it never
+ * does. Callers must await it — that is what keeps the connect action working until the authorize
+ * page is really on its way, instead of reporting success against a page that has not moved.
  */
-export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => void;
+export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => PromiseOrValue<void>;
+
+/**
+ * The opaque, short-lived `state` a provider's OAuth handoff carries.
+ *
+ * It is what tells the server who is connecting, since the top-level navigation to the provider
+ * carries no Firebase ID token of its own.
+ */
+export type DbxFirebaseExternalConnectionAuthorizeState = string;
+
+/**
+ * Mints a fresh {@link DbxFirebaseExternalConnectionAuthorizeState} for a provider.
+ */
+export type DbxFirebaseExternalConnectionMintAuthorizeStateFunction = () => Promise<DbxFirebaseExternalConnectionAuthorizeState>;
 
 /**
  * Context handed to a provider's custom {@link DbxFirebaseExternalConnectionConnectFunction}.
@@ -57,10 +75,23 @@ export interface DbxFirebaseExternalConnectionConnectContext {
   readonly provider: DbxFirebaseExternalConnectionProvider;
   /**
    * The authorize url the default behavior would have navigated to, when one could be resolved.
+   *
+   * WITHOUT the `state` query parameter — the default behavior appends that itself, from
+   * {@link mintAuthorizeState}, so a custom handler that skips the mint never pays for one.
    */
   readonly authorizeUrl: Maybe<string>;
   /**
-   * Navigates the browser. Use this rather than `window.location` directly.
+   * Mints the state the authorize request must carry, via an authenticated call.
+   *
+   * Only needed by a handler that builds its own authorize request; the default behavior does this on
+   * its own. Available regardless of the config's `mintAuthorizeState`, since a handler that asks for
+   * a state wants one; it throws only when the app never wired the userExternalConnection callables.
+   */
+  readonly mintAuthorizeState: DbxFirebaseExternalConnectionMintAuthorizeStateFunction;
+  /**
+   * Navigates the browser. Use this rather than `window.location` directly, and AWAIT it: it settles
+   * on the new page actually opening, which is what holds the connect action in its working state
+   * until then.
    */
   readonly navigate: DbxFirebaseExternalConnectionNavigateFunction;
 }
@@ -68,10 +99,13 @@ export interface DbxFirebaseExternalConnectionConnectContext {
 /**
  * Starts the connect flow for a provider.
  *
- * The library default is a bare top-level redirect to the provider's authorize url. An app supplies
- * this when connecting needs more than a redirect — most importantly, when the server must mint a
- * short-lived signed `state` first, because a top-level navigation carries no Firebase ID token and
- * the server otherwise cannot know who is connecting. Do NOT append the ID token as a query param.
+ * The library default already mints the signed `state` and redirects to the authorize url carrying
+ * it, which is the whole of what an authorization-code handoff needs. An app supplies this only when
+ * the flow itself differs — opening a popup instead of navigating, say. Whatever it does, do NOT
+ * append the Firebase ID token to the redirect: the state is what identifies the caller.
+ *
+ * The returned promise must not resolve before the authorize page is opening, so await the context's
+ * `navigate` rather than calling it and returning.
  */
 export type DbxFirebaseExternalConnectionConnectFunction = (context: DbxFirebaseExternalConnectionConnectContext) => Promise<void> | void;
 
@@ -109,6 +143,18 @@ export interface DbxFirebaseExternalConnectionProvider {
 }
 
 /**
+ * One provider an app offers, as declared in its configuration.
+ *
+ * A KNOWN provider type is the whole entry: the library already carries its presentation, so flagging
+ * a service on is naming it. Every app that connects to Discord shows the same Discord row, and the
+ * asset copy is not what varies between downstream apps — the server's OAuth controller is.
+ *
+ * Pass a full provider to register a service the library has no defaults for, or
+ * {@link dbxFirebaseKnownExternalConnectionProvider} to start from a known one and patch it.
+ */
+export type DbxFirebaseExternalConnectionProviderEntry = KnownUserExternalConnectionProviderType | DbxFirebaseExternalConnectionProvider;
+
+/**
  * Configuration for the external connection registry.
  *
  * Declared as an abstract class so it is its own injection token (the newer style, as
@@ -117,13 +163,23 @@ export interface DbxFirebaseExternalConnectionProvider {
  */
 export abstract class DbxFirebaseExternalConnectionsConfig {
   /**
-   * The providers the app registers.
+   * The providers the app registers, as known provider types and/or fully-declared providers.
    */
-  abstract readonly providers: DbxFirebaseExternalConnectionProvider[];
+  abstract readonly providers: DbxFirebaseExternalConnectionProviderEntry[];
   /**
    * Which providers are enabled. Pass `true` (the default) to enable every registered provider.
    */
   readonly enabledProviders?: Maybe<UserExternalConnectionProviderType[] | true>;
+  /**
+   * Whether the connect flow mints a signed `state` and carries it on the authorize request.
+   * Defaults to true.
+   *
+   * This is what identifies the connecting user to the server, since a top-level navigation carries
+   * no Firebase ID token: the app's own authorize endpoint bounces a stateless request straight to
+   * the failure url. Turn it off only for an endpoint that mints its own state, and note that doing
+   * so means no authenticated call is made before the redirect.
+   */
+  readonly mintAuthorizeState?: Maybe<boolean>;
   /**
    * Origin the authorize paths are resolved against (e.g. the hosting origin that fronts the API).
    *
@@ -139,6 +195,9 @@ export abstract class DbxFirebaseExternalConnectionsConfig {
   readonly authorizePathFactory?: Maybe<(providerType: UserExternalConnectionProviderType) => string>;
   /**
    * Navigation seam used by the default connect behavior.
+   *
+   * Defaults to {@link DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION}. An override owns the same
+   * contract: settle only once the new page is actually opening.
    */
   readonly navigate?: Maybe<DbxFirebaseExternalConnectionNavigateFunction>;
 }
@@ -185,6 +244,17 @@ export interface DbxFirebaseExternalConnectionActionConfig {
   readonly icon?: Maybe<string>;
   readonly confirm?: Maybe<DbxActionConfirmConfig>;
   readonly handler: WorkUsingContext;
+}
+
+/**
+ * One rendered list item: a row plus the actions currently available for it.
+ *
+ * The actions are paired with the row here rather than derived by the item component because building them needs
+ * the connect/disconnect handlers, which belong to the container that owns the stores.
+ */
+export interface DbxFirebaseExternalConnectionListItemValue {
+  readonly row: DbxFirebaseExternalConnectionRow;
+  readonly actions?: Maybe<DbxFirebaseExternalConnectionActionConfig[]>;
 }
 
 /**

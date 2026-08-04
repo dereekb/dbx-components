@@ -7,6 +7,7 @@ export * from './decision';
 export * from './equal';
 export * from './indexed';
 export * from './label';
+export * from './http';
 export * from './map';
 export * from './maybe.type';
 export * from './maybe';

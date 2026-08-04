@@ -47,6 +47,12 @@
         <dbx-button dbxActionButton [text]="skipConfirm ? 'Skip Confirm (No Dialog)' : 'With Confirm (Shows Dialog)'"></dbx-button>
         <dbx-button [text]="skipConfirm ? 'Enable Confirm' : 'Disable Confirm'" (dbxButtonClick)="toggleSkipConfirm()"></dbx-button>
       </doc-action-example-tools>
+
+      <h4>autoConfirm</h4>
+      <p>A config with autoConfirm marks the action ready immediately instead of showing the dialog. Use it when the config itself is computed, so an action with nothing to confirm can be bound to the same input as one that prompts.</p>
+      <doc-action-example-tools dbxAction [dbxActionConfirm]="autoConfirmConfig" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Auto Confirm (No Dialog)"></dbx-button>
+      </doc-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionError" hint="Combined with a dbx-error view to show any errors that pop up.">

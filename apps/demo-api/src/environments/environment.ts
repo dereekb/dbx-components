@@ -10,6 +10,12 @@ export const environment: FirebaseServerEnvironmentConfig = {
   developerToolsEnabled: true,
   appUrl: 'http://localhost:9010',
   appApiUrl: 'http://localhost:9010/api',
+  // The external-connection `/oauth/**` routes are excluded from the global API prefix and reached
+  // through the hosting rewrite, which the emulator serves on 9901 — not through the Angular dev
+  // server on 9010. The redirect URI registered with each provider is derived from this origin, and
+  // providers require a byte-identical match. In production the two origins coincide, so
+  // environment.prod.ts omits it and the framework falls back to appUrl.
+  appOAuthUrl: 'http://localhost:9901',
   // Point directly at the Firebase Functions emulator origin (bypassing the Angular dev-server
   // proxy on :9010) — webpack-dev-server's http-proxy-middleware doesn't reliably stream the
   // MCP SDK's `text/event-stream` responses, turning the upstream 200 SSE into a 400 at the

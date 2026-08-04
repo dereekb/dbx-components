@@ -1,0 +1,63 @@
+{
+  "name": "discord",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/discord/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["util-fetch", "!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/discord"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run discord:build-base"
+          },
+          {
+            "command": "npx nx run discord-nestjs:build-base"
+          }
+        ],
+        "parallel": false,
+        "color": true
+      }
+    },
+    "build-base": {
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run discord tests",
+            "command": "npx nx test discord"
+          },
+          {
+            "description": "run discord-nestjs tests",
+            "command": "npx nx test discord-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/discord && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/discord"
+      }
+    }
+  }
+}

@@ -15,11 +15,13 @@ export class ZoomOAuthApi {
     @Inject(ZoomOAuthServiceConfig) readonly config: ZoomOAuthServiceConfig,
     @Inject(ZoomOAuthAccessTokenCacheService) readonly cacheService: ZoomOAuthAccessTokenCacheService
   ) {
+    const { clientId, clientSecret, accountId } = config.zoomOAuth;
     const accessTokenCache = config.zoomOAuth.accessTokenCache ?? cacheService.loadZoomAccessTokenCache();
-    this.zoomOAuth = zoomOAuthFactory(config.factoryConfig ?? {})({
-      accessTokenCache,
-      ...config.zoomOAuth
-    });
+
+    // the fields the OAuth context needs are named rather than spread: the spread used to come AFTER
+    // `accessTokenCache`, so a present-but-undefined key on the service config would overwrite the
+    // cache just resolved from the cache service
+    this.zoomOAuth = zoomOAuthFactory(config.factoryConfig ?? {})({ clientId, clientSecret, accountId, accessTokenCache });
   }
 
   // MARK: Accessors

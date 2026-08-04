@@ -1,10 +1,11 @@
-import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { type ZohoAccountsConfig, type ZohoAccountsContext, type ZohoAccountsContextRef, type ZohoAccountsFetchFactory, type ZohoAccountsFetchFactoryParams, zohoAccountsConfigApiUrl } from './accounts.config';
+import { type ZohoAuthClientIdAndSecretPair, type ZohoConfig } from '../zoho.config';
 import { type LogZohoServerErrorFunction } from '../zoho.error.api';
 import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccounts200StatusWithErrorResponse } from './accounts.error.api';
 import { type ZohoAccessToken, type ZohoAccessTokenCache, type ZohoAccessTokenFactory, type ZohoAccessTokenRefresher } from './accounts';
 import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
-import { zohoAccountsAccessToken } from './accounts.api';
+import { type ZohoAccountsOAuthClientContext, zohoAccountsAccessToken } from './accounts.api';
 import { zohoRateLimitedFetchHandler } from '../zoho.limit';
 
 /**
@@ -33,6 +34,59 @@ export interface ZohoAccountsFactoryConfig {
  * Factory function that creates a {@link ZohoAccounts} client from a {@link ZohoAccountsConfig}.
  */
 export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
+
+/**
+ * Creates the {@link ZohoAccountsFetchFactory} the Zoho Accounts clients use when none is supplied.
+ *
+ * @param fetchHandler - The handler the produced fetches route through.
+ * @returns The default Zoho Accounts fetch factory.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function defaultZohoAccountsFetchFactory(fetchHandler: FetchHandler): ZohoAccountsFetchFactory {
+  return (input: ZohoAccountsFetchFactoryParams) =>
+    fetchApiFetchService.makeFetch({
+      baseUrl: input.apiUrl,
+      baseRequest: {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      },
+      fetchHandler,
+      timeout: 20 * 1000, // 20 second timeout
+      requireOkResponse: true, // enforce ok response
+      useTimeout: true // use timeout
+    });
+}
+
+/**
+ * The fetch pair every Zoho Accounts client is built on.
+ */
+interface ZohoAccountsClientFetch {
+  readonly fetch: ConfiguredFetch;
+  readonly fetchJson: ReturnType<typeof fetchJsonFunction>;
+}
+
+/**
+ * Builds the error-handling fetch pair shared by the full and client-credentials-only clients.
+ *
+ * Shared rather than duplicated because {@link interceptZohoAccounts200StatusWithErrorResponse} is
+ * load-bearing: Zoho answers a failed token exchange with HTTP 200 and an `{ "error": … }` body, so
+ * a hand-rolled fetch would treat a failed exchange as a success with an undefined access token.
+ *
+ * @param baseFetch - The configured base fetch to wrap.
+ * @param logZohoServerErrorFunction - Optional error logging override.
+ * @returns The wrapped fetch and its JSON counterpart.
+ */
+function zohoAccountsClientFetch(baseFetch: ConfiguredFetch, logZohoServerErrorFunction?: LogZohoServerErrorFunction): ZohoAccountsClientFetch {
+  const fetch: ConfiguredFetch = handleZohoAccountsErrorFetch(baseFetch, logZohoServerErrorFunction);
+  const fetchJson = fetchJsonFunction(fetch, {
+    interceptJsonResponse: interceptZohoAccounts200StatusWithErrorResponse, // intercept errors that return status 200
+    handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
+  });
+
+  return { fetch, fetchJson };
+}
 
 /**
  * Creates a {@link ZohoAccountsFactory} from the given configuration.
@@ -71,22 +125,7 @@ export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
 export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): ZohoAccountsFactory {
   const fetchHandler = zohoRateLimitedFetchHandler();
 
-  const {
-    logZohoServerErrorFunction,
-    fetchFactory = (input: ZohoAccountsFetchFactoryParams) =>
-      fetchApiFetchService.makeFetch({
-        baseUrl: input.apiUrl,
-        baseRequest: {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        },
-        fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
-        requireOkResponse: true, // enforce ok response
-        useTimeout: true // use timeout
-      })
-  } = factoryConfig;
+  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler) } = factoryConfig;
 
   return (config: ZohoAccountsConfig) => {
     if (!config.refreshToken) {
@@ -100,11 +139,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
     const apiUrl = zohoAccountsConfigApiUrl(config.apiUrl ?? 'us');
     const baseFetch = fetchFactory({ apiUrl });
 
-    const fetch: ConfiguredFetch = handleZohoAccountsErrorFetch(baseFetch, logZohoServerErrorFunction);
-    const fetchJson = fetchJsonFunction(fetch, {
-      interceptJsonResponse: interceptZohoAccounts200StatusWithErrorResponse, // intercept errors that return status 200
-      handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
-    });
+    const { fetch, fetchJson } = zohoAccountsClientFetch(baseFetch, logZohoServerErrorFunction);
 
     const tokenRefresher: ZohoAccessTokenRefresher = async () => {
       const createdAt = Date.now();
@@ -152,6 +187,92 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
  * Configuration for {@link zohoAccountsZohoAccessTokenFactory}, controlling token refresh,
  * caching, and expiration buffer behavior.
  */
+// MARK: OAuth Client
+/**
+ * Configuration for a {@link ZohoAccountsOAuthClient}.
+ *
+ * Notably absent: a refresh token. A per-user authorization-code handoff is how one is obtained.
+ */
+export interface ZohoAccountsOAuthClientConfig extends ZohoConfig, ZohoAuthClientIdAndSecretPair {}
+
+/**
+ * A Zoho Accounts client authenticated by client credentials alone.
+ */
+export interface ZohoAccountsOAuthClient {
+  readonly oauthClientContext: ZohoAccountsOAuthClientContext;
+}
+
+/**
+ * Configuration for creating a {@link ZohoAccountsOAuthClientFactory}.
+ */
+export interface ZohoAccountsOAuthClientFactoryConfig {
+  /**
+   * Custom fetch factory for creating the underlying HTTP client.
+   */
+  readonly fetchFactory?: ZohoAccountsFetchFactory;
+  /**
+   * Custom FetchHandler to use with the default fetchFactory.
+   *
+   * Intercepts requests before they leave the process, so specs can assert the RESOLVED url.
+   * Ignored when a `fetchFactory` is provided.
+   */
+  readonly fetchHandler?: Maybe<FetchHandler>;
+  /**
+   * Custom error logging function invoked when Zoho API errors are encountered.
+   */
+  readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+}
+
+/**
+ * Factory function that creates a {@link ZohoAccountsOAuthClient} from a {@link ZohoAccountsOAuthClientConfig}.
+ */
+export type ZohoAccountsOAuthClientFactory = (config: ZohoAccountsOAuthClientConfig) => ZohoAccountsOAuthClient;
+
+/**
+ * Creates a {@link ZohoAccountsOAuthClientFactory}, producing Zoho Accounts clients authenticated by
+ * CLIENT CREDENTIALS ALONE.
+ *
+ * {@link zohoAccountsFactory} requires a refresh token, which a per-user authorization-code handoff
+ * does not have yet — the handoff is how the refresh token is obtained. This client covers exactly
+ * the two endpoints that need no user token: the authorization-code exchange and
+ * `/oauth/user/info`.
+ *
+ * It builds its fetch through the same error handling as the full client, which matters more than it
+ * looks: Zoho answers a failed token exchange with HTTP 200 and an `{ "error": … }` body, and
+ * `interceptZohoAccounts200StatusWithErrorResponse` is what turns that into a thrown error instead
+ * of a "successful" exchange with an undefined access token.
+ *
+ * @param factoryConfig - Configuration providing optional fetch and logging overrides.
+ * @returns A factory function that creates client-credentials-only Zoho Accounts clients.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function zohoAccountsOAuthClientFactory(factoryConfig: ZohoAccountsOAuthClientFactoryConfig): ZohoAccountsOAuthClientFactory {
+  const fetchHandler = factoryConfig.fetchHandler ?? zohoRateLimitedFetchHandler();
+  const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler) } = factoryConfig;
+
+  return (config: ZohoAccountsOAuthClientConfig) => {
+    if (!config.clientId) {
+      throw new Error('ZohoAccountsOAuthClientConfig missing clientId.');
+    } else if (!config.clientSecret) {
+      throw new Error('ZohoAccountsOAuthClientConfig missing clientSecret.');
+    }
+
+    const apiUrl = zohoAccountsConfigApiUrl(config.apiUrl ?? 'us');
+    const baseFetch = fetchFactory({ apiUrl });
+
+    const { fetchJson } = zohoAccountsClientFetch(baseFetch, logZohoServerErrorFunction);
+    const resolvedConfig: ZohoAccountsOAuthClientConfig = { ...config, apiUrl };
+
+    const oauthClientContext: ZohoAccountsOAuthClientContext = {
+      fetchJson,
+      config: resolvedConfig
+    };
+
+    return { oauthClientContext };
+  };
+}
+
 export interface ZohoAccountsZohoAccessTokenFactoryConfig {
   /**
    * Number of milliseconds before the expiration time a token should be discarded

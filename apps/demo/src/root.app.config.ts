@@ -2,7 +2,7 @@ import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalytic
 import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
-import { environment, EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN, OIDC_API_ORIGIN } from './environments/environment';
+import { environment } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import {
   DbxFirebaseAnalyticsUserSource,
@@ -12,7 +12,7 @@ import {
   type DbxFirebaseModelEntitiesWidgetServiceConfig,
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
-  type DbxFirebaseExternalConnectionProvider,
+  type DbxFirebaseExternalConnectionProviderEntry,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   provideDbxFirebase,
   provideDbxFirebaseAuthImpersonation,
@@ -39,6 +39,8 @@ import {
   DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
   DEMO_APP_OAUTH_INTERACTION_PATH,
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   ProfileFunctions
 } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -64,19 +66,15 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
 /**
  * Third-party services the demo app offers to connect an account to.
  *
- * The provider TYPE comes from demo-firebase, because demo-api's OAuth controller writes the same
- * string into the connection entry map. Only the presentation lives here.
+ * Just the provider types demo-api mounts an OAuth controller for: dbx-firebase carries each known
+ * provider's presentation and the whole connect flow, so this list is the entire client-side
+ * configuration. Pass `dbxFirebaseKnownExternalConnectionProvider({ providerType, assets })` in place
+ * of a type to reword one of them.
+ *
+ * The types come from demo-firebase, because demo-api's OAuth controller writes the same string into
+ * the connection entry map.
  */
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProvider[] = [
-  {
-    providerType: DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-    assets: {
-      providerName: 'Cal.com',
-      icon: 'event',
-      description: 'Schedule and manage bookings from your Cal.com account.'
-    }
-  }
-];
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE];
 
 // MARK: DbxAnalytics
 /**
@@ -395,7 +393,7 @@ export const APP_CONFIG: ApplicationConfig = {
       appCollectionClass: DemoFirestoreCollections,
       // The connect redirect targets the hosting origin that fronts the API, since the OAuth
       // controller is not served by `ng serve`. Undefined in production, where they share an origin.
-      authorizeOrigin: EXTERNAL_CONNECTION_AUTHORIZE_ORIGIN,
+      authorizeOrigin: environment.externalConnections.authorizeOrigin,
       providers: DEMO_EXTERNAL_CONNECTION_PROVIDERS
     }),
     provideDbxFirebaseOidc({
@@ -408,7 +406,7 @@ export const APP_CONFIG: ApplicationConfig = {
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
-        oidcApiOrigin: OIDC_API_ORIGIN
+        oidcApiOrigin: environment.oidc.apiOrigin
       }
     }),
     // App initializers

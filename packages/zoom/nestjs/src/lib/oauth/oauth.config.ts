@@ -2,9 +2,14 @@ import { characterPrefixSuffixInstance } from '@dereekb/util';
 import { type ZoomOAuthConfig, type ZoomOAuthFactoryConfig } from '@dereekb/zoom';
 import { type ConfigService } from '@nestjs/config';
 
-export interface ZoomOAuthServiceApiConfig extends Omit<ZoomOAuthConfig, 'userRefreshToken' | 'type'> {
-  readonly authEntityType: 'account';
-}
+/**
+ * The environment-facing Zoom OAuth configuration.
+ *
+ * Stays flat, mirroring the ZOOM_* variables it is read from. Previously omitted `userRefreshToken`
+ * and `type`, neither of which exists on {@link ZoomOAuthConfig} — a no-op that would have silently
+ * stripped either key had one ever been added.
+ */
+export type ZoomOAuthServiceApiConfig = ZoomOAuthConfig;
 
 /**
  * Configuration for ZoomService
@@ -52,7 +57,6 @@ export function readZoomOAuthServiceConfigFromConfigService(configService: Confi
 
   const config: ZoomOAuthServiceConfig = {
     zoomOAuth: {
-      authEntityType: 'account',
       accountId,
       clientId,
       clientSecret

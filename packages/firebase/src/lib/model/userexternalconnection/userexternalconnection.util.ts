@@ -174,6 +174,35 @@ export function applyUserExternalConnectionEntry(input: ApplyUserExternalConnect
   };
 }
 
+/**
+ * Input for {@link emptyUserExternalConnection}.
+ */
+export interface EmptyUserExternalConnectionInput {
+  readonly uid: FirebaseAuthUserId;
+  readonly now: Date;
+}
+
+/**
+ * Returns the value of a connection document that has no providers on it yet.
+ *
+ * Creating the document is its own operation, so the "no connections" value lives here beside
+ * {@link applyUserExternalConnectionEntry} rather than as a literal at the call site — both write
+ * the complete document, and `c` is empty here for the same reason it is derived there.
+ *
+ * @param input - The user the document belongs to and the instant to stamp it with.
+ * @returns The UserExternalConnection value for a user with no provider entries.
+ */
+export function emptyUserExternalConnection(input: EmptyUserExternalConnectionInput): UserExternalConnection {
+  const { uid, now } = input;
+
+  return {
+    uid,
+    e: {},
+    c: [],
+    uat: now
+  };
+}
+
 // MARK: Display
 /**
  * Returns the entry for the given provider, if any.

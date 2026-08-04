@@ -1,4 +1,5 @@
-import { type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe, filterUndefinedValues } from '@dereekb/util';
+import { safeToJsDate } from '@dereekb/date';
 import { AbstractFirestoreDocument, type CollectionReference, copyUserRelatedDataAccessorFactoryFunction, type FirebaseAuthUserId, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, firestoreUID, snapshotConverterFunctions, type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, type UserRelated, type UserRelatedById } from '@dereekb/firebase';
 import { firestoreEncryptedField } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
@@ -171,8 +172,63 @@ export function userExternalConnectionGrantSummaryFromCredentials(credentials: U
     scopes: credentials.scopes,
     externalAccountId: credentials.externalAccountId,
     label: credentials.label,
-    connectedAt: credentials.issuedAt ? new Date(credentials.issuedAt) : null,
-    expiresAt: credentials.expiresAt ? new Date(credentials.expiresAt) : null
+    connectedAt: safeToJsDate(credentials.issuedAt),
+    expiresAt: safeToJsDate(credentials.expiresAt)
+  };
+}
+
+/**
+ * Input for {@link mergeRefreshedUserExternalConnectionCredentials}.
+ */
+export interface MergeRefreshedUserExternalConnectionCredentialsInput {
+  /**
+   * The credentials that were stored before the refresh.
+   */
+  readonly previous: UserExternalConnectionCredentials;
+  /**
+   * The credentials a refresh produced.
+   */
+  readonly refreshed: UserExternalConnectionCredentials;
+}
+
+/**
+ * Merges refreshed credentials over the stored ones, retaining anything the refresh response omitted.
+ *
+ * Required because the paired write replaces a provider's credentials WHOLESALE (see
+ * {@link applyUserExternalConnectionCredentials}) — so persisting a refresh response verbatim erases
+ * every field the provider did not resend, while leaving the entry `connected`. Two of those are
+ * load-bearing:
+ *
+ * - `refreshToken`, which Zoho (and any provider that issues one only on first consent) omits on
+ *   refresh. Losing it yields a connection that can never be refreshed again and does not look broken.
+ * - `extra`, which carries the values needed to USE the credentials — Zoho's `apiDomain` and the
+ *   `accountsServer` datacenter a later refresh must be sent to. Dropping `accountsServer` breaks the
+ *   refresh AFTER this one, which is considerably harder to attribute.
+ *
+ * `extra` is merged key-by-key rather than replaced, so a refresh that resends only `apiDomain` still
+ * updates it without discarding the rest. Keys the refresh left UNDEFINED are dropped before merging,
+ * because an object literal built with an absent optional field carries the key with an undefined value
+ * and a plain spread would use it to erase the stored one. A refresh that means to CLEAR a key can
+ * still say so with an explicit null.
+ *
+ * The generalization of `AbstractUserExternalConnectionOAuthService.credentialsRetainingStoredRefreshToken`,
+ * which does the same thing for the authorization-code exchange.
+ *
+ * @param input - The stored credentials and the refreshed ones.
+ * @returns The credentials to persist.
+ */
+export function mergeRefreshedUserExternalConnectionCredentials(input: MergeRefreshedUserExternalConnectionCredentialsInput): UserExternalConnectionCredentials {
+  const { previous, refreshed } = input;
+  const extra = previous.extra || refreshed.extra ? { ...previous.extra, ...(refreshed.extra ? filterUndefinedValues(refreshed.extra) : undefined) } : undefined;
+
+  return {
+    ...refreshed,
+    refreshToken: refreshed.refreshToken ?? previous.refreshToken,
+    tokenType: refreshed.tokenType ?? previous.tokenType,
+    scopes: refreshed.scopes ?? previous.scopes,
+    externalAccountId: refreshed.externalAccountId ?? previous.externalAccountId,
+    label: refreshed.label ?? previous.label,
+    extra
   };
 }
 

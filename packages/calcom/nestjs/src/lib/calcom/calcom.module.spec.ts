@@ -1,4 +1,5 @@
 import { appCalcomModuleMetadata } from './calcom.module';
+import { isCalcomApiKeyCredential } from '@dereekb/calcom';
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { fileCalcomOAuthAccessTokenCacheService, CalcomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
@@ -55,9 +56,10 @@ describe('appCalcomModuleMetadata()', () => {
       expect(api).toBeDefined();
 
       const { config } = api.calcomOAuth.oauthContext;
-      const hasApiKey = !!config.apiKey;
-      const hasOAuth = !!config.clientId && !!config.clientSecret;
-      expect(hasApiKey || hasOAuth).toBe(true);
+      const hasApiKey = config.defaultAuth != null && isCalcomApiKeyCredential(config.defaultAuth);
+
+      // either an api key that IS the token, or a client to exchange a refresh token against
+      expect(hasApiKey || config.client != null).toBe(true);
     });
 
     describe('oauthContext', () => {

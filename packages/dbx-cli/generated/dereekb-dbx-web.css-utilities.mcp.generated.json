@@ -33,14 +33,10 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 65,
+      "line": 68,
       "declarations": [
         {
-          "property": "width",
-          "value": "var(#{theming.$dbx-avatar-large-size-var}, 128px)"
-        },
-        {
-          "property": "height",
+          "property": "--dbx-avatar-view-size",
           "value": "var(#{theming.$dbx-avatar-large-size-var}, 128px)"
         }
       ],
@@ -51,7 +47,10 @@
         "avatar-small"
       ],
       "parent": "avatar-view",
-      "selectorContext": ".dbx-avatar-large .dbx-avatar-view"
+      "selectorContext": ".dbx-avatar-large .dbx-avatar-view",
+      "tokensSet": [
+        "--dbx-avatar-view-size"
+      ]
     },
     {
       "slug": "avatar-small",
@@ -59,14 +58,10 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 45,
+      "line": 59,
       "declarations": [
         {
-          "property": "width",
-          "value": "var(#{theming.$dbx-avatar-small-size-var}, 32px)"
-        },
-        {
-          "property": "height",
+          "property": "--dbx-avatar-view-size",
           "value": "var(#{theming.$dbx-avatar-small-size-var}, 32px)"
         }
       ],
@@ -77,7 +72,10 @@
         "avatar-large"
       ],
       "parent": "avatar-view",
-      "selectorContext": ".dbx-avatar-small .dbx-avatar-view"
+      "selectorContext": ".dbx-avatar-small .dbx-avatar-view",
+      "tokensSet": [
+        "--dbx-avatar-view-size"
+      ]
     },
     {
       "slug": "avatar-view",
@@ -85,8 +83,12 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 16,
+      "line": 17,
       "declarations": [
+        {
+          "property": "--dbx-avatar-view-size",
+          "value": "var(#{theming.$dbx-avatar-size-var}, 64px)"
+        },
         {
           "property": "position",
           "value": "relative"
@@ -109,11 +111,15 @@
         },
         {
           "property": "width",
-          "value": "var(#{theming.$dbx-avatar-size-var}, 64px)"
+          "value": "var(--dbx-avatar-view-size)"
         },
         {
           "property": "height",
-          "value": "var(#{theming.$dbx-avatar-size-var}, 64px)"
+          "value": "var(--dbx-avatar-view-size)"
+        },
+        {
+          "property": "background-color",
+          "value": "color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent)"
         }
       ],
       "role": "layout",
@@ -122,10 +128,18 @@
         "avatar-small",
         "avatar-large",
         "avatar-view-circle",
-        "avatar-view-square"
+        "avatar-view-square",
+        "avatar-view-tile"
       ],
       "component": "DbxAvatarViewComponent",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-avatar-view-size",
+        "--mat-sys-on-surface"
+      ],
+      "tokensSet": [
+        "--dbx-avatar-view-size"
+      ]
     },
     {
       "slug": "avatar-view-circle",
@@ -133,7 +147,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 125,
+      "line": 141,
       "declarations": [
         {
           "property": "border-radius",
@@ -149,12 +163,33 @@
       "parent": "avatar-view"
     },
     {
+      "slug": "avatar-view-img-contain",
+      "selector": ".dbx-avatar-view-img-contain",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/avatar/_avatar.scss",
+      "line": 85,
+      "declarations": [
+        {
+          "property": "object-fit",
+          "value": "contain"
+        }
+      ],
+      "role": "layout",
+      "intent": "fits the whole avatar image inside the box instead of cropping it — the default in tile mode, where the image is a brand logo",
+      "seeAlso": [
+        "avatar-view-tile"
+      ],
+      "parent": "avatar-view",
+      "component": "DbxAvatarViewComponent"
+    },
+    {
       "slug": "avatar-view-initials",
       "selector": ".dbx-avatar-view-initials",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 101,
+      "line": 103,
       "declarations": [
         {
           "property": "display",
@@ -208,7 +243,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 134,
+      "line": 150,
       "declarations": [
         {
           "property": "border-radius",
@@ -225,6 +260,42 @@
       "tokensRead": [
         "--dbx-avatar-square-container-shape",
         "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "slug": "avatar-view-tile",
+      "selector": ".dbx-avatar-view-tile",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/avatar/_avatar.scss",
+      "line": 168,
+      "declarations": [
+        {
+          "property": "--dbx-icon-tile-padding",
+          "value": "var(--dbx-avatar-tile-padding, calc(var(--dbx-avatar-view-size) * #{$tile-padding-to-avatar-size-ratio}))"
+        },
+        {
+          "property": "--dbx-icon-tile-icon-size",
+          "value": "var(--dbx-avatar-tile-icon-size, calc(var(--dbx-avatar-view-size) * #{$icon-to-avatar-size-ratio}))"
+        }
+      ],
+      "role": "layout",
+      "intent": "icon-tile presentation for `.dbx-avatar-view` — the avatar keeps its box size while `.dbx-icon-tile` supplies padding, shape and the `[dbxColor]` surface. Customize with `--dbx-avatar-tile-padding` / `--dbx-avatar-tile-icon-size`.",
+      "seeAlso": [
+        "icon-tile",
+        "avatar-view",
+        "avatar-view-img-contain"
+      ],
+      "parent": "avatar-view",
+      "component": "DbxAvatarViewComponent",
+      "tokensRead": [
+        "--dbx-avatar-tile-icon-size",
+        "--dbx-avatar-tile-padding",
+        "--dbx-avatar-view-size"
+      ],
+      "tokensSet": [
+        "--dbx-icon-tile-icon-size",
+        "--dbx-icon-tile-padding"
       ]
     },
     {

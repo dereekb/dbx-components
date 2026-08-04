@@ -1,8 +1,8 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type CalcomServerContext, type CalcomServerContextRef, type CalcomFetchFactory, type CalcomFetchFactoryInput, type CalcomUserContext, type CalcomUserContextFactory, type CalcomUserContextFactoryInput, type CalcomPublicContext } from './calcom.config';
+import { type CalcomServerContext, type CalcomServerContextRef, type CalcomFetchFactory, type CalcomFetchFactoryInput, type CalcomUserContext, type CalcomUserContextFactory, type CalcomPublicContext } from './calcom.config';
 import { type LogCalcomServerErrorFunction } from '../calcom.error.api';
 import { handleCalcomErrorFetch } from './calcom.error.api';
-import { type CalcomOAuthContextRef } from '../oauth/oauth.config';
+import { type CalcomOAuthContextRef, type CalcomRefreshTokenCredential } from '../oauth/oauth.config';
 import { calcomAccessTokenStringFactory } from '../oauth/oauth';
 import { type CalcomRateLimitedFetchHandlerConfig, calcomRateLimitedFetchHandler } from '../calcom.limit';
 import { type Maybe } from '@dereekb/util';
@@ -97,12 +97,8 @@ export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory
     };
 
     // MARK: Make User Context
-    const makeUserContext: CalcomUserContextFactory = (input: CalcomUserContextFactoryInput) => {
-      const userAccessTokenFactory = oauthContext.makeUserAccessTokenFactory({
-        refreshToken: input.refreshToken,
-        userAccessTokenCache: input.accessTokenCache
-      });
-
+    const makeUserContext: CalcomUserContextFactory = (input: CalcomRefreshTokenCredential) => {
+      const userAccessTokenFactory = oauthContext.makeAccessTokenFactory(input);
       const userAccessTokenStringFactory = calcomAccessTokenStringFactory(userAccessTokenFactory);
 
       const userBaseFetch = fetchFactory({

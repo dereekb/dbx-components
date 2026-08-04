@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { randomBytes } from 'node:crypto';
-import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, userExternalConnectionGrantSummaryFromCredentials, userExternalConnectionPrivateConverter } from './userexternalconnection.private';
+import { applyUserExternalConnectionCredentials, mergeRefreshedUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionPrivate, userExternalConnectionGrantSummaryFromCredentials, userExternalConnectionPrivateConverter } from './userexternalconnection.private';
 
 const TEST_UID = 'testuid';
 const encryptionSecret = randomBytes(32).toString('hex');
@@ -124,5 +124,84 @@ describe('applyUserExternalConnectionCredentials()', () => {
   it('should not mutate the current document', () => {
     applyUserExternalConnectionCredentials({ current: model, uid: TEST_UID, providerType: 'calcom', credentials: null, now });
     expect(Object.keys(model.cr)).toContain('calcom');
+  });
+});
+
+describe('mergeRefreshedUserExternalConnectionCredentials()', () => {
+  const previous: UserExternalConnectionCredentials = {
+    ...calcomCredentials,
+    extra: { apiDomain: 'https://www.zohoapis.com', accountsServer: 'https://accounts.zoho.com', location: 'us' }
+  };
+
+  /**
+   * A refresh response carrying only what a token endpoint minimally returns.
+   */
+  const minimalRefresh: UserExternalConnectionCredentials = {
+    accessToken: 'new-access-token',
+    issuedAt: '2026-03-01T02:00:00.000Z',
+    expiresAt: '2026-03-01T03:00:00.000Z'
+  };
+
+  it('should take the refreshed access token and timestamps', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: minimalRefresh });
+
+    expect(result.accessToken).toBe('new-access-token');
+    expect(result.issuedAt).toBe('2026-03-01T02:00:00.000Z');
+    expect(result.expiresAt).toBe('2026-03-01T03:00:00.000Z');
+  });
+
+  it('should retain the stored refresh token when the refresh omitted one', () => {
+    // Zoho omits refresh_token entirely on a refresh; persisting the response as-is would destroy it
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: minimalRefresh });
+    expect(result.refreshToken).toBe('refresh-token');
+  });
+
+  it('should prefer a rotated refresh token when the refresh returned one', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, refreshToken: 'rotated-refresh-token' } });
+    expect(result.refreshToken).toBe('rotated-refresh-token');
+  });
+
+  it('should retain the descriptive fields the refresh omitted', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: minimalRefresh });
+
+    expect(result.scopes).toEqual(['booking:read']);
+    expect(result.externalAccountId).toBe('cal-123');
+    expect(result.label).toBe('user@example.com');
+    expect(result.tokenType).toBe('Bearer');
+  });
+
+  it('should retain the whole stored extra when the refresh carried none', () => {
+    // dropping accountsServer here would break the refresh AFTER this one
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: minimalRefresh });
+
+    expect(result.extra?.accountsServer).toBe('https://accounts.zoho.com');
+    expect(result.extra?.apiDomain).toBe('https://www.zohoapis.com');
+    expect(result.extra?.location).toBe('us');
+  });
+
+  it('should merge extra key-by-key rather than replacing it', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { apiDomain: 'https://www.zohoapis.eu' } } });
+
+    expect(result.extra?.apiDomain).toBe('https://www.zohoapis.eu');
+    expect(result.extra?.accountsServer).toBe('https://accounts.zoho.com');
+    expect(result.extra?.location).toBe('us');
+  });
+
+  it('should not let an UNDEFINED extra value erase the stored one', () => {
+    // an object literal built with an absent optional field still carries the key, and a plain spread
+    // would use it to erase what is stored
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { apiDomain: 'https://www.zohoapis.eu', location: undefined } } });
+
+    expect(result.extra?.location).toBe('us');
+  });
+
+  it('should let an explicit NULL extra value clear the stored one', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { location: null } } });
+    expect(result.extra?.location).toBeNull();
+  });
+
+  it('should leave extra undefined when neither side had any', () => {
+    const result = mergeRefreshedUserExternalConnectionCredentials({ previous: calcomCredentials, refreshed: minimalRefresh });
+    expect(result.extra).not.toBeDefined();
   });
 });

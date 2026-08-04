@@ -1,9 +1,23 @@
-import { type FetchJsonBody, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
+import { type FetchJsonBody, type FetchJsonFunction, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type ZohoAccountsContext } from './accounts.config';
 import { type ZohoAuthClientIdAndSecretPair, type ZohoRefreshToken } from '../zoho.config';
 import { type ZohoAccessTokenApiDomain, type ZohoAccessTokenScopesString, type ZohoAccessTokenString } from './accounts';
 import { type Maybe, type Seconds } from '@dereekb/util';
 import { type ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
+import { ZOHO_ACCOUNTS_TOKEN_PATH, type ZohoOAuthScope } from './accounts.authorize';
+
+/**
+ * The parts of a {@link ZohoAccountsContext} an authorization-code exchange actually needs.
+ *
+ * Narrower than ZohoAccountsContext on purpose: the exchange is how a refresh token is OBTAINED, so
+ * requiring a context that already has one (as `zohoAccountsFactory` does) is circular for a
+ * per-user connect flow. A full `ZohoAccountsContext` remains structurally assignable to this, so
+ * every existing caller is unaffected.
+ */
+export interface ZohoAccountsOAuthClientContext {
+  readonly fetchJson: FetchJsonFunction;
+  readonly config: ZohoAuthClientIdAndSecretPair;
+}
 
 /**
  * Optional overrides for the access token request. When omitted, values
@@ -99,7 +113,75 @@ export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: 
       refresh_token: refreshToken
     });
 
-    return context.fetchJson(`/oauth/v2/token?${params}`, zohoAccountsApiFetchJsonInput('POST'));
+    return context.fetchJson(`${ZOHO_ACCOUNTS_TOKEN_PATH}?${params}`, zohoAccountsApiFetchJsonInput('POST'));
+  };
+}
+
+// MARK: Per-User Access Token
+/**
+ * Input for exchanging a specific user's refresh token for a new access token.
+ *
+ * Unlike {@link ZohoAccountsAccessTokenInput}, the refresh token is REQUIRED: there is no config-level
+ * token to fall back to, because the whole point is that the token belongs to a user rather than to
+ * the app.
+ */
+export interface ZohoAccountsUserAccessTokenInput {
+  /**
+   * The user's long-lived refresh token.
+   */
+  readonly refreshToken: ZohoRefreshToken;
+  /**
+   * Override client credentials. Falls back to the context config's `clientId`/`clientSecret`.
+   */
+  readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;
+}
+
+/**
+ * Exchanges a user's refresh token for a new access token.
+ */
+export type ZohoAccountsUserAccessTokenFunction = (input: ZohoAccountsUserAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse>;
+
+/**
+ * Creates a function that exchanges a SPECIFIC USER's refresh token for a new access token.
+ *
+ * The per-user counterpart of {@link zohoAccountsAccessToken}, and narrowed the same way
+ * {@link zohoAccountsRefreshTokenFromAuthorizationCode} is: it takes a
+ * {@link ZohoAccountsOAuthClientContext} rather than a full {@link ZohoAccountsContext}. That matters
+ * because a `ZohoAccountsContext`'s config REQUIRES a `refreshToken` — the app's own — so it cannot
+ * describe a client that refreshes on behalf of many users. A full context stays structurally
+ * assignable, so this is usable from either.
+ *
+ * Zoho does not rotate refresh tokens and its refresh response carries NO `refresh_token`, so the
+ * token passed in here stays valid and must be retained by the caller. The response does carry
+ * `api_domain`, which can differ from the one the grant was created with, so persist it.
+ *
+ * @param context - A Zoho Accounts client context providing fetch and client credentials.
+ * @returns Function that exchanges a user's refresh token for an access token.
+ *
+ * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token-expiry.html
+ *
+ * @example
+ * ```typescript
+ * const userAccessToken = zohoAccountsUserAccessToken(accountsClientContext);
+ * const { access_token, api_domain, expires_in } = await userAccessToken({ refreshToken: user.zohoRefreshToken });
+ * ```
+ */
+export function zohoAccountsUserAccessToken(context: ZohoAccountsOAuthClientContext): ZohoAccountsUserAccessTokenFunction {
+  return (input: ZohoAccountsUserAccessTokenInput) => {
+    const { clientId: configClientId, clientSecret: configClientSecret } = context.config;
+    const { client, refreshToken } = input;
+
+    const clientId = client?.clientId ?? configClientId;
+    const clientSecret = client?.clientSecret ?? configClientSecret;
+
+    const params = makeUrlSearchParams({
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken
+    });
+
+    return context.fetchJson<ZohoAccountsAccessTokenResponse>(`${ZOHO_ACCOUNTS_TOKEN_PATH}?${params}`, zohoAccountsApiFetchJsonInput('POST'));
   };
 }
 
@@ -194,7 +276,7 @@ export type ZohoAccountsRefreshTokenFromAuthorizationCodeFunction = (input: Zoho
  * });
  * ```
  */
-export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccountsContext): ZohoAccountsRefreshTokenFromAuthorizationCodeFunction {
+export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccountsOAuthClientContext): ZohoAccountsRefreshTokenFromAuthorizationCodeFunction {
   return (input: ZohoAccountsRefreshTokenFromAuthorizationCodeInput) => {
     const { clientId: configClientId, clientSecret: configClientSecret } = context.config;
     const { client, code, redirectUri } = input;
@@ -210,7 +292,73 @@ export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccou
       redirect_uri: redirectUri
     });
 
-    return context.fetchJson<ZohoAccountsRefreshTokenFromAuthorizationCodeResponse>(`/oauth/v2/token?${params}`, zohoAccountsApiFetchJsonInput('POST'));
+    return context.fetchJson<ZohoAccountsRefreshTokenFromAuthorizationCodeResponse>(`${ZOHO_ACCOUNTS_TOKEN_PATH}?${params}`, zohoAccountsApiFetchJsonInput('POST'));
+  };
+}
+
+// MARK: User Info
+/**
+ * Path of the Zoho Accounts endpoint that describes the authorizing user.
+ */
+export const ZOHO_ACCOUNTS_USER_INFO_PATH = '/oauth/user/info';
+
+/**
+ * Scope required to read {@link zohoAccountsUserInfo}.
+ */
+export const ZOHO_ACCOUNTS_PROFILE_READ_SCOPE: ZohoOAuthScope = 'AaaServer.profile.READ';
+
+/**
+ * Input for reading the identity an access token was issued to.
+ */
+export interface ZohoAccountsUserInfoInput {
+  /**
+   * The access token to read the identity of.
+   */
+  readonly accessToken: ZohoAccessTokenString;
+}
+
+/**
+ * The authorizing user, as described by the Zoho Accounts user info endpoint.
+ *
+ * EVERY field is optional. The documented casing (`ZUID`, `Email`, `Display_Name`) cannot be
+ * verified without live credentials, so a consumer must tolerate a response whose shape differs —
+ * the worst case is a connection with no label, not a failed connect.
+ */
+export interface ZohoAccountsUserInfoResponse {
+  /**
+   * The Zoho user id.
+   */
+  readonly ZUID?: Maybe<number | string>;
+  readonly Email?: Maybe<string>;
+  readonly Display_Name?: Maybe<string>;
+  readonly First_Name?: Maybe<string>;
+  readonly Last_Name?: Maybe<string>;
+}
+
+/**
+ * Reads the identity an access token was issued to.
+ */
+export type ZohoAccountsUserInfoFunction = (input: ZohoAccountsUserInfoInput) => Promise<ZohoAccountsUserInfoResponse>;
+
+/**
+ * Creates a function that reads the authorizing user's Zoho identity, so a connection can be
+ * labelled with the account it belongs to.
+ *
+ * Requires the {@link ZOHO_ACCOUNTS_PROFILE_READ_SCOPE} scope on the access token.
+ *
+ * @param context - Zoho Accounts OAuth client context providing fetch.
+ * @returns Function that reads the user info for an access token.
+ *
+ * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/get-user-info.html
+ */
+export function zohoAccountsUserInfo(context: ZohoAccountsOAuthClientContext): ZohoAccountsUserInfoFunction {
+  return (input: ZohoAccountsUserInfoInput) => {
+    return context.fetchJson<ZohoAccountsUserInfoResponse>(ZOHO_ACCOUNTS_USER_INFO_PATH, {
+      method: 'GET',
+      headers: {
+        Authorization: `Zoho-oauthtoken ${input.accessToken}`
+      }
+    });
   };
 }
 

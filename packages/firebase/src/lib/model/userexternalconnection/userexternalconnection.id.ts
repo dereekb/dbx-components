@@ -24,7 +24,31 @@ export type UserExternalConnectionProviderType = string;
 /**
  * Known third-party services the workspace ships provider support for.
  */
-export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord';
+export type KnownUserExternalConnectionProviderType = 'calcom' | 'zoom' | 'discord' | 'zoho';
+
+/**
+ * Provider type for Cal.com.
+ *
+ * Declared here rather than in a server package because the string is the map key on BOTH halves of
+ * the connection pair: the server's OAuth controller writes it and the client renders from it, so
+ * they must be the same literal.
+ */
+export const CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'calcom';
+
+/**
+ * Provider type for Zoom.
+ */
+export const ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'zoom';
+
+/**
+ * Provider type for Discord.
+ */
+export const DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'discord';
+
+/**
+ * Provider type for Zoho.
+ */
+export const ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE: KnownUserExternalConnectionProviderType = 'zoho';
 
 /**
  * A capability/scope string granted by a third-party provider (e.g. an OAuth scope).

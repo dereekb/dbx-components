@@ -158,8 +158,13 @@ export interface UserExternalConnection extends UserRelated, UserRelatedById {
 /**
  * Roles for a UserExternalConnection. Users can read their own connection state; all writes go
  * through the server.
+ *
+ * `connect` and `disconnect` are called out separately from `update` because they are the only
+ * operations a client can reach, so an app can withhold either one (a user allowed to drop a
+ * connection but not to add another, or the reverse) without also withholding the server-driven
+ * writes that share `update`.
  */
-export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole;
+export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole | 'connect' | 'disconnect';
 
 export class UserExternalConnectionDocument extends AbstractFirestoreDocument<UserExternalConnection, UserExternalConnectionDocument, typeof userExternalConnectionIdentity> {
   get modelIdentity() {

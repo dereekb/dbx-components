@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { applyUserExternalConnectionEntry, type FirebaseAuthUserId, type FirestoreContextReference, type UserExternalConnectionDocument, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, userExternalConnectionEntryForOutcome } from '@dereekb/firebase';
+import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type FirebaseAuthUserId, type FirestoreContextReference, type UserExternalConnectionDocument, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, userExternalConnectionEntryForOutcome } from '@dereekb/firebase';
 import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections, userExternalConnectionGrantSummaryFromCredentials } from './userexternalconnection.private';
+import { userExternalConnectionAlreadyExistsError } from './userexternalconnection.error';
 
 /**
  * Context required by {@link userExternalConnectionServerActions}.
@@ -67,35 +68,65 @@ export interface UserExternalConnectionDisconnectParams {
 }
 
 /**
+ * Parameters for creating a user's connection document.
+ */
+export interface UserExternalConnectionCreateParams {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * Optional instant to stamp the new document with. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
  * Parameters for deleting a user's entire connection pair.
  */
 export interface UserExternalConnectionDeleteAllParams {
   readonly uid: FirebaseAuthUserId;
 }
 
-/**
- * Parameters for reading a provider's stored credentials.
- */
-export interface UserExternalConnectionReadCredentialsParams {
-  readonly uid: FirebaseAuthUserId;
-  readonly providerType: UserExternalConnectionProviderType;
-}
-
 // MARK: Actions
 /**
  * Server-only actions for the UserExternalConnection document pair.
  *
- * This is the ENTIRE write surface. The two collections are never exposed for independent mutation,
- * so there is no way for a caller to write one document without the other — and therefore no sync,
- * reconciliation, or drift-detection process to maintain.
+ * This is the ENTIRE write surface, and ONLY the write surface. The two collections are never exposed
+ * for independent mutation, so there is no way for a caller to write one document without the other —
+ * and therefore no sync, reconciliation, or drift-detection process to maintain.
+ *
+ * Reading is `UserExternalConnectionAccessor` (raw) or `UserExternalConnectionReader` (the one a
+ * consumer wants). A read used to live here too, which meant every path that only needed to look at a
+ * user's credentials had to hold the write surface to do it.
  */
 export abstract class UserExternalConnectionServerActions {
+  abstract createUserExternalConnection(params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument>;
   abstract connectUserExternalConnection(params: UserExternalConnectionConnectParams): Promise<UserExternalConnectionDocument>;
   abstract refreshUserExternalConnectionCredentials(params: UserExternalConnectionRefreshCredentialsParams): Promise<UserExternalConnectionDocument>;
   abstract markUserExternalConnectionError(params: UserExternalConnectionMarkErrorParams): Promise<UserExternalConnectionDocument>;
   abstract disconnectUserExternalConnection(params: UserExternalConnectionDisconnectParams): Promise<UserExternalConnectionDocument>;
   abstract deleteAllUserExternalConnectionsForUser(params: UserExternalConnectionDeleteAllParams): Promise<void>;
-  abstract readUserExternalConnectionCredentials(params: UserExternalConnectionReadCredentialsParams): Promise<Maybe<UserExternalConnectionCredentials>>;
+}
+
+/**
+ * The single write a per-user token cache needs: persisting credentials the provider just issued.
+ *
+ * Narrower than {@link UserExternalConnectionServerActions} on purpose. A token cache has no business
+ * connecting, disconnecting, or deleting anything, and the resolved document is of no use to it — hence
+ * the unconstrained result, which also means a caller can satisfy this without producing a document it
+ * would only throw away.
+ */
+export interface UserExternalConnectionCredentialsWriter {
+  refreshUserExternalConnectionCredentials(params: UserExternalConnectionRefreshCredentialsParams): Promise<unknown>;
+}
+
+/**
+ * The two writes a reader performs: persisting a refresh, and recording that a provider rejected the
+ * credentials.
+ *
+ * Also narrower than {@link UserExternalConnectionServerActions} on purpose — a read surface has no
+ * business creating or deleting a connection — and for the same reason unconstrained in its results.
+ */
+export interface UserExternalConnectionCredentialsAndFailureWriter extends UserExternalConnectionCredentialsWriter {
+  markUserExternalConnectionError(params: UserExternalConnectionMarkErrorParams): Promise<unknown>;
 }
 
 /**
@@ -108,12 +139,43 @@ export function userExternalConnectionServerActions(context: UserExternalConnect
   const writePair = writeUserExternalConnectionPairInTransactionFactory(context);
 
   return {
+    createUserExternalConnection: createUserExternalConnectionFactory(context),
     connectUserExternalConnection: (params) => writePair({ ...params, outcome: 'connected' }),
     refreshUserExternalConnectionCredentials: (params) => writePair({ ...params, outcome: 'connected' }),
     markUserExternalConnectionError: (params) => writePair({ ...params, outcome: 'error' }),
     disconnectUserExternalConnection: (params) => writePair({ ...params, outcome: 'disconnected' }),
-    deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context),
-    readUserExternalConnectionCredentials: readUserExternalConnectionCredentialsFactory(context)
+    deleteAllUserExternalConnectionsForUser: deleteAllUserExternalConnectionsForUserFactory(context)
+  };
+}
+
+/**
+ * Creates a function that creates a user's connection document.
+ *
+ * Only the public half is written: the private half exists to hold credentials, and the paired write
+ * creates it on the first connect. Creation runs in a transaction so two concurrent calls cannot both
+ * see an absent document and both write one.
+ *
+ * @param context - The context carrying both halves of the pair.
+ * @returns A function that creates the document for a uid, throwing if it already exists.
+ */
+export function createUserExternalConnectionFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionCollection, firestoreContext } = context;
+
+  return async (params: UserExternalConnectionCreateParams): Promise<UserExternalConnectionDocument> => {
+    const { uid } = params;
+    const now = params.now ?? new Date();
+
+    return firestoreContext.runTransaction(async (transaction) => {
+      const document = userExternalConnectionCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+      const exists = await document.accessor.exists();
+
+      if (exists) {
+        throw userExternalConnectionAlreadyExistsError(uid);
+      }
+
+      await document.accessor.set(emptyUserExternalConnection({ uid, now }));
+      return document;
+    });
   };
 }
 
@@ -224,25 +286,5 @@ export function deleteAllUserExternalConnectionsForUserFactory(context: UserExte
       await publicDocument.accessor.delete();
       await privateDocument.accessor.delete();
     });
-  };
-}
-
-/**
- * Creates a function that reads a provider's stored credentials in plaintext.
- *
- * Server paths that need credentials load both documents; the client can only ever load the public
- * one. The pairing is a WRITE invariant — reads are asymmetric by design.
- *
- * @param context - The context carrying both halves of the pair.
- * @returns A function that returns the decrypted credentials for a provider, if any.
- */
-export function readUserExternalConnectionCredentialsFactory(context: UserExternalConnectionServerActionsContext) {
-  const { userExternalConnectionPrivateCollection } = context;
-
-  return async (params: UserExternalConnectionReadCredentialsParams): Promise<Maybe<UserExternalConnectionCredentials>> => {
-    const { uid, providerType } = params;
-    const document = userExternalConnectionPrivateCollection.documentAccessor().loadDocumentForId(uid);
-    const data = await document.snapshotData();
-    return data?.cr?.[providerType];
   };
 }

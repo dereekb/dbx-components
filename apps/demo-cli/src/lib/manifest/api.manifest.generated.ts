@@ -6,6 +6,7 @@ import {
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
+  createUserExternalConnectionParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
@@ -18,6 +19,7 @@ import {
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
   readStorageFileMetadataParamsType,
+  readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   resyncNotificationUserParamsType,
   rotateOidcClientSecretParamsType,
@@ -611,6 +613,31 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'read', typeText: 'boolean' },
       { name: 'message', typeText: 'string' }
     ]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'create',
+    paramsTypeName: 'CreateUserExternalConnectionParams',
+    paramsValidator: createUserExternalConnectionParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
+    paramsTypeDescription: "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation."
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'read',
+    specifier: 'authorizeState',
+    paramsTypeName: 'ReadUserExternalConnectionAuthorizeStateParams',
+    paramsValidator: readUserExternalConnectionAuthorizeStateParamsType,
+    resultTypeName: 'UserExternalConnectionAuthorizeStateResult',
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Mints the short-lived `state` that begins an OAuth connect handoff for a provider.\n\nA read rather than an update: it changes nothing, it just proves who is asking. The app\ndecides how the state is signed and how long it lives.',
+    paramsTypeDescription: 'Parameters for beginning an OAuth connect handoff for a provider.',
+    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' }],
+    resultTypeDescription: "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
+    resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
   },
   {
     model: 'userExternalConnection',

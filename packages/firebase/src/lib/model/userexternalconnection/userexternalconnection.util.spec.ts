@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type UserExternalConnection, type UserExternalConnectionEntry } from './userexternalconnection';
-import { applyUserExternalConnectionEntry, type UserExternalConnectionGrantSummary, userExternalConnectionConnectedProviderTypes, userExternalConnectionEntryForOutcome, userExternalConnectionEntryIsExpired } from './userexternalconnection.util';
+import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type UserExternalConnectionGrantSummary, userExternalConnectionConnectedProviderTypes, userExternalConnectionEntryForOutcome, userExternalConnectionEntryIsExpired } from './userexternalconnection.util';
 
 const TEST_UID = 'testuid';
 
@@ -177,6 +177,17 @@ describe('applyUserExternalConnectionEntry()', () => {
       expect(result.e['calcom']).toBe(first.e['calcom']);
       expect(result.c).toEqual(['calcom']);
     });
+  });
+});
+
+describe('emptyUserExternalConnection()', () => {
+  it('should return a document with no entries and no connected providers', () => {
+    const result = emptyUserExternalConnection({ uid: TEST_UID, now });
+
+    expect(result.uid).toBe(TEST_UID);
+    expect(Object.keys(result.e).length).toBe(0);
+    expect(result.c).toEqual([]);
+    expect(result.uat).toBe(now);
   });
 });
 

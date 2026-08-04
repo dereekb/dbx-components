@@ -1,11 +1,14 @@
-import { type InjectionToken, type ModuleMetadata } from '@nestjs/common';
+import { type InjectionToken, type ModuleMetadata, type Provider } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type FirestoreContext, type FirestoreContextReference, type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerEnvService, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
 import { UserExternalConnectionServerActions, type UserExternalConnectionServerActionsContext, userExternalConnectionServerActions } from './userexternalconnection.action.server';
+import { UserExternalConnectionAccessor, userExternalConnectionAccessor } from './userexternalconnection.accessor.service';
+import { UserExternalConnectionReader, userExternalConnectionReader } from './userexternalconnection.reader.service';
+import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, userExternalConnectionOAuthRegistryCredentialsRefresher, userExternalConnectionStateCoderFactory } from './oauth';
 
 // MARK: Environment Variable Keys
 /**
@@ -120,8 +123,15 @@ export interface ProvideAppUserExternalConnectionModuleMetadataConfig extends Pi
  *
  * By default this module exports:
  * - UserExternalConnectionServerActions
+ * - UserExternalConnectionAccessor
  * - UserExternalConnectionServerFirestoreCollections
  * - UserExternalConnectionModuleConfig
+ * - UserExternalConnectionStateCoder
+ *
+ * NOTE what is absent: `UserExternalConnectionReader`. The reader can be configured with a refresher,
+ * and the only refresher an app normally wants is backed by the OAuth provider registry — which this
+ * module cannot see without importing the provider modules that import it. Provide the reader with
+ * `userExternalConnectionReaderProvider()` from wherever the registry is declared.
  *
  * @param config - The module configuration.
  * @returns The assembled {@link ModuleMetadata}.
@@ -132,11 +142,18 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [UserExternalConnectionServerActions, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, ...(exports ?? [])],
+    exports: [UserExternalConnectionServerActions, UserExternalConnectionAccessor, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, UserExternalConnectionStateCoder, ...(exports ?? [])],
     providers: [
       {
         provide: UserExternalConnectionModuleConfig,
         useFactory: userExternalConnectionModuleConfigFactory,
+        inject: [ConfigService, FirebaseServerEnvService]
+      },
+      {
+        // provider-agnostic: the OAuth `state` is a feature of the authorization-code flow itself,
+        // not of any one provider, so every registered provider shares this coder and its secret
+        provide: UserExternalConnectionStateCoder,
+        useFactory: userExternalConnectionStateCoderFactory,
         inject: [ConfigService, FirebaseServerEnvService]
       },
       {
@@ -154,7 +171,64 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
         useFactory: userExternalConnectionServerActions,
         inject: [USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN]
       },
+      {
+        // the same context the actions are built from already carries both collections, which is all a
+        // read needs
+        provide: UserExternalConnectionAccessor,
+        useFactory: userExternalConnectionAccessor,
+        inject: [USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN]
+      },
       ...(providers ?? [])
     ]
+  };
+}
+
+// MARK: Reader Provider
+/**
+ * Configuration for {@link userExternalConnectionReaderProvider}.
+ */
+export interface UserExternalConnectionReaderProviderConfig {
+  /**
+   * Whether to build the reader's refresher from the {@link UserExternalConnectionOAuthProviderRegistry}.
+   * Defaults to true.
+   *
+   * Set false for an app that registers no OAuth provider services — the registry token would not
+   * resolve, and a reader with no refresher is still useful for reading.
+   */
+  readonly refreshWithOAuthProviderRegistry?: Maybe<boolean>;
+  /**
+   * Overrides how long before its stated expiration a credential is treated as expired.
+   */
+  readonly expirationBuffer?: Maybe<Milliseconds>;
+}
+
+/**
+ * Creates the NestJS provider for the {@link UserExternalConnectionReader}.
+ *
+ * Declared by the app rather than by the UserExternalConnection module, for the same reason
+ * {@link userExternalConnectionOAuthProviderRegistryProvider} is: the reader refreshes through the
+ * registry, and the registry can only be assembled somewhere that is able to import the provider
+ * modules — each of which imports the UserExternalConnection module. Put this beside the registry
+ * provider.
+ *
+ * @param config - Optional configuration. By default the reader refreshes through the registry.
+ * @returns The NestJS provider.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionReaderProvider(config?: Maybe<UserExternalConnectionReaderProviderConfig>): Provider {
+  const { refreshWithOAuthProviderRegistry, expirationBuffer } = config ?? {};
+  const withRegistry = refreshWithOAuthProviderRegistry ?? true;
+
+  return {
+    provide: UserExternalConnectionReader,
+    useFactory: (accessor: UserExternalConnectionAccessor, actions: UserExternalConnectionServerActions, registry?: Maybe<UserExternalConnectionOAuthProviderRegistry>) =>
+      userExternalConnectionReader({
+        accessor,
+        actions,
+        refresher: registry ? userExternalConnectionOAuthRegistryCredentialsRefresher({ registry }) : null,
+        expirationBuffer
+      }),
+    inject: withRegistry ? [UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionOAuthProviderRegistry] : [UserExternalConnectionAccessor, UserExternalConnectionServerActions]
   };
 }

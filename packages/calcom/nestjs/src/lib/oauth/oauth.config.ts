@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { type CalcomOAuthFactoryConfig } from '@dereekb/calcom';
 import { type ConfigService } from '@nestjs/config';
 
@@ -28,6 +29,8 @@ export abstract class CalcomOAuthServiceConfig {
       throw new Error('CalcomOAuthServiceConfig.calcomOAuth is required');
     }
 
+    // mirrors the guard in calcomOAuthFactory(): an api key IS a token, anything else is an exchange
+    // the token endpoint authenticates with the client pair. The two must not drift
     const hasApiKey = !!calcomOAuth.apiKey;
     const hasOAuth = !!calcomOAuth.clientId && !!calcomOAuth.clientSecret;
 
@@ -57,6 +60,13 @@ export function calcomOAuthServiceConfigFactory(configService: ConfigService): C
       apiKey: apiKey || undefined
     }
   };
+
+  // the api key wins for ambient calls because it does not expire, so a configured refresh token is
+  // silently unused. Warned here rather than in assertValidConfig, which tests call directly and
+  // which stays side-effect-free
+  if (apiKey && refreshToken) {
+    new Logger('CalcomOAuthServiceConfig').warn(`Both ${CALCOM_API_KEY_CONFIG_KEY} and ${CALCOM_REFRESH_TOKEN_CONFIG_KEY} are set. The api key takes precedence for ambient calls and the refresh token is ignored — unset one to make the intent explicit.`);
+  }
 
   CalcomOAuthServiceConfig.assertValidConfig(config);
   return config;

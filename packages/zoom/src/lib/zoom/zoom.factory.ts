@@ -1,8 +1,8 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryParams, type ZoomUserContext, type ZoomUserContextFactory, type ZoomUserContextFactoryParams } from './zoom.config';
+import { type ZoomServerContext, type ZoomServerContextRef, type ZoomFetchFactory, type ZoomFetchFactoryParams, type ZoomUserContext, type ZoomUserContextFactory } from './zoom.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
 import { handleZoomErrorFetch } from './zoom.error.api';
-import { type ZoomOAuthContextRef } from '../oauth/oauth.config';
+import { type ZoomOAuthContextRef, type ZoomRefreshTokenCredential } from '../oauth/oauth.config';
 import { zoomAccessTokenStringFactory } from '../oauth/oauth';
 import { type ZoomRateLimitedFetchHandlerConfig, zoomRateLimitedFetchHandler } from '../zoom.limit';
 import { type Maybe } from '@dereekb/util';
@@ -69,17 +69,21 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
     });
 
     // MARK: Make User Context
-    const makeUserContext: ZoomUserContextFactory = (input: ZoomUserContextFactoryParams) => {
-      const userAccessTokenFactory = oauthContext.makeUserAccessTokenFactory({
+    const makeUserContext: ZoomUserContextFactory = (input: ZoomRefreshTokenCredential) => {
+      const userAccessTokenFactory = oauthContext.makeAccessTokenFactory({
         refreshToken: input.refreshToken,
-        userAccessTokenCache: input.accessTokenCache
+        accessTokenCache: input.accessTokenCache
       });
 
       const userAccessTokenStringFactory = zoomAccessTokenStringFactory(userAccessTokenFactory);
 
-      const userFetch = fetchFactory({
+      const userBaseFetch = fetchFactory({
         zoomAccessTokenStringFactory: userAccessTokenStringFactory
       });
+
+      // wrapped for the same reason the server fetch is: without it a per-user call's error skips
+      // Zoom's parsed error family and its rate-limit header handling
+      const userFetch: ConfiguredFetch = handleZoomErrorFetch(userBaseFetch, logZoomServerErrorFunction);
 
       const userFetchJson = fetchJsonFunction(userFetch, {
         handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction

@@ -1,10 +1,9 @@
-import { type FactoryWithInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type FactoryWithInput, type FactoryWithRequiredInput } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
-import { type ZoomConfig, type ZoomRefreshToken } from '../zoom.config';
+import { type ZoomConfig } from '../zoom.config';
 import { type ZoomRateLimiterRef } from '../zoom.limit';
-import { type ZoomAccessTokenCache, type ZoomAccessTokenStringFactory } from '../oauth/oauth';
-
-export type ZoomApiKey = ZoomRefreshToken;
+import { type ZoomAccessTokenStringFactory } from '../oauth/oauth';
+import { type ZoomRefreshTokenCredential } from '../oauth/oauth.config';
 
 export interface ZoomFetchFactoryParams {
   readonly zoomAccessTokenStringFactory: ZoomAccessTokenStringFactory;
@@ -46,23 +45,14 @@ export interface ZoomServerContext extends ZoomContext {
   readonly config: ZoomConfig;
 }
 
-export interface ZoomUserContextFactoryParams {
-  /**
-   * The user's refresh token.
-   */
-  readonly refreshToken: ZoomRefreshToken;
-  /**
-   * Optional cache to use for the user's access token.
-   *
-   * The cache should only be configured for the user that owns the refresh token.
-   */
-  readonly accessTokenCache?: Maybe<ZoomAccessTokenCache>;
-}
-
 /**
- * Creates a ZoomUserContext from the input.
+ * Creates a ZoomUserContext from a user's credential.
+ *
+ * Deliberately the refresh-token arm of {@link ZoomAuthCredential} rather than the full union: a
+ * user context acts as a connected user, while the account credential is the app's own identity —
+ * which is the server context's job.
  */
-export type ZoomUserContextFactory = FactoryWithRequiredInput<ZoomUserContext, ZoomUserContextFactoryParams>;
+export type ZoomUserContextFactory = FactoryWithRequiredInput<ZoomUserContext, ZoomRefreshTokenCredential>;
 
 /**
  * Context used for performing fetch requests for a specific user.
@@ -84,8 +74,3 @@ export interface ZoomServerContextRef {
  * @deprecated use ZoomFetchFactoryParams instead.
  */
 export type ZoomFetchFactoryInput = ZoomFetchFactoryParams;
-
-/**
- * @deprecated use ZoomUserContextFactoryParams instead.
- */
-export type ZoomUserContextFactoryInput = ZoomUserContextFactoryParams;

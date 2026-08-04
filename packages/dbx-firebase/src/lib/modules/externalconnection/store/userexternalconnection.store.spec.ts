@@ -3,7 +3,7 @@ import { beginLoading, errorResult, successResult } from '@dereekb/rxjs';
 import { type DocumentDataWithIdAndKey, FIRESTORE_PERMISSION_DENIED_ERROR_CODE, type UserExternalConnection } from '@dereekb/firebase';
 import { readableError } from '@dereekb/util';
 import { DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR } from '../../../model/error';
-import { externalConnectionsLoadingStateFromDocumentLoadingState } from './userexternalconnection.store';
+import { externalConnectionsLoadingStateFromDocumentLoadingState, shouldCreateUserExternalConnectionForDocumentLoadingState } from './userexternalconnection.store';
 
 const now = new Date();
 
@@ -57,5 +57,29 @@ describe('externalConnectionsLoadingStateFromDocumentLoadingState()', () => {
 
     expect(result.error).not.toBeDefined();
     expect(result.value).not.toBeDefined();
+  });
+});
+
+describe('shouldCreateUserExternalConnectionForDocumentLoadingState()', () => {
+  it('should create when the document does not exist', () => {
+    expect(shouldCreateUserExternalConnectionForDocumentLoadingState(errorResult(readableError(DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR, 'The document does not exist.')))).toBe(true);
+  });
+
+  it('should not create while the document is still loading', () => {
+    // a loading state has no value, which would otherwise read as "missing" for a user who has one
+    expect(shouldCreateUserExternalConnectionForDocumentLoadingState(beginLoading<DocumentDataWithIdAndKey<UserExternalConnection>>())).toBe(false);
+  });
+
+  it('should not create when the document loaded', () => {
+    expect(shouldCreateUserExternalConnectionForDocumentLoadingState(successResult(documentData({})))).toBe(false);
+  });
+
+  it('should not create when the read was denied', () => {
+    // a denied read is a rules problem — creating would not make the document readable
+    expect(shouldCreateUserExternalConnectionForDocumentLoadingState(errorResult(readableError(FIRESTORE_PERMISSION_DENIED_ERROR_CODE, 'denied')))).toBe(false);
+  });
+
+  it('should not create on an unrelated error', () => {
+    expect(shouldCreateUserExternalConnectionForDocumentLoadingState(errorResult(readableError('UNAVAILABLE', 'offline')))).toBe(false);
   });
 });
