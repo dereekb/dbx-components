@@ -3,5 +3,5 @@ import { createVitestConfig } from '../../../vitest.preset.config.mjs';
 export default createVitestConfig({
   type: 'nestjs',
   pathFromRoot: __dirname,
-  projectName: 'nestjs-discord'
+  projectName: 'discord-nestjs'
 });

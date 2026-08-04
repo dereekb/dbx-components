@@ -39,9 +39,8 @@ function testOAuthContext(): { readonly oauthContext: CalcomOAuthContext; readon
   };
 
   const { oauthContext } = calcomOAuthFactory({ fetchHandler })({
-    clientId: TEST_CLIENT_ID,
-    clientSecret: TEST_CLIENT_SECRET,
-    refreshToken: TEST_REFRESH_TOKEN
+    serverAuth: { refreshToken: TEST_REFRESH_TOKEN },
+    client: { clientId: TEST_CLIENT_ID, clientSecret: TEST_CLIENT_SECRET }
   });
 
   return { oauthContext, requests };

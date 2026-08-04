@@ -1,7 +1,7 @@
 import { Client, Events, TextChannel, type Message } from 'discord.js';
 import { Inject, Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { DiscordServiceConfig, DEFAULT_DISCORD_INTENTS } from './discord.config';
-import { type DiscordChannelId } from './discord.type';
+import { type DiscordChannelId } from '@dereekb/discord';
 
 /**
  * Injectable service that wraps the discord.js Client for bot operations.

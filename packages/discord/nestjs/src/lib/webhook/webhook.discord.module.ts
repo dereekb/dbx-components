@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DiscordWebhookController } from './webhook.discord.controller';
 import { DiscordWebhookService } from './webhook.discord.service';
 import { DISCORD_PUBLIC_KEY_ENV_VAR, DiscordWebhookServiceConfig } from './webhook.discord.config';
-import { type DiscordPublicKey } from '../discord.type';
+import { type DiscordPublicKey } from '@dereekb/discord';
 
 /**
  * Factory that creates a DiscordWebhookServiceConfig from environment variables.

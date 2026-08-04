@@ -1,10 +1,9 @@
 {
-  "name": "nestjs-discord",
+  "name": "discord-nestjs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/nestjs/discord/src",
+  "sourceRoot": "packages/discord/nestjs/src",
   "projectType": "library",
   "tags": [],
-  "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build-base": {
       "dependsOn": []
@@ -17,7 +16,7 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "reportsDirectory": "{projectRoot}/../../../coverage/packages/nestjs/discord"
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/discord/nestjs"
       }
     }
   }

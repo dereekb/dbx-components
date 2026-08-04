@@ -48,10 +48,8 @@ describe('oauth.service', () => {
 
       const { config } = api.calcomOAuth.oauthContext;
 
-      // Should have either an API key or OAuth credentials configured
-      const hasApiKey = !!config.apiKey;
-      const hasOAuth = !!config.clientId && !!config.clientSecret;
-      expect(hasApiKey || hasOAuth).toBe(true);
+      // either the app's own identity or a client to exchange a refresh token against
+      expect(!!config.serverAuth?.apiKey || config.client != null).toBe(true);
     });
 
     describe('oauthContext', () => {

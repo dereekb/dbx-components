@@ -86,22 +86,14 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
   } = factoryConfig;
 
   return (config: CalcomOAuthConfig) => {
-    const apiKey = config.apiKey;
-    /**
-     * Whether the per-user path is available.
-     *
-     * Tracked separately from how SERVER-level calls authenticate, because the two are independent: an
-     * app can hold an API key for its own calls and an OAuth client for its users' connections, and
-     * before this was separated a configured API key silently disabled every per-user context.
-     */
-    const hasOAuthClient = !!config.clientId && !!config.clientSecret;
+    const { serverAuth, client } = config;
+    const apiKey = serverAuth?.apiKey;
 
-    if (!apiKey && !hasOAuthClient) {
-      if (config.clientId) {
-        throw new Error('CalcomOAuthConfig missing clientSecret.');
-      } else {
-        throw new Error('CalcomOAuthConfig missing clientId. Provide clientId+clientSecret for OAuth or apiKey for API key auth.');
-      }
+    // an API key authenticates the app's own calls directly; everything else — a server-level refresh
+    // as much as a per-user one — is an exchange the token endpoint authenticates with the client id
+    // and secret. With neither an API key nor a client, no token could ever be produced
+    if (!apiKey && client == null) {
+      throw new Error("CalcomOAuthConfig can authenticate nothing. Provide `serverAuth.apiKey` for the app's own calls, `client` (clientId+clientSecret) to exchange any refresh token, or both.");
     }
 
     const baseFetch = fetchFactory();
@@ -118,7 +110,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
      * Scoped to the server-level refresher only — each per-user refresher tracks its own rotation,
      * so refreshing one user never overwrites the server-level token.
      */
-    let latestRefreshToken = config.refreshToken;
+    let latestRefreshToken = serverAuth?.refreshToken;
 
     const tokenRefresher: CalcomAccessTokenRefresher = async () => {
       const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: latestRefreshToken ?? undefined });
@@ -145,7 +137,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
       apiKeyToken == null
         ? calcomOAuthAccessTokenFactory({
             tokenRefresher,
-            accessTokenCache: config.accessTokenCache
+            accessTokenCache: serverAuth?.accessTokenCache
           })
         : async () => apiKeyToken;
 
@@ -153,8 +145,8 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
     const makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory = (input: CalcomOAuthMakeUserAccessTokenFactoryInput) => {
       // an access token for a USER can only come from that user's refresh token, exchanged against the
       // OAuth client. An API key is the app's own identity and cannot stand in for it
-      if (!hasOAuthClient) {
-        throw new Error('makeUserAccessTokenFactory requires clientId+clientSecret. An api-key-only Cal.com configuration cannot create per-user contexts.');
+      if (client == null) {
+        throw new Error('makeUserAccessTokenFactory requires a `client` (clientId+clientSecret). A Cal.com configuration with only `serverAuth` cannot create per-user contexts.');
       }
 
       /**

@@ -1,12 +1,8 @@
-import { type DiscordOAuthConfig, type DiscordOAuthFactoryConfig, type DiscordOAuthScope } from '@dereekb/discord';
+import { type DiscordOAuthScope } from '@dereekb/discord';
 import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { UserExternalConnectionOAuthServiceConfig, userExternalConnectionOAuthControllerPath, userExternalConnectionOAuthRoutesForGlobalRouteExclude, userExternalConnectionOAuthServiceConfigFactory } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
-import { type ConfigService } from '@nestjs/config';
-
-export const DISCORD_CLIENT_ID_CONFIG_KEY = 'DISCORD_CLIENT_ID';
-export const DISCORD_CLIENT_SECRET_CONFIG_KEY = 'DISCORD_CLIENT_SECRET';
 
 /**
  * Controller path the Discord external-connection OAuth endpoints are mounted at.
@@ -41,30 +37,17 @@ export const DEFAULT_DISCORD_OAUTH_SCOPES: readonly DiscordOAuthScope[] = ['iden
 /**
  * Configuration for the {@link DiscordUserExternalConnectionOAuthService}.
  *
- * Extends the framework config with the two things that are Discord's own: which scopes to request,
- * and the client credentials.
+ * Extends the framework config with the one thing that is Discord's own — which scopes to request.
  *
- * The credentials live here rather than on an injected api — unlike Cal.com, Discord has no NestJS
- * layer, because the connect flow needs no access-token cache and Discord's outbound bot API is
- * already served by `@dereekb/nestjs/discord`.
+ * The client credentials are NOT here: they belong to `DiscordOAuthServiceConfig` in
+ * `@dereekb/discord/nestjs`, and the service reads them through the injected `DiscordOAuthApi`.
  */
 export abstract class DiscordUserExternalConnectionOAuthServiceConfig extends UserExternalConnectionOAuthServiceConfig {
   readonly scopes!: readonly DiscordOAuthScope[];
-  readonly discordOAuth!: DiscordOAuthConfig;
-  /**
-   * Optional configuration for the Discord OAuth client the service builds — a custom fetch handler
-   * or error logger.
-   */
-  readonly factoryConfig?: Maybe<DiscordOAuthFactoryConfig>;
 }
 
 export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
   readonly envService: FirebaseServerEnvService;
-  /**
-   * Reads the Discord OAuth client credentials. These are the only two configuration keys registering
-   * Discord adds; everything else is derived.
-   */
-  readonly configService: ConfigService;
   /**
    * Path on the app URL the user is returned to after connecting, e.g. `/app/settings`.
    */
@@ -77,26 +60,21 @@ export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
    * The scopes to request. Defaults to {@link DEFAULT_DISCORD_OAUTH_SCOPES}.
    */
   readonly scopes?: Maybe<readonly DiscordOAuthScope[]>;
-  /**
-   * Optional configuration for the Discord OAuth client the service builds.
-   */
-  readonly factoryConfig?: Maybe<DiscordOAuthFactoryConfig>;
 }
 
 /**
- * Builds the Discord connect flow's configuration from the app's configured origins plus the client
- * credentials.
+ * Builds the Discord connect flow's configuration from the app's configured origins.
  *
- * Nothing but the credentials is read from the environment: the redirect URI is derived from the app's
+ * Nothing here is read from the environment as a value: the redirect URI is derived from the app's
  * OAuth origin plus the mounted controller path, and the return URLs from the app URL plus
- * code-declared paths.
+ * code-declared paths. The client credentials are read by `discordOAuthServiceConfigFactory` in
+ * `@dereekb/discord/nestjs`, so registering Discord adds no deployment configuration here.
  *
- * @param config - The env service, the config service, the return paths, and the optional scope override.
+ * @param config - The env service, the return paths, and the optional scope override.
  * @returns The validated service configuration.
- * @throws {Error} When either client credential is missing.
  */
 export function discordUserExternalConnectionOAuthServiceConfigFactory(config: DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig): DiscordUserExternalConnectionOAuthServiceConfig {
-  const { envService, configService, successPath, failurePath, scopes, factoryConfig } = config;
+  const { envService, successPath, failurePath, scopes } = config;
 
   const baseConfig = userExternalConnectionOAuthServiceConfigFactory({
     envService,
@@ -105,22 +83,8 @@ export function discordUserExternalConnectionOAuthServiceConfigFactory(config: D
     failurePath
   });
 
-  const clientId = configService.get<string>(DISCORD_CLIENT_ID_CONFIG_KEY);
-  const clientSecret = configService.get<string>(DISCORD_CLIENT_SECRET_CONFIG_KEY);
-
-  // fail at startup rather than at the consent screen: a missing client id otherwise composes an
-  // authorize URL carrying `client_id=undefined`, and a missing secret fails the exchange only after
-  // the user has already consented
-  if (!clientId) {
-    throw new Error(`DiscordUserExternalConnectionOAuthService requires a Discord OAuth client id (${DISCORD_CLIENT_ID_CONFIG_KEY}).`);
-  } else if (!clientSecret) {
-    throw new Error(`DiscordUserExternalConnectionOAuthService requires a Discord OAuth client secret (${DISCORD_CLIENT_SECRET_CONFIG_KEY}).`);
-  }
-
   return {
     ...baseConfig,
-    scopes: scopes ?? DEFAULT_DISCORD_OAUTH_SCOPES,
-    discordOAuth: { clientId, clientSecret },
-    factoryConfig
+    scopes: scopes ?? DEFAULT_DISCORD_OAUTH_SCOPES
   };
 }

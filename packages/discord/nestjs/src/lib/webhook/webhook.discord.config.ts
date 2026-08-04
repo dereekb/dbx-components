@@ -1,5 +1,5 @@
 import { isHexWithByteLength } from '@dereekb/util';
-import { type DiscordPublicKey } from '../discord.type';
+import { type DiscordPublicKey } from '@dereekb/discord';
 
 /**
  * Default environment variable for the Discord application public key.

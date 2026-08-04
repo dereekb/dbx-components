@@ -3,11 +3,12 @@ import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { isDiscordOAuthScope, type DiscordAccessToken, type DiscordOAuthCurrentUser, type DiscordOAuthTokenResponse } from '@dereekb/discord';
+import { DISCORD_CLIENT_ID_CONFIG_KEY, DISCORD_CLIENT_SECRET_CONFIG_KEY, appDiscordOAuthModuleMetadata, discordOAuthServiceConfigFactory } from '@dereekb/discord/nestjs';
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
-import { DEFAULT_DISCORD_OAUTH_SCOPES, DISCORD_CLIENT_ID_CONFIG_KEY, DISCORD_CLIENT_SECRET_CONFIG_KEY, DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, discordUserExternalConnectionOAuthServiceConfigFactory } from './discord.oauth.connection.config';
+import { DEFAULT_DISCORD_OAUTH_SCOPES, DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, discordUserExternalConnectionOAuthServiceConfigFactory } from './discord.oauth.connection.config';
 import { DiscordUserExternalConnectionOAuthController } from './discord.oauth.connection.controller';
 import { appDiscordUserExternalConnectionOAuthModuleMetadata } from './discord.oauth.connection.module';
 import { DiscordUserExternalConnectionOAuthService, discordUserExternalConnectionCredentials } from './discord.oauth.connection.service';
@@ -60,16 +61,16 @@ function makeConfigService(): ConfigService {
 }
 
 /**
- * Builds the config factory over an arbitrary set of env values, so a missing credential can be
- * exercised without standing up a module.
+ * Builds the connect flow's configuration off the env service alone.
+ *
+ * Reads no credentials: those belong to `DiscordOAuthServiceConfig` in `@dereekb/discord/nestjs`, whose
+ * own spec covers a missing client id or secret.
  */
-function configFactoryWith(values: Record<string, string>) {
-  return () =>
-    discordUserExternalConnectionOAuthServiceConfigFactory({
-      envService: makeEnvService(),
-      configService: { get: (key: string) => values[key] } as unknown as ConfigService,
-      successPath: TEST_SUCCESS_PATH
-    });
+function connectionConfig() {
+  return discordUserExternalConnectionOAuthServiceConfigFactory({
+    envService: makeEnvService(),
+    successPath: TEST_SUCCESS_PATH
+  });
 }
 
 interface CapturedConnect {
@@ -110,8 +111,9 @@ function capturingServerActions() {
 /**
  * Routes every Discord call to a canned response keyed by pathname, capturing the requests.
  *
- * The adapter builds its own OAuth client, so this is injected through the module's `factoryConfig` —
- * the same seam a deployment would use for a custom fetch handler. No live credentials are involved.
+ * `DiscordOAuthApi` builds the OAuth client, so this is injected through the OAuth module's
+ * `factoryConfig` — the same seam a deployment would use for a custom fetch handler. No live
+ * credentials are involved.
  */
 function capturingFetchHandler() {
   const requests: Request[] = [];
@@ -154,11 +156,23 @@ describe('DiscordUserExternalConnectionOAuthService', () => {
     captured = capturingServerActions();
     fetches = capturingFetchHandler();
 
+    // wraps the real config factory rather than replacing it, so the ConfigService credential read is
+    // still exercised while the fetch seam is added on top
+    @Module(
+      appDiscordOAuthModuleMetadata({
+        discordOAuthServiceConfigFactory: (configService) => ({
+          ...discordOAuthServiceConfigFactory(configService),
+          factoryConfig: { fetchHandler: fetches.fetchHandler, logDiscordOAuthErrorFunction: () => undefined }
+        })
+      })
+    )
+    class TestDiscordOAuthModule {}
+
     @Module(
       appDiscordUserExternalConnectionOAuthModuleMetadata({
+        dependencyModule: TestDiscordOAuthModule,
         successPath: TEST_SUCCESS_PATH,
-        failurePath: TEST_FAILURE_PATH,
-        factoryConfig: { fetchHandler: fetches.fetchHandler, logDiscordOAuthErrorFunction: () => undefined }
+        failurePath: TEST_FAILURE_PATH
       })
     )
     class TestDiscordUserExternalConnectionOAuthModule {}
@@ -205,18 +219,8 @@ describe('DiscordUserExternalConnectionOAuthService', () => {
   });
 
   describe('discordUserExternalConnectionOAuthServiceConfigFactory()', () => {
-    it('should fail at startup when no client id is configured', () => {
-      // otherwise the authorize URL composes client_id=undefined and fails at the consent screen
-      expect(configFactoryWith({ [DISCORD_CLIENT_SECRET_CONFIG_KEY]: TEST_CLIENT_SECRET })).toThrow(DISCORD_CLIENT_ID_CONFIG_KEY);
-    });
-
-    it('should fail at startup when no client secret is configured', () => {
-      // otherwise the exchange fails only after the user has already consented
-      expect(configFactoryWith({ [DISCORD_CLIENT_ID_CONFIG_KEY]: TEST_CLIENT_ID })).toThrow(DISCORD_CLIENT_SECRET_CONFIG_KEY);
-    });
-
     it('should default the failure url to the success url', () => {
-      const config = configFactoryWith({ [DISCORD_CLIENT_ID_CONFIG_KEY]: TEST_CLIENT_ID, [DISCORD_CLIENT_SECRET_CONFIG_KEY]: TEST_CLIENT_SECRET })();
+      const config = connectionConfig();
 
       expect(config.userExternalConnectionOAuth.failureUrl).toBe(TEST_SUCCESS_URL);
       expect(config.scopes).toEqual(DEFAULT_DISCORD_OAUTH_SCOPES);

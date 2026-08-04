@@ -1,6 +1,16 @@
 import { Module } from '@nestjs/common';
+import { appDiscordOAuthModuleMetadata } from '@dereekb/discord/nestjs';
 import { appDiscordUserExternalConnectionOAuthModuleMetadata } from '@dereekb/firebase-server/discord';
 import { DEMO_EXTERNAL_CONNECTION_FAILURE_RETURN_PATH, DEMO_EXTERNAL_CONNECTION_RETURN_PATH, UserExternalConnectionModule } from '../../common/model/userexternalconnection';
+
+/**
+ * Provides {@link DiscordOAuthApi}, the app's Discord OAuth client.
+ *
+ * Takes no dependency module of its own, unlike the Cal.com equivalent: the Discord OAuth api needs no
+ * access-token cache service, since the external-connection framework persists each user's credentials.
+ */
+@Module(appDiscordOAuthModuleMetadata({}))
+export class DemoDiscordOAuthModule {}
 
 /**
  * Mounts the Discord connect endpoints at `/oauth/discord`.
@@ -14,6 +24,7 @@ import { DEMO_EXTERNAL_CONNECTION_FAILURE_RETURN_PATH, DEMO_EXTERNAL_CONNECTION_
  */
 @Module(
   appDiscordUserExternalConnectionOAuthModuleMetadata({
+    dependencyModule: DemoDiscordOAuthModule,
     // UserExternalConnectionModule supplies both the persistence actions and the shared state coder
     imports: [UserExternalConnectionModule],
     successPath: DEMO_EXTERNAL_CONNECTION_RETURN_PATH,

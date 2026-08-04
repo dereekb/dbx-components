@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type ClientOptions, GatewayIntentBits } from 'discord.js';
-import { type DiscordBotToken } from './discord.type';
+import { type DiscordBotToken } from '@dereekb/discord';
 
 /**
  * Default environment variable for the Discord bot token.

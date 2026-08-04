@@ -25,12 +25,13 @@ export class CalcomOAuthApi {
     const accessTokenCache = cacheService.loadCalcomAccessTokenCache();
     const { clientId, clientSecret, refreshToken, apiKey } = config.calcomOAuth;
 
+    // the environment-facing config stays flat, mirroring the CALCOM_* variables it is read from, and
+    // is mapped here into the two roles the context actually distinguishes. The client is taken as a
+    // pair or not at all, which replaces the empty-string sentinels this used to pass for a
+    // configuration that has no OAuth client
     this.calcomOAuth = calcomOAuthFactory(config.factoryConfig ?? {})({
-      accessTokenCache,
-      clientId: clientId ?? '',
-      clientSecret: clientSecret ?? '',
-      refreshToken,
-      apiKey
+      serverAuth: { apiKey, refreshToken, accessTokenCache },
+      client: clientId && clientSecret ? { clientId, clientSecret } : undefined
     });
   }
 

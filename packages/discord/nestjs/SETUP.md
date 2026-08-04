@@ -1,4 +1,4 @@
-# @dereekb/nestjs/discord Setup
+# @dereekb/discord/nestjs Setup
 
 ## Step 1: Create a Discord Application & Bot
 
@@ -57,13 +57,13 @@ DISCORD_TEST_CHANNEL_ID=your-test-channel-id-here
 The unit tests don't require a real bot token — they test the Ed25519 verifier, handler dispatch, config validation, and utility functions using mocks and real crypto.
 
 ```bash
-pnpm nx test nestjs-discord
+pnpm nx test discord-nestjs
 ```
 
 The integration suite in `discord.api.spec.ts` connects to the live Discord gateway and is **skipped by default** to preserve the bot's daily session quota. Opt in explicitly:
 
 ```bash
-DISCORD_RUN_INTEGRATION_TESTS=true pnpm nx test nestjs-discord
+DISCORD_RUN_INTEGRATION_TESTS=true pnpm nx test discord-nestjs
 ```
 
 Within a single run, all integration spec files share one logged-in client via `discord.api.spec.client.ts`, so only one `client.login()` call happens regardless of how many integration spec files exist.
@@ -73,8 +73,8 @@ Within a single run, all integration spec files share one logged-in client via `
 To test the bot connects and can send/receive messages, you can write a quick integration test or script:
 
 ```typescript
-import { DiscordApi } from '@dereekb/nestjs/discord';
-import { DiscordServiceConfig } from '@dereekb/nestjs/discord';
+import { DiscordApi } from '@dereekb/discord/nestjs';
+import { DiscordServiceConfig } from '@dereekb/discord/nestjs';
 
 // Create config
 const config: DiscordServiceConfig = {
@@ -112,7 +112,7 @@ api.onMessage((message) => {
 
 ```typescript
 // Bot only (read/send messages via gateway)
-import { DiscordModule } from '@dereekb/nestjs/discord';
+import { DiscordModule } from '@dereekb/discord/nestjs';
 
 @Module({
   imports: [DiscordModule]
@@ -120,7 +120,7 @@ import { DiscordModule } from '@dereekb/nestjs/discord';
 export class AppModule {}
 
 // Webhook only (receive interaction webhooks, no bot token needed)
-import { DiscordWebhookModule } from '@dereekb/nestjs/discord';
+import { DiscordWebhookModule } from '@dereekb/discord/nestjs';
 
 @Module({
   imports: [DiscordWebhookModule]

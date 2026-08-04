@@ -35,9 +35,8 @@ function testOAuth(): { readonly calcomOAuth: CalcomOAuth; readonly sentRefreshT
   };
 
   const calcomOAuth = calcomOAuthFactory({ fetchHandler })({
-    clientId: 'test-client-id',
-    clientSecret: 'test-client-secret',
-    refreshToken: SERVER_REFRESH_TOKEN
+    serverAuth: { refreshToken: SERVER_REFRESH_TOKEN },
+    client: { clientId: 'test-client-id', clientSecret: 'test-client-secret' }
   });
 
   return { calcomOAuth, sentRefreshTokens };
@@ -120,30 +119,48 @@ describe('calcomOAuthFactory()', () => {
     });
   });
 
-  describe('api key auth', () => {
+  describe('serverAuth.apiKey', () => {
+    const TEST_CLIENT = { clientId: 'test-client-id', clientSecret: 'test-client-secret' };
+
     it('should not expose a per-user token factory', () => {
       // an api key is the app's own identity, and cannot be exchanged for a token that acts as a user
-      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key' });
+      const { oauthContext } = calcomOAuthFactory({})({ serverAuth: { apiKey: 'test-api-key' } });
       expect(() => oauthContext.makeUserAccessTokenFactory({ refreshToken: USER_REFRESH_TOKEN })).toThrow();
     });
 
     it('should authenticate server calls with the api key', async () => {
-      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key' });
+      const { oauthContext } = calcomOAuthFactory({})({ serverAuth: { apiKey: 'test-api-key' } });
       expect((await oauthContext.loadAccessToken()).accessToken).toBe('test-api-key');
     });
 
-    it('should STILL expose a per-user token factory when an oauth client is also configured', () => {
-      // the two are independent: an app holds an api key for its own calls and an oauth client for its
-      // users' connections. Treating a configured api key as exclusive silently disabled every
-      // per-user context, which is the only way a stored user connection can be used at all
-      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key', clientId: 'test-client-id', clientSecret: 'test-client-secret' });
+    it('should STILL expose a per-user token factory when a client is also configured', () => {
+      // the two halves of the config are independent: an app holds an api key for its own calls and a
+      // client for its users' connections. Treating a configured api key as exclusive silently disabled
+      // every per-user context, which is the only way a stored user connection can be used at all
+      const { oauthContext } = calcomOAuthFactory({})({ serverAuth: { apiKey: 'test-api-key' }, client: TEST_CLIENT });
       expect(oauthContext.makeUserAccessTokenFactory({ refreshToken: USER_REFRESH_TOKEN })).toBeDefined();
     });
 
-    it('should still authenticate server calls with the api key when an oauth client is configured', async () => {
+    it('should still authenticate server calls with the api key when a client is configured', async () => {
       // the api key takes precedence for the app's own calls, which need no refresh loop
-      const { oauthContext } = calcomOAuthFactory({})({ apiKey: 'test-api-key', clientId: 'test-client-id', clientSecret: 'test-client-secret' });
+      const { oauthContext } = calcomOAuthFactory({})({ serverAuth: { apiKey: 'test-api-key' }, client: TEST_CLIENT });
       expect((await oauthContext.loadAccessToken()).accessToken).toBe('test-api-key');
+    });
+  });
+
+  describe('a config that can authenticate nothing', () => {
+    it('should refuse an empty config', () => {
+      expect(() => calcomOAuthFactory({})({})).toThrow();
+    });
+
+    it('should refuse a server refresh token with no client to exchange it against', () => {
+      // a refresh token is not credentials on its own — the token endpoint authenticates the exchange
+      // with the client id and secret, so this configuration could never produce a token
+      expect(() => calcomOAuthFactory({})({ serverAuth: { refreshToken: SERVER_REFRESH_TOKEN } })).toThrow();
+    });
+
+    it('should accept a client alone, for an app that only acts for its users', () => {
+      expect(() => calcomOAuthFactory({})({ client: { clientId: 'test-client-id', clientSecret: 'test-client-secret' } })).not.toThrow();
     });
   });
 });

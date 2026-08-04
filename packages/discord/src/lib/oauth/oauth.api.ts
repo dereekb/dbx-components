@@ -1,6 +1,6 @@
 import { type Maybe, type Seconds } from '@dereekb/util';
 import { type FetchJsonInput } from '@dereekb/util/fetch';
-import { type DiscordSnowflake } from '../discord.config';
+import { type DiscordSnowflake } from '../discord.type';
 import { DISCORD_OAUTH_CURRENT_USER_PATH, DISCORD_OAUTH_TOKEN_PATH, type DiscordOAuthConfig, type DiscordOAuthContext } from './oauth.config';
 
 /**

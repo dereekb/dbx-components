@@ -1,6 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DiscordWebhookService, type UntypedDiscordInteraction } from '@dereekb/nestjs/discord';
+import { DiscordWebhookService, type UntypedDiscordInteraction } from '@dereekb/discord/nestjs';
 
 @Injectable()
 export class DemoApiDiscordWebhookService {

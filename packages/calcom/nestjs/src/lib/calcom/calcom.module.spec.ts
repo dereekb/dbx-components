@@ -55,9 +55,9 @@ describe('appCalcomModuleMetadata()', () => {
       expect(api).toBeDefined();
 
       const { config } = api.calcomOAuth.oauthContext;
-      const hasApiKey = !!config.apiKey;
-      const hasOAuth = !!config.clientId && !!config.clientSecret;
-      expect(hasApiKey || hasOAuth).toBe(true);
+
+      // either the app's own identity or a client to exchange a refresh token against
+      expect(!!config.serverAuth?.apiKey || config.client != null).toBe(true);
     });
 
     describe('oauthContext', () => {

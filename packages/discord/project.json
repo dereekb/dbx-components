@@ -10,7 +10,15 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/discord"],
       "options": {
-        "command": "npx nx run discord:build-base",
+        "commands": [
+          {
+            "command": "npx nx run discord:build-base"
+          },
+          {
+            "command": "npx nx run discord-nestjs:build-base"
+          }
+        ],
+        "parallel": false,
         "color": true
       }
     },
@@ -20,6 +28,23 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run discord tests",
+            "command": "npx nx test discord"
+          },
+          {
+            "description": "run discord-nestjs tests",
+            "command": "npx nx test discord-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
     },
     "ci-publish-npmjs": {
       "executor": "nx:run-commands",

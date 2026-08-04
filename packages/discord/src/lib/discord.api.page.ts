@@ -37,7 +37,8 @@ export interface DiscordMessagePageFilter {
 /**
  * Result of a paginated Discord message fetch containing the array of messages.
  *
- * @typeParam T - The message type (typically discord.js `Message`)
+ * @typeParam T - The message type. Structural, so it fits a raw REST response as readily as a
+ * discord.js `Message`; this entry point carries no discord.js dependency of its own.
  */
 export interface DiscordMessagePageResult<T> {
   /**

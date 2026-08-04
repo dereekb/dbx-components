@@ -2,9 +2,9 @@ const { withNx } = require('@nx/rollup/with-nx');
 const applyVisualizer = require('../../../rollup.visualizer.config.cjs');
 
 const options = {
-  importPath: '@dereekb/nestjs/discord',
+  importPath: '@dereekb/discord/nestjs',
   main: './src/index.ts',
-  outputPath: '../../../dist/packages/nestjs/discord',
+  outputPath: '../../../dist/packages/discord/nestjs',
   tsConfig: './tsconfig.lib.json',
   project: './package.json',
   compiler: 'swc',

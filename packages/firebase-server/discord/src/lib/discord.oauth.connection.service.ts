@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DISCORD_OAUTH_SCOPE_DELIMITER, discordAccessTokenFromTokenResponse, discordOAuthAuthorizeUrlFactory, discordOAuthFactory, exchangeAuthorizationCode, readCurrentUser, refreshAccessToken, type DiscordAccessToken, type DiscordOAuthAuthorizeUrlFactory, type DiscordOAuthContext, type DiscordOAuthCurrentUser } from '@dereekb/discord';
+import { DISCORD_OAUTH_SCOPE_DELIMITER, type DiscordAccessToken, type DiscordOAuthAuthorizeUrlFactory, type DiscordOAuthCurrentUser } from '@dereekb/discord';
+import { DiscordOAuthApi } from '@dereekb/discord/nestjs';
 import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { DiscordUserExternalConnectionOAuthServiceConfig } from './discord.oauth.connection.config';
@@ -54,27 +55,24 @@ export function discordUserExternalConnectionCredentials(input: DiscordUserExter
 @Injectable()
 export class DiscordUserExternalConnectionOAuthService extends AbstractUserExternalConnectionOAuthService {
   readonly authorizeUrlFactory: DiscordOAuthAuthorizeUrlFactory;
-  readonly oauthContext: DiscordOAuthContext;
 
   constructor(
     @Inject(DiscordUserExternalConnectionOAuthServiceConfig) readonly config: DiscordUserExternalConnectionOAuthServiceConfig,
     @Inject(UserExternalConnectionStateCoder) readonly stateCoder: UserExternalConnectionStateCoder,
     @Inject(UserExternalConnectionServerActions) readonly userExternalConnectionActions: UserExternalConnectionServerActions,
-    @Inject(UserExternalConnectionAccessor) readonly userExternalConnectionAccessor: UserExternalConnectionAccessor
+    @Inject(UserExternalConnectionAccessor) readonly userExternalConnectionAccessor: UserExternalConnectionAccessor,
+    @Inject(DiscordOAuthApi) readonly oauthApi: DiscordOAuthApi
   ) {
     super();
 
-    const { scopes, discordOAuth, factoryConfig, userExternalConnectionOAuth } = config;
+    const { scopes, userExternalConnectionOAuth } = config;
 
-    this.authorizeUrlFactory = discordOAuthAuthorizeUrlFactory({
-      clientId: discordOAuth.clientId,
+    // no clientId guard here, unlike the Cal.com equivalent: DiscordOAuthConfig requires both
+    // credentials, so DiscordOAuthApi cannot construct without a client id to authorize as
+    this.authorizeUrlFactory = oauthApi.authorizeUrlFactory({
       redirectUri: userExternalConnectionOAuth.redirectUri,
       scopes
     });
-
-    // constructed directly rather than injected: there is no @dereekb/discord/nestjs layer, because
-    // the connect flow needs no token cache. The abstract base never asks for a Nest-provided api.
-    this.oauthContext = discordOAuthFactory(factoryConfig ?? {})(discordOAuth).oauthContext;
   }
 
   protected authorizeUrlForState(state: UserExternalConnectionOAuthState): WebsiteUrl {
@@ -82,15 +80,14 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
   }
 
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {
-    const response = await exchangeAuthorizationCode(this.oauthContext)({ code: input.code, redirectUri: input.redirectUri });
-    const accessToken = discordAccessTokenFromTokenResponse(response);
+    const accessToken = await this.oauthApi.exchangeAuthorizationCodeToAccessToken({ code: input.code, redirectUri: input.redirectUri });
 
     // Best-effort: the connection is fully usable unlabeled, so a failure to read the identity must
     // not fail the handoff. Only the settings row's detail line is lost.
     let currentUser: Maybe<DiscordOAuthCurrentUser>;
 
     try {
-      currentUser = await readCurrentUser(this.oauthContext)({ accessToken: accessToken.accessToken });
+      currentUser = await this.oauthApi.readCurrentUser({ accessToken: accessToken.accessToken });
     } catch (e) {
       this.logger.warn('Connected Discord but could not read the identity to label the connection: ', e);
     }
@@ -105,8 +102,7 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
       throw new Error('DiscordUserExternalConnectionOAuthService.refreshCredentials: the stored credentials carry no refresh token.');
     }
 
-    const response = await refreshAccessToken(this.oauthContext)({ refreshToken });
-    const accessToken = discordAccessTokenFromTokenResponse(response);
+    const accessToken = await this.oauthApi.refreshToAccessToken({ refreshToken });
 
     // deliberately no identity lookup here, unlike the code exchange: the label was resolved on connect
     // and the framework's merge carries it forward, so spending a request to re-read an unchanged

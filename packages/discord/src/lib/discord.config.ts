@@ -1,13 +1,4 @@
 /**
- * A Discord snowflake id.
- *
- * Declared here rather than reused from `@dereekb/nestjs/discord`'s `DiscordId`: that entry point's
- * barrel pulls in discord.js and a module that asserts a bot token, neither of which an OAuth client
- * needs. The duplication is deliberate and narrow.
- */
-export type DiscordSnowflake = string;
-
-/**
  * OAuth2 client id of a Discord application.
  *
  * Identical to the value the developer portal labels "Application ID".

@@ -24,24 +24,59 @@ export const CALCOM_OAUTH_TOKEN_PATH = '/token';
 export const CALCOM_OAUTH_AUTHORIZE_URL = 'https://app.cal.com/auth/oauth2/authorize';
 
 /**
- * Configuration for CalcomOAuth.
+ * How the app's OWN (server-level) Cal.com calls authenticate.
+ *
+ * Separate from {@link CalcomOAuthConfig.client} because the two are independent concerns, and
+ * conflating them is a real trap: an app can authenticate its own calls with an API key while its
+ * users' connections run through the OAuth client, and treating a configured API key as the whole
+ * story silently disables every per-user context.
  */
-export interface CalcomOAuthConfig extends Partial<CalcomAuthClientIdAndSecretPair> {
+export interface CalcomOAuthServerAuthConfig {
   /**
-   * Optional CalcomAccessTokenCache for caching access tokens.
+   * API key for simple bearer token auth, acting as the user who created it.
+   *
+   * Takes precedence over {@link refreshToken} when both are set: the key does not expire, so
+   * server-level calls skip the OAuth refresh loop entirely. Has NO effect on per-user contexts,
+   * which can only come from a user's own grant.
    */
-  readonly accessTokenCache?: Maybe<CalcomAccessTokenCache>;
+  readonly apiKey?: Maybe<CalcomApiKey>;
   /**
-   * Server-level refresh token for initial authentication.
+   * Server-level refresh token, exchanged against {@link CalcomOAuthConfig.client}.
+   *
+   * Cal.com rotates it on every use, so the context tracks the latest value internally rather than
+   * re-reading this one.
    */
   readonly refreshToken?: Maybe<CalcomRefreshToken>;
   /**
-   * Optional API key for simple bearer token auth.
+   * Optional cache for the server-level access token.
    *
-   * When provided, OAuth token refresh is skipped and the API key is used directly as the bearer token.
-   * Does not expire and requires no refresh.
+   * Per-user tokens are cached separately, per user — see
+   * {@link CalcomOAuthMakeUserAccessTokenFactoryInput.userAccessTokenCache}.
    */
-  readonly apiKey?: Maybe<CalcomApiKey>;
+  readonly accessTokenCache?: Maybe<CalcomAccessTokenCache>;
+}
+
+/**
+ * Configuration for CalcomOAuth.
+ *
+ * Split along the only line that matters at runtime: how the APP authenticates versus what is needed
+ * to act as a USER. An app that only acts for its users needs just `client`; an app that only makes
+ * its own calls needs `serverAuth.apiKey`, or a `serverAuth.refreshToken` AND the `client` to exchange
+ * it against — a refresh token alone is not credentials, since the token endpoint authenticates the
+ * exchange with the client id and secret.
+ */
+export interface CalcomOAuthConfig {
+  /**
+   * How the app's own calls authenticate. Without one, only per-user contexts are usable.
+   */
+  readonly serverAuth?: Maybe<CalcomOAuthServerAuthConfig>;
+  /**
+   * The OAuth client. Its presence — and ONLY its presence — is what enables per-user contexts.
+   *
+   * Both halves of the pair are required together, so a client cannot be half-configured into a state
+   * that composes an authorize URL carrying `client_id=undefined`.
+   */
+  readonly client?: Maybe<CalcomAuthClientIdAndSecretPair>;
 }
 
 export interface CalcomOAuthFetchFactoryInput {}

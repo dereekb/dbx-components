@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DiscordApi } from './discord.api';
 import { DISCORD_BOT_TOKEN_ENV_VAR, DiscordServiceConfig, isUsableDiscordBotToken } from './discord.config';
-import { type DiscordBotToken } from './discord.type';
+import { type DiscordBotToken } from '@dereekb/discord';
 
 /**
  * Factory that creates a DiscordServiceConfig from environment variables.

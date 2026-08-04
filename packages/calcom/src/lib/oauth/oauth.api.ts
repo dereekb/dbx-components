@@ -44,14 +44,14 @@ export interface CalcomOAuthAccessTokenErrorResponse {
  */
 export function refreshAccessToken(context: CalcomOAuthContext): (input?: CalcomOAuthRefreshTokenInput) => Promise<CalcomOAuthTokenResponse> {
   return (input) => {
-    const refreshToken = input?.refreshToken ?? context.config.refreshToken;
+    const refreshToken = input?.refreshToken ?? context.config.serverAuth?.refreshToken;
 
     const fetchJsonInput: FetchJsonInput = {
       method: 'POST',
       body: JSON.stringify({
         grant_type: 'refresh_token',
-        client_id: context.config.clientId,
-        client_secret: context.config.clientSecret,
+        client_id: context.config.client?.clientId,
+        client_secret: context.config.client?.clientSecret,
         refresh_token: refreshToken
       })
     };
@@ -86,8 +86,8 @@ export function exchangeAuthorizationCode(context: CalcomOAuthContext): (input: 
       method: 'POST',
       body: JSON.stringify({
         grant_type: 'authorization_code',
-        client_id: context.config.clientId,
-        client_secret: context.config.clientSecret,
+        client_id: context.config.client?.clientId,
+        client_secret: context.config.client?.clientSecret,
         code: input.code,
         redirect_uri: input.redirectUri
       })

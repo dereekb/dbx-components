@@ -1,6 +1,6 @@
 import { type Request } from 'express';
 import { verify, createPublicKey } from 'node:crypto';
-import { type DiscordPublicKey } from '../discord.type';
+import { type DiscordPublicKey } from '@dereekb/discord';
 
 export interface DiscordWebhookEventVerificationConfig {
   /**

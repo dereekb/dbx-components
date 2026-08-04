@@ -257,10 +257,9 @@
       "source": "dbx-web",
       "role": "size",
       "intents": [
-        "avatar tile icon size",
-        "tile glyph size"
+        "avatar tile icon size"
       ],
-      "description": "Glyph size inside a tile avatar. Defaults to a share of the avatar size rather than the icon tile's flat 24px.",
+      "description": "Component-scoped override point (`avatar`) read in `packages/dbx-web/src/lib/layout/avatar/_avatar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `calc(var(--dbx-avatar-view-size) * 0.65)`.",
       "defaults": {
         "light": "calc(var(--dbx-avatar-view-size) * 0.65)"
       },
@@ -272,9 +271,9 @@
       "role": "spacing",
       "intents": [
         "avatar tile padding",
-        "tile inset"
+        "avatar tile padding spacing"
       ],
-      "description": "Padding between a tile avatar's edge and its glyph or logo. Defaults to a share of the avatar size.",
+      "description": "Component-scoped override point (`avatar`) read in `packages/dbx-web/src/lib/layout/avatar/_avatar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `calc(var(--dbx-avatar-view-size) * 0.15)`.",
       "defaults": {
         "light": "calc(var(--dbx-avatar-view-size) * 0.15)"
       },
@@ -1282,13 +1281,14 @@
       "source": "dbx-web",
       "role": "size",
       "intents": [
-        "icon tile icon size"
+        "icon tile icon size",
+        "tile glyph size"
       ],
-      "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "description": "Icon tile glyph size, as a tile avatar resolves it. See `--dbx-avatar-tile-icon-size` to override.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-icon-size, 18px)"
+        "light": "var(--dbx-avatar-tile-icon-size, calc(var(--dbx-avatar-view-size) * 0.65))"
       },
-      "componentScope": "text"
+      "componentScope": "avatar"
     },
     {
       "cssVariable": "--dbx-icon-tile-min-width",
@@ -1309,13 +1309,13 @@
       "role": "spacing",
       "intents": [
         "icon tile padding",
-        "icon tile padding spacing"
+        "tile inset"
       ],
-      "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "description": "Icon tile padding, as a tile avatar resolves it. See `--dbx-avatar-tile-padding` to override.",
       "defaults": {
-        "light": "0"
+        "light": "var(--dbx-avatar-tile-padding, calc(var(--dbx-avatar-view-size) * 0.15))"
       },
-      "componentScope": "text"
+      "componentScope": "avatar"
     },
     {
       "cssVariable": "--dbx-icon-tile-width",
