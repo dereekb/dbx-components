@@ -736,20 +736,30 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       {
         name: 'e',
         longName: 'entries',
-        converter: 'firestoreObjectMap<UserExternalConnectionEntry',
+        converter: 'firestoreObjectMap<UserExternalConnectionEntry, FirestoreModelData<UserExternalConnectionEntry>, UserExternalConnectionProviderType>({ objectField: { fields: userExternalConnectionEntryFields } })',
         tsType: 'UserExternalConnectionEntryMap',
         optional: false,
         description: 'Per-provider connection state, keyed by provider type.'
       },
       {
-        name: 'objectField',
-        longName: 'objectField',
-        converter: '{ fields: userExternalConnectionEntryFields } }), c: firestoreEnumArray<UserExternalConnectionProviderType>(), uat: firestoreDate({ saveDefaultAsNow: true })',
-        optional: false
+        name: 'c',
+        longName: 'connectedProviderTypes',
+        converter: 'firestoreEnumArray<UserExternalConnectionProviderType>()',
+        tsType: 'UserExternalConnectionProviderType[]',
+        optional: false,
+        description: 'DERIVED from `e`: every provider type whose entry status is `connected`.'
+      },
+      {
+        name: 'uat',
+        longName: 'updatedAt',
+        converter: 'firestoreDate({ saveDefaultAsNow: true })',
+        tsType: 'Date',
+        optional: false,
+        description: 'Date this document was last updated at.'
       }
     ],
     enums: [],
-    detectionHints: ['e', 'objectField'],
+    detectionHints: ['e', 'c', 'uat'],
     description: "The client-readable half of a user's third-party OAuth connection state.",
     modelGroup: 'UserExternalConnection',
     collectionKind: 'root',
