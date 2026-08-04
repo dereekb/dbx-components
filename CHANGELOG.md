@@ -1,3 +1,18 @@
+# [13.33.0](https://github.com/dereekb/dbx-components/compare/v13.32.0-dev...v13.33.0) (2026-08-04)
+
+
+### Bug Fixes
+
+- **demo:** declare auth state data on the real lazy-loaded states ([36ff7faf](https://github.com/dereekb/dbx-components/commit/36ff7fafa5bc7f29eee732f3e9734b3637c37276))
+- **oidc:** collapse consent scopes into a content pit ([f6df7011](https://github.com/dereekb/dbx-components/commit/f6df70116754072c5fdb7d1d7fa2174cdd598100))
+- **util:** retain caught error in non-throwing performAsyncTasks ([a1db07ca](https://github.com/dereekb/dbx-components/commit/a1db07ca7f3ffd27a52b10a48038716e7dfdfb93))
+
+
+### Features
+
+- added userexternalconnection ([#53](https://github.com/dereekb/dbx-components/issues/53)) ([b872a3ad](https://github.com/dereekb/dbx-components/commit/b872a3ad9420479efbcd9ab26b1787f51efd8f01)), closes [#53](https://github.com/dereekb/dbx-components/issues/53)
+- **firebase:** add UserExternalConnection model pair and registry ([7c299ae8](https://github.com/dereekb/dbx-components/commit/7c299ae8e2c78b55e20cc7941fcaea1421415085))
+
 # [13.32.0](https://github.com/dereekb/dbx-components/compare/v13.31.0-dev...v13.32.0) (2026-07-30)
 
 
