@@ -1,7 +1,7 @@
 import { type FactoryWithInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type CalcomApiKey, type CalcomAuthClientIdAndSecretPair, type CalcomRefreshToken } from '../calcom.config';
-import { type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomAccessTokenFactory } from './oauth';
+import { type CalcomAccessTokenCache, type CalcomAccessTokenFactory } from './oauth';
 
 /**
  * The Cal.com OAuth API base URL.
@@ -23,80 +23,126 @@ export const CALCOM_OAUTH_TOKEN_PATH = '/token';
  */
 export const CALCOM_OAUTH_AUTHORIZE_URL = 'https://app.cal.com/auth/oauth2/authorize';
 
+// MARK: Credentials
 /**
- * How the app's OWN (server-level) Cal.com calls authenticate.
+ * Authenticates as the Cal.com user who created the API key.
  *
- * Separate from {@link CalcomOAuthConfig.client} because the two are independent concerns, and
- * conflating them is a real trap: an app can authenticate its own calls with an API key while its
- * users' connections run through the OAuth client, and treating a configured API key as the whole
- * story silently disables every per-user context.
+ * The key IS the bearer token and does not expire, so this credential never reaches the token
+ * endpoint and needs no {@link CalcomOAuthConfig.client}.
  */
-export interface CalcomOAuthServerAuthConfig {
+export interface CalcomApiKeyCredential {
+  readonly apiKey: CalcomApiKey;
+}
+
+/**
+ * Authenticates as the Cal.com user who granted the refresh token.
+ *
+ * Every exchange is authenticated with {@link CalcomOAuthConfig.client}'s id and secret, so this
+ * credential is unusable without one.
+ */
+export interface CalcomRefreshTokenCredential {
   /**
-   * API key for simple bearer token auth, acting as the user who created it.
+   * The grant's refresh token.
    *
-   * Takes precedence over {@link refreshToken} when both are set: the key does not expire, so
-   * server-level calls skip the OAuth refresh loop entirely. Has NO effect on per-user contexts,
-   * which can only come from a user's own grant.
+   * Cal.com rotates it on every use. The factory built from this credential tracks the rotation in
+   * memory, so this value is read once rather than re-read per refresh.
    */
-  readonly apiKey?: Maybe<CalcomApiKey>;
+  readonly refreshToken: CalcomRefreshToken;
   /**
-   * Server-level refresh token, exchanged against {@link CalcomOAuthConfig.client}.
+   * Cache for THIS credential's access token.
    *
-   * Cal.com rotates it on every use, so the context tracks the latest value internally rather than
-   * re-reading this one.
-   */
-  readonly refreshToken?: Maybe<CalcomRefreshToken>;
-  /**
-   * Optional cache for the server-level access token.
-   *
-   * Per-user tokens are cached separately, per user — see
-   * {@link CalcomOAuthMakeUserAccessTokenFactoryInput.userAccessTokenCache}.
+   * Must be scoped to exactly this grant. Two credentials sharing one cache overwrite each other,
+   * and the rotated refresh token rides along inside the cached value — so a shared cache does not
+   * merely lose a token, it spends one.
    */
   readonly accessTokenCache?: Maybe<CalcomAccessTokenCache>;
 }
 
 /**
+ * A credential Cal.com calls can be made with.
+ *
+ * One union for the ambient credential and for any per-user one, because they are the same thing:
+ * a way to act as some Cal.com user. Discriminated by the presence of `apiKey`.
+ */
+export type CalcomAuthCredential = CalcomApiKeyCredential | CalcomRefreshTokenCredential;
+
+/**
+ * Returns whether the credential is a {@link CalcomApiKeyCredential}.
+ *
+ * @param credential - The credential to check.
+ * @returns True when the credential carries an api key.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isCalcomApiKeyCredential(credential: CalcomAuthCredential): credential is CalcomApiKeyCredential {
+  return 'apiKey' in credential;
+}
+
+export interface CalcomAuthCredentialValues {
+  readonly apiKey?: Maybe<CalcomApiKey>;
+  readonly refreshToken?: Maybe<CalcomRefreshToken>;
+  readonly accessTokenCache?: Maybe<CalcomAccessTokenCache>;
+}
+
+/**
+ * Builds a {@link CalcomAuthCredential} from flat, optional values, as an environment-facing
+ * configuration provides them.
+ *
+ * An api key wins when both are present: it does not expire, so it skips the refresh loop entirely.
+ * The cache attaches only to the refresh-token arm, since an api key has no token to cache. Empty
+ * strings count as absent, so an unset environment variable read as `''` does not become a
+ * credential that sends `Bearer `.
+ *
+ * @param values - The flat credential values.
+ * @returns The equivalent credential, or undefined when neither value is present.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calcomAuthCredentialFromValues(values: CalcomAuthCredentialValues): Maybe<CalcomAuthCredential> {
+  const { apiKey, refreshToken, accessTokenCache } = values;
+  let result: Maybe<CalcomAuthCredential>;
+
+  if (apiKey) {
+    result = { apiKey };
+  } else if (refreshToken) {
+    result = { refreshToken, accessTokenCache };
+  }
+
+  return result;
+}
+
+/**
  * Configuration for CalcomOAuth.
  *
- * Split along the only line that matters at runtime: how the APP authenticates versus what is needed
- * to act as a USER. An app that only acts for its users needs just `client`; an app that only makes
- * its own calls needs `serverAuth.apiKey`, or a `serverAuth.refreshToken` AND the `client` to exchange
- * it against — a refresh token alone is not credentials, since the token endpoint authenticates the
- * exchange with the client id and secret.
+ * `client` is the app's OAuth *registration*. It is sent on EVERY token exchange — the ambient one
+ * as much as any per-user one — so it is not "the user half" of anything.
+ *
+ * `defaultAuth` is the credential used when no specific one is named, and is the only thing
+ * `loadAccessToken()` reads. It is not an "app identity" either: an api key acts as the user who
+ * created it, and a refresh token here is some user's grant being reused ambiently.
+ *
+ * An app that only acts for named users needs just `client`. An app that makes ambient calls needs
+ * a `defaultAuth`, plus `client` whenever that credential is a refresh token.
  */
 export interface CalcomOAuthConfig {
   /**
-   * How the app's own calls authenticate. Without one, only per-user contexts are usable.
-   */
-  readonly serverAuth?: Maybe<CalcomOAuthServerAuthConfig>;
-  /**
-   * The OAuth client. Its presence — and ONLY its presence — is what enables per-user contexts.
+   * The OAuth client registration, required for ANY refresh-token exchange.
    *
    * Both halves of the pair are required together, so a client cannot be half-configured into a state
    * that composes an authorize URL carrying `client_id=undefined`.
    */
   readonly client?: Maybe<CalcomAuthClientIdAndSecretPair>;
+  /**
+   * The credential used when no specific one is named.
+   */
+  readonly defaultAuth?: Maybe<CalcomAuthCredential>;
 }
 
 export interface CalcomOAuthFetchFactoryInput {}
 
 export type CalcomOAuthFetchFactory = FactoryWithInput<ConfiguredFetch, CalcomOAuthFetchFactoryInput>;
 
-export type CalcomOAuthMakeUserAccessTokenFactoryInput = {
-  readonly refreshToken: CalcomRefreshToken;
-  readonly userAccessTokenCache?: Maybe<CalcomAccessTokenCache>;
-  /**
-   * Optional stable, caller-owned key identifying whose token this is.
-   *
-   * Used to memoize the produced factory so its in-memory tier is shared across calls. Prefer an
-   * id the caller already owns (a user/profile id) over anything derived from the refresh token,
-   * which Cal.com rotates on every use.
-   */
-  readonly key?: Maybe<CalcomAccessTokenCacheKey>;
-};
-
-export type CalcomOAuthMakeUserAccessTokenFactory = FactoryWithRequiredInput<CalcomAccessTokenFactory, CalcomOAuthMakeUserAccessTokenFactoryInput>;
+export type CalcomOAuthMakeAccessTokenFactory = FactoryWithRequiredInput<CalcomAccessTokenFactory, CalcomAuthCredential>;
 
 /**
  * Context used for performing fetch() and fetchJson() calls with a configured fetch instance.
@@ -104,8 +150,20 @@ export type CalcomOAuthMakeUserAccessTokenFactory = FactoryWithRequiredInput<Cal
 export interface CalcomOAuthContext {
   readonly fetch: ConfiguredFetch;
   readonly fetchJson: FetchJsonFunction;
+  /**
+   * Resolves the access token for {@link CalcomOAuthConfig.defaultAuth}.
+   *
+   * `makeAccessTokenFactory(config.defaultAuth)`, built once at construction so its in-memory token
+   * tier and its refresh-token rotation are shared across the whole context.
+   */
   readonly loadAccessToken: CalcomAccessTokenFactory;
-  readonly makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory;
+  /**
+   * Builds an access token factory for one credential.
+   *
+   * Each returned factory owns its own rotation and cache tier, so refreshing one credential never
+   * spends another's token.
+   */
+  readonly makeAccessTokenFactory: CalcomOAuthMakeAccessTokenFactory;
   readonly config: CalcomOAuthConfig;
 }
 

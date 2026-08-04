@@ -2,7 +2,7 @@ import { addSeconds } from 'date-fns';
 import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { CalcomOAuthAccessTokenCacheService, calcomAccessTokenCacheFileKey, fileCalcomOAuthAccessTokenCacheService, memoryCalcomOAuthAccessTokenCacheService, mergeCalcomOAuthAccessTokenCacheServices } from './oauth.service';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { type CalcomAccessToken } from '@dereekb/calcom';
+import { isCalcomApiKeyCredential, type CalcomAccessToken } from '@dereekb/calcom';
 import { appCalcomOAuthModuleMetadata } from './oauth.module';
 import { CalcomOAuthApi } from './oauth.api';
 
@@ -47,9 +47,10 @@ describe('oauth.service', () => {
       expect(api).toBeDefined();
 
       const { config } = api.calcomOAuth.oauthContext;
+      const hasApiKey = config.defaultAuth != null && isCalcomApiKeyCredential(config.defaultAuth);
 
-      // either the app's own identity or a client to exchange a refresh token against
-      expect(!!config.serverAuth?.apiKey || config.client != null).toBe(true);
+      // either an api key that IS the token, or a client to exchange a refresh token against
+      expect(hasApiKey || config.client != null).toBe(true);
     });
 
     describe('oauthContext', () => {

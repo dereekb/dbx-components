@@ -1,7 +1,8 @@
-import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type FactoryWithRequiredInput } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
-import { type CalcomConfig, type CalcomRefreshToken } from '../calcom.config';
-import { type CalcomAccessTokenCache, type CalcomAccessTokenStringFactory } from '../oauth/oauth';
+import { type CalcomConfig } from '../calcom.config';
+import { type CalcomAccessTokenStringFactory } from '../oauth/oauth';
+import { type CalcomRefreshTokenCredential } from '../oauth/oauth.config';
 import { type CalcomRateLimiterRef } from '../calcom.limit';
 
 export interface CalcomFetchFactoryInput {
@@ -35,23 +36,14 @@ export interface CalcomUserContext extends CalcomContext {
   readonly userFetchJson: FetchJsonFunction;
 }
 
-export interface CalcomUserContextFactoryInput {
-  /**
-   * The user's refresh token.
-   */
-  readonly refreshToken: CalcomRefreshToken;
-  /**
-   * Optional cache to use for the user's access token.
-   *
-   * The cache should only be configured for the user that owns the refresh token.
-   */
-  readonly accessTokenCache?: Maybe<CalcomAccessTokenCache>;
-}
-
 /**
- * Creates a CalcomUserContext from the input.
+ * Creates a CalcomUserContext from a user's credential.
+ *
+ * Deliberately the refresh-token arm of {@link CalcomAuthCredential} rather than the full union: a
+ * user context acts as a connected user, while an api key acts as whoever created it — which is the
+ * server context's job.
  */
-export type CalcomUserContextFactory = FactoryWithRequiredInput<CalcomUserContext, CalcomUserContextFactoryInput>;
+export type CalcomUserContextFactory = FactoryWithRequiredInput<CalcomUserContext, CalcomRefreshTokenCredential>;
 
 /**
  * Context for making public (unauthenticated) requests to the Cal.com API.

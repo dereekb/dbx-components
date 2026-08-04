@@ -1,10 +1,10 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { CALCOM_OAUTH_API_URL, type CalcomOAuthConfig, type CalcomOAuthContext, type CalcomOAuthContextRef, type CalcomOAuthFetchFactory, type CalcomOAuthFetchFactoryInput, type CalcomOAuthMakeUserAccessTokenFactory, type CalcomOAuthMakeUserAccessTokenFactoryInput } from './oauth.config';
-import { type CalcomRefreshToken } from '../calcom.config';
+import { CALCOM_OAUTH_API_URL, isCalcomApiKeyCredential, type CalcomAuthCredential, type CalcomOAuthConfig, type CalcomOAuthContext, type CalcomOAuthContextRef, type CalcomOAuthFetchFactory, type CalcomOAuthFetchFactoryInput, type CalcomOAuthMakeAccessTokenFactory } from './oauth.config';
+import { type CalcomApiKey, type CalcomRefreshToken } from '../calcom.config';
 import { type LogCalcomServerErrorFunction } from '../calcom.error.api';
 import { CalcomOAuthAuthFailureError, handleCalcomOAuthErrorFetch } from './oauth.error.api';
 import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenFactory, type CalcomAccessTokenRefresher } from './oauth';
-import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
+import { MS_IN_DAY, MS_IN_MINUTE, MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
 import { calcomRateLimitedFetchHandler } from '../calcom.limit';
 import { refreshAccessToken, type CalcomOAuthTokenResponse } from './oauth.api';
 
@@ -31,6 +31,37 @@ export function calcomAccessTokenFromTokenResponse(response: CalcomOAuthTokenRes
     expiresIn: expires_in,
     expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
     scope: scope ?? ''
+  };
+
+  return accessToken;
+}
+
+/**
+ * The lifetime given to the synthetic access token an api key is wrapped in.
+ *
+ * Cal.com api keys do not expire; the value only has to outlive any process holding one, so the
+ * token satisfies the same expiration check every other token goes through.
+ */
+export const CALCOM_API_KEY_ACCESS_TOKEN_EXPIRATION: Milliseconds = MS_IN_DAY * 365 * 100;
+
+/**
+ * Wraps a {@link CalcomApiKey} as a static {@link CalcomAccessToken}.
+ *
+ * An api key is already a bearer token acting as the user who created it, so there is nothing to
+ * exchange and nothing to refresh.
+ *
+ * @param apiKey - The Cal.com api key.
+ * @returns The equivalent static CalcomAccessToken.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calcomAccessTokenFromApiKey(apiKey: CalcomApiKey): CalcomAccessToken {
+  const accessToken: CalcomAccessToken = {
+    accessToken: apiKey,
+    refreshToken: '',
+    expiresIn: Number.MAX_SAFE_INTEGER,
+    expiresAt: new Date(Date.now() + CALCOM_API_KEY_ACCESS_TOKEN_EXPIRATION),
+    scope: ''
   };
 
   return accessToken;
@@ -86,14 +117,13 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
   } = factoryConfig;
 
   return (config: CalcomOAuthConfig) => {
-    const { serverAuth, client } = config;
-    const apiKey = serverAuth?.apiKey;
+    const { defaultAuth, client } = config;
+    const hasApiKeyDefault = defaultAuth != null && isCalcomApiKeyCredential(defaultAuth) && !!defaultAuth.apiKey;
 
-    // an API key authenticates the app's own calls directly; everything else — a server-level refresh
-    // as much as a per-user one — is an exchange the token endpoint authenticates with the client id
-    // and secret. With neither an API key nor a client, no token could ever be produced
-    if (!apiKey && client == null) {
-      throw new Error("CalcomOAuthConfig can authenticate nothing. Provide `serverAuth.apiKey` for the app's own calls, `client` (clientId+clientSecret) to exchange any refresh token, or both.");
+    // an API key IS the token; every other credential is an exchange the token endpoint authenticates
+    // with the client id and secret. With neither, no token could ever be produced
+    if (!hasApiKeyDefault && client == null) {
+      throw new Error('CalcomOAuthConfig can authenticate nothing. Provide `defaultAuth: { apiKey }` for ambient calls, `client` (clientId+clientSecret) to exchange any refresh token, or both.');
     }
 
     const baseFetch = fetchFactory();
@@ -103,77 +133,69 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 
-    // MARK: Server Access Token
-    /**
-     * Tracks the latest server-level refresh token since Cal.com rotates them on every use.
-     *
-     * Scoped to the server-level refresher only — each per-user refresher tracks its own rotation,
-     * so refreshing one user never overwrites the server-level token.
-     */
-    let latestRefreshToken = serverAuth?.refreshToken;
+    // MARK: Access Tokens
+    const makeAccessTokenFactory: CalcomOAuthMakeAccessTokenFactory = (credential: CalcomAuthCredential) => {
+      let result: CalcomAccessTokenFactory;
 
-    const tokenRefresher: CalcomAccessTokenRefresher = async () => {
-      const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: latestRefreshToken ?? undefined });
-      const accessToken = calcomAccessTokenFromTokenResponse(response);
+      if (isCalcomApiKeyCredential(credential)) {
+        const { apiKey } = credential;
 
-      latestRefreshToken = accessToken.refreshToken;
-
-      return accessToken;
-    };
-
-    // an API key acts as the user who created it and does not expire, so it is handed back as a static
-    // token with nothing to refresh. It takes precedence for server-level calls when configured
-    const apiKeyToken: Maybe<CalcomAccessToken> = apiKey
-      ? {
-          accessToken: apiKey,
-          refreshToken: '',
-          expiresIn: Number.MAX_SAFE_INTEGER,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
-          scope: ''
+        // presence, not truthiness, is what discriminates the union — so without this an empty key
+        // would be handed back as a valid static token and every call would send `Bearer `
+        if (!apiKey) {
+          throw new Error('CalcomApiKeyCredential.apiKey is empty.');
         }
-      : undefined;
 
-    const loadAccessToken: CalcomAccessTokenFactory =
-      apiKeyToken == null
-        ? calcomOAuthAccessTokenFactory({
-            tokenRefresher,
-            accessTokenCache: serverAuth?.accessTokenCache
-          })
-        : async () => apiKeyToken;
+        const apiKeyToken = calcomAccessTokenFromApiKey(apiKey);
 
-    // MARK: User Access Token
-    const makeUserAccessTokenFactory: CalcomOAuthMakeUserAccessTokenFactory = (input: CalcomOAuthMakeUserAccessTokenFactoryInput) => {
-      // an access token for a USER can only come from that user's refresh token, exchanged against the
-      // OAuth client. An API key is the app's own identity and cannot stand in for it
-      if (client == null) {
-        throw new Error('makeUserAccessTokenFactory requires a `client` (clientId+clientSecret). A Cal.com configuration with only `serverAuth` cannot create per-user contexts.');
+        result = async () => apiKeyToken;
+      } else {
+        // a token for a specific grant can only come from that grant's refresh token, exchanged
+        // against the OAuth client. An API key is a different user's identity and cannot stand in
+        if (client == null) {
+          throw new Error('makeAccessTokenFactory() requires a `client` (clientId+clientSecret) to exchange a refresh token credential. A Cal.com configuration with only an api key cannot create one.');
+        }
+
+        /**
+         * Tracks THIS credential's rotated refresh token, since Cal.com rotates on every use.
+         *
+         * Declared per invocation, so every credential — the default one as much as any per-user one
+         * — rotates in isolation and refreshing one never overwrites another's token.
+         */
+        let latestRefreshToken: CalcomRefreshToken = credential.refreshToken;
+
+        const tokenRefresher: CalcomAccessTokenRefresher = async () => {
+          const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: latestRefreshToken });
+          const accessToken = calcomAccessTokenFromTokenResponse(response);
+
+          latestRefreshToken = accessToken.refreshToken;
+
+          return accessToken;
+        };
+
+        result = calcomOAuthAccessTokenFactory({
+          tokenRefresher,
+          accessTokenCache: credential.accessTokenCache
+        });
       }
 
-      /**
-       * Tracks this user's rotated refresh token, independently of the server-level token.
-       */
-      let userLatestRefreshToken: CalcomRefreshToken = input.refreshToken;
-
-      const userTokenRefresher: CalcomAccessTokenRefresher = async () => {
-        const response: CalcomOAuthTokenResponse = await refreshAccessToken(oauthContext)({ refreshToken: userLatestRefreshToken });
-        const accessToken = calcomAccessTokenFromTokenResponse(response);
-
-        userLatestRefreshToken = accessToken.refreshToken;
-
-        return accessToken;
-      };
-
-      return calcomOAuthAccessTokenFactory({
-        tokenRefresher: userTokenRefresher,
-        accessTokenCache: input.userAccessTokenCache
-      });
+      return result;
     };
+
+    // built once, so the default credential's in-memory tier and its rotation are shared across the
+    // whole context instead of restarting on every call
+    const loadAccessToken: CalcomAccessTokenFactory =
+      defaultAuth == null
+        ? async () => {
+            throw new CalcomOAuthAuthFailureError('No `defaultAuth` is configured on this CalcomOAuthConfig, so there is no ambient credential to authenticate with. Use makeAccessTokenFactory(credential) for a named credential.');
+          }
+        : makeAccessTokenFactory(defaultAuth);
 
     const oauthContext: CalcomOAuthContext = {
       fetch,
       fetchJson,
       loadAccessToken,
-      makeUserAccessTokenFactory,
+      makeAccessTokenFactory,
       config
     };
 

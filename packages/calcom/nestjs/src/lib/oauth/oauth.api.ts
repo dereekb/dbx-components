@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomAccessTokenFactory, type CalcomOAuth, type CalcomOAuthContext, type CalcomOAuthExchangeAuthorizationCodeInput, type CalcomOAuthMakeUserAccessTokenFactoryInput, type CalcomRefreshToken, calcomAccessTokenFromTokenResponse, calcomOAuthFactory, exchangeAuthorizationCode } from '@dereekb/calcom';
+import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomAccessTokenFactory, type CalcomOAuth, type CalcomOAuthContext, type CalcomOAuthExchangeAuthorizationCodeInput, type CalcomRefreshToken, type CalcomRefreshTokenCredential, calcomAccessTokenFromTokenResponse, calcomAuthCredentialFromValues, calcomOAuthFactory, exchangeAuthorizationCode } from '@dereekb/calcom';
 import { type Maybe } from '@dereekb/util';
 import { CalcomOAuthServiceConfig } from './oauth.config';
 import { CalcomOAuthAccessTokenCacheService } from './oauth.service';
@@ -7,12 +7,6 @@ import { CalcomOAuthAccessTokenCacheService } from './oauth.service';
 @Injectable()
 export class CalcomOAuthApi {
   readonly calcomOAuth: CalcomOAuth;
-
-  /**
-   * Per-user token factories, memoized by their caller-owned key so each user's in-memory token
-   * tier is reused across calls.
-   */
-  private readonly _userAccessTokenFactories = new Map<CalcomAccessTokenCacheKey, CalcomAccessTokenFactory>();
 
   get oauthContext(): CalcomOAuthContext {
     return this.calcomOAuth.oauthContext;
@@ -25,13 +19,13 @@ export class CalcomOAuthApi {
     const accessTokenCache = cacheService.loadCalcomAccessTokenCache();
     const { clientId, clientSecret, refreshToken, apiKey } = config.calcomOAuth;
 
-    // the environment-facing config stays flat, mirroring the CALCOM_* variables it is read from, and
-    // is mapped here into the two roles the context actually distinguishes. The client is taken as a
-    // pair or not at all, which replaces the empty-string sentinels this used to pass for a
-    // configuration that has no OAuth client
+    // the environment-facing config stays flat, mirroring the CALCOM_* variables it is read from.
+    // `client` is the app's OAuth registration, sent on every exchange; `defaultAuth` is the one
+    // credential the ambient loadAccessToken() resolves. The client is taken as a pair or not at all,
+    // which replaces the empty-string sentinels this used to pass for a config with no OAuth client
     this.calcomOAuth = calcomOAuthFactory(config.factoryConfig ?? {})({
-      serverAuth: { apiKey, refreshToken, accessTokenCache },
-      client: clientId && clientSecret ? { clientId, clientSecret } : undefined
+      client: clientId && clientSecret ? { clientId, clientSecret } : undefined,
+      defaultAuth: calcomAuthCredentialFromValues({ apiKey, refreshToken, accessTokenCache })
     });
   }
 
@@ -61,42 +55,25 @@ export class CalcomOAuthApi {
   /**
    * Retrieves an access token for a specific user using their refresh token.
    *
-   * When a `key` is provided the produced factory is memoized against it, so repeat calls share
-   * the factory's in-memory token tier instead of falling through to the cache or a live refresh
-   * on every call.
-   *
-   * @param input - Contains the user's refresh token, an optional memoization key, and an optional access token cache.
+   * @param credential - The user's refresh token credential, with the cache scoped to that grant.
    * @returns Promise resolving to the user's CalcomAccessToken.
    */
-  userAccessToken(input: CalcomOAuthMakeUserAccessTokenFactoryInput): Promise<CalcomAccessToken> {
-    return this.userAccessTokenFactory(input)();
+  userAccessToken(credential: CalcomRefreshTokenCredential): Promise<CalcomAccessToken> {
+    return this.userAccessTokenFactory(credential)();
   }
 
   /**
-   * Returns the memoized per-user CalcomAccessTokenFactory for the given input.
+   * Returns the CalcomAccessTokenFactory for a user's credential.
    *
-   * Without a `key` the factory cannot be shared (there is nothing stable to memoize against), so
-   * a fresh one is returned and its in-memory tier lives only for that call.
+   * A fresh factory on every call: its in-memory tier lives only as long as the returned factory, so
+   * one caller's tokens are never visible to the next. Durable sharing is the access token cache's
+   * job — see {@link cacheForKey}.
    *
-   * @param input - Contains the user's refresh token, an optional memoization key, and an optional access token cache.
-   * @returns The CalcomAccessTokenFactory for that user.
+   * @param credential - The user's refresh token credential.
+   * @returns The CalcomAccessTokenFactory for that credential.
    */
-  userAccessTokenFactory(input: CalcomOAuthMakeUserAccessTokenFactoryInput): CalcomAccessTokenFactory {
-    const { key } = input;
-    let factory: Maybe<CalcomAccessTokenFactory>;
-
-    if (key == null) {
-      factory = this.oauthContext.makeUserAccessTokenFactory(input);
-    } else {
-      factory = this._userAccessTokenFactories.get(key);
-
-      if (factory == null) {
-        factory = this.oauthContext.makeUserAccessTokenFactory(input);
-        this._userAccessTokenFactories.set(key, factory);
-      }
-    }
-
-    return factory;
+  userAccessTokenFactory(credential: CalcomRefreshTokenCredential): CalcomAccessTokenFactory {
+    return this.oauthContext.makeAccessTokenFactory(credential);
   }
 
   /**
