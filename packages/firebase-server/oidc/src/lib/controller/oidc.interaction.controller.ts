@@ -168,33 +168,17 @@ export class OidcInteractionController {
       // Loaded once here and reused by the provider-profile gate below and the TTL resolution further down.
       const clientPayload = await this.oidcService.findClientPayload(clientId);
 
-      // Admin-only scope gate. The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes`
-      // (a fresh consent has everything in `missing`; a re-consent may carry already-granted scopes in
-      // `encountered`). If that set intersects the admin-only scopes — the provider's `adminOnlyScopes`
-      // unioned with the scopes of every profile marked `adminOnly` — and the resolving user is not an
-      // admin, hard-reject with `access_denied` rather than silently dropping the scope.
+      // The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes` (a fresh consent has
+      // everything in `missing`; a re-consent may carry already-granted scopes in `encountered`). The two
+      // provider-profile gates below judge the REQUEST — what this client may ask for at all — so they
+      // read this set. The admin-only gate further down judges what the user actually consented to
+      // instead, and reads `consentedOIDCScopeSet`.
       const requestedOIDCScopeSet = new Set<string>([...missingOIDCScope, ...encounteredOIDCScopes]);
       const providerProfiles = this.accountService.providerConfig.providerProfiles;
-      const configAdminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
-      const adminOnlyScopes = new Set<string>([...configAdminOnlyScopes, ...adminOnlyScopesForOidcProviderProfiles(providerProfiles ?? [])]);
-      const requestedAdminOnlyScopes = Array.from(adminOnlyScopes).filter((scope) => requestedOIDCScopeSet.has(scope));
-
-      // Deliberately sourced from the provider config's `adminOnlyScopes` ALONE, unlike the gate above:
-      // this flag also selects the (highest) service-token TTL tier further down, and a profile marked
-      // `adminOnly` must gate by admin status WITHOUT widening its grant's lifetime to that tier.
-      const requestsServiceToken = configAdminOnlyScopes.some((scope) => requestedOIDCScopeSet.has(scope));
-      const isAdmin = accountId ? await (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
-
-      if (requestedAdminOnlyScopes.length > 0 && !isAdmin) {
-        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `The following scope(s) are restricted to admins: ${requestedAdminOnlyScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
-        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, serviceToken: requestsServiceToken, isAdmin: false, reason: 'service_token_non_admin', durationMs: Date.now() - startedAt }, this._logger);
-        res.json({ redirectTo });
-        return;
-      }
 
       // Provider-profile scope gate. Any scope referenced by a provider profile is "gated" — available
       // only to clients whose assigned profiles unlock it (a client with NO assigned profiles resolves
-      // to the registry's default profiles). Independent of the admin-only gate above; a scope may be
+      // to the registry's default profiles). Independent of the admin-only gate below; a scope may be
       // subject to both.
       const { unlocked: clientUnlockedScopes, required: clientRequiredScopes } = oidcClientProviderProfileScopes(providerProfiles, clientPayload?.dbx_provider_profiles ?? undefined);
       const profileGatedScopes = scopesForOidcProviderProfiles(providerProfiles ?? []);
@@ -220,6 +204,44 @@ export class OidcInteractionController {
         return;
       }
 
+      // The scopes this consent actually puts in force. Resolved once here and re-applied to the grant
+      // further down, so the admin-only gate below judges exactly the set that will be granted.
+      //
+      // Force-grants the client's required profile scopes (in addition to `openid`) so they cannot be
+      // dropped at consent — the required gate above already guarantees they were requested.
+      const effectiveOIDCScopes = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...clientRequiredScopes], alreadyEncountered: encounteredOIDCScopes });
+
+      // Scopes the existing Grant already holds (granted, minus any it rejected). Nothing here revokes
+      // them, so they stay in force through this consent and the gate below has to count them too.
+      const heldOIDCScopes = existingGrant ? existingGrant.getOIDCScope().split(' ').filter(Boolean) : [];
+      const consentedOIDCScopeSet = new Set<string>([...heldOIDCScopes, ...effectiveOIDCScopes.granted]);
+
+      // Admin-only scope gate. If the consented set intersects the admin-only scopes — the provider's
+      // `adminOnlyScopes` unioned with the scopes of every profile marked `adminOnly` — and the resolving
+      // user is not an admin, hard-reject with `access_denied` rather than silently dropping the scope.
+      //
+      // Deliberately gated on what the user CONSENTED to rather than on what the client requested: the
+      // consent UI renders a deselectable checkbox for every scope in the auth request, and a client
+      // cannot know the caller's admin status when it builds that request. Gating on the request would
+      // make an admin-only scope in `scopes_supported` fatal for every non-admin — deselecting it at
+      // consent has to be a way through.
+      const configAdminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
+      const adminOnlyScopes = new Set<string>([...configAdminOnlyScopes, ...adminOnlyScopesForOidcProviderProfiles(providerProfiles ?? [])]);
+      const consentedAdminOnlyScopes = Array.from(adminOnlyScopes).filter((scope) => consentedOIDCScopeSet.has(scope));
+
+      // Deliberately sourced from the provider config's `adminOnlyScopes` ALONE, unlike the gate above:
+      // this flag also selects the (highest) service-token TTL tier further down, and a profile marked
+      // `adminOnly` must gate by admin status WITHOUT widening its grant's lifetime to that tier.
+      const requestsServiceToken = configAdminOnlyScopes.some((scope) => consentedOIDCScopeSet.has(scope));
+      const isAdmin = accountId ? await (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
+
+      if (consentedAdminOnlyScopes.length > 0 && !isAdmin) {
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `The following scope(s) are restricted to admins: ${consentedAdminOnlyScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, serviceToken: requestsServiceToken, isAdmin: false, reason: 'service_token_non_admin', durationMs: Date.now() - startedAt }, this._logger);
+        res.json({ redirectTo });
+        return;
+      }
+
       // Resolve the requested login duration up-front. The configured Grant TTL function (in
       // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
       // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
@@ -232,9 +254,7 @@ export class OidcInteractionController {
       const grant = existingGrant ?? (await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId, expiresInSeconds));
 
       if (missingOIDCScope.length > 0) {
-        // Force-grant the client's required profile scopes (in addition to `openid`) so they cannot be
-        // dropped at consent — the required gate above already guarantees they were requested.
-        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...clientRequiredScopes], alreadyEncountered: encounteredOIDCScopes });
+        const { granted, rejected } = effectiveOIDCScopes;
 
         if (granted.length > 0) {
           grant.addOIDCScope(granted.join(' '));
@@ -264,7 +284,13 @@ export class OidcInteractionController {
       const missingResourceScopes = (prompt.details.missingResourceScopes as Record<string, string[]> | undefined) ?? {};
 
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
-        const requestedSubset = body.grantedResourceScopes?.[indicator];
+        // A submission with no explicit per-resource selection falls back to the OIDC scope selection
+        // rather than granting everything the resource server declares. A resource server's scope list
+        // is drawn from the same provider scopes the consent UI renders as one checkbox list, so a scope
+        // deselected there must not reappear on the resource-bound access token — otherwise deselecting
+        // an admin-only scope would clear the gate above while the token still carried it.
+        // `grantedOIDCScopes` being absent still means "grant everything requested".
+        const requestedSubset = body.grantedResourceScopes?.[indicator] ?? (body.grantedOIDCScopes ? scopes.filter((scope) => consentedOIDCScopeSet.has(scope)) : undefined);
         const encounteredResourceScopes = grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean);
         const { granted, rejected } = resolveEffectiveSubset({ missing: scopes, requestedSubset, alreadyEncountered: encounteredResourceScopes });
 

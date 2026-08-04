@@ -2026,7 +2026,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
          * Drives the full auth-code flow (auth → login → consent[approved] → callback) for a given
          * user, returning the final callback URL (which carries either `code` or `error`).
          */
-        async function driveServiceFlow(input: { readonly uid: string; readonly clientId: string; readonly scope: string; readonly extraAuthParams?: Record<string, string | number> }): Promise<{ callbackUrl: URL; cookieHeader: string; codeVerifier: string }> {
+        async function driveServiceFlow(input: { readonly uid: string; readonly clientId: string; readonly scope: string; readonly grantedOIDCScopes?: readonly string[]; readonly extraAuthParams?: Record<string, string | number> }): Promise<{ callbackUrl: URL; cookieHeader: string; codeVerifier: string }> {
           const server = app.getHttpServer();
           const cookieJar = new Map<string, string>();
 
@@ -2071,7 +2071,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           collectCookies(consentRedirectRes);
           const consentUid = new URL(consentRedirectRes.headers['location'], 'http://localhost').searchParams.get('uid')!;
 
-          const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
+          // Omitting grantedOIDCScopes entirely means "grant everything requested"; passing it mirrors the
+          // consent UI submitting only the checkboxes the user left selected.
+          const consentRes = await request(server)
+            .post(`/interaction/${consentUid}/consent`)
+            .set('Cookie', cookieHeader())
+            .send(input.grantedOIDCScopes ? { idToken, approved: true, grantedOIDCScopes: input.grantedOIDCScopes } : { idToken, approved: true });
           expect(consentRes.status).toBe(200);
           collectCookies(consentRes);
 
@@ -2151,6 +2156,44 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
           expect(callbackUrl.searchParams.get('code')).toBeNull();
+        });
+
+        // The admin-only gate reads what the user consented to, not what the client requested. A client
+        // requests token.service because it is advertised in scopes_supported — it cannot know the caller
+        // is not an admin — so deselecting the scope on the consent screen has to be a way through rather
+        // than a dead end for every non-admin.
+        it('non-admin deselecting token.service: consent succeeds, the scope is not granted, and the TTL stays on the non-admin tier', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'svc-nonadmin-deselected',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          // Driven with the MCP resource indicator, the way an MCP client actually authorizes: the
+          // resource server declares every provider scope, so a deselected scope must be kept off the
+          // resource-bound access token too — not just off the OIDC grant.
+          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({
+            uid: nonAdmin.uid,
+            clientId: client_id,
+            scope: 'openid email demo offline_access token.service',
+            grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access'],
+            extraAuthParams: { dbx_session_ttl: TWO_YEARS, resource: mcpModuleConfig.mcpUrl }
+          });
+
+          expect(callbackUrl.searchParams.get('error')).toBeNull();
+          const code = callbackUrl.searchParams.get('code')!;
+          expect(code).toBeDefined();
+
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier, resource: mcpModuleConfig.mcpUrl });
+          expect(tokenRes.status).toBe(200);
+          expect(tokenRes.body.scope).not.toContain('token.service');
+          expect(tokenRes.body.scope).toContain('demo');
+
+          // Deselecting also has to drop the service-token TTL tier — 2 years was requested, so a grant
+          // longer than the non-admin ceiling would mean the tier was picked from the request instead.
+          const grantTtl = await maxGrantTtlForUid(nonAdmin.uid);
+          expect(grantTtl).toBeLessThanOrEqual(45 * ONE_DAY + SLACK_SECONDS);
         });
 
         it('admin normal login clamps to the 90-day ceiling', async () => {
