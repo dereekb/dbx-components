@@ -24,7 +24,7 @@ import {
   type PdfMergePageRotationChange,
   type PdfMergePageView
 } from './pdf.merge';
-import { buildPdfMergeEntrySync, buildPdfMergePagePlan, mergePdfMergeEntries, readPdfMergeEntryPageMetas } from './pdf.merge.utility';
+import { asPdfMergeFile, buildPdfMergeEntriesFromSidecar, buildPdfMergeEntry, buildPdfMergeEntrySync, buildPdfMergePagePlan, mergePdfMergeEntries, readPdfMergeEntryPageMetas, type BuildPdfMergeEntriesFromSidecarConfig, type PdfMergeSidecarImportErrorReason, type PdfMergeSidecarImportResult } from './pdf.merge.utility';
 import { type DbxImageCompressionConfig } from '../image';
 import { filterMaybe } from '@dereekb/rxjs';
 
@@ -69,6 +69,88 @@ function prunePdfMergePageState(state: PdfMergeEditorState, liveEntryIds: Set<st
 }
 
 /**
+ * Why a store-level import failed. Extends the parse-level reasons from {@link buildPdfMergeEntriesFromSidecar} with the store's own slot check.
+ *
+ * - `unexpected_slots` — the file's manifest names a section the caller said this editor does not have. The offending ids are on {@link DbxPdfMergeEditorImportState.unexpectedSlotIds}.
+ */
+export type DbxPdfMergeEditorImportErrorReason = PdfMergeSidecarImportErrorReason | 'unexpected_slots';
+
+/**
+ * Result of a successful store-level import — the sidecar result plus what the caller's expectation did not cover.
+ */
+export interface DbxPdfMergeEditorImportResult extends PdfMergeSidecarImportResult {
+  /**
+   * Expected sections the imported file did not fill. Always empty when no `expectedSlotIds` was supplied. A non-empty list is informational, not a failure — the import still replaced the store's entries.
+   */
+  readonly missingSlotIds: readonly string[];
+}
+
+/**
+ * Lifecycle of the most recent {@link DbxPdfMergeEditorStore.importMergedPdf} call, exposed via {@link DbxPdfMergeEditorStore.importState$}.
+ */
+export interface DbxPdfMergeEditorImportState {
+  readonly status: 'importing' | 'imported' | 'failed';
+  /**
+   * Present with status `imported`.
+   */
+  readonly result?: Maybe<DbxPdfMergeEditorImportResult>;
+  /**
+   * Present with status `failed`.
+   */
+  readonly error?: Maybe<DbxPdfMergeEditorImportErrorReason>;
+  /**
+   * Sections the file named that the caller's `expectedSlotIds` did not allow. Present with error `unexpected_slots`; `null` entries represent unsectioned documents.
+   */
+  readonly unexpectedSlotIds?: readonly Maybe<string>[];
+}
+
+/**
+ * Input for {@link DbxPdfMergeEditorStore.importMergedPdf}.
+ */
+export interface DbxPdfMergeEditorImportMergedPdfInput {
+  /**
+   * Bytes of a merged PDF previously exported from the editor.
+   */
+  readonly source: Blob;
+  /**
+   * Sections the file is allowed to name. **Omit to skip the check entirely** — the default for a programmatic import.
+   *
+   * The check is opt-in here rather than derived from {@link DbxPdfMergeEditorStore.registeredSlotIds$} because a programmatic import routinely runs before any slot exists (a store mounted on an `<ng-container>` whose editor only opens later in a dialog), where the registry is legitimately empty. Entries land in the store regardless and slots pick them up on mount, so importing early is safe; it is the caller who knows whether the document is trusted. {@link DbxPdfMergeImportComponent} passes its own resolved list, preserving the picker's behavior.
+   */
+  readonly expectedSlotIds?: Maybe<readonly string[]>;
+  /**
+   * When `true`, a readable PDF with no manifest is imported as one unslotted entry rather than failing with `no_sidecar`. Defaults to `false`. See {@link BuildPdfMergeEntriesFromSidecarConfig.allowWithoutSidecar}.
+   */
+  readonly allowWithoutSidecar?: Maybe<boolean>;
+  /**
+   * File name for the entry built by the `allowWithoutSidecar` fallback when `source` is a bare {@link Blob}.
+   */
+  readonly fileName?: Maybe<string>;
+}
+
+/**
+ * Input for {@link DbxPdfMergeEditorStore.addFileToSlot}.
+ */
+export interface DbxPdfMergeEditorAddFileToSlotInput {
+  /**
+   * The document to add. A bare {@link Blob} is named via {@link fileName}.
+   */
+  readonly file: Blob | File;
+  /**
+   * Slot to attribute the entry to. Omit for an unslotted entry.
+   */
+  readonly slotId?: Maybe<string>;
+  /**
+   * Name for a bare {@link Blob}, or an override for a {@link File}'s own name.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * Image-compression override. Defaults to the store-level config set via {@link DbxPdfMergeEditorStore.setImageCompression}, matching what a slot uploader would apply to the same file.
+   */
+  readonly imageCompression?: Maybe<DbxImageCompressionConfig>;
+}
+
+/**
  * Input accepted by {@link DbxPdfMergeEditorStore.addFiles}: either a bare list of files (treated as unscoped, synchronously wrapped into entries) or `{ files, slotId }` to attribute the new entries to a slot. Callers that need client-side compression should construct entries via the async `buildPdfMergeEntry` and pass `{ entries }` instead.
  */
 export type DbxPdfMergeEditorAddFilesInput =
@@ -101,6 +183,7 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
    */
   private readonly _slotIdCounts = new Map<string, number>();
   private readonly _registeredSlotIds$ = new BehaviorSubject<readonly string[]>([]);
+  private readonly _importState$ = new BehaviorSubject<Maybe<DbxPdfMergeEditorImportState>>(undefined);
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -518,6 +601,96 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
     if (next.length !== current.length || next.some((slotId, i) => slotId !== current[i])) {
       this._registeredSlotIds$.next(next);
     }
+  }
+
+  // MARK: Import
+  /**
+   * Lifecycle of the most recent {@link importMergedPdf} call, or `undefined` before the first. Lets a consumer that triggered a programmatic import observe its outcome — the picker component is not the only entry point.
+   */
+  readonly importState$: Observable<Maybe<DbxPdfMergeEditorImportState>> = this._importState$.asObservable();
+
+  /**
+   * The most recent successful import, or `null` while none has succeeded.
+   */
+  readonly importResult$: Observable<Maybe<DbxPdfMergeEditorImportResult>> = this.importState$.pipe(
+    map((state) => (state?.status === 'imported' ? state.result : null)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Why the most recent import failed, or `null` when it did not.
+   */
+  readonly importError$: Observable<Maybe<DbxPdfMergeEditorImportErrorReason>> = this.importState$.pipe(
+    map((state) => (state?.status === 'failed' ? state.error : null)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while an import is in flight.
+   */
+  readonly isImporting$: Observable<boolean> = this.importState$.pipe(
+    map((state) => state?.status === 'importing'),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Imports a previously-exported merged PDF, replacing every entry currently in the store with the per-slot documents recorded in its manifest.
+   *
+   * This is the programmatic equivalent of what {@link DbxPdfMergeImportComponent} does with a picked file, and that component delegates here — so a stored document loaded by an app and a file chosen by a user go through one implementation with one set of error semantics. Progress and outcome are published on {@link importState$} as well as returned.
+   *
+   * @param input - The source blob plus the optional slot check and sidecar-less fallback.
+   * @returns The terminal state of this import.
+   */
+  async importMergedPdf(input: DbxPdfMergeEditorImportMergedPdfInput): Promise<DbxPdfMergeEditorImportState> {
+    const { source, expectedSlotIds, allowWithoutSidecar, fileName } = input;
+    const config: BuildPdfMergeEntriesFromSidecarConfig = { allowWithoutSidecar, fileName };
+
+    this._importState$.next({ status: 'importing' });
+
+    const outcome = await buildPdfMergeEntriesFromSidecar(source, config);
+    let state: DbxPdfMergeEditorImportState;
+
+    if ('error' in outcome) {
+      state = { status: 'failed', error: outcome.error };
+    } else {
+      // An unsectioned document counts as unexpected too: in a slots-only editor it would render
+      // nowhere, so rejecting it beats importing pages the user can never see again.
+      const unexpected = expectedSlotIds == null ? [] : outcome.slotIds.filter((slotId) => slotId == null || !expectedSlotIds.includes(slotId));
+
+      if (unexpected.length > 0) {
+        state = { status: 'failed', error: 'unexpected_slots', unexpectedSlotIds: unexpected };
+      } else {
+        const missingSlotIds = expectedSlotIds == null ? [] : expectedSlotIds.filter((slotId) => !outcome.slotIds.includes(slotId));
+
+        this.replaceEntries(outcome.entries);
+        state = { status: 'imported', result: { ...outcome, missingSlotIds } };
+      }
+    }
+
+    this._importState$.next(state);
+    return state;
+  }
+
+  /**
+   * Adds a single document to a slot, without any sidecar involvement — the programmatic equivalent of a user dropping one file onto a slot uploader. Existing entries are left alone.
+   *
+   * Unlike {@link importMergedPdf} this neither reads nor requires a manifest; it is the plain "put this file in that slot" primitive, for e.g. an admin appending one document to an existing set. The entry can be added before its slot mounts — {@link entriesForSlotId$} picks it up when the slot renders.
+   *
+   * @param input - The blob or file, its target slot, and an optional name for a bare blob.
+   * @returns The entry that was added, or `null` when the file is not a supported PDF/PNG/JPEG (in which case nothing was added).
+   */
+  async addFileToSlot(input: DbxPdfMergeEditorAddFileToSlotInput): Promise<Maybe<PdfMergeEntry>> {
+    const { file, slotId, fileName, imageCompression } = input;
+    const entry = await buildPdfMergeEntry(asPdfMergeFile(file, fileName), { slotId, imageCompression: imageCompression ?? this._imageCompression$.value });
+
+    if (entry != null) {
+      this.addFiles({ entries: [entry] });
+    }
+
+    return entry;
   }
 
   // MARK: Validator

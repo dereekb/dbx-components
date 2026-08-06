@@ -5,8 +5,8 @@ import { PDF_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
-import { buildPdfMergeEntriesFromSidecar, type PdfMergeSidecarImportErrorReason, type PdfMergeSidecarImportResult } from './pdf.merge.utility';
+import { DbxPdfMergeEditorStore, type DbxPdfMergeEditorImportResult, type DbxPdfMergeEditorImportState } from './pdf.merge.editor.store';
+import { type PdfMergeSidecarImportErrorReason } from './pdf.merge.utility';
 
 /**
  * Messages shown for each reason an import can fail.
@@ -104,7 +104,7 @@ export class DbxPdfMergeImportComponent {
    */
   readonly enforceExpectedSlots = input<boolean>(true);
 
-  readonly imported = output<PdfMergeSidecarImportResult>();
+  readonly imported = output<DbxPdfMergeEditorImportResult>();
   readonly importFailed = output<string>();
   /**
    * Emits the expected sections the imported file did not fill, when there are any. The import itself still succeeds — a missing section is a partial state the user can fill in.
@@ -112,7 +112,7 @@ export class DbxPdfMergeImportComponent {
   readonly missingSlots = output<readonly string[]>();
 
   private readonly _error = signal<Maybe<string>>(null);
-  private readonly _result = signal<Maybe<PdfMergeSidecarImportResult>>(null);
+  private readonly _result = signal<Maybe<DbxPdfMergeEditorImportResult>>(null);
   private readonly _missingSlotIds = signal<readonly string[]>([]);
 
   readonly errorSignal = this._error.asReadonly();
@@ -187,32 +187,39 @@ export class DbxPdfMergeImportComponent {
       this._result.set(null);
       this._missingSlotIds.set([]);
 
-      const outcome = await buildPdfMergeEntriesFromSidecar(file);
+      // Delegates to the store so the picker and a programmatic import share one implementation
+      // and one set of error semantics. The slot check is opt-in on the store, so the component's
+      // own resolved expectation is what preserves the picker's behavior. The returned state is
+      // used rather than `importState$` so these outputs only ever describe a picked file.
+      const state = await this.store.importMergedPdf({ source: file, expectedSlotIds: this.effectiveExpectedSlotIdsSignal() });
 
-      if ('error' in outcome) {
-        this.fail(DBX_PDF_MERGE_IMPORT_ERROR_MESSAGES[outcome.error]);
-      } else {
-        const expected = this.effectiveExpectedSlotIdsSignal();
-        // An unsectioned document counts as unexpected too: in a slots-only editor it would render
-        // nowhere, so rejecting it beats importing pages the user can never see again.
-        const unexpected = expected == null ? [] : outcome.slotIds.filter((slotId) => slotId == null || !expected.includes(slotId));
+      if (state.status === 'failed') {
+        this.fail(this.messageForFailure(state));
+      } else if (state.result != null) {
+        const { result } = state;
 
-        if (unexpected.length > 0) {
-          this.fail(`This PDF contains section(s) this editor does not have: ${unexpected.map((slotId) => slotId ?? 'unsectioned').join(', ')}.`);
-        } else {
-          const missing = expected == null ? [] : expected.filter((slotId) => !outcome.slotIds.includes(slotId));
+        this._result.set(result);
+        this._missingSlotIds.set(result.missingSlotIds);
+        this.imported.emit(result);
 
-          this.store.replaceEntries(outcome.entries);
-          this._result.set(outcome);
-          this._missingSlotIds.set(missing);
-          this.imported.emit(outcome);
-
-          if (missing.length > 0) {
-            this.missingSlots.emit(missing);
-          }
+        if (result.missingSlotIds.length > 0) {
+          this.missingSlots.emit(result.missingSlotIds);
         }
       }
     }
+  }
+
+  private messageForFailure(state: DbxPdfMergeEditorImportState): string {
+    const unexpected: readonly Maybe<string>[] = state.unexpectedSlotIds ?? [];
+    let message: string;
+
+    if (state.error === 'unexpected_slots') {
+      message = `This PDF contains section(s) this editor does not have: ${unexpected.map((slotId) => slotId ?? 'unsectioned').join(', ')}.`;
+    } else {
+      message = DBX_PDF_MERGE_IMPORT_ERROR_MESSAGES[state.error ?? 'unreadable'];
+    }
+
+    return message;
   }
 
   private fail(message: string): void {

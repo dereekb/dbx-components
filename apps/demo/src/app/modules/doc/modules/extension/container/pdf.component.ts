@@ -7,7 +7,7 @@ import {
   readPdfMergeSidecar,
   DbxPdfMergeImportComponent,
   type DbxPdfMergeImportConfig,
-  type PdfMergeSidecarImportResult,
+  type DbxPdfMergeEditorImportResult,
   DbxButtonComponent,
   DbxContentBorderDirective,
   DbxContentContainerDirective,
@@ -391,7 +391,7 @@ interface DocPdfMergeImportSummary {
   readonly sections: readonly { readonly slotId: Maybe<string>; readonly fileName: string }[];
   readonly missingTags: readonly string[];
   readonly untaggedPageCount: number;
-  readonly exportedAt: string;
+  readonly exportedAt: Maybe<string>;
 }
 
 @Component({
@@ -439,12 +439,12 @@ export class DocPdfMergeReimportExampleComponent {
   private readonly _summary = signal<Maybe<DocPdfMergeImportSummary>>(undefined);
   readonly importSummarySignal = this._summary.asReadonly();
 
-  onImported(result: PdfMergeSidecarImportResult): void {
+  onImported(result: DbxPdfMergeEditorImportResult): void {
     this._summary.set({
       sections: result.entries.map((entry) => ({ slotId: entry.slotId, fileName: entry.name })),
       missingTags: result.missingTags,
       untaggedPageCount: result.untaggedPageCount,
-      exportedAt: result.sidecar.createdAt
+      exportedAt: result.sidecar?.createdAt
     });
   }
 }

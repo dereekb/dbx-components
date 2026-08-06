@@ -32,6 +32,37 @@ export function formatPdfMergeEntrySize(size: FileSize): string {
   return result;
 }
 
+const DEFAULT_BLOB_FILE_NAMES: Readonly<Record<string, string>> = {
+  [PDF_MIME_TYPE]: 'document.pdf',
+  [PNG_MIME_TYPE]: 'image.png',
+  [JPEG_MIME_TYPE]: 'image.jpg'
+};
+
+const DEFAULT_BLOB_FILE_NAME = DEFAULT_BLOB_FILE_NAMES[PDF_MIME_TYPE];
+
+/**
+ * Normalizes a {@link Blob} into a {@link File} so it can become a {@link PdfMergeEntry}, which needs a name to display.
+ *
+ * A {@link File} passes through untouched unless an explicit `fileName` overrides it. A bare {@link Blob} is named from `fileName`, else from its MIME type (`document.pdf` / `image.png` / `image.jpg`), else `document.pdf` — the name only has to be plausible and correctly suffixed, since {@link classifyPdfMergeFile} falls back to the extension when a blob carries no type.
+ *
+ * @param input - Blob or File to normalize.
+ * @param fileName - Optional name, overriding a File's own name and naming a bare Blob.
+ * @returns A File carrying the resolved name.
+ */
+export function asPdfMergeFile(input: Blob | File, fileName?: Maybe<string>): File {
+  const mimeType = (input.type ?? '').toLowerCase();
+  let file: File;
+
+  if (input instanceof File && fileName == null) {
+    file = input;
+  } else {
+    const name = fileName ?? DEFAULT_BLOB_FILE_NAMES[mimeType] ?? DEFAULT_BLOB_FILE_NAME;
+    file = new File([input], name, { type: input.type || mimeTypeForFileExtension(slashPathDetails(name.toLowerCase()).typedFileExtension) || PDF_MIME_TYPE });
+  }
+
+  return file;
+}
+
 /**
  * Returns the {@link PdfMergeEntryKind} for a file based on its MIME type, with a small fallback to file-extension matching when the browser provided no MIME type.
  *
@@ -285,9 +316,13 @@ export interface PdfMergeSidecarImportResult {
    */
   readonly entries: readonly PdfMergeEntry[];
   /**
-   * The manifest that was read.
+   * The manifest that was read, or `null` when the file carried none and was imported through the {@link BuildPdfMergeEntriesFromSidecarConfig.allowWithoutSidecar} fallback. Check {@link fromSidecar} rather than testing this for null when the distinction matters.
    */
-  readonly sidecar: PdfMergeSidecar;
+  readonly sidecar: Maybe<PdfMergeSidecar>;
+  /**
+   * Whether the entries came from an embedded manifest (`true`) or from the whole-file fallback (`false`). Everything derived from a manifest — per-slot attribution, {@link missingTags}, {@link untaggedPageCount} — is meaningless when this is `false`.
+   */
+  readonly fromSidecar: boolean;
   /**
    * Slot ids present in the imported file, in manifest order. `null` represents the unslotted group.
    */
@@ -303,15 +338,31 @@ export interface PdfMergeSidecarImportResult {
 }
 
 /**
+ * Config for {@link buildPdfMergeEntriesFromSidecar}.
+ */
+export interface BuildPdfMergeEntriesFromSidecarConfig extends BuildPdfMergeEntryConfig {
+  /**
+   * When `true`, a readable PDF carrying no manifest is imported as a single unslotted entry instead of failing with `no_sidecar`. Defaults to `false`.
+   *
+   * Intended for documents stored before the manifest existed: loading one as a whole still lets the user page-edit it (rotate or drop a bad page) rather than being turned away. It cannot recover per-slot attribution — there is nothing recorded to attribute.
+   */
+  readonly allowWithoutSidecar?: Maybe<boolean>;
+  /**
+   * File name given to the entry built by the {@link allowWithoutSidecar} fallback when `input` is a bare {@link Blob}. Ignored when `input` is a {@link File} (its own name wins) or when a manifest is present.
+   */
+  readonly fileName?: Maybe<string>;
+}
+
+/**
  * Reconstructs editor entries from a PDF previously exported with an embedded manifest.
  *
  * Each document recorded in the manifest becomes one entry carrying its original slot id, so dropping the result into the store repopulates the same slots the file was built from. This is the re-import half of the sidecar: without it a completed document can only come back as a single opaque file.
  *
  * @param input - Bytes of a merged PDF, typically the file the user just chose.
- * @param config - Optional entry-building config (id factory override).
+ * @param config - Optional entry-building config (id factory override, and the sidecar-less fallback).
  * @returns The reconstructed entries and manifest, or a reason when the file cannot be imported.
  */
-export async function buildPdfMergeEntriesFromSidecar(input: Blob, config?: Maybe<BuildPdfMergeEntryConfig>): Promise<PdfMergeSidecarImportResult | { readonly error: PdfMergeSidecarImportErrorReason }> {
+export async function buildPdfMergeEntriesFromSidecar(input: Blob, config?: Maybe<BuildPdfMergeEntriesFromSidecarConfig>): Promise<PdfMergeSidecarImportResult | { readonly error: PdfMergeSidecarImportErrorReason }> {
   const split = await splitPdfMergeSidecarDocuments(input);
   let result: PdfMergeSidecarImportResult | { readonly error: PdfMergeSidecarImportErrorReason };
 
@@ -319,7 +370,18 @@ export async function buildPdfMergeEntriesFromSidecar(input: Blob, config?: Mayb
     // A readable PDF without a manifest and an unreadable one are distinguished so the UI can
     // explain the difference — "not exported from here" reads very differently from "corrupt".
     const readable = await isReadablePdf(input);
-    result = { error: readable ? 'no_sidecar' : 'unreadable' };
+
+    if (!readable) {
+      result = { error: 'unreadable' };
+    } else if (config?.allowWithoutSidecar) {
+      // No manifest to attribute pages with, so the whole file becomes one unslotted entry. An
+      // `unreadable` file never reaches here — the fallback widens which readable PDFs are
+      // accepted, it does not accept broken ones.
+      const entry = buildPdfMergeEntrySync(asPdfMergeFile(input, config?.fileName), { ...config, slotId: null });
+      result = entry == null ? { error: 'unreadable' } : { entries: [entry], sidecar: null, fromSidecar: false, slotIds: [null], missingTags: [], untaggedPageCount: 0 };
+    } else {
+      result = { error: 'no_sidecar' };
+    }
   } else if (split.documents.length === 0) {
     result = { error: 'no_documents' };
   } else {
@@ -328,6 +390,7 @@ export async function buildPdfMergeEntriesFromSidecar(input: Blob, config?: Mayb
     result = {
       entries,
       sidecar: split.sidecar,
+      fromSidecar: true,
       slotIds: split.documents.map((document) => document.slotId),
       missingTags: split.missingTags,
       untaggedPageCount: split.untaggedPageCount
