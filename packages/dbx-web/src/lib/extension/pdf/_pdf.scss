@@ -263,6 +263,40 @@
     margin-top: var(--dbx-padding-2);
   }
 
+  // Import
+  .dbx-pdf-merge-import-label {
+    margin-bottom: 4px;
+    font: var(--mat-sys-body-medium);
+  }
+
+  .dbx-pdf-merge-import-error,
+  .dbx-pdf-merge-import-success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin-top: var(--dbx-padding-2);
+    border-radius: var(--mat-sys-corner-small);
+  }
+
+  .dbx-pdf-merge-import-error {
+    background-color: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+
+  .dbx-pdf-merge-import-success {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+
+  .dbx-pdf-merge-import-icon.mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+
   // CDK animations
   .cdk-drop-list-dragging .dbx-pdf-merge-entry-row:not(.cdk-drag-placeholder),
   .cdk-drop-list-dragging .dbx-pdf-merge-page-row:not(.cdk-drag-placeholder) {

@@ -11,6 +11,7 @@ export * from './pdf.merge.list.component';
 export * from './pdf.merge.entry.component';
 export * from './pdf.merge.page.component';
 export * from './pdf.merge.page.list.component';
+export * from './pdf.merge.import.component';
 export * from './pdf.merge.upload.dialog.component';
 export * from './pdf.merge.upload.button.directive';
 export * from './pdf.merge.upload.action.directive';

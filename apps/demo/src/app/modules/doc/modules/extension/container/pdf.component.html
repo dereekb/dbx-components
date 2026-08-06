@@ -93,5 +93,22 @@
       </p>
       <doc-pdf-merge-page-editing-toggle-example></doc-pdf-merge-page-editing-toggle-example>
     </doc-feature-example>
+    <doc-feature-example header="Re-importing a completed document" hint="Choose a PDF exported from the page-editing example above and the editor rebuilds its sections from the embedded manifest.">
+      <p>
+        This is what the manifest is for. Download the merged PDF from the
+        <em>Page editing with an embedded manifest</em>
+        example above, then choose that single file here: the editor reads the embedded manifest, splits the document back into the pages belonging to each section, and refills
+        <em>Driver’s License</em>
+        and
+        <em>Certification</em>
+        — original file names included. From there a single section's pages can be replaced or removed without rebuilding the whole document.
+      </p>
+      <p>
+        Membership is resolved from the per-page tags, so a file that was reordered after export still splits correctly. A PDF with no manifest cannot be attributed to sections and is rejected with an explanation, as is one naming a section this editor does not have (
+        <code>expectedSlotIds</code>
+        ).
+      </p>
+      <doc-pdf-merge-reimport-example></doc-pdf-merge-reimport-example>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

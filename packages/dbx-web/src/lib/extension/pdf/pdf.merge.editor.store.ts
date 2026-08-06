@@ -602,6 +602,13 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
 
   readonly clearAll = this.updater((state) => ({ ...state, rawEntries: [], pageOverrides: {}, pageOrder: {} }));
 
+  /**
+   * Replaces the entire entry list, discarding any page edits.
+   *
+   * Used by the sidecar import path, which reconstructs a fresh set of slot-tagged entries from a previously-exported file. Done as a single state change so subscribers never observe an intermediate empty list.
+   */
+  readonly replaceEntries = this.updater((state, entries: readonly PdfMergeEntry[]) => ({ ...state, rawEntries: [...entries], pageOverrides: {}, pageOrder: {} }));
+
   // MARK: Page updaters
   /**
    * Reorders a page inside its own group. Groups never exchange pages — the page list renders one CDK drop list per group, so a cross-group drag is impossible to express.

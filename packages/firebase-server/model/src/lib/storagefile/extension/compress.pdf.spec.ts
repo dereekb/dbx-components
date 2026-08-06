@@ -3,7 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import sharp from 'sharp';
-import { PDFDocument, PDFHexString, PDFName, PDFRawStream, type PDFObject } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFHexString, PDFName, PDFRawStream, PDFString, type PDFObject } from '@cantoo/pdf-lib';
 import { bufferHasValidPdfMarkings } from '@dereekb/util';
 import { compressPdfImagesToTargetSize } from './compress.pdf';
 
@@ -257,6 +257,73 @@ async function meanAbsPixelDiff(jpegBytes: Buffer, expectedRaw: Buffer, channels
 
   return total / expectedRaw.length;
 }
+
+/**
+ * Mirrors the constants `@dereekb/dbx-web`'s PDF merge editor writes. Duplicated rather than imported because that is a browser package and this one is server-side; the values must stay in step with `pdf.merge.sidecar.ts`.
+ */
+const DBX_PDF_MERGE_SIDECAR_FILE_NAME = 'dbx-pdf-merge.json';
+const DBX_PDF_MERGE_PAGE_TAG_KEY = PDFName.of('DbxPageTag');
+
+async function makePdfWithSidecarAndEmbeddedJpeg(jpegBytes: Buffer, manifest: object, pageTag: string): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const image = await pdfDoc.embedJpg(jpegBytes);
+  const page = pdfDoc.addPage([600, 800]);
+
+  page.drawImage(image, { x: 50, y: 100, width: 500, height: 600 });
+  page.node.set(DBX_PDF_MERGE_PAGE_TAG_KEY, PDFString.of(pageTag));
+
+  await pdfDoc.attach(new Uint8Array(Buffer.from(JSON.stringify(manifest))), DBX_PDF_MERGE_SIDECAR_FILE_NAME, { mimeType: 'application/json' });
+
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
+}
+
+describe('compressPdfImagesToTargetSize() sidecar preservation', () => {
+  it('preserves the embedded merge manifest and page tags through image recompression', async () => {
+    // The merge editor records which pages came from which slot as an embedded JSON manifest plus a
+    // per-page dictionary tag. Compression rewrites image XObject streams and re-saves the whole
+    // document, so this guards against a future change there quietly breaking re-import.
+    const jpeg = await makeNoiseJpeg(3000, 3000, 95);
+    const manifest = {
+      version: 1,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      documents: [{ slotId: 'license', pageTags: ['license-0'] }],
+      pages: [{ tag: 'license-0', slotId: 'license', sourceName: 'license.pdf', sourceIndex: 0, rotation: 0, outputIndex: 0 }]
+    };
+    const pdfBytes = await makePdfWithSidecarAndEmbeddedJpeg(jpeg, manifest, 'license-0');
+
+    const result = await compressPdfImagesToTargetSize(pdfBytes, {
+      targetSizeBytes: 1 * 1024 * 1024,
+      imageMaxDimension: 1024,
+      imageQuality: 70
+    });
+
+    // Confirm the re-save path actually ran, so the assertions below inspect the rewritten bytes
+    // rather than the untouched original.
+    expect(result.imagesCompressed).toBe(1);
+    expect(result.compressedSizeBytes).toBeLessThan(result.originalSizeBytes);
+
+    const output = await PDFDocument.load(result.buffer);
+    const tag = output.getPages()[0].node.get(DBX_PDF_MERGE_PAGE_TAG_KEY);
+    const attachment = output.getAttachments().find((x) => x.name === DBX_PDF_MERGE_SIDECAR_FILE_NAME);
+
+    expect(tag instanceof PDFString ? tag.decodeText() : null).toBe('license-0');
+    expect(attachment).toBeDefined();
+    expect(JSON.parse(Buffer.from(attachment?.data as Uint8Array).toString('utf8'))).toEqual(manifest);
+  });
+
+  it('does not treat the embedded manifest stream as a compressible image', async () => {
+    const jpeg = await makeNoiseJpeg(3000, 3000, 95);
+    const manifest = { version: 1, documents: [], pages: [] };
+    const pdfBytes = await makePdfWithSidecarAndEmbeddedJpeg(jpeg, manifest, 'license-0');
+
+    const result = await compressPdfImagesToTargetSize(pdfBytes, { targetSizeBytes: 1 * 1024 * 1024 });
+
+    // Only the JPEG counts as an image stream — the attachment is a raw stream with no /Subtype /Image.
+    expect(result.imageStreamCount).toBe(1);
+    expect(result.imagesSkipped).toBe(0);
+  });
+});
 
 describe('compressPdfImagesToTargetSize()', () => {
   it('compresses a PDF containing an oversized embedded JPEG', async () => {

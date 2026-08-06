@@ -2,8 +2,12 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { JsonPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { type Maybe } from '@dereekb/util';
 import {
   readPdfMergeSidecar,
+  DbxPdfMergeImportComponent,
+  type DbxPdfMergeImportConfig,
+  type PdfMergeSidecarImportResult,
   DbxButtonComponent,
   DbxContentBorderDirective,
   DbxContentContainerDirective,
@@ -383,10 +387,89 @@ export class DocPdfMergeEditorPageEditingToggleExampleComponent {
   readonly pageEditingSignal = signal<boolean>(true);
 }
 
+interface DocPdfMergeImportSummary {
+  readonly sections: readonly { readonly slotId: Maybe<string>; readonly fileName: string }[];
+  readonly missingTags: readonly string[];
+  readonly untaggedPageCount: number;
+  readonly exportedAt: string;
+}
+
+@Component({
+  selector: 'doc-pdf-merge-reimport-example',
+  template: `
+    <dbx-content-border>
+      <dbx-pdf-merge-import [expectedSlotIds]="expectedSlotIds" [config]="importConfig" (imported)="onImported($event)"></dbx-pdf-merge-import>
+      <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false" [showPreviewButton]="true" [showDownloadButton]="true" [pageEditing]="true" [sidecar]="true">
+        <div dbxPdfMergeEditorFileUploadValidator>
+          <dbx-pdf-merge-editor-file-upload slotId="license" [config]="licenseConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'no_file'">radio_button_unchecked</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+          <dbx-pdf-merge-editor-file-upload slotId="cert" [config]="certConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'no_file'">radio_button_unchecked</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+        </div>
+      </dbx-pdf-merge-editor>
+    </dbx-content-border>
+    @if (importSummarySignal(); as summary) {
+      <p class="dbx-hint">Reconstructed from the imported file's manifest:</p>
+      <dbx-content-pit>
+        <pre class="dbx-mb0">{{ summary | json }}</pre>
+      </dbx-content-pit>
+    }
+  `,
+  standalone: true,
+  imports: [JsonPipe, MatIconModule, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorComponent, DbxPdfMergeImportComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
+  providers: [DbxPdfMergeEditorStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeReimportExampleComponent {
+  // Must match the slots declared below — the import rejects a file naming any other section.
+  readonly expectedSlotIds: readonly string[] = ['license', 'cert'];
+
+  readonly importConfig: DbxPdfMergeImportConfig = {
+    label: 'Re-import a completed document',
+    text: 'Choose exported PDF',
+    hint: 'Pick the merged PDF you downloaded from the example above'
+  };
+
+  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'] };
+  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], required: false };
+
+  private readonly _summary = signal<Maybe<DocPdfMergeImportSummary>>(undefined);
+  readonly importSummarySignal = this._summary.asReadonly();
+
+  onImported(result: PdfMergeSidecarImportResult): void {
+    this._summary.set({
+      sections: result.entries.map((entry) => ({ slotId: entry.slotId, fileName: entry.name })),
+      missingTags: result.missingTags,
+      untaggedPageCount: result.untaggedPageCount,
+      exportedAt: result.sidecar.createdAt
+    });
+  }
+}
+
 @Component({
   templateUrl: './pdf.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent, DocPdfMergeUploadButtonDefaultExampleComponent, DocPdfMergeUploadButtonCustomExampleComponent, DocPdfMergeEditorPageEditingExampleComponent, DocPdfMergeEditorPageEditingToggleExampleComponent],
+  imports: [
+    DbxContentContainerDirective,
+    DbxContentLayoutModule,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocPdfMergeEditorDefaultExampleComponent,
+    DocPdfMergeEditorSlotsExampleComponent,
+    DocPdfMergeEditorMaxFilesExampleComponent,
+    DocPdfMergeEditorConfigExampleComponent,
+    DocPdfMergeUploadButtonDefaultExampleComponent,
+    DocPdfMergeUploadButtonCustomExampleComponent,
+    DocPdfMergeEditorPageEditingExampleComponent,
+    DocPdfMergeEditorPageEditingToggleExampleComponent,
+    DocPdfMergeReimportExampleComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionPdfComponent {}

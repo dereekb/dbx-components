@@ -1,7 +1,7 @@
 import { degrees, PDFDocument } from '@cantoo/pdf-lib';
 import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, makeValuesGroupMap, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type FileSize, type Maybe, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
 import { makePdfMergePageId, PDF_MERGE_RESULT_MIME_TYPE, pdfMergePageGroupKeyForSlotId, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryOriginal, type PdfMergeEntryValidationResult, type PdfMergeEntryView, type PdfMergePageMeta, type PdfMergePageOverride, type PdfMergePageView } from './pdf.merge';
-import { attachPdfMergeSidecar, makePdfMergeSidecar, makePdfMergeSidecarPageTag, writePdfMergePageTag, type PdfMergeSidecarPage } from './pdf.merge.sidecar';
+import { attachPdfMergeSidecar, makePdfMergeSidecar, makePdfMergeSidecarPageTag, splitPdfMergeSidecarDocuments, writePdfMergePageTag, type PdfMergeSidecar, type PdfMergeSidecarPage } from './pdf.merge.sidecar';
 import { compressImageFile, type CompressImageDimensions, type DbxImageCompressionConfig, type ImageCompressionStatus } from '../image';
 
 const FULL_ROTATION_DEGREES = 360;
@@ -265,6 +265,89 @@ export async function readPdfMergeEntryPageMetas(entry: PdfMergeEntry): Promise<
   }
 
   return metas;
+}
+
+/**
+ * Why a call to {@link buildPdfMergeEntriesFromSidecar} could not produce entries.
+ *
+ * - `unreadable` — the bytes are not a PDF this library can open (corrupt, or encrypted).
+ * - `no_sidecar` — a readable PDF that carries no manifest, so there is nothing to attribute its pages to. This is the expected outcome for any PDF that did not come out of a merge with `sidecar: true`.
+ * - `no_documents` — a manifest is present but resolved to no pages at all.
+ */
+export type PdfMergeSidecarImportErrorReason = 'unreadable' | 'no_sidecar' | 'no_documents';
+
+/**
+ * Outcome of importing a previously-exported merged PDF.
+ */
+export interface PdfMergeSidecarImportResult {
+  /**
+   * Entries reconstructed from the file, one per document, each tagged with the slot recorded in the manifest.
+   */
+  readonly entries: readonly PdfMergeEntry[];
+  /**
+   * The manifest that was read.
+   */
+  readonly sidecar: PdfMergeSidecar;
+  /**
+   * Slot ids present in the imported file, in manifest order. `null` represents the unslotted group.
+   */
+  readonly slotIds: readonly Maybe<string>[];
+  /**
+   * Manifest tags that no longer resolve to a page — pages removed from the file after it was exported.
+   */
+  readonly missingTags: readonly string[];
+  /**
+   * Pages in the file carrying no tag, i.e. added outside the editor after export.
+   */
+  readonly untaggedPageCount: number;
+}
+
+/**
+ * Reconstructs editor entries from a PDF previously exported with an embedded manifest.
+ *
+ * Each document recorded in the manifest becomes one entry carrying its original slot id, so dropping the result into the store repopulates the same slots the file was built from. This is the re-import half of the sidecar: without it a completed document can only come back as a single opaque file.
+ *
+ * @param input - Bytes of a merged PDF, typically the file the user just chose.
+ * @param config - Optional entry-building config (id factory override).
+ * @returns The reconstructed entries and manifest, or a reason when the file cannot be imported.
+ */
+export async function buildPdfMergeEntriesFromSidecar(input: Blob, config?: Maybe<BuildPdfMergeEntryConfig>): Promise<PdfMergeSidecarImportResult | { readonly error: PdfMergeSidecarImportErrorReason }> {
+  const split = await splitPdfMergeSidecarDocuments(input);
+  let result: PdfMergeSidecarImportResult | { readonly error: PdfMergeSidecarImportErrorReason };
+
+  if (split == null) {
+    // A readable PDF without a manifest and an unreadable one are distinguished so the UI can
+    // explain the difference — "not exported from here" reads very differently from "corrupt".
+    const readable = await isReadablePdf(input);
+    result = { error: readable ? 'no_sidecar' : 'unreadable' };
+  } else if (split.documents.length === 0) {
+    result = { error: 'no_documents' };
+  } else {
+    const entries = split.documents.map((document) => buildPdfMergeEntrySync(document.file, { ...config, slotId: document.slotId })).filter((entry): entry is PdfMergeEntry => entry != null);
+
+    result = {
+      entries,
+      sidecar: split.sidecar,
+      slotIds: split.documents.map((document) => document.slotId),
+      missingTags: split.missingTags,
+      untaggedPageCount: split.untaggedPageCount
+    };
+  }
+
+  return result;
+}
+
+async function isReadablePdf(input: Blob): Promise<boolean> {
+  let readable: boolean;
+
+  try {
+    await PDFDocument.load(await input.arrayBuffer());
+    readable = true;
+  } catch {
+    readable = false;
+  }
+
+  return readable;
 }
 
 /**

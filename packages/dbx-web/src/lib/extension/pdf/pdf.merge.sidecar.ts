@@ -1,5 +1,5 @@
 import { PDFDocument, PDFHexString, PDFName, PDFString, type PDFPage } from '@cantoo/pdf-lib';
-import { JSON_MIME_TYPE, type ISO8601DateString, type Maybe } from '@dereekb/util';
+import { JSON_MIME_TYPE, PDF_MIME_TYPE, type ISO8601DateString, type Maybe } from '@dereekb/util';
 
 /**
  * Name of the JSON manifest attached to a merged PDF that records which pages came from which slot.
@@ -249,6 +249,24 @@ export async function readPdfMergeSidecar(input: PdfMergeSidecarReadInput): Prom
   try {
     const bytes = await bytesForSidecarReadInput(input);
     const document = await PDFDocument.load(bytes);
+    result = resolvePdfMergeSidecar(document);
+  } catch {
+    result = null;
+  }
+
+  return result;
+}
+
+/**
+ * Resolves the manifest of an already-loaded document. Split out from {@link readPdfMergeSidecar} so {@link splitPdfMergeSidecarDocuments} can reuse the resolution without parsing the same bytes twice.
+ *
+ * @param document - Loaded merged document.
+ * @returns The resolved manifest, or `null` when the document carries none.
+ */
+function resolvePdfMergeSidecar(document: PDFDocument): Maybe<PdfMergeSidecarReadResult> {
+  let result: Maybe<PdfMergeSidecarReadResult>;
+
+  {
     const attachment = document.getAttachments().find((x) => x.name === PDF_MERGE_SIDECAR_FILE_NAME);
     const sidecar = attachment == null ? null : parseSidecarBytes(attachment.data);
 
@@ -294,6 +312,77 @@ export async function readPdfMergeSidecar(input: PdfMergeSidecarReadInput): Prom
       });
 
       result = { sidecar, documents, missingTags, untaggedPageCount };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * One logical document reconstructed out of a merged PDF as a standalone file.
+ */
+export interface PdfMergeSidecarDocumentFile {
+  /**
+   * Slot the document belongs to, or `null` for the unslotted group.
+   */
+  readonly slotId: Maybe<string>;
+  /**
+   * The document's pages extracted into their own PDF, in manifest order. Named after the source file recorded in the manifest so the original file name is restored.
+   */
+  readonly file: File;
+  readonly pageCount: number;
+}
+
+/**
+ * Result of splitting a merged PDF back into its constituent documents.
+ */
+export interface SplitPdfMergeSidecarResult {
+  readonly sidecar: PdfMergeSidecar;
+  readonly documents: readonly PdfMergeSidecarDocumentFile[];
+  readonly missingTags: readonly string[];
+  readonly untaggedPageCount: number;
+}
+
+/**
+ * Splits a previously-merged PDF back into one file per document, using the embedded manifest to decide which pages belong to which slot.
+ *
+ * This is the inverse of a merge with `sidecar: true`, and is what lets a completed document be re-imported into the editor with its slots repopulated instead of arriving as one opaque file. Page order and any rotation baked in at merge time are preserved, and each document's pages are resolved by tag so a document that was reordered after export still splits correctly.
+ *
+ * @param input - Bytes of a merged PDF.
+ * @returns One file per document plus the manifest, or `null` when the input carries no manifest, is unreadable, or is encrypted.
+ */
+export async function splitPdfMergeSidecarDocuments(input: PdfMergeSidecarReadInput): Promise<Maybe<SplitPdfMergeSidecarResult>> {
+  let result: Maybe<SplitPdfMergeSidecarResult>;
+
+  try {
+    const bytes = await bytesForSidecarReadInput(input);
+    const source = await PDFDocument.load(bytes);
+    const read = resolvePdfMergeSidecar(source);
+
+    if (read == null) {
+      result = null;
+    } else {
+      const documents: PdfMergeSidecarDocumentFile[] = [];
+
+      for (const document of read.documents) {
+        if (document.pages.length > 0) {
+          const target = await PDFDocument.create();
+          const copied = await target.copyPages(
+            source,
+            document.pages.map((page) => page.pageIndex)
+          );
+
+          copied.forEach((page) => target.addPage(page));
+
+          const outputBytes = await target.save();
+          const name = document.pages[0].sourceName || `${document.slotId ?? 'document'}.pdf`;
+          const file = new File([outputBytes as BlobPart], name, { type: PDF_MIME_TYPE });
+
+          documents.push({ slotId: document.slotId, file, pageCount: document.pages.length });
+        }
+      }
+
+      result = { sidecar: read.sidecar, documents, missingTags: read.missingTags, untaggedPageCount: read.untaggedPageCount };
     }
   } catch {
     result = null;

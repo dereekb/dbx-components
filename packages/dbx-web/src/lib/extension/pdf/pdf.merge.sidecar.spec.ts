@@ -1,8 +1,8 @@
 import { PDFDocument, degrees, type Rotation } from '@cantoo/pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { makePdfMergePageId, pdfMergePageGroupKeyForSlotId, type PdfMergeEntry, type PdfMergePageRotation, type PdfMergePageView } from './pdf.merge';
-import { mergePdfMergeEntries } from './pdf.merge.utility';
-import { PDF_MERGE_SIDECAR_FILE_NAME, makePdfMergeSidecarPageTag, readPdfMergePageTag, readPdfMergeSidecar } from './pdf.merge.sidecar';
+import { buildPdfMergeEntriesFromSidecar, mergePdfMergeEntries, type PdfMergeSidecarImportResult } from './pdf.merge.utility';
+import { PDF_MERGE_SIDECAR_FILE_NAME, makePdfMergeSidecarPageTag, readPdfMergePageTag, readPdfMergeSidecar, splitPdfMergeSidecarDocuments } from './pdf.merge.sidecar';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -146,6 +146,101 @@ describe('readPdfMergeSidecar()', () => {
     const result = await readPdfMergeSidecar(blob);
 
     expect(result?.sidecar.pages[0].rotation).toBe(90);
+  });
+});
+
+describe('splitPdfMergeSidecarDocuments()', () => {
+  it('splits a merged file back into one file per slot', async () => {
+    const license = readyPdfEntry({ id: 'a', slotId: 'license', file: await makeRealPdfFile('license.pdf', 2) });
+    const cert = readyPdfEntry({ id: 'b', slotId: 'cert', file: await makeRealPdfFile('cert.pdf', 1) });
+    const blob = await mergePdfMergeEntries([license, cert], { sidecar: true });
+
+    const split = await splitPdfMergeSidecarDocuments(blob);
+
+    expect(split?.documents.map((x) => x.slotId)).toEqual(['license', 'cert']);
+    expect(split?.documents.map((x) => x.pageCount)).toEqual([2, 1]);
+    // The original file names are restored from the manifest.
+    expect(split?.documents.map((x) => x.file.name)).toEqual(['license.pdf', 'cert.pdf']);
+  });
+
+  it('returns null for a PDF with no manifest', async () => {
+    const entry = readyPdfEntry({ id: 'a', file: await makeRealPdfFile('plain.pdf', 2) });
+
+    expect(await splitPdfMergeSidecarDocuments(await mergePdfMergeEntries([entry]))).toBeNull();
+  });
+
+  it('preserves rotation that was applied before export', async () => {
+    const entry = readyPdfEntry({ id: 'a', slotId: 'scan', file: await makeRealPdfFile('scan.pdf', 2) });
+    const pages: PdfMergePageView[] = [viewForEntryPage(entry, 0, { rotation: 90 }), viewForEntryPage(entry, 1)];
+    const blob = await mergePdfMergeEntries([entry], { pages, sidecar: true });
+
+    const split = await splitPdfMergeSidecarDocuments(blob);
+    const restored = await PDFDocument.load(await split!.documents[0].file.arrayBuffer());
+
+    expect(restored.getPages().map((page) => page.getRotation().angle)).toEqual([90, 0]);
+  });
+
+  it('splits correctly even after the exported file has been reordered', async () => {
+    const license = readyPdfEntry({ id: 'a', slotId: 'license', file: await makeRealPdfFile('license.pdf', 2) });
+    const cert = readyPdfEntry({ id: 'b', slotId: 'cert', file: await makeRealPdfFile('cert.pdf', 1) });
+    const blob = await mergePdfMergeEntries([license, cert], { sidecar: true });
+
+    // Someone moves the cert page to the front outside the editor.
+    const document = await PDFDocument.load(await blob.arrayBuffer());
+    const [moved] = await document.copyPages(document, [2]);
+    document.removePage(2);
+    document.insertPage(0, moved);
+
+    const split = await splitPdfMergeSidecarDocuments(await document.save());
+
+    // Membership still resolves by tag, so each slot gets its own pages back regardless of position.
+    expect(split?.documents.map((x) => x.slotId)).toEqual(['license', 'cert']);
+    expect(split?.documents.map((x) => x.pageCount)).toEqual([2, 1]);
+  });
+});
+
+describe('buildPdfMergeEntriesFromSidecar()', () => {
+  it('round-trips an exported file back into slot-tagged entries', async () => {
+    const license = readyPdfEntry({ id: 'a', slotId: 'license', file: await makeRealPdfFile('license.pdf', 3) });
+    const cert = readyPdfEntry({ id: 'b', slotId: 'cert', file: await makeRealPdfFile('cert.pdf', 1) });
+    const blob = await mergePdfMergeEntries([license, cert], { sidecar: true });
+
+    const outcome = await buildPdfMergeEntriesFromSidecar(blob);
+
+    expect('error' in outcome).toBe(false);
+    const result = outcome as PdfMergeSidecarImportResult;
+    expect(result.entries.map((entry) => entry.slotId)).toEqual(['license', 'cert']);
+    expect(result.entries.map((entry) => entry.name)).toEqual(['license.pdf', 'cert.pdf']);
+    expect(result.slotIds).toEqual(['license', 'cert']);
+  });
+
+  it('survives a full export → import → re-export cycle with membership intact', async () => {
+    const license = readyPdfEntry({ id: 'a', slotId: 'license', file: await makeRealPdfFile('license.pdf', 2) });
+    const cert = readyPdfEntry({ id: 'b', slotId: 'cert', file: await makeRealPdfFile('cert.pdf', 1) });
+    const exported = await mergePdfMergeEntries([license, cert], { sidecar: true });
+
+    const outcome = (await buildPdfMergeEntriesFromSidecar(exported)) as PdfMergeSidecarImportResult;
+    const reExported = await mergePdfMergeEntries(
+      outcome.entries.map((entry) => ({ ...entry, status: 'ready' as const })),
+      { sidecar: true }
+    );
+
+    const result = await readPdfMergeSidecar(reExported);
+
+    expect(result?.documents.map((x) => x.slotId)).toEqual(['license', 'cert']);
+    expect(result?.documents[0].pages.map((x) => x.pageIndex)).toEqual([0, 1]);
+    expect(result?.documents[1].pages.map((x) => x.pageIndex)).toEqual([2]);
+  });
+
+  it('reports no_sidecar for a readable PDF that was not exported from the editor', async () => {
+    const entry = readyPdfEntry({ id: 'a', file: await makeRealPdfFile('plain.pdf', 1) });
+    const blob = await mergePdfMergeEntries([entry]);
+
+    expect(await buildPdfMergeEntriesFromSidecar(blob)).toEqual({ error: 'no_sidecar' });
+  });
+
+  it('reports unreadable for bytes that are not a PDF', async () => {
+    expect(await buildPdfMergeEntriesFromSidecar(new Blob(['not a pdf']))).toEqual({ error: 'unreadable' });
   });
 });
 
