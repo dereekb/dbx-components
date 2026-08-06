@@ -130,6 +130,11 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   private readonly _injectedConfig = inject(DBX_PDF_MERGE_EDITOR_CONFIG, { optional: true });
   private readonly _preserveEntriesOnDestroy = inject(DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, { optional: true }) ?? false;
 
+  /**
+   * The slot id this component registered with the store, captured at registration time so destroy deregisters the same key. `null` before {@link ngOnInit} and after teardown.
+   */
+  private _registeredSlotId: Maybe<string> = null;
+
   readonly slotId = input.required<string>();
   readonly config = input<Maybe<DbxPdfMergeEditorFileUploadConfig>>();
 
@@ -257,10 +262,28 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   readonly isValidSignal = toSignal(this.isValid$, { initialValue: false });
 
   ngOnInit(): void {
+    // Two registrations, deliberately: the store learns this slot's ID (so consumers like
+    // <dbx-pdf-merge-import> can enumerate the sections this editor declares), while the optional
+    // validator directive tracks the component itself to aggregate `isValid$`. They are separate
+    // because the store is always present while the validator is not, and because the store's
+    // `setValidator` seam exists precisely so it never has to hold slot component references.
+    this._registeredSlotId = this.slotId();
+    this.store.registerSlotId(this._registeredSlotId);
     this._validator?.registerSlot(this);
   }
 
   ngOnDestroy(): void {
+    // Unconditional, and deliberately OUTSIDE the `_preserveEntriesOnDestroy` check below: that
+    // token governs whether the slot's ENTRIES survive, not whether the slot is mounted. The
+    // upload dialog sets it to `true` and is torn down on every close, so gating this on it would
+    // leave the store permanently claiming a section that is no longer on screen. The captured id
+    // (rather than a fresh `slotId()` read) guarantees this decrements the same key `ngOnInit`
+    // incremented, and clearing it keeps a repeat destroy from evicting a still-mounted duplicate.
+    if (this._registeredSlotId != null) {
+      this.store.unregisterSlotId(this._registeredSlotId);
+      this._registeredSlotId = null;
+    }
+
     this._validator?.unregisterSlot(this);
 
     // Default behavior: removing a slot from a template (e.g. via `@if`) also drops the slot's

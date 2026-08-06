@@ -103,10 +103,17 @@
         <em>Certification</em>
         — original file names included. From there a single section's pages can be replaced or removed without rebuilding the whole document.
       </p>
+      <p>Membership is resolved from the per-page tags, so a file that was reordered after export still splits correctly. A PDF with no manifest cannot be attributed to sections and is rejected with an explanation, as is one naming a section this editor does not have.</p>
       <p>
-        Membership is resolved from the per-page tags, so a file that was reordered after export still splits correctly. A PDF with no manifest cannot be attributed to sections and is rejected with an explanation, as is one naming a section this editor does not have (
+        The import above is bound to nothing at all. Each
+        <code>dbx-pdf-merge-editor-file-upload</code>
+        registers its
+        <code>slotId</code>
+        with the shared store, so
+        <code>dbx-pdf-merge-import</code>
+        reads the sections it accepts straight off the slots beside it — bind
         <code>expectedSlotIds</code>
-        ).
+        only to override that. Since the component exists to split a document back into slots, it renders nothing at all when no slots are declared. A file that fills only some of the expected sections still imports, with a warning naming the ones it left empty.
       </p>
       <doc-pdf-merge-reimport-example></doc-pdf-merge-reimport-example>
     </doc-feature-example>

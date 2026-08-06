@@ -270,7 +270,8 @@
   }
 
   .dbx-pdf-merge-import-error,
-  .dbx-pdf-merge-import-success {
+  .dbx-pdf-merge-import-success,
+  .dbx-pdf-merge-import-warning {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -287,6 +288,11 @@
   .dbx-pdf-merge-import-success {
     background-color: var(--mat-sys-secondary-container);
     color: var(--mat-sys-on-secondary-container);
+  }
+
+  .dbx-pdf-merge-import-warning {
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
   }
 
   .dbx-pdf-merge-import-icon.mat-icon {

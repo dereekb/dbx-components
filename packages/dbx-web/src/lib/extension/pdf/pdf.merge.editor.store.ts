@@ -96,6 +96,11 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
    * Per-entry page metadata, parsed at most once per entry. Keyed by entry id; a resolved `null` means the entry could not be expanded. Only populated while page editing is enabled.
    */
   private readonly _pageMetaCache = new Map<string, Promise<Maybe<PdfMergePageMeta[]>>>();
+  /**
+   * Mount count per registered slot id. See {@link registerSlotId} for why this is a count rather than a set.
+   */
+  private readonly _slotIdCounts = new Map<string, number>();
+  private readonly _registeredSlotIds$ = new BehaviorSubject<readonly string[]>([]);
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -456,6 +461,63 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
       map((entries) => entries.filter((entry) => entry.slotId === slotId)),
       shareReplay(1)
     );
+  }
+
+  // MARK: Slot registry
+  /**
+   * Slot ids currently mounted against this store, i.e. the sections this editor declares.
+   *
+   * This is what makes `<dbx-pdf-merge-import>` a zero-configuration drop-in: it derives the set of sections a re-imported file is allowed to name (and whether it renders at all) from the slots actually on screen, rather than from a hand-maintained list duplicating them.
+   *
+   * Emitted **sorted ascending**, which is deterministic but is NOT declaration order. Sorting is what lets the guard below collapse slot churn: a set cycling through `@if` (`['a','b']` → `['b']` → `['b','a']`) ends up equal to the array it started with, where registration order would emit a spuriously different array for an identical set.
+   *
+   * Registered by {@link DbxPdfMergeEditorFileUploadComponent} from its own lifecycle. Kept here rather than on the optional {@link DbxPdfMergeEditorFileUploadValidatorDirective} because it must be available whether or not a validator is present — and because a separately-provided registry could be provided at a different level than the store, letting slots register with one instance while a reader sees another.
+   */
+  readonly registeredSlotIds$: Observable<readonly string[]> = this._registeredSlotIds$.pipe(
+    distinctUntilChanged((a, b) => a.length === b.length && a.every((slotId, i) => slotId === b[i])),
+    shareReplay(1)
+  );
+
+  /**
+   * Registers a slot id as mounted, adding it to {@link registeredSlotIds$}.
+   *
+   * Reference-counted rather than a set: the same `slotId` can legitimately be mounted twice at once — the PDF merge upload dialog hosts its slots against an ancestor store while inline slots may still exist under {@link DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY} — and one unmount must not deregister a still-mounted id.
+   *
+   * @param slotId - Slot identifier being mounted.
+   */
+  registerSlotId(slotId: string): void {
+    this._slotIdCounts.set(slotId, (this._slotIdCounts.get(slotId) ?? 0) + 1);
+    this._emitRegisteredSlotIds();
+  }
+
+  /**
+   * Deregisters one mount of a slot id, removing it from {@link registeredSlotIds$} once the last mount is gone. Unknown ids are ignored.
+   *
+   * Callers must pair this with their own {@link registerSlotId} exactly once. The store frequently outlives its slots (a dialog-hosted slot is destroyed on every close while the page-level store lives on), so a missed call leaves the editor permanently claiming a section that is not on screen.
+   *
+   * @param slotId - Slot identifier being unmounted.
+   */
+  unregisterSlotId(slotId: string): void {
+    const count = this._slotIdCounts.get(slotId);
+
+    if (count != null) {
+      if (count > 1) {
+        this._slotIdCounts.set(slotId, count - 1);
+      } else {
+        this._slotIdCounts.delete(slotId);
+      }
+
+      this._emitRegisteredSlotIds();
+    }
+  }
+
+  private _emitRegisteredSlotIds(): void {
+    const next = Array.from(this._slotIdCounts.keys()).sort();
+    const current = this._registeredSlotIds$.value;
+
+    if (next.length !== current.length || next.some((slotId, i) => slotId !== current[i])) {
+      this._registeredSlotIds$.next(next);
+    }
   }
 
   // MARK: Validator

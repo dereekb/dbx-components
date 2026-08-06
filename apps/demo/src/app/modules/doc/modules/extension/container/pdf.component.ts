@@ -398,7 +398,7 @@ interface DocPdfMergeImportSummary {
   selector: 'doc-pdf-merge-reimport-example',
   template: `
     <dbx-content-border>
-      <dbx-pdf-merge-import [expectedSlotIds]="expectedSlotIds" [config]="importConfig" (imported)="onImported($event)"></dbx-pdf-merge-import>
+      <dbx-pdf-merge-import [config]="importConfig" (imported)="onImported($event)"></dbx-pdf-merge-import>
       <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false" [showPreviewButton]="true" [showDownloadButton]="true" [pageEditing]="true" [sidecar]="true">
         <div dbxPdfMergeEditorFileUploadValidator>
           <dbx-pdf-merge-editor-file-upload slotId="license" [config]="licenseConfig">
@@ -427,9 +427,6 @@ interface DocPdfMergeImportSummary {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocPdfMergeReimportExampleComponent {
-  // Must match the slots declared below — the import rejects a file naming any other section.
-  readonly expectedSlotIds: readonly string[] = ['license', 'cert'];
-
   readonly importConfig: DbxPdfMergeImportConfig = {
     label: 'Re-import a completed document',
     text: 'Choose exported PDF',
