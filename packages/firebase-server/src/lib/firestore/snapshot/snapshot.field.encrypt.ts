@@ -82,14 +82,14 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
     fromData: (data: string) => {
       let result: T;
 
-      if (onDecodeFailure != null) {
+      if (onDecodeFailure == null) {
+        result = decryptValue<T>(data, getKey());
+      } else {
         try {
           result = decryptValue<T>(data, getKey());
         } catch (e) {
           result = onDecodeFailure(e, data);
         }
-      } else {
-        result = decryptValue<T>(data, getKey());
       }
 
       return result;
@@ -128,14 +128,14 @@ export function optionalFirestoreEncryptedField<T>(config: OptionalFirestoreEncr
     transformFromData: (data: string) => {
       let result: Maybe<T>;
 
-      if (onDecodeFailure != null) {
+      if (onDecodeFailure == null) {
+        result = decryptValue<T>(data, getKey());
+      } else {
         try {
           result = decryptValue<T>(data, getKey());
         } catch (e) {
           result = onDecodeFailure(e, data);
         }
-      } else {
-        result = decryptValue<T>(data, getKey());
       }
 
       return result as T;
