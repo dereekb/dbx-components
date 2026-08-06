@@ -11,10 +11,11 @@ import { DbxFileUploadComponent } from '../../interaction/upload/upload.componen
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_DBX_PDF_MERGE_PAGE_EDITING, DEFAULT_DBX_PDF_MERGE_SIDECAR, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';
+import { DbxPdfMergePageListComponent } from './pdf.merge.page.list.component';
 import { buildPdfMergeEntry, formatPdfMergeEntrySize } from './pdf.merge.utility';
 import { openPdfPreviewDialog } from './pdf.preview.dialog.component';
 
@@ -50,7 +51,7 @@ export type DbxPdfMergeEditorOutputSizeState = 'ok' | 'warn' | 'error';
   host: {
     class: 'dbx-pdf-merge-editor d-block'
   },
-  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent],
+  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -74,6 +75,8 @@ export class DbxPdfMergeEditorComponent {
   readonly downloadButton = input<Maybe<DbxButtonDisplayStylePair>>();
   readonly showAddFiles = input<Maybe<boolean>>();
   readonly showFileList = input<Maybe<boolean>>();
+  readonly pageEditing = input<Maybe<boolean>>();
+  readonly sidecar = input<Maybe<boolean>>();
   /**
    * Bundles every editor option into one object (see {@link DbxPdfMergeEditorConfig}). Individual inputs override the matching field here, which in turn overrides the workspace-wide {@link DBX_PDF_MERGE_EDITOR_CONFIG} token.
    */
@@ -92,6 +95,12 @@ export class DbxPdfMergeEditorComponent {
   readonly storeEncryptedHandlingSignal = toSignal(this.store.encryptedHandling$, { initialValue: undefined });
 
   /**
+   * Store-level page-editing and sidecar defaults pushed by {@link DbxPdfMergeEditorStoreDirective}. These read the store's raw (undefaulted) settings so an unset store value still falls through to the workspace-wide token in {@link effectiveConfigSignal}.
+   */
+  readonly storePageEditingSignal = toSignal(this.store.pageEditingSetting$, { initialValue: undefined });
+  readonly storeSidecarSignal = toSignal(this.store.sidecarSetting$, { initialValue: undefined });
+
+  /**
    * Merged config — the editor's own `config` input wins over the store-level default (for `imageCompression`), which in turn wins over the workspace-wide token. The individual inputs are resolved on top of this object in the per-field `*Signal` computeds below.
    */
   readonly effectiveConfigSignal = computed<DbxPdfMergeEditorConfig>(() => {
@@ -99,6 +108,8 @@ export class DbxPdfMergeEditorComponent {
     const fromToken = this._injectedConfig;
     const storeImageCompression = this.storeImageCompressionSignal();
     const storeEncryptedHandling = this.storeEncryptedHandlingSignal();
+    const storePageEditing = this.storePageEditingSignal();
+    const storeSidecar = this.storeSidecarSignal();
     return {
       imageCompression: fromInput?.imageCompression ?? storeImageCompression ?? fromToken?.imageCompression ?? null,
       outputSizeLimits: fromInput?.outputSizeLimits ?? fromToken?.outputSizeLimits ?? null,
@@ -110,11 +121,26 @@ export class DbxPdfMergeEditorComponent {
       downloadButton: fromInput?.downloadButton ?? fromToken?.downloadButton,
       showAddFiles: fromInput?.showAddFiles ?? fromToken?.showAddFiles,
       showFileList: fromInput?.showFileList ?? fromToken?.showFileList,
-      encryptedHandling: fromInput?.encryptedHandling ?? storeEncryptedHandling ?? fromToken?.encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING
+      encryptedHandling: fromInput?.encryptedHandling ?? storeEncryptedHandling ?? fromToken?.encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING,
+      pageEditing: fromInput?.pageEditing ?? storePageEditing ?? fromToken?.pageEditing ?? DEFAULT_DBX_PDF_MERGE_PAGE_EDITING,
+      sidecar: fromInput?.sidecar ?? storeSidecar ?? fromToken?.sidecar ?? DEFAULT_DBX_PDF_MERGE_SIDECAR
     };
   });
 
   readonly encryptedHandlingSignal = computed<DbxPdfMergeEncryptedHandling>(() => this.effectiveConfigSignal().encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING);
+
+  /**
+   * Whether page editing is active. When `false` the editor renders its original file list and no page machinery is instantiated at all.
+   */
+  readonly pageEditingSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.pageEditing() ?? config.pageEditing ?? DEFAULT_DBX_PDF_MERGE_PAGE_EDITING;
+  });
+
+  readonly sidecarSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.sidecar() ?? config.sidecar ?? DEFAULT_DBX_PDF_MERGE_SIDECAR;
+  });
 
   readonly imageCompressionConfigSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.effectiveConfigSignal().imageCompression);
   readonly outputSizeLimitsSignal = computed<Maybe<DbxPdfMergeOutputSizeLimitsConfig>>(() => this.effectiveConfigSignal().outputSizeLimits);
@@ -158,6 +184,10 @@ export class DbxPdfMergeEditorComponent {
 
   readonly hasReadyEntriesSignal = toSignal(this.store.hasReadyEntries$, { initialValue: false });
   readonly entryCountSignal = toSignal(this.store.entryCount$, { initialValue: 0 });
+  /**
+   * Number of pages that will actually reach the output — the page plan minus anything marked for removal. Only surfaced while page editing is enabled.
+   */
+  readonly mergeablePageCountSignal = toSignal(this.store.mergeablePageCount$, { initialValue: 0 });
   /**
    * Mirrors {@link DbxPdfMergeEditorStore.focusActive$} — `true` while `encryptedHandling === 'focus'` and at least one ready encrypted entry exists. Drives the encrypted-PDF focus banner.
    */
@@ -236,6 +266,16 @@ export class DbxPdfMergeEditorComponent {
     effect(() => {
       const handling = this.encryptedHandlingSignal();
       this.store.setEncryptedHandling(handling);
+    });
+
+    effect(() => {
+      const pageEditing = this.pageEditingSignal();
+      this.store.setPageEditing(pageEditing);
+    });
+
+    effect(() => {
+      const sidecar = this.sidecarSignal();
+      this.store.setSidecar(sidecar);
     });
   }
 

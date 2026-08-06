@@ -1,3 +1,19 @@
+# [13.34.0](https://github.com/dereekb/dbx-components/compare/v13.33.0-dev...v13.34.0) (2026-08-06)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([924d8eb5](https://github.com/dereekb/dbx-components/commit/924d8eb5d1b48d6440438a7bcc854a23141078f1))
+
+
+### Features
+
+- **dbx-web:** add pdf merge page editing mode and sidecar manifest ([3712b8db](https://github.com/dereekb/dbx-components/commit/3712b8dbc29a91ea8254d1c23c94a2131b852ab6))
+- **dbx-web:** add programmatic pdf merge import to the editor store ([c568e8af](https://github.com/dereekb/dbx-components/commit/c568e8af374ff55b1a19b0557981bc0be9e18071))
+- **dbx-web:** add sidecar re-import to pdf merge editor ([04b558e1](https://github.com/dereekb/dbx-components/commit/04b558e12962175cabd586c8ca9691fa5c8e716a))
+- **dbx-web:** derive pdf merge import slots from a store registry ([f769e10f](https://github.com/dereekb/dbx-components/commit/f769e10fbda500713aa3897a151821bfb74cf656))
+- **firebase-server:** add SystemStatePrivate + encrypt zoho cache ([3816b168](https://github.com/dereekb/dbx-components/commit/3816b168ef4505b0737b415e78edb739231eb85b))
+
 # [13.33.0](https://github.com/dereekb/dbx-components/compare/v13.32.0-dev...v13.33.0) (2026-08-04)
 
 

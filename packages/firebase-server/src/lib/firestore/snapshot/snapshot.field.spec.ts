@@ -118,6 +118,67 @@ describe('firestoreEncryptedField()', () => {
     );
   });
 
+  describe('onDecodeFailure', () => {
+    const FALLBACK = 'fallback-value';
+
+    it('should return the fallback for a value that is not ciphertext', () => {
+      // e.g. data written before the field was encrypted
+      const field = firestoreEncryptedField<string>({ secret, default: '', onDecodeFailure: () => FALLBACK });
+      const { from } = modelFieldMapFunctions(field);
+
+      expect(from('this-was-never-encrypted')).toBe(FALLBACK);
+    });
+
+    it('should return the fallback for ciphertext encrypted under a different key', () => {
+      // this is what makes a rotated secret survivable for a cache
+      const otherSecret = testEncryptionKey();
+      const foreign = modelFieldMapFunctions(firestoreEncryptedField<string>({ secret: otherSecret, default: '' })).to('secret-value');
+
+      const field = firestoreEncryptedField<string>({ secret, default: '', onDecodeFailure: () => FALLBACK });
+      const { from } = modelFieldMapFunctions(field);
+
+      expect(from(foreign)).toBe(FALLBACK);
+    });
+
+    it('should receive the error and the raw stored data', () => {
+      let seenData: string | undefined;
+      const field = firestoreEncryptedField<string>({
+        secret,
+        default: '',
+        onDecodeFailure: (_error, data) => {
+          seenData = data;
+          return FALLBACK;
+        }
+      });
+
+      modelFieldMapFunctions(field).from('not-ciphertext');
+      expect(seenData).toBe('not-ciphertext');
+    });
+
+    it('should still THROW when no handler is supplied', () => {
+      // Regression guard for uecp/jwks: a credential that silently becomes a default is far worse
+      // than a loud failure, so the tolerant path must stay opt-in.
+      const field = firestoreEncryptedField<string>({ secret, default: '' });
+      const { from } = modelFieldMapFunctions(field);
+
+      expect(() => from('this-was-never-encrypted')).toThrow();
+    });
+
+    it('should be supported by optionalFirestoreEncryptedField', () => {
+      const field = optionalFirestoreEncryptedField<string>({ secret, onDecodeFailure: () => FALLBACK });
+      const { from } = modelFieldMapFunctions(field);
+
+      expect(from('not-ciphertext')).toBe(FALLBACK);
+    });
+
+    it('should still THROW in optionalFirestoreEncryptedField when no handler is supplied', () => {
+      const field = optionalFirestoreEncryptedField<string>({ secret });
+      const { from } = modelFieldMapFunctions(field);
+
+      expect(() => from('not-ciphertext')).toThrow();
+    });
+  });
+
   describe('wrong key', () => {
     it('should fail to decrypt with a different key', () => {
       const key1 = testEncryptionKey();

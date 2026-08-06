@@ -17,6 +17,18 @@ export interface FirestoreEncryptedFieldConfig<T> {
    * Default value when the field is missing from Firestore.
    */
   readonly default: GetterOrValue<T>;
+  /**
+   * Called when a stored value is present but cannot be decrypted — a wrong or rotated key, a
+   * corrupt value, or data written before the field was encrypted. Its return value is used in
+   * place of the decrypted value.
+   *
+   * When omitted the decode throws, which is the correct behavior for a field of record: a
+   * credential that silently becomes `undefined` is far worse than a loud failure.
+   *
+   * Only supply this for data that can be regenerated — a cache. See the Zoho access token cache,
+   * where an undecryptable entry is a cache miss and the next call re-mints the token.
+   */
+  readonly onDecodeFailure?: Maybe<(error: unknown, data: string) => T>;
 }
 
 /**
@@ -29,6 +41,11 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
    * Secret source for the encryption key.
    */
   readonly secret: GetterOrValue<string>;
+  /**
+   * Called when a stored value is present but cannot be decrypted. See
+   * {@link FirestoreEncryptedFieldConfig.onDecodeFailure}. When omitted the decode throws.
+   */
+  readonly onDecodeFailure?: Maybe<(error: unknown, data: string) => Maybe<T>>;
 }
 
 // MARK: Field Converters
@@ -36,8 +53,10 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
  * Creates a Firestore field mapping that encrypts/decrypts a JSON-serializable value
  * using AES-256-GCM. The value is stored in Firestore as a base64-encoded string.
  *
- * The encryption key is resolved from the configured secret source on each read/write,
- * allowing for key rotation via environment variable changes.
+ * IMPORTANT: there is NO key rotation. `resolveEncryptionKey()` reads and validates the secret once,
+ * here at construction, and closes over the resulting key — changing the secret afterwards orphans
+ * every value already written with the old one. Rotation is only survivable for fields that supply
+ * {@link FirestoreEncryptedFieldConfig.onDecodeFailure} and hold regenerable data.
  *
  * @param config - Encryption field configuration.
  * @returns A field mapping configuration for encrypted values.
@@ -55,13 +74,25 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<T, string> {
-  const { secret, default: defaultValue } = config;
+  const { secret, default: defaultValue, onDecodeFailure } = config;
   const getKey = resolveEncryptionKey(secret);
 
   return firestoreField<T, string>({
     default: defaultValue,
     fromData: (data: string) => {
-      return decryptValue<T>(data, getKey());
+      let result: T;
+
+      if (onDecodeFailure == null) {
+        result = decryptValue<T>(data, getKey());
+      } else {
+        try {
+          result = decryptValue<T>(data, getKey());
+        } catch (e) {
+          result = onDecodeFailure(e, data);
+        }
+      }
+
+      return result;
     },
     toData: (value: T) => {
       return encryptValue(value, getKey());
@@ -90,12 +121,24 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreEncryptedField<T>(config: OptionalFirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>> {
-  const { secret } = config;
+  const { secret, onDecodeFailure } = config;
   const getKey = resolveEncryptionKey(secret);
 
   return optionalFirestoreField<T, string>({
     transformFromData: (data: string) => {
-      return decryptValue<T>(data, getKey());
+      let result: Maybe<T>;
+
+      if (onDecodeFailure == null) {
+        result = decryptValue<T>(data, getKey());
+      } else {
+        try {
+          result = decryptValue<T>(data, getKey());
+        } catch (e) {
+          result = onDecodeFailure(e, data);
+        }
+      }
+
+      return result as T;
     },
     transformToData: (value: T) => {
       return encryptValue(value, getKey());

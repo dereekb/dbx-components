@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
-import { distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView, type PdfMergePageView } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
 import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
+import { DbxPdfMergePageListComponent } from './pdf.merge.page.list.component';
 import { buildPdfMergeEntry } from './pdf.merge.utility';
 
 /**
@@ -101,11 +102,15 @@ const DEFAULT_REQUIRED = true;
     }
     @if (ownedEntriesSignal(); as owned) {
       @if (owned.length > 0) {
-        <div class="dbx-pdf-merge-editor-file-upload-entries" cdkDropList (cdkDropListDropped)="onDrop($event)">
-          @for (entry of owned; track entry.id) {
-            <dbx-pdf-merge-entry [entry]="entry"></dbx-pdf-merge-entry>
-          }
-        </div>
+        @if (pageEditingSignal()) {
+          <dbx-pdf-merge-page-list class="dbx-pdf-merge-editor-file-upload-pages" [slotId]="slotId()"></dbx-pdf-merge-page-list>
+        } @else {
+          <div class="dbx-pdf-merge-editor-file-upload-entries" cdkDropList (cdkDropListDropped)="onDrop($event)">
+            @for (entry of owned; track entry.id) {
+              <dbx-pdf-merge-entry [entry]="entry"></dbx-pdf-merge-entry>
+            }
+          </div>
+        }
       }
     }
   `,
@@ -115,7 +120,7 @@ const DEFAULT_REQUIRED = true;
     '[class.dbx-pdf-merge-editor-file-upload--valid]': 'stateSignal() === "valid"',
     '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"'
   },
-  imports: [CdkDropList, DbxFileUploadComponent, DbxPdfMergeEntryComponent],
+  imports: [CdkDropList, DbxFileUploadComponent, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -124,6 +129,11 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   private readonly _validator = inject(DbxPdfMergeEditorFileUploadValidatorDirective, { optional: true });
   private readonly _injectedConfig = inject(DBX_PDF_MERGE_EDITOR_CONFIG, { optional: true });
   private readonly _preserveEntriesOnDestroy = inject(DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, { optional: true }) ?? false;
+
+  /**
+   * The slot id this component registered with the store, captured at registration time so destroy deregisters the same key. `null` before {@link ngOnInit} and after teardown.
+   */
+  private _registeredSlotId: Maybe<string> = null;
 
   readonly slotId = input.required<string>();
   readonly config = input<Maybe<DbxPdfMergeEditorFileUploadConfig>>();
@@ -170,6 +180,19 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   readonly ownedEntriesSignal = toSignal(this.ownedEntries$, { initialValue: [] as PdfMergeEntryView[] });
 
   /**
+   * Whether the shared store has page editing enabled. Drives whether this slot lists its own pages or its own files.
+   */
+  readonly pageEditingSignal = toSignal(this.store.pageEditing$, { initialValue: false });
+
+  /**
+   * Pages contributed by this slot's entries. Empty while page editing is disabled.
+   */
+  readonly ownedPages$: Observable<PdfMergePageView[]> = toObservable(this.slotId).pipe(
+    switchMap((slotId) => this.store.pagesForSlotId$(slotId)),
+    shareReplay(1)
+  );
+
+  /**
    * Whether the slot still has room for more files. Drives visibility of the upload UI — once the slot is at capacity, the uploader is hidden and the user must remove an existing entry to add another.
    */
   readonly canAddFilesSignal = computed(() => this.ownedEntriesSignal().length < this.capacitySignal());
@@ -177,8 +200,8 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   /**
    * High-level state of the slot — `no_file` when empty, `valid` when owned entries satisfy the slot's thresholds, `invalid` when owned entries fail or are still being validated.
    */
-  readonly state$: Observable<DbxPdfMergeEditorFileUploadState> = this.ownedEntries$.pipe(
-    map((entries) => {
+  readonly state$: Observable<DbxPdfMergeEditorFileUploadState> = combineLatest([this.ownedEntries$, this.store.pageEditing$, this.ownedPages$]).pipe(
+    map(([entries, pageEditing, pages]) => {
       let state: DbxPdfMergeEditorFileUploadState;
 
       if (entries.length === 0) {
@@ -188,12 +211,18 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
         const readyCount = entries.filter((entry) => entry.status === 'ready').length;
         const minFiles = this.minFilesSignal();
         const maxFiles = this.maxFilesSignal();
+        // Only meaningful once the slot actually has pages: an empty list means editing is off, the
+        // entry is still hydrating, or it could not be expanded (encrypted) — none of which are the
+        // user deleting their own content.
+        const allPagesRemoved = pageEditing && pages.length > 0 && pages.every((page) => page.removed);
 
         if (validating) {
           state = 'invalid';
         } else if (readyCount < minFiles) {
           state = 'invalid';
         } else if (maxFiles != null && readyCount > maxFiles) {
+          state = 'invalid';
+        } else if (allPagesRemoved) {
           state = 'invalid';
         } else {
           state = 'valid';
@@ -233,10 +262,28 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   readonly isValidSignal = toSignal(this.isValid$, { initialValue: false });
 
   ngOnInit(): void {
+    // Two registrations, deliberately: the store learns this slot's ID (so consumers like
+    // <dbx-pdf-merge-import> can enumerate the sections this editor declares), while the optional
+    // validator directive tracks the component itself to aggregate `isValid$`. They are separate
+    // because the store is always present while the validator is not, and because the store's
+    // `setValidator` seam exists precisely so it never has to hold slot component references.
+    this._registeredSlotId = this.slotId();
+    this.store.registerSlotId(this._registeredSlotId);
     this._validator?.registerSlot(this);
   }
 
   ngOnDestroy(): void {
+    // Unconditional, and deliberately OUTSIDE the `_preserveEntriesOnDestroy` check below: that
+    // token governs whether the slot's ENTRIES survive, not whether the slot is mounted. The
+    // upload dialog sets it to `true` and is torn down on every close, so gating this on it would
+    // leave the store permanently claiming a section that is no longer on screen. The captured id
+    // (rather than a fresh `slotId()` read) guarantees this decrements the same key `ngOnInit`
+    // incremented, and clearing it keeps a repeat destroy from evicting a still-mounted duplicate.
+    if (this._registeredSlotId != null) {
+      this.store.unregisterSlotId(this._registeredSlotId);
+      this._registeredSlotId = null;
+    }
+
     this._validator?.unregisterSlot(this);
 
     // Default behavior: removing a slot from a template (e.g. via `@if`) also drops the slot's

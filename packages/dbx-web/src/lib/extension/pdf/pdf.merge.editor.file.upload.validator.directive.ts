@@ -7,6 +7,8 @@ import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 /**
  * Directive that registers as the active {@link DbxPdfMergeEditorValidator} on a {@link DbxPdfMergeEditorStore} and gates merge emissions on the readiness of every registered slot. {@link DbxPdfMergeEditorFileUploadComponent} instances walk the injector tree, find this directive, and call {@link registerSlot}/{@link unregisterSlot} during their own lifecycle.
  *
+ * This slot set is intentionally separate from {@link DbxPdfMergeEditorStore.registeredSlotIds$}, and the two should not be merged. This one is keyed by object identity because it exists solely to `combineLatest` each slot's `isValid$`; the store's is keyed by slot id, answers "which sections does this editor declare", and must be populated whether or not a validator is present — which is why it cannot live on this optional directive.
+ *
  * @example
  * ```html
  * <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false">

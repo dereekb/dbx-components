@@ -1,4 +1,5 @@
 export * from './zoho.accounts.firebase';
+export * from './zoho.accounts.firebase.module';
 export * from './zoho.accounts.firebase.system';
 export * from './zoho.oauth.connection.cache';
 export * from './zoho.oauth.connection.config';

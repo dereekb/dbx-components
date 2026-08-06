@@ -1,4 +1,4 @@
-import { type SystemState, type SystemStateFirestoreCollection } from '@dereekb/firebase';
+import { type FirestoreDocument, type SystemState, type SystemStateFirestoreCollectionLike, type SystemStateStoredData } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type ZohoAccessToken, type ZohoAccessTokenCache } from '@dereekb/zoho';
 import { type ZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
@@ -11,17 +11,24 @@ import { type ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } f
  * Tokens are stored in a single {@link SystemState} document (type {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE})
  * and token updates/clears use Firestore transactions for concurrency safety.
  *
+ * The access token is a credential, so pass a SERVER-ONLY collection — a
+ * `systemStatePrivateFirestoreCollection()` from `@dereekb/firebase-server/model`, whose converter
+ * map registers {@link zohoAccessTokenSystemStateDataConverterFactory} and encrypts the token at
+ * rest. Passing an app's client-shared `systemStateCollection` still type-checks (for backwards
+ * compatibility) but requires the converter to be registered in the client-shared map, which drags
+ * `@dereekb/firebase-server` into browser builds.
+ *
  * @param systemStateCollection - The Firestore collection for system state documents.
  * @returns A cache service backed by Firestore system state documents.
  *
  * @example
  * ```ts
- * const cacheService = firebaseZohoAccountsAccessTokenCacheService(systemStateCollection);
+ * const cacheService = firebaseZohoAccountsAccessTokenCacheService(systemStatePrivateCollection);
  * const cache = cacheService.loadZohoAccessTokenCache('my-zoho-service');
  * const token = await cache.loadCachedToken();
  * ```
  */
-export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollection: SystemStateFirestoreCollection): ZohoAccountsAccessTokenCacheService {
+export function firebaseZohoAccountsAccessTokenCacheService<D extends FirestoreDocument<SystemState<SystemStateStoredData>>>(systemStateCollection: SystemStateFirestoreCollectionLike<SystemStateStoredData, D>): ZohoAccountsAccessTokenCacheService {
   const systemStateDocumentAccessor = systemStateCollection.documentAccessor();
 
   const service: ZohoAccountsAccessTokenCacheService = {

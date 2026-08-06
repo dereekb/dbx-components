@@ -76,5 +76,65 @@ describe('firestore.rules', () => {
         await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'uecp', OWNER_UID), { cr: 'tampered' }));
       });
     });
+
+    describe('sys (SystemState)', () => {
+      const SYSTEM_STATE_TYPE = 'examplestate';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'sys', SYSTEM_STATE_TYPE), { data: { example: true } });
+        });
+      });
+
+      // SystemState is read/written server-side through the callable model services, which gate it
+      // on sys-admin. There is no match block, so direct client access is denied.
+      it('should deny an authenticated read', async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'sys', SYSTEM_STATE_TYPE)));
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'sys', SYSTEM_STATE_TYPE)));
+      });
+
+      it('should deny listing/querying the collection', async () => {
+        await assertFails(getDocs(collection(f.firestoreForUser(OWNER_UID), 'sys')));
+      });
+
+      it('should deny an authenticated write', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'sys', SYSTEM_STATE_TYPE), { data: { example: false } }));
+      });
+    });
+
+    describe('sysp (SystemStatePrivate)', () => {
+      const SYSTEM_STATE_TYPE = 'zoho_access_token';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'sysp', SYSTEM_STATE_TYPE), { data: { tokens: [], lat: new Date() } });
+        });
+      });
+
+      // There is deliberately NO match block for /sysp. It holds secrets encrypted at rest and has
+      // no client story at all. These assertions are what keeps the default-deny true.
+      it('should deny an authenticated read of the private document', async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'sysp', SYSTEM_STATE_TYPE)));
+      });
+
+      it('should deny an unauthenticated read of the private document', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'sysp', SYSTEM_STATE_TYPE)));
+      });
+
+      it('should deny listing/querying the private collection', async () => {
+        await assertFails(getDocs(collection(f.firestoreForUser(OWNER_UID), 'sysp')));
+      });
+
+      it('should deny an authenticated write of the private document', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'sysp', SYSTEM_STATE_TYPE), { data: { tampered: true } }));
+      });
+
+      it('should deny an unauthenticated write of the private document', async () => {
+        await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'sysp', SYSTEM_STATE_TYPE), { data: { tampered: true } }));
+      });
+    });
   });
 });

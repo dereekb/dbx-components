@@ -1,4 +1,5 @@
 export * from './pdf.merge';
+export * from './pdf.merge.sidecar';
 export * from './pdf.merge.utility';
 export * from './pdf.merge.editor.store';
 export * from './pdf.merge.editor.store.directive';
@@ -8,6 +9,9 @@ export * from './pdf.merge.editor.file.upload.validator.directive';
 export * from './pdf.merge.editor.file.upload.has.state.directive';
 export * from './pdf.merge.list.component';
 export * from './pdf.merge.entry.component';
+export * from './pdf.merge.page.component';
+export * from './pdf.merge.page.list.component';
+export * from './pdf.merge.import.component';
 export * from './pdf.merge.upload.dialog.component';
 export * from './pdf.merge.upload.button.directive';
 export * from './pdf.merge.upload.action.directive';

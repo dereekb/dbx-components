@@ -145,8 +145,167 @@
     cursor: not-allowed;
   }
 
+  // Page (page editing mode)
+  .dbx-pdf-merge-page-group + .dbx-pdf-merge-page-group {
+    margin-top: var(--dbx-padding-3);
+  }
+
+  .dbx-pdf-merge-page-group-label {
+    margin-bottom: 4px;
+  }
+
+  .dbx-pdf-merge-page-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dbx-pdf-merge-page-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--mat-sys-corner-small);
+    background-color: var(--mat-sys-surface-container);
+  }
+
+  .dbx-pdf-merge-page-row.cdk-drag-preview {
+    box-shadow: var(--mat-sys-level3);
+  }
+
+  .dbx-pdf-merge-page-row.cdk-drag-placeholder {
+    opacity: 0;
+  }
+
+  .dbx-pdf-merge-page-placeholder {
+    height: 48px;
+    border: 2px dashed var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-small);
+  }
+
+  .dbx-pdf-merge-page-handle {
+    cursor: grab;
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-page-handle:active {
+    cursor: grabbing;
+  }
+
+  .dbx-pdf-merge-page-icon,
+  .dbx-pdf-merge-page-rotate,
+  .dbx-pdf-merge-page-remove {
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-page-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dbx-pdf-merge-page-dimensions {
+    padding: 1px 6px;
+    border-radius: var(--mat-sys-corner-extra-small);
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+    font-size: var(--mat-sys-label-small-size);
+  }
+
+  .dbx-pdf-merge-page-rotation-chip {
+    gap: 4px;
+  }
+
+  // Chain `.mat-icon` so we beat the global `.mat-icon { width: 24px; height: 24px }` defaults
+  // (equal specificity, loaded later in some builds).
+  .dbx-pdf-merge-page-rotation-icon.mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    flex-shrink: 0;
+  }
+
+  // Marked for removal: dimmed and struck through, but still readable so the user can restore it.
+  .dbx-pdf-merge-page--removed .dbx-pdf-merge-page-row {
+    opacity: 0.5;
+  }
+
+  .dbx-pdf-merge-page--removed .dbx-pdf-merge-page-name {
+    text-decoration: line-through;
+  }
+
+  .dbx-pdf-merge-page--removed .dbx-pdf-merge-page-handle {
+    cursor: not-allowed;
+  }
+
+  .dbx-pdf-merge-page-unexpandable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin-top: 4px;
+    border-radius: var(--mat-sys-corner-small);
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  .dbx-pdf-merge-page-unexpandable-icon.mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-editor-file-upload-pages {
+    display: block;
+    margin-top: var(--dbx-padding-2);
+  }
+
+  // Import
+  .dbx-pdf-merge-import-label {
+    margin-bottom: 4px;
+    font: var(--mat-sys-body-medium);
+  }
+
+  .dbx-pdf-merge-import-error,
+  .dbx-pdf-merge-import-success,
+  .dbx-pdf-merge-import-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin-top: var(--dbx-padding-2);
+    border-radius: var(--mat-sys-corner-small);
+  }
+
+  .dbx-pdf-merge-import-error {
+    background-color: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+
+  .dbx-pdf-merge-import-success {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+
+  .dbx-pdf-merge-import-warning {
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  .dbx-pdf-merge-import-icon.mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+
   // CDK animations
-  .cdk-drop-list-dragging .dbx-pdf-merge-entry-row:not(.cdk-drag-placeholder) {
+  .cdk-drop-list-dragging .dbx-pdf-merge-entry-row:not(.cdk-drag-placeholder),
+  .cdk-drop-list-dragging .dbx-pdf-merge-page-row:not(.cdk-drag-placeholder) {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
 }

@@ -96,6 +96,16 @@ service cloud.firestore {
     // Firestore rules do not cascade, so the implicit default-deny is what protects it; a block here
     // would only create an opportunity to accidentally grant access. Asserted by firestore.rules.spec.ts.
 
+    // NOTE: for the same reason there is deliberately NO match block for /sys (SystemState) or
+    // /sysp (SystemStatePrivate). SystemState is read/written server-side through the callable model
+    // services, which gate it on sys-admin; SystemStatePrivate additionally holds secrets encrypted
+    // at rest (e.g. the Zoho access token cache) and has no client story at all. Both are asserted
+    // by firestore.rules.spec.ts.
+    //
+    // If an app does need to expose a specific SystemState document to clients, match that ONE
+    // document id (e.g. `match /sys/myfeatureflags`) rather than adding a `/sys/{doc}` wildcard —
+    // a wildcard would expose every other type in the collection along with it.
+
     match /ns/{notificationSummary} {
       allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }

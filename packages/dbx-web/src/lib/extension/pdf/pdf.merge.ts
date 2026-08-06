@@ -67,6 +67,21 @@ export const DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING: DbxPdfMergeEncryptedHandl
 export const DBX_PDF_MERGE_ENCRYPTED_ERROR_MESSAGE = 'Password-protected PDFs cannot be merged.';
 
 /**
+ * Default value for {@link DbxPdfMergeEditorConfig.pageEditing}. Off, so the editor's default behavior is unchanged.
+ */
+export const DEFAULT_DBX_PDF_MERGE_PAGE_EDITING = false;
+
+/**
+ * Default value for {@link DbxPdfMergeEditorConfig.sidecar}. Off, so merged output bytes are unchanged.
+ */
+export const DEFAULT_DBX_PDF_MERGE_SIDECAR = false;
+
+/**
+ * Message shown on an encrypted entry's row while page editing is enabled. Encrypted documents cannot be opened by `pdf-lib`, so their pages cannot be listed or edited — the entry stays a single opaque row.
+ */
+export const DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE = 'Encrypted — pages cannot be edited.';
+
+/**
  * MIME types accepted by the PDF merge editor by default: PDF documents and PNG/JPEG images.
  */
 export const DEFAULT_PDF_MERGE_ACCEPT: readonly MimeTypeWithoutParameters[] = [PDF_MIME_TYPE, PNG_MIME_TYPE, JPEG_MIME_TYPE];
@@ -141,6 +156,147 @@ export interface PdfMergeEntryView extends PdfMergeEntry {
 }
 
 /**
+ * Rotation the user has applied to a page, in degrees clockwise.
+ */
+export type PdfMergePageRotation = 0 | 90 | 180 | 270;
+
+/**
+ * Group key used for pages whose source entry has no slot id.
+ */
+export const DEFAULT_PDF_MERGE_PAGE_GROUP_KEY = '_';
+
+/**
+ * Returns the group key a page reorders within — its entry's slot id, or {@link DEFAULT_PDF_MERGE_PAGE_GROUP_KEY} when the entry is unslotted.
+ *
+ * @param slotId - Slot id of the owning entry, if any.
+ * @returns The group key.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function pdfMergePageGroupKeyForSlotId(slotId: Maybe<string>): string {
+  return slotId ?? DEFAULT_PDF_MERGE_PAGE_GROUP_KEY;
+}
+
+/**
+ * Separator between the entry id and the page index inside a page id.
+ */
+export const PDF_MERGE_PAGE_ID_SEPARATOR = ':';
+
+/**
+ * Builds the stable identifier for a page within the editor.
+ *
+ * @param entryId - Id of the owning {@link PdfMergeEntry}.
+ * @param sourceIndex - Zero-based page index within that entry's source document.
+ * @returns The page id.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function makePdfMergePageId(entryId: string, sourceIndex: number): string {
+  return `${entryId}${PDF_MERGE_PAGE_ID_SEPARATOR}${sourceIndex}`;
+}
+
+/**
+ * Returns the id of the entry a page id belongs to. Used to prune page state when an entry leaves the list.
+ *
+ * @param pageId - Page id produced by {@link makePdfMergePageId}.
+ * @returns The owning entry's id.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function entryIdForPdfMergePageId(pageId: string): string {
+  return pageId.slice(0, pageId.indexOf(PDF_MERGE_PAGE_ID_SEPARATOR));
+}
+
+/**
+ * Per-page metadata captured when a {@link PdfMergeEntry} is expanded for page editing. Read once per entry by the store's hydration pass and cached for as long as the entry stays in the list.
+ */
+export interface PdfMergePageMeta {
+  /**
+   * Zero-based index of this page within its source document.
+   */
+  readonly sourceIndex: number;
+  /**
+   * Page width in PDF points.
+   */
+  readonly width: number;
+  /**
+   * Page height in PDF points.
+   */
+  readonly height: number;
+  /**
+   * Rotation already baked into the source page, in degrees. User rotation composes on top of this at merge time rather than replacing it, so rotating an already-sideways scan behaves as the user expects.
+   */
+  readonly sourceRotation: number;
+}
+
+/**
+ * A user's edits to a single page, held sparsely in {@link PdfMergeEditorState.pageOverrides}. Only pages the user has actually touched appear, so adding or removing an entry needs no page bookkeeping.
+ */
+export interface PdfMergePageOverride {
+  readonly rotation: PdfMergePageRotation;
+  readonly removed: boolean;
+}
+
+/**
+ * A single page in the editor's page plan, derived by the store from the current entries plus any {@link PdfMergePageOverride}. Only produced while page editing is enabled.
+ */
+export interface PdfMergePageView {
+  /**
+   * Stable identifier — see {@link makePdfMergePageId}.
+   */
+  readonly id: string;
+  /**
+   * Id of the {@link PdfMergeEntry} this page came from.
+   */
+  readonly entryId: string;
+  /**
+   * Slot that owns the source entry, or `null` when unslotted.
+   */
+  readonly slotId: Maybe<string>;
+  /**
+   * Key of the group this page reorders within — see {@link pdfMergePageGroupKeyForSlotId}.
+   */
+  readonly groupKey: string;
+  /**
+   * Name of the source file the page came from.
+   */
+  readonly sourceName: string;
+  /**
+   * Whether the page came from a PDF or from an embedded image. Also determines how {@link PdfMergePageMeta} dimensions should be read — PDF pages are measured in points, image pages in pixels.
+   */
+  readonly kind: PdfMergeEntryKind;
+  /**
+   * Zero-based index of this page within its source document.
+   */
+  readonly sourceIndex: number;
+  /**
+   * Total page count of the source document. Drives the "page 2 of 3" label.
+   */
+  readonly sourcePageCount: number;
+  /**
+   * Metadata read from the source page.
+   */
+  readonly meta: PdfMergePageMeta;
+  /**
+   * User-applied rotation, composed with {@link PdfMergePageMeta.sourceRotation} at merge time.
+   */
+  readonly rotation: PdfMergePageRotation;
+  /**
+   * Whether the user marked this page for deletion. Marked pages stay visible in the list (struck through, restorable) but are excluded from the merge output.
+   */
+  readonly removed: boolean;
+}
+
+/**
+ * A set of pages that reorder together — every page contributed by one slot's entries, or every unslotted page. Pages never move between groups: the page list renders one CDK drop list per group, and unconnected drop lists cannot accept each other's drags, so the rule is enforced by construction rather than by a guard.
+ */
+export interface PdfMergePageGroup {
+  readonly groupKey: string;
+  /**
+   * Slot the group belongs to, or `null` for the unslotted group.
+   */
+  readonly slotId: Maybe<string>;
+  readonly pages: readonly PdfMergePageView[];
+}
+
+/**
  * Validation delegate registered on the {@link DbxPdfMergeEditorStore}. Receives the live {@link PdfMergeEntry} stream and returns a stream of `boolean` values controlling whether the store may emit a merge result. Emitting `false` causes {@link DbxPdfMergeEditorStore.currentMergeOutput$} to emit `undefined` and prevents {@link DbxPdfMergeEditorStore.mergeOutput$} from emitting.
  */
 export type DbxPdfMergeEditorValidator = (entries$: Observable<PdfMergeEntry[]>) => Observable<boolean>;
@@ -167,6 +323,14 @@ export interface PdfMergeEditorState {
    * Ordered list of entries the user has added. Order determines page order in the merged output.
    */
   readonly rawEntries: PdfMergeEntry[];
+  /**
+   * Sparse per-page edit overrides keyed by {@link PdfMergePageView.id}. Only pages the user has touched appear here. Overrides for pages that no longer resolve are ignored by the derived page stream and pruned when their owning entry leaves the list. Stays empty while page editing is disabled.
+   */
+  readonly pageOverrides: Record<string, PdfMergePageOverride>;
+  /**
+   * Explicit page ordering per group key, holding {@link PdfMergePageView.id} values. A group absent from this record uses natural order. Ids that no longer resolve are ignored, and pages missing from a stored list are appended in natural order — so the ordering self-heals as entries come and go. Stays empty while page editing is disabled.
+   */
+  readonly pageOrder: Record<string, string[]>;
 }
 
 /**
@@ -175,6 +339,37 @@ export interface PdfMergeEditorState {
 export interface PdfMergeEntryMove {
   readonly previousIndex: number;
   readonly currentIndex: number;
+}
+
+/**
+ * Index movement payload used by the editor's page reorder updater. Indices are group-local — the positions the group's CDK drop list sees, not positions in the overall page plan.
+ */
+export interface PdfMergePageMove {
+  readonly groupKey: string;
+  /**
+   * The group's page ids in the order they were rendered when the drag started.
+   *
+   * Supplied by the caller rather than recomputed by the store: the plan is derived state, so the store cannot see the exact order the user was looking at. Rewriting the array the component rendered keeps the stored order and the visible order in step.
+   */
+  readonly pageIds: readonly string[];
+  readonly previousIndex: number;
+  readonly currentIndex: number;
+}
+
+/**
+ * Payload for setting a page's rotation.
+ */
+export interface PdfMergePageRotationChange {
+  readonly pageId: string;
+  readonly rotation: PdfMergePageRotation;
+}
+
+/**
+ * Payload for marking a page as removed or restoring it.
+ */
+export interface PdfMergePageRemovedChange {
+  readonly pageId: string;
+  readonly removed: boolean;
 }
 
 /**
@@ -239,6 +434,20 @@ export interface DbxPdfMergeEditorConfig {
    * Strategy for how encrypted PDFs are handled — see {@link DbxPdfMergeEncryptedHandling}. Defaults to {@link DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING} (`'focus'`).
    */
   readonly encryptedHandling?: Maybe<DbxPdfMergeEncryptedHandling>;
+  /**
+   * Enables page editing mode. When `true`, the editor's list shows the individual pages of each uploaded PDF instead of one row per file, letting the user reorder, rotate, and mark pages for deletion with the merged output updating live.
+   *
+   * Pages reorder only within their own slot — a slot is one logical document, so letting a page cross slots would silently move content between documents.
+   *
+   * Defaults to {@link DEFAULT_DBX_PDF_MERGE_PAGE_EDITING} (`false`), in which case the editor behaves exactly as it does without this option: the page list is never instantiated and no source document is parsed.
+   */
+  readonly pageEditing?: Maybe<boolean>;
+  /**
+   * Embeds a sidecar manifest and per-page tags into the merged output, recording which pages came from which slot so downstream code can target them later via `readPdfMergeSidecar`. Independent of {@link pageEditing} — a plain slot merge benefits from the record too.
+   *
+   * Defaults to {@link DEFAULT_DBX_PDF_MERGE_SIDECAR} (`false`), in which case the output bytes are unchanged.
+   */
+  readonly sidecar?: Maybe<boolean>;
 }
 
 /**

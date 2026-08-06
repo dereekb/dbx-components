@@ -1,11 +1,12 @@
 import { type GrantedSysAdminRole } from '@dereekb/model';
-import { AbstractFirestoreDocument } from '../../common/firestore/accessor/document';
+import { AbstractFirestoreDocument, type FirestoreDocument } from '../../common/firestore/accessor/document';
+import { type InterceptFirestoreDataConverterFactory } from '../../common/firestore/accessor/converter';
 import { type FirestoreCollection, firestoreModelIdentity } from '../../common/firestore/collection/collection';
 import { type FirestoreContext } from '../../common/firestore/context';
 import { snapshotConverterFunctions } from '../../common/firestore/snapshot/snapshot';
 import { type CollectionReference } from '../../common/firestore/types';
 import { firestorePassThroughField } from '../../common/firestore/snapshot/snapshot.field';
-import { mapObjectMap, type ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
+import { mapObjectMap, type Maybe, type ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
 
 /**
  * @module system
@@ -39,7 +40,12 @@ export type SystemStateTypes = typeof systemStateIdentity;
 
 // MARK: SystemState
 /**
- * Model identity for the SystemState collection (collection name: `systemState`, prefix: `sys`).
+ * Model identity for the SystemState collection.
+ *
+ * NOTE: the second argument of `firestoreModelIdentity()` is the COLLECTION NAME, so this is model
+ * type `systemState` stored at the Firestore path `sys/<docId>` — not the other way around.
+ * `systemStateCollectionReference()` resolves `identity.collectionName`, and `firestore.rules` match
+ * blocks are written against `/sys`.
  */
 export const systemStateIdentity = firestoreModelIdentity('systemState', 'sys');
 
@@ -133,6 +139,15 @@ export function systemStateCollectionReference(context: FirestoreContext): Colle
 export type SystemStateFirestoreCollection<T extends SystemStateStoredData = SystemStateStoredData> = FirestoreCollection<SystemState<T>, SystemStateDocument<T>>;
 
 /**
+ * A {@link SystemState} collection with any document type.
+ *
+ * Use this where a consumer only needs to read/write SystemState documents and should accept either
+ * the client-shared {@link SystemStateFirestoreCollection} or a server-only variant that uses its own
+ * document class (e.g. `SystemStatePrivateFirestoreCollection` in `@dereekb/firebase-server/model`).
+ */
+export type SystemStateFirestoreCollectionLike<T extends SystemStateStoredData = SystemStateStoredData, D extends FirestoreDocument<SystemState<T>> = FirestoreDocument<SystemState<T>>> = FirestoreCollection<SystemState<T>, D>;
+
+/**
  * Field conversion config for a specific SystemState data type.
  *
  * Maps the typed `data` field to/from Firestore using {@link ModelFieldMapFunctionsConfig}.
@@ -149,6 +164,77 @@ export type SystemStateStoredDataFieldConverterConfig<T extends SystemStateStore
 export type SystemStateStoredDataConverterMap = {
   [key: string]: SystemStateStoredDataFieldConverterConfig<any>;
 };
+
+/**
+ * What a SystemState collection does when a document's type has no registered converter.
+ *
+ * - `passthrough`: fall back to the default pass-through converter. Historical behavior, and what
+ *   {@link systemStateFirestoreCollection} uses.
+ * - `error`: throw. Appropriate for a collection whose types are all known up front — notably a
+ *   server-only collection, where silently reading a secret-bearing document through a pass-through
+ *   converter would skip its field mapping (dates come back as raw `Timestamp`s, encrypted fields as
+ *   raw ciphertext) with nothing to signal it.
+ */
+export type SystemStateUnknownTypeBehavior = 'passthrough' | 'error';
+
+/**
+ * Configuration for {@link systemStateStoredDataConverterFactory}.
+ */
+export interface SystemStateStoredDataConverterFactoryConfig {
+  /**
+   * Map of type identifiers to their data field converters.
+   */
+  readonly converters: SystemStateStoredDataConverterMap;
+  /**
+   * Behavior when a document's type has no registered converter. Defaults to `passthrough`.
+   */
+  readonly unknownTypeBehavior?: Maybe<SystemStateUnknownTypeBehavior>;
+  /**
+   * Collection name used only to make the `error` message actionable.
+   */
+  readonly collectionName?: Maybe<string>;
+}
+
+/**
+ * Creates the `converterFactory` for a SystemState collection, selecting a converter by document id
+ * (which is the {@link SystemStateTypeIdentifier}).
+ *
+ * Returning `undefined` is what produces the pass-through fallback — the accessor resolves
+ * `converterFactory(ref) ?? defaultConverter`.
+ *
+ * NOTE for `error`: the factory runs in `loadDocument` / `documentRefForKey`, so an unregistered type
+ * throws at document *load*, including while hydrating query results. That is intended for a
+ * server-only collection, but it does mean you cannot generically iterate such a collection unless
+ * every type it contains is registered.
+ *
+ * @param config - The converter map and unknown-type behavior.
+ * @returns A converter factory suitable for a Firestore collection's `converterFactory`.
+ */
+export function systemStateStoredDataConverterFactory(config: SystemStateStoredDataConverterFactoryConfig): InterceptFirestoreDataConverterFactory<SystemState> {
+  const { converters, unknownTypeBehavior, collectionName } = config;
+  const behavior: SystemStateUnknownTypeBehavior = unknownTypeBehavior ?? 'passthrough';
+
+  const mappedConvertersGetter = cachedGetter(() =>
+    mapObjectMap(converters, (dataConverter) => {
+      return snapshotConverterFunctions<SystemState>({
+        fields: {
+          data: dataConverter
+        }
+      });
+    })
+  );
+
+  return (ref) => {
+    const type: SystemStateTypeIdentifier = ref.id;
+    const converter = mappedConvertersGetter()[type];
+
+    if (converter == null && behavior === 'error') {
+      throw new Error(`systemStateStoredDataConverterFactory: no converter registered for SystemState type "${type}"${collectionName ? ` in collection "${collectionName}"` : ''}. Register it, or use unknownTypeBehavior: 'passthrough'.`);
+    }
+
+    return converter;
+  };
+}
 
 /**
  * Creates a {@link SystemStateFirestoreCollection} with per-type data converters.
@@ -170,22 +256,11 @@ export type SystemStateStoredDataConverterMap = {
  * ```
  */
 export function systemStateFirestoreCollection(firestoreContext: FirestoreContext, converters: SystemStateStoredDataConverterMap): SystemStateFirestoreCollection {
-  const mappedConvertersGetter = cachedGetter(() =>
-    mapObjectMap(converters, (dataConverter) => {
-      return snapshotConverterFunctions<SystemState>({
-        fields: {
-          data: dataConverter
-        }
-      });
-    })
-  );
-
   return firestoreContext.firestoreCollection({
     converter: systemStateConverter,
-    converterFactory: (ref) => {
-      const type: SystemStateTypeIdentifier = ref.id;
-      return mappedConvertersGetter()[type];
-    },
+    // 'passthrough' preserves the historical behavior: an unregistered type silently falls back to
+    // the default pass-through converter rather than throwing.
+    converterFactory: systemStateStoredDataConverterFactory({ converters, unknownTypeBehavior: 'passthrough', collectionName: systemStateIdentity.collectionName }),
     modelIdentity: systemStateIdentity,
     collection: systemStateCollectionReference(firestoreContext),
     makeDocument: (a, d) => {
