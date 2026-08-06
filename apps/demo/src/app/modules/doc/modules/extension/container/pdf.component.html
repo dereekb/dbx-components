@@ -71,5 +71,27 @@
       </p>
       <doc-pdf-merge-upload-button-custom-example></doc-pdf-merge-upload-button-custom-example>
     </doc-feature-example>
+    <doc-feature-example header="Page editing with an embedded manifest" hint="Set pageEditing to turn the file list into a page list, and sidecar to record which pages came from which slot inside the merged PDF.">
+      <p>
+        With
+        <code>pageEditing</code>
+        enabled, each uploaded PDF expands into its individual pages. Pages can be reordered, rotated, and marked for deletion, and the Preview and Download buttons follow those edits live. Reordering is confined to a single slot — each group is its own drop list, so a page cannot be dragged from one document into another.
+      </p>
+      <p>
+        <code>sidecar</code>
+        additionally embeds a JSON manifest and tags every output page, so a later reader can find a specific document's pages. Membership is recorded as page tags rather than positions: tags travel with their page through any subsequent reordering, while recorded indices would go stale. The block below is that manifest read back out of the merged blob with
+        <code>readPdfMergeSidecar()</code>
+        — edit the pages and watch it update.
+      </p>
+      <doc-pdf-merge-page-editing-example></doc-pdf-merge-page-editing-example>
+    </doc-feature-example>
+    <doc-feature-example header="Toggling page editing on and off" hint="pageEditing is off by default; with it off the editor behaves exactly as it did before page editing existed.">
+      <p>
+        The same editor with
+        <code>pageEditing</code>
+        bound to a checkbox. Add a multi-page PDF and toggle it: off renders the original file list with whole-file reordering, on renders the page list. Page edits are held in the store while the mode is off, so switching back restores them. With the mode off no source document is parsed at all — the page machinery is never instantiated.
+      </p>
+      <doc-pdf-merge-page-editing-toggle-example></doc-pdf-merge-page-editing-toggle-example>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

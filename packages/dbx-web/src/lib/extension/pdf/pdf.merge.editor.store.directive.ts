@@ -67,5 +67,17 @@ export class DbxPdfMergeEditorStoreDirective {
     effect(() => {
       this.store.setEncryptedHandling(this.config()?.encryptedHandling);
     });
+
+    // Same channel for pageEditing, so a dialog-hosted editor opens straight into page
+    // editing mode when the host directive asked for it.
+    effect(() => {
+      this.store.setPageEditing(this.config()?.pageEditing);
+    });
+
+    // Same channel for the embedded manifest. Gated separately from pageEditing — a plain
+    // slot merge benefits from recording which pages came from which slot too.
+    effect(() => {
+      this.store.setSidecar(this.config()?.sidecar);
+    });
   }
 }

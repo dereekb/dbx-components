@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
+  readPdfMergeSidecar,
   DbxButtonComponent,
   DbxContentBorderDirective,
   DbxContentContainerDirective,
@@ -23,7 +25,7 @@ import { DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { distinctUntilChanged, delay, map, of } from 'rxjs';
+import { distinctUntilChanged, delay, map, of, switchMap } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 interface DocPdfMergeUploadResult {
@@ -318,9 +320,73 @@ export class DocPdfMergeUploadButtonCustomExampleComponent {
 }
 
 @Component({
+  selector: 'doc-pdf-merge-page-editing-example',
+  template: `
+    <dbx-content-border>
+      <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false" [showPreviewButton]="true" [showDownloadButton]="true" [pageEditing]="true" [sidecar]="true">
+        <div dbxPdfMergeEditorFileUploadValidator>
+          <dbx-pdf-merge-editor-file-upload slotId="license" [config]="licenseConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+          <dbx-pdf-merge-editor-file-upload slotId="cert" [config]="certConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+        </div>
+      </dbx-pdf-merge-editor>
+    </dbx-content-border>
+    @if (sidecarSignal(); as sidecar) {
+      <p class="dbx-hint">
+        Manifest embedded in the merged file, re-read with
+        <code>readPdfMergeSidecar()</code>
+        :
+      </p>
+      <dbx-content-pit>
+        <pre class="dbx-mb0">{{ sidecar | json }}</pre>
+      </dbx-content-pit>
+    }
+  `,
+  standalone: true,
+  imports: [JsonPipe, MatIconModule, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
+  providers: [DbxPdfMergeEditorStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeEditorPageEditingExampleComponent {
+  readonly store = inject(DbxPdfMergeEditorStore);
+
+  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'] };
+  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], required: false };
+
+  /**
+   * Reads the manifest back out of the merged blob on every change, so the document→page mapping stays visible as pages are reordered, rotated, and removed.
+   */
+  readonly sidecar$ = this.store.mergeOutput$.pipe(switchMap((blob) => readPdfMergeSidecar(blob)));
+  readonly sidecarSignal = toSignal(this.sidecar$, { initialValue: undefined });
+}
+
+@Component({
+  selector: 'doc-pdf-merge-page-editing-toggle-example',
+  template: `
+    <dbx-content-border>
+      <mat-checkbox [checked]="pageEditingSignal()" (change)="pageEditingSignal.set($event.checked)">Page editing</mat-checkbox>
+      <dbx-pdf-merge-editor [showPreviewButton]="true" [showDownloadButton]="true" [pageEditing]="pageEditingSignal()"></dbx-pdf-merge-editor>
+    </dbx-content-border>
+    <p class="dbx-hint">Add a multi-page PDF, then toggle the checkbox: the same entries render as files when off and as individual pages when on. Page edits are kept while the mode is off.</p>
+  `,
+  standalone: true,
+  imports: [MatCheckboxModule, DbxContentBorderDirective, DbxPdfMergeEditorComponent],
+  providers: [DbxPdfMergeEditorStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeEditorPageEditingToggleExampleComponent {
+  readonly pageEditingSignal = signal<boolean>(true);
+}
+
+@Component({
   templateUrl: './pdf.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent, DocPdfMergeUploadButtonDefaultExampleComponent, DocPdfMergeUploadButtonCustomExampleComponent],
+  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent, DocPdfMergeUploadButtonDefaultExampleComponent, DocPdfMergeUploadButtonCustomExampleComponent, DocPdfMergeEditorPageEditingExampleComponent, DocPdfMergeEditorPageEditingToggleExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionPdfComponent {}

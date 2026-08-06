@@ -5,7 +5,11 @@
 }
 <ng-content></ng-content>
 @if (showFileListSignal()) {
-  <dbx-pdf-merge-list></dbx-pdf-merge-list>
+  @if (pageEditingSignal()) {
+    <dbx-pdf-merge-page-list></dbx-pdf-merge-page-list>
+  } @else {
+    <dbx-pdf-merge-list></dbx-pdf-merge-list>
+  }
 }
 @if (focusActiveSignal()) {
   <div class="dbx-pdf-merge-editor-encrypted-banner">
@@ -29,6 +33,9 @@
 }
 <div class="dbx-pdf-merge-editor-actions">
   <span class="dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
+  @if (pageEditingSignal()) {
+    <span class="dbx-hint dbx-small">{{ mergeablePageCountSignal() }} page(s)</span>
+  }
   <span class="dbx-spacer"></span>
   <dbx-button text="Clear" icon="delete" [disabled]="entryCountSignal() === 0" (buttonClick)="onClear()"></dbx-button>
   @if (showPreviewButtonSignal()) {
