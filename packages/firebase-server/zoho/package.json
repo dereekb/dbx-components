@@ -12,6 +12,7 @@
     "@dereekb/util": "13.33.0",
     "@dereekb/zoho": "13.33.0",
     "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
     "express": "^5.2.1"
   }
 }
