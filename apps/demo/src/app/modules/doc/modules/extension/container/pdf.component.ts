@@ -136,7 +136,7 @@ export class DocPdfMergeEditorMaxFilesExampleComponent {
     multiple: true,
     minFiles: 1,
     maxFiles: 3,
-    hint: 'Drop up to three receipt PDFs or images. The uploader hides once you reach 3.'
+    hint: 'Drop up to three receipt PDFs or images. Once the first lands, the drop area gives way to the header Add button — which hides at 3.'
   };
 
   readonly mergedBlobSize$ = this.store.mergeOutput$.pipe(
@@ -359,8 +359,10 @@ export class DocPdfMergeUploadButtonCustomExampleComponent {
 export class DocPdfMergeEditorPageEditingExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
 
-  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'] };
-  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], required: false };
+  // multiple: true is what makes a section a *collection* of pages rather than one locked-in file —
+  // the header Add button appends another document's pages to the same section, and Clear empties it.
+  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'], multiple: true };
+  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], multiple: true, required: false };
 
   /**
    * Reads the manifest back out of the merged blob on every change, so the document→page mapping stays visible as pages are reordered, rotated, and removed.
@@ -433,8 +435,16 @@ export class DocPdfMergeReimportExampleComponent {
     hint: 'Pick the merged PDF you downloaded from the example above'
   };
 
-  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'] };
-  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], required: false };
+  // Both sections take multiple files so a re-imported section can be extended with another
+  // document (header Add) or emptied and rebuilt (header Clear) without touching the other section.
+  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'], multiple: true };
+  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = {
+    label: 'Certification',
+    accept: ['application/pdf', 'image/png', 'image/jpeg'],
+    multiple: true,
+    required: false,
+    clearConfirm: { prompt: 'The certification pages will be dropped from this document. Re-import or pick a new file to restore them.' }
+  };
 
   private readonly _summary = signal<Maybe<DocPdfMergeImportSummary>>(undefined);
   readonly importSummarySignal = this._summary.asReadonly();

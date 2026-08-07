@@ -11,10 +11,19 @@
         <em>required</em>
         slot has a ready file. Optional slots (here, Insurance Card) only block when they contain an invalid file. State-aware icons projected through the slot's header use the `dbxPdfMergeEditorFileUploadHasState` directive.
       </p>
+      <p>
+        Both slots here are single-file, so once one is filled it is at capacity and offers no
+        <em>Add</em>
+        — its header keeps only
+        <em>Clear</em>
+        , which is how a single-file slot's document gets replaced. Clearing confirms first through
+        <code>dbxActionConfirm</code>
+        .
+      </p>
       <doc-pdf-merge-editor-slots-example></doc-pdf-merge-editor-slots-example>
     </doc-feature-example>
-    <doc-feature-example header="dbx-pdf-merge-editor with max 3 files upload slot" hint="A single slot configured with multiple=true and maxFiles=3. The uploader hides automatically once three files are dropped; remove one to add a different file.">
-      <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Once the slot reaches capacity its `dbx-file-upload` is hidden — the user must remove an existing entry before adding more.</p>
+    <doc-feature-example header="dbx-pdf-merge-editor with max 3 files upload slot" hint="A single slot configured with multiple=true and maxFiles=3. Add is offered until three files are in; remove one to add a different file.">
+      <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Both add affordances are gated on it: the `dbx-file-upload` drop area stands in while the slot is empty, the header `Add` button takes over once it owns something, and at capacity neither is offered — the user must remove an existing entry, or `Clear` the slot, before adding more.</p>
       <doc-pdf-merge-editor-max-files-example></doc-pdf-merge-editor-max-files-example>
     </doc-feature-example>
     <doc-feature-example header="dbx-pdf-merge-editor with a single config object" hint="Drop large phone photos to see them downscale on upload. PNGs are converted to JPEG. Cross the 2 MB warn or 8 MB error threshold to see the banner.">
@@ -83,6 +92,33 @@
         <code>readPdfMergeSidecar()</code>
         — edit the pages and watch it update.
       </p>
+      <p>
+        Each section header carries its own
+        <em>Add</em>
+        and
+        <em>Clear</em>
+        controls once the section owns something. Both sections here are
+        <code>multiple: true</code>
+        , so
+        <em>Add</em>
+        appends another document's pages to the same section rather than starting a new one; it hides only when the section reaches its
+        <code>maxFiles</code>
+        capacity. While the section is empty the full drop area stands in for the button, so there is never more than one add affordance on screen.
+        <em>Clear</em>
+        is a
+        <code>dbxAction</code>
+        wrapped in
+        <code>dbxActionConfirm</code>
+        — it prompts before emptying the section, since it discards that section's files and their page edits. Turn either control off with
+        <code>showAddButton</code>
+        /
+        <code>showClearButton</code>
+        , and override the prompt's copy (or skip it with
+        <code>autoConfirm</code>
+        ) through
+        <code>clearConfirm</code>
+        .
+      </p>
       <doc-pdf-merge-page-editing-example></doc-pdf-merge-page-editing-example>
     </doc-feature-example>
     <doc-feature-example header="Toggling page editing on and off" hint="pageEditing is off by default; with it off the editor behaves exactly as it did before page editing existed.">
@@ -104,6 +140,17 @@
         — original file names included. From there a single section's pages can be replaced or removed without rebuilding the whole document.
       </p>
       <p>Membership is resolved from the per-page tags, so a file that was reordered after export still splits correctly. A PDF with no manifest cannot be attributed to sections and is rejected with an explanation, as is one naming a section this editor does not have.</p>
+      <p>
+        After the split, each section is editable on its own terms:
+        <em>Add</em>
+        appends another document to just that section, and
+        <em>Clear</em>
+        empties it after confirming — the other section, and its page edits, are untouched either way. The
+        <em>Certification</em>
+        section overrides the confirmation copy through
+        <code>clearConfirm</code>
+        to show that the prompt is the section's to word.
+      </p>
       <p>
         The import above is bound to nothing at all. Each
         <code>dbx-pdf-merge-editor-file-upload</code>

@@ -3,9 +3,15 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
+import { type WorkUsingContext } from '@dereekb/rxjs';
+import { DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
+import { DbxFileUploadButtonComponent } from '../../interaction/upload/upload.button.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
+import { DbxButtonComponent } from '../../button/button.component';
+import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from '../../action/action.confirm.directive';
+import { DbxActionSnackbarErrorDirective } from '../../error/error.snackbar.action.directive';
 import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView, type PdfMergePageView } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
@@ -71,15 +77,47 @@ export interface DbxPdfMergeEditorFileUploadConfig {
    * Optional per-slot image compression override. When omitted, the slot falls back to the ancestor {@link DbxPdfMergeEditorComponent} input config and finally to the workspace-wide {@link DBX_PDF_MERGE_EDITOR_CONFIG} token.
    */
   readonly imageCompression?: Maybe<DbxImageCompressionConfig>;
+  /**
+   * Whether the slot header offers an Add button once the slot owns entries and still has room under its capacity. Defaults to `true`.
+   *
+   * While this is enabled the full drop area is the slot's *empty* state only: once the slot owns something, the area collapses and this compact button becomes the way to add more, so the section never shows two competing add affordances. Set `false` to keep the pre-existing behavior, where the drop area stays visible until the slot reaches capacity.
+   */
+  readonly showAddButton?: Maybe<boolean>;
+  /**
+   * Whether the slot header offers a Clear button while the slot owns entries. Defaults to `true`.
+   *
+   * Clearing is also the slot's replace path: a single-file slot at capacity has no Add button, so clearing is how its file is swapped.
+   */
+  readonly showClearButton?: Maybe<boolean>;
+  /**
+   * Overrides merged over the default confirmation dialog shown before the slot is cleared. Set `autoConfirm: true` to clear without prompting.
+   */
+  readonly clearConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * Text for the header Add button. Defaults to `'Add'`.
+   */
+  readonly addButtonText?: Maybe<string>;
+  /**
+   * Text for the header Clear button. Defaults to `'Clear'`.
+   */
+  readonly clearButtonText?: Maybe<string>;
 }
 
 const DEFAULT_MIN_FILES = 1;
 const DEFAULT_REQUIRED = true;
+const DEFAULT_ADD_BUTTON_TEXT = 'Add';
+const DEFAULT_CLEAR_BUTTON_TEXT = 'Clear';
+const DEFAULT_CLEAR_CONFIRM_TITLE = 'Clear this section?';
+const DEFAULT_CLEAR_CONFIRM_PROMPT = 'Every file in this section will be removed, along with any page edits made to them.';
+const DEFAULT_CLEAR_CONFIRM_CONFIRM_TEXT = 'Clear';
+const DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT = 'Cancel';
 
 /**
  * Slot-scoped uploader for use inside a {@link DbxPdfMergeEditorComponent}. Adds files to the shared {@link DbxPdfMergeEditorStore} tagged with this slot's `slotId`, displays the slot's owned entries inline using {@link DbxPdfMergeEntryComponent}, and reports its readiness to the optional ancestor {@link DbxPdfMergeEditorFileUploadValidatorDirective}. On destroy the slot removes its owned entries from the store.
  *
  * Projects an `<ng-content>` slot inside its header element so consumers can render state-aware indicators (e.g. via the `dbxPdfMergeEditorFileUploadHasState` structural directive) alongside the optional `label`.
+ *
+ * Once the slot owns entries its header gains an Add button (while the slot is under capacity) and a Clear button, so a section that already has content can still be extended, emptied, or replaced. Clearing runs as its own `dbxAction` behind a `dbxActionConfirm` prompt — a misclick costs a dialog, not the section's files.
  *
  * @example
  * ```html
@@ -96,8 +134,20 @@ const DEFAULT_REQUIRED = true;
         <span class="dbx-pdf-merge-editor-file-upload-label">{{ label }}</span>
       }
       <ng-content></ng-content>
+      @if (showAddButtonSignal() || showClearButtonSignal()) {
+        <div class="dbx-pdf-merge-editor-file-upload-actions">
+          @if (showAddButtonSignal()) {
+            <dbx-file-upload-button [accept]="acceptSignal()" [multiple]="multipleSignal()" [text]="addButtonTextSignal()" icon="add" [ariaLabel]="addButtonAriaLabelSignal()" (filesChanged)="onFiles($event)"></dbx-file-upload-button>
+          }
+          @if (showClearButtonSignal()) {
+            <div dbxAction dbxActionSnackbarError [dbxActionHandler]="handleClear" [dbxActionConfirm]="clearConfirmSignal()">
+              <dbx-button dbxActionButton [text]="clearButtonTextSignal()" icon="delete" [ariaLabel]="clearButtonAriaLabelSignal()"></dbx-button>
+            </div>
+          }
+        </div>
+      }
     </div>
-    @if (canAddFilesSignal()) {
+    @if (showUploadAreaSignal()) {
       <dbx-file-upload [accept]="acceptSignal()" [multiple]="multipleSignal()" [mode]="modeSignal()" [hint]="hintSignal()" [text]="textSignal()" [icon]="iconSignal()" (filesChanged)="onFiles($event)"></dbx-file-upload>
     }
     @if (ownedEntriesSignal(); as owned) {
@@ -120,7 +170,7 @@ const DEFAULT_REQUIRED = true;
     '[class.dbx-pdf-merge-editor-file-upload--valid]': 'stateSignal() === "valid"',
     '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"'
   },
-  imports: [CdkDropList, DbxFileUploadComponent, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
+  imports: [CdkDropList, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -193,9 +243,76 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   );
 
   /**
-   * Whether the slot still has room for more files. Drives visibility of the upload UI — once the slot is at capacity, the uploader is hidden and the user must remove an existing entry to add another.
+   * Whether the slot still has room for more files. Gates every add affordance — once the slot is at capacity neither the drop area nor the header Add button is offered, and the user must clear the slot (or remove an entry) to add another.
    */
   readonly canAddFilesSignal = computed(() => this.ownedEntriesSignal().length < this.capacitySignal());
+
+  readonly showAddButtonConfigSignal = computed(() => this.config()?.showAddButton ?? true);
+  readonly showClearButtonConfigSignal = computed(() => this.config()?.showClearButton ?? true);
+
+  /**
+   * Whether the compact header Add button is rendered. Only meaningful once the slot owns something — while it is empty the drop area is already the add affordance.
+   */
+  readonly showAddButtonSignal = computed(() => {
+    const ownedEntries = this.ownedEntriesSignal();
+    const canAddFiles = this.canAddFilesSignal();
+    return this.showAddButtonConfigSignal() && ownedEntries.length > 0 && canAddFiles;
+  });
+
+  readonly showClearButtonSignal = computed(() => {
+    const ownedEntries = this.ownedEntriesSignal();
+    return this.showClearButtonConfigSignal() && ownedEntries.length > 0;
+  });
+
+  /**
+   * Whether the full drop area is rendered. It is the slot's empty state while the header Add button is enabled; with the button turned off it falls back to staying visible until the slot reaches capacity.
+   */
+  readonly showUploadAreaSignal = computed(() => {
+    const showAddButtonConfig = this.showAddButtonConfigSignal();
+    const canAddFiles = this.canAddFilesSignal();
+    const isEmpty = this.ownedEntriesSignal().length === 0;
+    return canAddFiles && (isEmpty || !showAddButtonConfig);
+  });
+
+  readonly addButtonTextSignal = computed(() => this.config()?.addButtonText ?? DEFAULT_ADD_BUTTON_TEXT);
+  readonly clearButtonTextSignal = computed(() => this.config()?.clearButtonText ?? DEFAULT_CLEAR_BUTTON_TEXT);
+
+  readonly addButtonAriaLabelSignal = computed(() => {
+    const label = this.labelSignal();
+    return label ? `Add files to ${label}` : 'Add files to this section';
+  });
+
+  readonly clearButtonAriaLabelSignal = computed(() => {
+    const label = this.labelSignal();
+    return label ? `Clear ${label}` : 'Clear this section';
+  });
+
+  /**
+   * Config for the confirmation shown before the slot is cleared. The slot's `label` is folded into the default title so a page of sections says which one is about to be emptied; `clearConfirm` overrides any field of it.
+   */
+  readonly clearConfirmSignal = computed<DbxActionConfirmConfig>(() => {
+    const label = this.labelSignal();
+    const overrides = this.config()?.clearConfirm;
+
+    return {
+      title: label ? `Clear ${label}?` : DEFAULT_CLEAR_CONFIRM_TITLE,
+      prompt: DEFAULT_CLEAR_CONFIRM_PROMPT,
+      confirmText: DEFAULT_CLEAR_CONFIRM_CONFIRM_TEXT,
+      cancelText: DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT,
+      ...overrides
+    };
+  });
+
+  /**
+   * Clears every entry this slot owns. Runs as the handler of the header's own `dbxAction`, so the `dbxActionConfirm` on that action is what stands between a misclick and the section's files.
+   *
+   * @param _value - Unused. The confirmation supplies no value, only the go-ahead.
+   * @param context - Work context completed as soon as the store drops the entries.
+   */
+  readonly handleClear: WorkUsingContext<unknown, void> = (_value, context) => {
+    this.store.removeEntriesBySlotId(this.slotId());
+    context.success();
+  };
 
   /**
    * High-level state of the slot — `no_file` when empty, `valid` when owned entries satisfy the slot's thresholds, `invalid` when owned entries fail or are still being validated.
