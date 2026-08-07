@@ -37,7 +37,11 @@
     <span class="dbx-hint dbx-small">{{ mergeablePageCountSignal() }} page(s)</span>
   }
   <span class="dbx-spacer"></span>
-  <dbx-button text="Clear" icon="delete" [disabled]="entryCountSignal() === 0" (buttonClick)="onClear()"></dbx-button>
+  <!-- Emptiness gates the button through the action's own disabled channel: dbxActionButton pushes
+       `isDisabled$` into the button, which would otherwise win over a plain [disabled] input. -->
+  <div dbxAction dbxActionSnackbarError [dbxActionDisabled]="entryCountSignal() === 0" [dbxActionHandler]="handleClear" [dbxActionConfirm]="clearConfirmSignal()">
+    <dbx-button dbxActionButton text="Clear" icon="delete"></dbx-button>
+  </div>
   @if (showPreviewButtonSignal()) {
     <dbx-button text="Preview" icon="picture_as_pdf" [disabled]="!canMergeSignal()" (buttonClick)="onPreview()"></dbx-button>
   }

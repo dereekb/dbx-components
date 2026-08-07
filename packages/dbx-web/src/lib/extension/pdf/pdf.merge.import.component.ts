@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { PDF_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
@@ -122,6 +122,24 @@ export class DbxPdfMergeImportComponent {
   private readonly _registeredSlotIdsSignal = toSignal(this.store.registeredSlotIds$, { initialValue: [] as readonly string[] });
 
   /**
+   * The exact import state the notices below currently describe — the one this component's own picked file produced. Identity, not contents: it is the only reliable way to tell "still my file" from "the store moved on".
+   */
+  private _displayedState: Maybe<DbxPdfMergeEditorImportState>;
+
+  constructor() {
+    // The notices are set from what `onFiles` gets back rather than from `importState$`, so that
+    // they only ever describe a file picked here. They must not outlive it, though: once the store
+    // is showing anything other than this component's own import — cleared outright, restored to a
+    // programmatic baseline, or replaced by an import from elsewhere — the notice is describing
+    // content the editor no longer holds, and goes.
+    this.store.importState$.pipe(takeUntilDestroyed()).subscribe((state) => {
+      if (state !== this._displayedState) {
+        this.resetDisplay();
+      }
+    });
+  }
+
+  /**
    * The sections an imported file is allowed to name, or `null` when no check applies. Resolves the explicit {@link expectedSlotIds} binding over the slots registered with the store.
    */
   readonly effectiveExpectedSlotIdsSignal = computed<Maybe<readonly string[]>>(() => {
@@ -183,15 +201,19 @@ export class DbxPdfMergeImportComponent {
     const file = event.matchResult.accepted[0];
 
     if (file != null) {
-      this._error.set(null);
-      this._result.set(null);
-      this._missingSlotIds.set([]);
+      this.resetDisplay();
 
       // Delegates to the store so the picker and a programmatic import share one implementation
       // and one set of error semantics. The slot check is opt-in on the store, so the component's
       // own resolved expectation is what preserves the picker's behavior. The returned state is
       // used rather than `importState$` so these outputs only ever describe a picked file.
-      const state = await this.store.importMergedPdf({ source: file, expectedSlotIds: this.effectiveExpectedSlotIdsSignal() });
+      // `origin: 'user'` marks this as discardable — it must not become the store's clear-time
+      // restore point, which belongs to whatever document the app itself supplied.
+      const state = await this.store.importMergedPdf({ source: file, expectedSlotIds: this.effectiveExpectedSlotIdsSignal(), origin: 'user' });
+
+      // Claim this state before rendering it: the subscription above resets on anything it does
+      // not recognise, and the 'importing'/terminal emissions have already gone past by now.
+      this._displayedState = state;
 
       if (state.status === 'failed') {
         this.fail(this.messageForFailure(state));
@@ -225,5 +247,15 @@ export class DbxPdfMergeImportComponent {
   private fail(message: string): void {
     this._error.set(message);
     this.importFailed.emit(message);
+  }
+
+  /**
+   * Drops every notice this component renders, returning it to its pre-import appearance and releasing its claim on the store's import state.
+   */
+  private resetDisplay(): void {
+    this._displayedState = null;
+    this._error.set(null);
+    this._result.set(null);
+    this._missingSlotIds.set([]);
   }
 }

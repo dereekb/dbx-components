@@ -86,10 +86,24 @@ export interface DbxPdfMergeEditorImportResult extends PdfMergeSidecarImportResu
 }
 
 /**
+ * Who initiated an import.
+ *
+ * - `programmatic` — app code called {@link DbxPdfMergeEditorStore.importMergedPdf} directly, or a blob was bound to `[source]` on {@link DbxPdfMergeEditorStoreDirective}. This is the editor's *baseline*: the document the surrounding app decided the editor should be showing.
+ * - `user` — the person picked a file through {@link DbxPdfMergeImportComponent}. Discardable; the baseline is not.
+ *
+ * The distinction exists for {@link DbxPdfMergeEditorStore.clearEntries}: emptying a programmatically-supplied editor would leave it in a state the app never asked for and cannot easily detect, so a clear restores the baseline instead of destroying it.
+ */
+export type DbxPdfMergeEditorImportOrigin = 'programmatic' | 'user';
+
+/**
  * Lifecycle of the most recent {@link DbxPdfMergeEditorStore.importMergedPdf} call, exposed via {@link DbxPdfMergeEditorStore.importState$}.
  */
 export interface DbxPdfMergeEditorImportState {
   readonly status: 'importing' | 'imported' | 'failed';
+  /**
+   * Who initiated this import. See {@link DbxPdfMergeEditorImportOrigin}.
+   */
+  readonly origin: DbxPdfMergeEditorImportOrigin;
   /**
    * Present with status `imported`.
    */
@@ -126,6 +140,38 @@ export interface DbxPdfMergeEditorImportMergedPdfInput {
    * File name for the entry built by the `allowWithoutSidecar` fallback when `source` is a bare {@link Blob}.
    */
   readonly fileName?: Maybe<string>;
+  /**
+   * Who initiated this import. Defaults to `programmatic` — the picker passes `user` explicitly, so any other caller is app code by construction.
+   *
+   * A successful `programmatic` import becomes the editor's restore point for {@link DbxPdfMergeEditorStore.clearEntries}.
+   */
+  readonly origin?: Maybe<DbxPdfMergeEditorImportOrigin>;
+}
+
+/**
+ * Input for {@link DbxPdfMergeEditorStore.clearEntries}.
+ */
+export interface DbxPdfMergeEditorClearEntriesInput {
+  /**
+   * Whether a programmatic import is restored rather than discarded. Defaults to `true`.
+   *
+   * Bind `false` for an editor whose clear really should empty everything, baseline included.
+   */
+  readonly restoreImport?: Maybe<boolean>;
+}
+
+/**
+ * Outcome of {@link DbxPdfMergeEditorStore.clearEntries}.
+ */
+export interface DbxPdfMergeEditorClearEntriesResult {
+  /**
+   * Whether the editor was reset to its programmatic baseline (`true`) or emptied (`false`).
+   */
+  readonly restored: boolean;
+  /**
+   * Terminal state of the restoring re-import. Only present when a restore was attempted.
+   */
+  readonly importState?: Maybe<DbxPdfMergeEditorImportState>;
 }
 
 /**
@@ -184,6 +230,10 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   private readonly _slotIdCounts = new Map<string, number>();
   private readonly _registeredSlotIds$ = new BehaviorSubject<readonly string[]>([]);
   private readonly _importState$ = new BehaviorSubject<Maybe<DbxPdfMergeEditorImportState>>(undefined);
+  /**
+   * Input of the most recent successful `programmatic` import, replayed by {@link clearEntries} to reset the editor to the document the app supplied. `null` until one succeeds; a user's pick never overwrites it.
+   */
+  private _restorableImport: Maybe<DbxPdfMergeEditorImportMergedPdfInput>;
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -637,6 +687,15 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
+   * Whether a programmatic baseline exists for {@link clearEntries} to restore. Lets a consumer word its own confirmation honestly — "reset to the imported document" rather than "remove everything".
+   *
+   * @returns `true` once a programmatic import has succeeded.
+   */
+  hasRestorableImport(): boolean {
+    return this._restorableImport != null;
+  }
+
+  /**
    * Imports a previously-exported merged PDF, replacing every entry currently in the store with the per-slot documents recorded in its manifest.
    *
    * This is the programmatic equivalent of what {@link DbxPdfMergeImportComponent} does with a picked file, and that component delegates here — so a stored document loaded by an app and a file chosen by a user go through one implementation with one set of error semantics. Progress and outcome are published on {@link importState$} as well as returned.
@@ -646,32 +705,84 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
    */
   async importMergedPdf(input: DbxPdfMergeEditorImportMergedPdfInput): Promise<DbxPdfMergeEditorImportState> {
     const { source, expectedSlotIds, allowWithoutSidecar, fileName } = input;
+    const origin = input.origin ?? 'programmatic';
     const config: BuildPdfMergeEntriesFromSidecarConfig = { allowWithoutSidecar, fileName };
 
-    this._importState$.next({ status: 'importing' });
+    this._importState$.next({ status: 'importing', origin });
 
     const outcome = await buildPdfMergeEntriesFromSidecar(source, config);
     let state: DbxPdfMergeEditorImportState;
 
     if ('error' in outcome) {
-      state = { status: 'failed', error: outcome.error };
+      state = { status: 'failed', origin, error: outcome.error };
     } else {
       // An unsectioned document counts as unexpected too: in a slots-only editor it would render
       // nowhere, so rejecting it beats importing pages the user can never see again.
       const unexpected = expectedSlotIds == null ? [] : outcome.slotIds.filter((slotId) => slotId == null || !expectedSlotIds.includes(slotId));
 
       if (unexpected.length > 0) {
-        state = { status: 'failed', error: 'unexpected_slots', unexpectedSlotIds: unexpected };
+        state = { status: 'failed', origin, error: 'unexpected_slots', unexpectedSlotIds: unexpected };
       } else {
         const missingSlotIds = expectedSlotIds == null ? [] : expectedSlotIds.filter((slotId) => !outcome.slotIds.includes(slotId));
 
         this.replaceEntries(outcome.entries);
-        state = { status: 'imported', result: { ...outcome, missingSlotIds } };
+        state = { status: 'imported', origin, result: { ...outcome, missingSlotIds } };
+
+        // A programmatic import is the app telling the editor what it should be showing, so it
+        // becomes the restore point. A user's pick deliberately does NOT overwrite it: the person
+        // replaced what is on screen, not what the app configured.
+        if (origin === 'programmatic') {
+          this._restorableImport = input;
+        }
       }
     }
 
     this._importState$.next(state);
     return state;
+  }
+
+  /**
+   * Discards the current import lifecycle, so consumers rendering its notices (the picker's "Imported N section(s)" success line, its missing-section warning, its error) fall back to showing nothing.
+   *
+   * Separate from the entry list — this clears the *record* of an import, not its contents.
+   */
+  clearImportState(): void {
+    this._importState$.next(undefined);
+  }
+
+  /**
+   * Empties the editor, or resets it to its programmatic baseline when one exists.
+   *
+   * This is the "Clear" affordance's operation, and it deliberately is not a plain {@link clearAll}. When the surrounding app supplied the document (a programmatic {@link importMergedPdf}, or `[source]` on {@link DbxPdfMergeEditorStoreDirective}), emptying the editor would strand it in a state the app never asked for and has no obvious way to notice. Instead the original import is re-run, landing the view exactly where it was when the document first arrived — page edits, section removals, and any user-picked file on top of it all discarded.
+   *
+   * With no baseline — the ordinary case, including an editor whose only import came from {@link DbxPdfMergeImportComponent} — the entries and the import state both go, so no stale success/warning notice outlives the content it described.
+   *
+   * @param input - Optional override for the restore behavior.
+   * @returns Whether the baseline was restored, plus the re-import's terminal state when one ran.
+   */
+  async clearEntries(input?: Maybe<DbxPdfMergeEditorClearEntriesInput>): Promise<DbxPdfMergeEditorClearEntriesResult> {
+    const restorable = this._restorableImport;
+    const shouldRestore = (input?.restoreImport ?? true) && restorable != null;
+    let result: DbxPdfMergeEditorClearEntriesResult;
+
+    if (shouldRestore) {
+      const importState = await this.importMergedPdf(restorable);
+
+      // A baseline that no longer imports (unreadable retained blob) must not leave the old
+      // entries sitting there — the user asked for a clear and got neither.
+      if (importState.status === 'imported') {
+        result = { restored: true, importState };
+      } else {
+        this.clearAll();
+        result = { restored: false, importState };
+      }
+    } else {
+      this.clearAll();
+      this.clearImportState();
+      result = { restored: false };
+    }
+
+    return result;
   }
 
   /**

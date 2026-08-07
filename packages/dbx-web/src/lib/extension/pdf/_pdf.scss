@@ -53,6 +53,15 @@
     font-weight: 500;
   }
 
+  // Pushed to the trailing edge so the Add/Clear controls stay clear of the label and any
+  // state indicators projected between them.
+  .dbx-pdf-merge-editor-file-upload-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+
   .dbx-pdf-merge-editor-file-upload-entries {
     display: flex;
     flex-direction: column;
@@ -212,8 +221,10 @@
     font-size: var(--mat-sys-label-small-size);
   }
 
-  .dbx-pdf-merge-page-rotation-chip {
+  .dbx-chip.dbx-chip-small.dbx-pdf-merge-page-rotation-chip {
     gap: 4px;
+    height: 12px;
+    min-height: 12px;
   }
 
   // Chain `.mat-icon` so we beat the global `.mat-icon { width: 24px; height: 24px }` defaults

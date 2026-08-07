@@ -1,3 +1,11 @@
+# [13.35.0](https://github.com/dereekb/dbx-components/compare/v13.34.0-dev...v13.35.0) (2026-08-07)
+
+
+### Features
+
+- **dbx-web:** add per-section add/clear to pdf merge slots ([05abdee8](https://github.com/dereekb/dbx-components/commit/05abdee81477e29d90fe34913148f111220d4035))
+- **dbx-web:** confirm + restore-aware clear for pdf merge editor ([ba9f1324](https://github.com/dereekb/dbx-components/commit/ba9f132440a49bb76c613e3cb4e2a05f34a2fdb0))
+
 # [13.34.0](https://github.com/dereekb/dbx-components/compare/v13.33.0-dev...v13.34.0) (2026-08-06)
 
 
