@@ -2,18 +2,21 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, ou
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { first } from 'rxjs';
+import { first, from, map } from 'rxjs';
 import { type FileSize, type Maybe } from '@dereekb/util';
-import { cleanSubscription } from '@dereekb/dbx-core';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
+import { cleanSubscription, DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type DbxButtonDisplayStylePair } from '../../button/button';
 import { DbxButtonComponent } from '../../button/button.component';
+import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from '../../action/action.confirm.directive';
+import { DbxActionSnackbarErrorDirective } from '../../error/error.snackbar.action.directive';
 import { DbxFileUploadComponent } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_DBX_PDF_MERGE_PAGE_EDITING, DEFAULT_DBX_PDF_MERGE_SIDECAR, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_DBX_PDF_MERGE_PAGE_EDITING, DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR, DEFAULT_DBX_PDF_MERGE_SIDECAR, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
-import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
+import { DbxPdfMergeEditorStore, type DbxPdfMergeEditorClearEntriesResult } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';
 import { DbxPdfMergePageListComponent } from './pdf.merge.page.list.component';
 import { buildPdfMergeEntry, formatPdfMergeEntrySize } from './pdf.merge.utility';
@@ -24,6 +27,23 @@ const DEFAULT_MERGED_FILE_NAME = 'merged.pdf';
 const DEFAULT_DOWNLOAD_BUTTON: DbxButtonDisplayStylePair = {
   display: { icon: 'download', text: 'Download' },
   style: { type: 'stroked' }
+};
+
+const DEFAULT_CLEAR_CONFIRM: DbxActionConfirmConfig = {
+  title: 'Clear all files?',
+  prompt: 'Every file added to this editor will be removed, along with any page edits made to them.',
+  confirmText: 'Clear',
+  cancelText: 'Cancel'
+};
+
+/**
+ * Shown in place of {@link DEFAULT_CLEAR_CONFIRM} when the editor has a programmatic baseline, since Clear resets to that document rather than emptying.
+ */
+const DEFAULT_RESTORE_CONFIRM: DbxActionConfirmConfig = {
+  title: 'Reset to the imported document?',
+  prompt: 'Every change made here — added files, page edits, removed sections — will be discarded and the imported document reloaded as it first arrived.',
+  confirmText: 'Reset',
+  cancelText: 'Cancel'
 };
 
 /**
@@ -51,7 +71,7 @@ export type DbxPdfMergeEditorOutputSizeState = 'ok' | 'warn' | 'error';
   host: {
     class: 'dbx-pdf-merge-editor d-block'
   },
-  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
+  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -123,8 +143,32 @@ export class DbxPdfMergeEditorComponent {
       showFileList: fromInput?.showFileList ?? fromToken?.showFileList,
       encryptedHandling: fromInput?.encryptedHandling ?? storeEncryptedHandling ?? fromToken?.encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING,
       pageEditing: fromInput?.pageEditing ?? storePageEditing ?? fromToken?.pageEditing ?? DEFAULT_DBX_PDF_MERGE_PAGE_EDITING,
-      sidecar: fromInput?.sidecar ?? storeSidecar ?? fromToken?.sidecar ?? DEFAULT_DBX_PDF_MERGE_SIDECAR
+      sidecar: fromInput?.sidecar ?? storeSidecar ?? fromToken?.sidecar ?? DEFAULT_DBX_PDF_MERGE_SIDECAR,
+      clearConfirm: fromInput?.clearConfirm ?? fromToken?.clearConfirm,
+      restoreImportOnClear: fromInput?.restoreImportOnClear ?? fromToken?.restoreImportOnClear ?? DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR
     };
+  });
+
+  readonly restoreImportOnClearSignal = computed<boolean>(() => this.effectiveConfigSignal().restoreImportOnClear ?? DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR);
+
+  /**
+   * Whether Clear will reset to a programmatic baseline instead of emptying. Only affects the confirmation's wording — {@link DbxPdfMergeEditorStore.clearEntries} makes the actual decision, and re-reads the store at the moment it runs.
+   */
+  readonly clearRestoresImportSignal = computed<boolean>(() => {
+    // Tracks the entry count so the wording is re-evaluated as the editor's contents change; the
+    // store's restore point is a plain field rather than a stream (nothing else needs to observe it).
+    this.entryCountSignal();
+    return this.restoreImportOnClearSignal() && this.store.hasRestorableImport();
+  });
+
+  /**
+   * Config for the confirmation shown before the footer Clear button empties the editor. `clearConfirm` overrides any field of the default; `autoConfirm: true` restores the pre-confirmation one-click behavior.
+   *
+   * The default copy tells the truth about which of the two things Clear is about to do — reset to the app-supplied document, or remove everything.
+   */
+  readonly clearConfirmSignal = computed<DbxActionConfirmConfig>(() => {
+    const base = this.clearRestoresImportSignal() ? DEFAULT_RESTORE_CONFIRM : DEFAULT_CLEAR_CONFIRM;
+    return { ...base, ...this.effectiveConfigSignal().clearConfirm };
   });
 
   readonly encryptedHandlingSignal = computed<DbxPdfMergeEncryptedHandling>(() => this.effectiveConfigSignal().encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING);
@@ -295,9 +339,21 @@ export class DbxPdfMergeEditorComponent {
     }
   }
 
-  onClear(): void {
-    this.store.clearAll();
+  /**
+   * Clears the editor, resetting to a programmatic baseline when there is one. See {@link DbxPdfMergeEditorStore.clearEntries}.
+   *
+   * @returns The clear outcome, so a programmatic caller can tell a reset from an empty.
+   */
+  onClear(): Promise<DbxPdfMergeEditorClearEntriesResult> {
+    return this.store.clearEntries({ restoreImport: this.restoreImportOnClearSignal() });
   }
+
+  /**
+   * Runs as the handler of the footer Clear button's own `dbxAction`, so the `dbxActionConfirm` on that action is what stands between a misclick and the whole entry list. Delegates to {@link onClear} so a programmatic clear and the button share one path.
+   *
+   * @returns An observable the action completes on — a restore re-parses the document, so this is not instantaneous.
+   */
+  readonly handleClear: WorkUsingObservable<unknown, void> = () => from(this.onClear()).pipe(map(() => undefined));
 
   onPreview(): void {
     if (!this.canMergeSignal()) {

@@ -152,6 +152,34 @@
         to show that the prompt is the section's to word.
       </p>
       <p>
+        The editor's own footer
+        <em>Clear</em>
+        does one of two things, and says which in its prompt. A document the
+        <em>app</em>
+        supplied — a programmatic
+        <code>importMergedPdf()</code>
+        , or a blob bound to
+        <code>[source]</code>
+        on
+        <code>dbxPdfMergeEditorStore</code>
+        — becomes the editor's baseline, and Clear reloads it rather than discarding it. Emptying it would strand a programmatic setup in a state the app never asked for and has no easy way to detect. Use the button above to load one, edit it, then press Clear: the document comes back exactly as it arrived. Bind
+        <code>restoreImportOnClear: false</code>
+        for an editor whose Clear really should empty everything.
+      </p>
+      <p>
+        A file the
+        <em>user</em>
+        picked through
+        <code>dbx-pdf-merge-import</code>
+        carries no such weight — it is marked
+        <code>origin: 'user'</code>
+        and is never made the baseline. Clearing it removes the entries and the import record together, so the "Imported N section(s)" notice, any missing-section warning, and the manifest block below all go with it. With a baseline present, a user's pick sits on top of it and Clear returns to the baseline. The block below is driven by
+        <code>importState$</code>
+        rather than the picker's
+        <code>imported</code>
+        output, so it tracks all of these paths.
+      </p>
+      <p>
         The import above is bound to nothing at all. Each
         <code>dbx-pdf-merge-editor-file-upload</code>
         registers its

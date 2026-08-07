@@ -4,6 +4,7 @@ import { type Observable } from 'rxjs';
 import { type DbxImageCompressionConfig, type ImageCompressionStatus } from '../image';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { type DbxButtonDisplayStylePair } from '../../button/button';
+import { type DbxActionConfirmConfig } from '../../action/action.confirm.directive';
 
 /**
  * Identifies which kind of source file a {@link PdfMergeEntry} represents.
@@ -75,6 +76,11 @@ export const DEFAULT_DBX_PDF_MERGE_PAGE_EDITING = false;
  * Default value for {@link DbxPdfMergeEditorConfig.sidecar}. Off, so merged output bytes are unchanged.
  */
 export const DEFAULT_DBX_PDF_MERGE_SIDECAR = false;
+
+/**
+ * Default value for {@link DbxPdfMergeEditorConfig.restoreImportOnClear}. On, so an editor the app populated programmatically is reset to that document by Clear rather than left empty.
+ */
+export const DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR = true;
 
 /**
  * Message shown on an encrypted entry's row while page editing is enabled. Encrypted documents cannot be opened by `pdf-lib`, so their pages cannot be listed or edited — the entry stays a single opaque row.
@@ -448,6 +454,16 @@ export interface DbxPdfMergeEditorConfig {
    * Defaults to {@link DEFAULT_DBX_PDF_MERGE_SIDECAR} (`false`), in which case the output bytes are unchanged.
    */
   readonly sidecar?: Maybe<boolean>;
+  /**
+   * Overrides merged over the default confirmation shown before the editor's footer Clear button empties every entry. Set `autoConfirm: true` to clear without prompting, restoring the pre-confirmation behavior.
+   */
+  readonly clearConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * Whether the footer Clear button resets a programmatically-supplied document to that document rather than discarding it. Defaults to `true`.
+   *
+   * See {@link DbxPdfMergeEditorStore.clearEntries} — the point is that an app that populated the editor via `importMergedPdf` (or `[source]`) never ends up looking at an empty editor it did not ask for. Set `false` for an editor whose Clear should empty everything, baseline included.
+   */
+  readonly restoreImportOnClear?: Maybe<boolean>;
 }
 
 /**

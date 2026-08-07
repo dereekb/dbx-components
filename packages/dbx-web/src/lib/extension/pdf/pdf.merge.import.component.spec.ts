@@ -433,3 +433,76 @@ describe('DbxPdfMergeImportComponent import', () => {
     expect(await firstValueFrom(store.entryCount$)).toBe(0);
   });
 });
+
+describe('DbxPdfMergeImportComponent notice lifecycle', () => {
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
+  let store: DbxPdfMergeEditorStore;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [TestHostComponent] }).compileComponents();
+
+    fixture = TestBed.createComponent(TestHostComponent);
+    component = fixture.componentInstance;
+    component.showLicense.set(true);
+    component.showCert.set(true);
+    fixture.detectChanges();
+    store = component.storeDirective().store;
+  });
+
+  it('drops the success notice when a clear discards the import outright', async () => {
+    await component.import().onFiles(filesChangedEvent(await makeExportedFile(['license', 'cert'])));
+    expect(component.import().successLabelSignal()).toContain('license');
+
+    await store.clearEntries();
+
+    expect(component.import().successLabelSignal()).toBeNull();
+    expect(component.import().missingLabelSignal()).toBeNull();
+  });
+
+  it('drops the missing-section warning when a clear discards the import', async () => {
+    await component.import().onFiles(filesChangedEvent(await makeExportedFile(['license'])));
+    expect(component.import().missingLabelSignal()).toContain('cert');
+
+    await store.clearEntries();
+
+    expect(component.import().missingLabelSignal()).toBeNull();
+  });
+
+  describe('with a programmatic baseline, where a clear restores rather than empties', () => {
+    beforeEach(async () => {
+      const baseline = await makeExportedFile(['license', 'cert']);
+      await store.importMergedPdf({ source: baseline });
+    });
+
+    it("drops the picker's error notice — the clear replaced what the error described", async () => {
+      // The reported sequence: load a packet programmatically, then pick a file the editor rejects.
+      await component.import().onFiles(filesChangedEvent(new File(['not a pdf'], 'bad.pdf', { type: 'application/pdf' })));
+      expect(component.import().errorSignal()).not.toBeNull();
+
+      const result = await store.clearEntries();
+
+      expect(result.restored).toBe(true);
+      expect(component.import().errorSignal()).toBeNull();
+    });
+
+    it("drops the picker's success notice when the baseline is restored over it", async () => {
+      await component.import().onFiles(filesChangedEvent(await makeExportedFile(['license'])));
+      expect(component.import().successLabelSignal()).not.toBeNull();
+      expect(component.import().missingLabelSignal()).toContain('cert');
+
+      await store.clearEntries();
+
+      expect(component.import().successLabelSignal()).toBeNull();
+      expect(component.import().missingLabelSignal()).toBeNull();
+      expect(await firstValueFrom(store.entryCount$)).toBe(2);
+    });
+
+    it("leaves a freshly picked file's own notice alone", async () => {
+      await component.import().onFiles(filesChangedEvent(await makeExportedFile(['license', 'cert'])));
+
+      expect(component.import().successLabelSignal()).toContain('license');
+      expect(component.import().errorSignal()).toBeNull();
+    });
+  });
+});

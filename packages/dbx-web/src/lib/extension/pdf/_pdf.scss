@@ -221,8 +221,10 @@
     font-size: var(--mat-sys-label-small-size);
   }
 
-  .dbx-pdf-merge-page-rotation-chip {
+  .dbx-chip.dbx-chip-small.dbx-pdf-merge-page-rotation-chip {
     gap: 4px;
+    height: 12px;
+    min-height: 12px;
   }
 
   // Chain `.mat-icon` so we beat the global `.mat-icon { width: 24px; height: 24px }` defaults
