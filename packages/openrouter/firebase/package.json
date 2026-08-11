@@ -1,0 +1,13 @@
+{
+  "name": "@dereekb/openrouter/firebase",
+  "version": "13.35.0",
+  "peerDependencies": {
+    "@dereekb/date": "13.35.0",
+    "@dereekb/firebase": "13.35.0",
+    "@dereekb/model": "13.35.0",
+    "@dereekb/openrouter": "13.35.0",
+    "@dereekb/rxjs": "13.35.0",
+    "@dereekb/util": "13.35.0",
+    "arktype": "^2.2.0"
+  }
+}
