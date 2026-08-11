@@ -1,16 +1,68 @@
-import { type WebsiteUrl, type Maybe } from '@dereekb/util';
+import { type WebsiteUrl, type Maybe, type ISO8601DateString } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomWebhookId, type CalcomResponseStatus } from '../calcom.type';
+import { type CalcomWebhookId, type CalcomResponseStatus, type CalcomUserId, type CalcomId, type CalcomEventTypeId } from '../calcom.type';
 
-export type CalcomWebhookTrigger = 'BOOKING_CREATED' | 'BOOKING_CANCELLED' | 'BOOKING_RESCHEDULED' | 'BOOKING_REQUESTED' | 'BOOKING_REJECTED' | 'BOOKING_NO_SHOW_UPDATED' | 'BOOKING_PAYMENT_INITIATED' | 'BOOKING_PAID' | 'MEETING_STARTED' | 'MEETING_ENDED' | 'RECORDING_READY' | 'RECORDING_TRANSCRIPTION_GENERATED';
+/**
+ * The events a webhook may subscribe to.
+ *
+ * Enumerated by the API itself: posting an unknown trigger returns the full accepted set.
+ */
+export type CalcomWebhookTrigger =
+  | 'BOOKING_CREATED'
+  | 'BOOKING_PAYMENT_INITIATED'
+  | 'BOOKING_PAID'
+  | 'BOOKING_RESCHEDULED'
+  | 'BOOKING_REQUESTED'
+  | 'BOOKING_CANCELLED'
+  | 'BOOKING_REJECTED'
+  | 'BOOKING_NO_SHOW_UPDATED'
+  | 'BOOKING_LOCATION_UPDATED'
+  | 'FORM_SUBMITTED'
+  | 'FORM_SUBMITTED_NO_EVENT'
+  | 'MEETING_STARTED'
+  | 'MEETING_ENDED'
+  | 'RECORDING_READY'
+  | 'RECORDING_TRANSCRIPTION_GENERATED'
+  | 'INSTANT_MEETING'
+  | 'INSTANT_MEETING_ACCEPTED'
+  | 'OOO_CREATED'
+  | 'AFTER_HOSTS_CAL_VIDEO_NO_SHOW'
+  | 'AFTER_GUESTS_CAL_VIDEO_NO_SHOW'
+  | 'ROUTING_FORM_FALLBACK_HIT'
+  | 'WRONG_ASSIGNMENT_REPORT'
+  | 'CALENDAR_ENTRY_REJECTED'
+  | 'DELEGATION_CREDENTIAL_ERROR'
+  | 'DELEGATION_CREDENTIAL_ROTATION_REQUIRED'
+  | 'DELEGATION_CREDENTIAL_SECRET_ROTATED'
+  | 'DELEGATION_CREDENTIAL_SECRET_ROTATION_FAILED';
 
 export interface CalcomWebhook {
   readonly id: CalcomWebhookId;
   readonly subscriberUrl: WebsiteUrl;
   readonly triggers: CalcomWebhookTrigger[];
   readonly active: boolean;
-  readonly payloadTemplate?: Maybe<string>;
-  readonly secret?: Maybe<string>;
+  readonly payloadTemplate: Maybe<string>;
+  readonly secret: Maybe<string>;
+  readonly userId: Maybe<CalcomUserId>;
+  /**
+   * The payload version Cal.com sends (e.g. `"2021-10-20"`), distinct from the `cal-api-version`
+   * header — which the webhook endpoints do not use at all.
+   */
+  readonly version: Maybe<string>;
+  /**
+   * Offset before/after the event for the time-relative triggers, with its unit.
+   */
+  readonly time: Maybe<number>;
+  readonly timeUnit: Maybe<string>;
+  /**
+   * Returned when reading a webhook, but not on the create response.
+   */
+  readonly createdAt?: Maybe<ISO8601DateString>;
+  readonly teamId?: Maybe<CalcomId>;
+  readonly eventTypeId?: Maybe<CalcomEventTypeId>;
+  readonly appId?: Maybe<string>;
+  readonly platform?: Maybe<boolean>;
+  readonly oAuthClientId?: Maybe<string>;
 }
 
 export interface CalcomCreateWebhookInput {

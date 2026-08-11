@@ -1,15 +1,70 @@
-import { type Minutes, type Maybe } from '@dereekb/util';
+import { type Minutes, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomResponseStatus } from '../calcom.type';
+import { type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomResponseStatus, type CalcomScheduleId, type CalcomUserId } from '../calcom.type';
 import { CALCOM_API_VERSION_EVENT_TYPES, calcomApiVersionHeaders } from '../shared/calcom.api-version';
+
+/**
+ * A toggleable event-type policy, returned either disabled or with its configuration.
+ *
+ * Cal.com models several independent settings this way (`confirmationPolicy`, `bookingWindow`,
+ * `seats`, `bookerActiveBookingsLimit`), each as `{ disabled: true }` or a settings object.
+ */
+export type CalcomEventTypePolicy = { readonly disabled: true } | Record<string, unknown>;
 
 export interface CalcomEventType {
   readonly id: CalcomEventTypeId;
+  readonly ownerId: CalcomUserId;
   readonly title: string;
   readonly slug: CalcomEventTypeSlug;
   readonly description: Maybe<string>;
   readonly lengthInMinutes: Minutes;
+  /**
+   * The selectable lengths of a multi-length event type. Absent on a fixed-length event type —
+   * which is exactly when `lengthInMinutes` may NOT be passed to create-booking.
+   */
+  readonly lengthInMinutesOptions?: Maybe<Minutes[]>;
   readonly locations: unknown[];
+  readonly bookingFields: unknown[];
+  readonly hidden: boolean;
+  readonly scheduleId: Maybe<CalcomScheduleId>;
+  readonly slotInterval: Maybe<Minutes>;
+  readonly minimumBookingNotice: Minutes;
+  readonly beforeEventBuffer: Minutes;
+  readonly afterEventBuffer: Minutes;
+  readonly offsetStart: Minutes;
+  readonly disableGuests: boolean;
+  readonly hideCalendarNotes: boolean;
+  readonly hideCalendarEventDetails: boolean;
+  readonly hideOrganizerEmail: boolean;
+  readonly requiresBookerEmailVerification: boolean;
+  readonly skipAttendeeEmailDeliverabilityCheck: boolean;
+  readonly lockTimeZoneToggleOnBookingPage: boolean;
+  readonly onlyShowFirstAvailableSlot: boolean;
+  readonly showOptimizedSlots: boolean;
+  readonly isInstantEvent: boolean;
+  readonly useDestinationCalendarEmail: boolean;
+  readonly bookingRequiresAuthentication: boolean;
+  readonly disableCancelling: boolean;
+  readonly disableRescheduling: boolean;
+  readonly allowReschedulingPastBookings: boolean;
+  readonly allowReschedulingCancelledBookings: boolean;
+  readonly forwardParamsSuccessRedirect: boolean;
+  readonly successRedirectUrl: Maybe<WebsiteUrl>;
+  readonly bookingUrl: Maybe<WebsiteUrl>;
+  readonly interfaceLanguage: Maybe<string>;
+  readonly price: number;
+  readonly currency: string;
+  readonly recurrence: Maybe<unknown>;
+  readonly metadata: Record<string, unknown>;
+  readonly users: unknown[];
+  readonly calVideoSettings: Maybe<Record<string, unknown>>;
+  readonly confirmationPolicy: CalcomEventTypePolicy;
+  readonly bookingWindow: CalcomEventTypePolicy;
+  readonly seats: CalcomEventTypePolicy;
+  readonly bookerActiveBookingsLimit: CalcomEventTypePolicy;
+  readonly privateNoteEnabled: boolean;
+  readonly privateNoteMode: Maybe<string>;
+  readonly privateNoteTemplate: Maybe<string>;
 }
 
 export interface CalcomGetEventTypesResponse {
@@ -22,22 +77,66 @@ export interface CalcomEventTypeResponse {
   readonly data: CalcomEventType;
 }
 
-export interface CalcomCreateEventTypeInput {
+/**
+ * The event-type settings accepted on both create and update.
+ */
+export interface CalcomEventTypeInputSettings {
+  readonly description?: Maybe<string>;
+  readonly locations?: Maybe<unknown[]>;
+  readonly bookingFields?: Maybe<unknown[]>;
+  /**
+   * The selectable lengths of a multi-length event type. Required before a booking may pass
+   * `lengthInMinutes`.
+   */
+  readonly lengthInMinutesOptions?: Maybe<Minutes[]>;
+  readonly hidden?: Maybe<boolean>;
+  readonly scheduleId?: Maybe<CalcomScheduleId>;
+  readonly slotInterval?: Maybe<Minutes>;
+  readonly minimumBookingNotice?: Maybe<Minutes>;
+  readonly beforeEventBuffer?: Maybe<Minutes>;
+  readonly afterEventBuffer?: Maybe<Minutes>;
+  readonly offsetStart?: Maybe<Minutes>;
+  readonly disableGuests?: Maybe<boolean>;
+  readonly hideCalendarNotes?: Maybe<boolean>;
+  readonly hideCalendarEventDetails?: Maybe<boolean>;
+  readonly hideOrganizerEmail?: Maybe<boolean>;
+  readonly requiresBookerEmailVerification?: Maybe<boolean>;
+  /**
+   * Skips Cal.com's deliverability check on the attendee email, which otherwise rejects
+   * addresses it cannot verify.
+   */
+  readonly skipAttendeeEmailDeliverabilityCheck?: Maybe<boolean>;
+  readonly lockTimeZoneToggleOnBookingPage?: Maybe<boolean>;
+  readonly onlyShowFirstAvailableSlot?: Maybe<boolean>;
+  readonly useDestinationCalendarEmail?: Maybe<boolean>;
+  readonly bookingRequiresAuthentication?: Maybe<boolean>;
+  readonly disableCancelling?: Maybe<boolean>;
+  readonly disableRescheduling?: Maybe<boolean>;
+  readonly allowReschedulingPastBookings?: Maybe<boolean>;
+  readonly allowReschedulingCancelledBookings?: Maybe<boolean>;
+  readonly forwardParamsSuccessRedirect?: Maybe<boolean>;
+  readonly successRedirectUrl?: Maybe<WebsiteUrl>;
+  readonly interfaceLanguage?: Maybe<string>;
+  readonly price?: Maybe<number>;
+  readonly currency?: Maybe<string>;
+  readonly recurrence?: Maybe<unknown>;
+  readonly metadata?: Maybe<Record<string, unknown>>;
+  readonly confirmationPolicy?: Maybe<CalcomEventTypePolicy>;
+  readonly bookingWindow?: Maybe<CalcomEventTypePolicy>;
+  readonly seats?: Maybe<CalcomEventTypePolicy>;
+  readonly bookerActiveBookingsLimit?: Maybe<CalcomEventTypePolicy>;
+}
+
+export interface CalcomCreateEventTypeInput extends CalcomEventTypeInputSettings {
   readonly title: string;
   readonly slug: CalcomEventTypeSlug;
   readonly lengthInMinutes: Minutes;
-  readonly description?: string;
-  readonly locations?: unknown[];
-  readonly bookingFields?: unknown[];
 }
 
-export interface CalcomUpdateEventTypeInput {
-  readonly title?: string;
-  readonly slug?: CalcomEventTypeSlug;
-  readonly lengthInMinutes?: Minutes;
-  readonly description?: string;
-  readonly locations?: unknown[];
-  readonly bookingFields?: unknown[];
+export interface CalcomUpdateEventTypeInput extends CalcomEventTypeInputSettings {
+  readonly title?: Maybe<string>;
+  readonly slug?: Maybe<CalcomEventTypeSlug>;
+  readonly lengthInMinutes?: Maybe<Minutes>;
 }
 
 /**

@@ -25,8 +25,11 @@ export type CalcomScheduleId = number;
 
 /**
  * Cal.com webhook identifier.
+ *
+ * A UUID string (e.g. `"7c3b0811-8a5a-4754-8b31-9f594559f98e"`), unlike the numeric ids used
+ * elsewhere in the API.
  */
-export type CalcomWebhookId = number;
+export type CalcomWebhookId = string;
 
 /**
  * Cal.com credential identifier, used to reference connected calendar credentials.

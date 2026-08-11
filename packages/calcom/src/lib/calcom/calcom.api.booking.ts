@@ -1,12 +1,32 @@
-import { type EmailAddress, type ISO8601DateString, type Maybe, type Minutes, type TimezoneString } from '@dereekb/util';
+import { type EmailAddress, type ISO8601DateString, type Maybe, type Minutes, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus, type CalcomEventTypeId, type CalcomResponseStatus } from '../calcom.type';
+import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus, type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomResponseStatus, type CalcomUserId, type CalcomUsername } from '../calcom.type';
 import { CALCOM_API_VERSION_BOOKINGS, calcomApiVersionHeaders } from '../shared/calcom.api-version';
 
 export interface CalcomBookingAttendee {
   readonly name: string;
   readonly email: EmailAddress;
+  readonly displayEmail: Maybe<EmailAddress>;
   readonly timeZone: TimezoneString;
+  readonly language: string;
+  readonly absent: boolean;
+}
+
+export interface CalcomBookingHost {
+  readonly id: CalcomUserId;
+  readonly name: string;
+  readonly email: EmailAddress;
+  readonly displayEmail: Maybe<EmailAddress>;
+  readonly username: CalcomUsername;
+  readonly timeZone: TimezoneString;
+}
+
+/**
+ * The event type a booking was made against, as embedded on the booking itself.
+ */
+export interface CalcomBookingEventType {
+  readonly id: CalcomEventTypeId;
+  readonly slug: CalcomEventTypeSlug;
 }
 
 export interface CalcomCreateBookingInput {
@@ -18,6 +38,13 @@ export interface CalcomCreateBookingInput {
     readonly timeZone: TimezoneString;
   };
   readonly metadata?: Maybe<Record<string, unknown>>;
+  /**
+   * Only valid when the target event type declares `lengthInMinutesOptions`.
+   *
+   * Sending it to an event type with a single fixed length is rejected with "Can't specify
+   * 'lengthInMinutes' because event type does not have multiple possible lengths", so leave it
+   * unset unless the event type is explicitly multi-length.
+   */
   readonly lengthInMinutes?: Maybe<Minutes>;
   readonly guests?: Maybe<string[]>;
 }
@@ -26,11 +53,34 @@ export interface CalcomBooking {
   readonly id: CalcomBookingId;
   readonly uid: CalcomBookingUid;
   readonly title: string;
+  readonly description: string;
   readonly status: CalcomBookingStatus;
-  readonly startTime: ISO8601DateString;
-  readonly endTime: ISO8601DateString;
+  /**
+   * The start of the booking. Note the API returns `start`/`end`, NOT `startTime`/`endTime`.
+   */
+  readonly start: ISO8601DateString;
+  readonly end: ISO8601DateString;
+  readonly duration: Minutes;
+  readonly eventTypeId: CalcomEventTypeId;
+  readonly eventType: CalcomBookingEventType;
+  readonly hosts: CalcomBookingHost[];
   readonly attendees: CalcomBookingAttendee[];
+  readonly guests: EmailAddress[];
+  /**
+   * The join url Cal.com supplies for the meeting, when the location is a conferencing app.
+   */
+  readonly meetingUrl: Maybe<WebsiteUrl>;
+  readonly location: Maybe<string>;
+  readonly absentHost: boolean;
+  readonly cancellationReason: Maybe<string>;
+  readonly cancelledByEmail: Maybe<EmailAddress>;
+  readonly rescheduledByEmail: Maybe<EmailAddress>;
+  readonly icsUid: string;
+  readonly rating: Maybe<number>;
   readonly metadata: Record<string, unknown>;
+  readonly bookingFieldsResponses: Record<string, unknown>;
+  readonly createdAt: ISO8601DateString;
+  readonly updatedAt: ISO8601DateString;
 }
 
 export interface CalcomCreateBookingResponse {

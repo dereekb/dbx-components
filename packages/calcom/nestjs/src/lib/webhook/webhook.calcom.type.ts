@@ -31,6 +31,17 @@ export interface CalcomWebhookBookingOrganizer {
   readonly timeZone: TimezoneString;
 }
 
+/**
+ * The booking as Cal.com POSTs it to a webhook subscriber.
+ *
+ * Deliberately NOT the same shape as the REST {@link CalcomBooking}: the webhook payload mirrors
+ * Cal.com's internal booking model and uses `startTime`/`endTime`, while `GET /v2/bookings/{uid}`
+ * returns `start`/`end`. Do not "align" these two out of a belief that they drifted — they are
+ * different surfaces.
+ *
+ * NOTE: unlike the REST types in this package, this shape has not been verified against a live
+ * payload (that requires a publicly reachable subscriber). Treat it as unconfirmed.
+ */
 export interface CalcomWebhookBookingPayload {
   readonly id: CalcomBookingId;
   readonly uid: CalcomBookingUid;

@@ -1,3 +1,19 @@
+# Unreleased
+
+### BREAKING CHANGES
+
+- **calcom:** `@dereekb/calcom`'s v2 API types have been corrected against the live `api.cal.com/v2`. These are type-level breaks that surface at compile time; consumers hitting them were, in most cases, already broken at runtime.
+  - `CalcomBooking.startTime`/`endTime` are now `start`/`end` — the API never returned the old names, so `new Date(booking.startTime)` was silently producing `Invalid Date`. `CalcomBooking` also gained the rest of the real response (`meetingUrl`, `location`, `duration`, `hosts`, `eventType`, `guests`, `icsUid`, `absentHost`, `bookingFieldsResponses`, timestamps).
+  - `CalcomConnectedCalendar` has been restructured: `integration` is an app-metadata object (`CalcomCalendarIntegrationApp`), `primary` is a single calendar, and `calendars` is a sibling array. The old `primary.calendars` path never existed.
+  - `CalcomGetBusyTimesInput.calendarsToLoad` is now `CalcomCalendarToLoad[]` (`{ credentialId, externalId }`) instead of `string[]`, and a `timeZone` or `loggedInUsersTz` is required. `getBusyTimes` previously comma-joined the array and could not address its endpoint at all (HTTP 400). Added `getBusyTimesForConnectedCalendars` for the common two-request flow.
+  - `CalcomGetAvailableSlotsResponse.data` is the day-keyed map itself — the `data.slots` wrapper never existed — and each slot is `{ start }` (plus `end` under `format: 'range'`) rather than `{ time }`.
+  - `CalcomWebhookId` is now `string`: the API returns a UUID, not a number.
+  - `CalcomUser.createdDate` has been removed (the API does not return it); `name`, `avatarUrl`, `bio`, `locale`, `organizationId` and `organization` were added.
+  - `CalcomSchedule.overrides` is an array, not a `Record`; `ownerId` was added.
+  - `CalcomEventType` and the create/update inputs were widened to the real surface, including `skipAttendeeEmailDeliverabilityCheck` and `lengthInMinutesOptions`. Note `lengthInMinutes` on create-booking is only valid when the event type declares `lengthInMinutesOptions`.
+  - `CalcomWebhookTrigger` now covers all 27 triggers the API accepts.
+  - Cal.com API errors now carry their real `code`/`message`: these are nested under the response body's `error` key, which the parser previously ignored, leaving every `CalcomServerError` with `code: undefined` and `message: undefined`.
+
 # [13.35.0](https://github.com/dereekb/dbx-components/compare/v13.34.0-dev...v13.35.0) (2026-08-07)
 
 

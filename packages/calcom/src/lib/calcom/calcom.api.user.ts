@@ -1,17 +1,30 @@
-import { type EmailAddress, type ISO8601DateString, type TimezoneString, type Maybe } from '@dereekb/util';
+import { type EmailAddress, type TimezoneString, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomUserId, type CalcomUsername, type CalcomScheduleId, type CalcomResponseStatus } from '../calcom.type';
+import { type CalcomId, type CalcomUserId, type CalcomUsername, type CalcomScheduleId, type CalcomResponseStatus } from '../calcom.type';
 import { CALCOM_API_VERSION_ME, calcomApiVersionHeaders } from '../shared/calcom.api-version';
+
+/**
+ * The organization a user belongs to, as embedded on the user.
+ */
+export interface CalcomUserOrganization {
+  readonly id: CalcomId;
+  readonly isPlatform: boolean;
+}
 
 export interface CalcomUser {
   readonly id: CalcomUserId;
   readonly email: EmailAddress;
+  readonly name: Maybe<string>;
   readonly username: Maybe<CalcomUsername>;
   readonly timeZone: TimezoneString;
   readonly weekStart: string;
-  readonly createdDate: ISO8601DateString;
   readonly timeFormat: number;
   readonly defaultScheduleId: Maybe<CalcomScheduleId>;
+  readonly avatarUrl: Maybe<WebsiteUrl>;
+  readonly bio: Maybe<string>;
+  readonly locale: Maybe<string>;
+  readonly organizationId: Maybe<CalcomId>;
+  readonly organization: Maybe<CalcomUserOrganization>;
 }
 
 export interface CalcomGetMeResponse {

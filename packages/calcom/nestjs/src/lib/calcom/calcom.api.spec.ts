@@ -10,6 +10,23 @@ import { waitForMs } from '@dereekb/util';
 
 const cacheService = fileCalcomOAuthAccessTokenCacheService();
 
+/**
+ * Treat the placeholder values shipped in the committed `.env` as "no credentials".
+ *
+ * The repo commits `CALCOM_API_KEY=placeholder`, so a bare presence check would never skip.
+ */
+function real(value: string | undefined): string | undefined {
+  return value && value !== 'placeholder' ? value : undefined;
+}
+
+/**
+ * These tests call the LIVE Cal.com API, so they only run when real credentials are present.
+ *
+ * Note nx caches test results and no env var is a hash input — pass `--skip-nx-cache` when
+ * toggling the key on or off.
+ */
+const hasCalcomCredentials = Boolean(real(process.env['CALCOM_API_KEY']) ?? real(process.env['CALCOM_CLIENT_ID']));
+
 @Module(
   appCalcomOAuthModuleMetadata({
     exports: [CalcomOAuthAccessTokenCacheService],
@@ -31,7 +48,7 @@ class TestCalcomModule {}
  */
 const spaceOutTesting: () => Promise<void> = () => waitForMs(500);
 
-describe('calcom.api', () => {
+describe.runIf(hasCalcomCredentials)('calcom.api', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
