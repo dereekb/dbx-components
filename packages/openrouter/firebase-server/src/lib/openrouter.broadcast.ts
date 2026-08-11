@@ -124,13 +124,20 @@ export async function reconcileOpenRouterRunTaskFromBroadcast(params: ReconcileO
  * @__NO_SIDE_EFFECTS__
  */
 export function mergedOpenRouterRunUsage(existing: Maybe<OpenRouterRunUsage>, generation: OpenRouterBroadcastGenerationInfo): OpenRouterRunUsage {
+  // Every field is spread conditionally rather than assigned. Usage is persisted as passthrough JSON, so
+  // an absent measurement written as an explicit `undefined` is not "no value" to Firestore — it is a
+  // rejected write, and it takes the whole reconciliation down with it.
   return {
-    inputTokens: generation.promptTokens ?? existing?.inputTokens,
-    outputTokens: generation.completionTokens ?? existing?.outputTokens,
-    totalTokens: generation.totalTokens ?? existing?.totalTokens,
-    reasoningTokens: existing?.reasoningTokens,
-    cachedTokens: existing?.cachedTokens,
-    cost: generation.cost ?? existing?.cost,
-    isByok: existing?.isByok
+    ...definedUsageValue('inputTokens', generation.promptTokens ?? existing?.inputTokens),
+    ...definedUsageValue('outputTokens', generation.completionTokens ?? existing?.outputTokens),
+    ...definedUsageValue('totalTokens', generation.totalTokens ?? existing?.totalTokens),
+    ...definedUsageValue('reasoningTokens', existing?.reasoningTokens),
+    ...definedUsageValue('cachedTokens', existing?.cachedTokens),
+    ...definedUsageValue('cost', generation.cost ?? existing?.cost),
+    ...definedUsageValue('isByok', existing?.isByok)
   };
+}
+
+function definedUsageValue<K extends keyof OpenRouterRunUsage>(key: K, value: OpenRouterRunUsage[K]): Partial<OpenRouterRunUsage> {
+  return value == null ? {} : { [key]: value };
 }

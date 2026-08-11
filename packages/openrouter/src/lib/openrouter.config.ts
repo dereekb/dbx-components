@@ -107,10 +107,50 @@ export interface OpenRouterFileParserPluginConfig {
 export type OpenRouterPluginConfig = OpenRouterFileParserPluginConfig | ({ readonly id: string } & Record<string, unknown>);
 
 /**
- * A hosted (server-executed) tool entry, e.g. `{ type: 'file_search', vector_store_ids: [...] }` or
- * `{ type: 'mcp', ... }`.
+ * A hosted (server-executed) tool entry, e.g. a `file_search` or `mcp` tool.
  */
 export type OpenRouterHostedToolConfig = { readonly type: string } & Record<string, unknown>;
+
+/**
+ * The hosted `file_search` tool.
+ *
+ * Field names are CAMELCASE, matching the SDK's request surface rather than the wire. That is not a
+ * style choice: `@openrouter/sdk` validates the request body against a closed schema that names this
+ * field `vectorStoreIds` and remaps it to `vector_store_ids` on the way out — so a config authored with
+ * the wire name is dropped during serialization, and the call goes out with a `file_search` tool that
+ * searches nothing. OpenRouter answers it anyway, confidently and ungrounded, with no error.
+ */
+export interface OpenRouterFileSearchToolConfig {
+  readonly type: 'file_search';
+  /**
+   * The OpenAI vector stores to search. A `vs_…` id resolves only for the org that owns it, so this
+   * works only where OpenRouter authenticates upstream with a BYOK key from that org.
+   *
+   * The passthrough itself is verified: OpenRouter forwards the tool to OpenAI, which resolves the id.
+   * See `openrouter.filesearch.spike.spec.ts`.
+   */
+  readonly vectorStoreIds: string[];
+  readonly maxNumResults?: Maybe<number>;
+  readonly rankingOptions?: Maybe<{ readonly ranker?: Maybe<string>; readonly scoreThreshold?: Maybe<number> }>;
+  readonly filters?: Maybe<Record<string, unknown>>;
+  /**
+   * Passthrough for anything the hosted tool grows that this interface does not yet name.
+   */
+  readonly [key: string]: unknown;
+}
+
+/**
+ * Builds a hosted `file_search` tool entry with the field names the SDK actually forwards.
+ *
+ * @param vectorStoreIds - The `vs_…` ids to search.
+ * @param maxNumResults - Optional cap on returned chunks.
+ * @returns The hosted tool entry.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function openRouterFileSearchTool(vectorStoreIds: string[], maxNumResults?: Maybe<number>): OpenRouterFileSearchToolConfig {
+  return { type: 'file_search', vectorStoreIds, ...(maxNumResults == null ? undefined : { maxNumResults }) };
+}
 
 /**
  * The default PDF parser engine this package pins.
@@ -307,6 +347,23 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
     }
 
     const hostedToolTypes = config.tools?.map((x) => x.type) ?? [];
+
+    if (hostedToolTypes.length > 0) {
+      // An ERROR, so a prompt carrying a hosted tool cannot be published. It is not a warning because
+      // there is no degraded outcome to warn about: `callModel` converts every `tools` entry as a client
+      // function tool, so the request throws at dispatch — on a run already queued, claimed, and charged
+      // an attempt. Failing at authoring time is strictly better than failing on every execution.
+      errors.push(`Hosted tools (${hostedToolTypes.join(', ')}) are not deliverable through the current callModel path; sending one needs a direct \`/responses\` path this package does not yet have.`);
+    }
+
+    const fileSearchWithoutStores = config.tools?.some((x) => x.type === 'file_search' && !Array.isArray(x['vectorStoreIds']));
+
+    if (fileSearchWithoutStores) {
+      // Separate from the above so the message survives the day hosted tools become deliverable: the SDK
+      // drops an unrecognized field (a `vector_store_ids` authored in wire case, say) during outbound
+      // serialization, leaving a tool that searches nothing and a model that answers ungrounded.
+      errors.push('A `file_search` hosted tool requires a `vectorStoreIds` array. Note the CAMELCASE — the SDK drops the wire-cased `vector_store_ids`, leaving a tool that searches nothing.');
+    }
 
     if (hostedToolTypes.length > 0 && config.provider?.requireParameters !== true) {
       warnings.push('Hosted tools were requested without `provider.requireParameters: true`; a provider that does not support them receives only the parameters it supports and ignores the rest, returning an ungrounded answer with no error.');

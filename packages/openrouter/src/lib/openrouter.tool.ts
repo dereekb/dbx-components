@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type ConversationState, type ParsedToolCall, type Tool, type UnsentToolResult, isManualTool } from './openrouter.sdk';
+import { type ConversationState, type FunctionCallOutputItem, type ParsedToolCall, type Tool, type UnsentToolResult, isManualTool, unsentResultsToAPIFormat } from './openrouter.sdk';
 import { type OpenRouterDeferredToolTaskId } from './openrouter.type';
 
 /**
@@ -96,4 +96,22 @@ export function openRouterResolvedDeferredToolResults<TTools extends readonly To
  */
 export function isOpenRouterStateAwaitingDeferredTools(state: Maybe<ConversationState>): boolean {
   return (state?.pendingToolCalls?.length ?? 0) > 0;
+}
+
+/**
+ * Converts recorded tool results into the `function_call_output` items that get appended to the
+ * conversation before the run is resumed.
+ *
+ * This is how a deferred pause is un-paused, and it is done HERE rather than through the SDK on
+ * purpose. `@openrouter/sdk@1.2.x` only knows how to resume a pause by re-running the tool locally
+ * (`approveToolCalls` calls the tool's `execute`, and a manual tool has none) or by rejecting it — so
+ * a result produced by another process has no route back in through the SDK's own API. Appending the
+ * outputs to the persisted conversation and re-sending it does have one, and it is the same wire
+ * format the SDK would have produced itself.
+ *
+ * @param results - The recorded results, in the persisted `callId` / `name` / `output` / `error` shape.
+ * @returns The `function_call_output` items to append to the conversation.
+ */
+export function openRouterFunctionCallOutputItems(results: Maybe<readonly { readonly callId: string; readonly name: string; readonly output?: unknown; readonly error?: Maybe<string> }[]>): FunctionCallOutputItem[] {
+  return unsentResultsToAPIFormat((results ?? []).map((result) => ({ callId: result.callId, name: result.name, output: result.output, error: result.error ?? undefined }) as UnsentToolResult));
 }

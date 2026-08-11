@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig, mergeOpenRouterModelConfig } from './openrouter.config';
-import { type OpenRouterFileAnnotationEchoMessage, type OpenRouterInput, type OpenRouterInputMessage, type OpenRouterSignedFileReference, openRouterFileAnnotationMessage, openRouterInputFilePartsForSignedFiles, openRouterInputMessages } from './openrouter.input';
+import { type OpenRouterFileAnnotationEchoMessage, type OpenRouterInput, type OpenRouterInputMessage, type OpenRouterSignedFileReference, openRouterFileAnnotationMessage, openRouterInputFilePartsForSignedFiles, openRouterInputMessages, openRouterUnparsedSignedFiles } from './openrouter.input';
 import { type OpenRouterResolvedPrompt } from './openrouter.prompt';
 import { type OpenRouterRunTaskKey } from './openrouter.type';
 
@@ -99,7 +99,9 @@ export function openRouterPromptRequest(params: OpenRouterPromptRequestParams): 
   const seedMessages: OpenRouterInputMessage[] = (prompt.messages ?? []).map(({ role, content }) => ({ role, content }));
   const annotationMessage = openRouterFileAnnotationMessage(fileAnnotations);
   const inputMessages = openRouterInputMessages(input);
-  const fileParts = openRouterInputFilePartsForSignedFiles(files);
+  // A file whose parse is already cached is NOT re-attached. Sending it again is what causes the
+  // re-parse; the annotation echo alone cannot prevent one.
+  const fileParts = openRouterInputFilePartsForSignedFiles(openRouterUnparsedSignedFiles(files, fileAnnotations));
 
   const messages: (OpenRouterInputMessage | OpenRouterFileAnnotationEchoMessage)[] = [...seedMessages];
 

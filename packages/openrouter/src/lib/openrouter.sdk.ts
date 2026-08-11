@@ -25,6 +25,7 @@
  */
 
 export { callModel } from '@openrouter/sdk/funcs/call-model';
+export { unsentResultsToAPIFormat } from '@openrouter/sdk/lib/conversation-state';
 export { embeddingsGenerate } from '@openrouter/sdk/funcs/embeddingsGenerate';
 export { tool } from '@openrouter/sdk/lib/tool';
 export { finishReasonIs, hasToolCall, maxCost, maxTokensUsed, stepCountIs } from '@openrouter/sdk/lib/stop-conditions';
@@ -35,5 +36,5 @@ export type { CallModelInput } from '@openrouter/sdk/lib/async-params';
 export type { ModelResult } from '@openrouter/sdk/lib/model-result';
 export type { RequestOptions } from '@openrouter/sdk/lib/sdks';
 export type { ConversationState, ConversationStatus, ParsedToolCall, StateAccessor, StopWhen, Tool, UnsentToolResult } from '@openrouter/sdk/lib/tool-types';
-export type { InputsUnion, OpenResponsesResult, Usage } from '@openrouter/sdk/models';
+export type { FunctionCallOutputItem, InputsUnion, OpenResponsesResult, Usage } from '@openrouter/sdk/models';
 export type { CreateEmbeddingsRequest, CreateEmbeddingsResponseBody } from '@openrouter/sdk/models/operations';

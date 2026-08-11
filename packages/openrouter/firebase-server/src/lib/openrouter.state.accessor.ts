@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type ConversationState, type ConversationStatus, type InputsUnion, type OpenRouterInputMessage, type OpenRouterRunTaskKey, type StateAccessor, type Tool } from '@dereekb/openrouter';
+import { type ConversationState, type ConversationStatus, type InputsUnion, type OpenRouterInputMessage, type OpenRouterRunTaskKey, type OpenRouterSignedFileReference, type StateAccessor, type Tool, openRouterMessagesWithFreshSignedFileUrls } from '@dereekb/openrouter';
 import { type OpenRouterRunTask, type OpenRouterRunTaskDocument, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 
 /**
@@ -115,10 +115,52 @@ export function openRouterRunTaskUpdateForConversationState(state: ConversationS
 
   return {
     s: openRouterRunTaskStateForConversationStatus(state.status, pendingToolCalls.length > 0),
-    msg: (state.messages ?? []) as unknown as OpenRouterInputMessage[],
-    ptc: pendingToolCalls.map((call) => ({ callId: call.id, name: call.name as string, taskId: call.id, arguments: call.arguments as Maybe<Record<string, unknown>> })),
-    utr: (state.unsentToolResults ?? []).map((result) => ({ callId: result.callId, name: result.name as string, output: result.output, error: result.error }))
+    msg: firestoreSafeConversationValue((state.messages ?? []) as unknown as OpenRouterInputMessage[]),
+    ptc: pendingToolCalls.map((call) => ({ callId: call.id, name: call.name as string, taskId: call.id, arguments: firestoreSafeConversationValue(call.arguments as Maybe<Record<string, unknown>>) ?? null })),
+    utr: (state.unsentToolResults ?? []).map((result) => ({ callId: result.callId, name: result.name as string, output: firestoreSafeConversationValue(result.output) ?? null, error: result.error ?? null }))
   };
+}
+
+/**
+ * Strips `undefined` out of a value on its way into Firestore.
+ *
+ * Conversation state is whatever the SDK hands back, and its response items carry explicit
+ * `undefined`s for absent optional fields. Firestore rejects `undefined` outright, so persisting one
+ * unfiltered fails the whole write — and it fails inside the SDK's `saveStateSafely`, which surfaces
+ * as an opaque "Failed to persist conversation state" rather than as the run-task write it actually is.
+ *
+ * A JSON round-trip is the right tool precisely because this data IS json: it came off the wire and is
+ * going back onto it.
+ *
+ * @param value - The value to sanitize.
+ * @returns The value with every `undefined` removed.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function firestoreSafeConversationValue<T>(value: T): T {
+  return value === undefined ? value : (JSON.parse(JSON.stringify(value)) as T);
+}
+
+/**
+ * Config for {@link firestoreOpenRouterStateAccessor}.
+ */
+export interface FirestoreOpenRouterStateAccessorConfig {
+  /**
+   * The conversation to start from when the run task has no history yet.
+   *
+   * The SDK never records the request's own input into conversation state — it only appends what comes
+   * BACK — so a run that resumes from state alone would resume having forgotten what it was asked. The
+   * runner seeds the assembled request input here so the persisted conversation is the whole
+   * conversation, and passes an empty `input` on the request itself to avoid sending it twice.
+   */
+  readonly initialMessages?: Maybe<OpenRouterInputMessage[]>;
+  /**
+   * The files signed for THIS attempt.
+   *
+   * Loaded history is re-pointed at these urls, so a resume hours later does not replay a signed url
+   * that expired minutes after the attempt that persisted it.
+   */
+  readonly signedFiles?: Maybe<OpenRouterSignedFileReference[]>;
 }
 
 /**
@@ -131,13 +173,24 @@ export function openRouterRunTaskUpdateForConversationState(state: ConversationS
  * A single-shot run simply never populates `msg` / `ptc` / `utr`, so nothing is paid for not using it.
  *
  * @param document - The run task document to read and write.
+ * @param config - The initial conversation and this attempt's signed files.
  * @returns The state accessor.
  */
-export function firestoreOpenRouterStateAccessor<TTools extends readonly Tool[] = readonly Tool[]>(document: OpenRouterRunTaskDocument): StateAccessor<TTools> {
+export function firestoreOpenRouterStateAccessor<TTools extends readonly Tool[] = readonly Tool[]>(document: OpenRouterRunTaskDocument, config?: Maybe<FirestoreOpenRouterStateAccessorConfig>): StateAccessor<TTools> {
+  const { initialMessages, signedFiles } = config ?? {};
+
   return {
     load: async () => {
       const task = await document.snapshotData();
-      return task == null ? null : conversationStateForOpenRouterRunTask<TTools>(document.id, task);
+      let result: Maybe<ConversationState<TTools>>;
+
+      if (task != null) {
+        const stored = task.msg ?? [];
+        const messages = openRouterMessagesWithFreshSignedFileUrls(stored.length > 0 ? stored : (initialMessages ?? []), signedFiles);
+        result = conversationStateForOpenRouterRunTask<TTools>(document.id, { ...task, msg: messages });
+      }
+
+      return result ?? null;
     },
     save: async (state) => {
       await document.update(openRouterRunTaskUpdateForConversationState(state as ConversationState));

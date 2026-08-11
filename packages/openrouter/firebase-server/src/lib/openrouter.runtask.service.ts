@@ -16,6 +16,7 @@ import {
   type OpenRouterSignedFileReference,
   type Tool,
   callModelForOpenRouterRequest,
+  openRouterFunctionCallOutputItems,
   openRouterInputMessages,
   openRouterPromptRequest
 } from '@dereekb/openrouter';
@@ -44,6 +45,15 @@ export const OPENROUTER_DEFAULT_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10
  * Default number of attempts before a task is marked FAILED.
  */
 export const OPENROUTER_DEFAULT_MAX_ATTEMPTS = 3;
+
+/**
+ * Priority recorded on a task whose caller named none. Lower runs first.
+ *
+ * Written rather than left absent so a priority-ordered sweep behaves: `orderBy` puts a `null` ahead of
+ * every number, so an unset priority would silently mean "run this before everything else" — the exact
+ * inverse of what leaving it out is meant to say.
+ */
+export const OPENROUTER_DEFAULT_RUN_TASK_PRIORITY = 100;
 
 /**
  * Params for enqueueing a run task.
@@ -131,9 +141,9 @@ export interface OpenRouterClaimRunTasksParams {
   /**
    * Whether tasks are ordered by priority before queue time.
    *
-   * Defaults to false. Firestore excludes a document from an `orderBy` on a field it does not have, so
-   * ordering by the optional `pr` silently drops every task that never set a priority — only turn this
-   * on when priorities are actually in use.
+   * Defaults to false. Every enqueued task carries a `pr` ({@link OPENROUTER_DEFAULT_RUN_TASK_PRIORITY}
+   * when the caller names none), but a task written by any other route may not — and a `null` priority
+   * sorts BEFORE every number, so such a task would jump the whole queue.
    */
   readonly usePriorityOrder?: Maybe<boolean>;
 }
@@ -361,7 +371,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         s: OpenRouterRunTaskState.QUEUED,
         qat: queuedAt,
         at: 0,
-        pr: priority,
+        pr: priority ?? OPENROUTER_DEFAULT_RUN_TASK_PRIORITY,
         pk: promptKey,
         pv: resolved.version,
         in: openRouterInputMessages(input),
@@ -468,6 +478,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       const resolved = await promptService.resolvePrompt({ promptKey: task.pk, version: task.pv });
       // Signed fresh on EVERY attempt. A url minted at enqueue would 403 by the time a third retry ran.
       const signedFiles = await signFilesForAttempt(task.fp);
+      const hasTools = tools != null && tools.length > 0;
 
       const request = openRouterPromptRequest({
         prompt: resolved,
@@ -475,18 +486,25 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         overrides: task.co,
         files: signedFiles,
         fileAnnotations: task.fa,
-        history: task.msg,
+        // With tools in play the conversation lives in the state accessor, which appends to it across
+        // turns; passing it here as well would send every prior turn twice.
+        history: hasTools ? undefined : task.msg,
         trace: { runTaskKey: key } satisfies OpenRouterRequestTrace
       });
 
-      const hasTools = tools != null && tools.length > 0;
+      if (hasTools) {
+        await appendDeferredToolResultsToConversation(document, task);
+      }
+
       const result = await callModelForOpenRouterRequest({
         client,
-        request,
+        // The whole conversation is supplied through the state accessor, so the request carries no input
+        // of its own — the SDK appends `input` to the loaded state, and the seeded state already is it.
+        request: hasTools ? { ...request, input: [] } : request,
         tools: tools ?? undefined,
         // The state accessor is only wired when tools are in play. For a single-shot run it would write
         // conversation history nobody reads, and on a doc whose state the runner is about to set anyway.
-        state: hasTools ? firestoreOpenRouterStateAccessor(document) : undefined
+        state: hasTools ? firestoreOpenRouterStateAccessor(document, { initialMessages: request.input, signedFiles }) : undefined
       });
 
       // Re-read: with tools configured, the state accessor may have moved the document to
@@ -522,10 +540,34 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
     return executionResult;
   }
 
+  /**
+   * Folds resolved deferred-tool results into the persisted conversation, so the resumed call sends the
+   * model the answers it was waiting on.
+   *
+   * Done here rather than through the SDK because `@openrouter/sdk@1.2.x` has no route back in for a
+   * result produced by another process: its only resume path re-runs the tool locally (a manual tool has
+   * no `execute`) or rejects it. Appending the `function_call_output` items to the conversation and
+   * re-sending it is the same thing the SDK would have put on the wire, minus the API it does not have.
+   *
+   * A no-op unless every pending call has a recorded result — a partially-resolved run has nothing new
+   * to say and must stay parked.
+   */
+  async function appendDeferredToolResultsToConversation(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask): Promise<void> {
+    const pending = task.ptc ?? [];
+    const unsent = task.utr ?? [];
+    const allResolved = pending.length > 0 && pending.every((call) => unsent.some((result) => result.callId === call.callId));
+
+    if (allResolved) {
+      const outputItems = openRouterFunctionCallOutputItems(unsent);
+      await document.update({ msg: [...(task.msg ?? []), ...(outputItems as unknown as OpenRouterInputMessage[])], ptc: null, utr: null });
+    }
+  }
+
   async function recordFailure(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, error: { code?: Maybe<string>; message?: Maybe<string> }, at: Date, result?: Maybe<OpenRouterCallResult>): Promise<OpenRouterRunTaskExecutionResult> {
     // The attempt counter was already incremented by the claim, so `at` is the number of attempts made
-    // INCLUDING this one.
-    const attemptsExhausted = task.at + 1 >= maxAttempts;
+    // INCLUDING this one — which is why nothing is added to it here. Adding one would spend the budget a
+    // tick early and mark a task FAILED with a retry still owed to it.
+    const attemptsExhausted = task.at >= maxAttempts;
     const state = attemptsExhausted ? OpenRouterRunTaskState.FAILED : OpenRouterRunTaskState.QUEUED;
 
     await document.update({
@@ -556,7 +598,10 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         const alreadySettled = (task.utr ?? []).some((x) => pending.every((p) => p.callId !== x.callId) || x.callId === call?.callId);
 
         if (call != null && !alreadySettled) {
-          const unsent = [...(task.utr ?? []), { callId: call.callId, name: call.name, output, error }];
+          // `error` and `output` are spread conditionally rather than assigned: Firestore rejects an
+          // explicit `undefined` outright, and a success carries no error while a failure carries no
+          // output, so one of the two is always absent.
+          const unsent = [...(task.utr ?? []), { callId: call.callId, name: call.name, ...(output === undefined ? undefined : { output }), ...(error == null ? undefined : { error }) }];
           const ready = pending.every((p) => unsent.some((u) => u.callId === p.callId));
 
           await document.update({ utr: unsent, ...(ready ? { s: OpenRouterRunTaskState.QUEUED, qat: new Date() } : undefined) });

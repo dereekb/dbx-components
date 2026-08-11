@@ -18,7 +18,7 @@ export interface OpenRouterRunTaskFirestoreCollections {
 export type OpenRouterRunTaskTypes = typeof openRouterRunTaskIdentity;
 
 /**
- * Identity for {@link OpenRouterRunTask} documents. Collection name: `openRouterRunTask`, short code: `orrt`.
+ * Identity for {@link OpenRouterRunTask} documents. Model type: `openRouterRunTask`, collection: `orrt`.
  */
 export const openRouterRunTaskIdentity = firestoreModelIdentity('openRouterRunTask', 'orrt');
 

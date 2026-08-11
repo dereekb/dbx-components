@@ -45,6 +45,10 @@ describe('openRouterCallModelInput()', () => {
     expect(input.trace.additionalProperties.runTaskKey).toBe('rt_1');
   });
 
+  it('should refuse a hosted tool with a legible error rather than an SDK TypeError', () => {
+    expect(() => openRouterCallModelInput({ request: { config: { model: 'm', tools: [{ type: 'file_search', vectorStoreIds: ['vs_1'] }] }, input: [] } })).toThrow(/not.*deliverable|cannot be sent/i);
+  });
+
   it('should omit tools and state when none are given', () => {
     const input = openRouterCallModelInput({ request: { config: { model: 'm' }, input: [] } }) as Record<string, unknown>;
     expect('tools' in input).toBe(false);
