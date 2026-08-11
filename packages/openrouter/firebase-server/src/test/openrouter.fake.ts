@@ -105,6 +105,9 @@ export function fakeOpenRouterResponseBody(reply: FakeOpenRouterReply, index: nu
   }
 
   return {
+    // NOTE: no `output_text`. OpenRouter does not send one — verified live against both a streaming and
+    // a non-streaming request — so a fake that helpfully supplies it would hide the fact that the text
+    // has to be read out of the `message` output item.
     id: reply.id ?? `gen_${index}`,
     object: 'response',
     created_at: 1000 + index,
@@ -116,7 +119,6 @@ export function fakeOpenRouterResponseBody(reply: FakeOpenRouterReply, index: nu
     metadata: null,
     model: FAKE_MODEL,
     output,
-    output_text: text,
     parallel_tool_calls: false,
     presence_penalty: null,
     status: 'completed',

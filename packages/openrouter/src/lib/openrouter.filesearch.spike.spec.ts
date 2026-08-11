@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { OpenRouterCore } from '@openrouter/sdk/core';
+import { callModelForOpenRouterRequest } from './openrouter.call';
+import { openRouterFileSearchTool, openRouterProviderPinnedTo } from './openrouter.config';
 
 /**
  * The `file_search` passthrough spike — live probes against OpenRouter.
@@ -22,12 +25,16 @@ import { describe, expect, it } from 'vitest';
  *    Pin it anyway on any model with more than one provider, where the documented behaviour ("providers
  *    will receive only the parameters they support, and ignore the rest") does bite.
  *
- * ## What still blocks USE
+ * ## Our side
  *
- * Not OpenRouter — us. `@openrouter/sdk`'s `callModel` destructures `tools` off the request and runs
- * every entry through its client-function converter, so a hosted entry never survives to be sent.
- * Sending one needs a direct `/responses` path this package does not have yet;
- * `validateOpenRouterModelConfig` rejects hosted tools until it does.
+ * Also done, and probed the same way. `@openrouter/sdk`'s `callModel` destructures `tools` off the
+ * request and runs every entry through its client-function converter, so a hosted entry never survives
+ * it — which is why a hosted-tool run goes out through `sendOpenRouterResponsesRequest` (a direct,
+ * non-streaming `POST /responses`) instead, or through a `ModelResult` carrying the hosted entries
+ * appended after client-tool conversion when the run also needs the client-side tool loop. See
+ * `openrouter.call.ts`. The probe below sends one through `callModelForOpenRouterRequest` and sees the
+ * same upstream vector-store error, so the delivery is verified at the package's own entry point rather
+ * than only at the wire.
  *
  * Regardless: **OpenRouter can never create or populate a vector store.** Ingestion always goes direct
  * to OpenAI.
@@ -136,6 +143,36 @@ describe.skipIf(!CREDENTIALS_PRESENT)('OpenRouter live probes', () => {
       // answer and no error at all.
       expect(body.error?.message ?? '', `Expected an upstream vector-store lookup failure; got ${JSON.stringify({ error: body.error, output: (body.output ?? []).map((x) => x.type) })}`).toMatch(/vector store/i);
       expect(JSON.stringify(body.tools ?? [])).toContain('vector_store_ids');
+    }
+  }, 60_000);
+
+  it('should deliver a hosted file_search tool through this package own dispatch path', async () => {
+    // The probes above prove the WIRE shape works. This one proves our layer delivers it: a config
+    // carrying a hosted tool routes off `callModel` (which would mangle it) onto the direct `/responses`
+    // path, and the tool still reaches OpenAI.
+    const client = new OpenRouterCore({ apiKey: OPENROUTER_API_KEY as string });
+
+    const result = await callModelForOpenRouterRequest({
+      client,
+      request: {
+        config: {
+          model: FILE_SEARCH_MODEL,
+          maxOutputTokens: 400,
+          tools: [openRouterFileSearchTool([VECTOR_STORE_ID ?? UNRESOLVABLE_VECTOR_STORE_ID], 5)],
+          include: ['file_search_call.results'],
+          provider: openRouterProviderPinnedTo('openai')
+        },
+        input: [{ role: 'user', content: 'Search the attached knowledge base and quote one sentence from it verbatim.' }]
+      }
+    });
+
+    if (VECTOR_STORE_ID) {
+      const fileSearchCall = (result.response.output ?? []).find((item) => (item as { type?: string }).type === 'file_search_call');
+      expect(fileSearchCall, `No file_search_call output item. Response: ${JSON.stringify(result.error)}`).toBeDefined();
+    } else {
+      // Same reasoning as the raw probe: only an upstream vector-store lookup can produce this error, so
+      // seeing it means our request carried the tool all the way through rather than dropping it.
+      expect(result.error?.message ?? '', `Expected an upstream vector-store lookup failure; got ${JSON.stringify(result.error)}`).toMatch(/vector store/i);
     }
   }, 60_000);
 

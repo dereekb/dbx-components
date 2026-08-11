@@ -5,7 +5,8 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterModelConfig, type Tool, openRouterFileSearchTool, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterModelConfig, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
+import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import { type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
 import { type FakeOpenRouterClient, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
 import { openRouterPromptServerActions } from './openrouter.action.server';
@@ -16,6 +17,40 @@ import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadc
 
 const TEST_PROMPT_KEY = 'test-prompt';
 const TEST_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', provider: { only: ['openai'], allowFallbacks: false, requireParameters: true } };
+
+/**
+ * Set to run the `live end-to-end` block against the real API. Every other block runs against a fake
+ * client and needs no credentials.
+ */
+const OPENROUTER_LIVE_API_KEY = process.env.OPENROUTER_API_KEY;
+const LIVE_TEST_MODEL = process.env.OPENROUTER_TEST_MODEL_ID ?? 'nvidia/nemotron-nano-9b-v2:free';
+
+/**
+ * Retries a live lookup a few times before failing.
+ *
+ * A generation is not queryable the instant its response returns — OpenRouter finalises it server-side
+ * — so a bare call races the API and would fail intermittently for a reason that is not a defect. The
+ * budget is deliberately generous: measured against the live API the lookup 404s for the first ~5
+ * seconds after the response lands, so a tight retry loop is just a slower way to get a flake.
+ *
+ * @param fn - The lookup to run.
+ * @param attempts - Attempts before the error is rethrown.
+ * @returns The lookup's value.
+ */
+async function retryLive<T>(fn: () => Promise<T>, attempts = 10): Promise<T> {
+  let lastError: unknown;
+
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+  }
+
+  throw lastError;
+}
 
 /**
  * A manual tool. `execute: false` is what makes the SDK emit the call without running it, and
@@ -60,6 +95,10 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       readonly maxAttempts?: number;
       readonly config?: OpenRouterModelConfig;
       readonly promptKey?: string;
+      /**
+       * Client to run against, replacing the fake. Only the live end-to-end block passes one.
+       */
+      readonly client?: OpenRouterCore;
     }
 
     async function buildStack(config?: BuildStackConfig): Promise<TestStack> {
@@ -80,7 +119,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       const service = openRouterRunTaskService({
         collections,
         promptService,
-        client: fake.client,
+        client: config?.client ?? fake.client,
         storageContext: storage.storageContext,
         tools: config?.tools,
         maxAttempts: config?.maxAttempts,
@@ -582,13 +621,38 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         return publish(promptDocument);
       }
 
-      it('should refuse to publish a prompt carrying a hosted tool', async () => {
+      it('should send a hosted file_search tool on the wire, in wire case', async () => {
         // Half the file_search spike needs no credentials: before asking whether OpenRouter HONOURS the
-        // tool, establish whether our own stack can even send one. It cannot — `callModel` runs every
-        // `tools` entry through the client-function converter, which throws on a hosted entry at dispatch
-        // time, after the run has been queued, claimed and charged an attempt. Publish-time is the right
-        // place for that to fail, and this pins it until a direct `/responses` path exists.
-        await expect(publishWithConfig('file-search', { ...TEST_MODEL_CONFIG, tools: [openRouterFileSearchTool(['vs_test_store'], 5)], include: ['file_search_call.results'] })).rejects.toThrow(/not deliverable/);
+        // tool, establish whether our own stack can even send one. This asserts against the body the fake
+        // fetcher received — i.e. after the SDK's own outbound serialization, which is where a hosted
+        // entry used to be dropped (no client tools) or throw (with them) inside `callModel`.
+        const config = { ...TEST_MODEL_CONFIG, tools: [openRouterFileSearchTool(['vs_test_store'], 5)], include: ['file_search_call.results'] };
+        const stack = await buildStack({ promptKey: 'file-search', config: config as OpenRouterModelConfig });
+
+        await stack.service.enqueueRunTask({ key: 'file_search_run', promptKey: 'file-search', input: 'quote one sentence from the knowledge base' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        expect((await stack.taskData('file_search_run'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+
+        const body = stack.fake.requests[0];
+        expect(body.tools).toEqual([{ type: 'file_search', vector_store_ids: ['vs_test_store'], max_num_results: 5 }]);
+        expect(body.include).toEqual(['file_search_call.results']);
+      });
+
+      it('should merge a hosted tool with a converted client tool rather than choosing one', async () => {
+        // The two are NOT mutually exclusive. A client tool has to go through the SDK's converter and a
+        // hosted one must not, so the hosted entries are appended AFTER that conversion — which is the
+        // one thing `callModel` cannot express, since it owns the `tools` key end to end.
+        const config = { ...TEST_MODEL_CONFIG, tools: [openRouterFileSearchTool(['vs_test_store'])] };
+        const stack = await buildStack({ promptKey: 'file-search-with-client-tool', config: config as OpenRouterModelConfig, tools: [deferredTool] });
+
+        await stack.service.enqueueRunTask({ key: 'merged_tools_run', promptKey: 'file-search-with-client-tool', input: 'go' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const sentTools = stack.fake.requests[0].tools as { type: string; name?: string }[];
+        expect(sentTools.map((x) => x.type)).toEqual(['function', 'file_search']);
+        expect(sentTools[0].name).toBe(DEFERRED_TOOL_NAME);
+        expect(sentTools[1]).toEqual({ type: 'file_search', vector_store_ids: ['vs_test_store'] });
       });
 
       it('should call out a file_search tool authored in wire case specifically', async () => {
@@ -596,6 +660,39 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         // serialization, so the wire-cased spelling yields a tool that searches nothing.
         await expect(publishWithConfig('bad-file-search', { model: 'openai/gpt-5.1', tools: [{ type: 'file_search', vector_store_ids: ['vs_test_store'] }] })).rejects.toThrow(/vectorStoreIds/);
       });
+    });
+
+    // MARK: End-to-end against the live API
+    describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live end-to-end', () => {
+      it('should drain a real run and resolve its stored generation id', async () => {
+        // The plan's end-to-end bullet, minus the one part this repo cannot reach: no app here consumes
+        // the models, so there is no model API for the callModel MCP to drive. Everything else is the
+        // real thing — `openRouterPromptServerActions` is exactly what that MCP would call, and the
+        // client is a live `OpenRouterCore` rather than the fake.
+        const client = new OpenRouterClient({ apiKey: OPENROUTER_LIVE_API_KEY as string });
+        // The cap is generous on purpose: a hybrid reasoning model spends output tokens on reasoning
+        // first, so a tight one truncates the answer away and leaves `o` empty on an otherwise fine run.
+        const stack = await buildStack({ promptKey: 'live-e2e', config: { model: LIVE_TEST_MODEL, maxOutputTokens: 2048 }, client });
+
+        await stack.service.enqueueRunTask({ key: 'live_run', promptKey: 'live-e2e', input: 'Reply with exactly: OK' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 1 });
+
+        const task = await stack.taskData('live_run');
+        expect(task?.s, `The live run did not complete: ${JSON.stringify(task?.e)}`).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(task?.o).toBeTruthy();
+        expect(task?.u?.totalTokens ?? 0).toBeGreaterThan(0);
+        // Cost is reported even on a free model, where it is 0 — its PRESENCE is the assertion.
+        expect(task?.u?.cost).toBeDefined();
+
+        const generationId = (task?.gi ?? [])[0];
+        expect(generationId).toBeTruthy();
+
+        // A generation is not queryable the instant its response returns, so this is given a few tries
+        // before it counts as a failure rather than as a race.
+        const generation = await retryLive(() => openRouterGeneration({ client, id: generationId }));
+        expect(generation.id).toBe(generationId);
+        expect(generation.model).toContain(LIVE_TEST_MODEL.split(':')[0]);
+      }, 120_000);
     });
 
     // MARK: Trace

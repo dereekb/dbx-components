@@ -108,13 +108,12 @@ describe('validateOpenRouterModelConfig()', () => {
     expect(openRouterFileSearchTool(['vs_1'], 5)).toEqual({ type: 'file_search', vectorStoreIds: ['vs_1'], maxNumResults: 5 });
   });
 
-  it('should reject any hosted tool, because callModel cannot deliver one', () => {
-    // Verified against the wire, not assumed: `callModel` runs every `tools` entry through
-    // `convertToolsToAPIFormat`, which reads `tool.function.name` — so a hosted entry throws at dispatch,
-    // on a run already queued, claimed, and charged an attempt. Failing at publish time is better.
+  it('should accept a well-formed hosted tool, which the direct /responses path can deliver', () => {
+    // The limitation this used to reject is gone: a hosted-tool run bypasses `callModel` (whose client
+    // function converter mangles a hosted entry) and posts to `/responses` directly.
     const result = validateOpenRouterModelConfig({ model: 'm', tools: [openRouterFileSearchTool(['vs_1'])], provider: openRouterProviderPinnedTo('openai') });
-    expect(result.valid).toBe(false);
-    expect(result.errors.some((x) => x.includes('not deliverable'))).toBe(true);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
   it('should warn when provider.only is set without disabling fallbacks', () => {
