@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OPENROUTER_DEFAULT_PDF_PARSER_ENGINE, type OpenRouterModelConfig, mergeOpenRouterModelConfig, openRouterFileParserPlugin, openRouterProviderPinnedTo, validateOpenRouterModelConfig } from './openrouter.config';
+import { OPENROUTER_DEFAULT_PDF_PARSER_ENGINE, type OpenRouterModelConfig, mergeOpenRouterModelConfig, openRouterFileParserPlugin, openRouterFileSearchTool, openRouterProviderPinnedTo, validateOpenRouterModelConfig } from './openrouter.config';
 
 describe('openRouterFileParserPlugin()', () => {
   it('should pin the native engine by default', () => {
@@ -87,13 +87,34 @@ describe('validateOpenRouterModelConfig()', () => {
   });
 
   it('should warn when hosted tools are used without requireParameters', () => {
-    const result = validateOpenRouterModelConfig({ model: 'm', tools: [{ type: 'file_search', vector_store_ids: ['vs_1'] }] });
+    const result = validateOpenRouterModelConfig({ model: 'm', tools: [openRouterFileSearchTool(['vs_1'])] });
     expect(result.warnings.some((x) => x.includes('requireParameters'))).toBe(true);
   });
 
   it('should not warn about hosted tools when the provider requires parameters', () => {
-    const result = validateOpenRouterModelConfig({ model: 'm', tools: [{ type: 'file_search', vector_store_ids: ['vs_1'] }], provider: openRouterProviderPinnedTo('openai') });
+    const result = validateOpenRouterModelConfig({ model: 'm', tools: [openRouterFileSearchTool(['vs_1'])], provider: openRouterProviderPinnedTo('openai') });
     expect(result.warnings.some((x) => x.includes('requireParameters'))).toBe(false);
+  });
+
+  it('should reject a file_search tool authored with the wire-cased field name', () => {
+    // The SDK names this field `vectorStoreIds` and strips anything it does not know, so the wire-cased
+    // spelling produces a tool that searches nothing — answered confidently, ungrounded, with no error.
+    const result = validateOpenRouterModelConfig({ model: 'm', tools: [{ type: 'file_search', vector_store_ids: ['vs_1'] }] });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((x) => x.includes('vectorStoreIds'))).toBe(true);
+  });
+
+  it('should build a file_search tool with the field names the SDK forwards', () => {
+    expect(openRouterFileSearchTool(['vs_1'], 5)).toEqual({ type: 'file_search', vectorStoreIds: ['vs_1'], maxNumResults: 5 });
+  });
+
+  it('should reject any hosted tool, because callModel cannot deliver one', () => {
+    // Verified against the wire, not assumed: `callModel` runs every `tools` entry through
+    // `convertToolsToAPIFormat`, which reads `tool.function.name` — so a hosted entry throws at dispatch,
+    // on a run already queued, claimed, and charged an attempt. Failing at publish time is better.
+    const result = validateOpenRouterModelConfig({ model: 'm', tools: [openRouterFileSearchTool(['vs_1'])], provider: openRouterProviderPinnedTo('openai') });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((x) => x.includes('not deliverable'))).toBe(true);
   });
 
   it('should warn when provider.only is set without disabling fallbacks', () => {

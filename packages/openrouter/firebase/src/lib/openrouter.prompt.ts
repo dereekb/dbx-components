@@ -22,7 +22,7 @@ export type OpenRouterPromptTypes = typeof openRouterPromptIdentity | typeof ope
 
 // MARK: OpenRouterPrompt
 /**
- * Identity for {@link OpenRouterPrompt} documents. Collection name: `openRouterPrompt`, short code: `orp`.
+ * Identity for {@link OpenRouterPrompt} documents. Model type: `openRouterPrompt`, collection: `orp`.
  */
 export const openRouterPromptIdentity = firestoreModelIdentity('openRouterPrompt', 'orp');
 
@@ -169,7 +169,7 @@ export function openRouterPromptFirestoreCollection(firestoreContext: FirestoreC
 // MARK: OpenRouterPromptVersion
 /**
  * Identity for {@link OpenRouterPromptVersion} documents. Subcollection of {@link OpenRouterPrompt}.
- * Collection name: `openRouterPromptVersion`, short code: `orpv`.
+ * Model type: `openRouterPromptVersion`, collection: `orpv`.
  */
 export const openRouterPromptVersionIdentity = firestoreModelIdentity(openRouterPromptIdentity, 'openRouterPromptVersion', 'orpv');
 

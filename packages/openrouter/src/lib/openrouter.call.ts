@@ -58,6 +58,30 @@ export function splitOpenRouterModelConfig(config: Maybe<OpenRouterModelConfig>)
 }
 
 /**
+ * Message used when a request carries hosted tools the `callModel` path cannot deliver.
+ */
+export const OPENROUTER_HOSTED_TOOLS_UNSUPPORTED_MESSAGE = 'Hosted (server-executed) tools cannot be sent through callModel: `@openrouter/sdk` converts every entry of `tools` as a client function tool, so a hosted entry is mangled or dropped before the request is built. Sending one needs a direct `/responses` path, which this package does not yet have.';
+
+/**
+ * Throws when a merged config carries hosted tools.
+ *
+ * The check exists to turn an opaque failure into a legible one. `callModel` destructures `tools` out of
+ * the request and runs every entry through `convertToolsToAPIFormat`, which reads `tool.function.name` —
+ * so a `{ type: 'file_search', … }` entry throws a `Cannot read properties of undefined` from inside the
+ * SDK at dispatch time, on a run that has already been queued, claimed, and charged an attempt. Failing
+ * here names the actual problem instead.
+ *
+ * @param tools - The `tools` value from the merged config.
+ * @throws When any hosted tool is present.
+ */
+export function assertNoOpenRouterHostedTools(tools: unknown): void {
+  if (Array.isArray(tools) && tools.length > 0) {
+    const types = tools.map((x) => (x as { type?: unknown })?.type).filter((x) => x != null);
+    throw new Error(`${OPENROUTER_HOSTED_TOOLS_UNSUPPORTED_MESSAGE} Found: ${types.join(', ')}.`);
+  }
+}
+
+/**
  * A normalized result of one OpenRouter call.
  *
  * Deliberately flat and provider-agnostic: this is what a run task stores and what a caller reads,
@@ -125,6 +149,8 @@ export interface OpenRouterCallModelInputParams<TTools extends readonly Tool[] =
 export function openRouterCallModelInput<TTools extends readonly Tool[] = readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): CallModelInput<TTools> {
   const { request, tools, state } = params;
   const { requestConfig, maxSteps } = splitOpenRouterModelConfig(request.config);
+
+  assertNoOpenRouterHostedTools(requestConfig['tools']);
 
   const input: Record<string, unknown> = {
     ...requestConfig,
@@ -212,22 +238,45 @@ export function openRouterCallResultFromResponse(response: OpenResponsesResult):
     outputText,
     outputJson: parseOpenRouterJsonOutput(outputText),
     generationIds: response.id ? [response.id] : [],
-    usage:
-      usage == null
-        ? undefined
-        : {
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-            totalTokens: usage.totalTokens,
-            reasoningTokens: usage.outputTokensDetails?.reasoningTokens,
-            cachedTokens: usage.inputTokensDetails?.cachedTokens,
-            cost: usage.cost,
-            isByok: usage.isByok
-          },
+    usage: usage == null ? undefined : openRouterRunUsageFromResponseUsage(usage),
     model: response.model,
     error: response.error == null ? undefined : { code: response.error.code == null ? undefined : String(response.error.code), message: response.error.message },
     response
   };
+}
+
+/**
+ * Flattens the SDK's nested usage object.
+ *
+ * A measurement the response did not report is OMITTED rather than set to `undefined`. That matters
+ * downstream rather than being tidiness: this value is persisted verbatim as passthrough JSON, and
+ * Firestore rejects an explicit `undefined` outright — so one unreported token count would fail the
+ * whole result write and lose an inference that had already been paid for.
+ *
+ * @param usage - The SDK usage object.
+ * @returns The flattened usage.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function openRouterRunUsageFromResponseUsage(usage: NonNullable<OpenResponsesResult['usage']>): OpenRouterRunUsage {
+  const result: Record<string, unknown> = {};
+  const values: [keyof OpenRouterRunUsage, Maybe<number | boolean>][] = [
+    ['inputTokens', usage.inputTokens],
+    ['outputTokens', usage.outputTokens],
+    ['totalTokens', usage.totalTokens],
+    ['reasoningTokens', usage.outputTokensDetails?.reasoningTokens],
+    ['cachedTokens', usage.inputTokensDetails?.cachedTokens],
+    ['cost', usage.cost],
+    ['isByok', usage.isByok]
+  ];
+
+  values.forEach(([key, value]) => {
+    if (value != null) {
+      result[key] = value;
+    }
+  });
+
+  return result as OpenRouterRunUsage;
 }
 
 /**

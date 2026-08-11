@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type ConversationState, type ParsedToolCall, type Tool } from './openrouter.sdk';
-import { isOpenRouterStateAwaitingDeferredTools, openRouterPendingDeferredToolCallFromParsedCall, openRouterPendingDeferredToolCalls, openRouterResolvedDeferredToolResults } from './openrouter.tool';
+import { isOpenRouterStateAwaitingDeferredTools, openRouterFunctionCallOutputItems, openRouterPendingDeferredToolCallFromParsedCall, openRouterPendingDeferredToolCalls, openRouterResolvedDeferredToolResults } from './openrouter.tool';
 
 function parsedCall(id: string, name: string): ParsedToolCall<Tool> {
   return { id, name, arguments: { a: 1 } } as unknown as ParsedToolCall<Tool>;
@@ -73,5 +73,21 @@ describe('isOpenRouterStateAwaitingDeferredTools()', () => {
   it('should be false for an empty or missing state', () => {
     expect(isOpenRouterStateAwaitingDeferredTools(stateWith([]))).toBe(false);
     expect(isOpenRouterStateAwaitingDeferredTools(null)).toBe(false);
+  });
+});
+
+describe('openRouterFunctionCallOutputItems()', () => {
+  it('should convert a recorded result into the wire format the model reads', () => {
+    // This is the resume path. `@openrouter/sdk@1.2.x` has no API for handing back a result produced by
+    // another process, so the outputs are appended to the conversation in the format it would have used.
+    expect(openRouterFunctionCallOutputItems([{ callId: 'call_1', name: 'ask_human', output: { decision: 'approve' } }])).toEqual([{ type: 'function_call_output', id: 'output_call_1', callId: 'call_1', output: '{"decision":"approve"}' }]);
+  });
+
+  it('should carry an error resolution as the output', () => {
+    expect(openRouterFunctionCallOutputItems([{ callId: 'call_1', name: 'ask_human', error: 'declined' }])[0].output).toBe('{"error":"declined"}');
+  });
+
+  it('should return nothing for no results', () => {
+    expect(openRouterFunctionCallOutputItems(null)).toEqual([]);
   });
 });
