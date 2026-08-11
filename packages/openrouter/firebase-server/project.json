@@ -1,0 +1,29 @@
+{
+  "name": "openrouter-firebase-server",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/openrouter/firebase-server/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests openrouter-firebase-server'"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/openrouter/firebase-server"
+      }
+    }
+  }
+}

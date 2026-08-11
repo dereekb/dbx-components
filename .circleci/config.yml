@@ -193,6 +193,12 @@ jobs:
           name: run trello tests
           command: npx nx run-all-tests trello
       - run:
+          name: run openrouter tests
+          command: npx nx test openrouter
+      - run:
+          name: run openrouter-firebase tests
+          command: npx nx test openrouter-firebase
+      - run:
           name: run analytics tests
           command: npx nx run-all-tests analytics
       - store_test_results:
