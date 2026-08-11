@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { OPENROUTER_NON_REQUEST_CONFIG_KEYS, openRouterCallModelInput, openRouterCallResultFromResponse, parseOpenRouterJsonOutput, splitOpenRouterModelConfig } from './openrouter.call';
+import { OPENROUTER_NON_REQUEST_CONFIG_KEYS, openRouterCallModelInput, openRouterCallResultFromResponse, openRouterHostedTools, openRouterResponsesRequestBody, parseOpenRouterJsonOutput, splitOpenRouterModelConfig } from './openrouter.call';
+import { openRouterFileSearchTool } from './openrouter.config';
 import { type OpenResponsesResult } from './openrouter.sdk';
 
 describe('splitOpenRouterModelConfig()', () => {
@@ -45,14 +46,46 @@ describe('openRouterCallModelInput()', () => {
     expect(input.trace.additionalProperties.runTaskKey).toBe('rt_1');
   });
 
-  it('should refuse a hosted tool with a legible error rather than an SDK TypeError', () => {
-    expect(() => openRouterCallModelInput({ request: { config: { model: 'm', tools: [{ type: 'file_search', vectorStoreIds: ['vs_1'] }] }, input: [] } })).toThrow(/not.*deliverable|cannot be sent/i);
+  it('should strip hosted tools, which callModel would convert as client function tools', () => {
+    // Hosted entries are re-attached after conversion by openRouterModelResultForRequest. Leaving one
+    // here is what throws `Cannot read properties of undefined` from inside the SDK at dispatch.
+    const input = openRouterCallModelInput({ request: { config: { model: 'm', tools: [openRouterFileSearchTool(['vs_1'])] }, input: [] } }) as Record<string, unknown>;
+    expect('tools' in input).toBe(false);
   });
 
   it('should omit tools and state when none are given', () => {
     const input = openRouterCallModelInput({ request: { config: { model: 'm' }, input: [] } }) as Record<string, unknown>;
     expect('tools' in input).toBe(false);
     expect('state' in input).toBe(false);
+  });
+});
+
+describe('openRouterHostedTools()', () => {
+  it('should return the hosted tool entries a config carries', () => {
+    expect(openRouterHostedTools({ model: 'm', tools: [openRouterFileSearchTool(['vs_1'])] })).toEqual([{ type: 'file_search', vectorStoreIds: ['vs_1'] }]);
+  });
+
+  it('should return an empty array for a config with no tools', () => {
+    expect(openRouterHostedTools({ model: 'm' })).toEqual([]);
+    expect(openRouterHostedTools(null)).toEqual([]);
+  });
+});
+
+describe('openRouterResponsesRequestBody()', () => {
+  it('should keep hosted tools on the body, which is the whole point of the direct path', () => {
+    // `vectorStoreIds` / `maxNumResults` are the SDK's names; it remaps them to `vector_store_ids` /
+    // `max_num_results` during outbound serialization.
+    const body = openRouterResponsesRequestBody({ config: { model: 'm', tools: [openRouterFileSearchTool(['vs_1'], 5)], include: ['file_search_call.results'] }, input: [] });
+    expect(body.tools).toEqual([{ type: 'file_search', vectorStoreIds: ['vs_1'], maxNumResults: 5 }]);
+    expect(body.include).toEqual(['file_search_call.results']);
+  });
+
+  it('should carry instructions and the trace, and keep execution controls off the body', () => {
+    const body = openRouterResponsesRequestBody({ config: { model: 'm', maxSteps: 3, requestTimeoutMs: 10 }, instructions: 'sys', input: [], trace: { runTaskKey: 'rt_1' } });
+    expect(body.instructions).toBe('sys');
+    expect(body.trace).toEqual({ additionalProperties: { runTaskKey: 'rt_1' } });
+    expect('maxSteps' in body).toBe(false);
+    expect('requestTimeoutMs' in body).toBe(false);
   });
 });
 
@@ -114,5 +147,37 @@ describe('openRouterCallResultFromResponse()', () => {
 
   it('should parse json output when the response is JSON', () => {
     expect(openRouterCallResultFromResponse(responseWith({ outputText: '{"fields":[]}' })).outputJson).toEqual({ fields: [] });
+  });
+
+  it('should read the text out of the message item, since OpenRouter sends no output_text', () => {
+    // Verified live on both a streaming and a non-streaming request: the body carries `output`
+    // (`reasoning`, then `message`) and NO `output_text`. Reading only that field stores an empty result
+    // for every real call — on inference that answered fine and was charged for.
+    const response = responseWith({
+      outputText: undefined,
+      output: [
+        { type: 'reasoning', summary: [] },
+        { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'OK' }] }
+      ]
+    } as unknown as Partial<OpenResponsesResult>);
+
+    expect(openRouterCallResultFromResponse(response).outputText).toBe('OK');
+  });
+
+  it('should concatenate text across every message item', () => {
+    const response = responseWith({
+      outputText: undefined,
+      output: [
+        { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'one ' }] },
+        { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'two' }] }
+      ]
+    } as unknown as Partial<OpenResponsesResult>);
+
+    expect(openRouterCallResultFromResponse(response).outputText).toBe('one two');
+  });
+
+  it('should return no text for a response carrying only tool calls', () => {
+    const response = responseWith({ outputText: undefined, output: [{ type: 'function_call', call_id: 'c1', name: 'x', arguments: '{}' }] } as unknown as Partial<OpenResponsesResult>);
+    expect(openRouterCallResultFromResponse(response).outputText).toBeUndefined();
   });
 });

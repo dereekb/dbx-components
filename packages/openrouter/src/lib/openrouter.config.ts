@@ -233,6 +233,10 @@ export interface OpenRouterModelConfig {
   readonly plugins?: Maybe<OpenRouterPluginConfig[]>;
   /**
    * Hosted (server-executed) tools, e.g. `file_search`, `mcp`, `web_search`.
+   *
+   * A config carrying any of these is dispatched off the `callModel` path — `callModel` converts every
+   * `tools` entry as a client function tool — and goes either straight to `/responses` or through a
+   * `ModelResult` that appends them after client-tool conversion. See `openRouterHostedTools`.
    */
   readonly tools?: Maybe<OpenRouterHostedToolConfig[]>;
   readonly toolChoice?: Maybe<unknown>;
@@ -347,21 +351,12 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
     }
 
     const hostedToolTypes = config.tools?.map((x) => x.type) ?? [];
-
-    if (hostedToolTypes.length > 0) {
-      // An ERROR, so a prompt carrying a hosted tool cannot be published. It is not a warning because
-      // there is no degraded outcome to warn about: `callModel` converts every `tools` entry as a client
-      // function tool, so the request throws at dispatch — on a run already queued, claimed, and charged
-      // an attempt. Failing at authoring time is strictly better than failing on every execution.
-      errors.push(`Hosted tools (${hostedToolTypes.join(', ')}) are not deliverable through the current callModel path; sending one needs a direct \`/responses\` path this package does not yet have.`);
-    }
-
     const fileSearchWithoutStores = config.tools?.some((x) => x.type === 'file_search' && !Array.isArray(x['vectorStoreIds']));
 
     if (fileSearchWithoutStores) {
-      // Separate from the above so the message survives the day hosted tools become deliverable: the SDK
-      // drops an unrecognized field (a `vector_store_ids` authored in wire case, say) during outbound
-      // serialization, leaving a tool that searches nothing and a model that answers ungrounded.
+      // The SDK drops an unrecognized field (a `vector_store_ids` authored in wire case, say) during
+      // outbound serialization, leaving a tool that searches nothing and a model that answers ungrounded
+      // with no error at all. That is exactly the failure worth refusing to publish.
       errors.push('A `file_search` hosted tool requires a `vectorStoreIds` array. Note the CAMELCASE — the SDK drops the wire-cased `vector_store_ids`, leaving a tool that searches nothing.');
     }
 

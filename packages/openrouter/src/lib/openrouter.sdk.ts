@@ -22,19 +22,31 @@
  * our own service (`resolveDeferredTool`), not on the SDK. The 1.2.x SDK's manual tools
  * (`execute: false`) plus `ConversationState.pendingToolCalls` / `unsentToolResults` provide exactly
  * that mechanism. See `openrouter.tool.ts`.
+ *
+ * NOTE ON `responsesSend` / `ModelResult` / `convertToolsToAPIFormat`: these three are what make hosted
+ * (server-executed) tools deliverable. `callModel` destructures `tools` off the request and runs every
+ * entry through `convertToolsToAPIFormat`, which reads `tool.function.name` — so a `file_search` entry
+ * is either dropped (no client tools) or throws (with client tools). `responsesSend` is the transport
+ * `callModel` itself dispatches through, and `ModelResult` is the tool loop it wraps; taking both
+ * directly lets `openrouter.call.ts` put an already-converted tool array on the request instead of one
+ * `callModel` will convert again. See `openRouterModelResultForRequest`.
  */
 
 export { callModel } from '@openrouter/sdk/funcs/call-model';
+export { responsesSend } from '@openrouter/sdk/funcs/responsesSend';
 export { unsentResultsToAPIFormat } from '@openrouter/sdk/lib/conversation-state';
 export { embeddingsGenerate } from '@openrouter/sdk/funcs/embeddingsGenerate';
+export { generationsGetGeneration } from '@openrouter/sdk/funcs/generationsGetGeneration';
+export { generationsListGenerationContent } from '@openrouter/sdk/funcs/generationsListGenerationContent';
+export { ModelResult } from '@openrouter/sdk/lib/model-result';
 export { tool } from '@openrouter/sdk/lib/tool';
+export { convertToolsToAPIFormat } from '@openrouter/sdk/lib/tool-executor';
 export { finishReasonIs, hasToolCall, maxCost, maxTokensUsed, stepCountIs } from '@openrouter/sdk/lib/stop-conditions';
 export { isManualTool, ToolType } from '@openrouter/sdk/lib/tool-types';
 
 export type { OpenRouterCore } from '@openrouter/sdk/core';
 export type { CallModelInput } from '@openrouter/sdk/lib/async-params';
-export type { ModelResult } from '@openrouter/sdk/lib/model-result';
 export type { RequestOptions } from '@openrouter/sdk/lib/sdks';
 export type { ConversationState, ConversationStatus, ParsedToolCall, StateAccessor, StopWhen, Tool, UnsentToolResult } from '@openrouter/sdk/lib/tool-types';
-export type { FunctionCallOutputItem, InputsUnion, OpenResponsesResult, Usage } from '@openrouter/sdk/models';
-export type { CreateEmbeddingsRequest, CreateEmbeddingsResponseBody } from '@openrouter/sdk/models/operations';
+export type { FunctionCallOutputItem, GenerationContentData, GenerationResponseData, InputsUnion, OpenResponsesResult, ResponsesRequest, Usage } from '@openrouter/sdk/models';
+export type { CreateEmbeddingsRequest, CreateEmbeddingsResponseBody, CreateResponsesResponse } from '@openrouter/sdk/models/operations';

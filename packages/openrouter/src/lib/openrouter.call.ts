@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
-import { type CallModelInput, type ModelResult, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type StateAccessor, type Tool, callModel, stepCountIs } from './openrouter.sdk';
-import { type OpenRouterModelConfig } from './openrouter.config';
+import { type CallModelInput, type CreateResponsesResponse, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
+import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
 import { type OpenRouterGenerationId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
 
@@ -58,27 +58,23 @@ export function splitOpenRouterModelConfig(config: Maybe<OpenRouterModelConfig>)
 }
 
 /**
- * Message used when a request carries hosted tools the `callModel` path cannot deliver.
- */
-export const OPENROUTER_HOSTED_TOOLS_UNSUPPORTED_MESSAGE = 'Hosted (server-executed) tools cannot be sent through callModel: `@openrouter/sdk` converts every entry of `tools` as a client function tool, so a hosted entry is mangled or dropped before the request is built. Sending one needs a direct `/responses` path, which this package does not yet have.';
-
-/**
- * Throws when a merged config carries hosted tools.
+ * The hosted (server-executed) tool entries a config carries, e.g. `file_search`, `web_search`, `mcp`.
  *
- * The check exists to turn an opaque failure into a legible one. `callModel` destructures `tools` out of
- * the request and runs every entry through `convertToolsToAPIFormat`, which reads `tool.function.name` —
- * so a `{ type: 'file_search', … }` entry throws a `Cannot read properties of undefined` from inside the
- * SDK at dispatch time, on a run that has already been queued, claimed, and charged an attempt. Failing
- * here names the actual problem instead.
+ * These are NOT client tools and must never be handed to `callModel`: it destructures `tools` off the
+ * request and runs every entry through `convertToolsToAPIFormat`, which reads `tool.function.name` — so
+ * a hosted entry is dropped outright when no client tools are present and throws a
+ * `Cannot read properties of undefined` from inside the SDK when they are. They are dispatched instead
+ * by {@link sendOpenRouterResponsesRequest} or merged in after conversion by
+ * {@link openRouterModelResultForRequest}.
  *
- * @param tools - The `tools` value from the merged config.
- * @throws When any hosted tool is present.
+ * @param config - The merged model config.
+ * @returns The hosted tool entries, or an empty array.
+ *
+ * @__NO_SIDE_EFFECTS__
  */
-export function assertNoOpenRouterHostedTools(tools: unknown): void {
-  if (Array.isArray(tools) && tools.length > 0) {
-    const types = tools.map((x) => (x as { type?: unknown })?.type).filter((x) => x != null);
-    throw new Error(`${OPENROUTER_HOSTED_TOOLS_UNSUPPORTED_MESSAGE} Found: ${types.join(', ')}.`);
-  }
+export function openRouterHostedTools(config: Maybe<OpenRouterModelConfig>): OpenRouterHostedToolConfig[] {
+  const tools = config?.tools;
+  return Array.isArray(tools) ? tools : [];
 }
 
 /**
@@ -141,30 +137,53 @@ export interface OpenRouterCallModelInputParams<TTools extends readonly Tool[] =
 }
 
 /**
+ * Converts a built request into the `/responses` request body.
+ *
+ * This is the whole wire body minus the SDK-only keys (`tools`/`state`/`stopWhen` on the `callModel`
+ * path), so both dispatch paths assemble the request the same way and cannot drift.
+ *
+ * @param request - The built request.
+ * @returns The request body, in the SDK's camelCase request surface.
+ */
+export function openRouterResponsesRequestBody(request: OpenRouterPromptRequest): Record<string, unknown> {
+  const { requestConfig } = splitOpenRouterModelConfig(request.config);
+
+  const body: Record<string, unknown> = {
+    ...requestConfig,
+    input: request.input
+  };
+
+  if (request.instructions) {
+    body.instructions = request.instructions;
+  }
+
+  if (request.trace != null) {
+    body.trace = { additionalProperties: { ...request.trace } };
+  }
+
+  return body;
+}
+
+/**
  * Converts a built request into the `callModel` input.
+ *
+ * Any hosted tools on the config are STRIPPED here rather than passed through: `callModel` owns the
+ * `tools` key and converts every entry as a client function tool. Hosted entries are re-attached after
+ * that conversion by {@link openRouterModelResultForRequest}.
  *
  * @param params - The request, tools, and state accessor.
  * @returns The `callModel` input.
  */
 export function openRouterCallModelInput<TTools extends readonly Tool[] = readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): CallModelInput<TTools> {
   const { request, tools, state } = params;
-  const { requestConfig, maxSteps } = splitOpenRouterModelConfig(request.config);
-
-  assertNoOpenRouterHostedTools(requestConfig['tools']);
+  const { maxSteps } = splitOpenRouterModelConfig(request.config);
 
   const input: Record<string, unknown> = {
-    ...requestConfig,
-    input: request.input,
+    ...openRouterResponsesRequestBody(request),
     stream: undefined
   };
 
-  if (request.instructions) {
-    input.instructions = request.instructions;
-  }
-
-  if (request.trace != null) {
-    input.trace = { additionalProperties: { ...request.trace } };
-  }
+  delete input.tools;
 
   if (tools != null) {
     input.tools = tools;
@@ -196,31 +215,174 @@ export interface CallModelForOpenRouterRequestParams<TTools extends readonly Too
 }
 
 /**
+ * Header `callModel` stamps on every request it dispatches, so OpenRouter can tell an agent-loop request
+ * apart from a plain one. Replicated on the merged hosted-tool path, which is a `callModel` request in
+ * everything but the entry point.
+ */
+export const OPENROUTER_CALL_MODEL_HEADER = 'x-openrouter-callmodel';
+
+/**
+ * Builds the request options for a call, folding in the config's `requestTimeoutMs`.
+ *
+ * @param options - Caller-supplied options.
+ * @param requestTimeoutMs - The per-request timeout from the config, when it set one.
+ * @returns The merged options.
+ */
+function openRouterRequestOptions(options: Maybe<RequestOptions>, requestTimeoutMs: Maybe<number>): RequestOptions {
+  return { ...options, ...(requestTimeoutMs == null ? undefined : { timeoutMs: requestTimeoutMs }) };
+}
+
+/**
+ * Copies request options and stamps the `x-openrouter-callmodel` header onto them.
+ *
+ * Both header sources are read for the same reason `callModel` reads both: the SDK resolves
+ * `options.headers ?? options.fetchOptions.headers`, so setting `headers` alone would SHADOW a caller
+ * who passed theirs through the (deprecated) `fetchOptions` instead of losing nothing.
+ *
+ * @param options - The request options.
+ * @returns Options carrying the caller's headers plus the callModel marker.
+ */
+function openRouterCallModelRequestOptions(options: RequestOptions): RequestOptions {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  const headers = new Headers(options.headers ?? options.fetchOptions?.headers ?? undefined);
+  headers.set(OPENROUTER_CALL_MODEL_HEADER, 'true');
+
+  return { ...options, headers };
+}
+
+/**
+ * Whether a call needs the SDK's client-side tool loop.
+ *
+ * Client tools and a `StateAccessor` both live on `ModelResult`, so a run using either cannot take the
+ * direct `/responses` path — it needs the loop that executes tools and round-trips conversation state.
+ *
+ * @param params - The tools and state accessor.
+ * @returns True when the loop is required.
+ */
+function usesOpenRouterClientToolLoop<TTools extends readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): boolean {
+  return (params.tools?.length ?? 0) > 0 || params.state != null;
+}
+
+/**
+ * Params for {@link sendOpenRouterResponsesRequest}.
+ */
+export interface SendOpenRouterResponsesRequestParams {
+  /**
+   * The OpenRouter client.
+   */
+  readonly client: OpenRouterCore;
+  /**
+   * The built request.
+   */
+  readonly request: OpenRouterPromptRequest;
+  /**
+   * Additional request options, merged under the config's `requestTimeoutMs`.
+   */
+  readonly options?: Maybe<RequestOptions>;
+}
+
+/**
+ * Sends a built request straight to `/responses`, bypassing `callModel` entirely.
+ *
+ * This is the path hosted (server-executed) tools take. `callModel` cannot carry them — it converts
+ * every `tools` entry as a client function tool — and there is nothing for its loop to do on a run whose
+ * tools are executed upstream anyway. Going direct also keeps the response VERBATIM: the request is
+ * non-streaming, so the returned `OpenResponsesResult` is the body OpenRouter sent rather than one
+ * reassembled from stream events, which is what preserves hosted-tool output items such as a
+ * `file_search_call` and the chunks `include: ['file_search_call.results']` asked for.
+ *
+ * @param params - The client, request, and options.
+ * @returns The response.
+ * @throws {Error} When the request fails, or when a streaming response comes back for a non-streaming request.
+ */
+export async function sendOpenRouterResponsesRequest(params: SendOpenRouterResponsesRequestParams): Promise<OpenResponsesResult> {
+  const { client, request, options } = params;
+  const { requestTimeoutMs } = splitOpenRouterModelConfig(request.config);
+  const responsesRequest = { ...openRouterResponsesRequestBody(request), stream: false } as unknown as ResponsesRequest & { stream?: false };
+
+  const result = await responsesSend(client, { responsesRequest }, openRouterRequestOptions(options, requestTimeoutMs));
+
+  if (!result.ok) {
+    throw result.error;
+  }
+
+  return openResponsesResultFromCreateResponse(result.value);
+}
+
+/**
+ * Narrows the SDK's response union to the non-streaming result.
+ *
+ * @param value - The value returned for a `stream: false` request.
+ * @returns The response.
+ * @throws {TypeError} When an event stream came back instead.
+ */
+function openResponsesResultFromCreateResponse(value: CreateResponsesResponse): OpenResponsesResult {
+  if (typeof (value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === 'function') {
+    throw new TypeError('OpenRouter returned a streaming response for a non-streaming `/responses` request.');
+  }
+
+  return value as OpenResponsesResult;
+}
+
+/**
  * Starts a call for a built request and returns the SDK's `ModelResult` without consuming it.
  *
  * Use this when the caller needs the streaming / tool-event surface. Most callers want
  * {@link callModelForOpenRouterRequest}, which consumes the result into a normalized value.
  *
+ * Hosted tools and client tools are NOT mutually exclusive here. When a config carries hosted tools this
+ * assembles the `ModelResult` itself — client tools converted to API format exactly as `callModel` would,
+ * with the hosted entries appended after that conversion — so a run can search a vector store AND drive
+ * the client-side tool loop. `callModel` cannot express that: it owns the `tools` key and there is no
+ * seam between its conversion and dispatch. Everything else about the run is unchanged, including the
+ * `x-openrouter-callmodel` header and the `stopWhen` step ceiling.
+ *
  * @param params - The client, request, tools, state, and options.
  * @returns The in-flight model result.
  */
 export function openRouterModelResultForRequest<TTools extends readonly Tool[] = readonly Tool[]>(params: CallModelForOpenRouterRequestParams<TTools>): ModelResult<TTools> {
-  const { client, request, options } = params;
-  const { requestTimeoutMs } = splitOpenRouterModelConfig(request.config);
-  const requestOptions: RequestOptions = { ...options, ...(requestTimeoutMs == null ? undefined : { timeoutMs: requestTimeoutMs }) };
+  const { client, request, tools, state, options } = params;
+  const { maxSteps, requestTimeoutMs } = splitOpenRouterModelConfig(request.config);
+  const requestOptions = openRouterRequestOptions(options, requestTimeoutMs);
+  const hostedTools = openRouterHostedTools(request.config);
+  let result: ModelResult<TTools>;
 
-  return callModel(client, openRouterCallModelInput(params), requestOptions);
+  if (hostedTools.length === 0) {
+    result = callModel(client, openRouterCallModelInput(params), requestOptions);
+  } else {
+    const apiRequest: Record<string, unknown> = {
+      ...openRouterResponsesRequestBody(request),
+      tools: [...(tools == null ? [] : convertToolsToAPIFormat(tools)), ...hostedTools],
+      stream: undefined
+    };
+
+    result = new ModelResult<TTools>({
+      client,
+      request: apiRequest as unknown as CallModelInput<TTools>,
+      options: openRouterCallModelRequestOptions(requestOptions),
+      ...(tools == null ? undefined : { tools }),
+      ...(state == null ? undefined : { state }),
+      ...(maxSteps == null ? undefined : { stopWhen: stepCountIs(maxSteps) })
+    });
+  }
+
+  return result;
 }
 
 /**
  * Runs a built request to completion and normalizes the response.
  *
+ * Routes to the direct `/responses` path for a hosted-tool run that needs no client-side tool loop, and
+ * to `ModelResult` otherwise. The caller does not choose: which transport a request needs is a property
+ * of the request, and making it a parameter would only create a way to get it wrong.
+ *
  * @param params - The client, request, tools, state, and options.
  * @returns The normalized call result.
  */
 export async function callModelForOpenRouterRequest<TTools extends readonly Tool[] = readonly Tool[]>(params: CallModelForOpenRouterRequestParams<TTools>): Promise<OpenRouterCallResult> {
-  const result = openRouterModelResultForRequest(params);
-  const response = await result.getResponse();
+  const sendDirect = openRouterHostedTools(params.request.config).length > 0 && !usesOpenRouterClientToolLoop(params);
+  const response = sendDirect ? await sendOpenRouterResponsesRequest(params) : await openRouterModelResultForRequest(params).getResponse();
+
   return openRouterCallResultFromResponse(response);
 }
 
@@ -231,7 +393,7 @@ export async function callModelForOpenRouterRequest<TTools extends readonly Tool
  * @returns The normalized result.
  */
 export function openRouterCallResultFromResponse(response: OpenResponsesResult): OpenRouterCallResult {
-  const outputText = response.outputText;
+  const outputText = openRouterOutputTextFromResponse(response);
   const usage = response.usage;
 
   return {
@@ -243,6 +405,38 @@ export function openRouterCallResultFromResponse(response: OpenResponsesResult):
     error: response.error == null ? undefined : { code: response.error.code == null ? undefined : String(response.error.code), message: response.error.message },
     response
   };
+}
+
+/**
+ * Reads the assistant text out of a response.
+ *
+ * The convenience `output_text` field is NOT populated by OpenRouter's `/responses` API — verified live,
+ * on both a streaming and a non-streaming request: the body carries `output` items (`reasoning`, then
+ * `message`) and no `output_text` at all. Reading that field alone therefore returns undefined for every
+ * real call, so a run task would store an empty `o` on a call that answered perfectly well and was
+ * charged for.
+ *
+ * Text is concatenated across ALL message items rather than just the first, since nothing guarantees a
+ * response is limited to one.
+ *
+ * @param response - The response.
+ * @returns The output text, or undefined when the response carried none.
+ */
+export function openRouterOutputTextFromResponse(response: OpenResponsesResult): Maybe<string> {
+  let result: Maybe<string> = response.outputText;
+
+  if (!result) {
+    const text = (response.output ?? [])
+      .filter((item) => (item as { type?: unknown })?.type === 'message')
+      .flatMap((item) => (item as { content?: unknown[] }).content ?? [])
+      .filter((part) => (part as { type?: unknown })?.type === 'output_text')
+      .map((part) => (part as { text?: string }).text ?? '')
+      .join('');
+
+    result = text || undefined;
+  }
+
+  return result;
 }
 
 /**
