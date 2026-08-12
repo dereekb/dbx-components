@@ -1,3 +1,5 @@
+import { type Count, type PageNumber } from '@dereekb/util';
+
 /**
  * A numeric identifier in Cal.com.
  */
@@ -86,3 +88,20 @@ export type CalcomResponseStatus = 'success' | 'error';
  * Cal.com booking status string.
  */
 export type CalcomBookingStatus = 'accepted' | 'pending' | 'cancelled' | 'rejected';
+
+/**
+ * The pagination envelope a paginated Cal.com list response carries beside its `data`.
+ *
+ * `currentPage`/`totalPages` are 1-based, and are derived from the `take`/`skip` of the request
+ * rather than being a cursor.
+ */
+export interface CalcomPagination {
+  readonly returnedItems: Count;
+  readonly totalItems: Count;
+  readonly itemsPerPage: Count;
+  readonly remainingItems: Count;
+  readonly currentPage: PageNumber;
+  readonly totalPages: Count;
+  readonly hasNextPage: boolean;
+  readonly hasPreviousPage: boolean;
+}

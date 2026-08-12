@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CalcomServiceConfig } from './calcom.config';
-import { type Calcom, type CalcomContext, type CalcomServerContext, type CalcomUserContext, type CalcomRefreshTokenCredential, calcomFactory, getMe, getSchedules, getAvailableSlots, createBooking, getBooking, cancelBooking, getEventTypes, createEventType, updateEventType, deleteEventType, getCalendars, getBusyTimes, createWebhook, getWebhooks, getWebhook, updateWebhook, deleteWebhook } from '@dereekb/calcom';
+import { type Calcom, type CalcomContext, type CalcomServerContext, type CalcomUserContext, type CalcomRefreshTokenCredential, calcomFactory, getMe, getSchedules, getAvailableSlots, createBooking, getBooking, getBookings, cancelBooking, getEventTypes, createEventType, updateEventType, deleteEventType, getCalendars, getBusyTimes, getBusyTimesForConnectedCalendars, createWebhook, getWebhooks, getWebhook, updateWebhook, deleteWebhook } from '@dereekb/calcom';
 import { cachedGetter } from '@dereekb/util';
 import { CalcomOAuthApi } from '../oauth';
 
@@ -187,6 +187,15 @@ export class CalcomApiContextInstance {
   }
 
   /**
+   * Configured pass-through for {@link getBookings}.
+   *
+   * @returns Function to retrieve a page of bookings.
+   */
+  get getBookings() {
+    return getBookings(this.context);
+  }
+
+  /**
    * Configured pass-through for {@link cancelBooking}.
    *
    * @returns Function to cancel a booking by UID.
@@ -249,6 +258,15 @@ export class CalcomApiContextInstance {
    */
   get getBusyTimes() {
     return getBusyTimes(this.context);
+  }
+
+  /**
+   * Configured pass-through for {@link getBusyTimesForConnectedCalendars}.
+   *
+   * @returns Function to retrieve busy times without having to resolve `calendarsToLoad` first.
+   */
+  get getBusyTimesForConnectedCalendars() {
+    return getBusyTimesForConnectedCalendars(this.context);
   }
 
   // MARK: Webhooks

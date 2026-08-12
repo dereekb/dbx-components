@@ -1,6 +1,7 @@
-import { type EmailAddress, type ISO8601DateString, type Maybe, type Minutes, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
+import { type Count, type EmailAddress, type ISO8601DateString, type Maybe, type Minutes, type SortingOrder, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
+import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus, type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomResponseStatus, type CalcomUserId, type CalcomUsername } from '../calcom.type';
+import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus, type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomPagination, type CalcomResponseStatus, type CalcomUserId, type CalcomUsername } from '../calcom.type';
 import { CALCOM_API_VERSION_BOOKINGS, calcomApiVersionHeaders } from '../shared/calcom.api-version';
 
 export interface CalcomBookingAttendee {
@@ -93,6 +94,43 @@ export interface CalcomGetBookingResponse {
   readonly data: CalcomBooking;
 }
 
+/**
+ * How {@link getBookings} filters by status.
+ *
+ * Note this is a filter over the booking's position in time as well as its state, and is NOT the
+ * {@link CalcomBookingStatus} carried on a booking: passing an unknown value is rejected with
+ * "Invalid status. Allowed are upcoming, recurring, past, cancelled, unconfirmed".
+ */
+export type CalcomBookingsFilterStatus = 'upcoming' | 'recurring' | 'past' | 'cancelled' | 'unconfirmed';
+
+export interface CalcomGetBookingsInput {
+  /**
+   * The number of bookings to return. The endpoint applies its own default (10) when unset.
+   */
+  readonly take?: Maybe<Count>;
+  readonly skip?: Maybe<Count>;
+  readonly status?: Maybe<CalcomBookingsFilterStatus>;
+  readonly eventTypeId?: Maybe<CalcomEventTypeId>;
+  readonly attendeeEmail?: Maybe<EmailAddress>;
+  /**
+   * Only bookings that start at or after this instant.
+   */
+  readonly afterStart?: Maybe<ISO8601DateString>;
+  /**
+   * Only bookings that end at or before this instant.
+   */
+  readonly beforeEnd?: Maybe<ISO8601DateString>;
+  readonly sortStart?: Maybe<SortingOrder>;
+  readonly sortEnd?: Maybe<SortingOrder>;
+  readonly sortCreated?: Maybe<SortingOrder>;
+}
+
+export interface CalcomGetBookingsResponse {
+  readonly status: CalcomResponseStatus;
+  readonly data: CalcomBooking[];
+  readonly pagination: CalcomPagination;
+}
+
 export interface CalcomCancelBookingInput {
   readonly uid: CalcomBookingUid;
   readonly cancellationReason?: Maybe<string>;
@@ -130,6 +168,34 @@ export function createBooking(context: CalcomContext): (input: CalcomCreateBooki
       method: 'POST',
       headers: calcomApiVersionHeaders(CALCOM_API_VERSION_BOOKINGS),
       body: JSON.stringify(input)
+    });
+  };
+}
+
+/**
+ * Retrieves the bookings visible to the authenticated user, newest page first.
+ *
+ * Paginated: read {@link CalcomGetBookingsResponse.pagination} rather than assuming `data` holds
+ * everything, as the endpoint caps a page even with no `take`.
+ *
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Retrieves a page of bookings for the given input.
+ *
+ * @see https://cal.com/docs/api-reference/v2/bookings/get-all-bookings
+ *
+ * @example
+ * ```ts
+ * const response = await getBookings(context)({ take: 10, status: 'upcoming', sortStart: 'asc' });
+ * console.log(response.pagination.totalItems, response.data.map(b => b.uid));
+ * ```
+ */
+export function getBookings(context: CalcomContext): (input?: Maybe<CalcomGetBookingsInput>) => Promise<CalcomGetBookingsResponse> {
+  return (input) => {
+    const params = makeUrlSearchParams(input);
+
+    return context.fetchJson(`/bookings?${params}`, {
+      method: 'GET',
+      headers: calcomApiVersionHeaders(CALCOM_API_VERSION_BOOKINGS)
     });
   };
 }

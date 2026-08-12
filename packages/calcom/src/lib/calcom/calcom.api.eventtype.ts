@@ -11,6 +11,18 @@ import { CALCOM_API_VERSION_EVENT_TYPES, calcomApiVersionHeaders } from '../shar
  */
 export type CalcomEventTypePolicy = { readonly disabled: true } | Record<string, unknown>;
 
+/**
+ * A boolean event-type setting Cal.com wraps in an object rather than sending bare.
+ *
+ * `disableCancelling`/`disableRescheduling` are `{ disabled: false }` on the wire in BOTH
+ * directions — the response never carries a bare boolean (so `if (eventType.disableCancelling)`
+ * on one would always be truthy), and passing one to create/update is rejected with "nested
+ * property disableCancelling must be either object or array".
+ */
+export interface CalcomEventTypeDisabledPolicy {
+  readonly disabled: boolean;
+}
+
 export interface CalcomEventType {
   readonly id: CalcomEventTypeId;
   readonly ownerId: CalcomUserId;
@@ -44,8 +56,8 @@ export interface CalcomEventType {
   readonly isInstantEvent: boolean;
   readonly useDestinationCalendarEmail: boolean;
   readonly bookingRequiresAuthentication: boolean;
-  readonly disableCancelling: boolean;
-  readonly disableRescheduling: boolean;
+  readonly disableCancelling: CalcomEventTypeDisabledPolicy;
+  readonly disableRescheduling: CalcomEventTypeDisabledPolicy;
   readonly allowReschedulingPastBookings: boolean;
   readonly allowReschedulingCancelledBookings: boolean;
   readonly forwardParamsSuccessRedirect: boolean;
@@ -110,8 +122,8 @@ export interface CalcomEventTypeInputSettings {
   readonly onlyShowFirstAvailableSlot?: Maybe<boolean>;
   readonly useDestinationCalendarEmail?: Maybe<boolean>;
   readonly bookingRequiresAuthentication?: Maybe<boolean>;
-  readonly disableCancelling?: Maybe<boolean>;
-  readonly disableRescheduling?: Maybe<boolean>;
+  readonly disableCancelling?: Maybe<CalcomEventTypeDisabledPolicy>;
+  readonly disableRescheduling?: Maybe<CalcomEventTypeDisabledPolicy>;
   readonly allowReschedulingPastBookings?: Maybe<boolean>;
   readonly allowReschedulingCancelledBookings?: Maybe<boolean>;
   readonly forwardParamsSuccessRedirect?: Maybe<boolean>;
