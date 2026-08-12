@@ -100,7 +100,8 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
   const { omitKeys, filterEmptyValues: filterValues, useBracketNotation } = options ?? {};
   const mergedInput = Array.isArray(input) ? mergeObjects(input) : input;
   const filteredInput = (filterValues ?? true) ? filterEmptyPojoValues(mergedInput ?? {}) : mergedInput;
-  const searchParams = useBracketNotation ? new URLSearchParams(toBracketNotationSearchParamTuples(filteredInput)) : new URLSearchParams(filteredInput as unknown as Record<string, string>);
+  const searchParamsInput = useBracketNotation ? toBracketNotationSearchParamTuples(filteredInput) : (filteredInput as unknown as Record<string, string>);
+  const searchParams = new URLSearchParams(searchParamsInput);
 
   if (omitKeys != null) {
     useIterableOrValue(omitKeys, (key) => searchParams.delete(key), false);

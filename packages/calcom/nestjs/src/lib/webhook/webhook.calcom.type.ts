@@ -1,16 +1,26 @@
-import { type EmailAddress, type ISO8601DateString, type TimezoneString } from '@dereekb/util';
-import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus } from '@dereekb/calcom';
+import { type EmailAddress, type ISO8601DateString, type SuggestedString, type TimezoneString } from '@dereekb/util';
+import { type CalcomBookingId, type CalcomBookingUid, type CalcomBookingStatus, type CalcomWebhookTrigger } from '@dereekb/calcom';
 
 // MARK: Event Types
 export const CALCOM_WEBHOOK_BOOKING_CREATED = 'BOOKING_CREATED';
 export const CALCOM_WEBHOOK_BOOKING_CANCELLED = 'BOOKING_CANCELLED';
 export const CALCOM_WEBHOOK_BOOKING_RESCHEDULED = 'BOOKING_RESCHEDULED';
-export const CALCOM_WEBHOOK_BOOKING_CONFIRMED = 'BOOKING_CONFIRMED';
 
-export type CalcomWebhookEventType = typeof CALCOM_WEBHOOK_BOOKING_CREATED | typeof CALCOM_WEBHOOK_BOOKING_CANCELLED | typeof CALCOM_WEBHOOK_BOOKING_RESCHEDULED | typeof CALCOM_WEBHOOK_BOOKING_CONFIRMED | string;
+/**
+ * The `triggerEvent` of an inbound webhook payload.
+ *
+ * Deliberately open-ended: this is a value Cal.com sends US, so a trigger added upstream — or one
+ * enabled on a subscription that predates this package — has to keep parsing rather than fail to
+ * type. {@link CalcomWebhookTrigger} is the set the API actually accepts on a subscription, and is
+ * what autocompletes here.
+ *
+ * Note there is no `BOOKING_CONFIRMED` trigger, despite this package once declaring one: a booking
+ * awaiting confirmation arrives as `BOOKING_REQUESTED` and its acceptance as `BOOKING_CREATED`.
+ */
+export type CalcomWebhookEventType = SuggestedString<CalcomWebhookTrigger>;
 
 // MARK: Event
-export interface CalcomWebhookEvent<T, ET extends string = string> {
+export interface CalcomWebhookEvent<T, ET extends CalcomWebhookEventType = CalcomWebhookEventType> {
   readonly triggerEvent: ET;
   readonly createdAt: ISO8601DateString;
   readonly payload: T;

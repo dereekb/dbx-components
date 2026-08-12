@@ -74,12 +74,6 @@ export type CalcomOrganizationSlug = string;
 export type CalcomCalendarIntegration = string;
 
 /**
- * Cal.com webhook event type string
- * (e.g., "BOOKING_CREATED", "BOOKING_CANCELLED").
- */
-export type CalcomWebhookEventTypeString = string;
-
-/**
  * Cal.com API response status string (e.g., "success", "error").
  */
 export type CalcomResponseStatus = 'success' | 'error';
