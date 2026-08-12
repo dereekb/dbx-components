@@ -29,14 +29,14 @@ function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remo
   // Remove the build target or tsconfig if it exists and is tagged
   if (remove) {
     // Remove whole build target
-    if (project.targets?.build && project.targets.build.options?.[SCHEMA_TAG]) {
-      delete project.targets?.build;
+    if (project.targets?.['build'] && project.targets['build'].options?.[SCHEMA_TAG]) {
+      delete project.targets?.['build'];
       console.log(`[${project.root}]`, `Removed build target`);
     }
     // remove tsconfig only
-    else if (project.targets?.build?.options?.[TSCONFIG_TAG]) {
-      delete project.targets.build.options.tsConfig;
-      delete project.targets.build.options[TSCONFIG_TAG];
+    else if (project.targets?.['build']?.options?.[TSCONFIG_TAG]) {
+      delete project.targets['build'].options.tsConfig;
+      delete project.targets['build'].options[TSCONFIG_TAG];
       console.log(`[${project.root}]`, `Removed tsconfig.json`);
     }
     // Remove nothing
@@ -49,14 +49,14 @@ function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remo
     project.targets = project.targets || {};
 
     // Build target exists already
-    if (project.targets.build) {
+    if (project.targets['build']) {
       // Ts config mising
-      if (project.targets.build.options.tsConfig) {
+      if (project.targets['build'].options.tsConfig) {
         // Ts config exists, nothing to do
         console.log(`[${project.root}]`, `Skipping, already exists`);
       } else {
-        project.targets.build.options = {
-          ...project.targets.build.options,
+        project.targets['build'].options = {
+          ...project.targets['build'].options,
           tsConfig: tsconfigPath,
           [TSCONFIG_TAG]: true
         };

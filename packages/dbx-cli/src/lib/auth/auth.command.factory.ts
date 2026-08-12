@@ -358,7 +358,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
             sessionExpiresAt,
             rotationDisabled,
             session,
-            sub: claims.sub,
+            sub: claims['sub'],
             claims
           });
         } else {

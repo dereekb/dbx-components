@@ -192,7 +192,7 @@ function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHand
 
 // Coerces the `detail` input into a WhoamiDetailLevel, defaulting unknown or absent values to `summary`.
 function parseDetailLevel(args: Record<string, unknown>): WhoamiDetailLevel {
-  const value = args.detail;
+  const value = args['detail'];
   return value === 'claims' || value === 'full' ? value : 'summary';
 }
 

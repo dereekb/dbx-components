@@ -51,7 +51,7 @@ import { openRouterFileSearchTool, openRouterProviderPinnedTo } from './openrout
  * OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID=vs_… pnpm nx test openrouter   # the full end-to-end assertion
  * ```
  */
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
 const CREDENTIALS_PRESENT = Boolean(OPENROUTER_API_KEY);
 
 /**
@@ -65,9 +65,9 @@ export const OPENROUTER_SPIKE_DEFAULT_TEST_MODEL = 'nvidia/nemotron-nano-9b-v2:f
  */
 export const OPENROUTER_SPIKE_DEFAULT_FILE_SEARCH_MODEL = 'openai/gpt-5-nano';
 
-const TEST_MODEL = process.env.OPENROUTER_TEST_MODEL_ID ?? OPENROUTER_SPIKE_DEFAULT_TEST_MODEL;
-const FILE_SEARCH_MODEL = process.env.OPENROUTER_FILE_SEARCH_MODEL_ID ?? OPENROUTER_SPIKE_DEFAULT_FILE_SEARCH_MODEL;
-const VECTOR_STORE_ID = process.env.OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID;
+const TEST_MODEL = process.env['OPENROUTER_TEST_MODEL_ID'] ?? OPENROUTER_SPIKE_DEFAULT_TEST_MODEL;
+const FILE_SEARCH_MODEL = process.env['OPENROUTER_FILE_SEARCH_MODEL_ID'] ?? OPENROUTER_SPIKE_DEFAULT_FILE_SEARCH_MODEL;
+const VECTOR_STORE_ID = process.env['OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID'];
 
 /**
  * A store id that is well-formed but cannot exist. Probing with it separates "OpenRouter forwarded the

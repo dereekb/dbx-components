@@ -45,6 +45,7 @@
     "@ngrx/operators": "^21.1.0",
     "@ngrx/store": "^21.1.0",
     "@nx/devkit": "22.7.0",
+    "@openrouter/agent": "^0.9.0",
     "@openrouter/sdk": "^1.2.26",
     "@placemarkio/geo-viewport": "^1.0.2",
     "@typeform/api-client": "^2.10.2",
@@ -211,7 +212,8 @@
   },
   "overrides": {
     "@ng-forge/dynamic-forms": "$@ng-forge/dynamic-forms",
-    "@ng-forge/dynamic-forms-material": "$@ng-forge/dynamic-forms-material"
+    "@ng-forge/dynamic-forms-material": "$@ng-forge/dynamic-forms-material",
+    "@openrouter/sdk": "$@openrouter/sdk"
   },
   "engines": {
     "node": ">=24.0.0"

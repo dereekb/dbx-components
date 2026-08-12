@@ -338,7 +338,7 @@ export class OidcService {
         url: async (_ctx: unknown, interaction: Interaction) => {
           let baseUrl: WebsiteUrlWithPrefix;
 
-          const client_id = interaction.params.client_id as string;
+          const client_id = interaction.params['client_id'] as string;
 
           let paramsToEncode = {
             uid: interaction.uid,
@@ -354,7 +354,7 @@ export class OidcService {
             const client = await this.findClientPayload(client_id);
 
             if (client) {
-              const scopes = interaction.params.scope as OAuthInteractionScopes;
+              const scopes = interaction.params['scope'] as OAuthInteractionScopes;
 
               // Surface the scopes the client's provider profiles force-require so the consent UI can
               // render them as required. Intersect with the actually-requested scopes so only visible

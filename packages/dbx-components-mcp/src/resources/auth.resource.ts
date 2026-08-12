@@ -74,7 +74,7 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const key = pickFirstVariable(variables.key);
+      const key = pickFirstVariable(variables['key']);
       const entry = key ? registry.findClaim(key) : undefined;
       let text: string;
       if (entry !== undefined) {
@@ -105,7 +105,7 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const role = pickFirstVariable(variables.role);
+      const role = pickFirstVariable(variables['role']);
       const entry = role ? registry.findRole(role) : undefined;
       let text: string;
       if (entry !== undefined) {
@@ -137,7 +137,7 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tag = pickFirstVariable(variables.tag);
+      const tag = pickFirstVariable(variables['tag']);
       let text: string;
       if (tag) {
         const roles = registry.findRolesByTag(tag);
@@ -166,7 +166,7 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const scope = pickFirstVariable(variables.scope);
+      const scope = pickFirstVariable(variables['scope']);
       const entry = scope ? registry.findScope(scope) : undefined;
       let text: string;
       if (entry !== undefined) {
@@ -197,7 +197,7 @@ export function registerAuthResource(server: McpServer, options: RegisterAuthRes
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const app = pickFirstVariable(variables.app);
+      const app = pickFirstVariable(variables['app']);
       const entry = app ? registry.findApp(app) : undefined;
       let text: string;
       if (entry !== undefined) {

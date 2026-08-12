@@ -54,7 +54,7 @@ describe('createEnumInfoTool', () => {
     });
 
     it('singularizes the description for one enum', () => {
-      const tool = createEnumInfoTool({ enums: { DayOfWeek: ENUMS.DayOfWeek } });
+      const tool = createEnumInfoTool({ enums: { DayOfWeek: ENUMS['DayOfWeek'] } });
       expect(tool.description).toContain('1 enum');
       expect(tool.description).not.toContain('1 enums');
     });

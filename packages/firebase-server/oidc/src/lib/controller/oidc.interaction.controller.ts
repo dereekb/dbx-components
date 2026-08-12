@@ -148,10 +148,10 @@ export class OidcInteractionController {
       const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
 
-      clientId = params.client_id as string;
+      clientId = params['client_id'] as string;
       accountId = session?.accountId ?? '';
 
-      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+      const missingOIDCScope = (prompt.details['missingOIDCScope'] as string[] | undefined) ?? [];
 
       // When the grant already exists (re-consent), find it up-front so its encountered scopes feed
       // both the admin-only gate below and the silent-no-op handling further down. A new grant is
@@ -267,7 +267,7 @@ export class OidcInteractionController {
 
       const encounteredOIDCClaims = grant.getOIDCClaimsEncountered();
 
-      const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
+      const missingOIDCClaims = (prompt.details['missingOIDCClaims'] as string[] | undefined) ?? [];
 
       if (missingOIDCClaims.length > 0) {
         const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCClaims, requestedSubset: body.grantedOIDCClaims, alreadyEncountered: encounteredOIDCClaims });
@@ -281,7 +281,7 @@ export class OidcInteractionController {
         }
       }
 
-      const missingResourceScopes = (prompt.details.missingResourceScopes as Record<string, string[]> | undefined) ?? {};
+      const missingResourceScopes = (prompt.details['missingResourceScopes'] as Record<string, string[]> | undefined) ?? {};
 
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
         // A submission with no explicit per-resource selection falls back to the OIDC scope selection

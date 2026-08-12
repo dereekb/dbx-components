@@ -130,20 +130,12 @@ export interface OpenRouterCallModelInputParams<TTools extends readonly Tool[] =
 export function openRouterResponsesRequestBody(request: OpenRouterPromptRequest): Record<string, unknown> {
   const { requestConfig } = splitOpenRouterModelConfig(request.config);
 
-  const body: Record<string, unknown> = {
+  return filterUndefinedValues<Record<string, unknown>>({
     ...requestConfig,
-    input: request.input
-  };
-
-  if (request.instructions) {
-    body.instructions = request.instructions;
-  }
-
-  if (request.trace != null) {
-    body.trace = { additionalProperties: { ...request.trace } };
-  }
-
-  return body;
+    input: request.input,
+    instructions: request.instructions || undefined,
+    trace: request.trace == null ? undefined : { additionalProperties: { ...request.trace } }
+  });
 }
 
 /**
@@ -160,24 +152,16 @@ export function openRouterCallModelInput<TTools extends readonly Tool[] = readon
   const { request, tools, state } = params;
   const { maxSteps } = splitOpenRouterModelConfig(request.config);
 
-  const input: Record<string, unknown> = {
-    ...openRouterResponsesRequestBody(request),
-    stream: undefined
-  };
+  // dropped by name rather than by mutation, so TypeScript sees which keys leave the body: the hosted
+  // tools `callModel` cannot carry, and a config-set `stream` the non-streaming path must not inherit.
+  const { tools: _hostedTools, stream: _stream, ...body } = openRouterResponsesRequestBody(request);
 
-  delete input.tools;
-
-  if (tools != null) {
-    input.tools = tools;
-  }
-
-  if (state != null) {
-    input.state = state;
-  }
-
-  if (maxSteps != null) {
-    input.stopWhen = stepCountIs(maxSteps);
-  }
+  const input: Record<string, unknown> = filterUndefinedValues<Record<string, unknown>>({
+    ...body,
+    tools: tools ?? undefined,
+    state: state ?? undefined,
+    stopWhen: maxSteps == null ? undefined : stepCountIs(maxSteps)
+  });
 
   return input as CallModelInput<TTools>;
 }

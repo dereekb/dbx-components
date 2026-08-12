@@ -177,8 +177,8 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.state).toBe('unverified');
-      expect(issue?.d?.domain).toBe(TEST_DOMAIN);
+      expect(issue?.d?.['state']).toBe('unverified');
+      expect(issue?.d?.['domain']).toBe(TEST_DOMAIN);
     });
 
     it('should report DOMAIN_NOT_ACTIVE when an active domain is disabled', async () => {
@@ -186,7 +186,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.disabled).toBe(true);
+      expect(issue?.d?.['disabled']).toBe(true);
     });
 
     it('should report the check as unavailable when the domain state cannot be read', async () => {
@@ -194,7 +194,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
-      expect(issue?.d?.domain).toBe(TEST_DOMAIN);
+      expect(issue?.d?.['domain']).toBe(TEST_DOMAIN);
       expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE)).toBeUndefined();
     });
   });
@@ -209,8 +209,8 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.code).toBe(550);
-      expect(issue?.d?.error).toBe('no such mailbox');
+      expect(issue?.d?.['code']).toBe(550);
+      expect(issue?.d?.['error']).toBe('no such mailbox');
       expect(issue?.f).toBeDefined();
     });
 
@@ -219,7 +219,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.address).toBe(TEST_TARGET);
+      expect(issue?.d?.['address']).toBe(TEST_TARGET);
     });
 
     it('should report SUPPRESSED_UNSUBSCRIBE as a warning', async () => {
@@ -227,7 +227,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-      expect(issue?.d?.tags).toEqual(['*']);
+      expect(issue?.d?.['tags']).toEqual(['*']);
     });
 
     it('should report every suppression list the address appears on', async () => {
@@ -260,7 +260,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
-      expect(issue?.d?.eventCount).toBe(2);
+      expect(issue?.d?.['eventCount']).toBe(2);
     });
 
     it('should report RECENT_DELIVERY_SUCCESS when the newest conclusive event is a delivery', async () => {
@@ -270,7 +270,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_SUCCESS);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.OK);
-      expect(issue?.d?.deliveredAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+      expect(issue?.d?.['deliveredAt']).toEqual(new Date('2026-01-01T00:00:00.000Z'));
       expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE)).toBeUndefined();
     });
 
@@ -280,8 +280,8 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.severity).toBe(MailgunEventSeverity.PERMANENT);
-      expect(issue?.d?.reason).toBe('suppress-bounce');
+      expect(issue?.d?.['severity']).toBe(MailgunEventSeverity.PERMANENT);
+      expect(issue?.d?.['reason']).toBe('suppress-bounce');
       expect(issue?.m).toContain('suppress-bounce');
     });
 
@@ -291,7 +291,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-      expect(issue?.d?.severity).toBe(MailgunEventSeverity.TEMPORARY);
+      expect(issue?.d?.['severity']).toBe(MailgunEventSeverity.TEMPORARY);
     });
 
     it('should report a rejected message as a failure', async () => {
@@ -299,7 +299,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const { response } = await runHealthCheck({ mock: { recentEvents } });
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE);
 
-      expect(issue?.d?.event).toBe(MailgunEventName.REJECTED);
+      expect(issue?.d?.['event']).toBe(MailgunEventName.REJECTED);
       // no severity on a rejection, so it is not treated as permanent
       expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
     });
@@ -319,7 +319,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
 
       expect(captures.validatedAddresses).toEqual([TEST_TARGET]);
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.risk).toBe('high');
+      expect(issue?.d?.['risk']).toBe('high');
     });
 
     it('should report ADDRESS_DISPOSABLE as a warning', async () => {
@@ -351,7 +351,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.SKIPPED);
-      expect(issue?.d?.target).toBe(TEST_TARGET);
+      expect(issue?.d?.['target']).toBe(TEST_TARGET);
       expect(captures.sentRequests).toHaveLength(0);
       expect(response.probe).toBeUndefined();
     });
@@ -376,7 +376,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
 
       expect(captures.sentRequests).toHaveLength(1);
       expect(issue?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
-      expect(issue?.d?.message).toBe('Suppressed');
+      expect(issue?.d?.['message']).toBe('Suppressed');
     });
 
     it('should report a refused send as an error rather than as unverifiable', async () => {
@@ -417,7 +417,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.error).toContain('mailgun refused the send');
+      expect(issue?.d?.['error']).toContain('mailgun refused the send');
     });
 
     it('should report PROBE_DISPATCH_FAILED as an error when the probe builder throws', async () => {
@@ -430,7 +430,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
 
       expect(captures.sentRequests).toHaveLength(0);
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.error).toContain('no probe template');
+      expect(issue?.d?.['error']).toContain('no probe template');
     });
   });
 
@@ -441,7 +441,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_DELIVERED);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.OK);
-      expect(issue?.d?.deliveredAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+      expect(issue?.d?.['deliveredAt']).toEqual(new Date('2026-01-01T00:00:00.000Z'));
       expect(response.probe?.s).toBe(NotificationHealthCheckStatus.OK);
       expect(response.probe?.d).toBe('Delivered');
     });
@@ -452,7 +452,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_FAILED);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.reason).toBe('mailbox does not exist');
+      expect(issue?.d?.['reason']).toBe('mailbox does not exist');
       expect(response.probe?.s).toBe(NotificationHealthCheckStatus.ERROR);
       expect(response.probe?.d).toBe('mailbox does not exist');
     });
@@ -472,7 +472,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_FAILED);
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-      expect(issue?.d?.probeTimeoutMinutes).toBe(15);
+      expect(issue?.d?.['probeTimeoutMinutes']).toBe(15);
       expect(response.probe?.d).toBe('No delivery result recorded');
     });
 
@@ -490,7 +490,7 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const probeQuery = captures.eventQueries.find((x) => x['message-id'] != null);
 
       expect(probeQuery?.['message-id']).toBe('20260101120000.1.abc@mail.example.com');
-      expect(probeQuery?.recipient).toBe(TEST_TARGET);
+      expect(probeQuery?.['recipient']).toBe(TEST_TARGET);
     });
 
     it('should resolve the pending probe rather than dispatch a second one', async () => {

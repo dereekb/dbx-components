@@ -423,7 +423,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(clientData!.type).toBe('Client');
 
         const storedPayload = clientData!.payload as Record<string, unknown>;
-        expect(storedPayload.client_id).toBe(client_id);
+        expect(storedPayload['client_id']).toBe(client_id);
         // selectiveFieldEncryptor strips the original plaintext key and stores the ciphertext
         // under the `$<field>` prefixed key. So `client_secret` must be absent and
         // `$client_secret` must hold the encrypted value.
@@ -1877,7 +1877,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(tokenRes.body.id_token).toBeDefined();
 
             const idTokenClaims = decodeJwt(tokenRes.body.id_token as string);
-            expect(idTokenClaims.nonce).toBe(requestNonce);
+            expect(idTokenClaims['nonce']).toBe(requestNonce);
           });
         });
 

@@ -46,7 +46,7 @@ describe('mergeOpenRouterModelConfig()', () => {
 
   it('should carry through parameters the interface does not name', () => {
     const result = mergeOpenRouterModelConfig([{ someFutureParam: 'x' } as OpenRouterModelConfig]);
-    expect(result.someFutureParam).toBe('x');
+    expect(result['someFutureParam']).toBe('x');
   });
 });
 

@@ -582,7 +582,7 @@ export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestore
     firebase: decoded.claims?.firebase ?? {}
   };
 
-  delete decodedToken.claims; // remove the "claims" item if it exists.
+  delete decodedToken['claims']; // remove the "claims" item if it exists.
   return decodedToken;
 }
 

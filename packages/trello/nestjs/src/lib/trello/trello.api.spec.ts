@@ -21,7 +21,7 @@ import { appTrelloModuleMetadata } from './trello.module';
 
 const NON_EXISTENT_TRELLO_ID = '0000000000000000000000aa';
 
-const TEST_BOARD_ID = process.env.TRELLO_TEST_BOARD_ID;
+const TEST_BOARD_ID = process.env['TRELLO_TEST_BOARD_ID'];
 
 @Module(appTrelloModuleMetadata())
 class TestTrelloModule {}

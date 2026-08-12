@@ -17,6 +17,7 @@
     "resolveJsonModule": true,
     "noUnusedLocals": false,
     "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
     "strict": true,
     "baseUrl": ".",
     "paths": {

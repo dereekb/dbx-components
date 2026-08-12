@@ -116,7 +116,7 @@ describe('userExternalConnectionZohoAccessTokenCache()', () => {
       expect(writes).toHaveLength(1);
       expect(writes[0].providerType).toBe(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
       expect(writes[0].credentials.accessToken).toBe('renewed-access-token');
-      expect(writes[0].credentials.extra?.apiDomain).toBe('https://www.zohoapis.eu');
+      expect(writes[0].credentials.extra?.['apiDomain']).toBe('https://www.zohoapis.eu');
     });
 
     it('should retain the refresh token and the accounts server', async () => {
@@ -126,8 +126,8 @@ describe('userExternalConnectionZohoAccessTokenCache()', () => {
       await cache.updateCachedToken(renewed);
 
       expect(writes[0].credentials.refreshToken).toBe('stored-refresh-token');
-      expect(writes[0].credentials.extra?.accountsServer).toBe(ZOHO_ACCOUNTS_US_API_URL);
-      expect(writes[0].credentials.extra?.location).toBe('us');
+      expect(writes[0].credentials.extra?.['accountsServer']).toBe(ZOHO_ACCOUNTS_US_API_URL);
+      expect(writes[0].credentials.extra?.['location']).toBe('us');
     });
 
     it('should not write when nothing is stored to merge onto', async () => {

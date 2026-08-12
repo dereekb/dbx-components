@@ -103,7 +103,7 @@ function coerceToDocument(data: unknown): Document {
     throw new Error('Input data must be a JSON object (the Firestore document). Got: ' + (Array.isArray(parsed) ? 'array' : typeof parsed));
   }
   const docRecord = parsed as Record<string, unknown>;
-  const rawKey = docRecord.key ?? docRecord._key ?? docRecord.id;
+  const rawKey = docRecord['key'] ?? docRecord['_key'] ?? docRecord['id'];
   const extraKey = typeof rawKey === 'string' ? rawKey : undefined;
   const result: Document = { doc: docRecord, extraKey };
   return result;

@@ -26,8 +26,8 @@ describe('demo api.details integration', () => {
       const details = getModelApiDetails(demoCallModelFn);
       expect(details).toBeDefined();
       expect(details!.models['guestbookEntry']).toBeDefined();
-      expect(details!.models['guestbookEntry'].calls.invoke).toBeDefined();
-      expect(details!.models['guestbookEntry'].calls.invoke!.specifiers['allPublishedEntries']).toBeDefined();
+      expect(details!.models['guestbookEntry'].calls['invoke']).toBeDefined();
+      expect(details!.models['guestbookEntry'].calls['invoke']!.specifiers['allPublishedEntries']).toBeDefined();
     });
   });
 

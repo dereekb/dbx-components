@@ -99,7 +99,7 @@ export function createOutputCommand(input: CreateOutputCommandInput): CommandMod
     describe: 'Configure output settings (global or per-command)',
     builder: (yargs: Argv) =>
       yargs.option('command', { alias: 'c', type: 'string', describe: 'Command path to configure (e.g. recruit.list)' }).check((argv) => {
-        if (argv.setDumpDir == null && argv.setPick == null) {
+        if (argv['setDumpDir'] == null && argv['setPick'] == null) {
           throw new Error('At least one of --set-dump-dir or --set-pick is required');
         }
 

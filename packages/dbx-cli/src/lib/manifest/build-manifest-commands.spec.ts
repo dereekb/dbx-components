@@ -109,7 +109,7 @@ describe('buildManifestCommands', () => {
     };
 
     expect(schema.required).toEqual(['guestbook']);
-    expect(schema.properties.guestbook).toEqual({ type: 'string', minLength: 1 });
+    expect(schema.properties['guestbook']).toEqual({ type: 'string', minLength: 1 });
   });
 
   it('prunes unjsonifiable `undefined` branches from clearable unions so `T | null | undefined` reads as `T | null`', async () => {
@@ -119,8 +119,8 @@ describe('buildManifestCommands', () => {
       readonly properties: Record<string, { readonly anyOf?: readonly unknown[] }>;
     };
 
-    expect(schema.properties.published.anyOf).toEqual([{ type: 'boolean' }, { type: 'null' }]);
-    expect(schema.properties.message.anyOf).toEqual([{ type: 'string', maxLength: 200, minLength: 1 }, { type: 'null' }]);
+    expect(schema.properties['published'].anyOf).toEqual([{ type: 'boolean' }, { type: 'null' }]);
+    expect(schema.properties['message'].anyOf).toEqual([{ type: 'string', maxLength: 200, minLength: 1 }, { type: 'null' }]);
   });
 
   it('renders the arktype expression instead of JSON Schema when dataHelpFormat=arktype', async () => {

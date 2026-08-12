@@ -16,7 +16,7 @@ import { demoCallModel } from '../model/crud.functions';
  * Set to run the `live` block against the real API. Every other block runs against the emulator alone
  * and needs no credentials — the same gate the openrouter package's own live block uses.
  */
-const OPENROUTER_LIVE_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
 
 /**
  * Builds a tiny PDF in-test.

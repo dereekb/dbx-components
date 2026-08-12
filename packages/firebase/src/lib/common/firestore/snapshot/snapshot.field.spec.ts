@@ -1083,8 +1083,8 @@ describe('firestoreModelKeyGrantedRoleArrayMap()', () => {
     const results = firestoreArrayMapConfig.to.convert(test) as Partial<typeof test>;
 
     expect(results).toBeDefined();
-    expect(results.amodelpath).toContain('true');
-    expect(results.amodelpath).not.toContain('');
+    expect(results['amodelpath']).toContain('true');
+    expect(results['amodelpath']).not.toContain('');
     expect(objectHasKey(results, 'amodelpath')).toBe(true);
     expect(objectHasKey(results, 'emptymodelpath')).toBe(false);
   });
@@ -1169,8 +1169,8 @@ describe('firestoreDencoderMap()', () => {
     const results = firestoreDencoderMapField.to.convert(testMap);
 
     expect(results).toBeDefined();
-    expect(results?.x).toBeDefined();
-    expect(typeof results?.x).toBe('string');
+    expect(results?.['x']).toBeDefined();
+    expect(typeof results?.['x']).toBe('string');
   });
 
   describe('converter', () => {
@@ -1204,9 +1204,9 @@ describe('firestoreDencoderMap()', () => {
 
       expect(decoded.value).toBeDefined();
       expect(typeof decoded.value).toBe('object');
-      expect(decoded.value.x).toBeDefined();
-      expect(decoded.value.x).toContain('read');
-      expect(decoded.value.x).toContain('update');
+      expect(decoded.value['x']).toBeDefined();
+      expect(decoded.value['x']).toContain('read');
+      expect(decoded.value['x']).toContain('update');
     });
   });
 });
@@ -1282,9 +1282,9 @@ describe('firestoreBitwiseObjectMap()', () => {
     const results = firestoreBitwiseObjectMapField.to.convert(testMap);
 
     expect(results).toBeDefined();
-    expect(results?.x).toBeDefined();
-    expect(typeof results?.x).toBe('number'); // encoded to number
-    expect(results?.x).toBe(3); // encoded to number
+    expect(results?.['x']).toBeDefined();
+    expect(typeof results?.['x']).toBe('number'); // encoded to number
+    expect(results?.['x']).toBe(3); // encoded to number
   });
 
   describe('converter', () => {
@@ -1327,12 +1327,12 @@ describe('firestoreBitwiseObjectMap()', () => {
 
       expect(decoded.value).toBeDefined();
       expect(typeof decoded.value).toBe('object');
-      expect(decoded.value.x).toBeDefined();
-      expect(decoded.value.y).toBeDefined();
-      expect(decoded.value.x.one).toBe(true);
-      expect(decoded.value.x.two).toBe(true);
-      expect(decoded.value.y.one).toBe(true);
-      expect(decoded.value.y.three).toBe(true);
+      expect(decoded.value['x']).toBeDefined();
+      expect(decoded.value['y']).toBeDefined();
+      expect(decoded.value['x'].one).toBe(true);
+      expect(decoded.value['x'].two).toBe(true);
+      expect(decoded.value['y'].one).toBe(true);
+      expect(decoded.value['y'].three).toBe(true);
     });
   });
 });

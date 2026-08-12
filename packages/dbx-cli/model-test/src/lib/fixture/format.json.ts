@@ -60,12 +60,12 @@ function summarizeEntry(entry: FixtureEntry, full: boolean = false): unknown {
     instanceMethodNames: entry.instanceMethods.map((m) => m.name)
   };
   if (full) {
-    summary.fixtureExtendsGenerics = entry.fixtureExtendsGenerics;
-    summary.instanceExtendsGenerics = entry.instanceExtendsGenerics;
-    summary.factory = entry.factory;
-    summary.params = entry.params;
-    summary.fixtureMethods = entry.fixtureMethods;
-    summary.instanceMethods = entry.instanceMethods;
+    summary['fixtureExtendsGenerics'] = entry.fixtureExtendsGenerics;
+    summary['instanceExtendsGenerics'] = entry.instanceExtendsGenerics;
+    summary['factory'] = entry.factory;
+    summary['params'] = entry.params;
+    summary['fixtureMethods'] = entry.fixtureMethods;
+    summary['instanceMethods'] = entry.instanceMethods;
   }
   return summary;
 }
