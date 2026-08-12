@@ -57,6 +57,12 @@ service firebase.storage {
         // max 2mb; text/plain only
         return request.resource.size < 2 * 1024 * 1024 && request.resource.contentType == 'text/plain'
       }
+
+      function isAllowedResumeFile() {
+        // max 10kb; application/pdf only. Mirrors USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, which is
+        // deliberately tiny because the resume is carried to OpenRouter as inline base64 on every attempt.
+        return request.resource.size < 10 * 1024 && request.resource.contentType == 'application/pdf'
+      }
     }
 
     // MARK: User Files

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnInit, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, type OnInit, Component, computed, inject } from '@angular/core';
 import { type WorkUsingContext, type IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import {
   DbxFirebaseAuthService,
@@ -10,6 +10,7 @@ import {
   dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs,
   DbxFirebaseStorageFileUploadModule,
   DbxFirebaseStorageService,
+  StorageFileDocumentStore,
   type StorageFileUploadConfig,
   storageFileUploadHandler,
   type StorageFileUploadHandler
@@ -18,9 +19,46 @@ import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { userAvatarUploadsFilePath } from 'demo-firebase';
+import { StorageFileProcessingState } from '@dereekb/firebase';
+import { USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, type UserResumeFileMetadata, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
+import { type Maybe, type SlashPathFile, isSlashPathFile, slashPathName } from '@dereekb/util';
+
+/**
+ * What the profile view shows about the user's resume and the model's verdict on it.
+ */
+export interface DemoProfileResumeCheckStatus {
+  /**
+   * The uploaded file's name.
+   */
+  readonly filename: string;
+  /**
+   * True while the resume-check run is queued or in flight.
+   */
+  readonly checking: boolean;
+  /**
+   * True when every check attempt was spent without an answer.
+   */
+  readonly failed: boolean;
+  /**
+   * When the verdict was written, if it has been.
+   */
+  readonly checkedAt?: Maybe<Date>;
+  /**
+   * The model's verdict, if it has answered.
+   */
+  readonly isResume?: Maybe<boolean>;
+  /**
+   * The model's reasoning for the verdict.
+   */
+  readonly reason?: Maybe<string>;
+}
+
+/**
+ * Fallback name for an upload whose own name is not usable as a path part.
+ */
+const DEFAULT_DEMO_PROFILE_RESUME_FILENAME: SlashPathFile = 'resume.pdf';
 
 /**
  * The signed-in user's own profile page.
@@ -29,7 +67,10 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '
  */
 @Component({
   templateUrl: './profile.component.html',
-  providers: [ProfileDocumentStore],
+  // The resume section's StorageFileDocumentStore is provided here rather than by a
+  // dbxFirebaseStorageFileDocument directive so this component can read the check's verdict off it. The
+  // avatar section keeps its own store, provided by the directive on that block's element.
+  providers: [ProfileDocumentStore, StorageFileDocumentStore],
   imports: [
     DbxLoadingProgressComponent,
     DemoProfileUsernameFormComponent,
@@ -91,6 +132,25 @@ export class DemoProfileViewComponent implements OnInit {
     }
   });
 
+  readonly resumeStorageFileDocumentStore = inject(StorageFileDocumentStore);
+
+  readonly resumeMaxFileSizeKb = USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES / 1024;
+
+  readonly resumeUploadHandler: StorageFileUploadHandler = storageFileUploadHandler({
+    storageService: this.storageService,
+    storageFileUploadConfigFactory: (file: File): StorageFileUploadConfig => {
+      const uid = this.userIdentifierSignal();
+      // The uploads folder is what the API matches on to pick the resume initializer, and the name is
+      // carried all the way to OpenRouter as the attachment's filename.
+      const filename = isSlashPathFile(file.name) ? file.name : DEFAULT_DEMO_PROFILE_RESUME_FILENAME;
+      const storagePath = userResumeFileUploadsFilePath(uid, filename);
+
+      return {
+        storagePath
+      };
+    }
+  });
+
   readonly avatarFileModifierFn: DbxFirebaseStorageFileUploadFileModifier = dbxFirebaseStorageFileImageCompressionFileModifier({
     compression: {
       maxDimension: 1280,
@@ -103,16 +163,44 @@ export class DemoProfileViewComponent implements OnInit {
   readonly profileData$ = this.profileDocumentStore.data$;
   readonly avatarUrl$ = this.profileData$.pipe(map((x) => x.avatar));
   readonly avatarStorageFileKey$ = this.profileData$.pipe(map((x) => x.avatarStorageFile));
+  readonly resumeStorageFileKey$ = this.profileData$.pipe(map((x) => x.resumeStorageFile));
   readonly username$ = this.profileData$.pipe(map((x) => x.username));
   readonly usernameSignal = toSignal(this.username$);
 
   readonly avatarUrlSignal = toSignal(this.avatarUrl$);
   readonly avatarStorageFileKeySignal = toSignal(this.avatarStorageFileKey$);
 
+  readonly resumeStorageFileSignal = toSignal(this.resumeStorageFileDocumentStore.currentData$);
+
+  readonly resumeCheckStatusSignal = computed<Maybe<DemoProfileResumeCheckStatus>>(() => {
+    const storageFile = this.resumeStorageFileSignal();
+    let status: Maybe<DemoProfileResumeCheckStatus>;
+
+    if (storageFile != null) {
+      const processingState = storageFile.ps;
+      // The `send`/`retrieve` subtask pair writes its verdict onto the StorageFile's metadata.
+      const metadata = storageFile.d as Maybe<UserResumeFileMetadata>;
+
+      status = {
+        filename: slashPathName(storageFile.pathString),
+        checking: processingState === StorageFileProcessingState.QUEUED_FOR_PROCESSING || processingState === StorageFileProcessingState.PROCESSING,
+        failed: processingState === StorageFileProcessingState.FAILED,
+        checkedAt: metadata?.checkedAt,
+        isResume: metadata?.isResume,
+        reason: metadata?.reason
+      };
+    }
+
+    return status;
+  });
+
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 
   ngOnInit(): void {
     this.profileDocumentStore.setId(this.auth.userIdentifier$);
+    // Points the section at any resume already on the profile. An upload re-points the same store at the
+    // StorageFile it creates, and the API writes that key back onto the profile, so the two converge.
+    this.resumeStorageFileDocumentStore.setKey(this.resumeStorageFileKey$);
   }
 
   readonly isUsernameModified: IsModifiedFunction<DemoProfileUsernameFormValue> = (value) => {
