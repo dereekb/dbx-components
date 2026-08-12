@@ -1,3 +1,21 @@
+# [13.36.0](https://github.com/dereekb/dbx-components/compare/v13.35.0-dev...v13.36.0) (2026-08-12)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([bc64ceac](https://github.com/dereekb/dbx-components/commit/bc64ceac0479266cb39e0916ac384a4a77b0f91e))
+
+
+### Code Refactoring
+
+- **calcom:** drop the BOOKING_CONFIRMED webhook trigger ([f37e1a07](https://github.com/dereekb/dbx-components/commit/f37e1a073e36ea7362e964a675d33e0e3cc482c1))
+
+
+### Features
+
+- **calcom:** align API types with the live Cal.com v2 API ([2e04990d](https://github.com/dereekb/dbx-components/commit/2e04990d3f17a6326423529d7e16129c4141919d))
+- **calcom:** semantic webhook time types + read-only API tests ([10a8f71d](https://github.com/dereekb/dbx-components/commit/10a8f71dee10cb797d6c6f652eb71480e4e32ec0))
+
 # Unreleased
 
 ### BREAKING CHANGES
