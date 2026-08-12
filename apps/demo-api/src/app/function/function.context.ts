@@ -30,6 +30,7 @@ import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoF
 import { NotificationInitServerActions, NotificationServerActions, StorageFileInitServerActions, StorageFileServerActions, UserExternalConnectionAccessor, UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader, UserExternalConnectionServerActions, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
 import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';
+import { OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterPromptService, type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
 /**
@@ -110,6 +111,18 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
    */
   get userExternalConnectionCalcomUserContextService(): UserExternalConnectionCalcomUserContextService {
     return this.nestApplication.get(UserExternalConnectionCalcomUserContextService);
+  }
+
+  get openRouterPromptActions(): OpenRouterPromptServerActions {
+    return this.nestApplication.get(OpenRouterPromptServerActions);
+  }
+
+  get openRouterPromptService(): OpenRouterPromptService {
+    return this.nestApplication.get(OPENROUTER_PROMPT_SERVICE_TOKEN);
+  }
+
+  get openRouterRunTaskService(): OpenRouterRunTaskService {
+    return this.nestApplication.get(OPENROUTER_RUN_TASK_SERVICE_TOKEN);
   }
 
   get firebaseModelsService() {

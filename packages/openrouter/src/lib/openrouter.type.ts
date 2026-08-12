@@ -63,9 +63,10 @@ export type OpenRouterFileAnnotationHash = string;
 /**
  * A reference to a file to send with a request.
  *
- * The path is stored, NOT a signed URL: a run task can sit queued for a sweep interval, be retried,
- * and (with deferred tools) resume much later, so a URL minted at enqueue time would 403 by the time
- * it was used. The runner signs the path fresh on every attempt instead.
+ * This type exists BECAUSE of the constraint, so this is where the constraint is stated: the path is
+ * stored, never a signed URL. A run task can sit queued for a sweep interval, be retried, and (with
+ * deferred tools) resume much later, so a URL minted at enqueue time would 403 by the time it was used.
+ * The runner signs the path fresh on every attempt instead.
  */
 export interface OpenRouterFileReference {
   /**
@@ -86,8 +87,9 @@ export interface OpenRouterFileReference {
  * A cached `file-parser` annotation, as returned on a response and resubmitted on a later request to
  * skip re-parsing the same file.
  *
- * Worth persisting: under `mistral-ocr` a re-parse costs $2/1,000 pages, and under any engine it
- * costs the latency of parsing a document we have already parsed.
+ * This is the canonical statement of what a re-parse costs, and why caching one is worth a persisted
+ * field: under `mistral-ocr` it is $2/1,000 pages, and under any engine it is the latency of reading a
+ * document we have already read.
  */
 export interface OpenRouterFileAnnotation {
   /**

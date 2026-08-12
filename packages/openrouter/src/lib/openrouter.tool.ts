@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, arrayToMap } from '@dereekb/util';
 import { type ConversationState, type FunctionCallOutputItem, type ParsedToolCall, type Tool, type UnsentToolResult, isManualTool, unsentResultsToAPIFormat } from './openrouter.sdk';
 import { type OpenRouterDeferredToolTaskId } from './openrouter.type';
 
@@ -74,7 +74,7 @@ export function openRouterPendingDeferredToolCallFromParsedCall(call: ParsedTool
  * @returns The unsent tool results, in the order the resolutions were given.
  */
 export function openRouterResolvedDeferredToolResults<TTools extends readonly Tool[] = readonly Tool[]>(pending: Maybe<OpenRouterPendingDeferredToolCall[]>, resolutions: Maybe<OpenRouterDeferredToolResolution[]>): UnsentToolResult<TTools>[] {
-  const byTaskId = new Map((pending ?? []).map((call) => [call.taskId, call]));
+  const byTaskId = arrayToMap(pending ?? [], (call) => call.taskId);
   const results: UnsentToolResult<TTools>[] = [];
 
   (resolutions ?? []).forEach((resolution) => {

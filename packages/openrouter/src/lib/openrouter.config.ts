@@ -155,25 +155,21 @@ export function openRouterFileSearchTool(vectorStoreIds: string[], maxNumResults
 /**
  * The default PDF parser engine this package pins.
  *
- * Verbatim from OpenRouter's docs: "If you don't explicitly specify an engine, OpenRouter will
- * default first to the model's native file processing capabilities, and if that's not available, we
- * will use the `mistral-ocr` engine." Omitting the engine on a model OpenRouter believes lacks
- * native file support therefore downgrades to Mistral silently — inheriting the 8-image cap and
- * per-page billing with no error, which on a multi-page resume quietly truncates content.
- *
- * Pinning it means a model or routing change cannot degrade parsing behind our back.
+ * Pinned because the alternative is silent: with no engine named, OpenRouter downgrades any model it
+ * believes lacks native file support to `mistral-ocr`, inheriting its 8-image cap and per-page billing with
+ * no error — which on a multi-page document quietly truncates content.
  */
-export const OPENROUTER_DEFAULT_PDF_PARSER_ENGINE: OpenRouterPdfParserEngine = 'native';
+export const DEFAULT_OPENROUTER_PDF_PARSER_ENGINE: OpenRouterPdfParserEngine = 'native';
 
 /**
  * The `file-parser` plugin entry with the PDF engine pinned.
  *
- * @param engine - Engine to pin. Defaults to {@link OPENROUTER_DEFAULT_PDF_PARSER_ENGINE}.
+ * @param engine - Engine to pin. Defaults to {@link DEFAULT_OPENROUTER_PDF_PARSER_ENGINE}.
  * @returns The plugin config entry.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function openRouterFileParserPlugin(engine: OpenRouterPdfParserEngine = OPENROUTER_DEFAULT_PDF_PARSER_ENGINE): OpenRouterFileParserPluginConfig {
+export function openRouterFileParserPlugin(engine: OpenRouterPdfParserEngine = DEFAULT_OPENROUTER_PDF_PARSER_ENGINE): OpenRouterFileParserPluginConfig {
   return { id: 'file-parser', pdf: { engine } };
 }
 
@@ -350,7 +346,7 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
       warnings.push('The `file-parser` plugin has no pinned `pdf.engine`; OpenRouter will silently fall back to `mistral-ocr` (8-image cap, per-page billing) on any model it believes lacks native file support.');
     }
 
-    const hostedToolTypes = config.tools?.map((x) => x.type) ?? [];
+    const hasHostedTools = (config.tools?.length ?? 0) > 0;
     const fileSearchWithoutStores = config.tools?.some((x) => x.type === 'file_search' && !Array.isArray(x['vectorStoreIds']));
 
     if (fileSearchWithoutStores) {
@@ -360,7 +356,7 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
       errors.push('A `file_search` hosted tool requires a `vectorStoreIds` array. Note the CAMELCASE — the SDK drops the wire-cased `vector_store_ids`, leaving a tool that searches nothing.');
     }
 
-    if (hostedToolTypes.length > 0 && config.provider?.requireParameters !== true) {
+    if (hasHostedTools && config.provider?.requireParameters !== true) {
       warnings.push('Hosted tools were requested without `provider.requireParameters: true`; a provider that does not support them receives only the parameters it supports and ignores the rest, returning an ungrounded answer with no error.');
     }
 

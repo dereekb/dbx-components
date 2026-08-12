@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, concatArraysUnique, mergeObjects } from '@dereekb/util';
 import { type OpenRouterRunTaskKey, type OpenRouterRunUsage } from '@dereekb/openrouter';
 import { type OpenRouterRunTaskFirestoreCollections } from '@dereekb/openrouter/firebase';
 
@@ -100,8 +100,8 @@ export async function reconcileOpenRouterRunTaskFromBroadcast(params: ReconcileO
     const task = await document.snapshotData();
 
     if (task != null) {
-      const generationIds = generation.generationId == null ? task.gi : Array.from(new Set([...(task.gi ?? []), generation.generationId]));
-      const usage = mergedOpenRouterRunUsage(task.u, generation);
+      const generationIds = generation.generationId == null ? task.gi : concatArraysUnique(task.gi, [generation.generationId]);
+      const usage = mergeOpenRouterRunUsage(task.u, generation);
 
       await document.update({ gi: generationIds, u: usage });
       reconciled = true;
@@ -117,27 +117,20 @@ export async function reconcileOpenRouterRunTaskFromBroadcast(params: ReconcileO
  * The broadcast value wins where it is present — it is the later, authoritative measurement — and the
  * stored value is kept where the span is silent, so an incomplete span cannot erase what the runner knew.
  *
+ * The filter MUST be `NULL`, not `mergeObjects`' default of `UNDEFINED`. Every field here is a `Maybe`, so a
+ * span reporting `cost: null` means "did not measure" — and under the default filter that `null` would win
+ * and erase the cost the runner actually recorded.
+ *
+ * `reasoningTokens` / `cachedTokens` / `isByok` are absent from the literal because a broadcast span carries
+ * none of them; they ride along from `existing` untouched.
+ *
  * @param existing - Usage already stored.
  * @param generation - The span's generation info.
  * @returns The merged usage.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function mergedOpenRouterRunUsage(existing: Maybe<OpenRouterRunUsage>, generation: OpenRouterBroadcastGenerationInfo): OpenRouterRunUsage {
-  // Every field is spread conditionally rather than assigned. Usage is persisted as passthrough JSON, so
-  // an absent measurement written as an explicit `undefined` is not "no value" to Firestore — it is a
-  // rejected write, and it takes the whole reconciliation down with it.
-  return {
-    ...definedUsageValue('inputTokens', generation.promptTokens ?? existing?.inputTokens),
-    ...definedUsageValue('outputTokens', generation.completionTokens ?? existing?.outputTokens),
-    ...definedUsageValue('totalTokens', generation.totalTokens ?? existing?.totalTokens),
-    ...definedUsageValue('reasoningTokens', existing?.reasoningTokens),
-    ...definedUsageValue('cachedTokens', existing?.cachedTokens),
-    ...definedUsageValue('cost', generation.cost ?? existing?.cost),
-    ...definedUsageValue('isByok', existing?.isByok)
-  };
-}
-
-function definedUsageValue<K extends keyof OpenRouterRunUsage>(key: K, value: OpenRouterRunUsage[K]): Partial<OpenRouterRunUsage> {
-  return value == null ? {} : { [key]: value };
+export function mergeOpenRouterRunUsage(existing: Maybe<OpenRouterRunUsage>, generation: OpenRouterBroadcastGenerationInfo): OpenRouterRunUsage {
+  const { promptTokens: inputTokens, completionTokens: outputTokens, totalTokens, cost } = generation;
+  return mergeObjects<OpenRouterRunUsage>([existing, { inputTokens, outputTokens, totalTokens, cost }], KeyValueTypleValueFilter.NULL);
 }

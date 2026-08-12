@@ -7,12 +7,13 @@ import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
 import { type OpenRouterCore, type OpenRouterModelConfig, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
-import { type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
+import { OPENROUTER_RUN_TASK_MAX_AGE, type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
 import { type FakeOpenRouterClient, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
 import { openRouterPromptServerActions } from './openrouter.action.server';
+import { type OpenRouterFileAttachmentMode } from './openrouter.file.attachment';
 import { openRouterPromptService } from './openrouter.prompt.service';
-import { OPENROUTER_DEFAULT_RUN_TASK_PRIORITY, type OpenRouterRunTaskExecutionResult, type OpenRouterRunTaskService, openRouterRunTaskService } from './openrouter.runtask.service';
-import { openRouterRunTaskSweep } from './openrouter.runtask.sweep';
+import { type OpenRouterRunTaskExecutionResult, type OpenRouterRunTaskService, openRouterRunTaskService } from './openrouter.runtask.service';
+import { openRouterRunTaskExpirationSweep, openRouterRunTaskSweep } from './openrouter.runtask.sweep';
 import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadcastAttributes } from './openrouter.broadcast';
 
 const TEST_PROMPT_KEY = 'test-prompt';
@@ -99,6 +100,10 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
        * Client to run against, replacing the fake. Only the live end-to-end block passes one.
        */
       readonly client?: OpenRouterCore;
+      /**
+       * Explicit file attachment mode. Unset means the service's default, which is `signedUrl`.
+       */
+      readonly fileAttachmentMode?: OpenRouterFileAttachmentMode;
     }
 
     async function buildStack(config?: BuildStackConfig): Promise<TestStack> {
@@ -121,6 +126,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         promptService,
         client: config?.client ?? fake.client,
         storageContext: storage.storageContext,
+        fileAttachmentMode: config?.fileAttachmentMode,
         tools: config?.tools,
         maxAttempts: config?.maxAttempts,
         onTerminalState: async (_document, result) => {
@@ -158,39 +164,21 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         states.forEach((task) => expect(task?.s).toBe(OpenRouterRunTaskState.COMPLETE));
       });
 
-      it('should claim in priority order and then queue order', async () => {
+      it('should claim in queue order', async () => {
         // Claim order is the assertable one: execution runs ten at a time, so completion order is not
-        // meaningful, but which ten get claimed first is exactly what priority is for.
+        // meaningful, but which ten get claimed first is the whole of what `qat` decides. Queue order is the
+        // ONLY order — a priority column would cost a second composite index and buy a second failure mode.
         const stack = await buildStack();
-        const enqueued: { key: string; priority: number }[] = [
-          { key: 'p_low_first', priority: 5 },
-          { key: 'p_high_second', priority: 1 },
-          { key: 'p_low_third', priority: 5 },
-          { key: 'p_high_fourth', priority: 1 }
-        ];
+        const keys = ['q_first', 'q_second', 'q_third', 'q_fourth'];
 
-        for (const { key, priority } of enqueued) {
-          await stack.service.enqueueRunTask({ key, promptKey: TEST_PROMPT_KEY, input: key, priority });
-          // Distinct `qat` values, so the secondary sort has something to sort on.
+        for (const key of keys) {
+          await stack.service.enqueueRunTask({ key, promptKey: TEST_PROMPT_KEY, input: key });
+          // Distinct `qat` values, so the sort has something to sort on.
           await new Promise((resolve) => setTimeout(resolve, 15));
         }
 
-        const claimed = await stack.service.claimNextRunTasks({ limit: 10, leaseOwner: 'test', usePriorityOrder: true });
-        expect(claimed.map((x) => x.id)).toEqual(['p_high_second', 'p_high_fourth', 'p_low_first', 'p_low_third']);
-      });
-
-      it('should sort an unprioritized task behind a prioritized one rather than ahead of it', async () => {
-        // A `pr` of null sorts BEFORE every number in Firestore, so leaving it unset would silently mean
-        // "run me first". Writing the default at enqueue is what keeps the absent case meaning "normal".
-        const stack = await buildStack();
-
-        await stack.service.enqueueRunTask({ key: 'without_priority', promptKey: TEST_PROMPT_KEY, input: 'b' });
-        await stack.service.enqueueRunTask({ key: 'with_priority', promptKey: TEST_PROMPT_KEY, input: 'a', priority: 1 });
-
-        expect((await stack.taskData('without_priority'))?.pr).toBe(OPENROUTER_DEFAULT_RUN_TASK_PRIORITY);
-
-        const claimed = await stack.service.claimNextRunTasks({ limit: 10, leaseOwner: 'test', usePriorityOrder: true });
-        expect(claimed.map((x) => x.id)).toEqual(['with_priority', 'without_priority']);
+        const claimed = await stack.service.claimNextRunTasks({ limit: 10, leaseOwner: 'test' });
+        expect(claimed.map((x) => x.id)).toEqual(keys);
       });
     });
 
@@ -354,6 +342,32 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect(second.resolved).toBe(false);
         expect((await stack.taskData('dupe'))?.utr?.length).toBe(1);
       });
+
+      it('should preserve the ORIGINAL qat when a resume returns the task to QUEUED', async () => {
+        // `qat` is write-once, and both things that read it depend on that. It is the task's retention age,
+        // so a rolling value would let a run cycling through tool resolutions keep pushing its own age
+        // forward and never age out. And it is the claim order: a run waiting on a tool since yesterday
+        // should be claimed ahead of one queued a minute ago, not sent to the back of the line.
+        const stack = await buildStack({
+          tools: [deferredTool],
+          reply: (_body, index) => (index === 0 ? { toolCalls: [{ callId: 'call_qat', name: DEFERRED_TOOL_NAME, arguments: { subject: 'x' } }] } : { text: 'done' })
+        });
+
+        await stack.service.enqueueRunTask({ key: 'stable_qat', promptKey: TEST_PROMPT_KEY, input: 'ask' });
+        const enqueuedAt = (await stack.taskData('stable_qat'))?.qat;
+        expect(enqueuedAt).toBeInstanceOf(Date);
+
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+        expect((await stack.taskData('stable_qat'))?.s).toBe(OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS);
+
+        // Enough of a gap that a reset would be visible.
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        await stack.service.resolveDeferredTool({ key: 'stable_qat', taskId: 'call_qat', output: 1 });
+
+        const resumed = await stack.taskData('stable_qat');
+        expect(resumed?.s).toBe(OpenRouterRunTaskState.QUEUED);
+        expect(resumed?.qat?.getTime()).toBe(enqueuedAt?.getTime());
+      });
     });
 
     // MARK: 7 — Prompt versioning
@@ -470,6 +484,96 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       });
     });
 
+    // MARK: 8b — Inline (base64) file attachment
+    describe('inline file attachment', () => {
+      const INLINE_PDF_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37]); // "%PDF-1.7"
+      const INLINE_PDF_BASE64 = Buffer.from(INLINE_PDF_BYTES).toString('base64');
+
+      it('should send the file as file_data with no file_url at all', async () => {
+        // The whole reason inline mode exists: OpenRouter dereferences a `file_url` from the public
+        // internet, which cannot reach an object living in the Firebase storage emulator. This asserts
+        // against the body the fake fetcher received — i.e. after the SDK's outbound serialization, which
+        // is the only place the answer is real.
+        const stack = await buildStack({ fileAttachmentMode: 'inlineData' });
+        stack.storage.putObject('resumes/candidate.pdf', { bytes: INLINE_PDF_BYTES, contentType: 'application/pdf' });
+
+        await stack.service.enqueueRunTask({
+          key: 'inlined',
+          promptKey: TEST_PROMPT_KEY,
+          input: 'is this a resume?',
+          files: [{ storagePath: 'resumes/candidate.pdf', filename: 'candidate.pdf' }]
+        });
+
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        expect((await stack.taskData('inlined'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+
+        const body = JSON.stringify(stack.fake.requests[0]);
+        expect(body).toContain(`data:application/pdf;base64,${INLINE_PDF_BASE64}`);
+        expect(body).toContain('file_data');
+        // Both halves matter: sending a url alongside the data leaves it undefined which one wins, and a
+        // url is exactly what does not work here.
+        expect(body).not.toContain('file_url');
+        expect(stack.storage.signed.length).toBe(0);
+      });
+
+      it('should store only the path on the run task, never the base64', async () => {
+        // `fp` is written once at enqueue and re-read on every attempt. Inlining there would put the whole
+        // file into a document with a 1 MiB ceiling, and re-pay for it on every read.
+        const stack = await buildStack({ fileAttachmentMode: 'inlineData' });
+        stack.storage.putObject('resumes/candidate.pdf', { bytes: INLINE_PDF_BYTES, contentType: 'application/pdf' });
+
+        await stack.service.enqueueRunTask({
+          key: 'inlined_not_stored',
+          promptKey: TEST_PROMPT_KEY,
+          input: 'go',
+          files: [{ storagePath: 'resumes/candidate.pdf', filename: 'candidate.pdf' }]
+        });
+
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('inlined_not_stored');
+        expect(task?.fp).toEqual([{ storagePath: 'resumes/candidate.pdf', filename: 'candidate.pdf' }]);
+        expect(JSON.stringify(task?.fp)).not.toContain(INLINE_PDF_BASE64);
+      });
+
+      it('should keep the base64 out of the conversation a state-accessor save persists', async () => {
+        // With tools in play the SDK persists the whole assembled conversation through the state accessor.
+        // Unstripped, that writes the file into `msg` on every save — and then replays a stale copy of it
+        // on the resume, since `load()` re-points parts it can still find.
+        const stack = await buildStack({
+          fileAttachmentMode: 'inlineData',
+          tools: [deferredTool],
+          reply: (_body, index) => (index === 0 ? { toolCalls: [{ callId: 'call_inline', name: DEFERRED_TOOL_NAME, arguments: { subject: 'resume' } }] } : { text: 'reviewed' })
+        });
+
+        stack.storage.putObject('resumes/candidate.pdf', { bytes: INLINE_PDF_BYTES, contentType: 'application/pdf' });
+
+        await stack.service.enqueueRunTask({
+          key: 'inlined_state',
+          promptKey: TEST_PROMPT_KEY,
+          input: 'review the attached resume',
+          files: [{ storagePath: 'resumes/candidate.pdf', filename: 'candidate.pdf' }]
+        });
+
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const parked = await stack.taskData('inlined_state');
+        expect(parked?.s).toBe(OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS);
+        expect((parked?.msg ?? []).length).toBeGreaterThan(0);
+        expect(JSON.stringify(parked?.msg)).not.toContain(INLINE_PDF_BASE64);
+        // The filename survives, because that is the key `load()` rejoins the fresh attachment on.
+        expect(JSON.stringify(parked?.msg)).toContain('candidate.pdf');
+
+        // …and the resume still carries the file, re-read for the new attempt rather than replayed.
+        await stack.service.resolveDeferredTool({ key: 'inlined_state', taskId: 'call_inline', output: { approved: true } });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        expect((await stack.taskData('inlined_state'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(JSON.stringify(stack.fake.requests[1])).toContain(INLINE_PDF_BASE64);
+      });
+    });
+
     // MARK: 9 — Annotation reuse
     describe('annotation reuse', () => {
       it('should resubmit the cached parse instead of the file, so the pdf is not parsed again', async () => {
@@ -482,7 +586,6 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
             s: OpenRouterRunTaskState.QUEUED,
             qat: new Date(),
             at: 1,
-            pr: OPENROUTER_DEFAULT_RUN_TASK_PRIORITY,
             pk: TEST_PROMPT_KEY,
             pv: 1,
             in: [{ role: 'user', content: 'summarize the attached resume' }],
@@ -592,18 +695,114 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       });
     });
 
-    // MARK: Replay
-    describe('replay', () => {
-      it('should re-enqueue a historical run pinned to its original prompt version', async () => {
+    // MARK: Retention
+    describe('retention', () => {
+      const OVER_AGE = new Date(Date.now() - OPENROUTER_RUN_TASK_MAX_AGE - MS_IN_HOUR);
+      const IN_AGE = new Date(Date.now() - MS_IN_HOUR);
+
+      interface SeedTaskConfig {
+        readonly stack: TestStack;
+        readonly key: string;
+        readonly state: OpenRouterRunTaskState;
+        readonly qat: Date;
+        readonly overrides?: Partial<OpenRouterRunTask>;
+      }
+
+      async function seedTask(config: SeedTaskConfig) {
+        const { stack, key, state, qat, overrides } = config;
+
+        await stack.collections.openRouterRunTaskCollection
+          .documentAccessor()
+          .loadDocumentForId(key)
+          .accessor.set({ s: state, qat, at: 1, pk: TEST_PROMPT_KEY, pv: 1, in: [], ...overrides });
+      }
+
+      it('should delete an over-age task in EVERY state', async () => {
+        // The ceiling is the whole requirement. A run task is a short-lived execution record —
+        // NotificationTask owns retrying and durable persistence — so nothing outlives the age, and a task
+        // still RUNNING a week after it was queued has been lease-reclaimed and re-attempted for a week,
+        // which is the clearest case of all for deleting it.
         const stack = await buildStack();
 
-        await stack.service.enqueueRunTask({ key: 'original', promptKey: TEST_PROMPT_KEY, input: 'the original ask' });
-        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+        await seedTask({ stack, key: 'old_queued', state: OpenRouterRunTaskState.QUEUED, qat: OVER_AGE });
+        // A FRESH lease, so nothing else in the system would touch this one.
+        await seedTask({ stack, key: 'old_running', state: OpenRouterRunTaskState.RUNNING, qat: OVER_AGE, overrides: { lat: new Date(), lo: 'a_live_sweep' } });
+        await seedTask({ stack, key: 'old_complete', state: OpenRouterRunTaskState.COMPLETE, qat: OVER_AGE, overrides: { fat: OVER_AGE, o: 'answered' } });
+        await seedTask({ stack, key: 'old_awaiting', state: OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS, qat: OVER_AGE, overrides: { ptc: [{ callId: 'c1', name: 't', taskId: 'k1' }] } });
 
-        const replay = await stack.service.replayRunTask('original', 'original_replay');
-        expect(replay.task.pv).toBe(1);
-        expect(replay.task.s).toBe(OpenRouterRunTaskState.QUEUED);
-        expect(JSON.stringify(replay.task.in)).toContain('the original ask');
+        const result = await openRouterRunTaskExpirationSweep({ service: stack.service });
+
+        expect(result.deleted).toBe(4);
+        expect(result.pages).toBe(1);
+        expect(await stack.taskData('old_queued')).toBeUndefined();
+        expect(await stack.taskData('old_running')).toBeUndefined();
+        expect(await stack.taskData('old_complete')).toBeUndefined();
+        expect(await stack.taskData('old_awaiting')).toBeUndefined();
+      });
+
+      it('should NOT delete a task still inside its retention age', async () => {
+        const stack = await buildStack();
+
+        await seedTask({ stack, key: 'recent_queued', state: OpenRouterRunTaskState.QUEUED, qat: IN_AGE });
+        await seedTask({ stack, key: 'recent_complete', state: OpenRouterRunTaskState.COMPLETE, qat: IN_AGE, overrides: { fat: IN_AGE } });
+
+        const result = await openRouterRunTaskExpirationSweep({ service: stack.service });
+
+        expect(result.deleted).toBe(0);
+        expect(await stack.taskData('recent_queued')).toBeDefined();
+        expect(await stack.taskData('recent_complete')).toBeDefined();
+      });
+
+      it('should page through more expired tasks than one page holds', async () => {
+        // Proves the cursor-less loop terminates. No cursor is needed because the page just deleted no
+        // longer matches the query, so re-running it IS the next page.
+        const stack = await buildStack();
+
+        for (let i = 0; i < 7; i += 1) {
+          await seedTask({ stack, key: `paged_${i}`, state: OpenRouterRunTaskState.COMPLETE, qat: new Date(OVER_AGE.getTime() + i) });
+        }
+
+        const result = await openRouterRunTaskExpirationSweep({ service: stack.service, pageSize: 3 });
+
+        expect(result.deleted).toBe(7);
+        expect(result.pages).toBe(3);
+        const remaining = await Promise.all(Array.from({ length: 7 }, (_, i) => stack.taskData(`paged_${i}`)));
+        remaining.forEach((task) => expect(task).toBeUndefined());
+      });
+
+      it('should not abort the drain sweep when a running task is deleted mid-flight', async () => {
+        // Traced: the delete lands after executeRunTask already read the task, so its null guard does not
+        // fire, and the next `document.update()` throws NOT_FOUND — including the write recordFailure()
+        // makes while handling the FIRST throw, which is outside any try. Without the guard that rejection
+        // propagates through performTasksInParallel and takes the whole sweep down, discarding every result
+        // it had already collected. The sweep must RESOLVE with `failed: 1`, not reject.
+        const collections = buildCollections();
+        const stack = await buildStack({
+          reply: async (_body, index) => {
+            if (index === 0) {
+              await collections.openRouterRunTaskCollection.documentAccessor().loadDocumentForId('deleted_midflight').accessor.delete();
+            }
+
+            return { text: 'answered into the void' };
+          }
+        });
+
+        await stack.service.enqueueRunTask({ key: 'deleted_midflight', promptKey: TEST_PROMPT_KEY, input: 'go' });
+        // A distinct `qat`, so claim order — and therefore which task the index-0 reply belongs to — is
+        // deterministic rather than a millisecond race.
+        await new Promise((resolve) => setTimeout(resolve, 15));
+        await stack.service.enqueueRunTask({ key: 'survivor', promptKey: TEST_PROMPT_KEY, input: 'go' });
+
+        // Serial execution, so the index-0 call is the first-queued task's.
+        const result = await openRouterRunTaskSweep({ service: stack.service, maxParallelTasks: 1, pageSize: 5, maxPages: 1 });
+
+        expect(result.failed).toBe(1);
+        expect(result.executed).toBe(2);
+        expect(await stack.taskData('deleted_midflight')).toBeUndefined();
+        // The other task's result survived rather than being discarded with the rejection.
+        expect((await stack.taskData('survivor'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+        // The owning NotificationTask still learns the run is not coming.
+        expect(stack.terminal.map((x) => x.key).sort()).toEqual(['deleted_midflight', 'survivor']);
       });
     });
 

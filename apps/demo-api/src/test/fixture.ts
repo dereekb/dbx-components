@@ -99,6 +99,7 @@ import {
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
+import { OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { type FirebaseServerEnvironmentConfig, assertSnapshotData } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
@@ -135,6 +136,8 @@ export interface DemoApiContext {
   get notificationSendService(): NotificationSendService;
   get notificationTaskService(): NotificationTaskService;
   get storageFileServerActions(): StorageFileServerActions;
+  get openRouterPromptServerActions(): OpenRouterPromptServerActions;
+  get openRouterRunTaskService(): OpenRouterRunTaskService;
   get userExternalConnectionServerFirestoreCollections(): UserExternalConnectionServerFirestoreCollections;
   get userExternalConnectionServerActions(): UserExternalConnectionServerActions;
   get userExternalConnectionAccessor(): UserExternalConnectionAccessor;
@@ -190,6 +193,14 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get storageFileInitServerActions() {
     return this.instance.storageFileInitServerActions;
+  }
+
+  get openRouterPromptServerActions() {
+    return this.instance.openRouterPromptServerActions;
+  }
+
+  get openRouterRunTaskService() {
+    return this.instance.openRouterRunTaskService;
   }
 
   get storageContext() {
@@ -280,6 +291,14 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get storageFileInitServerActions() {
     return this.get(StorageFileInitServerActions);
+  }
+
+  get openRouterPromptServerActions() {
+    return this.get(OpenRouterPromptServerActions);
+  }
+
+  get openRouterRunTaskService(): OpenRouterRunTaskService {
+    return this.get(OPENROUTER_RUN_TASK_SERVICE_TOKEN);
   }
 
   get profileServerActions() {
@@ -389,6 +408,14 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.storageFileInitServerActions;
   }
 
+  get openRouterPromptServerActions() {
+    return this.instance.openRouterPromptServerActions;
+  }
+
+  get openRouterRunTaskService() {
+    return this.instance.openRouterRunTaskService;
+  }
+
   get profileServerActions() {
     return this.instance.profileServerActions;
   }
@@ -473,6 +500,14 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get storageFileInitServerActions() {
     return this.get(StorageFileInitServerActions);
+  }
+
+  get openRouterPromptServerActions() {
+    return this.get(OpenRouterPromptServerActions);
+  }
+
+  get openRouterRunTaskService(): OpenRouterRunTaskService {
+    return this.get(OPENROUTER_RUN_TASK_SERVICE_TOKEN);
   }
 
   get profileServerActions() {

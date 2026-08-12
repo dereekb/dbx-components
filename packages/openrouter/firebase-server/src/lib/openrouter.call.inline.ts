@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterCallResult, type OpenRouterCore, type OpenRouterFileReference, type OpenRouterInput, type OpenRouterModelConfig, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterSignedFileReference, type Tool, callModelForOpenRouterRequest, openRouterPromptRequest } from '@dereekb/openrouter';
+import { type OpenRouterAttachedFileReference, type OpenRouterCallResult, type OpenRouterCore, type OpenRouterInput, type OpenRouterModelConfig, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type Tool, callModelForOpenRouterRequest, openRouterPromptRequest } from '@dereekb/openrouter';
 import { type OpenRouterPromptService } from './openrouter.prompt.service';
 
 /**
@@ -31,12 +31,12 @@ export interface CallModelForPromptParams {
    */
   readonly configOverrides?: Maybe<OpenRouterModelConfig>;
   /**
-   * Files, already signed for this call.
+   * Files, already attached for this call — see `openRouterFileAttachmentResolver`.
    *
-   * Signed rather than by path, unlike the queued path: an inline call runs once, right now, so there is
-   * no later attempt for which a URL could have expired.
+   * Attached rather than by path, unlike the queued path: an inline call runs once, right now, so there
+   * is no later attempt for which a url could have expired.
    */
-  readonly files?: Maybe<OpenRouterSignedFileReference[]>;
+  readonly files?: Maybe<OpenRouterAttachedFileReference[]>;
   /**
    * Client-side tools.
    */
@@ -63,31 +63,4 @@ export async function callModelForPrompt(params: CallModelForPromptParams): Prom
   const request = openRouterPromptRequest({ prompt, input, overrides: configOverrides, files, trace });
 
   return callModelForOpenRouterRequest({ client, request, tools: tools ?? undefined });
-}
-
-/**
- * Params for {@link openRouterSignedFilesForPaths}.
- */
-export interface OpenRouterSignedFilesForPathsParams {
-  /**
-   * The files to sign.
-   */
-  readonly files: Maybe<OpenRouterFileReference[]>;
-  /**
-   * Signs one file reference.
-   */
-  readonly sign: (file: OpenRouterFileReference) => Promise<string>;
-}
-
-/**
- * Signs a list of file references.
- *
- * Exists so an inline caller can reuse the run-task service's signing without going through the queue.
- *
- * @param params - The files and the signer.
- * @returns The signed references.
- */
-export async function openRouterSignedFilesForPaths(params: OpenRouterSignedFilesForPathsParams): Promise<OpenRouterSignedFileReference[]> {
-  const { files, sign } = params;
-  return Promise.all((files ?? []).map(async (file) => ({ file, signedUrl: await sign(file) })));
 }

@@ -1,10 +1,11 @@
-import { type FirebaseStorageContext, type StoragePath } from '@dereekb/firebase';
-import { type Maybe, type Milliseconds, MS_IN_MINUTE, type Seconds, addMilliseconds, filterMaybeArrayValues } from '@dereekb/util';
+import { type FirebaseStorageContext } from '@dereekb/firebase';
+import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
+import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays } from '@dereekb/util';
 import {
+  type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
   type OpenRouterCore,
   type OpenRouterDeferredToolResolution,
-  type OpenRouterFileAnnotation,
   type OpenRouterFileReference,
   type OpenRouterInput,
   type OpenRouterInputMessage,
@@ -12,26 +13,18 @@ import {
   type OpenRouterPromptKey,
   type OpenRouterPromptVersionNumber,
   type OpenRouterRequestTrace,
+  type OpenRouterRunError,
   type OpenRouterRunTaskKey,
-  type OpenRouterSignedFileReference,
   type Tool,
   callModelForOpenRouterRequest,
   openRouterFunctionCallOutputItems,
   openRouterInputMessages,
   openRouterPromptRequest
 } from '@dereekb/openrouter';
-import { type OpenRouterRunTask, type OpenRouterRunTaskDocument, type OpenRouterRunTaskFirestoreCollections, OpenRouterRunTaskState, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from '@dereekb/openrouter/firebase';
-import { type OpenRouterPromptService } from './openrouter.prompt.service';
+import { OPENROUTER_RUN_TASK_MAX_AGE, type OpenRouterRunTask, type OpenRouterRunTaskDocument, type OpenRouterRunTaskFirestoreCollections, type OpenRouterRunTaskPendingToolCall, OpenRouterRunTaskState, type OpenRouterRunTaskUnsentToolResult, isOpenRouterRunTaskStateTerminal, openRouterRunTasksExpiredQuery, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from '@dereekb/openrouter/firebase';
+import { type OpenRouterFileAttachmentMode, openRouterFileAttachmentResolver } from './openrouter.file.attachment';
+import { OpenRouterPromptResolutionError, type OpenRouterPromptService } from './openrouter.prompt.service';
 import { firestoreOpenRouterStateAccessor } from './openrouter.state.accessor';
-
-/**
- * Default lifetime of a signed url minted for one attempt.
- *
- * Deliberately short. The url only has to survive the single request it is attached to, and every
- * attempt gets a freshly signed one — so a short TTL costs nothing and narrows the window in which a
- * third party holds a bearer credential to the object.
- */
-export const OPENROUTER_DEFAULT_SIGNED_URL_TTL: Milliseconds = MS_IN_MINUTE * 5;
 
 /**
  * Default lease duration. A `RUNNING` task whose lease is older than this is reclaimable.
@@ -39,21 +32,22 @@ export const OPENROUTER_DEFAULT_SIGNED_URL_TTL: Milliseconds = MS_IN_MINUTE * 5;
  * Comfortably longer than any single inference plus its retries, so a healthy run is never stolen from
  * itself, and short enough that a crashed sweep's work resumes on the next tick or two.
  */
-export const OPENROUTER_DEFAULT_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10;
+export const DEFAULT_OPENROUTER_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10;
 
 /**
  * Default number of attempts before a task is marked FAILED.
+ *
+ * Spent only on a failure {@link isRetryableOpenRouterError} classifies as transient; a deterministic
+ * failure reaches `FAILED` on its first attempt.
  */
-export const OPENROUTER_DEFAULT_MAX_ATTEMPTS = 3;
+export const DEFAULT_OPENROUTER_MAX_ATTEMPTS = 3;
 
 /**
- * Priority recorded on a task whose caller named none. Lower runs first.
+ * Maximum tasks one retention page may delete.
  *
- * Written rather than left absent so a priority-ordered sweep behaves: `orderBy` puts a `null` ahead of
- * every number, so an unset priority would silently mean "run this before everything else" — the exact
- * inverse of what leaving it out is meant to say.
+ * A page's deletes go out as a single Firestore write batch, and a batch takes at most 500 writes.
  */
-export const OPENROUTER_DEFAULT_RUN_TASK_PRIORITY = 100;
+export const OPENROUTER_MAX_EXPIRED_RUN_TASK_DELETE_PAGE_SIZE = 500;
 
 /**
  * Params for enqueueing a run task.
@@ -87,19 +81,11 @@ export interface OpenRouterEnqueueRunTaskParams {
    */
   readonly configOverrides?: Maybe<OpenRouterModelConfig>;
   /**
-   * Sweep priority. Lower runs first.
-   */
-  readonly priority?: Maybe<number>;
-  /**
    * A prior run task to continue from — its history seeds this run's `msg`.
    *
    * This is what replaces `previous_response_id`, which OpenRouter rejects with a 400.
    */
   readonly continueFrom?: Maybe<OpenRouterRunTaskKey>;
-  /**
-   * When this task may be deleted. Defaults to the service's configured TTL.
-   */
-  readonly expiresAt?: Maybe<Date>;
   /**
    * Whether an existing document for this key is reset back to QUEUED.
    *
@@ -135,17 +121,37 @@ export interface OpenRouterClaimRunTasksParams {
    */
   readonly leaseOwner: string;
   /**
-   * Lease duration. Defaults to {@link OPENROUTER_DEFAULT_LEASE_DURATION}.
+   * Lease duration. Defaults to {@link DEFAULT_OPENROUTER_LEASE_DURATION}.
    */
   readonly leaseDuration?: Maybe<Milliseconds>;
+}
+
+/**
+ * Params for deleting the run tasks past their retention age.
+ */
+export interface OpenRouterDeleteExpiredRunTasksParams {
   /**
-   * Whether tasks are ordered by priority before queue time.
-   *
-   * Defaults to false. Every enqueued task carries a `pr` ({@link OPENROUTER_DEFAULT_RUN_TASK_PRIORITY}
-   * when the caller names none), but a task written by any other route may not — and a `null` priority
-   * sorts BEFORE every number, so such a task would jump the whole queue.
+   * Maximum number of tasks to delete. Clamped to {@link OPENROUTER_MAX_EXPIRED_RUN_TASK_DELETE_PAGE_SIZE}.
    */
-  readonly usePriorityOrder?: Maybe<boolean>;
+  readonly limit: number;
+  /**
+   * Tasks queued at or before this date are deleted. Defaults to `now - OPENROUTER_RUN_TASK_MAX_AGE`.
+   *
+   * A parameter rather than always-derived so a sweep can pin one cutoff across every page of a run, and
+   * so a test can assert against a fixed clock.
+   */
+  readonly before?: Maybe<Date>;
+}
+
+/**
+ * Result of one retention page.
+ */
+export interface OpenRouterDeleteExpiredRunTasksResult {
+  readonly deleted: number;
+  /**
+   * The keys deleted — once the document is gone this is the only record the run existed.
+   */
+  readonly keys: OpenRouterRunTaskKey[];
 }
 
 /**
@@ -230,14 +236,14 @@ export abstract class OpenRouterRunTaskService {
    */
   abstract resolveDeferredTool(params: OpenRouterResolveDeferredToolParams): Promise<OpenRouterResolveDeferredToolResult>;
   /**
-   * Re-enqueues a historical run against its stored input and config.
+   * Deletes one page of run tasks older than {@link OPENROUTER_RUN_TASK_MAX_AGE}, in every state.
    */
-  abstract replayRunTask(key: OpenRouterRunTaskKey, replayKey?: Maybe<OpenRouterRunTaskKey>): Promise<OpenRouterEnqueueRunTaskResult>;
+  abstract deleteExpiredRunTasks(params: OpenRouterDeleteExpiredRunTasksParams): Promise<OpenRouterDeleteExpiredRunTasksResult>;
   /**
-   * Signs the files of a task for one attempt. Exposed for tests, which is where the
-   * "does a retry get a NEW url" question actually gets answered.
+   * Resolves the files of a task into the attachments for one attempt. Exposed for tests, which is
+   * where the "does a retry get a NEW url" question actually gets answered.
    */
-  abstract signFilesForAttempt(files: Maybe<OpenRouterFileReference[]>): Promise<OpenRouterSignedFileReference[]>;
+  abstract attachFilesForAttempt(files: Maybe<OpenRouterFileReference[]>): Promise<OpenRouterAttachedFileReference[]>;
 }
 
 /**
@@ -246,6 +252,10 @@ export abstract class OpenRouterRunTaskService {
  * This is the in-process replacement for OpenAI's completion webhook: because we hold the HTTP
  * connection during inference, the runner already knows the moment a run finishes, so it can advance
  * the owning work directly. No inbound round-trip, nothing to authenticate, and impossible to miss.
+ *
+ * A handler MUST NOT write to the run task document. It is still invoked with `FAILED` for a task the
+ * retention sweep deleted mid-flight — correctly, since the owning NotificationTask has to learn the run
+ * is not coming — and by then there is no document left to update.
  */
 export type OpenRouterRunTaskTerminalStateHandler = (document: OpenRouterRunTaskDocument, result: OpenRouterRunTaskExecutionResult) => Promise<void>;
 
@@ -266,9 +276,25 @@ export interface OpenRouterRunTaskServiceConfig {
    */
   readonly client: OpenRouterCore;
   /**
-   * Storage context used to sign file urls. Required only when tasks carry files.
+   * Storage context used to read/sign the files of a task. Required only when tasks carry files.
    */
   readonly storageContext?: Maybe<FirebaseStorageContext>;
+  /**
+   * Environment service that selects how files are attached: `isTestingEnv` attaches them inline.
+   *
+   * This is the whole gate. A signed url is unreachable from OpenRouter when the object lives in the
+   * Firebase storage emulator, so an emulator run has to carry the bytes — and an app should not have
+   * to remember to say so twice.
+   */
+  readonly envService?: Maybe<FirebaseServerEnvService>;
+  /**
+   * Explicit file attachment mode, overriding whatever `envService` would select.
+   */
+  readonly fileAttachmentMode?: Maybe<OpenRouterFileAttachmentMode>;
+  /**
+   * Inline size cap. Defaults to {@link DEFAULT_OPENROUTER_MAX_INLINE_FILE_SIZE_BYTES}.
+   */
+  readonly maxInlineFileSizeBytes?: Maybe<number>;
   /**
    * Client-side tools available to every run. Manual (`execute: false`) tools here are what produce a
    * deferred pause.
@@ -279,23 +305,18 @@ export interface OpenRouterRunTaskServiceConfig {
    */
   readonly onTerminalState?: Maybe<OpenRouterRunTaskTerminalStateHandler>;
   /**
-   * Signed-url lifetime. Defaults to {@link OPENROUTER_DEFAULT_SIGNED_URL_TTL}.
+   * Signed-url lifetime. Defaults to {@link DEFAULT_OPENROUTER_SIGNED_URL_TTL}.
    */
   readonly signedUrlTtl?: Maybe<Milliseconds>;
   /**
-   * Attempts before a task is FAILED. Defaults to {@link OPENROUTER_DEFAULT_MAX_ATTEMPTS}.
+   * Attempts a RETRYABLE failure may spend before a task is FAILED. Defaults to
+   * {@link DEFAULT_OPENROUTER_MAX_ATTEMPTS}.
    */
   readonly maxAttempts?: Maybe<number>;
   /**
-   * Default lease duration. Defaults to {@link OPENROUTER_DEFAULT_LEASE_DURATION}.
+   * Default lease duration. Defaults to {@link DEFAULT_OPENROUTER_LEASE_DURATION}.
    */
   readonly leaseDuration?: Maybe<Milliseconds>;
-  /**
-   * Default time-to-live for a new run task, in seconds. Omit for no expiration.
-   *
-   * Worth setting: `msg` grows without bound across a long chained conversation.
-   */
-  readonly defaultTtlSeconds?: Maybe<Seconds>;
 }
 
 /**
@@ -305,12 +326,12 @@ export interface OpenRouterRunTaskServiceConfig {
  * @returns The service.
  */
 export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig): OpenRouterRunTaskService {
-  const { collections, promptService, client, storageContext, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration, defaultTtlSeconds } = config;
+  const { collections, promptService, client, storageContext, envService, fileAttachmentMode, maxInlineFileSizeBytes, tools, onTerminalState, signedUrlTtl, maxAttempts: inputMaxAttempts, leaseDuration: inputLeaseDuration } = config;
   const { openRouterRunTaskCollection } = collections;
 
-  const urlTtl = signedUrlTtl ?? OPENROUTER_DEFAULT_SIGNED_URL_TTL;
-  const maxAttempts = inputMaxAttempts ?? OPENROUTER_DEFAULT_MAX_ATTEMPTS;
-  const defaultLeaseDuration = inputLeaseDuration ?? OPENROUTER_DEFAULT_LEASE_DURATION;
+  const attachFilesForAttempt = openRouterFileAttachmentResolver({ storageContext, envService, mode: fileAttachmentMode, signedUrlTtl, maxInlineFileSizeBytes });
+  const maxAttempts = inputMaxAttempts ?? DEFAULT_OPENROUTER_MAX_ATTEMPTS;
+  const defaultLeaseDuration = inputLeaseDuration ?? DEFAULT_OPENROUTER_LEASE_DURATION;
 
   function runTaskDocument(key: OpenRouterRunTaskKey): OpenRouterRunTaskDocument {
     return openRouterRunTaskCollection.documentAccessor().loadDocumentForId(key);
@@ -320,36 +341,8 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
     return runTaskDocument(key).snapshotData();
   }
 
-  async function signFilesForAttempt(files: Maybe<OpenRouterFileReference[]>): Promise<OpenRouterSignedFileReference[]> {
-    let result: OpenRouterSignedFileReference[] = [];
-
-    if (files != null && files.length > 0) {
-      if (storageContext == null) {
-        throw new Error('An OpenRouterRunTask carries files but the OpenRouterRunTaskService has no storageContext to sign them with.');
-      }
-
-      const defaultBucketId = storageContext.defaultBucket();
-
-      result = await Promise.all(
-        files.map(async (file) => {
-          const path: StoragePath = { bucketId: file.bucket ?? defaultBucketId, pathString: file.storagePath };
-          const accessorFile = storageContext.file(path);
-
-          if (accessorFile.getSignedUrl == null) {
-            throw new Error('The configured FirebaseStorageContext cannot mint signed urls.');
-          }
-
-          const signedUrl = await accessorFile.getSignedUrl({ action: 'read', expiresIn: urlTtl });
-          return { file, signedUrl };
-        })
-      );
-    }
-
-    return result;
-  }
-
   async function enqueueRunTask(params: OpenRouterEnqueueRunTaskParams): Promise<OpenRouterEnqueueRunTaskResult> {
-    const { key, promptKey, version, input, files, configOverrides, priority, continueFrom, expiresAt, restart } = params;
+    const { key, promptKey, version, input, files, configOverrides, continueFrom, restart } = params;
     const document = runTaskDocument(key);
     const existing = await document.snapshotData();
 
@@ -365,20 +358,18 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       // queued run is going to say.
       const resolved = await promptService.resolvePrompt({ promptKey, version });
       const history = continueFrom == null ? undefined : await historyForRunTask(continueFrom);
-      const queuedAt = new Date();
 
       task = {
         s: OpenRouterRunTaskState.QUEUED,
-        qat: queuedAt,
+        // Write-once from here on: the retention ceiling and the claim order both read it as the task's age.
+        qat: new Date(),
         at: 0,
-        pr: priority ?? OPENROUTER_DEFAULT_RUN_TASK_PRIORITY,
         pk: promptKey,
         pv: resolved.version,
         in: openRouterInputMessages(input),
         fp: files,
         co: configOverrides,
-        msg: history,
-        x: expiresAt ?? (defaultTtlSeconds == null ? undefined : addMilliseconds(queuedAt, defaultTtlSeconds * 1000))
+        msg: history
       };
 
       created = true;
@@ -412,25 +403,45 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
   }
 
   async function claimNextRunTasks(params: OpenRouterClaimRunTasksParams): Promise<OpenRouterRunTaskDocument[]> {
-    const { limit: pageLimit, leaseOwner, leaseDuration, usePriorityOrder } = params;
+    const { limit: pageLimit, leaseOwner, leaseDuration } = params;
     const now = new Date();
     const leaseCutoff = addMilliseconds(now, -(leaseDuration ?? defaultLeaseDuration));
 
     // Two queries rather than one. "QUEUED or resumable" and "RUNNING with a stale lease" cannot share a
     // single Firestore query — the second needs an inequality on `lat`, and Firestore allows the range
     // filter on only one field, which the ordering must then lead with. Each query has its own index.
-    const [runnable, reclaimable] = await Promise.all([openRouterRunTaskCollection.queryDocument(openRouterRunTasksRunnableQuery({ limit: pageLimit, usePriorityOrder: usePriorityOrder ?? false })).getDocs(), openRouterRunTaskCollection.queryDocument(openRouterRunTasksReclaimableQuery({ limit: pageLimit, leaseCutoff })).getDocs()]);
+    const [runnable, reclaimable] = await Promise.all([openRouterRunTaskCollection.queryDocument(openRouterRunTasksRunnableQuery({ limit: pageLimit })).getDocs(), openRouterRunTaskCollection.queryDocument(openRouterRunTasksReclaimableQuery({ limit: pageLimit, leaseCutoff })).getDocs()]);
 
-    const candidates = new Map<string, OpenRouterRunTaskDocument>();
-    [...runnable, ...reclaimable].forEach((document) => candidates.set(document.id, document));
-
-    const claimed = await Promise.all(
-      Array.from(candidates.values())
-        .slice(0, pageLimit)
-        .map((document) => claimRunTask(document, leaseOwner, now, leaseCutoff))
-    );
+    // A task can appear in both pages, so the merged list is de-duplicated by id. First occurrence wins,
+    // which keeps the runnable page's queue order ahead of the reclaimable page's lease order.
+    const candidates = filterUniqueValues(mergeArrays([runnable, reclaimable]), (x) => x.id).slice(0, pageLimit);
+    const claimed = await Promise.all(candidates.map((document) => claimRunTask(document, leaseOwner, now, leaseCutoff)));
 
     return filterMaybeArrayValues(claimed);
+  }
+
+  async function deleteExpiredRunTasks(params: OpenRouterDeleteExpiredRunTasksParams): Promise<OpenRouterDeleteExpiredRunTasksResult> {
+    const { limit: inputLimit, before } = params;
+    const pageLimit = Math.min(inputLimit, OPENROUTER_MAX_EXPIRED_RUN_TASK_DELETE_PAGE_SIZE);
+    const cutoff = before ?? addMilliseconds(new Date(), -OPENROUTER_RUN_TASK_MAX_AGE);
+
+    // No transaction and no lease check. `qat` is write-once, so nothing can move a task's age between the
+    // query and the commit — a read-modify-write transaction would buy nothing and add a contention point
+    // on documents a drain sweep may be running.
+    const documents = await openRouterRunTaskCollection.queryDocument(openRouterRunTasksExpiredQuery({ before: cutoff, limit: pageLimit })).getDocs();
+    const keys = documents.map((x) => x.id);
+
+    if (documents.length > 0) {
+      // One write batch per page rather than N loose deletes: a page either goes away or it does not, and
+      // one round trip replaces up to 500.
+      const writeBatch = openRouterRunTaskCollection.firestoreContext.batch();
+      const writeBatchAccessor = openRouterRunTaskCollection.documentAccessorForWriteBatch(writeBatch);
+
+      await Promise.all(documents.map((document) => writeBatchAccessor.loadDocumentFrom(document).accessor.delete()));
+      await writeBatch.commit();
+    }
+
+    return { deleted: keys.length, keys };
   }
 
   async function claimRunTask(document: OpenRouterRunTaskDocument, leaseOwner: string, now: Date, leaseCutoff: Date): Promise<Maybe<OpenRouterRunTaskDocument>> {
@@ -460,10 +471,25 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
     if (task == null) {
       executionResult = { key, state: OpenRouterRunTaskState.FAILED, error: new Error('The run task no longer exists.') };
     } else {
-      executionResult = await executeRunTaskData(document, task);
+      try {
+        executionResult = await executeRunTaskData(document, task);
+      } catch (e) {
+        // A task deleted mid-flight by the retention sweep is the expected cause: every write in
+        // executeRunTaskData goes through `document.update()`, which throws NOT_FOUND on a deleted document —
+        // including the write recordFailure() makes while handling the first throw, which is outside any try
+        // and would otherwise reject the whole sweep and discard every result already collected.
+        //
+        // The existence re-read is what keeps this from swallowing real defects: anything thrown while the
+        // document is still there is rethrown untouched.
+        if (await document.accessor.exists()) {
+          throw e;
+        }
+
+        executionResult = { key, state: OpenRouterRunTaskState.FAILED, error: e };
+      }
     }
 
-    if (onTerminalState != null && (executionResult.state === OpenRouterRunTaskState.COMPLETE || executionResult.state === OpenRouterRunTaskState.FAILED)) {
+    if (onTerminalState != null && isOpenRouterRunTaskStateTerminal(executionResult.state)) {
       await onTerminalState(document, executionResult);
     }
 
@@ -476,15 +502,15 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
 
     try {
       const resolved = await promptService.resolvePrompt({ promptKey: task.pk, version: task.pv });
-      // Signed fresh on EVERY attempt. A url minted at enqueue would 403 by the time a third retry ran.
-      const signedFiles = await signFilesForAttempt(task.fp);
+      // Resolved fresh on EVERY attempt — see `OpenRouterFileReference` for why a url cannot be reused.
+      const attachedFiles = await attachFilesForAttempt(task.fp);
       const hasTools = tools != null && tools.length > 0;
 
       const request = openRouterPromptRequest({
         prompt: resolved,
         input: task.in,
         overrides: task.co,
-        files: signedFiles,
+        files: attachedFiles,
         fileAnnotations: task.fa,
         // With tools in play the conversation lives in the state accessor, which appends to it across
         // turns; passing it here as well would send every prior turn twice.
@@ -504,7 +530,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         tools: tools ?? undefined,
         // The state accessor is only wired when tools are in play. For a single-shot run it would write
         // conversation history nobody reads, and on a doc whose state the runner is about to set anyway.
-        state: hasTools ? firestoreOpenRouterStateAccessor(document, { initialMessages: request.input, signedFiles }) : undefined
+        state: hasTools ? firestoreOpenRouterStateAccessor(document, { initialMessages: request.input, attachedFiles }) : undefined
       });
 
       // Re-read: with tools configured, the state accessor may have moved the document to
@@ -522,7 +548,9 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
           fat: finishedAt,
           o: result.outputText,
           j: result.outputJson,
-          gi: mergedGenerationIds(task.gi, result.generationIds),
+          // Appended rather than replaced: a retried task produced real generations on its earlier attempts
+          // too, and those are exactly what an audit of a flaky run needs.
+          gi: concatArraysUnique(task.gi, result.generationIds),
           u: result.usage,
           e: null,
           lat: null,
@@ -530,11 +558,11 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         });
         executionResult = { key, state: OpenRouterRunTaskState.COMPLETE, result };
       } else {
-        executionResult = await recordFailure(document, task, result.error, finishedAt, result);
+        executionResult = await recordFailure({ document, task, error: result.error, cause: result.error, at: finishedAt, result });
       }
     } catch (e) {
-      executionResult = await recordFailure(document, task, { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, new Date());
-      executionResult = { ...executionResult, error: e };
+      const failure = await recordFailure({ document, task, error: { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, cause: e, at: new Date() });
+      executionResult = { ...failure, error: e };
     }
 
     return executionResult;
@@ -555,7 +583,9 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
   async function appendDeferredToolResultsToConversation(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask): Promise<void> {
     const pending = task.ptc ?? [];
     const unsent = task.utr ?? [];
-    const allResolved = pending.length > 0 && pending.every((call) => unsent.some((result) => result.callId === call.callId));
+    // The length guard means "and there is something to send" — an empty `ptc` satisfies the predicate
+    // vacuously, and appending nothing would clear `ptc` / `utr` for no reason.
+    const allResolved = pending.length > 0 && !hasUnresolvedOpenRouterPendingToolCalls(pending, unsent);
 
     if (allResolved) {
       const outputItems = openRouterFunctionCallOutputItems(unsent);
@@ -563,21 +593,27 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
     }
   }
 
-  async function recordFailure(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, error: { code?: Maybe<string>; message?: Maybe<string> }, at: Date, result?: Maybe<OpenRouterCallResult>): Promise<OpenRouterRunTaskExecutionResult> {
-    // The attempt counter was already incremented by the claim, so `at` is the number of attempts made
+  async function recordFailure(params: RecordOpenRouterRunTaskFailureParams): Promise<OpenRouterRunTaskExecutionResult> {
+    const { document, task, error, cause, at, result } = params;
+
+    // A deterministic failure — a bad key, a 402, a model id that does not exist — cannot succeed on a
+    // second attempt, so it spends none of the budget and goes straight to FAILED.
+    const retryable = isRetryableOpenRouterError(cause);
+    // The attempt counter was already incremented by the claim, so `task.at` is the number of attempts made
     // INCLUDING this one — which is why nothing is added to it here. Adding one would spend the budget a
     // tick early and mark a task FAILED with a retry still owed to it.
     const attemptsExhausted = task.at >= maxAttempts;
-    const state = attemptsExhausted ? OpenRouterRunTaskState.FAILED : OpenRouterRunTaskState.QUEUED;
+    const finished = !retryable || attemptsExhausted;
+    const state = finished ? OpenRouterRunTaskState.FAILED : OpenRouterRunTaskState.QUEUED;
 
     await document.update({
       s: state,
       // Releasing the lease is what makes the task claimable again on the next sweep.
       lat: null,
       lo: null,
-      fat: attemptsExhausted ? at : null,
+      fat: finished ? at : null,
       e: error,
-      gi: result == null ? undefined : mergedGenerationIds(task.gi, result.generationIds),
+      gi: result == null ? undefined : concatArraysUnique(task.gi, result.generationIds),
       u: result?.usage
     });
 
@@ -595,16 +631,19 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       if (task != null) {
         const pending = task.ptc ?? [];
         const call = pending.find((x) => x.taskId === taskId);
-        const alreadySettled = (task.utr ?? []).some((x) => pending.every((p) => p.callId !== x.callId) || x.callId === call?.callId);
+        const alreadySettled = (task.utr ?? []).some((x) => x.callId === call?.callId);
 
         if (call != null && !alreadySettled) {
-          // `error` and `output` are spread conditionally rather than assigned: Firestore rejects an
-          // explicit `undefined` outright, and a success carries no error while a failure carries no
-          // output, so one of the two is always absent.
-          const unsent = [...(task.utr ?? []), { callId: call.callId, name: call.name, ...(output === undefined ? undefined : { output }), ...(error == null ? undefined : { error }) }];
-          const ready = pending.every((p) => unsent.some((u) => u.callId === p.callId));
+          // Preserves today's semantics exactly: an `output` of `null` is a real result and is kept, while an
+          // absent `error` is dropped rather than written as `undefined`, which Firestore rejects outright.
+          const unsent = [...(task.utr ?? []), filterUndefinedValues({ callId: call.callId, name: call.name, output, error: error ?? undefined })];
+          const ready = !hasUnresolvedOpenRouterPendingToolCalls(pending, unsent);
 
-          await document.update({ utr: unsent, ...(ready ? { s: OpenRouterRunTaskState.QUEUED, qat: new Date() } : undefined) });
+          // `qat` is deliberately NOT moved. It is the task's age for retention, so a task cycling through
+          // tool resolutions would otherwise keep pushing its own age forward and never age out — and keeping
+          // the original also orders correctly: a run waiting on a tool since yesterday should be claimed
+          // ahead of one queued a minute ago.
+          await document.update({ utr: unsent, ...(ready ? { s: OpenRouterRunTaskState.QUEUED } : undefined) });
           result = { resolved: true, ready };
         }
       }
@@ -613,27 +652,29 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
     });
   }
 
-  async function replayRunTask(key: OpenRouterRunTaskKey, replayKey?: Maybe<OpenRouterRunTaskKey>): Promise<OpenRouterEnqueueRunTaskResult> {
-    const task = await readRunTask(key);
+  return { enqueueRunTask, readRunTask, runTaskDocument, claimNextRunTasks, executeRunTask, resolveDeferredTool, deleteExpiredRunTasks, attachFilesForAttempt };
+}
 
-    if (task == null) {
-      throw new Error(`Cannot replay OpenRouterRunTask "${key}": it does not exist.`);
-    }
-
-    return enqueueRunTask({
-      key: replayKey ?? `${key}_replay_${Date.now()}`,
-      promptKey: task.pk,
-      // Pinned to the ORIGINAL version: a replay that silently used a newer prompt would not be a replay.
-      version: task.pv,
-      input: task.in,
-      files: task.fp,
-      configOverrides: task.co,
-      priority: task.pr,
-      restart: true
-    });
-  }
-
-  return { enqueueRunTask, readRunTask, runTaskDocument, claimNextRunTasks, executeRunTask, resolveDeferredTool, replayRunTask, signFilesForAttempt };
+/**
+ * Params for the internal failure recorder.
+ */
+interface RecordOpenRouterRunTaskFailureParams {
+  readonly document: OpenRouterRunTaskDocument;
+  readonly task: OpenRouterRunTask;
+  /**
+   * The error to persist on the task.
+   */
+  readonly error: OpenRouterRunError;
+  /**
+   * The value the failure is CLASSIFIED from: the thrown value on the throw path, and the response's
+   * reported error on the path that returns a failure without throwing.
+   */
+  readonly cause: unknown;
+  /**
+   * When the failure happened.
+   */
+  readonly at: Date;
+  readonly result?: Maybe<OpenRouterCallResult>;
 }
 
 /**
@@ -660,7 +701,10 @@ export function isOpenRouterRunTaskClaimable(task: OpenRouterRunTask, leaseCutof
       break;
     case OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS:
       // Only once every pending call has a recorded result; otherwise there is nothing new to send.
-      result = (task.ptc ?? []).every((call) => (task.utr ?? []).some((unsent) => unsent.callId === call.callId));
+      //
+      // Vacuously true for an EMPTY `ptc`, deliberately. Such a task gets claimed, no-ops the append, and can
+      // still complete — whereas refusing to claim it would strand it permanently with nothing able to move it.
+      result = !hasUnresolvedOpenRouterPendingToolCalls(task.ptc, task.utr);
       break;
     default:
       result = false;
@@ -671,19 +715,19 @@ export function isOpenRouterRunTaskClaimable(task: OpenRouterRunTask, leaseCutof
 }
 
 /**
- * Merges newly-produced generation ids into the stored list.
+ * Whether any pending deferred tool call is still missing its recorded result.
  *
- * Appends rather than replaces: a retried task produced real generations on its earlier attempts too,
- * and those are exactly what an audit of a flaky run needs.
+ * The one predicate behind "is this run ready to resume": the claim check, the resolution's `ready` flag,
+ * and the conversation append all ask it, and three hand-written copies had already drifted apart.
  *
- * @param existing - Already-stored ids.
- * @param produced - Ids produced by this attempt.
- * @returns The merged list.
+ * @param pending - The pending deferred tool calls.
+ * @param unsent - The recorded-but-unsent tool results.
+ * @returns True when at least one pending call has no recorded result.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function mergedGenerationIds(existing: Maybe<string[]>, produced: Maybe<string[]>): string[] {
-  return Array.from(new Set([...(existing ?? []), ...(produced ?? [])]));
+export function hasUnresolvedOpenRouterPendingToolCalls(pending: Maybe<readonly OpenRouterRunTaskPendingToolCall[]>, unsent: Maybe<readonly OpenRouterRunTaskUnsentToolResult[]>): boolean {
+  return (pending ?? []).some((call) => !(unsent ?? []).some((result) => result.callId === call.callId));
 }
 
 /**
@@ -721,6 +765,74 @@ export function openRouterErrorMessage(e: unknown): string {
 }
 
 /**
+ * HTTP statuses a retry cannot fix.
+ *
+ * 400 is a malformed request (an invalid model id, a JSON schema the provider rejects), 401/403 are a
+ * credential problem, 402 is an empty account, and 404 is a route or resource that does not exist. Each of
+ * them answers identically on every attempt, so spending the budget on them only delays the FAILED that
+ * the owning work is waiting for.
+ */
+export const OPENROUTER_PERMANENT_ERROR_STATUSES: readonly number[] = [400, 401, 402, 403, 404];
+
+/**
+ * Whether a failure is worth another attempt.
+ *
+ * What this encodes is a whitelist of the KNOWN-PERMANENT, not a whitelist of the retryable: anything
+ * unrecognized defaults to RETRYABLE. An unknown failure is far more likely to be a transient upstream blip
+ * than a permanent one, and the attempt budget bounds the cost of being wrong either way — whereas
+ * defaulting the other way would turn one bad minute at a provider into a definitively failed run.
+ *
+ * So the retryable side needs no list of its own. 408 / 409 / 429 and every 5xx, socket-level failures
+ * (`ECONNRESET`, `ETIMEDOUT`, `ECONNREFUSED`, `EAI_AGAIN`), and the Google-infrastructure transients
+ * (`UNAVAILABLE`, `DEADLINE_EXCEEDED`, `ABORTED`) a Firestore or GCS call raises mid-run all reach the
+ * default and are retried.
+ *
+ * Permanent is two cases. {@link OPENROUTER_PERMANENT_ERROR_STATUSES}, read off `status` / `statusCode` /
+ * `code` — which covers both routes into `recordFailure`: a thrown SDK/HTTP error, and the numeric
+ * `error.code` OpenRouter reports in a response body without throwing at all. And an
+ * {@link OpenRouterPromptResolutionError}, which is deterministic by construction: the prompt either exists
+ * at that version or it never will, so re-resolving it is guaranteed to fail identically.
+ *
+ * @param e - The thrown value, or the error reported on a response.
+ * @returns True when another attempt could plausibly succeed.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isRetryableOpenRouterError(e: unknown): boolean {
+  const status = openRouterErrorStatus(e);
+  return !(e instanceof OpenRouterPromptResolutionError) && (status == null || !OPENROUTER_PERMANENT_ERROR_STATUSES.includes(status));
+}
+
+/**
+ * Extracts an HTTP status from a thrown value or a reported response error.
+ *
+ * `code` is read as a status too, because OpenRouter reports a NUMERIC code in a response body's `error`
+ * object where an SDK error would carry `status`.
+ *
+ * @param e - The thrown value.
+ * @returns The status, when the value carries a numeric one.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+function openRouterErrorStatus(e: unknown): Maybe<number> {
+  let result: Maybe<number>;
+
+  if (e != null && typeof e === 'object') {
+    const candidate = (e as { status?: unknown; statusCode?: unknown; code?: unknown }).status ?? (e as { statusCode?: unknown }).statusCode ?? (e as { code?: unknown }).code;
+
+    if (typeof candidate === 'number') {
+      result = candidate;
+    } else if (typeof candidate === 'string' && /^\d{3}$/.test(candidate)) {
+      // A three-digit string is a status OpenRouter reported as text; anything else is a symbolic code
+      // (`ECONNRESET`, `server_error`) and is left for the default-retryable path.
+      result = Number(candidate);
+    }
+  }
+
+  return result;
+}
+
+/**
  * The deferred-tool resolutions recorded on a task, in the form the core package's resolver consumes.
  *
  * @param task - The run task.
@@ -743,16 +855,4 @@ export function openRouterDeferredToolResolutionsForRunTask(task: OpenRouterRunT
       return result;
     })
   );
-}
-
-/**
- * The cached file annotations of a task, for resubmission on a retry or a chained call.
- *
- * @param task - The run task.
- * @returns The annotations.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function openRouterFileAnnotationsForRunTask(task: OpenRouterRunTask): Maybe<OpenRouterFileAnnotation[]> {
-  return task.fa;
 }

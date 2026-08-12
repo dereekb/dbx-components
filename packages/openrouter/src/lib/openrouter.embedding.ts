@@ -98,38 +98,21 @@ export async function openRouterEmbeddings(params: OpenRouterEmbeddingsParams): 
   return { model: response.model, embeddings, promptTokens: response.usage?.promptTokens, totalTokens: response.usage?.totalTokens };
 }
 
-const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
 /**
  * Decodes a base64 string to bytes.
  *
- * Hand-rolled rather than using `Buffer` or `atob`: this package's only peer dependency is
- * `@dereekb/util`, so it must not assume a Node or a browser global.
+ * `atob` is a WHATWG global, present on Node ≥16 and in every browser, so no Node-only `Buffer` is assumed.
+ * Anything outside the base64 alphabet — padding, embedded newlines from a wrapped response — is stripped
+ * first, which is what makes the input tolerant rather than strict.
  *
  * @param base64 - The base64 string. Padding is optional.
  * @returns The decoded bytes.
  */
 export function openRouterDecodeBase64(base64: string): Uint8Array {
-  const clean = base64.replaceAll(/[^A-Za-z0-9+/]/g, '');
-  const byteLength = Math.floor((clean.length * 3) / 4);
-  const bytes = new Uint8Array(byteLength);
-
-  let buffer = 0;
-  let bits = 0;
-  let offset = 0;
-
-  for (const element of clean) {
-    buffer = (buffer << 6) | BASE64_ALPHABET.indexOf(element);
-    bits += 6;
-
-    if (bits >= 8) {
-      bits -= 8;
-      bytes[offset] = (buffer >> bits) & 0xff;
-      offset += 1;
-    }
-  }
-
-  return bytes;
+  // `charCodeAt`, not `codePointAt`: `atob` returns a latin1 string, so every character is a single UTF-16
+  // code unit below 256. The two agree here, and only `charCodeAt` is typed to return a plain `number`.
+  // eslint-disable-next-line unicorn/prefer-code-point
+  return Uint8Array.from(atob(base64.replaceAll(/[^A-Za-z0-9+/]/g, '')), (c) => c.charCodeAt(0));
 }
 
 /**

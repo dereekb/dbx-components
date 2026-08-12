@@ -1,6 +1,8 @@
 import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, type StorageFileProcessingPurposeSubtaskProcessorConfig, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
+import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
+import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
 import {
   ALL_NOTIFICATION_TASK_TYPES,
   EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE,
@@ -28,7 +30,7 @@ import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceH
  * @param demoFirebaseServerActionsContext - Server actions context providing Firestore and storage access.
  * @returns A configured NotificationTaskService with all demo task handlers.
  */
-export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskService {
+export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext, openRouterRunTaskService: OpenRouterRunTaskService): NotificationTaskService {
   /**
    * The result data parsed from the datastore should be strings only, so restore the values to their expected types.
    *
@@ -129,7 +131,7 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
     ]
   };
 
-  const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext);
+  const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext, openRouterRunTaskService);
   const exampleHandledHandler = demoExampleHandledNotificationTaskHandler(demoFirebaseServerActionsContext);
 
   const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler];
@@ -147,9 +149,10 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
  * Configures subtask processors for user test file uploads with multi-step processing flow.
  *
  * @param demoFirebaseServerActionsContext - Server actions context providing storage and Firestore access.
+ * @param openRouterRunTaskService - The OpenRouter queue the `resume` purpose enqueues into and polls.
  * @returns A notification task handler config for storage file processing.
  */
-export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext) {
+export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext, openRouterRunTaskService: OpenRouterRunTaskService) {
   const testFileProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask> = {
     target: USER_TEST_FILE_PURPOSE,
     flow: [
@@ -192,7 +195,11 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
     ]
   };
 
-  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig];
+  // No new NotificationTaskType: the framework's `SFP` storage-file processing task already covers this,
+  // so the resume check is one more entry here rather than a task type of its own.
+  const resumeFileProcessorConfig = demoUserResumeFileProcessingSubtaskProcessor(openRouterRunTaskService);
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig];
 
   return storageFileProcessingNotificationTaskHandler({
     processors,

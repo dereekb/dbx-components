@@ -60,7 +60,7 @@ describe('openRouterPromptRequest()', () => {
     const request = openRouterPromptRequest({
       prompt: { ...TEST_PROMPT, messages: undefined },
       input: [{ role: 'user', content: [{ type: 'input_text', text: 'read this' }] }],
-      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, signedUrl: 'https://signed/a' }]
+      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, fileUrl: 'https://signed/a' }]
     });
 
     const parts = (request.input[0] as OpenRouterInputMessage).content as OpenRouterInputFilePart[];
@@ -74,7 +74,7 @@ describe('openRouterPromptRequest()', () => {
     const request = openRouterPromptRequest({
       prompt: { ...TEST_PROMPT, messages: undefined },
       input: [{ role: 'user', content: 'read this' }],
-      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, signedUrl: 'https://signed/a' }]
+      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, fileUrl: 'https://signed/a' }]
     });
 
     const parts = (request.input[0] as OpenRouterInputMessage).content as OpenRouterInputFilePart[];
@@ -85,7 +85,7 @@ describe('openRouterPromptRequest()', () => {
   it('should create a user message for a file-only run', () => {
     const request = openRouterPromptRequest({
       prompt: { ...TEST_PROMPT, messages: undefined },
-      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, signedUrl: 'https://signed/a' }]
+      files: [{ file: { storagePath: 'resumes/a.pdf', filename: 'a.pdf' }, fileUrl: 'https://signed/a' }]
     });
 
     expect(request.input.length).toBe(1);
@@ -96,7 +96,7 @@ describe('openRouterPromptRequest()', () => {
   it('should not attach files to a seed system message', () => {
     const request = openRouterPromptRequest({
       prompt: { ...TEST_PROMPT, messages: [{ role: 'system', content: 'static-a' }] },
-      files: [{ file: { storagePath: 'a.pdf', filename: 'a.pdf' }, signedUrl: 'https://signed/a' }]
+      files: [{ file: { storagePath: 'a.pdf', filename: 'a.pdf' }, fileUrl: 'https://signed/a' }]
     });
 
     expect(request.input.length).toBe(2);

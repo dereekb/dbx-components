@@ -6,30 +6,17 @@
  * confined to this one file: an SDK reorganisation is then a change here rather than across the
  * package.
  *
- * NOTE ON `@openrouter/agent`: the plan's step 1 called for adding it alongside `@openrouter/sdk`
- * `^1.2.x`. It was NOT added. `@openrouter/agent@0.9.0` (the latest) declares
- * `"@openrouter/sdk": "^0.13.7"`, so npm installs it a NESTED second copy of the SDK — and the two
- * `OpenRouterCore` classes are distinct nominal types (they carry different `#private` brands), so a
- * client built by `@dereekb/nestjs/openrouter` from the 1.2.x SDK cannot be passed to the agent
- * package's `callModel` at all. Two clients, two request builders, one of them silently older.
+ * `@openrouter/agent` is deliberately NOT used. It declares `"@openrouter/sdk": "^0.13.7"`, so npm nests a
+ * second copy of the SDK — and the two `OpenRouterCore` classes are distinct nominal types (different
+ * `#private` brands), so a client built from the 1.2.x SDK cannot be passed to its `callModel` at all. The
+ * only thing it adds is a first-class deferred-tool API, and the 1.2.x SDK's manual tools
+ * (`execute: false`) plus `ConversationState.pendingToolCalls` / `unsentToolResults` already provide that
+ * mechanism. See `openrouter.tool.ts`.
  *
- * The tradeoff was checked rather than assumed: the `ResponsesRequest` field sets of `0.13.67` and
- * `1.2.26` are IDENTICAL, so the plan's stated reason for wanting `^1.2.x` ("the pinned 0.12.79 SDK
- * is already missing ~8 params") is satisfied by the 1.2.x SDK on its own. The only thing the agent
- * package adds is its first-class deferred-tool API (`tool({ lifecycle: 'deferred' })` +
- * `resumeToolResults`). That is the plan's blocker (4) — "documented but has no in-repo precedent" —
- * and the plan places the pause data on our own run task (`ptc` / `utr`) and the resume entry point on
- * our own service (`resolveDeferredTool`), not on the SDK. The 1.2.x SDK's manual tools
- * (`execute: false`) plus `ConversationState.pendingToolCalls` / `unsentToolResults` provide exactly
- * that mechanism. See `openrouter.tool.ts`.
- *
- * NOTE ON `responsesSend` / `ModelResult` / `convertToolsToAPIFormat`: these three are what make hosted
- * (server-executed) tools deliverable. `callModel` destructures `tools` off the request and runs every
- * entry through `convertToolsToAPIFormat`, which reads `tool.function.name` — so a `file_search` entry
- * is either dropped (no client tools) or throws (with client tools). `responsesSend` is the transport
- * `callModel` itself dispatches through, and `ModelResult` is the tool loop it wraps; taking both
- * directly lets `openrouter.call.ts` put an already-converted tool array on the request instead of one
- * `callModel` will convert again. See `openRouterModelResultForRequest`.
+ * `responsesSend` / `ModelResult` / `convertToolsToAPIFormat` are what make hosted (server-executed) tools
+ * deliverable: `callModel` owns the `tools` key and converts every entry as a client function tool, so
+ * taking its transport and its tool loop directly is what lets `openrouter.call.ts` put an
+ * already-converted tool array on the request. See `openRouterModelResultForRequest`.
  */
 
 export { callModel } from '@openrouter/sdk/funcs/call-model';
