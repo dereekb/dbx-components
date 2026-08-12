@@ -27,6 +27,37 @@
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">
+      <dbx-section header="Resume" hint="Uploads a PDF, then asks OpenRouter whether the document actually is a resume.">
+        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf">
+          <div dbxAction dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
+            <dbx-loading dbxActionLoadingContext>
+              @if (resumeCheckStatusSignal(); as status) {
+                <dbx-label-block [header]="status.filename">
+                  @if (status.checking) {
+                    <div class="dbx-hint">Checking with OpenRouter...</div>
+                  } @else if (status.failed) {
+                    <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
+                  } @else if (status.checkedAt) {
+                    <div [class]="status.isResume ? 'dbx-success' : 'dbx-warn'">{{ status.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
+                    <div class="dbx-hint">{{ status.reason }}</div>
+                  }
+                </dbx-label-block>
+              } @else {
+                <dbx-label-block header="No Resume">
+                  <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
+                </dbx-label-block>
+              }
+            </dbx-loading>
+          </div>
+          <span class="dbx-spacer"></span>
+          <!-- Action Space -->
+          <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="resumeUploadHandler" [triggerOnFiles]="true">
+            <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Resume" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+          </div>
+        </div>
+      </dbx-section>
+    </dbx-content-box>
+    <dbx-content-box [wide]="true">
       <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ usernameSignal() }})" hint="Change your profile username.">
         <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>
