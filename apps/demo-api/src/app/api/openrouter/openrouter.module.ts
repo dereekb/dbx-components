@@ -4,6 +4,7 @@ import { OpenRouterApi, OpenRouterModule } from '@dereekb/nestjs/openrouter';
 import { OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterPromptService, type OpenRouterRunTaskService, appOpenRouterModuleMetadata, openRouterPromptServerActions, openRouterPromptService, openRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { DemoFirebaseServerActionsContext } from '../../common/firebase/action.context';
 import { DemoApiActionModule } from '../../common/firebase/action.module';
+import { DemoApiStorageModule } from '../../common/firebase/storage.module';
 
 /**
  * Builds the {@link OpenRouterPromptService} for the demo app.
@@ -58,7 +59,7 @@ export function demoOpenRouterPromptServerActionsFactory(context: DemoFirebaseSe
  * the framework module cannot construct them.
  */
 @Module({
-  imports: [DemoApiActionModule, OpenRouterModule],
+  imports: [DemoApiActionModule, DemoApiStorageModule, OpenRouterModule],
   providers: [
     {
       provide: OPENROUTER_PROMPT_SERVICE_TOKEN,
