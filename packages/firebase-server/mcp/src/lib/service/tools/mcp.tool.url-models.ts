@@ -191,31 +191,31 @@ async function urlModelsToolHandler(args: Record<string, unknown>, ctx: McpStati
 }
 
 function parseUrlModelsInput(args: Record<string, unknown>): UrlModelsToolInput {
-  const url = args.url;
+  const url = args['url'];
   if (typeof url !== 'string' || url.length === 0) {
     throw new Error('url-models: "url" is required and must be a non-empty string.');
   }
 
-  const keysOnly = args.keysOnly === true;
-  const load = args.load === true;
+  const keysOnly = args['keysOnly'] === true;
+  const load = args['load'] === true;
   if (keysOnly && load) {
     throw new Error('url-models: "keysOnly" and "load" cannot be combined — "keysOnly" returns keys without loading documents.');
   }
 
   let models: ReadonlyArray<string> | undefined;
-  if (args.models !== undefined) {
-    if (!Array.isArray(args.models) || args.models.some((m) => typeof m !== 'string')) {
+  if (args['models'] !== undefined) {
+    if (!Array.isArray(args['models']) || args['models'].some((m) => typeof m !== 'string')) {
       throw new Error('url-models: "models" must be an array of model-type strings.');
     }
-    models = args.models as ReadonlyArray<string>;
+    models = args['models'] as ReadonlyArray<string>;
   }
 
   let currentUserUid: string | undefined;
-  if (args.currentUserUid !== undefined) {
-    if (typeof args.currentUserUid !== 'string' || args.currentUserUid.length === 0) {
+  if (args['currentUserUid'] !== undefined) {
+    if (typeof args['currentUserUid'] !== 'string' || args['currentUserUid'].length === 0) {
       throw new Error('url-models: "currentUserUid" must be a non-empty string.');
     }
-    currentUserUid = args.currentUserUid;
+    currentUserUid = args['currentUserUid'];
   }
 
   return { url, ...(models === undefined ? {} : { models }), keysOnly, load, ...(currentUserUid === undefined ? {} : { currentUserUid }) };

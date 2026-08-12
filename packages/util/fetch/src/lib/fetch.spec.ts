@@ -234,7 +234,7 @@ describe('mergeRequestInits()', () => {
 
     expect(headers.length).toBe(1);
     expect(headers[0][0]).toBe('a');
-    expect(headers[0][1]).toBe(b.a);
+    expect(headers[0][1]).toBe(b['a']);
   });
 });
 
@@ -270,7 +270,7 @@ describe('mergeRequestHeaders()', () => {
 
     expect(result.length).toBe(1);
     expect(result[0][0]).toBe('a');
-    expect(result[0][1]).toBe(b.a);
+    expect(result[0][1]).toBe(b['a']);
   });
 
   it('should merge two header tuples', () => {

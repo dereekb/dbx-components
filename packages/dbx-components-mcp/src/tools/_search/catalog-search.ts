@@ -213,10 +213,10 @@ export function buildCatalogSearchInputSchema(input?: BuildCatalogSearchInputSch
   const properties: Record<string, object> = { ...CATALOG_BASE_SCHEMA_PROPERTIES };
   const overrides = input?.descriptions;
   if (overrides?.category !== undefined) {
-    properties.category = { ...(properties.category as Record<string, unknown>), description: overrides.category };
+    properties['category'] = { ...(properties['category'] as Record<string, unknown>), description: overrides.category };
   }
   if (overrides?.module !== undefined) {
-    properties.module = { ...(properties.module as Record<string, unknown>), description: overrides.module };
+    properties['module'] = { ...(properties['module'] as Record<string, unknown>), description: overrides.module };
   }
   const extras = input?.extraProperties;
   if (extras !== undefined) {

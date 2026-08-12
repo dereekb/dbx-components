@@ -675,7 +675,7 @@ describe('McpServerFactoryService reason parameter', () => {
     const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }])));
     const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
 
-    expect(schema.properties?.reason).toEqual({ type: 'string', maxLength: 250, description: expect.any(String) });
+    expect(schema.properties?.['reason']).toEqual({ type: 'string', maxLength: 250, description: expect.any(String) });
     expect(schema.required).toContain('reason');
   });
 
@@ -686,29 +686,29 @@ describe('McpServerFactoryService reason parameter', () => {
     const tools = await listToolEntries(factory, { auth: firebaseAuth() });
     const schema = tools.find((t) => t.name === 'model-info')?.inputSchema as ReasonSchema;
 
-    expect(schema.properties?.reason).toMatchObject({ type: 'string', maxLength: 250 });
+    expect(schema.properties?.['reason']).toMatchObject({ type: 'string', maxLength: 250 });
     expect(schema.required).toContain('reason');
   });
 
   it('omits the reason parameter when reasonParameter is false', async () => {
     const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: false } }));
     const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
-    expect(schema.properties?.reason).toBeUndefined();
+    expect(schema.properties?.['reason']).toBeUndefined();
     expect(schema.required ?? []).not.toContain('reason');
   });
 
   it('honors a custom parameterName and maxLength override', async () => {
     const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: { parameterName: 'justification', maxLength: 80 } } }));
     const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
-    expect(schema.properties?.justification).toMatchObject({ type: 'string', maxLength: 80 });
-    expect(schema.properties?.reason).toBeUndefined();
+    expect(schema.properties?.['justification']).toMatchObject({ type: 'string', maxLength: 80 });
+    expect(schema.properties?.['reason']).toBeUndefined();
     expect(schema.required).toContain('justification');
   });
 
   it('does not mark the parameter required when required is false', async () => {
     const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: { required: false } } }));
     const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
-    expect(schema.properties?.reason).toBeDefined();
+    expect(schema.properties?.['reason']).toBeDefined();
     expect(schema.required ?? []).not.toContain('reason');
   });
 
@@ -719,7 +719,7 @@ describe('McpServerFactoryService reason parameter', () => {
     const tools = await listToolEntries(makeFactory(apiDetails));
     const schema = tools.find((t) => t.name === 'widget-create')?.inputSchema as ReasonSchema;
 
-    expect(schema.properties?.reason).toEqual({ type: 'string', description: 'handler-owned' });
+    expect(schema.properties?.['reason']).toEqual({ type: 'string', description: 'handler-owned' });
     expect(schema.required ?? []).not.toContain('reason');
   });
 });

@@ -174,17 +174,17 @@ describe('mergeRefreshedUserExternalConnectionCredentials()', () => {
     // dropping accountsServer here would break the refresh AFTER this one
     const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: minimalRefresh });
 
-    expect(result.extra?.accountsServer).toBe('https://accounts.zoho.com');
-    expect(result.extra?.apiDomain).toBe('https://www.zohoapis.com');
-    expect(result.extra?.location).toBe('us');
+    expect(result.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
+    expect(result.extra?.['apiDomain']).toBe('https://www.zohoapis.com');
+    expect(result.extra?.['location']).toBe('us');
   });
 
   it('should merge extra key-by-key rather than replacing it', () => {
     const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { apiDomain: 'https://www.zohoapis.eu' } } });
 
-    expect(result.extra?.apiDomain).toBe('https://www.zohoapis.eu');
-    expect(result.extra?.accountsServer).toBe('https://accounts.zoho.com');
-    expect(result.extra?.location).toBe('us');
+    expect(result.extra?.['apiDomain']).toBe('https://www.zohoapis.eu');
+    expect(result.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
+    expect(result.extra?.['location']).toBe('us');
   });
 
   it('should not let an UNDEFINED extra value erase the stored one', () => {
@@ -192,12 +192,12 @@ describe('mergeRefreshedUserExternalConnectionCredentials()', () => {
     // would use it to erase what is stored
     const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { apiDomain: 'https://www.zohoapis.eu', location: undefined } } });
 
-    expect(result.extra?.location).toBe('us');
+    expect(result.extra?.['location']).toBe('us');
   });
 
   it('should let an explicit NULL extra value clear the stored one', () => {
     const result = mergeRefreshedUserExternalConnectionCredentials({ previous, refreshed: { ...minimalRefresh, extra: { location: null } } });
-    expect(result.extra?.location).toBeNull();
+    expect(result.extra?.['location']).toBeNull();
   });
 
   it('should leave extra undefined when neither side had any', () => {

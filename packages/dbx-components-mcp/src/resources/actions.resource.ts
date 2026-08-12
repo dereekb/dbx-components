@@ -87,7 +87,7 @@ export function registerActionsResource(server: McpServer, options: RegisterActi
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Action entry'
@@ -103,7 +103,7 @@ export function registerActionsResource(server: McpServer, options: RegisterActi
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawRole = variables.role;
+      const rawRole = variables['role'];
       const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole) as ActionEntryRole | undefined;
 
       const valid = role !== undefined && ACTION_ROLE_ORDER.includes(role);

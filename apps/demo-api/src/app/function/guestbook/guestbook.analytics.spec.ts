@@ -52,7 +52,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(successEvents[0].lifecycle).toBe('success');
         expect(successEvents[0].call).toBe('create');
         expect(successEvents[0].modelType).toBe('guestbook');
-        expect(successEvents[0].properties?.modelKeys).toEqual(result.modelKeys);
+        expect(successEvents[0].properties?.['modelKeys']).toEqual(result.modelKeys);
 
         // Verify onComplete
         const completeEvents = capturedEvents.filter((e) => e.event === 'Guestbook Create Complete');

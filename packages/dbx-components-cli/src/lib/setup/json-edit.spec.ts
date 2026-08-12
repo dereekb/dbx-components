@@ -10,18 +10,18 @@ const NAMING = deriveSetupNaming({ firebaseProjectId: 'gethapierapp', projectNam
 describe('applyNxJsonEdits', () => {
   it('sets workspaceLayout, target defaults, and disables the TUI', () => {
     const result = applyNxJsonEdits({ targetDefaults: { existing: { cache: false } } }, NAMING);
-    expect(result.workspaceLayout).toEqual({ appsDir: 'apps', libsDir: 'components' });
-    expect(result.tui).toEqual({ enabled: false });
-    const targetDefaults = result.targetDefaults as JsonObject;
+    expect(result['workspaceLayout']).toEqual({ appsDir: 'apps', libsDir: 'components' });
+    expect(result['tui']).toEqual({ enabled: false });
+    const targetDefaults = result['targetDefaults'] as JsonObject;
     expect(targetDefaults['build-base']).toEqual({ cache: true });
     expect(targetDefaults['build']).toEqual({ dependsOn: ['^build'], inputs: ['production', '^production'], cache: true });
     expect(targetDefaults['existing']).toEqual({ cache: false });
-    expect((targetDefaults['@nx/vitest:test'] as JsonObject).configurations).toEqual({ ci: { ci: true, codeCoverage: true } });
+    expect((targetDefaults['@nx/vitest:test'] as JsonObject)['configurations']).toEqual({ ci: { ci: true, codeCoverage: true } });
   });
 
   it('strips any nxCloudId left by create-nx-workspace', () => {
     const result = applyNxJsonEdits({ targetDefaults: {}, nxCloudId: '6a32ec6edb03481948b3fcf5' }, NAMING);
-    expect(result.nxCloudId).toBeUndefined();
+    expect(result['nxCloudId']).toBeUndefined();
   });
 });
 
@@ -32,14 +32,14 @@ describe('removeVerdaccioFromPackageJson', () => {
       devDependencies: { verdaccio: '^6.3.2', '@nx/js': '23.0.0' },
       scripts: { 'local-registry': 'nx local-registry', build: 'nx build' }
     });
-    expect(result.dependencies).toEqual({ rxjs: '^7.8.0' });
-    expect(result.devDependencies).toEqual({ '@nx/js': '23.0.0' });
-    expect(result.scripts).toEqual({ build: 'nx build' });
+    expect(result['dependencies']).toEqual({ rxjs: '^7.8.0' });
+    expect(result['devDependencies']).toEqual({ '@nx/js': '23.0.0' });
+    expect(result['scripts']).toEqual({ build: 'nx build' });
   });
 
   it('is a no-op when no verdaccio config is present', () => {
     const result = removeVerdaccioFromPackageJson({ devDependencies: { '@nx/js': '23.0.0' } });
-    expect(result.devDependencies).toEqual({ '@nx/js': '23.0.0' });
+    expect(result['devDependencies']).toEqual({ '@nx/js': '23.0.0' });
   });
 });
 
@@ -49,8 +49,8 @@ describe('alignDbxPeerDependencies', () => {
       dependencies: { '@angular/core': '21.2.9', '@angular/common': '21.2.9', express: '^4.21.2', '@dereekb/util': '^13.18.0' },
       devDependencies: { '@angular/compiler-cli': '21.2.9', '@types/express': '^4.17.21', 'typescript-eslint': '^8.40.0', '@typescript-eslint/utils': '^8.40.0', '@analogjs/vite-plugin-angular': '~2.3.1', '@analogjs/vitest-angular': '2.2.0' }
     });
-    const deps = result.dependencies as JsonObject;
-    const dev = result.devDependencies as JsonObject;
+    const deps = result['dependencies'] as JsonObject;
+    const dev = result['devDependencies'] as JsonObject;
     expect(deps['@angular/core']).toBe('21.2.11');
     expect(deps['@angular/common']).toBe('21.2.11');
     expect(deps['express']).toBe('^5.2.1');
@@ -64,40 +64,40 @@ describe('alignDbxPeerDependencies', () => {
 
   it('does not add a package that is not already declared', () => {
     const result = alignDbxPeerDependencies({ dependencies: { '@dereekb/util': '^13.18.0' } });
-    expect(result.dependencies).toEqual({ '@dereekb/util': '^13.18.0' });
+    expect(result['dependencies']).toEqual({ '@dereekb/util': '^13.18.0' });
   });
 
   it('leaves the Angular build/devkit packages on their own line', () => {
     const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '21.2.7', '@angular/cli': '21.2.7' } });
-    expect(result.devDependencies).toEqual({ '@angular/build': '21.2.7', '@angular/cli': '21.2.7' });
+    expect(result['devDependencies']).toEqual({ '@angular/build': '21.2.7', '@angular/cli': '21.2.7' });
   });
 });
 
 describe('applyFirebaseJsonEdits', () => {
   it('rewrites functions, firestore, and emulators with derived ports', () => {
     const result = applyFirebaseJsonEdits({}, NAMING, '24');
-    expect(result.functions).toEqual({ source: 'dist/apps/gethapier-api', runtime: 'nodejs24', engines: { node: '24' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] });
-    expect(result.firestore).toEqual({ rules: 'firestore.rules', indexes: 'firestore.indexes.json' });
-    const emulators = result.emulators as JsonObject;
-    expect((emulators.ui as JsonObject).port).toBe(9300);
-    expect((emulators.firestore as JsonObject).websocketPort).toBe(9308);
-    expect((emulators.storage as JsonObject).port).toBe(9306);
+    expect(result['functions']).toEqual({ source: 'dist/apps/gethapier-api', runtime: 'nodejs24', engines: { node: '24' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] });
+    expect(result['firestore']).toEqual({ rules: 'firestore.rules', indexes: 'firestore.indexes.json' });
+    const emulators = result['emulators'] as JsonObject;
+    expect((emulators['ui'] as JsonObject)['port']).toBe(9300);
+    expect((emulators['firestore'] as JsonObject)['websocketPort']).toBe(9308);
+    expect((emulators['storage'] as JsonObject)['port']).toBe(9306);
   });
 });
 
 describe('applyTsconfigBaseEdits / applyApiTsconfigEdits', () => {
   it('merges the base compiler options', () => {
     const result = applyTsconfigBaseEdits({ compilerOptions: { rootDir: '.' } });
-    const opts = result.compilerOptions as JsonObject;
-    expect(opts.rootDir).toBe('.');
-    expect(opts.strict).toBe(true);
-    expect(opts.moduleResolution).toBe('bundler');
+    const opts = result['compilerOptions'] as JsonObject;
+    expect(opts['rootDir']).toBe('.');
+    expect(opts['strict']).toBe(true);
+    expect(opts['moduleResolution']).toBe('bundler');
   });
 
   it('disables esModuleInterop for the api tsconfig', () => {
     const result = applyApiTsconfigEdits({ compilerOptions: { strict: true } });
-    expect((result.compilerOptions as JsonObject).esModuleInterop).toBe(false);
-    expect((result.compilerOptions as JsonObject).strict).toBe(true);
+    expect((result['compilerOptions'] as JsonObject)['esModuleInterop']).toBe(false);
+    expect((result['compilerOptions'] as JsonObject)['strict']).toBe(true);
   });
 });
 
@@ -108,7 +108,7 @@ describe('editJsonFile', () => {
     writeFileSync(path, JSON.stringify({ targetDefaults: {} }));
     editJsonFile(path, (current) => applyNxJsonEdits(current, NAMING));
     const written = JSON.parse(readFileSync(path, 'utf8')) as JsonObject;
-    expect(written.tui).toEqual({ enabled: false });
+    expect(written['tui']).toEqual({ enabled: false });
   });
 
   it('returns undefined for a missing file', () => {
@@ -140,18 +140,18 @@ describe('firebase.json hosting rewrites', () => {
 
   it('inserts OIDC rewrites before the catch-all on every target', () => {
     const result = applyOidcFirebaseJsonRewrites(baseFirebase);
-    const target0 = (result.hosting as JsonObject[])[0];
-    const sources = (target0.rewrites as JsonObject[]).map((rewrite) => rewrite.source);
+    const target0 = (result['hosting'] as JsonObject[])[0];
+    const sources = (target0['rewrites'] as JsonObject[]).map((rewrite) => rewrite['source']);
     expect(sources).toEqual(['/api/**', '/.well-known/**', '/oidc/**', '/interaction/**', '**']);
     // every target gets them
-    expect((result.hosting as JsonObject[])[1].rewrites).toHaveLength(5);
+    expect((result['hosting'] as JsonObject[])[1]['rewrites']).toHaveLength(5);
   });
 
   it('adds MCP rewrites and is idempotent', () => {
     const once = applyMcpFirebaseJsonRewrites(applyOidcFirebaseJsonRewrites(baseFirebase));
     const twice = applyMcpFirebaseJsonRewrites(applyOidcFirebaseJsonRewrites(once));
     expect(JSON.stringify(once)).toBe(JSON.stringify(twice));
-    const sources = ((once.hosting as JsonObject[])[0].rewrites as JsonObject[]).map((rewrite) => rewrite.source);
+    const sources = ((once['hosting'] as JsonObject[])[0]['rewrites'] as JsonObject[]).map((rewrite) => rewrite['source']);
     expect(sources).toContain('/mcp/**');
     expect(sources).toContain('/mcp');
     expect(sources[sources.length - 1]).toBe('**');
@@ -166,10 +166,10 @@ describe('proxy.conf.dev.json edits', () => {
 
   it('rewrites every target origin and ensures OIDC keys', () => {
     const result = applyOidcProxyEdits(baseProxy, TARGET);
-    expect((result['/api/**'] as JsonObject).target).toBe(TARGET);
-    expect((result['/oidc/**'] as JsonObject).target).toBe(TARGET);
-    expect((result['/.well-known/**'] as JsonObject).target).toBe(TARGET);
-    expect((result['/reg/**'] as JsonObject).target).toBe(TARGET);
+    expect((result['/api/**'] as JsonObject)['target']).toBe(TARGET);
+    expect((result['/oidc/**'] as JsonObject)['target']).toBe(TARGET);
+    expect((result['/.well-known/**'] as JsonObject)['target']).toBe(TARGET);
+    expect((result['/reg/**'] as JsonObject)['target']).toBe(TARGET);
     expect(result['/interaction/**'] as JsonObject).toEqual({ target: TARGET, secure: false, logLevel: 'debug' });
   });
 
@@ -177,16 +177,16 @@ describe('proxy.conf.dev.json edits', () => {
     const once = applyMcpProxyEdits(applyOidcProxyEdits(baseProxy, TARGET), TARGET);
     const twice = applyMcpProxyEdits(applyOidcProxyEdits(once, TARGET), TARGET);
     expect(JSON.stringify(once)).toBe(JSON.stringify(twice));
-    expect((once['/mcp'] as JsonObject).target).toBe(TARGET);
-    expect((once['/mcp/**'] as JsonObject).target).toBe(TARGET);
+    expect((once['/mcp'] as JsonObject)['target']).toBe(TARGET);
+    expect((once['/mcp/**'] as JsonObject)['target']).toBe(TARGET);
   });
 });
 
 describe('ensureMcpServerEntry', () => {
   it('adds an http server entry without clobbering existing servers', () => {
     const result = ensureMcpServerEntry({ mcpServers: { existing: { type: 'stdio', command: 'x' } } }, { name: 'gethapier-mcp-dev', url: 'http://0.0.0.0:9302/gethapierapp-staging/us-central1/api/mcp' });
-    const servers = result.mcpServers as JsonObject;
-    expect(servers.existing).toBeDefined();
+    const servers = result['mcpServers'] as JsonObject;
+    expect(servers['existing']).toBeDefined();
     expect(servers['gethapier-mcp-dev']).toEqual({ type: 'http', url: 'http://0.0.0.0:9302/gethapierapp-staging/us-central1/api/mcp' });
   });
 

@@ -7,6 +7,6 @@
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "express": "^5.2.1",
-    "@openrouter/sdk": "^0.12.79"
+    "@openrouter/sdk": "^1.2.26"
   }
 }

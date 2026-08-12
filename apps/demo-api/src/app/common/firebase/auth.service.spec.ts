@@ -34,18 +34,18 @@ demoApiFunctionContextFactory((f) => {
     describe('claimsForRoles()', () => {
       it('should return null for all claim keys when given empty roles', () => {
         const claims = authService.claimsForRoles(new Set());
-        expect(claims.a).toBeNull();
-        expect(claims.o).toBeNull();
+        expect(claims['a']).toBeNull();
+        expect(claims['o']).toBeNull();
       });
 
       it('should return admin claim for admin role', () => {
         const claims = authService.claimsForRoles(new Set([AUTH_ADMIN_ROLE]));
-        expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+        expect(claims['a']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
 
       it('should return onboarded claim for onboarded roles', () => {
         const claims = authService.claimsForRoles(new Set([AUTH_TOS_SIGNED_ROLE, AUTH_ONBOARDED_ROLE]));
-        expect(claims.o).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+        expect(claims['o']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
     });
 
@@ -121,7 +121,7 @@ demoApiFunctionContextFactory((f) => {
               expect(roles.has(AUTH_ADMIN_ROLE)).toBe(true);
 
               const claims = await userContext.loadClaims();
-              expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+              expect(claims['a']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
             });
           });
 
@@ -172,7 +172,7 @@ demoApiFunctionContextFactory((f) => {
               await userContext.setClaims({ a: 1 });
 
               const claims = await userContext.loadClaims();
-              expect(claims.a).toBe(1);
+              expect(claims['a']).toBe(1);
             });
           });
 
@@ -183,8 +183,8 @@ demoApiFunctionContextFactory((f) => {
               await userContext.updateClaims({ o: 1 });
 
               const claims = await userContext.loadClaims();
-              expect(claims.a).toBe(1);
-              expect(claims.o).toBe(1);
+              expect(claims['a']).toBe(1);
+              expect(claims['o']).toBe(1);
             });
 
             it('should remove claims with null values', async () => {
@@ -193,8 +193,8 @@ demoApiFunctionContextFactory((f) => {
               await userContext.updateClaims({ a: null });
 
               const claims = await userContext.loadClaims();
-              expect(claims.a).toBeUndefined();
-              expect(claims.o).toBe(1);
+              expect(claims['a']).toBeUndefined();
+              expect(claims['o']).toBe(1);
             });
           });
 

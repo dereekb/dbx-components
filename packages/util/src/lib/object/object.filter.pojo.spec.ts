@@ -467,7 +467,7 @@ describe('filterKeysOnPOJOFunction()', () => {
 
       expect(result).toBeDefined();
       expect(result).toEqual({ a: 1, b: 2 });
-      expect(result.c).toBeUndefined();
+      expect(result['c']).toBeUndefined();
     });
 
     describe('invertFilter=true', () => {
@@ -479,8 +479,8 @@ describe('filterKeysOnPOJOFunction()', () => {
 
         expect(result).toBeDefined();
         expect(result).toEqual({ c: 3 });
-        expect(result.a).toBeUndefined();
-        expect(result.b).toBeUndefined();
+        expect(result['a']).toBeUndefined();
+        expect(result['b']).toBeUndefined();
       });
     });
   });

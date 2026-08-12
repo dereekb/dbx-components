@@ -72,7 +72,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const raw = variables.slug;
+      const raw = variables['slug'];
       const slug = Array.isArray(raw) ? raw[0] : raw;
       let text: string;
       let mimeType = 'application/json';
@@ -102,7 +102,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawMode = variables.mode;
+      const rawMode = variables['mode'];
       const mode = (Array.isArray(rawMode) ? rawMode[0] : rawMode) as ModelArchetypeSyncMode | undefined;
       let text: string;
       let mimeType = 'application/json';
@@ -126,8 +126,8 @@ export function registerModelArchetypesResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawAxis = variables.axisName;
-      const rawValue = variables.axisValue;
+      const rawAxis = variables['axisName'];
+      const rawValue = variables['axisValue'];
       const axisName = Array.isArray(rawAxis) ? rawAxis[0] : rawAxis;
       const axisValue = Array.isArray(rawValue) ? rawValue[0] : rawValue;
       let text: string;
@@ -152,7 +152,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const raw = variables.kind;
+      const raw = variables['kind'];
       const kind = (Array.isArray(raw) ? raw[0] : raw) as FirestoreCollectionKind | undefined;
       let text: string;
       let mimeType = 'application/json';

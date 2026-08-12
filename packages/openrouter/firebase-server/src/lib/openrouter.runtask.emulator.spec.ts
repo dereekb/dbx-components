@@ -23,8 +23,8 @@ const TEST_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', prov
  * Set to run the `live end-to-end` block against the real API. Every other block runs against a fake
  * client and needs no credentials.
  */
-const OPENROUTER_LIVE_API_KEY = process.env.OPENROUTER_API_KEY;
-const LIVE_TEST_MODEL = process.env.OPENROUTER_TEST_MODEL_ID ?? 'nvidia/nemotron-nano-9b-v2:free';
+const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
+const LIVE_TEST_MODEL = process.env['OPENROUTER_TEST_MODEL_ID'] ?? 'nvidia/nemotron-nano-9b-v2:free';
 
 /**
  * Retries a live lookup a few times before failing.
@@ -188,7 +188,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const executions: string[] = [];
         const stack = await buildStack({
           reply: (body) => {
-            executions.push(JSON.stringify(body.input));
+            executions.push(JSON.stringify(body['input']));
             return { text: 'ok', delayMs: 25 };
           }
         });
@@ -275,7 +275,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
 
         expect(stack.fake.callCount).toBe(2);
 
-        const resumedInput = JSON.stringify(stack.fake.requests[1].input);
+        const resumedInput = JSON.stringify(stack.fake.requests[1]['input']);
         // Continued: the original ask and the tool result are both on the second request.
         expect(resumedInput).toContain('please review this');
         expect(resumedInput).toContain('function_call_output');
@@ -320,7 +320,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect(finished?.ptc ?? []).toEqual([]);
         expect(finished?.utr ?? []).toEqual([]);
 
-        const resumedInput = JSON.stringify(stack.fake.requests[1].input);
+        const resumedInput = JSON.stringify(stack.fake.requests[1]['input']);
         // The externally-produced output is on the wire — the thing the SDK's own resume API cannot do.
         expect(resumedInput).toContain('approve');
       });
@@ -834,8 +834,8 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect((await stack.taskData('file_search_run'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
 
         const body = stack.fake.requests[0];
-        expect(body.tools).toEqual([{ type: 'file_search', vector_store_ids: ['vs_test_store'], max_num_results: 5 }]);
-        expect(body.include).toEqual(['file_search_call.results']);
+        expect(body['tools']).toEqual([{ type: 'file_search', vector_store_ids: ['vs_test_store'], max_num_results: 5 }]);
+        expect(body['include']).toEqual(['file_search_call.results']);
       });
 
       it('should merge a hosted tool with a converted client tool rather than choosing one', async () => {
@@ -848,7 +848,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         await stack.service.enqueueRunTask({ key: 'merged_tools_run', promptKey: 'file-search-with-client-tool', input: 'go' });
         await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
 
-        const sentTools = stack.fake.requests[0].tools as { type: string; name?: string }[];
+        const sentTools = stack.fake.requests[0]['tools'] as { type: string; name?: string }[];
         expect(sentTools.map((x) => x.type)).toEqual(['function', 'file_search']);
         expect(sentTools[0].name).toBe(DEFERRED_TOOL_NAME);
         expect(sentTools[1]).toEqual({ type: 'file_search', vector_store_ids: ['vs_test_store'] });
@@ -903,7 +903,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
 
         // This is the correlation handle the broadcast webhook reads back off the OTLP span.
-        expect(JSON.stringify(stack.fake.requests[0].trace)).toContain('traced');
+        expect(JSON.stringify(stack.fake.requests[0]['trace'])).toContain('traced');
       });
     });
   });
@@ -988,7 +988,7 @@ describe('openRouter broadcast reconciliation (firestore emulator)', () => {
 
 // MARK: Helpers
 function urlsInRequest(body: Record<string, unknown>): string {
-  return JSON.stringify(body.input ?? []);
+  return JSON.stringify(body['input'] ?? []);
 }
 
 interface BroadcastPayloadConfig {

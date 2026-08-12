@@ -43,7 +43,7 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
     async upsert(id: OidcEntryId, payload: AdapterPayload, expiresIn: UnixDateTimeSecondsNumber): Promise<void> {
       // Set ownership key for Client entries so firestore rules can restrict reads by owner.
       // The firestoreOwnerKey is passed through the payload metadata by OidcClientService.
-      const o: Maybe<FirebaseAuthOwnershipKey> = this.name === OIDC_ENTRY_CLIENT_TYPE ? (payload.firestoreOwnerKey as string | undefined) : undefined;
+      const o: Maybe<FirebaseAuthOwnershipKey> = this.name === OIDC_ENTRY_CLIENT_TYPE ? (payload['firestoreOwnerKey'] as string | undefined) : undefined;
 
       // oidc-provider uses `accountId` as the user identifier on Grant, AccessToken,
       // RefreshToken, etc. — `payload.uid` is only populated on Session/Interaction.
@@ -60,7 +60,7 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       // inherit `iat` (epoch seconds) from BaseToken; Client entries use
       // `created_at` (ISO string).
       const iat = payload.iat;
-      const createdAtIso = payload.created_at as string | undefined;
+      const createdAtIso = payload['created_at'] as string | undefined;
       let createdAt: Maybe<Date>;
 
       if (typeof iat === 'number') {

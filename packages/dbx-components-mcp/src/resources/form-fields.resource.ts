@@ -82,7 +82,7 @@ export function registerFormFieldsResource(server: McpServer, config: RegisterFo
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug) ?? registry.findByFactoryName(slug),
         listAvailableSlugs: () => registry.all.map((f) => f.slug),
         label: 'Form field'
@@ -98,7 +98,7 @@ export function registerFormFieldsResource(server: McpServer, config: RegisterFo
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const producesValue = variables.produces;
+      const producesValue = variables['produces'];
       const produces = Array.isArray(producesValue) ? producesValue[0] : producesValue;
 
       let text: string;
@@ -136,7 +136,7 @@ export function registerFormFieldsResource(server: McpServer, config: RegisterFo
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tierValue = variables.tier;
+      const tierValue = variables['tier'];
       const tier = (Array.isArray(tierValue) ? tierValue[0] : tierValue) as FormTier | undefined;
 
       const valid = tier && FORM_TIER_ORDER.includes(tier);
@@ -169,7 +169,7 @@ export function registerFormFieldsResource(server: McpServer, config: RegisterFo
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const value = variables.arrayOutput;
+      const value = variables['arrayOutput'];
       const arrayOutput = (Array.isArray(value) ? value[0] : value) as FormArrayOutput | undefined;
 
       const valid = arrayOutput && ARRAY_OUTPUT_VALUES.includes(arrayOutput);

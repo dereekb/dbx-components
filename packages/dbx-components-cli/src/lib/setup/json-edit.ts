@@ -43,7 +43,7 @@ function withoutKeys(obj: JsonObject, keys: readonly string[]): JsonObject {
  * @returns A new nx.json object with the edits applied.
  */
 export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonObject {
-  const targetDefaults = { ...(nxJson.targetDefaults as JsonObject) };
+  const targetDefaults = { ...(nxJson['targetDefaults'] as JsonObject) };
   targetDefaults['build-base'] = { cache: true };
   targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true };
   targetDefaults['@nx/vitest:test'] = {
@@ -181,7 +181,7 @@ export function applyTsconfigBaseEdits(tsconfig: JsonObject): JsonObject {
   return {
     ...tsconfig,
     compilerOptions: {
-      ...(tsconfig.compilerOptions as JsonObject),
+      ...(tsconfig['compilerOptions'] as JsonObject),
       moduleResolution: 'bundler',
       experimentalDecorators: true,
       importHelpers: true,
@@ -209,7 +209,7 @@ export function applyTsconfigBaseEdits(tsconfig: JsonObject): JsonObject {
 export function applyApiTsconfigEdits(tsconfig: JsonObject): JsonObject {
   return {
     ...tsconfig,
-    compilerOptions: { ...(tsconfig.compilerOptions as JsonObject), esModuleInterop: false }
+    compilerOptions: { ...(tsconfig['compilerOptions'] as JsonObject), esModuleInterop: false }
   };
 }
 
@@ -290,9 +290,9 @@ export function editJsonFileStatus(path: string, transform: (current: JsonObject
  * @returns The target with the rewrites ensured.
  */
 function ensureHostingRewrites(target: JsonObject, sources: readonly string[]): JsonObject {
-  const rewrites = Array.isArray(target.rewrites) ? [...(target.rewrites as JsonObject[])] : [];
-  const existing = new Set(rewrites.map((rewrite) => rewrite.source));
-  const catchAllIndex = rewrites.findIndex((rewrite) => rewrite.source === '**');
+  const rewrites = Array.isArray(target['rewrites']) ? [...(target['rewrites'] as JsonObject[])] : [];
+  const existing = new Set(rewrites.map((rewrite) => rewrite['source']));
+  const catchAllIndex = rewrites.findIndex((rewrite) => rewrite['source'] === '**');
   const insertAt = catchAllIndex < 0 ? rewrites.length : catchAllIndex;
   const toAdd = sources.filter((source) => !existing.has(source)).map((source) => ({ source, function: 'api' }));
   return { ...target, rewrites: [...rewrites.slice(0, insertAt), ...toAdd, ...rewrites.slice(insertAt)] };
@@ -307,7 +307,7 @@ function ensureHostingRewrites(target: JsonObject, sources: readonly string[]): 
  * @returns A new firebase.json with the rewrites ensured.
  */
 export function applyHostingRewrites(firebaseJson: JsonObject, sources: readonly string[]): JsonObject {
-  const hosting = firebaseJson.hosting;
+  const hosting = firebaseJson['hosting'];
   let nextHosting: unknown;
   if (Array.isArray(hosting)) {
     nextHosting = hosting.map((target) => ensureHostingRewrites(target as JsonObject, sources));
@@ -412,7 +412,7 @@ export function applyMcpProxyEdits(proxyJson: JsonObject, target: string): JsonO
  * @returns The updated `.mcp.json` object.
  */
 export function ensureMcpServerEntry(mcpJson: JsonObject, input: { readonly name: string; readonly url: string }): JsonObject {
-  const servers: JsonObject = { ...(mcpJson.mcpServers as JsonObject) };
+  const servers: JsonObject = { ...(mcpJson['mcpServers'] as JsonObject) };
   if (!(input.name in servers)) {
     servers[input.name] = { type: 'http', url: input.url };
   }

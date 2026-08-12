@@ -139,8 +139,8 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
 }
 
 function parseModelGetInput(args: Record<string, unknown>): ModelGetToolInput {
-  const modelType = args.modelType;
-  const keys = args.keys;
+  const modelType = args['modelType'];
+  const keys = args['keys'];
 
   if (typeof modelType !== 'string' || modelType.length === 0) {
     throw new Error('model-get: "modelType" is required and must be a non-empty string.');

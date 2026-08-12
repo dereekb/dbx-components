@@ -28,21 +28,21 @@ describe('splitOpenRouterModelConfig()', () => {
 describe('openRouterCallModelInput()', () => {
   it('should spread the request config and set the input', () => {
     const input = openRouterCallModelInput({ request: { config: { model: 'm', temperature: 0.5 }, input: [{ role: 'user', content: 'hi' }], instructions: 'sys' } }) as Record<string, unknown>;
-    expect(input.model).toBe('m');
-    expect(input.temperature).toBe(0.5);
-    expect(input.instructions).toBe('sys');
-    expect(Array.isArray(input.input)).toBe(true);
+    expect(input['model']).toBe('m');
+    expect(input['temperature']).toBe(0.5);
+    expect(input['instructions']).toBe('sys');
+    expect(Array.isArray(input['input'])).toBe(true);
   });
 
   it('should translate maxSteps into a stop condition rather than a request param', () => {
     const input = openRouterCallModelInput({ request: { config: { model: 'm', maxSteps: 2 }, input: [] } }) as Record<string, unknown>;
-    expect(input.maxSteps).toBeUndefined();
-    expect(typeof input.stopWhen).toBe('function');
+    expect(input['maxSteps']).toBeUndefined();
+    expect(typeof input['stopWhen']).toBe('function');
   });
 
   it('should carry the trace as additionalProperties so it lands as span attributes', () => {
     const input = openRouterCallModelInput({ request: { config: { model: 'm' }, input: [], trace: { runTaskKey: 'rt_1' } } }) as { trace: { additionalProperties: Record<string, unknown> } };
-    expect(input.trace.additionalProperties.runTaskKey).toBe('rt_1');
+    expect(input.trace.additionalProperties['runTaskKey']).toBe('rt_1');
   });
 
   it('should strip hosted tools, which callModel would convert as client function tools', () => {
@@ -75,14 +75,14 @@ describe('openRouterResponsesRequestBody()', () => {
     // `vectorStoreIds` / `maxNumResults` are the SDK's names; it remaps them to `vector_store_ids` /
     // `max_num_results` during outbound serialization.
     const body = openRouterResponsesRequestBody({ config: { model: 'm', tools: [openRouterFileSearchTool(['vs_1'], 5)], include: ['file_search_call.results'] }, input: [] });
-    expect(body.tools).toEqual([{ type: 'file_search', vectorStoreIds: ['vs_1'], maxNumResults: 5 }]);
-    expect(body.include).toEqual(['file_search_call.results']);
+    expect(body['tools']).toEqual([{ type: 'file_search', vectorStoreIds: ['vs_1'], maxNumResults: 5 }]);
+    expect(body['include']).toEqual(['file_search_call.results']);
   });
 
   it('should carry instructions and the trace, and keep execution controls off the body', () => {
     const body = openRouterResponsesRequestBody({ config: { model: 'm', maxSteps: 3, requestTimeoutMs: 10 }, instructions: 'sys', input: [], trace: { runTaskKey: 'rt_1' } });
-    expect(body.instructions).toBe('sys');
-    expect(body.trace).toEqual({ additionalProperties: { runTaskKey: 'rt_1' } });
+    expect(body['instructions']).toBe('sys');
+    expect(body['trace']).toEqual({ additionalProperties: { runTaskKey: 'rt_1' } });
     expect('maxSteps' in body).toBe(false);
     expect('requestTimeoutMs' in body).toBe(false);
   });

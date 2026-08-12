@@ -55,8 +55,8 @@ describe('applyMcpReasonParameterToSchema', () => {
   it('adds a string reason property with the configured maxLength + description', () => {
     const input = { type: 'object', properties: { name: { type: 'string' } } };
     const result = applyMcpReasonParameterToSchema(input, resolved) as { properties: Record<string, unknown> };
-    expect(result.properties.reason).toEqual({ type: 'string', maxLength: 250, description: 'a reason' });
-    expect(result.properties.name).toEqual({ type: 'string' });
+    expect(result.properties['reason']).toEqual({ type: 'string', maxLength: 250, description: 'a reason' });
+    expect(result.properties['name']).toEqual({ type: 'string' });
   });
 
   it('adds the parameter name to required when required is true', () => {
@@ -95,12 +95,12 @@ describe('applyMcpReasonParameterToSchema', () => {
   it('defends against a schema with no properties block', () => {
     const result = applyMcpReasonParameterToSchema({ type: 'object' }, resolved) as { type: string; properties: Record<string, unknown> };
     expect(result.type).toBe('object');
-    expect(result.properties.reason).toBeDefined();
+    expect(result.properties['reason']).toBeDefined();
   });
 
   it('honors a custom parameterName', () => {
     const result = applyMcpReasonParameterToSchema({ type: 'object', properties: {} }, { ...resolved, parameterName: 'justification' }) as { properties: Record<string, unknown>; required: ReadonlyArray<string> };
-    expect(result.properties.justification).toBeDefined();
+    expect(result.properties['justification']).toBeDefined();
     expect(result.required).toEqual(['justification']);
   });
 });
@@ -143,7 +143,7 @@ describe('extractMcpReasonFromArgs', () => {
     const result = extractMcpReasonFromArgs(args, resolved, true);
     expect(result.reason).toBeUndefined();
     expect(result.args).toBe(args);
-    expect(result.args.reason).toBe('handler-owned');
+    expect(result.args['reason']).toBe('handler-owned');
   });
 
   it('returns reason undefined and original args when the key is absent', () => {

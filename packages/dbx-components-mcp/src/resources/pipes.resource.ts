@@ -79,7 +79,7 @@ export function registerPipesResource(server: McpServer, options: RegisterPipesR
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Pipe'
@@ -95,7 +95,7 @@ export function registerPipesResource(server: McpServer, options: RegisterPipesR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawCategory = variables.category;
+      const rawCategory = variables['category'];
       const category = (Array.isArray(rawCategory) ? rawCategory[0] : rawCategory) as PipeCategory | undefined;
 
       const valid = category && PIPE_CATEGORY_ORDER.includes(category);

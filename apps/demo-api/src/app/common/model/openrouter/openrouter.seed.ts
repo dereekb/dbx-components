@@ -55,7 +55,7 @@ export async function seedDemoOpenRouterPrompts(context: SeedDemoOpenRouterPromp
     await openRouterPromptActions.createOpenRouterPrompt({ key: DEMO_RESUME_CHECK_PROMPT_KEY, name: DEMO_RESUME_CHECK_PROMPT_NAME, description: 'Decides whether an attached document is a resume.' });
   }
 
-  const modelId = process.env.OPENROUTER_TEST_MODEL_ID ?? DEMO_RESUME_CHECK_DEFAULT_MODEL_ID;
+  const modelId = process.env['OPENROUTER_TEST_MODEL_ID'] ?? DEMO_RESUME_CHECK_DEFAULT_MODEL_ID;
   const activeVersion = (await promptDocument.snapshotData())?.av;
 
   let version: OpenRouterPromptVersionNumber;

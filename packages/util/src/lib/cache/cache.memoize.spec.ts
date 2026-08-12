@@ -133,7 +133,7 @@ describe('memoizeAsyncKeyedValueCache()', () => {
   it('load() should return a snapshot independent from the memoized record', async () => {
     const memoized = memoizeAsyncKeyedValueCache(inMemoryAsyncKeyedValueCache<number>({ a: 1 }));
     const snapshot = await memoized.load();
-    snapshot.a = 999;
+    snapshot['a'] = 999;
     expect(await memoized.get('a')).toBe(1);
   });
 });

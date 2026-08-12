@@ -324,7 +324,7 @@ export async function runPaginatedList<I, R extends PaginatedResponse>(params: R
     };
 
     if (stream.pickPath) {
-      summaryMeta.dumpFilePick = stream.pickPath;
+      summaryMeta['dumpFilePick'] = stream.pickPath;
     }
 
     printPaginatedOutput({ multiplePagesOutput, summaryMeta, state, adapter, pickFilter: outputOptions.pick });
