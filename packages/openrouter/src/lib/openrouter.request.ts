@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig, mergeOpenRouterModelConfig } from './openrouter.config';
-import { type OpenRouterFileAnnotationEchoMessage, type OpenRouterInput, type OpenRouterInputMessage, type OpenRouterSignedFileReference, openRouterFileAnnotationMessage, openRouterInputFilePartsForSignedFiles, openRouterInputMessages, openRouterUnparsedSignedFiles } from './openrouter.input';
+import { type OpenRouterAttachedFileReference, type OpenRouterFileAnnotationEchoMessage, type OpenRouterInput, type OpenRouterInputMessage, openRouterFileAnnotationMessage, openRouterInputFilePartsForAttachedFiles, openRouterInputMessages, openRouterUnparsedAttachedFiles } from './openrouter.input';
 import { type OpenRouterResolvedPrompt } from './openrouter.prompt';
 import { type OpenRouterRunTaskKey } from './openrouter.type';
 
@@ -39,9 +39,9 @@ export interface OpenRouterPromptRequestParams {
    */
   readonly overrides?: Maybe<OpenRouterModelConfig>;
   /**
-   * Files to attach, each already signed for THIS attempt.
+   * Files to attach, each already resolved to a url or inline data for THIS attempt.
    */
-  readonly files?: Maybe<OpenRouterSignedFileReference[]>;
+  readonly files?: Maybe<OpenRouterAttachedFileReference[]>;
   /**
    * Cached `file-parser` annotations to echo back so an already-parsed file is not re-parsed.
    */
@@ -101,7 +101,7 @@ export function openRouterPromptRequest(params: OpenRouterPromptRequestParams): 
   const inputMessages = openRouterInputMessages(input);
   // A file whose parse is already cached is NOT re-attached. Sending it again is what causes the
   // re-parse; the annotation echo alone cannot prevent one.
-  const fileParts = openRouterInputFilePartsForSignedFiles(openRouterUnparsedSignedFiles(files, fileAnnotations));
+  const fileParts = openRouterInputFilePartsForAttachedFiles(openRouterUnparsedAttachedFiles(files, fileAnnotations));
 
   const messages: (OpenRouterInputMessage | OpenRouterFileAnnotationEchoMessage)[] = [...seedMessages];
 
@@ -118,7 +118,7 @@ export function openRouterPromptRequest(params: OpenRouterPromptRequestParams): 
   if (fileParts.length > 0) {
     // Files ride on the last user message so they sit alongside the text that refers to them. When
     // the caller passed no input at all (a file-only run) a user message is created to carry them.
-    const lastUserIndex = findLastUserMessageIndex(messages);
+    const lastUserIndex = messages.findLastIndex((x) => x.role === 'user');
 
     if (lastUserIndex >= 0) {
       const target = messages[lastUserIndex] as OpenRouterInputMessage;
@@ -130,17 +130,4 @@ export function openRouterPromptRequest(params: OpenRouterPromptRequestParams): 
   }
 
   return { config, instructions: prompt.instructions, input: messages, trace };
-}
-
-function findLastUserMessageIndex(messages: (OpenRouterInputMessage | OpenRouterFileAnnotationEchoMessage)[]): number {
-  let result = -1;
-
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    if (messages[i].role === 'user') {
-      result = i;
-      break;
-    }
-  }
-
-  return result;
 }

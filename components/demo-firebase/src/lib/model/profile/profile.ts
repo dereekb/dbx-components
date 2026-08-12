@@ -23,6 +23,10 @@ export interface Profile extends UserRelated, UserRelatedById {
    */
   avatarStorageFile?: Maybe<StorageFileKey>;
   /**
+   * Resume storage file, set by the resume upload initializer.
+   */
+  resumeStorageFile?: Maybe<StorageFileKey>;
+  /**
    * Unique username.
    */
   username: string;
@@ -49,6 +53,7 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
     uid: firestoreUID(),
     avatar: optionalFirestoreString(),
     avatarStorageFile: optionalFirestoreString(),
+    resumeStorageFile: optionalFirestoreString(),
     username: firestoreString({ default: '', defaultBeforeSave: null }),
     bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })

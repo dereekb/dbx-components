@@ -1,21 +1,10 @@
 import { type FirestoreQueryConstraint, limit, orderBy, where, whereDateIsOnOrBefore } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
-import { type OpenRouterPromptKey } from '@dereekb/openrouter';
-import { type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.runtask';
+import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.runtask';
 
 /**
- * The states a sweep is allowed to pull a task out of.
- *
- * `AWAITING_ASYNC_TOOLS` is in here alongside `QUEUED` because a task parked on a deferred tool whose
- * results have since arrived is runnable again; `isOpenRouterRunTaskClaimable` is what decides whether
- * the results actually did arrive.
+ * Params for {@link openRouterRunTasksRunnableQuery}.
  */
-export const OPENROUTER_RUN_TASK_RUNNABLE_STATES: readonly OpenRouterRunTaskState[] = [OpenRouterRunTaskState.QUEUED, OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS];
-
-/**
- * Params for a runnable-page query.
- */
-export interface OpenRouterRunTasksRunnablePageQueryParams {
+export interface OpenRouterRunTasksRunnableQueryParams {
   /**
    * Maximum number of tasks to return.
    */
@@ -25,78 +14,22 @@ export interface OpenRouterRunTasksRunnablePageQueryParams {
 /**
  * Query for the run tasks a sweep may execute, oldest-queued first.
  *
- * @param params - The page limit.
- * @returns Firestore query constraints for the runnable page.
- *
- * @dbxModelFirebaseIndex
- * @dbxModelFirebaseIndexModel OpenRouterRunTask
- * @dbxModelFirebaseIndexScope COLLECTION
- * @dbxModelFirebaseIndexCategory sweep
- */
-export function openRouterRunTasksRunnableByQueuedAtQuery(params: OpenRouterRunTasksRunnablePageQueryParams): FirestoreQueryConstraint[] {
-  const { limit: pageLimit } = params;
-  return [where<OpenRouterRunTask>('s', 'in', OPENROUTER_RUN_TASK_RUNNABLE_STATES), orderBy<OpenRouterRunTask>('qat', 'asc'), limit(pageLimit)];
-}
-
-/**
- * Query for the run tasks a sweep may execute, highest-priority first and oldest-queued within a
- * priority.
- *
- * Separate factory rather than a flag on the one above, because the two need DIFFERENT composite
- * indexes — `(s, qat)` versus `(s, pr, qat)` — and one factory per index is what lets the index
- * generator see both. A conditional `orderBy` inside a single factory is invisible to it, which is how
- * a query ships with no index behind it and 400s only in production.
+ * Queue order is the ONLY order, and deliberately so. A priority column costs a second composite index
+ * and buys a second failure mode: Firestore sorts `null` before every number, so one task written without
+ * a priority jumps the entire queue. Delaying a run is `NotificationTask`'s job — it owns the delayed
+ * firing — which leaves nothing for a priority here to express.
  *
  * @param params - The page limit.
  * @returns Firestore query constraints for the runnable page.
  *
  * @dbxModelFirebaseIndex
- * @dbxModelFirebaseIndexModel OpenRouterRunTask
- * @dbxModelFirebaseIndexScope COLLECTION
- * @dbxModelFirebaseIndexCategory sweep
- */
-export function openRouterRunTasksRunnableByPriorityQuery(params: OpenRouterRunTasksRunnablePageQueryParams): FirestoreQueryConstraint[] {
-  const { limit: pageLimit } = params;
-  return [where<OpenRouterRunTask>('s', 'in', OPENROUTER_RUN_TASK_RUNNABLE_STATES), orderBy<OpenRouterRunTask>('pr', 'asc'), orderBy<OpenRouterRunTask>('qat', 'asc'), limit(pageLimit)];
-}
-
-/**
- * Params for {@link openRouterRunTasksRunnableQuery}.
- */
-export interface OpenRouterRunTasksRunnableQueryParams extends OpenRouterRunTasksRunnablePageQueryParams {
-  /**
-   * Whether to order by priority before queue time.
-   *
-   * Defaults to false, and the reason is worth stating precisely because the obvious reason is wrong.
-   * Firestore excludes a document from an `orderBy` on a field it does not HAVE — but `pr` is written
-   * on every enqueued task (as {@link OPENROUTER_DEFAULT_RUN_TASK_PRIORITY}), so nothing is dropped.
-   * What does bite is the opposite: a `pr` of `null` sorts BEFORE every number, so a task written
-   * without one jumps ahead of a priority-1 task. Turn this on only where every writer sets a
-   * priority — and note it needs the three-field `(s, pr, qat)` index rather than the two-field one.
-   */
-  readonly usePriorityOrder?: Maybe<boolean>;
-}
-
-/**
- * Picks the runnable-page query for a sweep's ordering preference.
- *
- * @param params - The page limit and ordering preference.
- * @returns Firestore query constraints for the runnable page.
- *
- * `Skip` rides along with `Dispatcher` because a dispatcher body has no constraint calls of its own by
- * design, and `require-dbx-model-firebase-index-companion-tags` only exempts `Skip`. Both tags together
- * keep the delegate tracking the generator wants while telling the lint rule the empty body is intended.
- *
- * @dbxModelFirebaseIndex
- * @dbxModelFirebaseIndexDispatcher
- * @dbxModelFirebaseIndexSkip true
  * @dbxModelFirebaseIndexModel OpenRouterRunTask
  * @dbxModelFirebaseIndexScope COLLECTION
  * @dbxModelFirebaseIndexCategory sweep
  */
 export function openRouterRunTasksRunnableQuery(params: OpenRouterRunTasksRunnableQueryParams): FirestoreQueryConstraint[] {
-  const { limit: pageLimit, usePriorityOrder } = params;
-  return usePriorityOrder ? openRouterRunTasksRunnableByPriorityQuery({ limit: pageLimit }) : openRouterRunTasksRunnableByQueuedAtQuery({ limit: pageLimit });
+  const { limit: pageLimit } = params;
+  return [where<OpenRouterRunTask>('s', 'in', OPENROUTER_RUN_TASK_CLAIMABLE_STATES), orderBy<OpenRouterRunTask>('qat', 'asc'), limit(pageLimit)];
 }
 
 /**
@@ -142,7 +75,7 @@ export function openRouterRunTasksReclaimableQuery(params: OpenRouterRunTasksRec
  */
 export interface OpenRouterRunTasksExpiredQueryParams {
   /**
-   * Tasks expiring at or before this date are returned.
+   * Tasks queued at or before this date are returned.
    */
   readonly before: Date;
   /**
@@ -152,12 +85,18 @@ export interface OpenRouterRunTasksExpiredQueryParams {
 }
 
 /**
- * Query for run tasks past their expiration, for cleanup.
+ * Query for run tasks past their retention age, for deletion. Matches EVERY state, `RUNNING` included —
+ * see {@link OPENROUTER_RUN_TASK_MAX_AGE} for why the ceiling is the whole requirement.
  *
- * Cleanup matters here rather than being hygiene: `msg` grows without bound across a long chained
- * conversation.
+ * Ordered by `qat` with no state filter, so it needs no composite index at all: a single-field range with
+ * a matching order is served by Firestore's automatic single-field index.
  *
- * @param params - The expiration cutoff and page limit.
+ * Firestore's NATIVE TTL policy cannot do this job, for the same reason the cutoff goes through
+ * `whereDateIsOnOrBefore` rather than a bare `where('qat', '<=', date)`: `firestoreDate` persists an
+ * ISO8601 STRING, and a TTL policy only deletes on a `Timestamp` field. Pointed at `qat` it would
+ * silently never fire. The app-level sweep is the mechanism here, not a stopgap for one.
+ *
+ * @param params - The retention cutoff and page limit.
  * @returns Firestore query constraints for the expired page.
  *
  * @dbxModelFirebaseIndex
@@ -167,35 +106,5 @@ export interface OpenRouterRunTasksExpiredQueryParams {
  */
 export function openRouterRunTasksExpiredQuery(params: OpenRouterRunTasksExpiredQueryParams): FirestoreQueryConstraint[] {
   const { before, limit: pageLimit } = params;
-  // ISO-string comparison, for the same reason as the reclaimable query above.
-  return [whereDateIsOnOrBefore<OpenRouterRunTask>('x', before), orderBy<OpenRouterRunTask>('x', 'asc'), limit(pageLimit)];
-}
-
-/**
- * Params for {@link openRouterRunTasksForPromptQuery}.
- */
-export interface OpenRouterRunTasksForPromptQueryParams {
-  /**
-   * The prompt whose runs to return.
-   */
-  readonly promptKey: OpenRouterPromptKey;
-  /**
-   * Maximum number of tasks to return.
-   */
-  readonly limit: number;
-}
-
-/**
- * Query for the run tasks belonging to one prompt, newest first.
- *
- * @param params - The prompt key and page limit.
- * @returns Firestore query constraints.
- *
- * @dbxModelFirebaseIndex
- * @dbxModelFirebaseIndexModel OpenRouterRunTask
- * @dbxModelFirebaseIndexScope COLLECTION
- */
-export function openRouterRunTasksForPromptQuery(params: OpenRouterRunTasksForPromptQueryParams): FirestoreQueryConstraint[] {
-  const { promptKey, limit: pageLimit } = params;
-  return [where<OpenRouterRunTask>('pk', '==', promptKey), orderBy<OpenRouterRunTask>('qat', 'desc'), limit(pageLimit)];
+  return [whereDateIsOnOrBefore<OpenRouterRunTask>('qat', before), orderBy<OpenRouterRunTask>('qat', 'asc'), limit(pageLimit)];
 }

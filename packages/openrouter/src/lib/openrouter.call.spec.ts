@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OPENROUTER_NON_REQUEST_CONFIG_KEYS, openRouterCallModelInput, openRouterCallResultFromResponse, openRouterHostedTools, openRouterResponsesRequestBody, parseOpenRouterJsonOutput, splitOpenRouterModelConfig } from './openrouter.call';
+import { openRouterCallModelInput, openRouterCallResultFromResponse, openRouterHostedTools, openRouterResponsesRequestBody, openRouterRunErrorFromResponseError, parseOpenRouterJsonOutput, splitOpenRouterModelConfig } from './openrouter.call';
 import { openRouterFileSearchTool } from './openrouter.config';
 import { type OpenResponsesResult } from './openrouter.sdk';
 
@@ -10,7 +10,6 @@ describe('splitOpenRouterModelConfig()', () => {
     expect(split.requestConfig).toEqual({ model: 'm' });
     expect(split.maxSteps).toBe(4);
     expect(split.requestTimeoutMs).toBe(1000);
-    expect(OPENROUTER_NON_REQUEST_CONFIG_KEYS).toContain('maxSteps');
   });
 
   it('should drop undefined values', () => {
@@ -179,5 +178,17 @@ describe('openRouterCallResultFromResponse()', () => {
   it('should return no text for a response carrying only tool calls', () => {
     const response = responseWith({ outputText: undefined, output: [{ type: 'function_call', call_id: 'c1', name: 'x', arguments: '{}' }] } as unknown as Partial<OpenResponsesResult>);
     expect(openRouterCallResultFromResponse(response).outputText).toBeUndefined();
+  });
+});
+
+describe('openRouterRunErrorFromResponseError()', () => {
+  it('should stringify the numeric code OpenRouter reports', () => {
+    // OpenRouter puts the HTTP status here as a NUMBER, while `OpenRouterRunError.code` is the same string
+    // field an SDK-thrown error fills with `ECONNRESET`.
+    expect(openRouterRunErrorFromResponseError({ code: 402, message: 'out of credits' } as unknown as NonNullable<OpenResponsesResult['error']>)).toEqual({ code: '402', message: 'out of credits' });
+  });
+
+  it('should leave an absent code undefined rather than stringifying null', () => {
+    expect(openRouterRunErrorFromResponseError({ code: null, message: 'no code' } as unknown as NonNullable<OpenResponsesResult['error']>)).toEqual({ code: undefined, message: 'no code' });
   });
 });

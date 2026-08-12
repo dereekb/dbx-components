@@ -181,7 +181,23 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
 }
 
 /**
- * A storage context that mints a distinct, timestamped url per call.
+ * One object held by a {@link FakeStorageContext}.
+ */
+export interface FakeStorageObject {
+  readonly bytes: Uint8Array;
+  readonly contentType?: Maybe<string>;
+}
+
+/**
+ * A read of an object's bytes, with the cap the caller asked for.
+ */
+export interface FakeStorageGetBytesCall {
+  readonly pathString: string;
+  readonly maxDownloadSizeBytes?: Maybe<number>;
+}
+
+/**
+ * A storage context that mints a distinct, timestamped url per call and serves in-memory bytes.
  *
  * The emulator's storage cannot mint a real signed url, and a real one would not answer the question
  * the signed-url scenario asks anyway: it asks whether the runner mints a NEW url per attempt, which is
@@ -193,6 +209,18 @@ export interface FakeStorageContext {
    * The urls minted so far, in order.
    */
   readonly signed: string[];
+  /**
+   * Every `getBytes` made, in order, with the cap it was made under.
+   */
+  readonly reads: FakeStorageGetBytesCall[];
+  /**
+   * The in-memory objects, by path string.
+   */
+  readonly objects: Record<string, FakeStorageObject>;
+  /**
+   * Seeds an object at a path.
+   */
+  putObject(pathString: string, object: FakeStorageObject): void;
   /**
    * Overridable clock, so a test can advance past a signed url's lifetime.
    */
@@ -207,9 +235,16 @@ export interface FakeStorageContext {
  */
 export function fakeStorageContext(bucketId = 'test-bucket'): FakeStorageContext {
   const signed: string[] = [];
+  const reads: FakeStorageGetBytesCall[] = [];
+  const objects: Record<string, FakeStorageObject> = {};
 
   const fake: FakeStorageContext = {
     signed,
+    reads,
+    objects,
+    putObject: (pathString: string, object: FakeStorageObject) => {
+      objects[pathString] = object;
+    },
     now: () => Date.now(),
     storageContext: {
       defaultBucket: () => bucketId,
@@ -218,7 +253,18 @@ export function fakeStorageContext(bucketId = 'test-bucket'): FakeStorageContext
           const url = `https://storage.example.com/${path.bucketId}/${path.pathString}?issuedAt=${fake.now()}&n=${signed.length}`;
           signed.push(url);
           return url;
-        }
+        },
+        getBytes: async (maxDownloadSizeBytes?: number) => {
+          reads.push({ pathString: path.pathString, maxDownloadSizeBytes });
+          const object = objects[path.pathString];
+
+          if (object == null) {
+            throw new Error(`No fake storage object at "${path.pathString}".`);
+          }
+
+          return object.bytes;
+        },
+        getMetadata: async () => ({ bucket: path.bucketId, fullPath: path.pathString, contentType: objects[path.pathString]?.contentType })
       })
     } as unknown as FirebaseStorageContext
   };

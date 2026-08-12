@@ -24,21 +24,58 @@ The raw OpenRouter client (`OpenRouterApi`) and the OTLP broadcast webhook live 
 
 1. **Enqueue** — `enqueueRunTask({ key, promptKey, input })` writes one Firestore doc with
    `s: QUEUED` and returns. One write, nothing blocks.
-2. **Drain** — `openRouterRunTaskSweep(...)` claims a page of `QUEUED` tasks by lease, runs them
-   `maxParallelTasks` at a time, writes results, and stops claiming new pages once its
-   `maxRunTimeMs` budget is spent. Unclaimed work stays `QUEUED` for the next tick.
+2. **Drain** — `openRouterRunTaskSweep(...)` claims a page of `QUEUED` tasks by lease in **`qat` order**,
+   runs them `maxParallelTasks` at a time, writes results, and stops claiming new pages once its
+   `maxRunTimeMs` budget is spent. Unclaimed work stays `QUEUED` for the next tick. Mount it on a
+   per-minute-ish schedule the app already runs.
 3. **Consume** — `readRunTask(key)` → `COMPLETE` uses the output, `QUEUED`/`RUNNING` retries later,
    `FAILED` takes the failure path.
+4. **Expire** — `openRouterRunTaskExpirationSweep(...)` deletes every task queued more than
+   `OPENROUTER_RUN_TASK_MAX_AGE` (**7 days**) ago, **in any state, `RUNNING` included**. Its own, far
+   slower schedule — hourly is plenty. Nothing lives past the ceiling, and there is no per-task
+   expiration field to set or forget: a queued task runs essentially immediately, so `qat` *is* its age.
+
+Retries are classified rather than uniform: a transient failure (429, 5xx, `ECONNRESET`, a Firestore
+`UNAVAILABLE`) spends the `maxAttempts` budget, while a deterministic one (400, 401, 402, 403, 404, a
+prompt that does not resolve) reaches `FAILED` on its first attempt instead of burning three sweep ticks
+to reach the same answer. Anything unrecognized is treated as transient.
+
+There is no replay. `enqueueRunTask({ key, …, restart: true })` re-runs a key, and `continueFrom` chains
+one run onto another's history.
 
 Short calls skip all of it: `callModelForPrompt(...)` runs inline and returns the result with no
 document.
 
 ## Files and PDFs
 
-There is no upload step. A run task stores the **GCS object path**, never a signed URL — the sweeper
-mints a fresh signed URL on every attempt, so a retry hours later still works. PDF parsing pins
-`engine: 'native'` so the model provider parses on our BYOK key; the default silently falls back to
-`mistral-ocr` (8-image cap, per-page billing) with no error.
+There is no upload step. A run task stores the **GCS object path** (`fp`) and nothing else — never a
+URL, never the bytes. The attachment is resolved fresh on **every attempt**, in one of two modes:
+
+| Mode | What goes on the wire | When |
+|---|---|---|
+| `signedUrl` | `file_url`, a short-lived signed URL OpenRouter dereferences itself | Default. Cheap, keeps the request small. |
+| `inlineData` | `file_data: "data:<mime>;base64,…"` | The object is not reachable from the public internet. |
+
+**The mode comes from the environment**, not from a flag an app has to remember to set twice: give
+`openRouterRunTaskService` a `FirebaseServerEnvService` and `isTestingEnv` selects `inlineData`. That is
+what makes files work against the **Firebase storage emulator**, where nothing is really signed and the
+host is `localhost`, so a `file_url` OpenRouter tries to fetch resolves to nothing. `fileAttachmentMode`
+overrides it explicitly, and `maxInlineFileSizeBytes` (default 256 KB) caps the read — inline bloats the
+request ~33% and is re-paid on every attempt, unlike a URL.
+
+`openRouterFileAttachmentResolver()` is the same factory, exposed for an inline (`callModelForPrompt`)
+caller that needs attachments without going through the queue.
+
+Neither payload is ever persisted. Resolving per attempt is only half the fix — the other half is that
+the conversation written back through the `StateAccessor` has its `input_file` payloads **stripped**
+(`openRouterMessagesWithoutFileAttachmentData`), keeping only `filename` as the rejoin key, and `load()`
+re-points them at the current attempt's attachment
+(`openRouterMessagesWithFreshFileAttachments`). Without that, a deferred resume hours later would replay
+a URL that expired minutes after it was minted, or carry a second copy of the whole file in a Firestore
+document with a 1 MiB ceiling.
+
+PDF parsing pins `engine: 'native'` so the model provider parses on our BYOK key; the default silently
+falls back to `mistral-ocr` (8-image cap, per-page billing) with no error.
 
 A file whose parse is already cached on the run task (`fa`) is **not re-attached** on a retry — the
 cached text is resubmitted instead. OpenRouter's documented `annotations` echo is emitted too, but it
@@ -145,7 +182,10 @@ and is the set a consuming app must merge into its own indexes file:
 dbx-cli-generate-firestore-indexes --component packages/openrouter/firebase --output packages/openrouter/firebase/firestore.indexes.json
 ```
 
-Four composites on `orrt`: `(s, qat)` for the sweep, `(s, pr, qat)` when `usePriorityOrder` is on,
-`(s, lat)` for lease reclamation, and `(pk, qat desc)` for per-prompt history. **The emulator does not
-enforce composite indexes**, so a green integration run proves nothing here — `openrouter.query.spec.ts`
-asserts the generated file against the query factories instead.
+**Two** composites on `orrt`: `(s, qat)` for the drain sweep and `(s, lat)` for lease reclamation. The
+retention query needs none at all — `qat <= cutoff` ordered by `qat` is a single-field range with a
+matching order, which Firestore serves from its automatic single-field index.
+
+**The emulator does not enforce composite indexes**, so a green integration run proves nothing here —
+`openrouter.query.spec.ts` asserts the generated file against the query factories instead, and pins the
+count at exactly two so a re-added factory cannot quietly buy a third.

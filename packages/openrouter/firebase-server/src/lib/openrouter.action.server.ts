@@ -67,7 +67,15 @@ export function openRouterPromptServerActions(context: OpenRouterPromptServerAct
   };
 }
 
-export function createOpenRouterPromptFactory({ firebaseServerActionTransformFunctionFactory, openRouterPromptCollection }: OpenRouterPromptServerActionsContext) {
+/**
+ * Creates a new prompt at its caller-supplied key, refusing a key that already exists.
+ *
+ * @param context - The actions context.
+ * @returns The create action.
+ */
+export function createOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection } = context;
+
   return firebaseServerActionTransformFunctionFactory(createOpenRouterPromptParamsType, async (params) => {
     const { key, name, description, tags } = params;
 
@@ -93,7 +101,15 @@ export function createOpenRouterPromptFactory({ firebaseServerActionTransformFun
   });
 }
 
-export function updateOpenRouterPromptFactory({ firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService }: OpenRouterPromptServerActionsContext) {
+/**
+ * Updates a prompt's metadata, lifecycle state, or active version, then drops its cached resolution.
+ *
+ * @param context - The actions context.
+ * @returns The update action.
+ */
+export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
+
   return firebaseServerActionTransformFunctionFactory(updateOpenRouterPromptParamsType, async (params) => {
     const { name, description, tags, state, activeVersion } = params;
 
@@ -126,7 +142,15 @@ export function updateOpenRouterPromptFactory({ firebaseServerActionTransformFun
   });
 }
 
-export function publishOpenRouterPromptVersionFactory({ firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService }: OpenRouterPromptServerActionsContext) {
+/**
+ * Publishes a new immutable version, allocating its number inside the transaction, and optionally promotes it.
+ *
+ * @param context - The actions context.
+ * @returns The publish action.
+ */
+export function publishOpenRouterPromptVersionFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
+
   return firebaseServerActionTransformFunctionFactory(publishOpenRouterPromptVersionParamsType, async (params) => {
     const { instructions, messages, config, notes, activate } = params;
 
@@ -172,7 +196,15 @@ export function publishOpenRouterPromptVersionFactory({ firebaseServerActionTran
   });
 }
 
-export function readOpenRouterPromptFactory({ firebaseServerActionTransformFunctionFactory, openRouterPromptVersionCollectionFactory }: OpenRouterPromptServerActionsContext) {
+/**
+ * Reads a prompt plus one of its versions — the pinned one, or the active one when none is named.
+ *
+ * @param context - The actions context.
+ * @returns The read action.
+ */
+export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptVersionCollectionFactory } = context;
+
   return firebaseServerActionTransformFunctionFactory(readOpenRouterPromptParamsType, async (params) => {
     const { version: inputVersion, includeVersions } = params;
 
@@ -213,24 +245,35 @@ export function readOpenRouterPromptFactory({ firebaseServerActionTransformFunct
   });
 }
 
-export function listOpenRouterPromptsFactory({ firebaseServerActionTransformFunctionFactory, openRouterPromptCollection }: OpenRouterPromptServerActionsContext) {
+/**
+ * Lists the prompts matching a state and/or tag filter.
+ *
+ * @param context - The actions context.
+ * @returns The list action.
+ */
+export function listOpenRouterPromptsFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection } = context;
+
   return firebaseServerActionTransformFunctionFactory(listOpenRouterPromptsParamsType, async (params) => {
     const { state, tag, limit: inputLimit } = params;
     const pageLimit = inputLimit ?? 100;
 
-    const documents = await openRouterPromptCollection.queryDocument().getDocs();
-    const snapshots = await Promise.all(documents.map(async (x) => ({ id: x.id, data: await x.snapshotData() })));
+    // One read total. `getDocs()` followed by a `snapshotData()` per document would re-read every one of
+    // them; the pairs loader carries the data the query already fetched.
+    const pairs = await openRouterPromptCollection.queryDocument().getDocSnapshotDataPairs();
 
     const prompts = filterMaybeArrayValues(
-      snapshots.map(({ id, data }) => {
+      pairs.map(({ document, data }) => {
         let result: Maybe<ListOpenRouterPromptsResult['prompts'][0]>;
 
-        if (data != null && matchesOpenRouterPromptFilter(data, state, tag)) {
-          result = { key: id, name: data.n, state: data.s, activeVersion: data.av, latestVersion: data.lv, tags: data.t };
+        if (isOpenRouterPromptMatchingFilter(data, state, tag)) {
+          result = { key: document.id, name: data.n, state: data.s, activeVersion: data.av, latestVersion: data.lv, tags: data.t };
         }
 
         return result;
       })
+      // Applied AFTER filtering, deliberately. State and tag are matched in memory, so a query-level limit
+      // would return fewer than `limit` matches while more still existed.
     ).slice(0, pageLimit);
 
     return { prompts };
@@ -251,6 +294,6 @@ export function listOpenRouterPromptsFactory({ firebaseServerActionTransformFunc
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function matchesOpenRouterPromptFilter(prompt: OpenRouterPrompt, state: Maybe<OpenRouterPromptState>, tag: Maybe<string>): boolean {
+export function isOpenRouterPromptMatchingFilter(prompt: OpenRouterPrompt, state: Maybe<OpenRouterPromptState>, tag: Maybe<string>): boolean {
   return (state == null || prompt.s === state) && (tag == null || (prompt.t ?? []).includes(tag));
 }

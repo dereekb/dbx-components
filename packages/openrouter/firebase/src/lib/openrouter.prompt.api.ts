@@ -1,8 +1,8 @@
 import { type Type, type } from 'arktype';
-import { type FirestoreModelKey, type InferredTargetModelParams, inferredTargetModelParamsType } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type FirestoreModelKey, type InferredTargetModelParams, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory, inferredTargetModelParamsType } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
-import { type OpenRouterPromptState } from './openrouter.prompt';
+import { type OpenRouterPromptState, type openRouterPromptIdentity } from './openrouter.prompt';
 
 // MARK: Create
 /**
@@ -257,3 +257,61 @@ export interface ReadOpenRouterRunTaskParams {
 }
 
 export const readOpenRouterRunTaskParamsType = /* @__PURE__ */ type({ key: 'string >= 1' }) as Type<ReadOpenRouterRunTaskParams>;
+
+// MARK: Functions
+/**
+ * Custom (non-CRUD) function type map for OpenRouter prompts.
+ */
+export type OpenRouterPromptFunctionTypeMap = {};
+
+export const OPENROUTER_PROMPT_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMap<OpenRouterPromptFunctionTypeMap> = {};
+
+/**
+ * CRUD function configuration map for {@link OpenRouterPrompt}.
+ *
+ * There is deliberately no Angular UI for prompt authoring: declaring the CRUD here is what makes every
+ * prompt operation reachable over an app's existing callModel surface — including from the callModel
+ * MCP — instead of requiring a screen to be built for it.
+ *
+ * `OpenRouterRunTask` is absent on purpose. A run task is written and drained entirely server-side, and
+ * its `msg` field carries raw model input and output.
+ */
+export type OpenRouterPromptModelCrudFunctionsConfig = {
+  readonly openRouterPrompt: {
+    create: CreateOpenRouterPromptParams;
+    read: {
+      _: [ReadOpenRouterPromptParams, ReadOpenRouterPromptResult];
+      list: [ListOpenRouterPromptsParams, ListOpenRouterPromptsResult];
+    };
+    update: {
+      _: UpdateOpenRouterPromptParams;
+      publishVersion: [PublishOpenRouterPromptVersionParams, PublishOpenRouterPromptVersionResult];
+    };
+  };
+};
+
+export const OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<OpenRouterPromptModelCrudFunctionsConfig, typeof openRouterPromptIdentity> = {
+  openRouterPrompt: ['create', 'read:_,list', 'update:_,publishVersion']
+};
+
+/**
+ * Abstract class defining the callable OpenRouter prompt functions.
+ */
+export abstract class OpenRouterPromptModelFunctions implements ModelFirebaseFunctionMap<OpenRouterPromptFunctionTypeMap, OpenRouterPromptModelCrudFunctionsConfig> {
+  abstract openRouterPrompt: {
+    createOpenRouterPrompt: ModelFirebaseCreateFunction<CreateOpenRouterPromptParams>;
+    readOpenRouterPrompt: {
+      read: ModelFirebaseCrudFunction<ReadOpenRouterPromptParams, ReadOpenRouterPromptResult>;
+      list: ModelFirebaseCrudFunction<ListOpenRouterPromptsParams, ListOpenRouterPromptsResult>;
+    };
+    updateOpenRouterPrompt: {
+      update: ModelFirebaseCrudFunction<UpdateOpenRouterPromptParams>;
+      publishVersion: ModelFirebaseCrudFunction<PublishOpenRouterPromptVersionParams, PublishOpenRouterPromptVersionResult>;
+    };
+  };
+}
+
+/**
+ * Client-side callable function map factory for OpenRouter prompt CRUD.
+ */
+export const openRouterPromptModelFunctionMap = callModelFirebaseFunctionMapFactory(OPENROUTER_PROMPT_FUNCTION_TYPE_CONFIG_MAP, OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG);

@@ -177,9 +177,14 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
   }
 
   function clearCachedPrompt(promptKey: OpenRouterPromptKey): void {
-    Array.from(cache.keys())
-      .filter((key) => key.startsWith(`${promptKey}:`))
-      .forEach((key) => cache.delete(key));
+    // Every version of the prompt goes, pinned entries included: a publish or promote can change what any
+    // of them resolve to. Deleting the current entry mid-iteration is well-defined for a Map iterator, so
+    // no snapshot copy is needed.
+    for (const key of cache.keys()) {
+      if (key.startsWith(`${promptKey}:`)) {
+        cache.delete(key);
+      }
+    }
   }
 
   return { loadPrompt, resolvePrompt, clearCachedPrompt };

@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, arrayToMap } from '@dereekb/util';
 import { type OpenRouterFileAnnotation, type OpenRouterFileReference } from './openrouter.type';
 
 /**
@@ -136,59 +136,85 @@ export function openRouterInputFileDataPart(base64: string, filename: string, co
 }
 
 /**
- * A file reference paired with the url that was minted for it on this attempt.
+ * A file reference paired with however it is being carried on THIS attempt.
+ *
+ * Exactly one of `fileUrl` / `fileData` is expected. Which one depends on whether the object is
+ * reachable from the public internet: a signed url is cheap and keeps the request small, and inline
+ * base64 is the fallback for an object OpenRouter cannot dereference — most notably anything living in
+ * the Firebase storage emulator, where "signed" urls point at localhost.
  */
-export interface OpenRouterSignedFileReference {
+export interface OpenRouterAttachedFileReference {
   readonly file: OpenRouterFileReference;
   /**
    * The signed url, minted for THIS attempt.
    *
-   * Never persist this. A run task can sit queued for a sweep interval, be retried, and (with
-   * deferred tools) resume much later, so a url minted at enqueue time would 403 by the time it was
-   * used.
+   * Never persist this — see {@link OpenRouterFileReference} for why a url cannot outlive the attempt that
+   * minted it.
    */
-  readonly signedUrl: string;
+  readonly fileUrl?: Maybe<string>;
+  /**
+   * A `data:<mime>;base64,…` url carrying the file inline on THIS attempt.
+   *
+   * Never persist this either, for a different reason: it is the whole file, re-read on every attempt,
+   * and a run task document has a 1 MiB ceiling.
+   */
+  readonly fileData?: Maybe<string>;
 }
 
 /**
- * Expands signed file references into file content parts.
+ * Expands attached file references into file content parts.
  *
- * @param files - The signed file references.
+ * @param files - The attached file references.
  * @returns One content part per file.
  */
-export function openRouterInputFilePartsForSignedFiles(files: Maybe<OpenRouterSignedFileReference[]>): OpenRouterInputFilePart[] {
-  return (files ?? []).map(({ file, signedUrl }) => openRouterInputFileUrlPart(signedUrl, file.filename));
+export function openRouterInputFilePartsForAttachedFiles(files: Maybe<OpenRouterAttachedFileReference[]>): OpenRouterInputFilePart[] {
+  return (files ?? []).map(({ file, fileUrl, fileData }) => (fileData != null ? openRouterInputFileDataPart(fileData, file.filename) : openRouterInputFileUrlPart(fileUrl as string, file.filename)));
 }
 
 /**
- * Rewrites the `input_file` parts of an already-assembled conversation with the urls signed for THIS
- * attempt, matching on filename.
+ * Rewrites the `input_file` parts of an already-assembled conversation with the attachment resolved for
+ * THIS attempt, matching on filename.
  *
- * A conversation persisted mid-run carries the urls that were signed for the attempt that persisted
- * it. Replaying it unchanged hours later replays urls that have expired — which is the failure mode
- * most likely to reach production unnoticed, because it only shows up on a retry or a deferred resume.
- * Signing fresh per attempt is only half the fix; the other half is making sure the stored history is
- * re-pointed at the fresh urls too.
+ * A conversation persisted mid-run carries whatever the attempt that persisted it was carrying —
+ * a url that has since expired, or (with inline attachments stripped on save) nothing at all. Replaying
+ * it unchanged is the failure mode most likely to reach production unnoticed, because it only shows up
+ * on a retry or a deferred resume. Resolving fresh per attempt is only half the fix; the other half is
+ * making sure the stored history is re-pointed at the fresh attachment too.
+ *
+ * The field the attachment does NOT carry is REMOVED rather than left alone: a stored `fileUrl` sitting
+ * next to a fresh `fileData` would send OpenRouter both, and it is not defined which one wins. Removed
+ * rather than nulled, because this output goes on the wire — the SDK validates `input_file` against a
+ * schema where an explicit `null` is not a legal absent value.
  *
  * A part whose filename matches nothing in `files` is left alone: it came from somewhere other than
  * this task's file list, and guessing at it would be worse than leaving it.
  *
  * @param messages - The assembled conversation.
- * @param files - The files signed for this attempt.
- * @returns The conversation with fresh urls, or the input unchanged when there is nothing to rewrite.
+ * @param files - The files attached for this attempt.
+ * @returns The conversation with fresh attachments, or the input unchanged when there is nothing to rewrite.
  */
-export function openRouterMessagesWithFreshSignedFileUrls<T extends { readonly role: string; readonly content: unknown }>(messages: Maybe<T[]>, files: Maybe<OpenRouterSignedFileReference[]>): T[] {
-  const urlsByFilename = new Map((files ?? []).map(({ file, signedUrl }) => [file.filename, signedUrl]));
+export function openRouterMessagesWithFreshFileAttachments<T extends { readonly role: string; readonly content: unknown }>(messages: Maybe<T[]>, files: Maybe<OpenRouterAttachedFileReference[]>): T[] {
+  const attachmentsByFilename = arrayToMap(files ?? [], (attached) => attached.file.filename);
   let result: T[] = messages ?? [];
 
-  if (urlsByFilename.size > 0 && result.length > 0) {
+  if (attachmentsByFilename.size > 0 && result.length > 0) {
     result = result.map((message) => {
       let updated = message;
 
       if (Array.isArray(message.content)) {
         const content = (message.content as OpenRouterInputContentPart[]).map((part) => {
-          const freshUrl = part.type === 'input_file' && part.filename != null ? urlsByFilename.get(part.filename) : undefined;
-          return freshUrl == null ? part : { ...part, fileUrl: freshUrl };
+          let updatedPart = part;
+
+          if (part.type === 'input_file' && part.filename != null) {
+            const fresh = attachmentsByFilename.get(part.filename);
+
+            if (fresh != null) {
+              const { fileUrl: _staleUrl, fileData: _staleData, ...rest } = part;
+              updatedPart = { ...rest, ...(fresh.fileData != null ? { fileData: fresh.fileData } : { fileUrl: fresh.fileUrl }) };
+            }
+          }
+
+          return updatedPart;
         });
 
         updated = { ...message, content };
@@ -199,6 +225,30 @@ export function openRouterMessagesWithFreshSignedFileUrls<T extends { readonly r
   }
 
   return result;
+}
+
+/**
+ * Strips the attachment payload off every `input_file` part, keeping `filename` as the rejoin key.
+ *
+ * Applied on the way INTO Firestore. An attachment is resolved per attempt and is meaningless the
+ * moment that attempt ends — a signed url has expired, and inline base64 is the whole file, on a
+ * document with a 1 MiB ceiling and a `msg` field that already grows without bound. Nothing is lost:
+ * {@link openRouterMessagesWithFreshFileAttachments} re-points the stored parts on the way back out.
+ *
+ * @param messages - The conversation about to be persisted.
+ * @returns The conversation with attachment payloads removed.
+ */
+export function openRouterMessagesWithoutFileAttachmentData<T extends { readonly role: string; readonly content: unknown }>(messages: Maybe<T[]>): T[] {
+  return (messages ?? []).map((message) => {
+    let updated = message;
+
+    if (Array.isArray(message.content)) {
+      const content = (message.content as OpenRouterInputContentPart[]).map((part) => (part.type === 'input_file' ? { ...part, fileUrl: null, fileData: null } : part));
+      updated = { ...message, content };
+    }
+
+    return updated;
+  });
 }
 
 /**
@@ -233,15 +283,12 @@ export function openRouterFileAnnotationText(annotation: OpenRouterFileAnnotatio
  * It carries the parse TWICE, deliberately, and for an empirical reason rather than a defensive one:
  *
  *  - `annotations` is OpenRouter's own documented echo format, so the shape is kept and the mechanism
- *    starts working the day the Responses API models it. Today it does not — `@openrouter/sdk@1.2.26`
- *    validates the request body against a closed union whose message variants have no `annotations`
- *    field, so the property is STRIPPED during outbound serialization and never leaves this process.
- *    Verified against the wire in `openrouter.runtask.emulator.spec.ts`, not assumed.
+ *    starts working the day the Responses API models it. Today it does not: the SDK validates the request
+ *    body against a closed union whose message variants have no `annotations` field, so the property is
+ *    STRIPPED during outbound serialization. Verified against the wire, not assumed.
  *  - The parse is therefore ALSO rendered into `content`, as ordinary text, which does survive. Paired
  *    with the request builder dropping the file part for an already-parsed file, that is what makes the
- *    cache real today: the document is not sent again, so it cannot be parsed again — which under
- *    `mistral-ocr` is $2/1,000 pages, and under any engine is latency spent re-reading a document we
- *    have already read.
+ *    cache real today.
  *
  * @param annotations - The cached annotations.
  * @returns The message, or undefined when there is nothing cached to resubmit.
@@ -270,13 +317,13 @@ export function openRouterFileAnnotationMessage(annotations: Maybe<OpenRouterFil
  * A file is matched to its cached parse by filename, which is the only handle both sides share — the
  * annotation's `hash` is assigned by OpenRouter and the reference's `storagePath` is ours.
  *
- * @param files - The files signed for this attempt.
+ * @param files - The files attached for this attempt.
  * @param annotations - The cached annotations.
  * @returns The files that still need sending.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function openRouterUnparsedSignedFiles(files: Maybe<OpenRouterSignedFileReference[]>, annotations: Maybe<OpenRouterFileAnnotation[]>): OpenRouterSignedFileReference[] {
+export function openRouterUnparsedAttachedFiles(files: Maybe<OpenRouterAttachedFileReference[]>, annotations: Maybe<OpenRouterFileAnnotation[]>): OpenRouterAttachedFileReference[] {
   const cachedFilenames = new Set((annotations ?? []).map((annotation) => annotation.filename).filter((filename): filename is string => filename != null));
   return (files ?? []).filter(({ file }) => !cachedFilenames.has(file.filename));
 }

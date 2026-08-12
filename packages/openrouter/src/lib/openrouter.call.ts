@@ -1,14 +1,8 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { type CallModelInput, type CreateResponsesResponse, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
 import { type OpenRouterGenerationId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
-
-/**
- * Config keys that live on {@link OpenRouterModelConfig} for our convenience but are NOT OpenRouter
- * request parameters, and so must not be forwarded to the API.
- */
-export const OPENROUTER_NON_REQUEST_CONFIG_KEYS: readonly string[] = ['maxSteps', 'requestTimeoutMs'];
 
 /**
  * A model config split into the part that goes on the request and the part that controls how the
@@ -32,29 +26,17 @@ export interface OpenRouterSplitModelConfig {
 /**
  * Splits a model config into request parameters and execution controls.
  *
- * Forwarding an unknown key is not harmless: OpenRouter validates the request body, so leaving
- * `maxSteps` on it risks a 400 on the whole call.
+ * Forwarding one of ours is not harmless: OpenRouter validates the request body, so leaving `maxSteps` on
+ * it risks a 400 on the whole call. Which keys are ours is expressed by naming them in a rest-destructure
+ * rather than in a list of strings, so TypeScript checks the names against
+ * {@link OpenRouterModelConfig} and a rename cannot leave a stale entry behind.
  *
  * @param config - The merged model config.
  * @returns The split config.
  */
 export function splitOpenRouterModelConfig(config: Maybe<OpenRouterModelConfig>): OpenRouterSplitModelConfig {
-  const requestConfig: Record<string, unknown> = {};
-  let maxSteps: Maybe<number>;
-  let requestTimeoutMs: Maybe<number>;
-
-  if (config != null) {
-    Object.entries(config).forEach(([key, value]) => {
-      if (value !== undefined && !OPENROUTER_NON_REQUEST_CONFIG_KEYS.includes(key)) {
-        requestConfig[key] = value;
-      }
-    });
-
-    maxSteps = config.maxSteps;
-    requestTimeoutMs = config.requestTimeoutMs;
-  }
-
-  return { requestConfig, maxSteps, requestTimeoutMs };
+  const { maxSteps, requestTimeoutMs, ...rest } = config ?? {};
+  return { requestConfig: filterUndefinedValues(rest), maxSteps, requestTimeoutMs };
 }
 
 /**
@@ -259,7 +241,7 @@ function openRouterCallModelRequestOptions(options: RequestOptions): RequestOpti
  * @param params - The tools and state accessor.
  * @returns True when the loop is required.
  */
-function usesOpenRouterClientToolLoop<TTools extends readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): boolean {
+function isOpenRouterClientToolLoopRequired<TTools extends readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): boolean {
   return (params.tools?.length ?? 0) > 0 || params.state != null;
 }
 
@@ -380,7 +362,7 @@ export function openRouterModelResultForRequest<TTools extends readonly Tool[] =
  * @returns The normalized call result.
  */
 export async function callModelForOpenRouterRequest<TTools extends readonly Tool[] = readonly Tool[]>(params: CallModelForOpenRouterRequestParams<TTools>): Promise<OpenRouterCallResult> {
-  const sendDirect = openRouterHostedTools(params.request.config).length > 0 && !usesOpenRouterClientToolLoop(params);
+  const sendDirect = openRouterHostedTools(params.request.config).length > 0 && !isOpenRouterClientToolLoopRequired(params);
   const response = sendDirect ? await sendOpenRouterResponsesRequest(params) : await openRouterModelResultForRequest(params).getResponse();
 
   return openRouterCallResultFromResponse(response);
@@ -402,7 +384,7 @@ export function openRouterCallResultFromResponse(response: OpenResponsesResult):
     generationIds: response.id ? [response.id] : [],
     usage: usage == null ? undefined : openRouterRunUsageFromResponseUsage(usage),
     model: response.model,
-    error: response.error == null ? undefined : { code: response.error.code == null ? undefined : String(response.error.code), message: response.error.message },
+    error: response.error == null ? undefined : openRouterRunErrorFromResponseError(response.error),
     response
   };
 }
@@ -442,10 +424,7 @@ export function openRouterOutputTextFromResponse(response: OpenResponsesResult):
 /**
  * Flattens the SDK's nested usage object.
  *
- * A measurement the response did not report is OMITTED rather than set to `undefined`. That matters
- * downstream rather than being tidiness: this value is persisted verbatim as passthrough JSON, and
- * Firestore rejects an explicit `undefined` outright — so one unreported token count would fail the
- * whole result write and lose an inference that had already been paid for.
+ * A measurement the response did not report is OMITTED rather than carried as `undefined` or `null`.
  *
  * @param usage - The SDK usage object.
  * @returns The flattened usage.
@@ -453,24 +432,28 @@ export function openRouterOutputTextFromResponse(response: OpenResponsesResult):
  * @__NO_SIDE_EFFECTS__
  */
 export function openRouterRunUsageFromResponseUsage(usage: NonNullable<OpenResponsesResult['usage']>): OpenRouterRunUsage {
-  const result: Record<string, unknown> = {};
-  const values: [keyof OpenRouterRunUsage, Maybe<number | boolean>][] = [
-    ['inputTokens', usage.inputTokens],
-    ['outputTokens', usage.outputTokens],
-    ['totalTokens', usage.totalTokens],
-    ['reasoningTokens', usage.outputTokensDetails?.reasoningTokens],
-    ['cachedTokens', usage.inputTokensDetails?.cachedTokens],
-    ['cost', usage.cost],
-    ['isByok', usage.isByok]
-  ];
+  const { inputTokens, outputTokens, totalTokens, cost, isByok, inputTokensDetails, outputTokensDetails } = usage;
+  return filterUndefinedValues({ inputTokens, outputTokens, totalTokens, reasoningTokens: outputTokensDetails?.reasoningTokens, cachedTokens: inputTokensDetails?.cachedTokens, cost, isByok }, true);
+}
 
-  values.forEach(([key, value]) => {
-    if (value != null) {
-      result[key] = value;
-    }
-  });
-
-  return result as OpenRouterRunUsage;
+/**
+ * Flattens the error an OpenRouter response reports in its body.
+ *
+ * Named rather than inlined at the one call site for the same reason
+ * {@link openRouterRunUsageFromResponseUsage} is: a library that exports `OpenRouterRunError` as a type
+ * should let a caller holding a raw `OpenResponsesResult` produce one without transcribing its shape.
+ *
+ * `code` goes through `String()` because OpenRouter reports a NUMERIC code here (the HTTP status), while
+ * `OpenRouterRunError.code` is a string — the same field an SDK-thrown error fills with `ECONNRESET`.
+ *
+ * @param error - The error reported on the response.
+ * @returns The flattened error.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function openRouterRunErrorFromResponseError(error: NonNullable<OpenResponsesResult['error']>): OpenRouterRunError {
+  const { code, message } = error;
+  return { code: code == null ? undefined : String(code), message };
 }
 
 /**

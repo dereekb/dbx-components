@@ -27,6 +27,9 @@ import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
+import { openRouterPromptCreate } from '../openrouter/openrouterprompt.create';
+import { openRouterPromptPublishVersion, openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
+import { openRouterPromptList, openRouterPromptRead } from '../openrouter/openrouterprompt.read';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -49,7 +52,10 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryCreateClient
   }),
-  userExternalConnection: userExternalConnectionCreate
+  userExternalConnection: userExternalConnectionCreate,
+  // Prompt CRUD reaches the model API deliberately: there is no Angular screen for prompt authoring,
+  // and this is what makes the prompt models drivable over the existing callModel surface.
+  openRouterPrompt: openRouterPromptCreate
 };
 
 // MARK: Read
@@ -68,6 +74,10 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   userExternalConnection: onCallSpecifierHandler({
     authorizeState: userExternalConnectionReadAuthorizeState
+  }),
+  openRouterPrompt: onCallSpecifierHandler({
+    _: openRouterPromptRead,
+    list: openRouterPromptList
   })
 };
 
@@ -117,6 +127,10 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   }),
   userExternalConnection: onCallSpecifierHandler({
     disconnect: userExternalConnectionUpdateDisconnect
+  }),
+  openRouterPrompt: onCallSpecifierHandler({
+    _: openRouterPromptUpdate,
+    publishVersion: openRouterPromptPublishVersion
   })
 };
 

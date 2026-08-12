@@ -1,6 +1,7 @@
 export * from './openrouter.action.server';
 export * from './openrouter.broadcast';
 export * from './openrouter.call.inline';
+export * from './openrouter.file.attachment';
 export * from './openrouter.module';
 export * from './openrouter.prompt.service';
 export * from './openrouter.runtask.handle';

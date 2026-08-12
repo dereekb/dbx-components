@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type OpenRouterRunTask, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 import { handleOpenRouterRunTaskResult, handleOpenRouterRunTaskResultFactory, openRouterRunTaskOutcome } from './openrouter.runtask.handle';
-import { mergedOpenRouterRunUsage, openRouterRunTaskKeyFromBroadcastAttributes } from './openrouter.broadcast';
+import { mergeOpenRouterRunUsage, openRouterRunTaskKeyFromBroadcastAttributes } from './openrouter.broadcast';
 
 function task(state: OpenRouterRunTaskState): OpenRouterRunTask {
   return { s: state, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [] };
@@ -67,16 +67,16 @@ describe('openRouterRunTaskKeyFromBroadcastAttributes()', () => {
   });
 });
 
-describe('mergedOpenRouterRunUsage()', () => {
+describe('mergeOpenRouterRunUsage()', () => {
   it('should let the broadcast value win, since it is the later measurement', () => {
-    const merged = mergedOpenRouterRunUsage({ cost: 0.01, totalTokens: 10 }, { cost: 0.02, totalTokens: 12 });
+    const merged = mergeOpenRouterRunUsage({ cost: 0.01, totalTokens: 10 }, { cost: 0.02, totalTokens: 12 });
     expect(merged.cost).toBe(0.02);
     expect(merged.totalTokens).toBe(12);
   });
 
   it('should keep stored values the span is silent about', () => {
     // An incomplete span must not erase what the runner already knew.
-    const merged = mergedOpenRouterRunUsage({ cost: 0.01, totalTokens: 10, reasoningTokens: 3, isByok: true }, {});
+    const merged = mergeOpenRouterRunUsage({ cost: 0.01, totalTokens: 10, reasoningTokens: 3, isByok: true }, {});
     expect(merged.cost).toBe(0.01);
     expect(merged.totalTokens).toBe(10);
     expect(merged.reasoningTokens).toBe(3);
@@ -84,6 +84,6 @@ describe('mergedOpenRouterRunUsage()', () => {
   });
 
   it('should work with no stored usage at all', () => {
-    expect(mergedOpenRouterRunUsage(null, { promptTokens: 5, completionTokens: 2, totalTokens: 7 })).toMatchObject({ inputTokens: 5, outputTokens: 2, totalTokens: 7 });
+    expect(mergeOpenRouterRunUsage(null, { promptTokens: 5, completionTokens: 2, totalTokens: 7 })).toMatchObject({ inputTokens: 5, outputTokens: 2, totalTokens: 7 });
   });
 });

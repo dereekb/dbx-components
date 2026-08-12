@@ -1,4 +1,43 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "orrt",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "s",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lat",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "orrt",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "s",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qat",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    }
+  ],
   "fieldOverrides": []
 }

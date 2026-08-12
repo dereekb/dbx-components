@@ -23,6 +23,12 @@ service firebase.storage {
         allow write: if (isUploadUser() && isAllowedLogFile()) || userClaimsIsSysAdmin();
       }
 
+      // MARK: Resume File
+      // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_RESUME_FILE_PURPOSE].
+      match /resume/{filename=**} {
+        allow write: if (isUploadUser() && isAllowedResumeFile()) || userClaimsIsSysAdmin();
+      }
+
       // MARK: Avatar
       // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_AVATAR_PURPOSE].
       match /avatar.img {

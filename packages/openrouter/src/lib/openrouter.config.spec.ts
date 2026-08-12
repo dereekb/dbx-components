@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { OPENROUTER_DEFAULT_PDF_PARSER_ENGINE, type OpenRouterModelConfig, mergeOpenRouterModelConfig, openRouterFileParserPlugin, openRouterFileSearchTool, openRouterProviderPinnedTo, validateOpenRouterModelConfig } from './openrouter.config';
+import { DEFAULT_OPENROUTER_PDF_PARSER_ENGINE, type OpenRouterModelConfig, mergeOpenRouterModelConfig, openRouterFileParserPlugin, openRouterFileSearchTool, openRouterProviderPinnedTo, validateOpenRouterModelConfig } from './openrouter.config';
 
 describe('openRouterFileParserPlugin()', () => {
   it('should pin the native engine by default', () => {
     const plugin = openRouterFileParserPlugin();
     expect(plugin.id).toBe('file-parser');
     expect(plugin.pdf?.engine).toBe('native');
-    expect(OPENROUTER_DEFAULT_PDF_PARSER_ENGINE).toBe('native');
+    expect(DEFAULT_OPENROUTER_PDF_PARSER_ENGINE).toBe('native');
   });
 
   it('should allow pinning another engine explicitly', () => {

@@ -1,7 +1,21 @@
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { type Maybe } from '@dereekb/util';
+import { MS_IN_DAY, type Maybe, type Milliseconds, filterOnlyUndefinedValues } from '@dereekb/util';
 import { type OpenRouterFileAnnotation, type OpenRouterFileReference, type OpenRouterGenerationId, type OpenRouterInputMessage, type OpenRouterModelConfig, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterRunError, type OpenRouterRunUsage } from '@dereekb/openrouter';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreArray, firestoreDate, firestoreEnum, firestoreModelIdentity, firestoreNumber, firestoreString, optionalFirestoreArray, optionalFirestoreDate, optionalFirestoreField, optionalFirestoreNumber, optionalFirestoreString, snapshotConverterFunctions } from '@dereekb/firebase';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, type FirestoreModelFieldMapFunctionsConfig, firestoreArray, firestoreDate, firestoreEnum, firestoreModelIdentity, firestoreNumber, firestoreString, optionalFirestoreArray, optionalFirestoreDate, optionalFirestoreField, optionalFirestoreString, snapshotConverterFunctions } from '@dereekb/firebase';
+
+/**
+ * How long an OpenRouterRunTask lives before it is deleted, measured from `qat`.
+ *
+ * A design requirement rather than a tuning knob. NotificationTask already owns retrying, durable
+ * persistence, and delayed execution, so a run task is a short-lived execution record — letting one
+ * outlive a week would make it a second system of record with a second retention policy to reason about,
+ * for no gain.
+ *
+ * Measured from `qat` rather than a per-task expiration field because there is nothing to configure:
+ * a queued task runs essentially immediately, so its queue time IS its age. No field to forget to
+ * write, no document excluded from the retention query for lacking one.
+ */
+export const OPENROUTER_RUN_TASK_MAX_AGE: Milliseconds = MS_IN_DAY * 7;
 
 /**
  * Provides access to the {@link OpenRouterRunTask} collection.
@@ -55,6 +69,10 @@ export enum OpenRouterRunTaskState {
 
 /**
  * States a sweep considers claimable.
+ *
+ * `AWAITING_ASYNC_TOOLS` is in here alongside `QUEUED` because a task parked on a deferred tool whose
+ * results have since arrived is runnable again; `isOpenRouterRunTaskClaimable` is what decides whether
+ * the results actually did arrive.
  */
 export const OPENROUTER_RUN_TASK_CLAIMABLE_STATES: readonly OpenRouterRunTaskState[] = [OpenRouterRunTaskState.QUEUED, OpenRouterRunTaskState.AWAITING_ASYNC_TOOLS];
 
@@ -136,7 +154,13 @@ export interface OpenRouterRunTask {
    */
   s: OpenRouterRunTaskState;
   /**
-   * Date this task was queued at. The sweep's secondary sort key, after priority.
+   * Date this task was queued at. The sweep's ONLY sort key.
+   *
+   * WRITE-ONCE: set at enqueue and never moved, not even when a deferred-tool resume returns the task to
+   * `QUEUED`. Two things depend on that. It is what makes `qat` a valid retention age — a rolling value
+   * would let a task cycling through tool resolutions keep pushing its own age forward and never reach
+   * {@link OPENROUTER_RUN_TASK_MAX_AGE}. And it is the more correct ORDER: a task that has been waiting on
+   * a deferred tool since yesterday should be claimed before one queued a minute ago.
    *
    * @dbxModelVariable queuedAt
    */
@@ -177,12 +201,6 @@ export interface OpenRouterRunTask {
    */
   at: number;
   /**
-   * Sweep priority. Lower runs first; absent sorts as the default priority.
-   *
-   * @dbxModelVariable priority
-   */
-  pr?: Maybe<number>;
-  /**
    * Prompt this run uses.
    *
    * @dbxModelVariable promptKey
@@ -190,37 +208,33 @@ export interface OpenRouterRunTask {
   pk: OpenRouterPromptKey;
   /**
    * The resolved prompt version. Recorded rather than re-resolved so a retry cannot silently switch
-   * prompt text mid-run, and so a replay reproduces the original call.
+   * prompt text mid-run.
    *
    * @dbxModelVariable promptVersion
    */
   pv: OpenRouterPromptVersionNumber;
   /**
-   * The call input. Also exactly what a replay re-enqueues.
+   * The call input.
    *
    * @dbxModelVariable input
    */
   in: OpenRouterInputMessage[];
   /**
-   * Files to attach, as GCS object paths.
-   *
-   * NEVER signed URLs. A task can sit queued for a sweep interval, be retried, and (with deferred
-   * tools) resume much later, so a URL minted at enqueue would 403 by the time it was used. The
-   * sweeper signs each path fresh on every attempt.
+   * Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.
    *
    * @dbxModelVariable files
    */
   fp?: Maybe<OpenRouterFileReference[]>;
   /**
    * Cached `file-parser` annotations, resubmitted on retries and chained calls so an already-parsed
-   * PDF is not parsed again.
+   * PDF is not parsed again. See {@link OpenRouterFileAnnotation} for what a re-parse costs.
    *
    * @dbxModelVariable fileAnnotations
    */
   fa?: Maybe<OpenRouterFileAnnotation[]>;
   /**
-   * Per-run overrides applied on top of the version's config. Passthrough JSON, for the same reason
-   * the version's config is.
+   * Per-run overrides applied on top of the version's config. Passthrough JSON, for the reason
+   * {@link OpenRouterModelConfig} states.
    *
    * @dbxModelVariable configOverrides
    */
@@ -283,15 +297,6 @@ export interface OpenRouterRunTask {
    * @dbxModelVariable unsentToolResults
    */
   utr?: Maybe<OpenRouterRunTaskUnsentToolResult[]>;
-  /**
-   * When this task may be deleted.
-   *
-   * Not optional in spirit: `msg` grows without bound across a long chained conversation, so
-   * something has to expire it.
-   *
-   * @dbxModelVariable expiresAt
-   */
-  x?: Maybe<Date>;
 }
 
 /**
@@ -305,6 +310,33 @@ export class OpenRouterRunTaskDocument extends AbstractFirestoreDocument<OpenRou
   }
 }
 
+/**
+ * An optional passthrough-JSON object field whose `undefined` values are stripped on the way in.
+ *
+ * This is the ONE place the constraint lives. Firestore rejects an explicit `undefined` outright, and
+ * each of these fields is assembled from optional upstream values — a usage object built from whichever
+ * token counts a response happened to report, a config a caller spread a `Maybe` into. Solved per-writer
+ * it has to be remembered four times; solved here it cannot be forgotten.
+ *
+ * SHALLOW, deliberately: it covers the top-level keys of the object it is given. It does NOT reach into
+ * a nested sub-object, and it does NOT apply to array element interiors — `msg` / `ptc` / `utr` carry
+ * SDK-shaped JSON of arbitrary depth, which is what `openRouterConversationValueForFirestore` is for.
+ *
+ * `transformToData` rather than `transformData`: the latter is applied in both directions and would
+ * deep-copy the field on every READ. With only the write direction set, reads are byte-identical to the
+ * plain passthrough field.
+ *
+ * A top-level `null` still clears the field: `optionalFirestoreField` short-circuits `x == null` before
+ * the transform runs, so `update({ e: null })` is untouched by this.
+ *
+ * @returns The field mapping config.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+function optionalFirestorePassthroughJsonField<T extends object>(): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
+  return optionalFirestoreField<T>({ transformToData: filterOnlyUndefinedValues });
+}
+
 export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterRunTask>({
   fields: {
     s: firestoreEnum<OpenRouterRunTaskState>({ default: OpenRouterRunTaskState.QUEUED }),
@@ -314,22 +346,20 @@ export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterR
     lat: optionalFirestoreDate(),
     lo: optionalFirestoreString(),
     at: firestoreNumber({ default: 0 }),
-    pr: optionalFirestoreNumber(),
     pk: firestoreString({ default: '' }),
     pv: firestoreNumber({ default: 0 }),
     in: firestoreArray<OpenRouterInputMessage>({}),
     fp: optionalFirestoreArray<OpenRouterFileReference>({ dontStoreIfEmpty: true }),
     fa: optionalFirestoreArray<OpenRouterFileAnnotation>({ dontStoreIfEmpty: true }),
-    co: optionalFirestoreField<OpenRouterModelConfig>(),
+    co: optionalFirestorePassthroughJsonField<OpenRouterModelConfig>(),
     o: optionalFirestoreString(),
-    j: optionalFirestoreField<Record<string, unknown>>(),
+    j: optionalFirestorePassthroughJsonField<Record<string, unknown>>(),
     gi: optionalFirestoreArray<OpenRouterGenerationId>({ filterUnique: true, dontStoreIfEmpty: true }),
-    u: optionalFirestoreField<OpenRouterRunUsage>(),
-    e: optionalFirestoreField<OpenRouterRunError>(),
+    u: optionalFirestorePassthroughJsonField<OpenRouterRunUsage>(),
+    e: optionalFirestorePassthroughJsonField<OpenRouterRunError>(),
     msg: optionalFirestoreArray<OpenRouterInputMessage>({ dontStoreIfEmpty: true }),
     ptc: optionalFirestoreArray<OpenRouterRunTaskPendingToolCall>({ dontStoreIfEmpty: true }),
-    utr: optionalFirestoreArray<OpenRouterRunTaskUnsentToolResult>({ dontStoreIfEmpty: true }),
-    x: optionalFirestoreDate()
+    utr: optionalFirestoreArray<OpenRouterRunTaskUnsentToolResult>({ dontStoreIfEmpty: true })
   }
 });
 

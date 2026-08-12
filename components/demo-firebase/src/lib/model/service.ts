@@ -91,13 +91,32 @@ import {
   type UserExternalConnectionTypes,
   userExternalConnectionFirestoreCollection
 } from '@dereekb/firebase';
+import {
+  type OpenRouterPrompt,
+  type OpenRouterPromptDocument,
+  type OpenRouterPromptRoles,
+  type OpenRouterPromptTypes,
+  type OpenRouterPromptVersion,
+  type OpenRouterPromptVersionDocument,
+  type OpenRouterPromptVersionRoles,
+  type OpenRouterPromptFirestoreCollection,
+  type OpenRouterPromptFirestoreCollections,
+  type OpenRouterPromptVersionFirestoreCollectionFactory,
+  type OpenRouterPromptVersionFirestoreCollectionGroup,
+  type OpenRouterRunTaskFirestoreCollection,
+  type OpenRouterRunTaskFirestoreCollections,
+  openRouterPromptFirestoreCollection,
+  openRouterPromptVersionFirestoreCollectionFactory,
+  openRouterPromptVersionFirestoreCollectionGroup,
+  openRouterRunTaskFirestoreCollection
+} from '@dereekb/openrouter/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -121,6 +140,10 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
   abstract readonly userExternalConnectionCollection: UserExternalConnectionFirestoreCollection;
+  abstract readonly openRouterPromptCollection: OpenRouterPromptFirestoreCollection;
+  abstract readonly openRouterPromptVersionCollectionFactory: OpenRouterPromptVersionFirestoreCollectionFactory;
+  abstract readonly openRouterPromptVersionCollectionGroup: OpenRouterPromptVersionFirestoreCollectionGroup;
+  abstract readonly openRouterRunTaskCollection: OpenRouterRunTaskFirestoreCollection;
 }
 
 /**
@@ -156,7 +179,11 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
     oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext }),
-    userExternalConnectionCollection: userExternalConnectionFirestoreCollection(firestoreContext)
+    userExternalConnectionCollection: userExternalConnectionFirestoreCollection(firestoreContext),
+    openRouterPromptCollection: openRouterPromptFirestoreCollection(firestoreContext),
+    openRouterPromptVersionCollectionFactory: openRouterPromptVersionFirestoreCollectionFactory(firestoreContext),
+    openRouterPromptVersionCollectionGroup: openRouterPromptVersionFirestoreCollectionGroup(firestoreContext),
+    openRouterRunTaskCollection: openRouterRunTaskFirestoreCollection(firestoreContext)
   };
 }
 
@@ -381,6 +408,27 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
   getFirestoreCollection: (c) => c.app.oidcEntryCollection
 });
 
+// MARK: OpenRouter
+/**
+ * @dbxModelServiceFactory openRouterPrompt
+ */
+export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPrompt, OpenRouterPromptDocument, OpenRouterPromptRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPrompt, OpenRouterPromptDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — a prompt is operational configuration
+  },
+  getFirestoreCollection: (c) => c.app.openRouterPromptCollection
+});
+
+/**
+ * @dbxModelServiceFactory openRouterPromptVersion
+ */
+export const openRouterPromptVersionFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPromptVersion, OpenRouterPromptVersionDocument, OpenRouterPromptVersionRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPromptVersion, OpenRouterPromptVersionDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptVersionDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptVersionRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.openRouterPromptVersionCollectionGroup
+});
+
 // MARK: UserExternalConnection
 /**
  * @dbxModelServiceFactory userExternalConnection
@@ -393,7 +441,7 @@ export const userExternalConnectionFirebaseModelServiceFactory = firebaseModelSe
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes | UserExternalConnectionTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -415,7 +463,9 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
   oidcEntry: oidcEntryFirebaseModelServiceFactory,
-  userExternalConnection: userExternalConnectionFirebaseModelServiceFactory
+  userExternalConnection: userExternalConnectionFirebaseModelServiceFactory,
+  openRouterPrompt: openRouterPromptFirebaseModelServiceFactory,
+  openRouterPromptVersion: openRouterPromptVersionFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

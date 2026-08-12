@@ -58,6 +58,24 @@ describe('openRouterRunTaskConverter', () => {
     expect(openRouterRunTaskConverter.mapFunctions.from(data).co).toEqual(co);
   });
 
+  it('should strip an undefined value out of a passthrough json field rather than store it', () => {
+    // Firestore rejects an explicit `undefined` outright. Usage is assembled from whichever token counts a
+    // response happened to report, so one unreported measurement would otherwise fail the whole result
+    // write and lose an inference that had already been paid for.
+    const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], u: { inputTokens: 10, cost: undefined }, co: { model: 'm', temperature: undefined } });
+
+    expect(data.u).toEqual({ inputTokens: 10 });
+    expect(Object.keys(data.u as object)).not.toContain('cost');
+    expect(data.co).toEqual({ model: 'm' });
+  });
+
+  it('should still clear a passthrough json field written as null', () => {
+    // The strip runs only on an object; a top-level null short-circuits ahead of it, which is what keeps
+    // `update({ e: null })` working as "clear this field".
+    const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], e: null });
+    expect(data.e).toBeNull();
+  });
+
   it('should round-trip a completed result with usage', () => {
     const data = openRouterRunTaskConverter.mapFunctions.to({
       s: OpenRouterRunTaskState.COMPLETE,
