@@ -1,3 +1,5 @@
+import { type Count, type PageNumber } from '@dereekb/util';
+
 /**
  * A numeric identifier in Cal.com.
  */
@@ -25,8 +27,11 @@ export type CalcomScheduleId = number;
 
 /**
  * Cal.com webhook identifier.
+ *
+ * A UUID string (e.g. `"7c3b0811-8a5a-4754-8b31-9f594559f98e"`), unlike the numeric ids used
+ * elsewhere in the API.
  */
-export type CalcomWebhookId = number;
+export type CalcomWebhookId = string;
 
 /**
  * Cal.com credential identifier, used to reference connected calendar credentials.
@@ -69,12 +74,6 @@ export type CalcomOrganizationSlug = string;
 export type CalcomCalendarIntegration = string;
 
 /**
- * Cal.com webhook event type string
- * (e.g., "BOOKING_CREATED", "BOOKING_CANCELLED").
- */
-export type CalcomWebhookEventTypeString = string;
-
-/**
  * Cal.com API response status string (e.g., "success", "error").
  */
 export type CalcomResponseStatus = 'success' | 'error';
@@ -83,3 +82,20 @@ export type CalcomResponseStatus = 'success' | 'error';
  * Cal.com booking status string.
  */
 export type CalcomBookingStatus = 'accepted' | 'pending' | 'cancelled' | 'rejected';
+
+/**
+ * The pagination envelope a paginated Cal.com list response carries beside its `data`.
+ *
+ * `currentPage`/`totalPages` are 1-based, and are derived from the `take`/`skip` of the request
+ * rather than being a cursor.
+ */
+export interface CalcomPagination {
+  readonly returnedItems: Count;
+  readonly totalItems: Count;
+  readonly itemsPerPage: Count;
+  readonly remainingItems: Count;
+  readonly currentPage: PageNumber;
+  readonly totalPages: Count;
+  readonly hasNextPage: boolean;
+  readonly hasPreviousPage: boolean;
+}

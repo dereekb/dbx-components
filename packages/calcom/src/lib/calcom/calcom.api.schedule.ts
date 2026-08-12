@@ -1,6 +1,6 @@
-import { type TimezoneString } from '@dereekb/util';
+import { type ISO8601DayString, type TimezoneString } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
-import { type CalcomScheduleId, type CalcomResponseStatus } from '../calcom.type';
+import { type CalcomScheduleId, type CalcomResponseStatus, type CalcomUserId } from '../calcom.type';
 import { CALCOM_API_VERSION_SCHEDULES, calcomApiVersionHeaders } from '../shared/calcom.api-version';
 
 export interface CalcomAvailabilityRule {
@@ -9,13 +9,30 @@ export interface CalcomAvailabilityRule {
   readonly endTime: string;
 }
 
+/**
+ * A date-specific exception to a schedule's weekly availability.
+ *
+ * NOTE: the array itself is confirmed against the live API, but this entry shape is taken from
+ * the Cal.com docs — the account used to verify this package has no overrides configured, so no
+ * real entry was observed. Treat the field names as unverified.
+ */
+export interface CalcomScheduleOverride {
+  readonly date: ISO8601DayString;
+  readonly startTime: string;
+  readonly endTime: string;
+}
+
 export interface CalcomSchedule {
   readonly id: CalcomScheduleId;
+  readonly ownerId: CalcomUserId;
   readonly name: string;
   readonly timeZone: TimezoneString;
   readonly availability: CalcomAvailabilityRule[];
   readonly isDefault: boolean;
-  readonly overrides: Record<string, CalcomAvailabilityRule[]>;
+  /**
+   * Date-specific overrides, returned as an ARRAY (not a date-keyed record).
+   */
+  readonly overrides: CalcomScheduleOverride[];
 }
 
 export interface CalcomGetSchedulesResponse {

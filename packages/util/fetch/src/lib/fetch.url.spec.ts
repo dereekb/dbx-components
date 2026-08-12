@@ -1,4 +1,4 @@
-import { makeUrlSearchParams, makeUrlSearchParamsString, updateUrlSearchParams } from './fetch.url';
+import { makeUrlSearchParams, makeUrlSearchParamsString, toBracketNotationSearchParamTuples, updateUrlSearchParams } from './fetch.url';
 
 describe('makeUrlSearchParams()', () => {
   it('should create URLSearchParams from an object', () => {
@@ -25,6 +25,69 @@ describe('makeUrlSearchParams()', () => {
     expect(result.get('a')).toBe('1');
     expect(result.has('b')).toBe(false);
     expect(result.has('c')).toBe(false);
+  });
+
+  it('should collapse a nested object to [object Object] by default', () => {
+    const result = makeUrlSearchParams({ a: { b: '1' } });
+    expect(result.get('a')).toBe('[object Object]');
+  });
+
+  it('should expand nested values into bracket notation when useBracketNotation is true', () => {
+    const result = makeUrlSearchParams({ calendarsToLoad: [{ credentialId: 1845764, externalId: 'a@b.com' }] }, { useBracketNotation: true });
+    expect(result.get('calendarsToLoad[0][credentialId]')).toBe('1845764');
+    expect(result.get('calendarsToLoad[0][externalId]')).toBe('a@b.com');
+    expect(result.has('calendarsToLoad')).toBe(false);
+  });
+
+  it('should leave scalar values unchanged when useBracketNotation is true', () => {
+    const result = makeUrlSearchParams({ dateFrom: '2026-08-01', limit: 5 }, { useBracketNotation: true });
+    expect(result.get('dateFrom')).toBe('2026-08-01');
+    expect(result.get('limit')).toBe('5');
+  });
+});
+
+describe('toBracketNotationSearchParamTuples()', () => {
+  it('should return an empty array for nullish input', () => {
+    expect(toBracketNotationSearchParamTuples(null)).toEqual([]);
+    expect(toBracketNotationSearchParamTuples(undefined)).toEqual([]);
+  });
+
+  it('should pass scalar values through unchanged', () => {
+    expect(toBracketNotationSearchParamTuples({ a: '1', b: 2, c: true })).toEqual([
+      ['a', '1'],
+      ['b', '2'],
+      ['c', 'true']
+    ]);
+  });
+
+  it('should index array entries', () => {
+    expect(toBracketNotationSearchParamTuples({ a: ['x', 'y'] })).toEqual([
+      ['a[0]', 'x'],
+      ['a[1]', 'y']
+    ]);
+  });
+
+  it('should key nested object properties', () => {
+    expect(toBracketNotationSearchParamTuples({ a: { b: '1' } })).toEqual([['a[b]', '1']]);
+  });
+
+  it('should recurse through arrays of objects', () => {
+    expect(toBracketNotationSearchParamTuples({ a: [{ b: 1 }, { b: 2 }] })).toEqual([
+      ['a[0][b]', '1'],
+      ['a[1][b]', '2']
+    ]);
+  });
+
+  it('should recurse through deeply nested values', () => {
+    expect(toBracketNotationSearchParamTuples({ a: { b: [{ c: 'd' }] } })).toEqual([['a[b][0][c]', 'd']]);
+  });
+
+  it('should skip nullish leaves rather than stringify them', () => {
+    expect(toBracketNotationSearchParamTuples({ a: null, b: undefined, c: '1' })).toEqual([['c', '1']]);
+  });
+
+  it('should emit nothing for an empty array or object', () => {
+    expect(toBracketNotationSearchParamTuples({ a: [], b: {} })).toEqual([]);
   });
 });
 

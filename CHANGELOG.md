@@ -1,3 +1,37 @@
+# [13.36.0](https://github.com/dereekb/dbx-components/compare/v13.35.0-dev...v13.36.0) (2026-08-12)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([bc64ceac](https://github.com/dereekb/dbx-components/commit/bc64ceac0479266cb39e0916ac384a4a77b0f91e))
+
+
+### Code Refactoring
+
+- **calcom:** drop the BOOKING_CONFIRMED webhook trigger ([f37e1a07](https://github.com/dereekb/dbx-components/commit/f37e1a073e36ea7362e964a675d33e0e3cc482c1))
+
+
+### Features
+
+- **calcom:** align API types with the live Cal.com v2 API ([2e04990d](https://github.com/dereekb/dbx-components/commit/2e04990d3f17a6326423529d7e16129c4141919d))
+- **calcom:** semantic webhook time types + read-only API tests ([10a8f71d](https://github.com/dereekb/dbx-components/commit/10a8f71dee10cb797d6c6f652eb71480e4e32ec0))
+
+# Unreleased
+
+### BREAKING CHANGES
+
+- **calcom:** `@dereekb/calcom`'s v2 API types have been corrected against the live `api.cal.com/v2`. These are type-level breaks that surface at compile time; consumers hitting them were, in most cases, already broken at runtime.
+  - `CalcomBooking.startTime`/`endTime` are now `start`/`end` — the API never returned the old names, so `new Date(booking.startTime)` was silently producing `Invalid Date`. `CalcomBooking` also gained the rest of the real response (`meetingUrl`, `location`, `duration`, `hosts`, `eventType`, `guests`, `icsUid`, `absentHost`, `bookingFieldsResponses`, timestamps).
+  - `CalcomConnectedCalendar` has been restructured: `integration` is an app-metadata object (`CalcomCalendarIntegrationApp`), `primary` is a single calendar, and `calendars` is a sibling array. The old `primary.calendars` path never existed.
+  - `CalcomGetBusyTimesInput.calendarsToLoad` is now `CalcomCalendarToLoad[]` (`{ credentialId, externalId }`) instead of `string[]`, and a `timeZone` or `loggedInUsersTz` is required. `getBusyTimes` previously comma-joined the array and could not address its endpoint at all (HTTP 400). Added `getBusyTimesForConnectedCalendars` for the common two-request flow.
+  - `CalcomGetAvailableSlotsResponse.data` is the day-keyed map itself — the `data.slots` wrapper never existed — and each slot is `{ start }` (plus `end` under `format: 'range'`) rather than `{ time }`.
+  - `CalcomWebhookId` is now `string`: the API returns a UUID, not a number.
+  - `CalcomUser.createdDate` has been removed (the API does not return it); `name`, `avatarUrl`, `bio`, `locale`, `organizationId` and `organization` were added.
+  - `CalcomSchedule.overrides` is an array, not a `Record`; `ownerId` was added.
+  - `CalcomEventType` and the create/update inputs were widened to the real surface, including `skipAttendeeEmailDeliverabilityCheck` and `lengthInMinutesOptions`. Note `lengthInMinutes` on create-booking is only valid when the event type declares `lengthInMinutesOptions`.
+  - `CalcomWebhookTrigger` now covers all 27 triggers the API accepts.
+  - Cal.com API errors now carry their real `code`/`message`: these are nested under the response body's `error` key, which the parser previously ignored, leaving every `CalcomServerError` with `code: undefined` and `message: undefined`.
+
 # [13.35.0](https://github.com/dereekb/dbx-components/compare/v13.34.0-dev...v13.35.0) (2026-08-07)
 
 

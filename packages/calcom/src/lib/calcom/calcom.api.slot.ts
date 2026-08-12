@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type Maybe, type Minutes, type TimezoneString } from '@dereekb/util';
+import { type ISO8601DateString, type ISO8601DayString, type Maybe, type Minutes, type TimezoneString } from '@dereekb/util';
 import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type CalcomContext, type CalcomPublicContext } from './calcom.config';
 import { type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomUsername, type CalcomTeamSlug, type CalcomOrganizationSlug, type CalcomResponseStatus } from '../calcom.type';
@@ -18,14 +18,24 @@ export interface CalcomGetAvailableSlotsInput {
 }
 
 export interface CalcomSlot {
-  readonly time: ISO8601DateString;
+  readonly start: ISO8601DateString;
+  /**
+   * The end of the slot. Only returned when `format: 'range'` was requested.
+   */
+  readonly end?: Maybe<ISO8601DateString>;
 }
+
+/**
+ * Available slots keyed by day (`"2026-08-12"`), each holding that day's slots.
+ */
+export type CalcomSlotsByDay = Record<ISO8601DayString, CalcomSlot[]>;
 
 export interface CalcomGetAvailableSlotsResponse {
   readonly status: CalcomResponseStatus;
-  readonly data: {
-    readonly slots: Record<string, CalcomSlot[]>;
-  };
+  /**
+   * The day-keyed slot map itself — at `cal-api-version: 2024-09-04` there is no `slots` wrapper.
+   */
+  readonly data: CalcomSlotsByDay;
 }
 
 /**
@@ -37,6 +47,8 @@ export interface CalcomGetAvailableSlotsResponse {
  * @param context - The Cal.com API context (authenticated or public)
  * @returns Queries available slots for the given input.
  *
+ * The `cal-api-version` header is REQUIRED here — without it the endpoint 404s.
+ *
  * @see https://cal.com/docs/api-reference/v2/slots/get-available-time-slots-for-an-event-type
  *
  * @example
@@ -47,8 +59,8 @@ export interface CalcomGetAvailableSlotsResponse {
  *   eventTypeId: 12345
  * });
  *
- * for (const [date, slots] of Object.entries(response.data.slots)) {
- *   console.log(date, slots.map(s => s.time));
+ * for (const [date, slots] of Object.entries(response.data)) {
+ *   console.log(date, slots.map(s => s.start));
  * }
  * ```
  */

@@ -31,6 +31,62 @@ export interface MakeUrlSearchParamsOptions {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams#interaction_with_url.searchparams | MDN: Interaction with URL.searchParams}
    */
   readonly useUrlSearchSpaceHandling?: boolean;
+  /**
+   * Whether to expand nested arrays and objects into bracket-notation keys instead of
+   * letting `URLSearchParams` stringify them.
+   *
+   * `URLSearchParams` calls `String()` on every value, so by default an array is comma-joined
+   * and a nested object collapses to the useless `[object Object]`. Many APIs instead expect
+   * each leaf addressed by an indexed/keyed path:
+   *
+   * `{ a: [{ b: 1 }] }` becomes `a[0][b]=1` rather than `a=[object Object]`.
+   *
+   * Scalar values are unaffected. Nullish leaves are skipped.
+   *
+   * Defaults to false.
+   */
+  readonly useBracketNotation?: boolean;
+}
+
+/**
+ * A single URL query parameter, as a key/value tuple.
+ */
+export type UrlSearchParamsKeyValueTuple = [string, string];
+
+/**
+ * Expands a potentially nested object into bracket-notation query key/value tuples.
+ *
+ * Arrays are addressed by index and object properties by key, recursively, so every leaf
+ * gets its own fully-qualified parameter. Nullish leaves are omitted rather than emitted
+ * as the strings `"null"`/`"undefined"`; all other leaves are stringified.
+ *
+ * @param input - The object to expand.
+ * @returns The bracket-notation key/value tuples.
+ *
+ * @example
+ * ```typescript
+ * toBracketNotationSearchParamTuples({ calendarsToLoad: [{ credentialId: 1, externalId: 'a@b.com' }] });
+ * // => [['calendarsToLoad[0][credentialId]', '1'], ['calendarsToLoad[0][externalId]', 'a@b.com']]
+ * ```
+ */
+export function toBracketNotationSearchParamTuples(input: Maybe<object>): UrlSearchParamsKeyValueTuple[] {
+  const tuples: UrlSearchParamsKeyValueTuple[] = [];
+
+  function expandValue(key: string, value: unknown): void {
+    if (value != null) {
+      if (Array.isArray(value)) {
+        value.forEach((itemValue, i) => expandValue(`${key}[${i}]`, itemValue));
+      } else if (typeof value === 'object') {
+        Object.entries(value).forEach(([childKey, childValue]) => expandValue(`${key}[${childKey}]`, childValue));
+      } else {
+        tuples.push([key, String(value)]);
+      }
+    }
+  }
+
+  Object.entries(input ?? {}).forEach(([key, value]) => expandValue(key, value));
+
+  return tuples;
 }
 
 /**
@@ -41,10 +97,11 @@ export interface MakeUrlSearchParamsOptions {
  * @returns A URLSearchParams instance built from the merged and filtered input.
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
-  const { omitKeys, filterEmptyValues: filterValues } = options ?? {};
+  const { omitKeys, filterEmptyValues: filterValues, useBracketNotation } = options ?? {};
   const mergedInput = Array.isArray(input) ? mergeObjects(input) : input;
   const filteredInput = (filterValues ?? true) ? filterEmptyPojoValues(mergedInput ?? {}) : mergedInput;
-  const searchParams = new URLSearchParams(filteredInput as unknown as Record<string, string>);
+  const searchParamsInput = useBracketNotation ? toBracketNotationSearchParamTuples(filteredInput) : (filteredInput as unknown as Record<string, string>);
+  const searchParams = new URLSearchParams(searchParamsInput);
 
   if (omitKeys != null) {
     useIterableOrValue(omitKeys, (key) => searchParams.delete(key), false);

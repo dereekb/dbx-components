@@ -1,5 +1,5 @@
 import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import { type CalcomWebhookEventType, type UntypedCalcomWebhookEvent, type CalcomWebhookEvent, type CalcomWebhookBookingPayload, CALCOM_WEBHOOK_BOOKING_CREATED, CALCOM_WEBHOOK_BOOKING_CANCELLED, CALCOM_WEBHOOK_BOOKING_RESCHEDULED, CALCOM_WEBHOOK_BOOKING_CONFIRMED } from './webhook.calcom.type';
+import { type CalcomWebhookEventType, type UntypedCalcomWebhookEvent, type CalcomWebhookEvent, type CalcomWebhookBookingPayload, CALCOM_WEBHOOK_BOOKING_CREATED, CALCOM_WEBHOOK_BOOKING_CANCELLED, CALCOM_WEBHOOK_BOOKING_RESCHEDULED } from './webhook.calcom.type';
 
 /**
  * Creates a CalcomWebhookEvent and treats the data as the input type.
@@ -25,7 +25,6 @@ export interface CalcomEventHandlerConfigurer extends HandlerBindAccessor<Untype
   handleBookingCreated: CalcomHandlerMappedSetFunction<CalcomWebhookBookingPayload>;
   handleBookingCancelled: CalcomHandlerMappedSetFunction<CalcomWebhookBookingPayload>;
   handleBookingRescheduled: CalcomHandlerMappedSetFunction<CalcomWebhookBookingPayload>;
-  handleBookingConfirmed: CalcomHandlerMappedSetFunction<CalcomWebhookBookingPayload>;
 }
 
 export const calcomEventHandlerConfigurerFactory = handlerConfigurerFactory<CalcomEventHandlerConfigurer, UntypedCalcomWebhookEvent>({
@@ -36,8 +35,7 @@ export const calcomEventHandlerConfigurerFactory = handlerConfigurerFactory<Calc
       ...accessor,
       handleBookingCreated: fnWithKey(CALCOM_WEBHOOK_BOOKING_CREATED),
       handleBookingCancelled: fnWithKey(CALCOM_WEBHOOK_BOOKING_CANCELLED),
-      handleBookingRescheduled: fnWithKey(CALCOM_WEBHOOK_BOOKING_RESCHEDULED),
-      handleBookingConfirmed: fnWithKey(CALCOM_WEBHOOK_BOOKING_CONFIRMED)
+      handleBookingRescheduled: fnWithKey(CALCOM_WEBHOOK_BOOKING_RESCHEDULED)
     };
 
     return configurer;
