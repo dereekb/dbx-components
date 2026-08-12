@@ -69,6 +69,29 @@
     margin-top: var(--dbx-padding-2);
   }
 
+  // Section superseded by an encrypted document: no add affordances are rendered, so this notice is
+  // what tells the user the section is intentionally out of play rather than broken.
+  .dbx-pdf-merge-editor-file-upload-superseded {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--mat-sys-corner-small);
+    background-color: var(--mat-sys-surface-container);
+  }
+
+  .dbx-pdf-merge-editor-file-upload-superseded-icon.mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-editor-file-upload--superseded .dbx-pdf-merge-editor-file-upload-label {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
   .dbx-pdf-preview-frame {
     min-height: 480px;
   }
@@ -267,6 +290,24 @@
     height: 18px;
     line-height: 18px;
     flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-page-unexpandable-remove {
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-page-unexpandable-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  // An ignored entry is not the document being used, so it reads as inert rather than as a notice
+  // about the file the merge is built from.
+  .dbx-pdf-merge-page-unexpandable--ignored {
+    background-color: var(--mat-sys-surface-container);
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.7;
   }
 
   .dbx-pdf-merge-editor-file-upload-pages {

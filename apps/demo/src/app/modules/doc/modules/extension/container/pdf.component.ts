@@ -392,6 +392,71 @@ export class DocPdfMergeEditorPageEditingToggleExampleComponent {
 }
 
 /**
+ * Password-protected asset the encrypted example adds. Its `/Encrypt` dictionary is what validation flags, and `pdf-lib` cannot open it at all — which is the whole point of the example.
+ */
+const DOC_PDF_MERGE_ENCRYPTED_ASSET_URL = '/assets/test/encrypted.pdf';
+
+@Component({
+  selector: 'doc-pdf-merge-encrypted-example',
+  template: `
+    <dbx-content-border>
+      <div class="dbx-mb3">
+        <dbx-button text="Add an encrypted PDF to Driver’s License" icon="lock" [working]="loadingSignal()" (buttonClick)="onAddEncrypted()"></dbx-button>
+        <p class="dbx-hint dbx-small dbx-mb0">Fetches a password-protected PDF and adds it to the first section, exactly as picking one would.</p>
+      </div>
+      <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false" [showPreviewButton]="true" [showDownloadButton]="true" [pageEditing]="true" [sidecar]="true">
+        <div dbxPdfMergeEditorFileUploadValidator>
+          <dbx-pdf-merge-editor-file-upload slotId="license" [config]="licenseConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+          <dbx-pdf-merge-editor-file-upload slotId="cert" [config]="certConfig">
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'valid'">check_circle</mat-icon>
+            <mat-icon *dbxPdfMergeEditorFileUploadHasState="'invalid'">error</mat-icon>
+          </dbx-pdf-merge-editor-file-upload>
+        </div>
+      </dbx-pdf-merge-editor>
+    </dbx-content-border>
+    @if (mergeOutputSizeSignal(); as size) {
+      <p class="dbx-hint">Merge output: {{ size }} bytes — the encrypted file's own bytes, passed through unchanged.</p>
+    }
+  `,
+  standalone: true,
+  imports: [MatIconModule, DbxButtonComponent, DbxContentBorderDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
+  providers: [DbxPdfMergeEditorStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeEncryptedExampleComponent {
+  readonly store = inject(DbxPdfMergeEditorStore);
+
+  readonly licenseConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Driver’s License', accept: ['application/pdf', 'image/png', 'image/jpeg'], multiple: true };
+  readonly certConfig: DbxPdfMergeEditorFileUploadConfig = { label: 'Certification', accept: ['application/pdf', 'image/png', 'image/jpeg'], multiple: true };
+
+  private readonly _loading = signal<boolean>(false);
+  readonly loadingSignal = this._loading.asReadonly();
+
+  readonly mergeOutputSizeSignal = toSignal(
+    this.store.mergeOutput$.pipe(
+      map((blob) => blob.size),
+      distinctUntilChanged()
+    ),
+    { initialValue: undefined }
+  );
+
+  async onAddEncrypted(): Promise<void> {
+    this._loading.set(true);
+
+    try {
+      const response = await fetch(DOC_PDF_MERGE_ENCRYPTED_ASSET_URL);
+      const file = new File([await response.blob()], 'locked-license.pdf', { type: 'application/pdf' });
+      await this.store.addFileToSlot({ file, slotId: 'license' });
+    } finally {
+      this._loading.set(false);
+    }
+  }
+}
+
+/**
  * Asset the "load programmatically" button builds its sample packet from.
  */
 const DOC_PDF_MERGE_SAMPLE_ASSET_URL = '/assets/test/resume.pdf';
@@ -549,6 +614,7 @@ export class DocPdfMergeReimportExampleComponent {
     DocPdfMergeUploadButtonCustomExampleComponent,
     DocPdfMergeEditorPageEditingExampleComponent,
     DocPdfMergeEditorPageEditingToggleExampleComponent,
+    DocPdfMergeEncryptedExampleComponent,
     DocPdfMergeReimportExampleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush

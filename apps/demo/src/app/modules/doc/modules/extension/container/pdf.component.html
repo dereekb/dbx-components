@@ -129,6 +129,25 @@
       </p>
       <doc-pdf-merge-page-editing-toggle-example></doc-pdf-merge-page-editing-toggle-example>
     </doc-feature-example>
+    <doc-feature-example header="An encrypted PDF with page editing on" hint="A password-protected PDF cannot be opened, so it lists no editable pages — and is uploaded exactly as it arrived.">
+      <p>
+        The default
+        <code>encryptedHandling</code>
+        of
+        <code>focus</code>
+        makes an encrypted file the whole document: it stays in the list as a single opaque row (its pages cannot be listed, let alone reordered or rotated) and the merge output is its own bytes, unchanged. Preview, Download, and any upload flow reading
+        <code>mergeOutput$</code>
+        all work, even though the page plan for such a document is necessarily empty.
+      </p>
+      <p>
+        Every other section is withdrawn while that is true — no drop area, no Add button, and its
+        <code>required</code>
+        check is waived, since nothing put there could reach the output. Remove the encrypted file and the sections come straight back. Set
+        <code>encryptedHandling: 'error'</code>
+        instead to reject encrypted files outright.
+      </p>
+      <doc-pdf-merge-encrypted-example></doc-pdf-merge-encrypted-example>
+    </doc-feature-example>
     <doc-feature-example header="Re-importing a completed document" hint="Choose a PDF exported from the page-editing example above and the editor rebuilds its sections from the embedded manifest.">
       <p>
         This is what the manifest is for. Download the merged PDF from the

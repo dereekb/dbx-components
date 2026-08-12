@@ -2,16 +2,22 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { combineLatest, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE, pdfMergePageGroupKeyForSlotId, type PdfMergeEntryView, type PdfMergePageGroup } from './pdf.merge';
+import { DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE, DBX_PDF_MERGE_IGNORED_ENTRY_MESSAGE, pdfMergePageGroupKeyForSlotId, type PdfMergeEntryView, type PdfMergePageGroup } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergePageComponent } from './pdf.merge.page.component';
+import { formatPdfMergeEntrySize } from './pdf.merge.utility';
 
 /**
  * Message shown for an entry that is not encrypted but still could not be parsed into pages.
  */
 const UNREADABLE_PAGES_MESSAGE = 'Pages could not be read.';
+
+const IGNORED_ICON = 'block';
+const ENCRYPTED_ICON = 'lock';
+const UNREADABLE_ICON = 'error';
 
 /**
  * Renders the editor's page plan while page editing is enabled, one CDK drop list per group.
@@ -42,17 +48,25 @@ const UNREADABLE_PAGES_MESSAGE = 'Pages could not be read.';
       }
     }
     @for (entry of unexpandableSignal(); track entry.id) {
-      <div class="dbx-pdf-merge-page-unexpandable">
-        <mat-icon class="dbx-pdf-merge-page-unexpandable-icon">lock</mat-icon>
-        <span class="dbx-pdf-merge-page-unexpandable-name dbx-text-truncate" [title]="entry.name">{{ entry.name }}</span>
-        <span class="dbx-hint dbx-small">{{ messageForUnexpandable(entry) }}</span>
+      <div class="dbx-pdf-merge-page-unexpandable" [class.dbx-pdf-merge-page-unexpandable--ignored]="entry.ignored">
+        <mat-icon class="dbx-pdf-merge-page-unexpandable-icon">{{ iconForUnexpandable(entry) }}</mat-icon>
+        <div class="dbx-pdf-merge-page-unexpandable-info dbx-flex-fill-0">
+          <div class="dbx-pdf-merge-page-unexpandable-name dbx-text-truncate" [title]="entry.name">{{ entry.name }}</div>
+          <div class="dbx-pdf-merge-page-unexpandable-meta dbx-hint dbx-small">
+            <span>{{ sizeForUnexpandable(entry) }}</span>
+            <span>{{ messageForUnexpandable(entry) }}</span>
+          </div>
+        </div>
+        <button mat-icon-button type="button" class="dbx-pdf-merge-page-unexpandable-remove" (click)="onRemove(entry)" [attr.aria-label]="'Remove ' + entry.name">
+          <mat-icon>close</mat-icon>
+        </button>
       </div>
     }
   `,
   host: {
     class: 'dbx-pdf-merge-page-list d-block'
   },
-  imports: [CdkDropList, MatIconModule, DbxPdfMergePageComponent],
+  imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -103,8 +117,46 @@ export class DbxPdfMergePageListComponent {
     return this.showGroupLabelsSignal() ? group.slotId : null;
   }
 
+  /**
+   * Explains why the entry has no pages in the list. The `ignored` check comes first: an ignored encrypted entry is out of the merge because something else is the focus target, which is the more actionable of the two facts.
+   *
+   * @param entry - Entry contributing no pages.
+   * @returns Message for the row.
+   */
   messageForUnexpandable(entry: PdfMergeEntryView): string {
-    return entry.encrypted ? DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE : UNREADABLE_PAGES_MESSAGE;
+    let message: string;
+
+    if (entry.ignored) {
+      message = DBX_PDF_MERGE_IGNORED_ENTRY_MESSAGE;
+    } else if (entry.encrypted) {
+      message = DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE;
+    } else {
+      message = UNREADABLE_PAGES_MESSAGE;
+    }
+
+    return message;
+  }
+
+  iconForUnexpandable(entry: PdfMergeEntryView): string {
+    let icon: string;
+
+    if (entry.ignored) {
+      icon = IGNORED_ICON;
+    } else if (entry.encrypted) {
+      icon = ENCRYPTED_ICON;
+    } else {
+      icon = UNREADABLE_ICON;
+    }
+
+    return icon;
+  }
+
+  sizeForUnexpandable(entry: PdfMergeEntryView): string {
+    return formatPdfMergeEntrySize(entry.size);
+  }
+
+  onRemove(entry: PdfMergeEntryView): void {
+    this.store.removeEntry(entry.id);
   }
 
   onDrop(group: PdfMergePageGroup, event: CdkDragDrop<unknown>): void {

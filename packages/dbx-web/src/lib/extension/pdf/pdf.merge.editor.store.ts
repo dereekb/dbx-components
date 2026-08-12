@@ -24,7 +24,7 @@ import {
   type PdfMergePageRotationChange,
   type PdfMergePageView
 } from './pdf.merge';
-import { asPdfMergeFile, buildPdfMergeEntriesFromSidecar, buildPdfMergeEntry, buildPdfMergeEntrySync, buildPdfMergePagePlan, mergePdfMergeEntries, readPdfMergeEntryPageMetas, type BuildPdfMergeEntriesFromSidecarConfig, type PdfMergeSidecarImportErrorReason, type PdfMergeSidecarImportResult } from './pdf.merge.utility';
+import { asPdfMergeFile, buildPdfMergeEntriesFromSidecar, buildPdfMergeEntry, buildPdfMergeEntrySync, buildPdfMergePagePlan, mergePdfMergeEntries, pdfMergeEntriesUseEncryptedPassthrough, readPdfMergeEntryPageMetas, type BuildPdfMergeEntriesFromSidecarConfig, type PdfMergeSidecarImportErrorReason, type PdfMergeSidecarImportResult } from './pdf.merge.utility';
 import { type DbxImageCompressionConfig } from '../image';
 import { filterMaybe } from '@dereekb/rxjs';
 
@@ -332,6 +332,19 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
+   * The single entry `focus` handling has narrowed the merge to — the first ready encrypted entry — or `null` whenever focus is not active (another handling mode, or no encrypted entry).
+   *
+   * Consumed by {@link DbxPdfMergeEditorFileUploadComponent} to answer "is my section still part of this document": while this entry exists, the output is that file alone, so every other slot's contents are ignored no matter what is put in them. Slots compare their own id against {@link PdfMergeEntry.slotId} here — a `null`/absent slot id means the focus target came from the editor's own upload area and supersedes every slot.
+   */
+  readonly encryptedFocusEntry$: Observable<Maybe<PdfMergeEntryView>> = combineLatest([this.displayEntries$, this.focusActive$]).pipe(
+    map(([entries, focusActive]) => (focusActive ? (entries.find((entry) => entry.encrypted && entry.status === 'ready' && !entry.ignored) ?? null) : null)),
+    // By id, not by reference: `displayEntries$` rebuilds its views on every emission, so the same
+    // focus target arrives as a fresh object each time.
+    distinctUntilChanged((a, b) => a?.id === b?.id),
+    shareReplay(1)
+  );
+
+  /**
    * Emits the encrypted, `ready` entries currently in the list. Useful for consumers that want to surface UI specifically for encrypted files.
    */
   readonly encryptedEntries$: Observable<PdfMergeEntry[]> = this.entries$.pipe(
@@ -341,6 +354,17 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
 
   readonly hasReadyEntries$: Observable<boolean> = this.displayEntries$.pipe(
     map((entries) => entries.some((entry) => entry.status === 'ready' && !entry.ignored)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while the merge will take the encrypted-passthrough branch — the only entry participating is a single ready encrypted PDF, whose original bytes become the output unchanged. See {@link pdfMergeEntriesUseEncryptedPassthrough}.
+   *
+   * This is what keeps page editing compatible with encrypted documents. `pdf-lib` cannot open an encrypted file, so it can never be expanded into pages and the page plan is necessarily empty for it — meaning every page-plan gate ({@link hasMergeablePages$} and the merge stream's own check) would otherwise read "the user deleted every page" and disable Preview, Download, and the upload/accept flows for the entire document. The passthrough has no plan to satisfy, so those gates consult this instead.
+   */
+  readonly encryptedPassthrough$: Observable<boolean> = this.displayEntries$.pipe(
+    map((entries) => pdfMergeEntriesUseEncryptedPassthrough(entries.filter((entry) => !entry.ignored))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -450,10 +474,12 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
-   * Entries that are ready to merge but whose pages could not be listed — encrypted documents (which `pdf-lib` cannot open) and anything unparseable. Surfaced so the UI can explain why those rows are not expandable instead of letting them silently vanish from the page list. Always empty while page editing is disabled.
+   * Entries that are ready but contribute no pages to the plan: encrypted documents (which `pdf-lib` cannot open), anything unparseable, and entries the active {@link DbxPdfMergeEncryptedHandling} is ignoring. Surfaced so the UI can explain why those rows are not expandable instead of letting them silently vanish from the page list. Always empty while page editing is disabled.
+   *
+   * Ignored entries belong here rather than nowhere: the file-granular list greys them out and still offers a remove button, so omitting them under page editing would make a file the user just added disappear with no explanation and no way to take it back out.
    */
   readonly unexpandableEntries$: Observable<PdfMergeEntryView[]> = combineLatest([this.displayEntries$, this.pageEditing$, this.pageMetas$]).pipe(
-    map(([entries, pageEditing, pageMetas]) => (pageEditing ? entries.filter((entry) => entry.status === 'ready' && !entry.ignored && pageMetas[entry.id] === null) : [])),
+    map(([entries, pageEditing, pageMetas]) => (pageEditing ? entries.filter((entry) => entry.status === 'ready' && (entry.ignored || pageMetas[entry.id] === null)) : [])),
     shareReplay(1)
   );
 
@@ -467,10 +493,10 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
-   * Whether at least one page survives the user's edits. Emits `true` while page editing is disabled so it never gates the default path.
+   * Whether at least one page survives the user's edits. Emits `true` while page editing is disabled so it never gates the default path, and while {@link encryptedPassthrough$} is active, where the output is the encrypted file itself and there is no plan to satisfy.
    */
-  readonly hasMergeablePages$: Observable<boolean> = this.pages$.pipe(
-    map((pages) => pages == null || pages.some((page) => !page.removed)),
+  readonly hasMergeablePages$: Observable<boolean> = combineLatest([this.pages$, this.encryptedPassthrough$]).pipe(
+    map(([pages, encryptedPassthrough]) => encryptedPassthrough || pages == null || pages.some((page) => !page.removed)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -510,12 +536,14 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   /**
    * Internal pre-validity merge stream produced without consulting {@link isValid$}. Drives both {@link outputSize$} and the eventual {@link currentMergeOutput$} so size-based gating can observe the would-be blob without creating a cycle. Consumes {@link displayEntries$} so the merge respects the active {@link DbxPdfMergeEncryptedHandling} (encrypted-focused entries pass through, ignored entries are dropped, `error` mode demotions are honored).
    */
-  private readonly _candidateMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.displayEntries$, this.isValidating$, this.validatorValid$, this.pages$, this.sidecar$]).pipe(
-    switchMap(([entries, isValidating, validatorValid, pages, sidecar]) => {
+  private readonly _candidateMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.displayEntries$, this.isValidating$, this.validatorValid$, this.pages$, this.sidecar$, this.encryptedPassthrough$]).pipe(
+    switchMap(([entries, isValidating, validatorValid, pages, sidecar, encryptedPassthrough]) => {
       const mergeable = entries.filter((entry) => !entry.ignored);
       const hasReady = mergeable.some((entry) => entry.status === 'ready');
-      // A `null` plan means page editing is off, in which case the merge takes its original every-page path.
-      const hasPages = pages == null || pages.some((page) => !page.removed);
+      // A `null` plan means page editing is off, in which case the merge takes its original every-page
+      // path. A passthrough has no plan either — the encrypted document cannot be opened, so its empty
+      // plan must not read as "every page deleted" and suppress the output.
+      const hasPages = encryptedPassthrough || pages == null || pages.some((page) => !page.removed);
       let next$: Observable<Maybe<Blob>>;
 
       if (isValidating || !hasReady || !validatorValid || !hasPages) {

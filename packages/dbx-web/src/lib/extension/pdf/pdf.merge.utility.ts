@@ -254,6 +254,20 @@ export async function validatePdfMergeEntry(entry: Omit<PdfMergeEntry, 'validati
 }
 
 /**
+ * Whether merging these entries will take the encrypted-passthrough branch of {@link mergePdfMergeEntries} — the only `ready` entry is a single encrypted PDF, so the merge emits its original bytes unchanged instead of assembling a document.
+ *
+ * Exported because the passthrough is not merely an implementation detail of the merge: `pdf-lib` cannot open an encrypted document at all, so such an entry can never be expanded into pages and the editor's page plan is necessarily empty for it. Anything that gates the merge on having pages has to consult this, or enabling page editing would silently block every encrypted document. Keeping the condition here is what keeps those gates aligned with what the merge actually does.
+ *
+ * @param entries - Entries about to be merged, already narrowed to the ones participating (ignored entries excluded).
+ * @returns `true` when the merge will pass a single encrypted file through unchanged.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function pdfMergeEntriesUseEncryptedPassthrough(entries: readonly PdfMergeEntry[]): boolean {
+  const ready = entries.filter((entry) => entry.status === 'ready');
+  return ready.length === 1 && ready[0].encrypted === true;
+}
+
+/**
  * Normalizes an arbitrary degree value into the `[0, 360)` range.
  *
  * @param angle - Angle in degrees, possibly negative or over a full turn.
@@ -734,7 +748,7 @@ export async function mergePdfMergeEntries(entries: readonly PdfMergeEntry[], op
 
   if (ready.length === 0) {
     throw new Error('No ready entries to merge.');
-  } else if (ready.length === 1 && ready[0].encrypted) {
+  } else if (pdfMergeEntriesUseEncryptedPassthrough(ready)) {
     const bytes = await ready[0].file.arrayBuffer();
     result = new Blob([bytes], { type: PDF_MERGE_RESULT_MIME_TYPE });
   } else if (ready.some((entry) => entry.encrypted)) {

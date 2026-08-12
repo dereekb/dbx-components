@@ -51,7 +51,7 @@ export interface PdfMergeEntryValidationResult {
 /**
  * Strategy for how the editor reacts when an encrypted PDF is added.
  *
- * - `focus` (default) — the encrypted entry stays `ready` and all non-encrypted entries are hidden from the merge (greyed out in the list). The merge output is the encrypted file's bytes passed through unchanged so downstream upload flows still receive a usable blob.
+ * - `focus` (default) — the encrypted entry stays `ready` and all non-encrypted entries are hidden from the merge (greyed out in the list). The merge output is the encrypted file's bytes passed through unchanged so downstream upload flows still receive a usable blob. This holds with page editing enabled: an encrypted document cannot be opened, so it lists no editable pages and the empty page plan does not gate the output (see `pdfMergeEntriesUseEncryptedPassthrough`). Every {@link DbxPdfMergeEditorFileUploadComponent} slot other than the one holding the encrypted file withdraws its add affordances and waives its `required` check, since nothing put there could reach the output.
  * - `error` — encrypted entries are marked as `error` with a "Password-protected PDFs cannot be merged." message. Preserves the legacy hard-reject behavior.
  * - `allow` — encrypted entries stay `ready` and participate in the merge alongside other entries. The client-side `pdf-lib` merge will fail; useful only for consumers that bypass `mergeOutput$` and upload raw entries themselves.
  */
@@ -83,9 +83,19 @@ export const DEFAULT_DBX_PDF_MERGE_SIDECAR = false;
 export const DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR = true;
 
 /**
- * Message shown on an encrypted entry's row while page editing is enabled. Encrypted documents cannot be opened by `pdf-lib`, so their pages cannot be listed or edited — the entry stays a single opaque row.
+ * Message shown on an encrypted entry's row while page editing is enabled. Encrypted documents cannot be opened by `pdf-lib`, so their pages cannot be listed or edited — the entry stays a single opaque row, and the merge emits the file unchanged.
  */
-export const DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE = 'Encrypted — pages cannot be edited.';
+export const DBX_PDF_MERGE_ENCRYPTED_NOT_EDITABLE_MESSAGE = 'This file cannot be edited; it will be used as-is.';
+
+/**
+ * Message shown on a row the active {@link DbxPdfMergeEncryptedHandling} is ignoring, i.e. a non-focused entry under `focus` mode. Kept in the list (rather than dropped) so a file the user added never disappears without an explanation.
+ */
+export const DBX_PDF_MERGE_IGNORED_ENTRY_MESSAGE = 'Ignored since an encrypted file is used instead.';
+
+/**
+ * Message shown on a {@link DbxPdfMergeEditorFileUploadComponent} slot whose section cannot contribute to the document because an encrypted PDF elsewhere in the editor is being used as the whole output under `focus` handling.
+ */
+export const DBX_PDF_MERGE_SUPERSEDED_SLOT_MESSAGE = 'An encrypted PDF is being used as the whole document.';
 
 /**
  * MIME types accepted by the PDF merge editor by default: PDF documents and PNG/JPEG images.

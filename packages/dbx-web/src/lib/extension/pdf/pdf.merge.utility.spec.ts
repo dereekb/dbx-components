@@ -2,7 +2,7 @@ import { PDFDocument, degrees, type Rotation } from '@cantoo/pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PDF_MERGE_PAGE_GROUP_KEY, makePdfMergePageId, pdfMergePageGroupKeyForSlotId, type PdfMergeEntry, type PdfMergeEntryView, type PdfMergePageMeta, type PdfMergePageRotation, type PdfMergePageView } from './pdf.merge';
 import { readPdfMergePageTag } from './pdf.merge.sidecar';
-import { buildPdfMergeEntry, buildPdfMergeEntrySync, buildPdfMergePagePlan, classifyPdfMergeFile, formatPdfMergeEntrySize, mergePdfMergeEntries, readPdfMergeEntryPageMetas, validatePdfMergeEntry } from './pdf.merge.utility';
+import { buildPdfMergeEntry, buildPdfMergeEntrySync, buildPdfMergePagePlan, classifyPdfMergeFile, formatPdfMergeEntrySize, mergePdfMergeEntries, pdfMergeEntriesUseEncryptedPassthrough, readPdfMergeEntryPageMetas, validatePdfMergeEntry } from './pdf.merge.utility';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -240,6 +240,34 @@ describe('validatePdfMergeEntry()', () => {
   it('marks a non-empty image as ready', async () => {
     const result = await validatePdfMergeEntry(imageEntry(makeFile('a.png', 'image/png', 'imgdata')));
     expect(result.ok).toBe(true);
+  });
+});
+
+describe('pdfMergeEntriesUseEncryptedPassthrough()', () => {
+  it('detects a lone ready encrypted entry', () => {
+    expect(pdfMergeEntriesUseEncryptedPassthrough([readyEntry({ encrypted: true })])).toBe(true);
+  });
+
+  it('ignores entries that are not ready when deciding', () => {
+    const encrypted = readyEntry({ encrypted: true });
+    const pending = readyEntry({ id: 'other', status: 'validating' });
+
+    expect(pdfMergeEntriesUseEncryptedPassthrough([encrypted, pending])).toBe(true);
+  });
+
+  it('rejects an encrypted entry alongside another ready entry, which the merge cannot do', () => {
+    const encrypted = readyEntry({ encrypted: true });
+    const plain = readyEntry({ id: 'other' });
+
+    expect(pdfMergeEntriesUseEncryptedPassthrough([encrypted, plain])).toBe(false);
+  });
+
+  it('rejects a lone entry that is not encrypted', () => {
+    expect(pdfMergeEntriesUseEncryptedPassthrough([readyEntry({})])).toBe(false);
+  });
+
+  it('rejects an empty list', () => {
+    expect(pdfMergeEntriesUseEncryptedPassthrough([])).toBe(false);
   });
 });
 
