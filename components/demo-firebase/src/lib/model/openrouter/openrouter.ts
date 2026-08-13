@@ -1,4 +1,4 @@
-import { type OpenRouterModelConfig, type OpenRouterPromptKey, openRouterFileParserPlugin } from '@dereekb/openrouter';
+import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, openRouterFileParserPlugin } from '@dereekb/openrouter';
 
 /**
  * The demo's one OpenRouter prompt: given a PDF, decide whether it is a resume.
@@ -56,6 +56,38 @@ export function demoResumeCheckPromptConfig(modelId: string = DEMO_RESUME_CHECK_
 }
 
 /**
+ * The version {@link demoResumeCheckPromptDefinition} ships.
+ *
+ * Bump this whenever the instructions or the config below change, so an environment already seeded at
+ * the previous version picks the new definition up instead of serving what it stored.
+ */
+export const DEMO_RESUME_CHECK_PROMPT_VERSION: OpenRouterPromptVersionNumber = 1;
+
+/**
+ * The demo's resume-check prompt, as a code definition.
+ *
+ * This is what lets the resume check run in an environment that was never seeded — a fresh emulator, or
+ * a test — instead of failing to resolve the prompt and leaving the upload stuck mid-check. Seeding is
+ * still what a real deployment does, and a stored version at or above
+ * {@link DEMO_RESUME_CHECK_PROMPT_VERSION} takes precedence over this.
+ *
+ * @param modelId - Model to run against. Defaults to {@link DEMO_RESUME_CHECK_DEFAULT_MODEL_ID}.
+ * @returns The prompt definition.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function demoResumeCheckPromptDefinition(modelId: string = DEMO_RESUME_CHECK_DEFAULT_MODEL_ID): OpenRouterPromptDefinition {
+  return {
+    promptKey: DEMO_RESUME_CHECK_PROMPT_KEY,
+    version: DEMO_RESUME_CHECK_PROMPT_VERSION,
+    name: DEMO_RESUME_CHECK_PROMPT_NAME,
+    description: 'Decides whether an attached document is a resume.',
+    instructions: DEMO_RESUME_CHECK_INSTRUCTIONS,
+    config: demoResumeCheckPromptConfig(modelId)
+  };
+}
+
+/**
  * The model's verdict about one document.
  */
 export interface DemoResumeCheckVerdict {
@@ -77,8 +109,7 @@ export interface DemoResumeCheckVerdict {
  * @__NO_SIDE_EFFECTS__
  */
 export function demoResumeCheckVerdictFromOutput(outputJson: unknown, outputText: unknown): DemoResumeCheckVerdict | undefined {
-  const parsed = demoResumeCheckVerdictFromValue(outputJson) ?? demoResumeCheckVerdictFromValue(demoResumeCheckJsonInText(outputText));
-  return parsed;
+  return demoResumeCheckVerdictFromValue(outputJson) ?? demoResumeCheckVerdictFromValue(demoResumeCheckJsonInText(outputText));
 }
 
 function demoResumeCheckJsonInText(outputText: unknown): unknown {

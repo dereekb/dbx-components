@@ -5,15 +5,20 @@ import { OPENROUTER_PROMPT_SERVICE_TOKEN, OPENROUTER_RUN_TASK_SERVICE_TOKEN, Ope
 import { DemoFirebaseServerActionsContext } from '../../common/firebase/action.context';
 import { DemoApiActionModule } from '../../common/firebase/action.module';
 import { DemoApiStorageModule } from '../../common/firebase/storage.module';
+import { demoOpenRouterPromptDefinitions } from '../../common/model/openrouter/openrouter.definitions';
 
 /**
  * Builds the {@link OpenRouterPromptService} for the demo app.
+ *
+ * The code definitions are what let the resume check run against an environment that was never seeded —
+ * a fresh emulator, or a test — instead of failing to resolve the prompt. A seeded version at or above
+ * the definition's version still wins.
  *
  * @param context - Server actions context supplying the prompt collections.
  * @returns The prompt service.
  */
 export function demoOpenRouterPromptServiceFactory(context: DemoFirebaseServerActionsContext): OpenRouterPromptService {
-  return openRouterPromptService({ collections: context });
+  return openRouterPromptService({ collections: context, definitions: demoOpenRouterPromptDefinitions() });
 }
 
 /**
