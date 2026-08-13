@@ -5,13 +5,13 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterCore, type OpenRouterModelConfig, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import { OPENROUTER_RUN_TASK_MAX_AGE, type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
 import { type FakeOpenRouterClient, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
 import { openRouterPromptServerActions } from './openrouter.action.server';
 import { type OpenRouterFileAttachmentMode } from './openrouter.file.attachment';
-import { openRouterPromptService } from './openrouter.prompt.service';
+import { OpenRouterPromptResolutionError, openRouterPromptService } from './openrouter.prompt.service';
 import { type OpenRouterRunTaskExecutionResult, type OpenRouterRunTaskService, openRouterRunTaskService } from './openrouter.runtask.service';
 import { openRouterRunTaskExpirationSweep, openRouterRunTaskSweep } from './openrouter.runtask.sweep';
 import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadcastAttributes } from './openrouter.broadcast';
@@ -424,6 +424,67 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const result = await publish(promptDocument);
         expect(result.warnings.length).toBeGreaterThan(0);
         expect(result.warnings.join(' ')).toContain('mistral-ocr');
+      });
+    });
+
+    // MARK: 7b — Code-defined prompts
+    describe('prompt definitions', () => {
+      const DEFINED_KEY = 'defined-prompt';
+
+      function definition(version: number, instructions: string): OpenRouterPromptDefinition {
+        return { promptKey: DEFINED_KEY, version, name: 'Defined', instructions, config: TEST_MODEL_CONFIG };
+      }
+
+      function buildServiceWithDefinition(version: number, instructions: string) {
+        const collections = buildCollections();
+        const promptService = openRouterPromptService({ collections, definitions: [definition(version, instructions)], cacheDuration: 1 });
+        const actionsContext = { ...firebaseServerActionsContext(), ...collections, firestoreContext: f.firestoreContext, openRouterPromptService: promptService };
+
+        return { promptService, actions: openRouterPromptServerActions(actionsContext) };
+      }
+
+      it('should serve a definition when nothing has been seeded', async () => {
+        // The failure this exists for: an unseeded environment threw OpenRouterPromptResolutionError, which
+        // is classified permanent, so the caller had no retry that could ever succeed.
+        const { promptService } = buildServiceWithDefinition(1, 'from code');
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from code');
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).version).toBe(1);
+        // The definition is NOT a stored prompt, and must not pretend to be one.
+        expect(await promptService.loadPrompt(DEFINED_KEY)).toBeUndefined();
+      });
+
+      it('should prefer the stored version once it is published at the definition version', async () => {
+        const { promptService, actions } = buildServiceWithDefinition(1, 'from code');
+        const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
+
+        const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        expect((await publish(promptDocument)).version).toBe(1);
+
+        // Equal versions hand it to the store, which is what makes seeding take over authoring.
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from store');
+      });
+
+      it('should prefer the definition when its version is ahead of the stored one', async () => {
+        // Drift control: bumping the definition's version is what lets code win back an environment that
+        // was already seeded at a lower version.
+        const { promptService, actions } = buildServiceWithDefinition(2, 'from newer code');
+        const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
+
+        const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        await publish(promptDocument);
+
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from newer code');
+        // The stored version is still readable by a caller that names it.
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY, version: 1 })).instructions).toBe('from store');
+      });
+
+      it('should serve a definition to a pinned caller when that version was never stored', async () => {
+        // This is what lets a run enqueued against a definition still dispatch: enqueue records the
+        // definition's version, and dispatch re-resolves pinned to it.
+        const { promptService } = buildServiceWithDefinition(3, 'from code');
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY, version: 3 })).instructions).toBe('from code');
+
+        await expect(promptService.resolvePrompt({ promptKey: DEFINED_KEY, version: 2 })).rejects.toThrow(OpenRouterPromptResolutionError);
       });
     });
 

@@ -49,3 +49,34 @@ export interface OpenRouterResolvedPrompt {
    */
   readonly config: OpenRouterModelConfig;
 }
+
+/**
+ * A prompt defined in CODE rather than published to Firestore.
+ *
+ * This is the backup half of prompt resolution: an app ships its prompts as definitions, so a fresh
+ * environment — a new emulator, a test, a project that has never been seeded — can serve them without a
+ * manual seeding step first. Once the same prompt is published to Firestore the stored version takes
+ * over, which is what keeps prompt authoring a runtime concern rather than a deploy-shaped one.
+ *
+ * A definition IS an {@link OpenRouterResolvedPrompt}, so serving one needs no conversion. The extra
+ * fields are the authoring metadata a seeder needs to create the stored prompt from this same value,
+ * rather than restating the name and description alongside it.
+ */
+export interface OpenRouterPromptDefinition extends OpenRouterResolvedPrompt {
+  /**
+   * The version this code ships.
+   *
+   * Compared against the stored prompt's active version to decide which one wins, so this is the one
+   * knob that controls drift: bump it when the definition's text or config changes and the definition
+   * takes over again, even from an environment that was already seeded at a lower version.
+   */
+  readonly version: OpenRouterPromptVersionNumber;
+  /**
+   * Human-readable name, used when this definition is published to Firestore.
+   */
+  readonly name: string;
+  /**
+   * What this prompt is for, used when this definition is published to Firestore.
+   */
+  readonly description?: Maybe<string>;
+}
