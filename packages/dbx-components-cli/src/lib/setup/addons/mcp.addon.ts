@@ -78,13 +78,25 @@ function buildInjection(input: McpInjectionInput, render: (snippet: string) => s
 }
 
 /**
- * The dev MCP endpoint URL (functions-emulator origin) for this project.
+ * The dev MCP endpoint URL (hosting-emulator origin) for this project.
+ *
+ * Deliberately the *hosting* emulator rather than the functions emulator: RFC 9728 discovery
+ * probes `/.well-known/oauth-protected-resource` at the origin root, and the functions emulator
+ * only routes `/<project>/<region>/<function>/…`, so an app mounted under that prefix cannot
+ * answer at the root. A client that has not yet seen a 401 challenge — the `/mcp` → Authenticate
+ * flow, which happens before any request — then fails discovery and falls back to treating the
+ * origin itself as the authorization server, which 404s at dynamic client registration.
+ *
+ * Hosting serves the app at `/` (via the `/mcp` rewrites {@link applyMcpFirebaseJsonRewrites}
+ * adds), so both discovery probes resolve. Uses `localhost` rather than the naming `localhost`
+ * field (`0.0.0.0`, used by {@link buildProxyTarget}) because this is a connect address for the
+ * MCP client, not a bind address.
  *
  * @param context - The add-on context.
  * @returns The MCP endpoint URL.
  */
 function buildMcpDevUrl(context: AddonContext): string {
-  return `${buildProxyTarget({ functionsPort: context.naming.emulatorFunctionsPort, projectId: context.naming.stagingProjectId })}/mcp`;
+  return `http://localhost:${context.naming.emulatorHostingPort}/mcp`;
 }
 
 /**

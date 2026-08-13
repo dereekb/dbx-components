@@ -184,10 +184,10 @@ describe('proxy.conf.dev.json edits', () => {
 
 describe('ensureMcpServerEntry', () => {
   it('adds an http server entry without clobbering existing servers', () => {
-    const result = ensureMcpServerEntry({ mcpServers: { existing: { type: 'stdio', command: 'x' } } }, { name: 'gethapier-mcp-dev', url: 'http://0.0.0.0:9302/gethapierapp-staging/us-central1/api/mcp' });
+    const result = ensureMcpServerEntry({ mcpServers: { existing: { type: 'stdio', command: 'x' } } }, { name: 'gethapier-mcp-dev', url: 'http://localhost:9301/mcp' });
     const servers = result['mcpServers'] as JsonObject;
     expect(servers['existing']).toBeDefined();
-    expect(servers['gethapier-mcp-dev']).toEqual({ type: 'http', url: 'http://0.0.0.0:9302/gethapierapp-staging/us-central1/api/mcp' });
+    expect(servers['gethapier-mcp-dev']).toEqual({ type: 'http', url: 'http://localhost:9301/mcp' });
   });
 
   it('creates mcpServers when absent and is idempotent', () => {

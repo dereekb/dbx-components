@@ -16,11 +16,16 @@ export const environment: FirebaseServerEnvironmentConfig = {
   // providers require a byte-identical match. In production the two origins coincide, so
   // environment.prod.ts omits it and the framework falls back to appUrl.
   appOAuthUrl: 'http://localhost:9901',
-  // Point directly at the Firebase Functions emulator origin (bypassing the Angular dev-server
-  // proxy on :9010) — webpack-dev-server's http-proxy-middleware doesn't reliably stream the
-  // MCP SDK's `text/event-stream` responses, turning the upstream 200 SSE into a 400 at the
-  // client. This URL flows into the protected-resource `resource`, the RFC 8707 resourceServers
-  // key, the audience claim on tokens, and the RFC 9728 resource_metadata WWW-Authenticate URL,
-  // so changing it here keeps every wire-level identifier consistent.
-  appMcpUrl: 'http://localhost:9902/dereekb-components/us-central1/api/mcp'
+  // Served through the hosting emulator (same reason as `appOAuthUrl` above) rather than the
+  // Functions emulator origin. RFC 9728 discovery probes `/.well-known/oauth-protected-resource`
+  // at the *origin root*, and the Functions emulator only routes `/<project>/<region>/<function>/…`
+  // — the Nest app sits under that prefix and can't answer at the root, so a client that hasn't
+  // yet seen a 401 (the `/mcp` → Authenticate flow) fails discovery and falls back to treating
+  // the origin itself as the authorization server. Hosting serves the app at the root, so both
+  // discovery probes resolve. The `:9010` Angular dev-server proxy is also root-origin but was
+  // ruled out: webpack-dev-server's http-proxy-middleware doesn't reliably stream responses.
+  // This URL flows into the protected-resource `resource`, the RFC 8707 resourceServers key, the
+  // audience claim on tokens, and the RFC 9728 resource_metadata WWW-Authenticate URL, so
+  // changing it here keeps every wire-level identifier consistent.
+  appMcpUrl: 'http://localhost:9901/mcp'
 };

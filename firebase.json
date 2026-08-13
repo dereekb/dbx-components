@@ -36,6 +36,14 @@
         "function": "api"
       },
       {
+        "source": "/mcp/**",
+        "function": "api"
+      },
+      {
+        "source": "/mcp",
+        "function": "api"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

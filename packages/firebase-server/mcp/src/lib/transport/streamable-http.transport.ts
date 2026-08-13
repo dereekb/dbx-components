@@ -19,7 +19,13 @@ import { type Request, type Response } from 'express';
  */
 export async function handleStreamableHttpMcpRequest(req: Request, res: Response, server: { connect: (transport: StreamableHTTPServerTransport) => Promise<void> }): Promise<void> {
   // sessionIdGenerator: undefined → stateless mode.
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  //
+  // enableJsonResponse: true → reply with a single `application/json` body instead of framing it
+  // as `text/event-stream`. Stateless mode answers exactly one JSON-RPC message per request and
+  // the controller only implements POST (there is no standalone SSE stream to keep open), so SSE
+  // framing adds nothing while making the endpoint fragile behind proxies that buffer or rewrite
+  // streamed responses — the failure that originally pushed the demo app off its dev proxy.
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
 
   res.on('close', () => {
     void transport.close();

@@ -87,6 +87,32 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(providerConfigService.scopesSupported).toContain('email');
         expect(providerConfigService.scopesSupported).toContain('demo');
       });
+
+      it('should contain the provider-profile-gated scopes', () => {
+        expect(providerConfigService.scopesSupported).toContain('lms');
+        expect(providerConfigService.scopesSupported).toContain('reports');
+      });
+    });
+
+    describe('clientRequestableScopesSupported', () => {
+      it('should contain the ungated scopes', () => {
+        expect(providerConfigService.clientRequestableScopesSupported).toContain('openid');
+        expect(providerConfigService.clientRequestableScopesSupported).toContain('demo');
+        expect(providerConfigService.clientRequestableScopesSupported).toContain('model.read');
+      });
+
+      // No DEMO_OIDC_PROVIDER_PROFILES entry is marked `isDefault`, so both gated scopes require an
+      // explicit assignment and neither belongs in a list a client requests unconditionally.
+      it('should exclude the scopes unlocked only by an assigned provider profile', () => {
+        expect(providerConfigService.clientRequestableScopesSupported).not.toContain('lms');
+        expect(providerConfigService.clientRequestableScopesSupported).not.toContain('reports');
+      });
+
+      // Admin-only scopes stay: the admin-only gate judges what the user CONSENTED to, so a
+      // non-admin can deselect the scope at consent and still complete the flow.
+      it('should retain the admin-only service token scope', () => {
+        expect(providerConfigService.clientRequestableScopesSupported).toContain('token.service');
+      });
     });
 
     describe('claimsSupported', () => {

@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '@dereekb/firebase-server/mcp';
 import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
+import { SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
@@ -73,6 +74,10 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
   return {
     oidcIssuer: oidcModuleConfig.issuer,
     mcpUrl,
+    // A service token is admin-only and makes the grant long-lived + non-rotating — not what an
+    // interactive MCP connection should be asking for, so it is not advertised to MCP clients (which
+    // request the advertised list verbatim). Other OIDC clients can still request it directly.
+    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE),
     serverName: 'demo-api-mcp',
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
@@ -98,7 +103,7 @@ const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SE
  * export propagates to `McpServerFactoryService`, plus the MCP module config provider.
  * Imports + re-exports {@link DemoApiOidcModule} so {@link OidcModuleConfig} is available
  * to the MCP config factory and its `OidcProviderConfigService` export propagates to the
- * `McpWellKnownController` (which reads the provider's `scopesSupported`).
+ * `McpWellKnownController` (which reads the provider's `clientRequestableScopesSupported`).
  */
 @Module({
   imports: [DemoApiOidcModule, DemoModelApiModule],
