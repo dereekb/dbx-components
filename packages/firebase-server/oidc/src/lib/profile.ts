@@ -1,4 +1,4 @@
-import { type OidcProviderProfile, oidcProviderProfilesForClient, requiredScopesForOidcProviderProfiles, scopesForOidcProviderProfiles, type OidcScope, type OidcProviderProfileKey } from '@dereekb/firebase';
+import { adminOnlyScopesForOidcProviderProfiles, type OidcProviderProfile, oidcProviderProfilesForClient, requiredScopesForOidcProviderProfiles, scopesForOidcProviderProfiles, type OidcScope, type OidcProviderProfileKey } from '@dereekb/firebase';
 
 /**
  * Custom oidc-provider client metadata field holding the {@link OidcProviderProfile} keys assigned
@@ -42,4 +42,29 @@ export function oidcClientProviderProfileScopes<S extends OidcScope = OidcScope>
     unlocked: scopesForOidcProviderProfiles(clientProfiles),
     required: requiredScopesForOidcProviderProfiles(clientProfiles)
   };
+}
+
+/**
+ * The subset of an {@link OidcProviderConfig} needed to resolve its admin-only scopes. Declared
+ * structurally so this module stays free of a dependency on the config type.
+ */
+export interface OidcAdminOnlyScopesInput<S extends OidcScope = OidcScope> {
+  readonly adminOnlyScopes?: readonly string[];
+  readonly providerProfiles?: readonly OidcProviderProfile<S>[];
+}
+
+/**
+ * Resolves every scope restricted to admin users: the provider config's own `adminOnlyScopes`
+ * unioned with the scopes of each profile marked {@link OidcProviderProfile.adminOnly}.
+ *
+ * The single choke point for that union — the consent admin-only gate (which hard-rejects a
+ * non-admin who consented to one) and the consent URL builder (which withholds them from a
+ * non-admin's consent screen in the first place) both read through it, so the set a user is
+ * offered and the set they are judged against cannot drift apart.
+ *
+ * @param providerConfig - The provider config supplying `adminOnlyScopes` and the profile registry.
+ * @returns The union of config-level and profile-level admin-only scopes.
+ */
+export function adminOnlyScopesForOidcProviderConfig<S extends OidcScope = OidcScope>(providerConfig: OidcAdminOnlyScopesInput<S>): Set<string> {
+  return new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...adminOnlyScopesForOidcProviderProfiles(providerConfig.providerProfiles ?? [])]);
 }

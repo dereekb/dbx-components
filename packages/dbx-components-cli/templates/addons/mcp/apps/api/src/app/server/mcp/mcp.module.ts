@@ -66,7 +66,7 @@ const APP_CODE_PREFIX_CAMELMcpAuthRoleReader: McpAuthRoleReader = (claims) => AP
  * (so its dispatch service reaches the MCP server factory) + the config provider, and
  * imports + re-exports {@link APP_CODE_PREFIXApiOidcModule} so {@link OidcModuleConfig} is
  * injectable here and its `OidcProviderConfigService` export propagates to the
- * `McpWellKnownController` (which reads the provider's `scopesSupported`).
+ * `McpWellKnownController` (which reads the provider's `clientRequestableScopesSupported`).
  */
 @Module({
   imports: [APP_CODE_PREFIXApiOidcModule, APP_CODE_PREFIXModelApiModule],

@@ -1,4 +1,4 @@
-import { Controller, Post, Req, Res, Inject, Logger } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Req, Res, Inject, Logger, HttpStatus } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
 import { McpServerFactoryService } from '../service/mcp.server.factory';
@@ -35,5 +35,40 @@ export class McpController {
         res.status(500).json({ statusCode: 500, message: 'MCP request handling failed' });
       }
     }
+  }
+
+  /**
+   * Rejects the Streamable HTTP transport's optional `GET` method, which opens a standalone SSE
+   * stream. Not applicable in stateless mode. Separate from {@link handleUnsupportedDelete} because
+   * NestJS binds one HTTP method per handler — stacking route decorators would silently drop one.
+   *
+   * @param res - The Express response to write the rejection to.
+   */
+  @Get()
+  handleUnsupportedGet(@Res() res: Response): void {
+    this._rejectUnsupportedMethod(res);
+  }
+
+  /**
+   * Rejects the Streamable HTTP transport's optional `DELETE` method, which tears down a session.
+   * Not applicable in stateless mode — no session is ever issued.
+   *
+   * @param res - The Express response to write the rejection to.
+   */
+  @Delete()
+  handleUnsupportedDelete(@Res() res: Response): void {
+    this._rejectUnsupportedMethod(res);
+  }
+
+  /**
+   * Answers with a spec-conformant `405 Method Not Allowed` + `Allow` header. Without these
+   * handlers NestJS answers `404`, which some clients treat as a hard failure rather than
+   * "the server doesn't offer this".
+   *
+   * @param res - The Express response to write the rejection to.
+   */
+  private _rejectUnsupportedMethod(res: Response): void {
+    res.setHeader('Allow', 'POST');
+    res.status(HttpStatus.METHOD_NOT_ALLOWED).json({ statusCode: HttpStatus.METHOD_NOT_ALLOWED, message: 'Method Not Allowed' });
   }
 }
