@@ -1,7 +1,7 @@
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
 import { type SlashPathPathMatcherPath } from '@dereekb/util';
-import { USER_RESUME_FILE_PURPOSE, USER_RESUME_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_RESUME_FILE_UPLOADS_FOLDER_NAME, userResumeFileGroupIds, userResumeFileStoragePath } from 'demo-firebase';
+import { type ProfileResume, ProfileResumeState, USER_RESUME_FILE_PURPOSE, USER_RESUME_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_RESUME_FILE_UPLOADS_FOLDER_NAME, userResumeFileGroupIds, userResumeFileStoragePath } from 'demo-firebase';
 import { type DemoFirebaseServerActionsContext } from '../../../firebase/action.context';
 
 /**
@@ -54,10 +54,7 @@ export function makeUserResumeFileUploadInitializer(context: DemoFirebaseServerA
       const fileBytes = await input.fileDetailsAccessor.loadFileBytes();
       let result: StorageFileInitializeFromUploadServiceInitializerResult;
 
-      if (!isPdfContent(fileBytes)) {
-        // Permanent: re-reading the same bytes will never make them a PDF.
-        result = storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(new Error('The uploaded resume is not a PDF.'));
-      } else {
+      if (isPdfContent(fileBytes)) {
         const newPath = userResumeFileStoragePath(userId, file as string);
         const createdFile = await input.fileDetailsAccessor.copy(newPath);
 
@@ -73,10 +70,22 @@ export function makeUserResumeFileUploadInitializer(context: DemoFirebaseServerA
         const profileDocument = profileCollection.documentAccessor().loadDocumentForId(userId);
 
         if (await profileDocument.exists()) {
-          await profileDocument.update({ resumeStorageFile: createStorageFileResult.storageFileDocument.key });
+          // The whole object is replaced rather than merged, so the incoming resume starts with no
+          // verdict instead of inheriting the previous file's.
+          const resume: ProfileResume = {
+            state: ProfileResumeState.CHECKING,
+            storageFile: createStorageFileResult.storageFileDocument.key,
+            filename: file as string,
+            uploadedAt: new Date()
+          };
+
+          await profileDocument.update({ resume });
         }
 
         result = { createStorageFileResult, flagPreviousForDelete: true };
+      } else {
+        // Permanent: re-reading the same bytes will never make them a PDF.
+        result = storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(new Error('The uploaded resume is not a PDF.'));
       }
 
       return result;

@@ -197,7 +197,7 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
 
   // No new NotificationTaskType: the framework's `SFP` storage-file processing task already covers this,
   // so the resume check is one more entry here rather than a task type of its own.
-  const resumeFileProcessorConfig = demoUserResumeFileProcessingSubtaskProcessor(openRouterRunTaskService);
+  const resumeFileProcessorConfig = demoUserResumeFileProcessingSubtaskProcessor({ openRouterRunTaskService, profileCollection: demoFirebaseServerActionsContext.profileCollection });
 
   const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig];
 
