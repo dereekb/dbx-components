@@ -29,23 +29,33 @@
     <dbx-content-box [wide]="true">
       <dbx-section header="Resume" hint="Uploads a PDF, then asks OpenRouter whether the document actually is a resume.">
         <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf">
-          <div dbxAction dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
+          <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
             <dbx-loading dbxActionLoadingContext>
-              @if (resumeCheckStatusSignal(); as status) {
-                <dbx-label-block [header]="status.filename">
-                  @if (status.checking) {
-                    <div class="dbx-hint">Checking with OpenRouter...</div>
-                  } @else if (status.failed) {
-                    <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
-                  } @else if (status.checkedAt) {
-                    <div [class]="status.isResume ? 'dbx-success' : 'dbx-warn'">{{ status.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
-                    <div class="dbx-hint">{{ status.reason }}</div>
+              @if (resumeSignal(); as resume) {
+                @switch (resume.state) {
+                  @case (profileResumeState.CHECKING) {
+                    <dbx-label-block [header]="resume.filename">
+                      <div class="dbx-hint">Uploaded {{ resume.uploadedAt | timeDistance }} &mdash; checking with OpenRouter...</div>
+                    </dbx-label-block>
                   }
-                </dbx-label-block>
-              } @else {
-                <dbx-label-block header="No Resume">
-                  <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
-                </dbx-label-block>
+                  @case (profileResumeState.CHECKED) {
+                    <dbx-label-block [header]="resume.filename">
+                      <div [class]="resume.isResume ? 'dbx-success' : 'dbx-warn'">{{ resume.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
+                      <div class="dbx-hint">{{ resume.reason }}</div>
+                      <div class="dbx-hint">Checked {{ resume.checkedAt | timeDistance }}.</div>
+                    </dbx-label-block>
+                  }
+                  @case (profileResumeState.FAILED) {
+                    <dbx-label-block [header]="resume.filename">
+                      <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
+                    </dbx-label-block>
+                  }
+                  @default {
+                    <dbx-label-block header="No Resume">
+                      <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
+                    </dbx-label-block>
+                  }
+                }
               }
             </dbx-loading>
           </div>

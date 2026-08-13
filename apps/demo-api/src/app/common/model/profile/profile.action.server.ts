@@ -1,5 +1,5 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
+import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
@@ -68,6 +68,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         await profile.accessor.set({
           uid,
           username,
+          resume: { state: ProfileResumeState.NONE },
           updatedAt: new Date()
         });
 

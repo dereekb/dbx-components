@@ -3,10 +3,10 @@ import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, StorageFileProcessingState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
+import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
 import { OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
-import { DEMO_RESUME_CHECK_PROMPT_KEY, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
+import { DEMO_RESUME_CHECK_PROMPT_KEY, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { seedDemoOpenRouterPrompts } from '../../common/model/openrouter/openrouter.seed';
 import { demoResumeCheckRunTaskKey } from '../../common/model/notification/handlers/storagefile/task.handler.storagefile.resume';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
@@ -83,6 +83,21 @@ demoApiFunctionContextFactory((f) => {
           return sendQueuedNotifications();
         }
 
+        /**
+         * Clears the throttle a pass leaves on the file's processing task.
+         *
+         * Every run of a notification task pushes its `sat` out by
+         * NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES, which is what stops the queue looping on
+         * a task it just ran. In a test that means back-to-back passes only ever execute the first
+         * subtask, so the clock is wound back by hand between them.
+         */
+        async function clearProcessingTaskThrottle(storageFileDocument: StorageFileDocument) {
+          const storageFile = await assertSnapshotData(storageFileDocument);
+          const notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(storageFile.pn as NotificationKey);
+
+          await notificationDocument.update({ sat: new Date() });
+        }
+
         describe('resume storage file', () => {
           it('should initialize an uploaded resume and queue it for processing', async () => {
             await seedDemoOpenRouterPrompts({ openRouterPromptActions: f.openRouterPromptServerActions, demoFirestoreCollections: f.demoFirestoreCollections });
@@ -95,9 +110,14 @@ demoApiFunctionContextFactory((f) => {
             expect(storageFile.p).toBe(USER_RESUME_FILE_PURPOSE);
             expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
 
-            // The upload initializer points the Profile at the new file, the way the avatar one does.
+            // The upload initializer opens the Profile's resume tracking, which is what the profile view
+            // renders — the StorageFile itself is not client-readable.
             const profile = await assertSnapshotData(p.document);
-            expect(profile.resumeStorageFile).toBe(storageFileDocument.key);
+            expect(profile.resume.storageFile).toBe(storageFileDocument.key);
+            expect(profile.resume.state).toBe(ProfileResumeState.CHECKING);
+            expect(profile.resume.filename).toBe('resume.pdf');
+            expect(profile.resume.uploadedAt).toBeDefined();
+            expect(profile.resume.checkedAt).toBeFalsy();
           });
 
           it('should seed the resume-check prompt idempotently', async () => {
@@ -149,6 +169,36 @@ demoApiFunctionContextFactory((f) => {
             expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
             expect(storageFile.d).toBeUndefined();
             expect(storageFile.pn).toBeDefined();
+          });
+
+          it('should land the verdict on the StorageFile and the Profile once the run completes', async () => {
+            const storageFileDocument = await uploadAndBeginProcessing();
+
+            // `send` — enqueues the run.
+            await runNotificationTasks();
+
+            // Stands in for the sweep. The emulator never calls OpenRouter, so the run is completed by
+            // hand and `retrieve` is left to do the part under test.
+            const runTaskDocument = f.demoFirestoreCollections.openRouterRunTaskCollection.documentAccessor().loadDocumentForId(demoResumeCheckRunTaskKey(storageFileDocument.id));
+            await runTaskDocument.update({ s: OpenRouterRunTaskState.COMPLETE, o: '{"isResume": true, "reason": "It lists work history and education."}' });
+
+            // `retrieve`
+            await clearProcessingTaskThrottle(storageFileDocument);
+            await runNotificationTasks();
+
+            const storageFile = await assertSnapshotData(storageFileDocument);
+            expect((storageFile.d as UserResumeFileMetadata).isResume).toBe(true);
+
+            // The verdict reaches the Profile, which is what the profile view actually renders.
+            const profile = await assertSnapshotData(p.document);
+            expect(profile.resume.state).toBe(ProfileResumeState.CHECKED);
+            expect(profile.resume.isResume).toBe(true);
+            expect(profile.resume.reason).toBe('It lists work history and education.');
+            expect(profile.resume.checkedAt).toBeDefined();
+
+            // ...without dropping what the upload initializer put there.
+            expect(profile.resume.storageFile).toBe(storageFileDocument.key);
+            expect(profile.resume.filename).toBe('resume.pdf');
           });
 
           describe('signedUploadUrl', () => {
@@ -223,6 +273,10 @@ demoApiFunctionContextFactory((f) => {
               expect(metadata).toBeDefined();
               expect(metadata.isResume).toBe(true);
               expect(metadata.checkedAt).toBeDefined();
+
+              const profile = await assertSnapshotData(p.document);
+              expect(profile.resume.state).toBe(ProfileResumeState.CHECKED);
+              expect(profile.resume.isResume).toBe(true);
             }, 180_000);
           });
         });

@@ -1,4 +1,26 @@
-import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, optionalFirestoreString, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, type StorageFileKey } from '@dereekb/firebase';
+import {
+  firestoreModelIdentity,
+  type CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  firestoreEnum,
+  firestoreSubObject,
+  type FirestoreCollection,
+  type UserRelatedById,
+  type FirestoreContext,
+  type SingleItemFirestoreCollection,
+  optionalFirestoreBoolean,
+  optionalFirestoreDate,
+  optionalFirestoreString,
+  type CollectionGroup,
+  type FirestoreCollectionGroup,
+  type UserRelated,
+  copyUserRelatedDataAccessorFactoryFunction,
+  firestoreUID,
+  type StorageFileKey
+} from '@dereekb/firebase';
 import { type GrantedReadRole } from '@dereekb/model';
 import { type WebsiteUrl, type Maybe } from '@dereekb/util';
 
@@ -13,6 +35,74 @@ export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIde
 // MARK: Profile
 export const profileIdentity = firestoreModelIdentity('profile', 'pr');
 
+/**
+ * Where the user's resume sits in the upload -> check -> verdict lifecycle.
+ *
+ * The check is asynchronous — the upload initializer creates the StorageFile, a `send` subtask enqueues
+ * the OpenRouter run, and a `retrieve` subtask writes the verdict back a sweep tick later — so there is
+ * a stretch with a resume but no answer, which is its own state rather than an absent verdict.
+ */
+export enum ProfileResumeState {
+  /**
+   * No resume has been uploaded.
+   */
+  NONE = 0,
+  /**
+   * A resume was uploaded and its check is queued or in flight.
+   */
+  CHECKING = 1,
+  /**
+   * The check finished and wrote a verdict.
+   */
+  CHECKED = 2,
+  /**
+   * Every check attempt was spent without a verdict.
+   */
+  FAILED = 3
+}
+
+/**
+ * The user's current resume and what the resume check concluded about it.
+ *
+ * Tracked on the Profile rather than read off the resume's StorageFile because the profile view already
+ * streams this document, and — unlike a StorageFile — `firestore.rules` grants its owner read access.
+ *
+ * Replaced wholesale by each upload, so a new resume can never be shown carrying the previous one's
+ * verdict.
+ *
+ * @dbxModelSubObject
+ */
+export interface ProfileResume {
+  /**
+   * The current state of the resume check.
+   */
+  state: ProfileResumeState;
+  /**
+   * The StorageFile the resume was copied to.
+   */
+  storageFile?: Maybe<StorageFileKey>;
+  /**
+   * The uploaded file's name.
+   */
+  filename?: Maybe<string>;
+  /**
+   * When the upload was initialized.
+   */
+  uploadedAt?: Maybe<Date>;
+  /**
+   * When the verdict was written, if it has been.
+   */
+  checkedAt?: Maybe<Date>;
+  /**
+   * The model's verdict, if it answered.
+   */
+  isResume?: Maybe<boolean>;
+  /**
+   * The model's reasoning for the verdict.
+   */
+  reason?: Maybe<string>;
+}
+
 export interface Profile extends UserRelated, UserRelatedById {
   /**
    * Avatar URL
@@ -23,9 +113,11 @@ export interface Profile extends UserRelated, UserRelatedById {
    */
   avatarStorageFile?: Maybe<StorageFileKey>;
   /**
-   * Resume storage file, set by the resume upload initializer.
+   * The user's resume and the resume check's verdict on it.
+   *
+   * Written by the resume upload initializer, then advanced by the `retrieve` subtask.
    */
-  resumeStorageFile?: Maybe<StorageFileKey>;
+  resume: ProfileResume;
   /**
    * Unique username.
    */
@@ -53,7 +145,19 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
     uid: firestoreUID(),
     avatar: optionalFirestoreString(),
     avatarStorageFile: optionalFirestoreString(),
-    resumeStorageFile: optionalFirestoreString(),
+    resume: firestoreSubObject<ProfileResume>({
+      objectField: {
+        fields: {
+          state: firestoreEnum<ProfileResumeState>({ default: ProfileResumeState.NONE }),
+          storageFile: optionalFirestoreString(),
+          filename: optionalFirestoreString(),
+          uploadedAt: optionalFirestoreDate(),
+          checkedAt: optionalFirestoreDate(),
+          isResume: optionalFirestoreBoolean(),
+          reason: optionalFirestoreString()
+        }
+      }
+    }),
     username: firestoreString({ default: '', defaultBeforeSave: null }),
     bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })
