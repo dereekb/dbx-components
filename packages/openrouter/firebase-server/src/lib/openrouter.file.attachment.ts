@@ -9,7 +9,7 @@ import { type OpenRouterAttachedFileReference, type OpenRouterFileReference } fr
  * - `signedUrl` — a short-lived signed url OpenRouter dereferences itself. Cheap, and the default.
  * - `inlineData` — the bytes, base64'd into the request body. The only option when the object is not
  *   reachable from the public internet, which is exactly the case against the Firebase storage
- *   emulator: nothing there is really signed and the host is localhost.
+ *   emulator: signing is unsupported there, so the accessor falls back to a `publicUrl()` on localhost.
  */
 export type OpenRouterFileAttachmentMode = 'signedUrl' | 'inlineData';
 
@@ -47,7 +47,7 @@ export interface OpenRouterFileAttachmentResolverConfig {
    */
   readonly storageContext?: Maybe<FirebaseStorageContext>;
   /**
-   * Selects the mode when `mode` is not given: `isTestingEnv` picks `inlineData`.
+   * Selects the mode when `mode` is not given: a non-production environment picks `inlineData`.
    *
    * This is the whole environment gate. An app wires its env service in once and both the emulator and
    * production do the right thing without a second switch to keep in sync.
@@ -80,6 +80,12 @@ export type OpenRouterFileAttachmentResolver = (files: Maybe<OpenRouterFileRefer
  *
  * Order: the explicit override, then the environment service, then `signedUrl`.
  *
+ * Gated on `isProduction` rather than `isTestingEnv`, because the question is whether OpenRouter can
+ * reach the object, not whether this is a test. Every non-production environment here is a localhost
+ * one — the emulator under `nx serve` as much as a spec run — and `isTestingEnv` is only
+ * `NODE_ENV === 'test'`, so it covered the spec run and left the emulator handing OpenRouter a
+ * `127.0.0.1` url that it rejects outright.
+ *
  * @param config - The resolver config.
  * @returns The mode.
  *
@@ -87,7 +93,8 @@ export type OpenRouterFileAttachmentResolver = (files: Maybe<OpenRouterFileRefer
  */
 export function openRouterFileAttachmentModeForConfig(config: OpenRouterFileAttachmentResolverConfig): OpenRouterFileAttachmentMode {
   const { mode, envService } = config;
-  return mode ?? (envService?.isTestingEnv ? 'inlineData' : 'signedUrl');
+  // `=== false` rather than a negation, so a config with no env service still resolves to `signedUrl`.
+  return mode ?? (envService?.isProduction === false ? 'inlineData' : 'signedUrl');
 }
 
 /**

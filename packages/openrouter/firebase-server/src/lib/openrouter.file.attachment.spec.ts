@@ -4,11 +4,14 @@ import { fakeStorageContext } from '../test/openrouter.fake';
 import { DEFAULT_OPENROUTER_MAX_INLINE_FILE_SIZE_BYTES, openRouterFileAttachmentModeForConfig, openRouterFileAttachmentResolver } from './openrouter.file.attachment';
 
 /**
- * A minimal env service. Only `isTestingEnv` participates in the decision, so the rest is filler that
+ * A minimal env service. Only `isProduction` participates in the decision, so the rest is filler that
  * exists to satisfy the abstract class.
+ *
+ * `isTestingEnv` is passed separately rather than derived, so a run can model the case the gate used to
+ * get wrong: the emulator under `nx serve`, which is neither production nor `NODE_ENV === 'test'`.
  */
-function stubEnvService(isTestingEnv: boolean): FirebaseServerEnvService {
-  return { isTestingEnv, isProduction: !isTestingEnv, isStaging: false } as unknown as FirebaseServerEnvService;
+function stubEnvService(isProduction: boolean, isTestingEnv = !isProduction): FirebaseServerEnvService {
+  return { isTestingEnv, isProduction, isStaging: false } as unknown as FirebaseServerEnvService;
 }
 
 const PDF_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // "%PDF"
@@ -19,19 +22,25 @@ describe('openRouterFileAttachmentModeForConfig()', () => {
     expect(openRouterFileAttachmentModeForConfig({})).toBe('signedUrl');
   });
 
-  it('should select inlineData from a testing environment', () => {
+  it('should select inlineData from a non-production environment', () => {
     // The gate the whole feature turns on: against the storage emulator a signed url points at localhost,
     // which OpenRouter cannot reach.
-    expect(openRouterFileAttachmentModeForConfig({ envService: stubEnvService(true) })).toBe('inlineData');
+    expect(openRouterFileAttachmentModeForConfig({ envService: stubEnvService(false) })).toBe('inlineData');
   });
 
-  it('should select signedUrl from a non-testing environment', () => {
-    expect(openRouterFileAttachmentModeForConfig({ envService: stubEnvService(false) })).toBe('signedUrl');
+  it('should select inlineData in the emulator, which is neither production nor a test env', () => {
+    // The regression this gate was changed for. Under `nx serve` NODE_ENV is unset, so the old
+    // `isTestingEnv` check picked signedUrl and OpenRouter answered "Localhost URLs are not allowed".
+    expect(openRouterFileAttachmentModeForConfig({ envService: stubEnvService(false, false) })).toBe('inlineData');
+  });
+
+  it('should select signedUrl from a production environment', () => {
+    expect(openRouterFileAttachmentModeForConfig({ envService: stubEnvService(true) })).toBe('signedUrl');
   });
 
   it('should let an explicit mode win over the environment service', () => {
-    expect(openRouterFileAttachmentModeForConfig({ mode: 'signedUrl', envService: stubEnvService(true) })).toBe('signedUrl');
-    expect(openRouterFileAttachmentModeForConfig({ mode: 'inlineData', envService: stubEnvService(false) })).toBe('inlineData');
+    expect(openRouterFileAttachmentModeForConfig({ mode: 'signedUrl', envService: stubEnvService(false) })).toBe('signedUrl');
+    expect(openRouterFileAttachmentModeForConfig({ mode: 'inlineData', envService: stubEnvService(true) })).toBe('inlineData');
   });
 });
 
@@ -76,7 +85,7 @@ describe('openRouterFileAttachmentResolver()', () => {
       const storage = fakeStorageContext();
       storage.putObject('a/1.pdf', { bytes: PDF_BYTES, contentType: 'application/pdf' });
 
-      const resolve = openRouterFileAttachmentResolver({ storageContext: storage.storageContext, envService: stubEnvService(true) });
+      const resolve = openRouterFileAttachmentResolver({ storageContext: storage.storageContext, envService: stubEnvService(false) });
       const attached = await resolve([{ storagePath: 'a/1.pdf', filename: '1.pdf' }]);
 
       expect(attached[0].fileData).toBe(`data:application/pdf;base64,${PDF_BASE64}`);

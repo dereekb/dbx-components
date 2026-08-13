@@ -24,9 +24,11 @@ export function demoOpenRouterPromptServiceFactory(context: DemoFirebaseServerAc
 /**
  * Builds the {@link OpenRouterRunTaskService} for the demo app.
  *
- * `envService` is the whole file-transport gate: against the emulator `isTestingEnv` is true, so the
+ * `envService` is the whole file-transport gate: against the emulator `isProduction` is false, so the
  * runner attaches a file as inline base64 instead of a signed url OpenRouter could never reach — the
- * url would point at localhost. Nothing else in the app has to know which mode is in play.
+ * emulator does not support signing, so the accessor falls back to a `publicUrl()` on localhost and
+ * OpenRouter rejects it with "Localhost URLs are not allowed". Nothing else in the app has to know
+ * which mode is in play.
  *
  * @param context - Server actions context supplying the run task collections.
  * @param promptService - Resolves a run's prompt version.
