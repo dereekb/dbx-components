@@ -280,7 +280,7 @@ export interface OpenRouterRunTaskServiceConfig {
    */
   readonly storageContext?: Maybe<FirebaseStorageContext>;
   /**
-   * Environment service that selects how files are attached: `isTestingEnv` attaches them inline.
+   * Environment service that selects how files are attached: a non-production environment attaches them inline.
    *
    * This is the whole gate. A signed url is unreachable from OpenRouter when the object lives in the
    * Firebase storage emulator, so an emulator run has to carry the bytes — and an app should not have
