@@ -2,7 +2,7 @@ import { type Type, type } from 'arktype';
 import { type FirebaseFunctionTypeConfigMap, type FirestoreModelKey, type InferredTargetModelParams, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory, inferredTargetModelParamsType } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
-import { type OpenRouterPromptState, type openRouterPromptIdentity } from './openrouter.prompt';
+import { type OpenRouterPromptState, type openRouterPromptIdentity } from './openrouter.model';
 
 // MARK: Create
 /**

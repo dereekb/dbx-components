@@ -1,5 +1,5 @@
 import { type FirestoreQueryConstraint, limit, orderBy, where, whereDateIsOnOrBefore } from '@dereekb/firebase';
-import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.runtask';
+import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.model';
 
 /**
  * Params for {@link openRouterRunTasksRunnableQuery}.
