@@ -1,5 +1,6 @@
 export * from './object.array.delta';
 export * from './object.array';
+export * from './object.copy';
 export * from './object.empty';
 export * from './object.equal';
 export * from './object.key';

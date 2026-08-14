@@ -50,6 +50,9 @@ import {
   filterFromPOJOFunction,
   copyObject,
   type CopyObjectFunction,
+  copyValueDeepFunction,
+  type CopyValueDeepConfig,
+  objectHasNoKeys,
   mapObjectMapFunction,
   filterEmptyArrayValues,
   type ModelKey,
@@ -501,6 +504,81 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
   }
 
   return result;
+}
+
+/**
+ * Configuration for {@link optionalFirestorePassthroughJsonField}.
+ *
+ * Extends {@link CopyValueDeepConfig}, which is what configures the filtering applied on the way in: by
+ * default `filter` strips `undefined` values at every depth. `arrayValues`, `filterEmptyValues`, and
+ * `transform` are passed through to the copy as-is.
+ *
+ * @template T - Type for both the model field and Firestore field
+ */
+export interface OptionalFirestorePassthroughJsonFieldConfig<T extends object> extends CopyValueDeepConfig, Pick<OptionalFirestoreFieldConfig<T, T>, 'defaultReadValue'> {
+  /**
+   * Whether to store `null` instead of an object that has no keys left after filtering. Defaults to `false`.
+   */
+  readonly dontStoreIfEmpty?: boolean;
+}
+
+/**
+ * Creates a field mapping configuration for an optional object field that is stored as-is, aside from
+ * the values the filter strips out on the way in.
+ *
+ * This is the field for json a converter should not model: a third-party api response, a request config
+ * whose parameters the vendor extends without warning, an sdk-shaped payload. A strict converter would
+ * silently drop whatever it does not name; this one keeps everything.
+ *
+ * The one thing it does not keep is a value Firestore rejects. Firestore refuses an explicit `undefined`
+ * outright — one absent optional field anywhere in the payload fails the whole write — and such a value
+ * is exactly what assembling json from `Maybe` inputs produces (a usage object built from whichever
+ * token counts a response happened to report, a config a caller spread a `Maybe` into). Solved per-writer
+ * it has to be remembered at every call site; solved here it cannot be forgotten.
+ *
+ * The filtering is RECURSIVE, since json of this kind is nested and its interior is just as capable of
+ * carrying an `undefined` as its top level. Non-plain values are retained by reference, so a `Date` (or
+ * a `Timestamp`, or a `DocumentReference`) survives the copy intact.
+ *
+ * Filtering happens on WRITE only. Reads are the plain passthrough — no copy, no traversal — since data
+ * that came out of Firestore cannot contain the values being filtered in the first place.
+ *
+ * A top-level `null` still clears the field: {@link optionalFirestoreField} short-circuits `x == null`
+ * ahead of the transform, so `update({ myField: null })` is untouched by this.
+ *
+ * @param config - Filtering and storage configuration. Defaults to stripping `undefined` values at every depth.
+ * @returns A field mapping configuration for optional passthrough json values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags json, passthrough, object, raw, optional, undefined, filter, recursive, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-field, firestore-pass-through-field, firestore-sub-object
+ * @template T - Type for both the model field and Firestore field
+ *
+ * @example
+ * ```ts
+ * fields: {
+ *   // { model: 'm', temperature: undefined, provider: { only: ['openai'], sort: undefined } }
+ *   // stores as { model: 'm', provider: { only: ['openai'] } }
+ *   config: optionalFirestorePassthroughJsonField<MyVendorConfig>(),
+ *   // store null rather than an empty object when nothing survives the filtering
+ *   usage: optionalFirestorePassthroughJsonField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })
+ * }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function optionalFirestorePassthroughJsonField<T extends object>(config?: OptionalFirestorePassthroughJsonFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
+  const { dontStoreIfEmpty, defaultReadValue } = config ?? {};
+
+  return optionalFirestoreField<T>({
+    defaultReadValue,
+    dontStoreIf: dontStoreIfEmpty ? (x: T) => objectHasNoKeys(x) : undefined,
+    // transformToData rather than transformData: the latter is applied in both directions and would copy
+    // the field on every READ too.
+    transformToData: copyValueDeepFunction(config)
+  });
 }
 
 /**

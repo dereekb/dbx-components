@@ -1,5 +1,5 @@
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { MS_IN_DAY, type Maybe, type Milliseconds, filterOnlyUndefinedValues } from '@dereekb/util';
+import { MS_IN_DAY, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type OpenRouterFileAnnotation, type OpenRouterFileReference, type OpenRouterGenerationId, type OpenRouterInputMessage, type OpenRouterInputRole, type OpenRouterModelConfig, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, type OpenRouterRunError, type OpenRouterRunUsage } from '@dereekb/openrouter';
 import {
   AbstractFirestoreDocument,
@@ -9,7 +9,6 @@ import {
   type FirestoreCollectionGroup,
   type FirestoreCollectionWithParent,
   type FirestoreContext,
-  type FirestoreModelFieldMapFunctionsConfig,
   type FirestoreModelKey,
   firestoreArray,
   firestoreDate,
@@ -19,8 +18,8 @@ import {
   firestoreString,
   optionalFirestoreArray,
   optionalFirestoreDate,
-  optionalFirestoreField,
   optionalFirestoreNumber,
+  optionalFirestorePassthroughJsonField,
   optionalFirestoreString,
   snapshotConverterFunctions
 } from '@dereekb/firebase';
@@ -296,7 +295,7 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     v: firestoreNumber({ default: 0 }),
     i: optionalFirestoreString(),
     m: optionalFirestoreArray<OpenRouterPromptVersionMessage>({ dontStoreIfEmpty: true }),
-    c: optionalFirestoreField<OpenRouterModelConfig>(),
+    c: optionalFirestorePassthroughJsonField<OpenRouterModelConfig>(),
     nt: optionalFirestoreString(),
     by: optionalFirestoreString()
   }
@@ -678,33 +677,6 @@ export class OpenRouterRunTaskDocument extends AbstractFirestoreDocument<OpenRou
   get modelIdentity() {
     return openRouterRunTaskIdentity;
   }
-}
-
-/**
- * An optional passthrough-JSON object field whose `undefined` values are stripped on the way in.
- *
- * This is the ONE place the constraint lives. Firestore rejects an explicit `undefined` outright, and
- * each of these fields is assembled from optional upstream values — a usage object built from whichever
- * token counts a response happened to report, a config a caller spread a `Maybe` into. Solved per-writer
- * it has to be remembered four times; solved here it cannot be forgotten.
- *
- * SHALLOW, deliberately: it covers the top-level keys of the object it is given. It does NOT reach into
- * a nested sub-object, and it does NOT apply to array element interiors — `msg` / `ptc` / `utr` carry
- * SDK-shaped JSON of arbitrary depth, which is what `openRouterConversationValueForFirestore` is for.
- *
- * `transformToData` rather than `transformData`: the latter is applied in both directions and would
- * deep-copy the field on every READ. With only the write direction set, reads are byte-identical to the
- * plain passthrough field.
- *
- * A top-level `null` still clears the field: `optionalFirestoreField` short-circuits `x == null` before
- * the transform runs, so `update({ e: null })` is untouched by this.
- *
- * @returns The field mapping config.
- *
- * @__NO_SIDE_EFFECTS__
- */
-function optionalFirestorePassthroughJsonField<T extends object>(): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
-  return optionalFirestoreField<T>({ transformToData: filterOnlyUndefinedValues });
 }
 
 export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterRunTask>({

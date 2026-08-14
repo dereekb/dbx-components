@@ -127,14 +127,18 @@ export function openRouterRunTaskUpdateForConversationState(state: ConversationS
 /**
  * Strips `undefined` out of a value on its way into Firestore, at ANY DEPTH.
  *
- * This is the deep counterpart to the run task converter's shallow passthrough-JSON field, and it makes a
- * genuinely different claim: conversation state is whatever the SDK hands back, arbitrarily nested, and its
- * response items carry explicit `undefined`s for absent optional fields at every level. Firestore rejects
- * `undefined` outright, so persisting one unfiltered fails the whole write — and it fails inside the SDK's
- * `saveStateSafely`, which surfaces as an opaque "Failed to persist conversation state" rather than as the
- * run-task write it actually is. There is no deep undefined-filter in `@dereekb/util`, and a JSON
- * round-trip is the right tool anyway precisely because this data IS json: it came off the wire and is
- * going back onto it.
+ * Conversation state is whatever the SDK hands back, arbitrarily nested, and its response items carry
+ * explicit `undefined`s for absent optional fields at every level. Firestore rejects `undefined` outright,
+ * so persisting one unfiltered fails the whole write — and it fails inside the SDK's `saveStateSafely`,
+ * which surfaces as an opaque "Failed to persist conversation state" rather than as the run-task write it
+ * actually is.
+ *
+ * A JSON round-trip rather than `copyValueWithoutUndefinedValues` (which filters just as deeply, and is
+ * what the run task converter's passthrough-JSON fields use): the round-trip additionally flattens
+ * anything that is not wire json — a `Date`, a class instance with a `toJSON` — which is correct here
+ * precisely because this data IS json. It came off the wire, and `load()` hands it straight back to the
+ * SDK expecting the same shapes. The converter's fields, by contrast, must leave a `Date`/`Timestamp`
+ * intact for Firestore.
  *
  * @param value - The value to sanitize.
  * @returns The value with every `undefined` removed.
