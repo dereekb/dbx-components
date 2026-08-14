@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { type Maybe } from '@dereekb/util';
+import { MS_IN_DAY, type Days, type ISO8601DayString, type Maybe } from '@dereekb/util';
 import { calcomOAuthFactory } from '../oauth/oauth.factory';
 import { calcomFactory } from './calcom.factory';
 import { type CalcomServerContext } from './calcom.config';
@@ -29,6 +29,18 @@ const apiKey = real(process.env['CALCOM_API_KEY']);
  * rate-limits itself and backs off on 429, which can stretch a call well past its normal latency.
  */
 const LIVE_TEST_TIMEOUT_MS = 45 * 1000;
+
+/**
+ * Relative bounds for the live slots query, in days from now.
+ *
+ * The window MUST be relative: `/slots` only ever returns bookable FUTURE slots, so a hardcoded
+ * window silently rots into the past and the day map comes back empty. It starts tomorrow to
+ * clear the event type's minimum booking notice, and runs well out so it straddles a schedule's
+ * off days — a narrow window can legitimately return nothing (weekends, an owner who only takes
+ * bookings a few days a week) and would flake the assertion.
+ */
+const SLOT_WINDOW_START_DAYS: Days = 1;
+const SLOT_WINDOW_END_DAYS: Days = 30;
 
 /**
  * Builds a server context that talks to the real api.cal.com/v2 with an api key.
@@ -125,10 +137,12 @@ describe.runIf(apiKey)('calcom.api (live)', () => {
         const eventTypes = await getEventTypes(context)();
         const eventTypeId = eventTypes.data[0].id;
 
+        const dayStringFromNow = (days: Days): ISO8601DayString => new Date(Date.now() + days * MS_IN_DAY).toISOString().slice(0, 10);
+
         const result = await getAvailableSlots(context)({
           eventTypeId,
-          start: '2026-08-12',
-          end: '2026-08-15'
+          start: dayStringFromNow(SLOT_WINDOW_START_DAYS),
+          end: dayStringFromNow(SLOT_WINDOW_END_DAYS)
         });
 
         expect(result.status).toBe('success');

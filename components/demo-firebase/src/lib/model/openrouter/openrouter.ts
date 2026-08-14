@@ -16,11 +16,16 @@ export const DEMO_RESUME_CHECK_PROMPT_NAME = 'Demo Resume Check';
 /**
  * Default model the demo runs the resume check on.
  *
- * A free model, so a live run costs nothing. The server-side seeder overrides it from
- * `OPENROUTER_TEST_MODEL_ID` — the same knob the openrouter package's own live specs read — which is
- * read there rather than here because this file is shared with the browser build.
+ * An OpenAI model reached over BYOK, chosen because it accepts FILE input natively
+ * (`input_modalities: ["file", "image", "text"]`) — which is what lets the `file-parser` plugin's
+ * `native` engine work. A free text-only model cannot do this: OpenRouter forwards the raw file part
+ * upstream and the provider rejects the whole request. See {@link demoResumeCheckPromptConfig}.
+ *
+ * The server-side seeder overrides it from `OPENROUTER_TEST_MODEL_ID` — the same knob the openrouter
+ * package's own live specs read — which is read there rather than here because this file is shared with
+ * the browser build. Any replacement must also take file input, or the engine has to change with it.
  */
-export const DEMO_RESUME_CHECK_DEFAULT_MODEL_ID = 'nvidia/nemotron-nano-9b-v2:free';
+export const DEMO_RESUME_CHECK_DEFAULT_MODEL_ID = 'openai/gpt-5.6-luna';
 
 /**
  * The system prompt for {@link DEMO_RESUME_CHECK_PROMPT_KEY}.
@@ -36,9 +41,16 @@ export const DEMO_RESUME_CHECK_INSTRUCTIONS = ['You inspect an attached document
  * Model config for {@link DEMO_RESUME_CHECK_PROMPT_KEY}.
  *
  * The `file-parser` plugin is not optional here: a prompt that attaches a PDF without it gets NO
- * warning at all (validation only warns when the plugin is present and its engine is unpinned), and the
- * pinned `native` engine is what avoids OpenRouter's silent `mistral-ocr` fallback — an 8-image cap and
+ * warning at all (validation only warns when the plugin is present and its engine is unpinned), and
+ * pinning an engine is what avoids OpenRouter's silent `mistral-ocr` fallback — an 8-image cap and
  * per-page billing, applied without an error to notice.
+ *
+ * The engine is the package default `native`, which requires a model that takes file input — hence
+ * {@link DEMO_RESUME_CHECK_DEFAULT_MODEL_ID} being an OpenAI model on BYOK rather than a free text-only
+ * one. That pairing is load-bearing, not incidental: point `OPENROUTER_TEST_MODEL_ID` at a text-only
+ * model and OpenRouter forwards the raw file part upstream, where the provider rejects the whole request
+ * with a 400 `Provider returned error` wrapping its own `Unknown part type: file`. A text-only model
+ * needs `openRouterFileParserPlugin('pdf-text')` instead.
  *
  * @param modelId - Model to run against. Defaults to {@link DEMO_RESUME_CHECK_DEFAULT_MODEL_ID}.
  * @returns The model config.
@@ -61,7 +73,7 @@ export function demoResumeCheckPromptConfig(modelId: string = DEMO_RESUME_CHECK_
  * Bump this whenever the instructions or the config below change, so an environment already seeded at
  * the previous version picks the new definition up instead of serving what it stored.
  */
-export const DEMO_RESUME_CHECK_PROMPT_VERSION: OpenRouterPromptVersionNumber = 1;
+export const DEMO_RESUME_CHECK_PROMPT_VERSION: OpenRouterPromptVersionNumber = 2;
 
 /**
  * The demo's resume-check prompt, as a code definition.

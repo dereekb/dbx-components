@@ -6,7 +6,7 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
 import { OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
-import { DEMO_RESUME_CHECK_PROMPT_KEY, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
+import { DEMO_RESUME_CHECK_PROMPT_KEY, DEMO_RESUME_CHECK_PROMPT_VERSION, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { seedDemoOpenRouterPrompts } from '../../common/model/openrouter/openrouter.seed';
 import { demoResumeCheckRunTaskKey } from '../../common/model/notification/handlers/storagefile/task.handler.storagefile.resume';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
@@ -144,7 +144,10 @@ demoApiFunctionContextFactory((f) => {
 
             expect(runTask).toBeDefined();
             expect(runTask?.pk).toBe(DEMO_RESUME_CHECK_PROMPT_KEY);
-            expect(runTask?.pv).toBe(1);
+            // The code definition, not the version the seeder published: it ships ahead of the store, so
+            // the resolver serves it. Asserted against the constant so a config change that bumps the
+            // version does not have to be mirrored here.
+            expect(runTask?.pv).toBe(DEMO_RESUME_CHECK_PROMPT_VERSION);
             expect(runTask?.s).toBe(OpenRouterRunTaskState.QUEUED);
             expect(runTask?.fp).toHaveLength(1);
             expect(runTask?.fp?.[0].storagePath).toBe(processing.pathString);
@@ -263,7 +266,16 @@ demoApiFunctionContextFactory((f) => {
               expect(runTask?.o).toBeTruthy();
 
               // `retrieve` — the run is already COMPLETE, so it lands the verdict on its first look rather
-              // than parking for a sweep interval.
+              // than parking for a sweep interval. The throttle is wound back first for the same reason
+              // the emulator block does it: `send` already ran this pass, and a live inference takes
+              // seconds where the throttle is a minute.
+              await clearProcessingTaskThrottle(storageFileDocument);
+              await runNotificationTasks();
+
+              // Cleanup, which is what moves the file to SUCCESS. A separate pass on purpose: the
+              // processor does not set `canRunNextCheckpoint`, so completing the last subtask advances to
+              // the cleanup checkpoint without running it.
+              await clearProcessingTaskThrottle(storageFileDocument);
               await runNotificationTasks();
 
               const storageFile = await assertSnapshotData(storageFileDocument);

@@ -1,5 +1,6 @@
 import { type Type, type } from 'arktype';
 import { type FirebaseFunctionTypeConfigMap, type FirestoreModelKey, type InferredTargetModelParams, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory, inferredTargetModelParamsType } from '@dereekb/firebase';
+import { clearable } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
 import { type OpenRouterPromptState, type openRouterPromptIdentity } from './openrouter.model';
@@ -35,8 +36,8 @@ export interface CreateOpenRouterPromptParams {
 export const createOpenRouterPromptParamsType = /* @__PURE__ */ type({
   key: 'string >= 1',
   name: 'string >= 1',
-  'description?': 'string | null | undefined',
-  'tags?': 'string[] | null | undefined'
+  'description?': clearable('string'),
+  'tags?': clearable('string[]')
 }) as Type<CreateOpenRouterPromptParams>;
 
 // MARK: Update
@@ -67,11 +68,11 @@ export interface UpdateOpenRouterPromptParams extends InferredTargetModelParams 
 
 export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
   type({
-    'name?': 'string | null | undefined',
-    'description?': 'string | null | undefined',
-    'tags?': 'string[] | null | undefined',
-    'state?': 'number | null | undefined',
-    'activeVersion?': 'number | null | undefined'
+    'name?': clearable('string'),
+    'description?': clearable('string'),
+    'tags?': clearable('string[]'),
+    'state?': clearable('number'),
+    'activeVersion?': clearable('number')
   })
 ) as Type<UpdateOpenRouterPromptParams>;
 
@@ -82,6 +83,11 @@ export interface OpenRouterPromptVersionMessageParams {
   readonly role: 'user' | 'system' | 'assistant' | 'developer';
   readonly content: string;
 }
+
+export const openRouterPromptVersionMessageParamsType = /* @__PURE__ */ type({
+  role: "'user' | 'system' | 'assistant' | 'developer'",
+  content: 'string'
+}) as Type<OpenRouterPromptVersionMessageParams>;
 
 /**
  * Parameters for publishing a new {@link OpenRouterPromptVersion}.
@@ -119,11 +125,11 @@ export interface PublishOpenRouterPromptVersionParams extends InferredTargetMode
 
 export const publishOpenRouterPromptVersionParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
   type({
-    'instructions?': 'string | null | undefined',
-    'messages?': type({ role: "'user' | 'system' | 'assistant' | 'developer'", content: 'string' }).array().or('null | undefined'),
-    'config?': 'object | null | undefined',
-    'notes?': 'string | null | undefined',
-    'activate?': 'boolean | null | undefined'
+    'instructions?': clearable('string'),
+    'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
+    'config?': clearable('object'),
+    'notes?': clearable('string'),
+    'activate?': clearable('boolean')
   })
 ) as Type<PublishOpenRouterPromptVersionParams>;
 
@@ -171,8 +177,8 @@ export interface ReadOpenRouterPromptParams extends InferredTargetModelParams {
 
 export const readOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
   type({
-    'version?': 'number | null | undefined',
-    'includeVersions?': 'boolean | null | undefined'
+    'version?': clearable('number'),
+    'includeVersions?': clearable('boolean')
   })
 ) as Type<ReadOpenRouterPromptParams>;
 
@@ -224,9 +230,9 @@ export interface ListOpenRouterPromptsParams {
 }
 
 export const listOpenRouterPromptsParamsType = /* @__PURE__ */ type({
-  'state?': 'number | null | undefined',
-  'tag?': 'string | null | undefined',
-  'limit?': 'number | null | undefined'
+  'state?': clearable('number'),
+  'tag?': clearable('string'),
+  'limit?': clearable('number')
 }) as Type<ListOpenRouterPromptsParams>;
 
 /**

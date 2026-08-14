@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OPENROUTER_PROMPT_VERSION_ID_DIGITS, openRouterPromptVersionId, openRouterPromptVersionNumberFromId } from './openrouter.prompt.id';
+import { OPENROUTER_PROMPT_VERSION_ID_DIGITS, openRouterPromptVersionId, openRouterPromptVersionNumberFromId } from './openrouter.id';
 import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, OPENROUTER_RUN_TASK_TERMINAL_STATES, OpenRouterPromptState, OpenRouterRunTaskState, isOpenRouterRunTaskStateTerminal, openRouterPromptConverter, openRouterPromptIdentity, openRouterPromptVersionConverter, openRouterPromptVersionIdentity, openRouterResolvedPromptForVersion, openRouterRunTaskConverter, openRouterRunTaskIdentity } from './openrouter.model';
 
 describe('openRouterPromptVersionId()', () => {
