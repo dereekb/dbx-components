@@ -27,9 +27,10 @@ import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
-import { openRouterPromptCreate } from '../openrouter/openrouterprompt.create';
-import { openRouterPromptPublishVersion, openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
-import { openRouterPromptList, openRouterPromptRead } from '../openrouter/openrouterprompt.read';
+import { openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
+import { openRouterPromptQuery } from '../openrouter/openrouterprompt.query';
+import { openRouterPromptVersionCreate } from '../openrouter/openrouterpromptversion.create';
+import { openRouterPromptVersionUpdate } from '../openrouter/openrouterpromptversion.update';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
@@ -53,9 +54,9 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
     client: oidcEntryCreateClient
   }),
   userExternalConnection: userExternalConnectionCreate,
-  // Prompt CRUD reaches the model API deliberately: there is no Angular screen for prompt authoring,
-  // and this is what makes the prompt models drivable over the existing callModel surface.
-  openRouterPrompt: openRouterPromptCreate
+  // Publishing a prompt version is a create on the version model: it writes a new document,
+  // and there is no Angular screen for prompt authoring, so callModel and its MCP are the only way in.
+  openRouterPromptVersion: openRouterPromptVersionCreate
 };
 
 // MARK: Read
@@ -74,10 +75,6 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   userExternalConnection: onCallSpecifierHandler({
     authorizeState: userExternalConnectionReadAuthorizeState
-  }),
-  openRouterPrompt: onCallSpecifierHandler({
-    _: openRouterPromptRead,
-    list: openRouterPromptList
   })
 };
 
@@ -128,10 +125,9 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   userExternalConnection: onCallSpecifierHandler({
     disconnect: userExternalConnectionUpdateDisconnect
   }),
-  openRouterPrompt: onCallSpecifierHandler({
-    _: openRouterPromptUpdate,
-    publishVersion: openRouterPromptPublishVersion
-  })
+  openRouterPrompt: openRouterPromptUpdate,
+  // Edits the head version in place. The action refuses a version that a newer one has locked.
+  openRouterPromptVersion: openRouterPromptVersionUpdate
 };
 
 // MARK: Delete
@@ -153,7 +149,10 @@ export const DEMO_QUERY_MODEL_MAP: DemoOnCallQueryModelMap = {
   guestbookEntry: onCallSpecifierHandler({
     _: guestbookEntryQuery,
     entries: guestbookEntryEntriesQuery
-  })
+  }),
+  // A prompt is written over the model API and read back off it too: there is no Angular screen for
+  // prompt authoring, so the query is what makes the collection enumerable over callModel and its MCP.
+  openRouterPrompt: openRouterPromptQuery
 };
 
 // MARK: Invoke

@@ -38,7 +38,7 @@ export interface SeedDemoOpenRouterPromptsResult {
  * moves a prompt into the store, where it can be edited at runtime instead of by deploy.
  *
  * Idempotent: an existing prompt is reused, and a version is published only when the prompt has no
- * active one. A version is immutable once published, so re-seeding must not mint a new one on every
+ * active one. Minting a version locks the one before it, so re-seeding must not mint a new one on every
  * call — that would leave the prompt with an ever-growing history of identical versions.
  *
  * Publishes from the same definitions the service resolves against, so the stored version cannot drift
@@ -64,15 +64,15 @@ export async function seedDemoOpenRouterPrompts(context: SeedDemoOpenRouterPromp
   let warnings: string[] = [];
 
   if (activeVersion == null) {
-    const publish = await openRouterPromptActions.publishOpenRouterPromptVersion({
-      key: firestoreModelKey(openRouterPromptIdentity, definition.promptKey),
+    const createVersion = await openRouterPromptActions.createOpenRouterPromptVersion({
+      prompt: firestoreModelKey(openRouterPromptIdentity, definition.promptKey),
       instructions: definition.instructions,
       config: definition.config as Record<string, unknown>,
       notes: 'Seeded by seedDemoOpenRouterPrompts().',
       activate: true
     });
 
-    const result = await publish(promptDocument);
+    const result = await createVersion(promptDocument);
     version = result.version;
     warnings = result.warnings;
   } else {

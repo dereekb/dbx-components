@@ -7,7 +7,7 @@ import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
 import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
-import { OPENROUTER_RUN_TASK_MAX_AGE, type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
+import { OPENROUTER_RUN_TASK_MAX_AGE, type OpenRouterPromptDocument, type OpenRouterRunTask, OpenRouterRunTaskState, openRouterPromptFirestoreCollection, openRouterPromptIdentity, openRouterPromptVersionFirestoreCollectionFactory, openRouterPromptVersionId, openRouterPromptVersionFirestoreCollectionGroup, openRouterRunTaskFirestoreCollection } from '@dereekb/openrouter/firebase';
 import { type FakeOpenRouterClient, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
 import { openRouterPromptServerActions } from './openrouter.action.server';
 import { type OpenRouterFileAttachmentMode } from './openrouter.file.attachment';
@@ -114,7 +114,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       const actions = openRouterPromptServerActions(actionsContext);
 
       const promptDocument = await actions.createOpenRouterPrompt({ key: promptKey, name: 'Test Prompt' });
-      const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, promptKey), instructions: 'You are a test.', config: (config?.config ?? TEST_MODEL_CONFIG) as Record<string, unknown>, activate: true });
+      const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, promptKey), instructions: 'You are a test.', config: (config?.config ?? TEST_MODEL_CONFIG) as Record<string, unknown>, activate: true });
       await publish(promptDocument);
 
       const fake = fakeOpenRouterClient(config?.reply ?? { text: 'ok' });
@@ -381,14 +381,14 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const promptDocument = await actions.createOpenRouterPrompt({ key: 'versioned', name: 'Versioned' });
         const promptModelKey = firestoreModelKey(openRouterPromptIdentity, 'versioned');
 
-        const publishV1 = await actions.publishOpenRouterPromptVersion({ key: promptModelKey, instructions: 'version one', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        const publishV1 = await actions.createOpenRouterPromptVersion({ prompt: promptModelKey, instructions: 'version one', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
         const v1 = await publishV1(promptDocument);
         expect(v1.version).toBe(1);
         expect(v1.activated).toBe(true);
 
         expect((await promptService.resolvePrompt({ promptKey: 'versioned' })).instructions).toBe('version one');
 
-        const publishV2 = await actions.publishOpenRouterPromptVersion({ key: promptModelKey, instructions: 'version two', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        const publishV2 = await actions.createOpenRouterPromptVersion({ prompt: promptModelKey, instructions: 'version two', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
         const v2 = await publishV2(promptDocument);
         expect(v2.version).toBe(2);
 
@@ -397,6 +397,54 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect((await promptService.resolvePrompt({ promptKey: 'versioned' })).instructions).toBe('version two');
         // A pinned caller is unaffected by the promotion. This is what OpenRouter Presets cannot do.
         expect((await promptService.resolvePrompt({ promptKey: 'versioned', version: 1 })).instructions).toBe('version one');
+      });
+
+      it('should edit the head version in place, and lock it once the next version exists', async () => {
+        const collections = buildCollections();
+        const promptService = openRouterPromptService({ collections });
+        const actionsContext = { ...firebaseServerActionsContext(), ...collections, firestoreContext: f.firestoreContext, openRouterPromptService: promptService };
+        const actions = openRouterPromptServerActions(actionsContext);
+
+        const promptDocument = await actions.createOpenRouterPrompt({ key: 'editable', name: 'Editable' });
+        const promptModelKey = firestoreModelKey(openRouterPromptIdentity, 'editable');
+        const versionAccessor = collections.openRouterPromptVersionCollectionFactory(promptDocument).documentAccessor();
+
+        const createV1 = await actions.createOpenRouterPromptVersion({ prompt: promptModelKey, instructions: 'first draft', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        await createV1(promptDocument);
+
+        const v1Document = versionAccessor.loadDocumentForId(openRouterPromptVersionId(1));
+        expect((await promptService.resolvePrompt({ promptKey: 'editable', version: 1 })).instructions).toBe('first draft');
+
+        // The head version is editable, so iterating on a prompt does not mint a version per keystroke.
+        // Only `instructions` is sent: the stored config has to survive the patch AND be what the edit is
+        // validated against, or an edit this small would be refused for naming no model.
+        const editV1 = await actions.updateOpenRouterPromptVersion({ instructions: 'second draft' });
+        await editV1(v1Document);
+
+        const editedV1 = await v1Document.snapshotData();
+        expect(editedV1?.i).toBe('second draft');
+        expect(editedV1?.c).toEqual(TEST_MODEL_CONFIG);
+        // Visible immediately rather than after the cache window — a pinned resolution of the head version
+        // is no longer cached forever, precisely because the head can still move.
+        expect((await promptService.resolvePrompt({ promptKey: 'editable', version: 1 })).instructions).toBe('second draft');
+
+        const createV2 = await actions.createOpenRouterPromptVersion({ prompt: promptModelKey, instructions: 'version two', config: TEST_MODEL_CONFIG as Record<string, unknown> });
+        await createV2(promptDocument);
+
+        // v1 stopped being the head, so it is now what every run that cites it said it was.
+        expect((await v1Document.snapshotData())?.lk).toBe(true);
+
+        const editLocked = await actions.updateOpenRouterPromptVersion({ instructions: 'rewriting history' });
+        await expect(editLocked(v1Document)).rejects.toThrow('is locked');
+        expect((await v1Document.snapshotData())?.i).toBe('second draft');
+
+        // ...and the new head takes over as the editable one.
+        const v2Document = versionAccessor.loadDocumentForId(openRouterPromptVersionId(2));
+        expect((await v2Document.snapshotData())?.lk).toBeUndefined();
+
+        const editV2 = await actions.updateOpenRouterPromptVersion({ instructions: 'version two, amended' });
+        await editV2(v2Document);
+        expect((await v2Document.snapshotData())?.i).toBe('version two, amended');
       });
 
       it('should record the resolved version on the run task at enqueue, not at dispatch', async () => {
@@ -413,8 +461,8 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const actions = openRouterPromptServerActions(actionsContext);
 
         const promptDocument = await actions.createOpenRouterPrompt({ key: 'warned', name: 'Warned' });
-        const publish = await actions.publishOpenRouterPromptVersion({
-          key: firestoreModelKey(openRouterPromptIdentity, 'warned'),
+        const publish = await actions.createOpenRouterPromptVersion({
+          prompt: firestoreModelKey(openRouterPromptIdentity, 'warned'),
           // No pinned pdf engine: OpenRouter falls back to mistral-ocr silently, which is a warning and
           // not an error precisely because it produces a wrong answer rather than a failure.
           config: { model: 'openai/gpt-5.1', plugins: [{ id: 'file-parser' }] },
@@ -457,7 +505,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const { promptService, actions } = buildServiceWithDefinition(1, 'from code');
         const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
 
-        const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
         expect((await publish(promptDocument)).version).toBe(1);
 
         // Equal versions hand it to the store, which is what makes seeding take over authoring.
@@ -470,7 +518,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const { promptService, actions } = buildServiceWithDefinition(2, 'from newer code');
         const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
 
-        const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
         await publish(promptDocument);
 
         expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from newer code');
@@ -876,7 +924,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const actions = openRouterPromptServerActions(actionsContext);
 
         const promptDocument = await actions.createOpenRouterPrompt({ key: promptKey, name: promptKey });
-        const publish = await actions.publishOpenRouterPromptVersion({ key: firestoreModelKey(openRouterPromptIdentity, promptKey), config, activate: true });
+        const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, promptKey), config, activate: true });
 
         return publish(promptDocument);
       }
