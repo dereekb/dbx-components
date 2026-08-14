@@ -1,5 +1,5 @@
 import { type Maybe, filterUndefinedValues } from '@dereekb/util';
-import { type CallModelInput, type CreateResponsesResponse, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
+import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
 import { type OpenRouterGenerationId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
@@ -217,19 +217,6 @@ function openRouterCallModelRequestOptions(options: RequestOptions): RequestOpti
 }
 
 /**
- * Whether a call needs the SDK's client-side tool loop.
- *
- * Client tools and a `StateAccessor` both live on `ModelResult`, so a run using either cannot take the
- * direct `/responses` path — it needs the loop that executes tools and round-trips conversation state.
- *
- * @param params - The tools and state accessor.
- * @returns True when the loop is required.
- */
-function isOpenRouterClientToolLoopRequired<TTools extends readonly Tool[]>(params: OpenRouterCallModelInputParams<TTools>): boolean {
-  return (params.tools?.length ?? 0) > 0 || params.state != null;
-}
-
-/**
  * Params for {@link sendOpenRouterResponsesRequest}.
  */
 export interface SendOpenRouterResponsesRequestParams {
@@ -272,22 +259,14 @@ export async function sendOpenRouterResponsesRequest(params: SendOpenRouterRespo
     throw result.error;
   }
 
-  return openResponsesResultFromCreateResponse(result.value);
-}
-
-/**
- * Narrows the SDK's response union to the non-streaming result.
- *
- * @param value - The value returned for a `stream: false` request.
- * @returns The response.
- * @throws {TypeError} When an event stream came back instead.
- */
-function openResponsesResultFromCreateResponse(value: CreateResponsesResponse): OpenResponsesResult {
-  if (typeof (value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === 'function') {
+  // `stream: false` narrows the SDK's response union by contract only, so the narrowing is asserted
+  // rather than assumed: an event stream read as a result yields a value whose every field is undefined,
+  // which a caller would store as a successful call that produced nothing.
+  if (typeof (result.value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === 'function') {
     throw new TypeError('OpenRouter returned a streaming response for a non-streaming `/responses` request.');
   }
 
-  return value as OpenResponsesResult;
+  return result.value as OpenResponsesResult;
 }
 
 /**
@@ -316,10 +295,13 @@ export function openRouterModelResultForRequest<TTools extends readonly Tool[] =
   if (hostedTools.length === 0) {
     result = callModel(client, openRouterCallModelInput(params), requestOptions);
   } else {
+    // `stream` is dropped by name, exactly as the `callModel` path drops it, so neither path can inherit
+    // a config-set value.
+    const { stream: _stream, ...body } = openRouterResponsesRequestBody(request);
+
     const apiRequest: Record<string, unknown> = {
-      ...openRouterResponsesRequestBody(request),
-      tools: [...(tools == null ? [] : convertToolsToAPIFormat(tools)), ...hostedTools],
-      stream: undefined
+      ...body,
+      tools: [...(tools == null ? [] : convertToolsToAPIFormat(tools)), ...hostedTools]
     };
 
     result = new ModelResult<TTools>({
@@ -346,7 +328,11 @@ export function openRouterModelResultForRequest<TTools extends readonly Tool[] =
  * @returns The normalized call result.
  */
 export async function callModelForOpenRouterRequest<TTools extends readonly Tool[] = readonly Tool[]>(params: CallModelForOpenRouterRequestParams<TTools>): Promise<OpenRouterCallResult> {
-  const sendDirect = openRouterHostedTools(params.request.config).length > 0 && !isOpenRouterClientToolLoopRequired(params);
+  // Client tools and a `StateAccessor` both live on `ModelResult`, so a run using either needs the loop
+  // that executes tools and round-trips conversation state — even when its hosted tools would otherwise
+  // qualify it for the direct path.
+  const needsClientToolLoop = (params.tools?.length ?? 0) > 0 || params.state != null;
+  const sendDirect = openRouterHostedTools(params.request.config).length > 0 && !needsClientToolLoop;
   const response = sendDirect ? await sendOpenRouterResponsesRequest(params) : await openRouterModelResultForRequest(params).getResponse();
 
   return openRouterCallResultFromResponse(response);
@@ -393,10 +379,10 @@ export function openRouterOutputTextFromResponse(response: OpenResponsesResult):
 
   if (!result) {
     const text = (response.output ?? [])
-      .filter((item) => (item as { type?: unknown })?.type === 'message')
-      .flatMap((item) => (item as { content?: unknown[] }).content ?? [])
-      .filter((part) => (part as { type?: unknown })?.type === 'output_text')
-      .map((part) => (part as { text?: string }).text ?? '')
+      .filter((item) => item.type === 'message')
+      .flatMap((item) => item.content ?? [])
+      .filter((part) => part.type === 'output_text')
+      .map((part) => part.text ?? '')
       .join('');
 
     result = text || undefined;
