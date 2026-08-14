@@ -24,7 +24,7 @@ import {
   optionalFirestoreString,
   snapshotConverterFunctions
 } from '@dereekb/firebase';
-import { openRouterPromptVersionId } from './openrouter.prompt.id';
+import { openRouterPromptVersionId } from './openrouter.id';
 
 // MARK: OpenRouterPrompt
 /**

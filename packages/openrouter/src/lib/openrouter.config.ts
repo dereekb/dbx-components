@@ -85,12 +85,18 @@ export interface OpenRouterProviderConfig {
  * PDF parsing engine for the `file-parser` plugin.
  *
  * - `native` — the model provider parses the PDF itself (OpenAI, on our BYOK key), billed as input
- *   tokens, with no image cap.
+ *   tokens, with no image cap. ONLY valid on a model with native file input: OpenRouter forwards the
+ *   raw file part upstream, and a text-only model rejects the whole request with a 400
+ *   (`Provider returned error`, wrapping the provider's own `Unknown part type: file`). Verified live
+ *   against `nvidia/nemotron-nano-9b-v2:free`.
+ * - `pdf-text` — OpenRouter extracts the PDF's embedded text itself. Free, and valid on EVERY model
+ *   because the model only ever sees text. Yields nothing for a scanned/image-only PDF, so the model
+ *   answers ungrounded with no error — which is why it is not the default.
  * - `mistral-ocr` — Mistral's OCR service, billed by OpenRouter per page, capped at 8 images per PDF
  *   with the surplus silently dropped.
  * - `cloudflare-ai` — Cloudflare Workers AI, free, PDF to markdown.
  */
-export type OpenRouterPdfParserEngine = 'native' | 'mistral-ocr' | 'cloudflare-ai';
+export type OpenRouterPdfParserEngine = 'native' | 'pdf-text' | 'mistral-ocr' | 'cloudflare-ai';
 
 /**
  * The `file-parser` plugin. Replaces OpenAI's code-interpreter/file-upload path for PDF input.
@@ -158,6 +164,11 @@ export function openRouterFileSearchTool(vectorStoreIds: string[], maxNumResults
  * Pinned because the alternative is silent: with no engine named, OpenRouter downgrades any model it
  * believes lacks native file support to `mistral-ocr`, inheriting its 8-image cap and per-page billing with
  * no error — which on a multi-page document quietly truncates content.
+ *
+ * `native` rather than the equally-free `pdf-text` because it fails LOUDLY. It requires a model with
+ * native file input and 400s on one without, where `pdf-text` would hand a scanned PDF to the model as
+ * empty text and let it answer ungrounded. A caller on a text-only model wants
+ * `openRouterFileParserPlugin('pdf-text')` — see {@link OpenRouterPdfParserEngine}.
  */
 export const DEFAULT_OPENROUTER_PDF_PARSER_ENGINE: OpenRouterPdfParserEngine = 'native';
 

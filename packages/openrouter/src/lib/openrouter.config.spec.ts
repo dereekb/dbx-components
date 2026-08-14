@@ -11,6 +11,9 @@ describe('openRouterFileParserPlugin()', () => {
 
   it('should allow pinning another engine explicitly', () => {
     expect(openRouterFileParserPlugin('cloudflare-ai').pdf?.engine).toBe('cloudflare-ai');
+    // The engine for a text-only model: `native` forwards the raw file part upstream, which such a model
+    // rejects with a 400 on the whole request.
+    expect(openRouterFileParserPlugin('pdf-text').pdf?.engine).toBe('pdf-text');
   });
 });
 
