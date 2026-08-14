@@ -20,8 +20,7 @@
  *     ancestor chain for subcollection paths (e.g.
  *     `"nb/abc/nbn/def"` → NotificationBoxNotification under NotificationBox).
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getFirebaseModel, getFirebaseModelByPrefix, type FirebaseModel } from '@dereekb/dbx-cli';
 import { formatDecode } from './decode.formatter.js';

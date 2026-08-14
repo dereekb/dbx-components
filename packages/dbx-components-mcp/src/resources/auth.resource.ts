@@ -5,8 +5,7 @@
  * resources for clients that prefer browsing data over invoking the
  * `dbx_auth_*` tools.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { AuthRegistry } from '@dereekb/dbx-cli';
 import { pickFirstVariable } from './_resource-helpers.js';
 

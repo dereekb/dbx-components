@@ -1,6 +1,6 @@
 import { IMPERSONATION_URL_QUERY_PARAM, type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';

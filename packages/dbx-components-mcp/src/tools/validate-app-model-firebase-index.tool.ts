@@ -30,7 +30,7 @@
 import type { Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { ensurePathInsideCwd, ModelFirebaseIndexValidateAppCode, attachRemediation, formatStatusLabel, formatViolationLine, groupViolations, type ViolationSeverity } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

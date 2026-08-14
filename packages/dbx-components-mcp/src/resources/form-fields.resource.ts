@@ -6,8 +6,7 @@
  * {@link ForgeFieldRegistry} loaded at server startup; tests can drive it via
  * {@link createForgeFieldRegistryFromEntries}.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { FORM_TIER_ORDER, type FormTier, type FormArrayOutput, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 

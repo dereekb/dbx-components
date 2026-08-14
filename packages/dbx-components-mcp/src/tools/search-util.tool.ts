@@ -12,8 +12,7 @@
  * tool that solves the "agent can't find expirationDetails by typing
  * 'expiration'" problem.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import type { UtilEntryInfo, UtilRegistry } from '@dereekb/dbx-cli';
 import { DEFAULT_CATALOG_LIMIT, MAX_CATALOG_LIMIT, buildCatalogSearchInputSchema, formatCatalogSearchResults, scoreCatalogEntryToken } from './_search/catalog-search.js';
 import { runSearchTool } from './_search/score.js';

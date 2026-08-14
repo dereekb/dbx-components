@@ -20,7 +20,7 @@
  */
 
 import { resolve } from 'node:path';
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';

@@ -12,8 +12,7 @@
  * spec and surface drift. Use this tool when you just need the path; use
  * the list-app tool when you want an inventory + drift audit.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildCanonicalFilename, recommendBucketsForGroup, recommendSpecPath, type SpecBucketRecommendation } from '@dereekb/util';

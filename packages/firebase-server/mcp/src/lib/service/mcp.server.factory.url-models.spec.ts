@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Logger } from '@nestjs/common';
-import { ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { dispatchMcpToolsList } from './mcp.spec-driver';
 import { type FirestoreModelIdentity, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { McpServerFactoryService } from './mcp.server.factory';
@@ -46,10 +46,8 @@ function firebaseAuth(): FirebaseServerAuthData {
 }
 
 async function listTools(factory: McpServerFactoryService, auth?: FirebaseServerAuthData): Promise<ReadonlyArray<string>> {
-  const server = factory.createServer({ rawRequest: {} as any, auth });
-  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string }> }>>;
-  const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
-  return result.tools.map((t) => t.name);
+  const tools = await dispatchMcpToolsList<{ name: string }>(factory, { auth });
+  return tools.map((t) => t.name);
 }
 
 describe('McpServerFactoryService url-models gating', () => {

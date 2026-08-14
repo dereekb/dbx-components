@@ -6,8 +6,7 @@
  * iterates these, sets the `tools/list` and `tools/call` request handlers
  * exactly once, and routes calls by tool name.
  */
-
-import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult, Tool } from '@modelcontextprotocol/server';
 
 /**
  * Shape of an MCP `tools/call` result. Mirrors the SDK's `CallToolResult` but
@@ -38,4 +37,19 @@ export interface DbxTool {
 export function toolError(message: string): ToolResult {
   const result: ToolResult = { content: [{ type: 'text', text: message }], isError: true };
   return result;
+}
+
+/**
+ * Widens a {@link ToolResult} into the SDK's `CallToolResult`. The SDK types
+ * `tools/call` handler returns from the method name and its `content` array is
+ * mutable, so the dispatcher copies our deeply-readonly result across that one
+ * boundary rather than loosening {@link ToolResult} itself.
+ *
+ * @param result - The tool handler's result.
+ * @returns An equivalent `CallToolResult` the SDK will accept.
+ */
+export function toCallToolResult(result: ToolResult): CallToolResult {
+  const content = result.content.map(({ type, text }) => ({ type, text }));
+  const callToolResult: CallToolResult = result.isError === undefined ? { content } : { content, isError: result.isError };
+  return callToolResult;
 }

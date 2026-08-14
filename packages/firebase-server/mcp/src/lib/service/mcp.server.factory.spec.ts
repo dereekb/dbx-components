@@ -4,8 +4,9 @@ import { join } from 'node:path';
 import { Logger } from '@nestjs/common';
 import { McpServerFactoryService } from './mcp.server.factory';
 import { MCP_MANIFEST_VERSION } from './mcp.manifest';
+import { generateMcpToolDefinitions } from './mcp.tool-generator';
 import { type McpModuleConfig, type McpAuthRoleReader } from '../mcp.config';
-import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { dispatchMcpToolCall, dispatchMcpToolsList, type McpSpecDriverContext } from './mcp.spec-driver';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type ModelApiDetailsResult, type FirebaseServerAuthData, type McpToolVisibility, type McpVisibilityContext, type McpToolDetailsBuilder, type McpToolDetailsBuilderInput } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE, type AuthRoleSet } from '@dereekb/util';
@@ -49,19 +50,14 @@ function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Part
 
 type WireToolEntry = { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } };
 
-async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<WireToolEntry>> {
-  const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
-  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<WireToolEntry> }>>;
-  const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
-  return result.tools;
+type McpTestContext = McpSpecDriverContext;
+
+async function listToolEntries(factory: McpServerFactoryService, ctx: McpTestContext = {}): Promise<ReadonlyArray<WireToolEntry>> {
+  return dispatchMcpToolsList<WireToolEntry>(factory, ctx);
 }
 
-async function listTools(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description?: string }>> {
-  const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
-  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description?: string }> }>>;
-  const listHandler = handlers.get(ListToolsRequestSchema.shape.method.value)!;
-  const result = await listHandler({ method: 'tools/list', params: {} }, {} as any);
-  return result.tools;
+async function listTools(factory: McpServerFactoryService, ctx: McpTestContext = {}): Promise<ReadonlyArray<{ name: string; description?: string }>> {
+  return dispatchMcpToolsList<{ name: string; description?: string }>(factory, ctx);
 }
 
 function makeApiDetails(spec: ReadonlyArray<{ model: string; call: string; specifier?: string; mcp?: object; requiredScope?: string }>): ModelApiDetailsResult {
@@ -110,17 +106,7 @@ describe('McpServerFactoryService.createServer', () => {
       }
     });
 
-    const server = factory.createServer({ rawRequest: {} as any });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const callResult = (await callHandler(
-      {
-        method: 'tools/call',
-        params: { name: 'storageFile-recomputeChecksums', arguments: { foo: 1 } }
-      },
-      {} as any
-    )) as { isError?: boolean; structuredContent?: unknown };
+    const callResult = await dispatchMcpToolCall<{ isError?: boolean; structuredContent?: unknown }>({ factory, ctx: {}, name: 'storageFile-recomputeChecksums', args: { foo: 1 } });
 
     expect(callResult.isError).toBeUndefined();
     expect(callResult.structuredContent).toEqual({ ran: true });
@@ -129,11 +115,7 @@ describe('McpServerFactoryService.createServer', () => {
 
   it('returns an isError response when the tool name is unknown', async () => {
     const factory = makeFactory({ models: {} });
-    const server = factory.createServer({ rawRequest: {} as any });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'missing-tool', arguments: {} } }, {} as any)) as { isError?: boolean; content: ReadonlyArray<{ text: string }> };
+    const result = await dispatchMcpToolCall<{ isError?: boolean; content: ReadonlyArray<{ text: string }> }>({ factory, ctx: {}, name: 'missing-tool' });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('Unknown tool');
   });
@@ -205,22 +187,14 @@ describe('McpServerFactoryService additive per-function requiredScope filter', (
 
   it('rejects tools/call for a per-function-gated tool the caller lacks the scope for (filtered out → Unknown tool)', async () => {
     const factory = makeFactory(apiDetails, { dispatch: () => ({ ran: true }) });
-    const server = factory.createServer({ rawRequest: {} as any, auth: oidcAuth('model.create') });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'workerAcademyProgress-create', arguments: {} } }, {} as any)) as { isError?: boolean; content: ReadonlyArray<{ text: string }> };
+    const result = await dispatchMcpToolCall<{ isError?: boolean; content: ReadonlyArray<{ text: string }> }>({ factory, ctx: { auth: oidcAuth('model.create') }, name: 'workerAcademyProgress-create' });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('Unknown tool');
   });
 
   it('dispatches tools/call for a per-function-gated tool when the caller holds both scopes', async () => {
     const factory = makeFactory(apiDetails, { dispatch: () => ({ ran: true }) });
-    const server = factory.createServer({ rawRequest: {} as any, auth: oidcAuth('model.create lms') });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'workerAcademyProgress-create', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: unknown };
+    const result = await dispatchMcpToolCall<{ isError?: boolean; structuredContent?: unknown }>({ factory, ctx: { auth: oidcAuth('model.create lms') }, name: 'workerAcademyProgress-create' });
     expect(result.isError).toBeUndefined();
     expect(result.structuredContent).toEqual({ ran: true });
   });
@@ -396,11 +370,9 @@ describe('McpServerFactoryService manifest loader', () => {
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
 
     try {
-      const server = factory.createServer({ rawRequest: {} as any });
-      const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description?: string; outputSchema?: object }> }>>;
-      const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
+      const tools = await dispatchMcpToolsList<{ name: string; description?: string; outputSchema?: object }>(factory);
 
-      const tool = result.tools.find((t) => t.name === 'guestbook-query');
+      const tool = tools.find((t) => t.name === 'guestbook-query');
       expect(tool?.description).toBe('Pre-rendered query description.');
       expect(tool?.outputSchema).toEqual({ type: 'object', properties: { count: { type: 'number' } } });
       expect(logSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('1 tool entries'))).toBe(true);
@@ -506,18 +478,14 @@ describe('McpServerFactoryService model catalog tools', () => {
   it('answers tools/call for model-info in groups mode by default, and list mode for all:true', async () => {
     const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
-    const server = factory.createServer({ rawRequest: {} as any, auth: firebaseAuth() });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const groups = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; groups?: ReadonlyArray<{ modelGroup: string; modelCount: number }>; totalModels?: number } };
+    const groups = await dispatchMcpToolCall<{ isError?: boolean; structuredContent?: { mode?: string; groups?: ReadonlyArray<{ modelGroup: string; modelCount: number }>; totalModels?: number } }>({ factory, ctx: { auth: firebaseAuth() }, name: 'model-info' });
 
     expect(groups.isError).toBeUndefined();
     expect(groups.structuredContent?.mode).toBe('groups');
     expect(groups.structuredContent?.groups).toEqual([{ modelGroup: 'Guestbook', modelCount: 1 }]);
     expect(groups.structuredContent?.totalModels).toBe(1);
 
-    const list = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: { all: true } } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; models?: ReadonlyArray<{ modelType: string }> } };
+    const list = await dispatchMcpToolCall<{ isError?: boolean; structuredContent?: { mode?: string; models?: ReadonlyArray<{ modelType: string }> } }>({ factory, ctx: { auth: firebaseAuth() }, name: 'model-info', args: { all: true } });
 
     expect(list.isError).toBeUndefined();
     expect(list.structuredContent?.mode).toBe('list');
@@ -527,11 +495,7 @@ describe('McpServerFactoryService model catalog tools', () => {
   it('answers tools/call for model-decode against a registered prefix', async () => {
     const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
-    const server = factory.createServer({ rawRequest: {} as any, auth: firebaseAuth() });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'model-decode', arguments: { key: 'gb/abc' } } }, {} as any)) as { isError?: boolean; structuredContent?: { leaf?: { modelType?: string } } };
+    const result = await dispatchMcpToolCall<{ isError?: boolean; structuredContent?: { leaf?: { modelType?: string } } }>({ factory, ctx: { auth: firebaseAuth() }, name: 'model-decode', args: { key: 'gb/abc' } });
 
     expect(result.isError).toBeUndefined();
     expect(result.structuredContent?.leaf?.modelType).toBe('guestbook');
@@ -592,7 +556,19 @@ describe('McpServerFactoryService toolDetails builder', () => {
     expect(received[0]?.dispatch).toEqual({ call: 'read', modelType: 'widget', specifier: undefined });
   });
 
-  it('reuses the same frozen staticWireEntry across requests for tools without a builder (reason disabled)', async () => {
+  it('precomputes one frozen staticWireEntry per tool', () => {
+    // The frozen-verbatim hot path is an in-process optimisation: the entry is built once at
+    // generation time and handed to every request unchanged. Asserted here on the generator's
+    // output rather than through a request, because a dispatched request round-trips the entry
+    // through JSON and neither object identity nor frozen-ness survives that.
+    const result = generateMcpToolDefinitions(makeApiDetails([{ model: 'widget', call: 'read' }]));
+    const entry = result.tools[0]?.staticWireEntry;
+
+    expect(entry).toBeDefined();
+    expect(Object.isFrozen(entry)).toBe(true);
+  });
+
+  it('serves an identical wire entry on every request for tools without a builder (reason disabled)', async () => {
     // The frozen-verbatim hot path only holds when the auto-injected reason parameter is disabled;
     // with it enabled the inputSchema is wrapped per request (covered by the reason-parameter suite).
     const apiDetails = makeApiDetails([{ model: 'widget', call: 'read' }]);
@@ -600,8 +576,7 @@ describe('McpServerFactoryService toolDetails builder', () => {
 
     const firstCall = await listToolEntries(factory);
     const secondCall = await listToolEntries(factory);
-    expect(firstCall[0]).toBe(secondCall[0]);
-    expect(Object.isFrozen(firstCall[0])).toBe(true);
+    expect(firstCall[0]).toEqual(secondCall[0]);
   });
 
   it('does not invoke builders for tools that did not opt in', async () => {
@@ -647,11 +622,7 @@ describe('McpServerFactoryService filtered-out tool dispatch', () => {
   it('returns "Unknown tool" when a hidden tool is invoked via tools/call', async () => {
     const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', mcp: { visibility: false satisfies McpToolVisibility } }]);
     const factory = makeFactory(apiDetails);
-    const server = factory.createServer({ rawRequest: {} as any });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'widget-read', arguments: {} } }, {} as any)) as { isError?: boolean; content: ReadonlyArray<{ text: string }> };
+    const result = await dispatchMcpToolCall<{ isError?: boolean; content: ReadonlyArray<{ text: string }> }>({ factory, ctx: {}, name: 'widget-read' });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('Unknown tool');
   });

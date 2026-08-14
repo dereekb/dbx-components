@@ -18,8 +18,7 @@
  * the registry as a parameter rather than importing it from a module-level
  * static.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
 
 const SEMANTIC_TYPES_URI = 'dbx://semantic-type/entries';

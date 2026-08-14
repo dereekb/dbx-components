@@ -16,8 +16,7 @@
  *
  * Returns a markdown report with all violations grouped by file and model.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type DbxTool } from './types.js';
 import { createSourceValidateTool } from './validate-tool.js';
 import { modelValidate } from '@dereekb/dbx-cli/validate';

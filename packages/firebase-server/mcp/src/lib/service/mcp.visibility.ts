@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { callModelOidcScopeForCallType, type CallModelOidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
-import { type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
+import type { ToolAnnotations } from '@modelcontextprotocol/server';
 
 /**
  * Normalized classification of a {@link McpToolVisibility} value computed at boot.

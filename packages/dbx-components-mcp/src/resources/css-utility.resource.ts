@@ -5,8 +5,7 @@
  * read-only resources for clients that prefer browsing data over calling
  * the `dbx_css_class_lookup` tool.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { CSS_UTILITY_ROLES, type CssUtilityRoleValue, type CssUtilityRegistry } from '@dereekb/dbx-cli';
 
 const CSS_UTILITY_URI = 'dbx://css-utility/entries';

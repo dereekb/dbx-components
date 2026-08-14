@@ -10,8 +10,7 @@
  *
  * Built from a {@link ForgeFieldRegistry} loaded at server startup.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type FormFieldInfo, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { resolveTopicAlias } from './form-alias-resolver.js';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';

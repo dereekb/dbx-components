@@ -11,8 +11,7 @@
  * `'upstream'` or `'downstream'`; `componentDirs` overrides discovery for
  * non-standard layouts.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';

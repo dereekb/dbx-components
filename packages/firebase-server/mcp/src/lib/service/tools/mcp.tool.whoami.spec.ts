@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
 import { type McpManifestAuth, type McpManifestAuthApp, type McpManifestAuthClaim } from '../mcp.manifest';

@@ -10,8 +10,7 @@
  *
  * Reads from an {@link ActionRegistry} supplied at construction time.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { ACTION_ROLE_ORDER, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry } from '@dereekb/dbx-cli';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';

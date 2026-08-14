@@ -11,8 +11,7 @@
  * {@link createSemanticTypeSearchTool} is invoked from {@link registerTools}
  * after the registry is loaded at server startup.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type SemanticTypeEntry, type SemanticTypeRegistry } from '@dereekb/dbx-cli';
 import { formatSemanticTypeSearchResults } from './semantic-type-lookup.formatter.js';

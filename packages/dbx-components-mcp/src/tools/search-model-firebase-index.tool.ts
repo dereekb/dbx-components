@@ -12,8 +12,7 @@
  * Built from a {@link ModelFirebaseIndexRegistry} loaded at server
  * startup.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import type { ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';

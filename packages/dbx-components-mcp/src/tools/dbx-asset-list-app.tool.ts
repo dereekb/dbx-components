@@ -11,8 +11,7 @@
  * Accepts the same `componentDir` + `apiDir` as the validator, plus an
  * optional `format: 'markdown' | 'json'` (default markdown).
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { assetListApp, assetValidateApp } from '@dereekb/dbx-cli/validate';
 import { type DbxTool } from './types.js';
 import { createListAppTool } from './validate-tool.js';

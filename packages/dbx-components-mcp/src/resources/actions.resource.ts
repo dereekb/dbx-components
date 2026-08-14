@@ -6,8 +6,7 @@
  * for clients that prefer browsing data over calling tools. Companion to the
  * `dbx_action_*` tool family which consumes the same registry.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { ACTION_ROLE_ORDER, type ActionEntryRole, type ActionRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 

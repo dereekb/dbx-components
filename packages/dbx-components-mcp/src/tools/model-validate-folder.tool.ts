@@ -19,8 +19,7 @@
  *   - `glob`: a single glob pattern expanded via `node:fs/promises`;
  *     non-directory matches are filtered out automatically.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type DbxTool } from './types.js';
 import { createFolderValidateTool } from './validate-tool.js';
 import { type modelValidate, modelValidateFolder } from '@dereekb/dbx-cli/validate';
