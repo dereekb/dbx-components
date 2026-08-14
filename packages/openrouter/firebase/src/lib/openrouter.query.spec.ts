@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, type FirestoreQueryConstraint, type OrderByQueryConstraintData, type WhereQueryConstraintData } from '@dereekb/firebase';
-import { openRouterRunTaskIdentity } from './openrouter.runtask';
+import { openRouterRunTaskIdentity } from './openrouter.model';
 import { openRouterRunTasksExpiredQuery, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from './openrouter.query';
 
 /**
