@@ -126,7 +126,7 @@ demoApiFunctionContextFactory((f) => {
 
             expect(first.created).toBe(true);
             expect(first.version).toBe(1);
-            // A version is immutable once published, so re-seeding must NOT mint a second identical one.
+            // Minting a version locks the one before it, so re-seeding must NOT mint a second identical one.
             expect(second.created).toBe(false);
             expect(second.version).toBe(1);
           });

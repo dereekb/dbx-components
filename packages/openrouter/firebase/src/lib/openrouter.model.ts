@@ -17,6 +17,7 @@ import {
   firestoreNumber,
   firestoreString,
   optionalFirestoreArray,
+  optionalFirestoreBoolean,
   optionalFirestoreDate,
   optionalFirestoreNumber,
   optionalFirestorePassthroughJsonField,
@@ -214,15 +215,18 @@ export interface OpenRouterPromptVersionMessage {
 }
 
 /**
- * One published, immutable version of a prompt.
+ * One version of a prompt.
  *
  * Version pinning is the one thing OpenRouter Presets structurally cannot do — a preset always
  * resolves to latest — so it is the reason this model exists rather than deferring to a preset. A run
  * records the version it used, so a result is always traceable to the exact prompt text that produced
  * it, and a historical run can be replayed against that same text.
  *
- * Versions are treated as immutable once published: editing one would silently change the meaning of
- * every past run that cites it.
+ * Only the latest version is editable. Creating the next version {@link OpenRouterPromptVersion.lk
+ * locks} the one before it, permanently, because editing a version a past run cites would silently
+ * change the meaning of that run's result. The head version stays open so that a prompt can be
+ * iterated on without minting a version per keystroke — which does mean a run against the head can be
+ * replayed against text that has since moved. Lock it by creating the next version.
  *
  * @dbxModel
  * @dbxModelRead admin
@@ -275,13 +279,27 @@ export interface OpenRouterPromptVersion {
    * @dbxModelVariable createdBy
    */
   by?: Maybe<FirestoreModelKey>;
+  /**
+   * Whether the version is locked against further edits.
+   *
+   * Set on the outgoing version when the next one is created, and never unset — a version a past run
+   * cites has to keep saying what it said when the run cited it.
+   *
+   * Stored rather than derived from the prompt's `lv`, so a reader holding only the version document
+   * can tell whether it is editable, and so the update path needs no second read to find out.
+   *
+   * @dbxModelVariable locked
+   */
+  lk?: Maybe<boolean>;
 }
 
 /**
- * Roles for an {@link OpenRouterPromptVersion}. Versions are immutable once published, so there is no
- * update role.
+ * Roles for an {@link OpenRouterPromptVersion}.
+ *
+ * `update` is granted by the role map, but the action refuses a locked version regardless: the lock is
+ * a property of the document, not of who is asking.
  */
-export type OpenRouterPromptVersionRoles = GrantedReadRole;
+export type OpenRouterPromptVersionRoles = GrantedReadRole | GrantedUpdateRole;
 
 export class OpenRouterPromptVersionDocument extends AbstractFirestoreDocument<OpenRouterPromptVersion, OpenRouterPromptVersionDocument, typeof openRouterPromptVersionIdentity> {
   get modelIdentity() {
@@ -297,7 +315,8 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     m: optionalFirestoreArray<OpenRouterPromptVersionMessage>({ dontStoreIfEmpty: true }),
     c: optionalFirestorePassthroughJsonField<OpenRouterModelConfig>(),
     nt: optionalFirestoreString(),
-    by: optionalFirestoreString()
+    by: optionalFirestoreString(),
+    lk: optionalFirestoreBoolean()
   }
 });
 

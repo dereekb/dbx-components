@@ -186,6 +186,10 @@ dbx-cli-generate-firestore-indexes --component packages/openrouter/firebase --ou
 retention query needs none at all — `qat <= cutoff` ordered by `qat` is a single-field range with a
 matching order, which Firestore serves from its automatic single-field index.
 
+Nothing on `orp`. The prompt query filters on `s` alone and adds no ordering, so pagination rides
+Firestore's implicit `__name__` order — which for this model is the prompt's own readable key. Adding a
+second filter axis (an `array-contains` on `t`, say) is what would buy the first composite here.
+
 **The emulator does not enforce composite indexes**, so a green integration run proves nothing here —
 `openrouter.query.spec.ts` asserts the generated file against the query factories instead, and pins the
 count at exactly two so a re-added factory cannot quietly buy a third.

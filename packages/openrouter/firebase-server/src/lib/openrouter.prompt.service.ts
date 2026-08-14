@@ -1,4 +1,4 @@
-import { type Getter, type Maybe, type Milliseconds, MS_IN_MINUTE, arrayToMap, cachedGetter, expiringCachedGetter } from '@dereekb/util';
+import { type Getter, type Maybe, type Milliseconds, MS_IN_MINUTE, arrayToMap, expiringCachedGetter } from '@dereekb/util';
 import { type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import { type OpenRouterPrompt, type OpenRouterPromptDocument, type OpenRouterPromptFirestoreCollections, type OpenRouterPromptVersion, OpenRouterPromptState, openRouterPromptVersionId, openRouterResolvedPromptForVersion } from '@dereekb/openrouter/firebase';
 
@@ -33,11 +33,12 @@ export interface OpenRouterResolvePromptParams {
 /**
  * Default time a resolved prompt is cached for.
  *
- * Short on purpose. Published versions are immutable, so the only thing that can go stale is which
- * version is active — and a promotion should take effect within a minute or two, not on the next cold
- * start.
+ * What can go stale is which version is active, and what the latest — still editable — version says.
+ * Neither is critical to serve to the second: a run that used the previous text for a few minutes is a
+ * run against a prompt that was live a few minutes ago, not a wrong run. Bounded rather than permanent
+ * is the requirement, so the change lands on its own rather than at the next cold start.
  */
-export const OPENROUTER_PROMPT_CACHE_DURATION: Milliseconds = MS_IN_MINUTE * 2;
+export const OPENROUTER_PROMPT_CACHE_DURATION: Milliseconds = MS_IN_MINUTE * 5;
 
 /**
  * Loads prompts and resolves their versions.
@@ -197,12 +198,12 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
 
     if (getter == null) {
       const load = () => resolveVersion(promptKey, version);
-      // A pinned version is immutable, so it never needs re-reading; only the active pointer can move,
-      // which is the one thing that has to expire. A key with a code definition is the exception: even a
-      // pinned resolution may be standing in for a version the store has not published yet, and
-      // `clearCachedPrompt` only reaches the instance that did the publishing.
-      const immutable = version != null && !definitionsByKey.has(promptKey);
-      getter = immutable ? cachedGetter(load) : expiringCachedGetter({ getter: load, ttl: duration });
+      // Everything expires, pinned resolutions included. A version is only immutable once it LOCKS, which
+      // happens when the next version is created — until then the head version is editable in place, and
+      // a permanently cached pin of it would serve the pre-edit text forever on every instance except the
+      // one that handled the edit. Telling the two apart would cost a read of the lock, which is the same
+      // read the expiry already pays for.
+      getter = expiringCachedGetter({ getter: load, ttl: duration });
       cache.set(key, getter);
     }
 

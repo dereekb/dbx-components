@@ -1,5 +1,35 @@
 import { type FirestoreQueryConstraint, limit, orderBy, where, whereDateIsOnOrBefore } from '@dereekb/firebase';
-import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.model';
+import { OPENROUTER_RUN_TASK_CLAIMABLE_STATES, type OpenRouterPrompt, type OpenRouterPromptState, type OpenRouterRunTask, OpenRouterRunTaskState } from './openrouter.model';
+
+/**
+ * Params for {@link openRouterPromptsWithStateQuery}.
+ */
+export interface OpenRouterPromptsWithStateQueryParams {
+  /**
+   * The lifecycle state to match.
+   */
+  readonly state: OpenRouterPromptState;
+}
+
+/**
+ * Query for the prompts in one lifecycle state.
+ *
+ * Needs no composite index, and is deliberately kept that way. Unordered, so pagination falls through to
+ * Firestore's implicit `__name__` order — which for this model is the prompt's own readable key, already
+ * the order a listing wants — and state is the only filter axis: pairing it with an `array-contains` on
+ * `t` would buy a composite index for a collection measured in dozens of documents.
+ *
+ * @param params - The state to match.
+ * @returns Firestore query constraints for the prompts in that state.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel OpenRouterPrompt
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory admin
+ */
+export function openRouterPromptsWithStateQuery(params: OpenRouterPromptsWithStateQueryParams): FirestoreQueryConstraint[] {
+  return [where<OpenRouterPrompt>('s', '==', params.state)];
+}
 
 /**
  * Params for {@link openRouterRunTasksRunnableQuery}.

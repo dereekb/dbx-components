@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, type FirestoreQueryConstraint, type OrderByQueryConstraintData, type WhereQueryConstraintData } from '@dereekb/firebase';
-import { openRouterRunTaskIdentity } from './openrouter.model';
-import { openRouterRunTasksExpiredQuery, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from './openrouter.query';
+import { OpenRouterPromptState, openRouterPromptIdentity, openRouterRunTaskIdentity } from './openrouter.model';
+import { openRouterPromptsWithStateQuery, openRouterRunTasksExpiredQuery, openRouterRunTasksReclaimableQuery, openRouterRunTasksRunnableQuery } from './openrouter.query';
 
 /**
  * The generated index file shipped with this package, which a consuming app merges into its own
@@ -49,9 +49,20 @@ function requiredIndexFor(constraints: FirestoreQueryConstraint[]): string {
   return [...equalityFields, ...orderedFields].join(', ');
 }
 
-function generatedIndexFields(): string[] {
-  return indexesJson.indexes.filter((index) => index.collectionGroup === openRouterRunTaskIdentity.collectionName).map((index) => index.fields.map((field) => `${field.fieldPath}:${(field.order ?? 'ASCENDING').toLowerCase().replace('ending', '')}`).join(', '));
+function generatedIndexFields(collectionName: string = openRouterRunTaskIdentity.collectionName): string[] {
+  return indexesJson.indexes.filter((index) => index.collectionGroup === collectionName).map((index) => index.fields.map((field) => `${field.fieldPath}:${(field.order ?? 'ASCENDING').toLowerCase().replace('ending', '')}`).join(', '));
 }
+
+describe('OpenRouterPrompt query factories', () => {
+  it('should need no composite index at all', () => {
+    // One equality filter and no ordering, so Firestore serves it from the automatic single-field index
+    // and pagination falls through to the implicit `__name__` order — which for this model is the
+    // prompt's own readable key. A second filter axis or an explicit orderBy is what would buy the first
+    // composite on `orp`, and this is the assertion that would notice.
+    expect(requiredIndexFor(openRouterPromptsWithStateQuery({ state: OpenRouterPromptState.ACTIVE }))).toBe('s:==');
+    expect(generatedIndexFields(openRouterPromptIdentity.collectionName)).toHaveLength(0);
+  });
+});
 
 describe('OpenRouterRunTask query factories', () => {
   it('should require the documented composite index per query', () => {

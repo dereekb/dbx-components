@@ -1,28 +1,22 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type FirestoreContextReference, firestoreModelKey } from '@dereekb/firebase';
-import { type Maybe, filterMaybeArrayValues } from '@dereekb/util';
-import { type OpenRouterModelConfig, validateOpenRouterModelConfig } from '@dereekb/openrouter';
+import { type FirestoreContextReference, type FirestoreModelKey, firestoreModelId, firestoreModelKeyParentKey } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import { type OpenRouterModelConfig, type OpenRouterPromptKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import {
-  type CreateOpenRouterPromptParams,
-  type ListOpenRouterPromptsParams,
-  type ListOpenRouterPromptsResult,
-  type OpenRouterPrompt,
+  type CreateOpenRouterPromptVersionParams,
+  type CreateOpenRouterPromptVersionResult,
   type OpenRouterPromptDocument,
   type OpenRouterPromptFirestoreCollections,
   OpenRouterPromptState,
   type OpenRouterPromptVersion,
-  type PublishOpenRouterPromptVersionParams,
-  type PublishOpenRouterPromptVersionResult,
-  type ReadOpenRouterPromptParams,
-  type ReadOpenRouterPromptResult,
+  type OpenRouterPromptVersionDocument,
   type UpdateOpenRouterPromptParams,
-  createOpenRouterPromptParamsType,
-  listOpenRouterPromptsParamsType,
-  openRouterPromptIdentity,
+  type UpdateOpenRouterPromptVersionParams,
+  type UpdateOpenRouterPromptVersionResult,
+  createOpenRouterPromptVersionParamsType,
   openRouterPromptVersionId,
-  publishOpenRouterPromptVersionParamsType,
-  readOpenRouterPromptParamsType,
-  updateOpenRouterPromptParamsType
+  updateOpenRouterPromptParamsType,
+  updateOpenRouterPromptVersionParamsType
 } from '@dereekb/openrouter/firebase';
 import { type OpenRouterPromptService } from './openrouter.prompt.service';
 
@@ -38,17 +32,44 @@ export interface OpenRouterPromptServerActionsContext extends FirebaseServerActi
 }
 
 /**
+ * Parameters for {@link OpenRouterPromptServerActions.createOpenRouterPrompt}.
+ *
+ * Server-side only, and deliberately not part of the model API: a prompt comes into existence from a
+ * seed run against an {@link OpenRouterPromptDefinition} the code already carries, so there is no
+ * external caller whose input needs validating.
+ */
+export interface CreateOpenRouterPromptParams {
+  /**
+   * The prompt key, used as the document id. Lowercase, dash-separated by convention.
+   */
+  readonly key: OpenRouterPromptKey;
+  /**
+   * Human-readable name.
+   */
+  readonly name: string;
+  /**
+   * What the prompt is for.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * Grouping tags.
+   */
+  readonly tags?: Maybe<string[]>;
+}
+
+/**
  * Server actions for managing prompts.
  *
- * These exist instead of an Angular UI: prompt CRUD reaches the model API, and the existing callModel
- * MCP surface makes every one of them callable without building a screen for it.
+ * The writes exist instead of an Angular UI: they reach the model API, and the existing callModel MCP
+ * surface makes them callable without building a screen for it. Reads are absent because the prompt and
+ * version model services already make both fetchable by key through model-get, and listing is the
+ * model API's standard query operation over {@link openRouterPromptsWithStateQuery}.
  */
 export abstract class OpenRouterPromptServerActions {
   abstract createOpenRouterPrompt(params: CreateOpenRouterPromptParams): Promise<OpenRouterPromptDocument>;
   abstract updateOpenRouterPrompt(params: UpdateOpenRouterPromptParams): Promise<(document: OpenRouterPromptDocument) => Promise<OpenRouterPromptDocument>>;
-  abstract publishOpenRouterPromptVersion(params: PublishOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptDocument) => Promise<PublishOpenRouterPromptVersionResult>>;
-  abstract readOpenRouterPrompt(params: ReadOpenRouterPromptParams): Promise<(document: OpenRouterPromptDocument) => Promise<ReadOpenRouterPromptResult>>;
-  abstract listOpenRouterPrompts(params: ListOpenRouterPromptsParams): Promise<ListOpenRouterPromptsResult>;
+  abstract createOpenRouterPromptVersion(params: CreateOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptDocument) => Promise<CreateOpenRouterPromptVersionResult>>;
+  abstract updateOpenRouterPromptVersion(params: UpdateOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptVersionDocument) => Promise<UpdateOpenRouterPromptVersionResult>>;
 }
 
 /**
@@ -61,22 +82,24 @@ export function openRouterPromptServerActions(context: OpenRouterPromptServerAct
   return {
     createOpenRouterPrompt: createOpenRouterPromptFactory(context),
     updateOpenRouterPrompt: updateOpenRouterPromptFactory(context),
-    publishOpenRouterPromptVersion: publishOpenRouterPromptVersionFactory(context),
-    readOpenRouterPrompt: readOpenRouterPromptFactory(context),
-    listOpenRouterPrompts: listOpenRouterPromptsFactory(context)
+    createOpenRouterPromptVersion: createOpenRouterPromptVersionFactory(context),
+    updateOpenRouterPromptVersion: updateOpenRouterPromptVersionFactory(context)
   };
 }
 
 /**
  * Creates a new prompt at its caller-supplied key, refusing a key that already exists.
  *
+ * Takes its params directly rather than through an arktype-validated action: the only callers are a
+ * seed and a test, both of them server-side.
+ *
  * @param context - The actions context.
  * @returns The create action.
  */
 export function createOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection } = context;
+  const { openRouterPromptCollection } = context;
 
-  return firebaseServerActionTransformFunctionFactory(createOpenRouterPromptParamsType, async (params) => {
+  return async (params: CreateOpenRouterPromptParams) => {
     const { key, name, description, tags } = params;
 
     return openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
@@ -98,7 +121,7 @@ export function createOpenRouterPromptFactory(context: OpenRouterPromptServerAct
 
       return openRouterPromptCollection.documentAccessor().loadDocumentForId(key);
     });
-  });
+  };
 }
 
 /**
@@ -143,23 +166,24 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
 }
 
 /**
- * Publishes a new immutable version, allocating its number inside the transaction, and optionally promotes it.
+ * Creates a new version, allocating its number inside the transaction, locking the version it succeeds,
+ * and optionally promoting it.
  *
  * @param context - The actions context.
- * @returns The publish action.
+ * @returns The create version action.
  */
-export function publishOpenRouterPromptVersionFactory(context: OpenRouterPromptServerActionsContext) {
+export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(publishOpenRouterPromptVersionParamsType, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(createOpenRouterPromptVersionParamsType, async (params) => {
     const { instructions, messages, config, notes, activate } = params;
 
-    return async (document: OpenRouterPromptDocument) => {
+    return async (document: OpenRouterPromptDocument): Promise<CreateOpenRouterPromptVersionResult> => {
       const modelConfig = (config ?? undefined) as Maybe<OpenRouterModelConfig>;
       const validation = validateOpenRouterModelConfig(modelConfig ?? {});
 
       if (!validation.valid) {
-        throw new Error(`Cannot publish a version of OpenRouterPrompt "${document.id}": ${validation.errors.join(' ')}`);
+        throw new Error(`Cannot create a version of OpenRouterPrompt "${document.id}": ${validation.errors.join(' ')}`);
       }
 
       const result = await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
@@ -171,9 +195,17 @@ export function publishOpenRouterPromptVersionFactory(context: OpenRouterPromptS
         }
 
         // Allocated from the prompt document inside the transaction rather than supplied by the caller:
-        // two concurrent publishes picking the same number would silently overwrite one another.
+        // two concurrent creates picking the same number would silently overwrite one another.
         const version = prompt.lv + 1;
-        const versionDocument = openRouterPromptVersionCollectionFactory(inTransaction).documentAccessorForTransaction(transaction).loadDocumentForId(openRouterPromptVersionId(version));
+        const versionCollection = openRouterPromptVersionCollectionFactory(inTransaction).documentAccessorForTransaction(transaction);
+        const versionDocument = versionCollection.loadDocumentForId(openRouterPromptVersionId(version));
+
+        // The outgoing version stops being editable the moment it stops being the head — in the same
+        // transaction, so there is no window in which two versions are both unlocked. Read first:
+        // Firestore forbids a read after a write in a transaction, and a `set` on a version that was
+        // deleted out from under us would resurrect it as a document holding nothing but a lock.
+        const previousVersionDocument = prompt.lv > 0 ? versionCollection.loadDocumentForId(openRouterPromptVersionId(prompt.lv)) : undefined;
+        const previousVersionExists = previousVersionDocument == null ? false : await previousVersionDocument.accessor.exists();
 
         const versionData: OpenRouterPromptVersion = {
           cat: new Date(),
@@ -184,10 +216,15 @@ export function publishOpenRouterPromptVersionFactory(context: OpenRouterPromptS
           nt: notes
         };
 
+        if (previousVersionDocument != null && previousVersionExists) {
+          await previousVersionDocument.update({ lk: true });
+        }
+
         await versionDocument.accessor.set(versionData);
         await inTransaction.update({ lv: version, uat: new Date(), ...(activate ? { av: version, s: OpenRouterPromptState.ACTIVE } : undefined) });
 
-        return { version, key: firestoreModelKey(openRouterPromptIdentity, document.id), activated: activate === true, warnings: validation.warnings };
+        // The version document's own path, not the prompt's: a create reports what it created.
+        return { modelKeys: [versionDocument.documentRef.path] as [FirestoreModelKey], version, activated: activate === true, warnings: validation.warnings };
       });
 
       openRouterPromptService.clearCachedPrompt(document.id);
@@ -197,103 +234,54 @@ export function publishOpenRouterPromptVersionFactory(context: OpenRouterPromptS
 }
 
 /**
- * Reads a prompt plus one of its versions — the pinned one, or the active one when none is named.
+ * Edits the latest version of a prompt in place, refusing one the next version has locked.
+ *
+ * The lock is re-read inside the transaction rather than trusted from the caller's snapshot: a create
+ * racing this edit would otherwise let the write land on a version that had just stopped being the head.
  *
  * @param context - The actions context.
- * @returns The read action.
+ * @returns The update version action.
  */
-export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, openRouterPromptVersionCollectionFactory } = context;
+export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionGroup, openRouterPromptService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(readOpenRouterPromptParamsType, async (params) => {
-    const { version: inputVersion, includeVersions } = params;
+  return firebaseServerActionTransformFunctionFactory(updateOpenRouterPromptVersionParamsType, async (params) => {
+    const { instructions, messages, config, notes } = params;
 
-    return async (document: OpenRouterPromptDocument): Promise<ReadOpenRouterPromptResult> => {
-      const prompt = await document.snapshotData();
+    return async (document: OpenRouterPromptVersionDocument): Promise<UpdateOpenRouterPromptVersionResult> => {
+      const inputConfig = config as Maybe<OpenRouterModelConfig>;
 
-      if (prompt == null) {
-        throw new Error(`The OpenRouterPrompt "${document.id}" does not exist.`);
-      }
+      const validation = await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
+        const inTransaction = openRouterPromptVersionCollectionGroup.documentAccessorForTransaction(transaction).loadDocument(document.documentRef);
+        const version = await inTransaction.snapshotData();
 
-      const versionCollection = openRouterPromptVersionCollectionFactory(document);
-      const targetVersion = inputVersion ?? prompt.av;
-
-      const versionData = targetVersion == null ? undefined : await versionCollection.documentAccessor().loadDocumentForId(openRouterPromptVersionId(targetVersion)).snapshotData();
-      const versions = includeVersions ? (await versionCollection.queryDocument().getDocs()).map((x) => Number(x.id)) : undefined;
-
-      return {
-        key: document.id,
-        name: prompt.n,
-        description: prompt.d,
-        state: prompt.s,
-        activeVersion: prompt.av,
-        latestVersion: prompt.lv,
-        tags: prompt.t,
-        version:
-          versionData == null
-            ? undefined
-            : {
-                version: versionData.v,
-                instructions: versionData.i,
-                messages: versionData.m?.map(({ r, c }) => ({ role: r, content: c })),
-                config: versionData.c as Maybe<Record<string, unknown>>,
-                notes: versionData.nt
-              },
-        versions
-      };
-    };
-  });
-}
-
-/**
- * Lists the prompts matching a state and/or tag filter.
- *
- * @param context - The actions context.
- * @returns The list action.
- */
-export function listOpenRouterPromptsFactory(context: OpenRouterPromptServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection } = context;
-
-  return firebaseServerActionTransformFunctionFactory(listOpenRouterPromptsParamsType, async (params) => {
-    const { state, tag, limit: inputLimit } = params;
-    const pageLimit = inputLimit ?? 100;
-
-    // One read total. `getDocs()` followed by a `snapshotData()` per document would re-read every one of
-    // them; the pairs loader carries the data the query already fetched.
-    const pairs = await openRouterPromptCollection.queryDocument().getDocSnapshotDataPairs();
-
-    const prompts = filterMaybeArrayValues(
-      pairs.map(({ document, data }) => {
-        let result: Maybe<ListOpenRouterPromptsResult['prompts'][0]>;
-
-        if (isOpenRouterPromptMatchingFilter(data, state, tag)) {
-          result = { key: document.id, name: data.n, state: data.s, activeVersion: data.av, latestVersion: data.lv, tags: data.t };
+        if (version == null) {
+          throw new Error(`The OpenRouterPromptVersion "${document.key}" does not exist.`);
         }
 
+        if (version.lk) {
+          throw new Error(`The OpenRouterPromptVersion "${document.key}" is locked, because a newer version exists. Create a new version instead.`);
+        }
+
+        // Validated against what the version will SAY once written, not against the patch: an edit that
+        // touches only the instructions must not be judged against an empty config and refused for
+        // naming no model. An explicitly null config is judged as the empty config it would leave behind,
+        // which is exactly the refusal that should happen.
+        const result = validateOpenRouterModelConfig((config === undefined ? version.c : inputConfig) ?? {});
+
+        if (!result.valid) {
+          throw new Error(`Cannot update OpenRouterPromptVersion "${document.key}": ${result.errors.join(' ')}`);
+        }
+
+        // Undefined fields are stripped before the write, so an omitted field is left as it was. `null`
+        // is passed through for the fields that can meaningfully carry nothing.
+        await inTransaction.update({ i: instructions, m: messages == null ? messages : messages.map(({ role, content }) => ({ r: role, c: content })), c: inputConfig, nt: notes });
         return result;
-      })
-      // Applied AFTER filtering, deliberately. State and tag are matched in memory, so a query-level limit
-      // would return fewer than `limit` matches while more still existed.
-    ).slice(0, pageLimit);
+      });
 
-    return { prompts };
+      // Keyed by the parent prompt, which is the id the cache and the resolver both work in.
+      openRouterPromptService.clearCachedPrompt(firestoreModelId(firestoreModelKeyParentKey(document) as FirestoreModelKey));
+      return { warnings: validation.warnings };
+    };
   });
-}
-
-/**
- * Whether a prompt matches the listing filter.
- *
- * Filtered in memory rather than by query: the prompt collection is operational configuration measured
- * in dozens of documents, and a composite index plus an `array-contains` on an optional field would cost
- * more than it saves at that size.
- *
- * @param prompt - The prompt.
- * @param state - Optional state filter.
- * @param tag - Optional tag filter.
- * @returns True when the prompt matches.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function isOpenRouterPromptMatchingFilter(prompt: OpenRouterPrompt, state: Maybe<OpenRouterPromptState>, tag: Maybe<string>): boolean {
-  return (state == null || prompt.s === state) && (tag == null || (prompt.t ?? []).includes(tag));
 }
