@@ -1,5 +1,5 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, type GrantedReadRole, type GrantedUpdateRole, type WebsiteFileLink } from '@dereekb/model';
-import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique, type IndexRef, filterUniqueByIndex, unixDateTimeSecondsNumberFromDate, dateFromDateOrTimeSecondsNumber } from '@dereekb/util';
+import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique, type IndexRef, filterUniqueByIndex, unixDateTimeSecondsNumberFromDate, dateFromDateOrTimeSecondsNumber, KeyValueTypleValueFilter, isDate } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { type FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { type DocumentSnapshot } from '../types';
@@ -37,7 +37,8 @@ import {
   optionalFirestoreNumber,
   optionalFirestoreArray,
   optionalFirestoreUnixDateTimeSecondsNumber,
-  firestoreUnixDateTimeSecondsNumber
+  firestoreUnixDateTimeSecondsNumber,
+  optionalFirestorePassthroughJsonField
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -300,6 +301,136 @@ describe('optionalFirestoreDate()', () => {
 
       const result = from(null);
       expect(result).toBeSameSecondAs(new Date(defaultReadValue));
+    });
+  });
+});
+
+describe('optionalFirestorePassthroughJsonField()', () => {
+  interface TestPassthroughJson {
+    a?: Maybe<number>;
+    b?: Maybe<{ c?: Maybe<number>; d?: Maybe<Date>; e?: Maybe<number[]> }>;
+  }
+
+  const field = optionalFirestorePassthroughJsonField<TestPassthroughJson>();
+
+  it('should store the value unchanged when it has nothing to filter', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const value = { a: 1, b: { c: 2, e: [3] } };
+    expect(to(value)).toEqual(value);
+  });
+
+  it('should read the value unchanged, without copying it', () => {
+    const { from } = modelFieldMapFunctions(field);
+
+    // reads are the plain passthrough — data out of Firestore cannot contain a filtered value
+    const value = { a: 1, b: { c: 2 } };
+    expect(from(value)).toBe(value);
+  });
+
+  it('should strip an undefined value from the top level', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const result = to({ a: undefined, b: { c: 1 } }) as TestPassthroughJson;
+    expect(Object.keys(result)).not.toContain('a');
+    expect(result).toEqual({ b: { c: 1 } });
+  });
+
+  it('should strip an undefined value from a nested object', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const result = to({ b: { c: undefined, e: [1] } }) as TestPassthroughJson;
+    expect(Object.keys(result.b as object)).not.toContain('c');
+    expect(result).toEqual({ b: { e: [1] } });
+  });
+
+  it('should strip an undefined value from a nested array', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const result = to({ b: { e: [1, undefined as unknown as number, 2] } }) as TestPassthroughJson;
+    expect(result.b?.e).toEqual([1, 2]);
+  });
+
+  it('should not mutate the input value', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const value = { a: undefined, b: { c: undefined } };
+    to(value);
+
+    expect(Object.keys(value)).toContain('a');
+    expect(Object.keys(value.b)).toContain('c');
+  });
+
+  it('should retain a Date within the value', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const d = new Date();
+    const result = to({ b: { d } }) as TestPassthroughJson;
+    expect(result.b?.d).toBe(d);
+  });
+
+  it('should retain a null value within the value', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const result = to({ a: null, b: { c: 1 } }) as TestPassthroughJson;
+    expect(result.a).toBeNull();
+  });
+
+  it('should return null for a null input value, clearing the field', () => {
+    const { to } = modelFieldMapFunctions(field);
+    expect(to(null)).toBeNull();
+  });
+
+  it('should return null for an undefined input value', () => {
+    const { to } = modelFieldMapFunctions(field);
+    expect(to(undefined)).toBeNull();
+  });
+
+  describe('filter', () => {
+    const nullFilteredField = optionalFirestorePassthroughJsonField<TestPassthroughJson>({ filter: KeyValueTypleValueFilter.NULL });
+
+    it('should strip null values at any depth', () => {
+      const { to } = modelFieldMapFunctions(nullFilteredField);
+
+      const result = to({ a: null, b: { c: null, e: [1] } }) as TestPassthroughJson;
+      expect(result).toEqual({ b: { e: [1] } });
+    });
+  });
+
+  describe('filterEmptyValues', () => {
+    const filterEmptyField = optionalFirestorePassthroughJsonField<TestPassthroughJson>({ filterEmptyValues: true });
+
+    it('should remove a nested object left empty by the filtering', () => {
+      const { to } = modelFieldMapFunctions(filterEmptyField);
+
+      const result = to({ a: 1, b: { c: undefined } }) as TestPassthroughJson;
+      expect(result).toEqual({ a: 1 });
+    });
+  });
+
+  describe('dontStoreIfEmpty', () => {
+    const dontStoreIfEmptyField = optionalFirestorePassthroughJsonField<TestPassthroughJson>({ filterEmptyValues: true, dontStoreIfEmpty: true });
+
+    it('should store null when nothing survives the filtering', () => {
+      const { to } = modelFieldMapFunctions(dontStoreIfEmptyField);
+      expect(to({ a: undefined, b: { c: undefined } })).toBeNull();
+    });
+
+    it('should store the value when something survives the filtering', () => {
+      const { to } = modelFieldMapFunctions(dontStoreIfEmptyField);
+      expect(to({ a: 1, b: { c: undefined } })).toEqual({ a: 1 });
+    });
+  });
+
+  describe('transform', () => {
+    const transformField = optionalFirestorePassthroughJsonField<TestPassthroughJson>({ transform: (value: unknown) => (isDate(value) ? value.toISOString() : value) });
+
+    it('should apply the transform to values at any depth', () => {
+      const { to } = modelFieldMapFunctions(transformField);
+
+      const d = new Date();
+      const result = to({ b: { d } }) as unknown as { b: { d: string } };
+      expect(result.b.d).toBe(d.toISOString());
     });
   });
 });

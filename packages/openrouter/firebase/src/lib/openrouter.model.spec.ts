@@ -137,6 +137,31 @@ describe('openRouterRunTaskConverter', () => {
     expect(data.co).toEqual({ model: 'm' });
   });
 
+  it('should strip a nested undefined value out of a passthrough json field', () => {
+    // The json these fields carry is nested, and its interior is just as capable of carrying an
+    // `undefined` as its top level — a nested one fails the write exactly the same way.
+    const data = openRouterRunTaskConverter.mapFunctions.to({
+      s: 0,
+      qat: new Date(),
+      at: 0,
+      pk: 'p',
+      pv: 1,
+      in: [],
+      co: { model: 'm', provider: { only: ['openai'], sort: undefined }, plugins: [{ id: 'file-parser', pdf: { engine: 'native', unused: undefined } }] }
+    });
+
+    expect(data.co).toEqual({ model: 'm', provider: { only: ['openai'] }, plugins: [{ id: 'file-parser', pdf: { engine: 'native' } }] });
+    expect(JSON.stringify(data.co)).not.toContain('sort');
+    expect(JSON.stringify(data.co)).not.toContain('unused');
+  });
+
+  it('should not mutate the value it was given when stripping', () => {
+    const co = { model: 'm', provider: { only: ['openai'], sort: undefined } };
+    openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], co });
+
+    expect(Object.keys(co.provider)).toContain('sort');
+  });
+
   it('should still clear a passthrough json field written as null', () => {
     // The strip runs only on an object; a top-level null short-circuits ahead of it, which is what keeps
     // `update({ e: null })` working as "clear this field".
