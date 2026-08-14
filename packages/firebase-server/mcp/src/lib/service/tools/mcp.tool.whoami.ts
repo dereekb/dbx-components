@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
 import { type McpAuthRoleReader } from '../../mcp.config';
 import { type McpManifestAuth, type McpManifestAuthClaim } from '../mcp.manifest';

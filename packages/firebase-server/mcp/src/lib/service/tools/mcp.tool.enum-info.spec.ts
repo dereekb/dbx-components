@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestEnum } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { createEnumInfoTool, resolveEnumInfoOutput, ENUM_INFO_TOOL_NAME, type EnumInfoToolOutput } from './mcp.tool.enum-info';

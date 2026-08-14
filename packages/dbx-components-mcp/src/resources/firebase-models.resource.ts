@@ -5,8 +5,7 @@
  * that prefer browsing registry data over calling tools. Companion to
  * `dbx_model_decode` which consumes the same registry.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { FIREBASE_MODELS, getFirebaseBucketKeyedByIdModels, getFirebaseDistrictKeyedByIdModels, getFirebaseExternalIdKeyedByIdModels, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseRegionKeyedByIdModels, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels, type FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy } from '../tools/model-hierarchy.formatter.js';
 

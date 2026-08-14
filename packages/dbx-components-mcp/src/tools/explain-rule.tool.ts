@@ -16,8 +16,7 @@
  * `scripts/extract-rule-catalog.mjs` from the per-cluster `codes.ts`
  * enum members.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { findRule, formatRuleAsJson, formatRuleAsMarkdown, RULE_CATALOG, searchRules, type RuleEntry, type RuleSeverity, type RuleSource } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

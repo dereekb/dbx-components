@@ -5,8 +5,7 @@
  * pipes, and services — as read-only resources for clients that prefer
  * browsing data over calling the `dbx_ui_*` tools.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 

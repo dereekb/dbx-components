@@ -10,8 +10,7 @@
  * Also publishes the static rules reference (composite vs. fieldOverride)
  * and a schema reference for `firestore.indexes.json`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 

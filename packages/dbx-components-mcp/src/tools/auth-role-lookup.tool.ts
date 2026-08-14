@@ -22,8 +22,7 @@
  *
  * Pass `topic="list"` to enumerate the role catalog.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import type { AuthClaimInfo, AuthRegistry, AuthRoleInfo, AuthScopeInfo } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

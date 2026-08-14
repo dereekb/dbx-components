@@ -5,8 +5,7 @@
  * for clients that prefer browsing data over calling the `dbx_css_token_lookup` /
  * `dbx_ui_smell_check` tools.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { TOKEN_ROLES, TOKEN_SOURCES, type TokenRoleValue, type TokenSourceValue, type TokenRegistry } from '@dereekb/dbx-cli';
 
 const TOKENS_URI = 'dbx://token/entries';

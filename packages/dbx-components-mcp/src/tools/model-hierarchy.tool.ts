@@ -7,12 +7,11 @@
  * Firebase models. Optional `rootModel` and `maxDepth` filters narrow the
  * output to a subtree.
  *
- * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
- * API (not `McpServer.registerTool`) because registerTool requires a zod
- * schema — the workspace standard is arktype.
+ * Registered via the low-level `server.setRequestHandler('tools/call', ...)`
+ * API rather than `McpServer.registerTool` — see the schema-strategy note in
+ * `tools/index.ts`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy, renderModelHierarchy, type HierarchyFormat, type HierarchyOutput } from './model-hierarchy.formatter.js';

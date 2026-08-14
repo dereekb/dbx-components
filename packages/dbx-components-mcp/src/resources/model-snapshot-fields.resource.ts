@@ -6,8 +6,7 @@
  * downstream packages) — as read-only resources for clients that prefer
  * browsing data over calling `dbx_model_snapshot_field_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 

@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
+import { McpServer, type CallToolResult, type Tool, type ToolAnnotations } from '@modelcontextprotocol/server';
 import { type Request } from 'express';
 import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
@@ -37,9 +36,10 @@ export interface McpRequestContext {
  * Injectable factory that builds {@link McpServer} instances pre-wired to the
  * call model dispatch chain.
  *
- * The factory is invoked per Streamable HTTP request — `@modelcontextprotocol/sdk`
- * recommends a fresh `McpServer` + transport pair per stateless JSON-RPC request,
- * which sidesteps session bookkeeping for the common Claude-connector case.
+ * The factory is invoked per Streamable HTTP request. That is the shape the MCP
+ * SDK's 2026-07-28 entry (`createMcpHandler`) requires — it builds a fresh server
+ * per request and has no session concept at all — and it is equally what the SDK
+ * recommends for stateless 2025-era serving, so one factory backs both eras.
  */
 @Injectable()
 export class McpServerFactoryService {
@@ -111,11 +111,15 @@ export class McpServerFactoryService {
       listedTools = [...visibleTools, batchTool];
     }
 
-    server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: listedTools.map((tool) => this._buildToolListEntry(tool, ctx, scopes))
+    server.server.setRequestHandler('tools/list', async () => ({
+      // McpToolListEntry types its schemas as opaque `object`: they are read from a manifest file
+      // or produced by arktype's JSON Schema export, so the `type: 'object'` root the SDK's wire
+      // type mandates holds at runtime but cannot be proven statically. Every schema reaching here
+      // either came from arktypeToJsonSchemaForExport or defaulted to `{ type: 'object' }`.
+      tools: listedTools.map((tool) => this._buildToolListEntry(tool, ctx, scopes)) as Tool[]
     }));
 
-    server.server.setRequestHandler(CallToolRequestSchema, async (request) => this._handleToolCall(request, definitionsByName, ctx));
+    server.server.setRequestHandler('tools/call', async (request) => this._handleToolCall(request, definitionsByName, ctx));
 
     return server;
   }

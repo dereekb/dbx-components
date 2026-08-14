@@ -19,8 +19,7 @@
  * `clearable(...)`, missing `[Params, Result]` tuple form, missing
  * `// MARK:` markers).
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type DbxTool } from './types.js';
 import { createSourceValidateTool } from './validate-tool.js';
 import { modelValidateApi } from '@dereekb/dbx-cli/validate';

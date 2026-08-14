@@ -11,8 +11,7 @@
  * `angular-material-mdc` manifests plus any external manifests declared in
  * `dbx-mcp.config.json`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { TOKEN_ROLES, type TokenRegistry } from '@dereekb/dbx-cli';
 import { resolveToken, formatCssTokenLookup, type ResolveTokenInput } from './css-token-lookup/index.js';

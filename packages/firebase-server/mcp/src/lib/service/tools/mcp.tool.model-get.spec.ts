@@ -1,6 +1,6 @@
 import { type FirestoreModelIdentity } from '@dereekb/firebase';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createModelGetTool, MCP_MODEL_GET_BATCH_SIZE, MODEL_GET_TOOL_NAME } from './mcp.tool.model-get';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 

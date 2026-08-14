@@ -5,8 +5,7 @@
  * date-pipe family, the async helper, etc. — as read-only resources for
  * clients that prefer browsing data over calling `dbx_pipe_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 

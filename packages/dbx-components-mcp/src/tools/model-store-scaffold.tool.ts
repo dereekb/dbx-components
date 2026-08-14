@@ -23,8 +23,7 @@
  *     `.store.accessor.ts`, no directive, no collection. Default surfaces:
  *     ['document'].
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
@@ -91,7 +90,7 @@ const DBX_MODEL_STORE_SCAFFOLD_TOOL: Tool = {
       model_name: { type: 'string', description: 'PascalCase model name.' },
       app_prefix: { type: 'string', description: 'Lowercase app prefix.' },
       firebase_package: { type: 'string', description: 'Module specifier of the firebase model package.' },
-      shape: { type: 'string', enum: STORE_SHAPES as readonly string[], description: "Store shape; defaults to 'root'." },
+      shape: { type: 'string', enum: [...STORE_SHAPES], description: "Store shape; defaults to 'root'." },
       collections_class: { type: 'string', description: 'Firestore-collections class name (required except for system-state).' },
       collection_accessor: { type: 'string', description: 'Root collection accessor name. Defaults to `<modelCamel>Collection`.' },
       factory_accessor: { type: 'string', description: 'Sub-collection factory accessor. Defaults to `<modelCamel>CollectionFactory`.' },

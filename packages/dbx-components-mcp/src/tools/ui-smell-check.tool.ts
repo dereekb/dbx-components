@@ -14,7 +14,7 @@
 import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { basename, extname, isAbsolute, resolve } from 'node:path';
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { findAndLoadConfig, type ConfigReadFile, type TokenRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { uiSmellCheck } from '@dereekb/dbx-cli/validate';

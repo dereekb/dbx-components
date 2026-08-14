@@ -11,8 +11,7 @@
  *   - `dbx://model-archetype/by-axis/{axisName}/{axisValue}` — axis filter
  *   - `dbx://model-archetype/by-collection-kind/{kind}` — filter by implied `FirestoreCollectionKind`
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, getModelArchetypeBySlug, getModelArchetypesByCollectionKind, getModelArchetypesBySyncMode, getModelArchetypesByAxisValue, resolveModelArchetype, type ModelArchetypeSyncMode, type ModelArchetypeSlug, type FirestoreCollectionKind } from '@dereekb/dbx-cli';
 
 const ARCHETYPES_URI = 'dbx://model-archetype/entries';

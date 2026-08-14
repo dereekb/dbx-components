@@ -20,8 +20,7 @@
  * `dereekb-dbx-web.css-utilities.mcp.generated.json` plus any external
  * manifests declared in `dbx-mcp.config.json`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { CSS_UTILITY_ROLES, type CssUtilityEntry, type CssUtilityRegistry, type ScoredCssUtilityMatch } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

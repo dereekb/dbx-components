@@ -10,8 +10,7 @@
  * source tree to surface app-defined `enforceOidcScopes` and
  * `callModel` middleware references.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import type { AuthAppInfo, AuthClaimInfo, AuthRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

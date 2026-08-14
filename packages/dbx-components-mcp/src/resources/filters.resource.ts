@@ -6,8 +6,7 @@
  * `ClickableFilterPreset` shape — as read-only resources for clients that
  * prefer browsing data over calling `dbx_filter_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 

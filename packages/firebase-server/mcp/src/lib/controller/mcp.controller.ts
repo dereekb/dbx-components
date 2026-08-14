@@ -11,9 +11,11 @@ import { handleStreamableHttpMcpRequest } from '../transport/streamable-http.tra
  * which must include `'/mcp'` in its `protectedPaths`. By the time the request reaches
  * this controller, `req.auth` is populated with the authenticated user's data.
  *
- * Each request gets a fresh transport + MCP server pair (stateless mode), which is
- * adequate for Claude custom-connector style usage. A session-tracked variant can
- * be layered on later if streaming tool output becomes a requirement.
+ * Each request gets a fresh MCP server (stateless mode), which is adequate for Claude
+ * custom-connector style usage. Both protocol eras are served — 2026-07-28 through the
+ * SDK's per-request `createMcpHandler` entry, and 2025-era through a stateless Streamable
+ * HTTP transport. A session-tracked variant can be layered on later if streaming tool
+ * output becomes a requirement.
  */
 @Controller('mcp')
 export class McpController {
@@ -24,10 +26,9 @@ export class McpController {
   @Post()
   async handleMcpRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
     const auth = (req as FirebaseServerAuthenticatedRequest).auth;
-    const server = this.factory.createServer({ auth, rawRequest: req });
 
     try {
-      await handleStreamableHttpMcpRequest(req, res, server);
+      await handleStreamableHttpMcpRequest(req, res, () => this.factory.createServer({ auth, rawRequest: req }));
     } catch (error) {
       this._logger.error('MCP request handling failed', error);
 

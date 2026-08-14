@@ -11,8 +11,7 @@
  * AND every supporting list/view/item template captured via
  * `@dbxDocsUiExampleUses`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { UI_PATTERNS, getUiExamplePattern, type UiExampleDepth, type UiExamplePattern } from './data/patterns/ui-patterns.js';
 import { type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY, type DbxDocsUiExampleEntry, type DbxDocsUiExampleUseEntry } from '@dereekb/dbx-cli';
