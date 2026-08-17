@@ -27,6 +27,7 @@ import { DemoApiNestContext } from '../app/function/function.context';
 import { DemoApiServerNestContext } from '../app/server/server.context';
 import {
   type CleanupSentNotificationsParams,
+  type DocumentReference,
   type FirestoreCollection,
   type FirestoreModelKey,
   type InitializeAllApplicableNotificationBoxesParams,
@@ -99,7 +100,23 @@ import {
   UserExternalConnectionServerFirestoreCollections
 } from '@dereekb/firebase-server/model';
 import { UserExternalConnectionCalcomUserContextService } from '@dereekb/firebase-server/calcom';
-import { OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
+import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
+import {
+  type CreateOpenRouterPromptVersionParams,
+  type CreateOpenRouterPromptVersionResult,
+  type OpenRouterPrompt,
+  type OpenRouterPromptDocument,
+  type OpenRouterPromptFirestoreCollection,
+  type OpenRouterPromptVersion,
+  type OpenRouterPromptVersionDocument,
+  type OpenRouterPromptVersionFirestoreCollection,
+  type UpdateOpenRouterPromptParams,
+  type UpdateOpenRouterPromptVersionParams,
+  type UpdateOpenRouterPromptVersionResult,
+  openRouterPromptVersionId,
+  openRouterPromptVersionNumberFromId
+} from '@dereekb/openrouter/firebase';
+import { OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterRunTaskService, type SeedOpenRouterPromptsParams, type SeedOpenRouterPromptsResult, openRouterPromptServerActions, openRouterPromptService } from '@dereekb/openrouter/firebase-server';
 import { type FirebaseServerEnvironmentConfig, assertSnapshotData } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
@@ -1653,6 +1670,297 @@ export const demoUserExternalConnectionPrivateContextFactory = () =>
   });
 
 export const demoUserExternalConnectionPrivateContext = demoUserExternalConnectionPrivateContextFactory();
+
+// MARK: OpenRouterPrompt
+/**
+ * Default key {@link demoOpenRouterPromptContext} creates its prompt under.
+ */
+export const DEMO_API_TEST_OPENROUTER_PROMPT_KEY: OpenRouterPromptKey = 'test-prompt';
+
+/**
+ * Default system prompt {@link demoOpenRouterPromptVersionContext} publishes with.
+ */
+export const DEMO_API_TEST_OPENROUTER_PROMPT_INSTRUCTIONS = 'You are a test.';
+
+/**
+ * Default model config {@link demoOpenRouterPromptVersionContext} publishes with.
+ *
+ * A pinned single-provider config rather than a bare model id: config validation refuses a version that
+ * names no model, so a fixture default has to be one that passes cleanly and raises no warnings.
+ */
+export const DEMO_API_TEST_OPENROUTER_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', provider: { only: ['openai'], allowFallbacks: false, requireParameters: true } };
+
+export interface DemoApiOpenRouterPromptTestContextParams {
+  /**
+   * The prompt key, which is also the document id. Defaults to {@link DEMO_API_TEST_OPENROUTER_PROMPT_KEY}.
+   */
+  readonly key?: Maybe<OpenRouterPromptKey>;
+  /**
+   * Human-readable name. Defaults to the key.
+   */
+  readonly name?: Maybe<string>;
+  /**
+   * Whether to create the prompt. Defaults to true.
+   *
+   * False addresses the key without writing anything, which is how a seed spec stages the prompt the
+   * seed itself is deciding whether to create.
+   */
+  readonly create?: Maybe<boolean>;
+}
+
+/**
+ * Params for {@link DemoApiOpenRouterPromptTestContextInstance.seed}.
+ */
+export interface DemoApiSeedOpenRouterPromptsParams extends SeedOpenRouterPromptsParams {
+  /**
+   * Registry to seed instead of the one the app ships.
+   */
+  readonly definitions?: Maybe<OpenRouterPromptDefinition[]>;
+}
+
+export class DemoApiOpenRouterPromptTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<OpenRouterPrompt, OpenRouterPromptDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiOpenRouterPromptTestContextInstance<F>> {
+  async loadPrompt(): Promise<OpenRouterPrompt> {
+    return this.instance.loadPrompt();
+  }
+
+  versionDocument(version: OpenRouterPromptVersionNumber): OpenRouterPromptVersionDocument {
+    return this.instance.versionDocument(version);
+  }
+
+  async loadVersion(version: OpenRouterPromptVersionNumber): Promise<Maybe<OpenRouterPromptVersion>> {
+    return this.instance.loadVersion(version);
+  }
+
+  async update(params: Omit<UpdateOpenRouterPromptParams, 'key'>): Promise<void> {
+    return this.instance.update(params);
+  }
+
+  async createVersion(params: Omit<CreateOpenRouterPromptVersionParams, 'prompt'>): Promise<CreateOpenRouterPromptVersionResult> {
+    return this.instance.createVersion(params);
+  }
+
+  async seed(params?: DemoApiSeedOpenRouterPromptsParams): Promise<SeedOpenRouterPromptsResult> {
+    return this.instance.seed(params);
+  }
+}
+
+export class DemoApiOpenRouterPromptTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<OpenRouterPrompt, OpenRouterPromptDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Reads the prompt back, asserting it exists.
+   *
+   * @returns The prompt.
+   */
+  async loadPrompt(): Promise<OpenRouterPrompt> {
+    return assertSnapshotData(this.document);
+  }
+
+  /**
+   * The document for one of this prompt's versions, which need not have been published.
+   *
+   * @param version - The version number.
+   * @returns The version document.
+   */
+  versionDocument(version: OpenRouterPromptVersionNumber): OpenRouterPromptVersionDocument {
+    return this.testContext.demoFirestoreCollections.openRouterPromptVersionCollectionFactory(this.document).documentAccessor().loadDocumentForId(openRouterPromptVersionId(version));
+  }
+
+  /**
+   * Reads one of this prompt's versions, which need not have been published.
+   *
+   * @param version - The version number.
+   * @returns The version, or undefined when that number was never published.
+   */
+  async loadVersion(version: OpenRouterPromptVersionNumber): Promise<Maybe<OpenRouterPromptVersion>> {
+    return this.versionDocument(version).snapshotData();
+  }
+
+  /**
+   * Updates the prompt through the server action, which is the surface an operator edits it through.
+   *
+   * @param params - The update, keyed automatically.
+   */
+  async update(params: Omit<UpdateOpenRouterPromptParams, 'key'>): Promise<void> {
+    const updateOpenRouterPrompt = await this.testContext.openRouterPromptServerActions.updateOpenRouterPrompt({ ...params, key: this.documentKey });
+    await updateOpenRouterPrompt(this.document);
+  }
+
+  /**
+   * Publishes a new version through the server action, allocating its number.
+   *
+   * @param params - The version to create, keyed automatically.
+   * @returns What was created.
+   */
+  async createVersion(params: Omit<CreateOpenRouterPromptVersionParams, 'prompt'>): Promise<CreateOpenRouterPromptVersionResult> {
+    const createOpenRouterPromptVersion = await this.testContext.openRouterPromptServerActions.createOpenRouterPromptVersion({ ...params, prompt: this.documentKey });
+    return createOpenRouterPromptVersion(this.document);
+  }
+
+  /**
+   * Runs the prompt seed.
+   *
+   * Uncurried on purpose — the seed has no target document, which is why it hangs off a context staged
+   * with `create: false`: the prompt it writes is the one it is deciding whether to create.
+   *
+   * With no `definitions` this is the app's own action over the registry it ships, which is the run a
+   * deploy performs. With them it is the same wiring over a different registry — the collections, the
+   * firestore context, and the actions context all stay the app's real instances — which is what lets a
+   * spec seed the shipped prompts at a version the app does not currently declare.
+   *
+   * @param params - The seed params, plus the registry to read.
+   * @returns What the run did.
+   */
+  async seed(params?: DemoApiSeedOpenRouterPromptsParams): Promise<SeedOpenRouterPromptsResult> {
+    const { definitions, ...seedParams } = params ?? {};
+    let actions = this.testContext.openRouterPromptServerActions;
+
+    if (definitions != null) {
+      const actionsContext = this.testContext.serverActionsContext;
+      const promptService = openRouterPromptService({ collections: actionsContext, cacheDuration: 1, definitions });
+      actions = openRouterPromptServerActions({ ...actionsContext, openRouterPromptService: promptService });
+    }
+
+    return actions.seedOpenRouterPrompts(seedParams);
+  }
+}
+
+/**
+ * Context over one OpenRouterPrompt, created through the server action.
+ *
+ * A prompt has no `create` on the model API — it comes into existence server-side, from a seed or an
+ * operator — so the document is staged through {@link OpenRouterPromptServerActions} rather than a
+ * callable.
+ *
+ * @returns The context factory to wrap a spec's tests with.
+ */
+export const demoOpenRouterPromptContextFactory = () =>
+  modelTestContextFactory<OpenRouterPrompt, OpenRouterPromptDocument, DemoApiOpenRouterPromptTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiOpenRouterPromptTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiOpenRouterPromptTestContextFixture<FirebaseAdminFunctionTestContextInstance>, OpenRouterPromptFirestoreCollection>({
+    makeFixture: (f) => new DemoApiOpenRouterPromptTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.openRouterPromptCollection,
+    collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.openRouterPromptCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiOpenRouterPromptTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      const key = params.key ?? DEMO_API_TEST_OPENROUTER_PROMPT_KEY;
+      let documentRef: DocumentReference<OpenRouterPrompt>;
+
+      if (params.create === false) {
+        documentRef = collection.documentAccessor().documentRefForId(key);
+      } else {
+        const document = await p.openRouterPromptServerActions.createOpenRouterPrompt({ key, name: params.name ?? key });
+        documentRef = document.documentRef;
+      }
+
+      return documentRef;
+    }
+  });
+
+export const demoOpenRouterPromptContext = demoOpenRouterPromptContextFactory();
+
+// MARK: OpenRouterPromptVersion
+export interface DemoApiOpenRouterPromptVersionTestContextParams extends Partial<Omit<CreateOpenRouterPromptVersionParams, 'prompt'>> {
+  /**
+   * The prompt the version belongs to.
+   */
+  readonly p: DemoApiOpenRouterPromptTestContextFixture;
+  /**
+   * Address this version number instead of publishing a new version.
+   *
+   * A separate param rather than an override of the published number, because a create ALLOCATES from
+   * the prompt's `lv` — so the number a publish lands on cannot be named before the write, and a
+   * caller that wants a specific number wants one nothing is going to write.
+   */
+  readonly version?: Maybe<OpenRouterPromptVersionNumber>;
+}
+
+export class DemoApiOpenRouterPromptVersionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<OpenRouterPromptVersion, OpenRouterPromptVersionDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiOpenRouterPromptVersionTestContextInstance<F>> {
+  get version(): OpenRouterPromptVersionNumber {
+    return this.instance.version;
+  }
+
+  async loadVersion(): Promise<OpenRouterPromptVersion> {
+    return this.instance.loadVersion();
+  }
+
+  async update(params: Omit<UpdateOpenRouterPromptVersionParams, 'key'>): Promise<UpdateOpenRouterPromptVersionResult> {
+    return this.instance.update(params);
+  }
+}
+
+export class DemoApiOpenRouterPromptVersionTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<OpenRouterPromptVersion, OpenRouterPromptVersionDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * The version number, read off the document id.
+   *
+   * Available without a read because the id IS the number, zero-padded so the collection sorts.
+   *
+   * @returns The version number.
+   */
+  get version(): OpenRouterPromptVersionNumber {
+    return openRouterPromptVersionNumberFromId(this.documentId);
+  }
+
+  /**
+   * Reads the version back, asserting it exists.
+   *
+   * @returns The version.
+   */
+  async loadVersion(): Promise<OpenRouterPromptVersion> {
+    return assertSnapshotData(this.document);
+  }
+
+  /**
+   * Edits the version in place through the server action, which refuses a locked one.
+   *
+   * @param params - The edit, keyed automatically.
+   * @returns The validation warnings the edit raised.
+   */
+  async update(params: Omit<UpdateOpenRouterPromptVersionParams, 'key'>): Promise<UpdateOpenRouterPromptVersionResult> {
+    const updateOpenRouterPromptVersion = await this.testContext.openRouterPromptServerActions.updateOpenRouterPromptVersion({ ...params, key: this.documentKey });
+    return updateOpenRouterPromptVersion(this.document);
+  }
+}
+
+/**
+ * Context over one OpenRouterPromptVersion under a {@link demoOpenRouterPromptContext} prompt.
+ *
+ * Publishes a version by default, at whatever number the prompt's allocator hands it — pass `version`
+ * to address a specific number instead, which is how a spec stages a version that was never published.
+ *
+ * @returns The context factory to wrap a spec's tests with.
+ */
+export const demoOpenRouterPromptVersionContextFactory = () =>
+  modelTestContextFactory<
+    OpenRouterPromptVersion,
+    OpenRouterPromptVersionDocument,
+    DemoApiOpenRouterPromptVersionTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiOpenRouterPromptVersionTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiOpenRouterPromptVersionTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    OpenRouterPromptVersionFirestoreCollection
+  >({
+    makeFixture: (f) => new DemoApiOpenRouterPromptVersionTestContextFixture(f),
+    getCollection: (fi, params) => fi.demoFirestoreCollections.openRouterPromptVersionCollectionFactory(params.p.document),
+    collectionForDocument: (fi, doc) => {
+      const parent = fi.demoFirestoreCollections.openRouterPromptCollection.documentAccessor().loadDocument(doc.parent);
+      return fi.demoFirestoreCollections.openRouterPromptVersionCollectionFactory(parent);
+    },
+    makeInstance: (delegate, ref, testInstance) => new DemoApiOpenRouterPromptVersionTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params) => {
+      let version: OpenRouterPromptVersionNumber;
+
+      if (params.version == null) {
+        // Through the prompt's own createVersion, so the number comes from the same allocator every
+        // other publisher uses rather than one this fixture picked.
+        const created = await params.p.createVersion({ instructions: params.instructions ?? DEMO_API_TEST_OPENROUTER_PROMPT_INSTRUCTIONS, messages: params.messages, config: params.config ?? (DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown>), notes: params.notes, activate: params.activate });
+        version = created.version;
+      } else {
+        version = params.version;
+      }
+
+      return collection.documentAccessor().documentRefForId(openRouterPromptVersionId(version));
+    }
+  });
+
+export const demoOpenRouterPromptVersionContext = demoOpenRouterPromptVersionContextFactory();
 
 // MARK: Oidc
 /**

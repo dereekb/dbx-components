@@ -3,6 +3,7 @@ import { MS_IN_DAY, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type OpenRouterFileAnnotation, type OpenRouterFileReference, type OpenRouterGenerationId, type OpenRouterInputMessage, type OpenRouterInputRole, type OpenRouterModelConfig, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, type OpenRouterRunError, type OpenRouterRunUsage } from '@dereekb/openrouter';
 import {
   AbstractFirestoreDocument,
+  AbstractFirestoreDocumentWithParent,
   type CollectionGroup,
   type CollectionReference,
   type FirestoreCollection,
@@ -301,7 +302,12 @@ export interface OpenRouterPromptVersion {
  */
 export type OpenRouterPromptVersionRoles = GrantedReadRole | GrantedUpdateRole;
 
-export class OpenRouterPromptVersionDocument extends AbstractFirestoreDocument<OpenRouterPromptVersion, OpenRouterPromptVersionDocument, typeof openRouterPromptVersionIdentity> {
+/**
+ * With a parent, unlike the other documents here: a version only ever exists in a subcollection under
+ * the prompt it belongs to, so a holder of one — a collection-group query result especially — needs a
+ * way back to that prompt without parsing the path.
+ */
+export class OpenRouterPromptVersionDocument extends AbstractFirestoreDocumentWithParent<OpenRouterPrompt, OpenRouterPromptVersion, OpenRouterPromptVersionDocument, typeof openRouterPromptVersionIdentity> {
   get modelIdentity() {
     return openRouterPromptVersionIdentity;
   }
