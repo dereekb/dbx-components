@@ -1,10 +1,11 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type FirestoreContextReference, type FirestoreModelKey, firestoreModelId, firestoreModelKeyParentKey } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
+import { type FirestoreContextReference, type FirestoreModelKey, firestoreModelId, firestoreModelKeyParentKey, getDocumentSnapshotDataTuples } from '@dereekb/firebase';
+import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
 import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import {
   type CreateOpenRouterPromptVersionParams,
   type CreateOpenRouterPromptVersionResult,
+  type OpenRouterPrompt,
   type OpenRouterPromptDocument,
   type OpenRouterPromptFirestoreCollections,
   OpenRouterPromptState,
@@ -344,9 +345,39 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
 }
 
 /**
- * What one definition's seed transaction did.
+ * What one definition's seed did.
  */
 type SeedOpenRouterPromptOutcome = 'created' | 'published' | 'upToDate' | 'skipped';
+
+/**
+ * How many definitions {@link seedOpenRouterPromptsFactory} publishes at a time.
+ *
+ * Each definition's writes are their own commit against documents no other definition touches, so the
+ * bound is not a correctness requirement — it keeps a large registry from opening one connection per
+ * prompt against Firestore all at once.
+ */
+export const OPENROUTER_SEED_PROMPTS_MAX_PARALLEL_UPDATES = 25;
+
+/**
+ * One definition, the prompt document it seeds, and that document's state as of the run's opening read.
+ *
+ * The prompt is read once for the whole run rather than once per definition, so the parallel phase
+ * starts from data it does not have to fetch again.
+ */
+interface SeedOpenRouterPromptTarget {
+  /**
+   * The definition being published.
+   */
+  readonly definition: OpenRouterPromptDefinition;
+  /**
+   * The prompt document addressed by the definition's key.
+   */
+  readonly promptDocument: OpenRouterPromptDocument;
+  /**
+   * The prompt as it stood at the opening read, or undefined when the key has no document yet.
+   */
+  readonly prompt: Maybe<OpenRouterPrompt>;
+}
 
 /**
  * Publishes each code definition the prompt service carries at ITS OWN declared version number.
@@ -364,10 +395,22 @@ type SeedOpenRouterPromptOutcome = 'created' | 'published' | 'upToDate' | 'skipp
  *
  * Deliberately NOT built on {@link createOpenRouterPromptVersionFactory}: that action is reachable over
  * callModel/MCP, and its in-transaction allocation is a race-safety contract on a public surface rather
- * than an implementation detail. This gets equivalent safety by a different mechanism — reading the
- * target version id puts it in the transaction's read set — which is only sound because that id is a
- * compile-time constant, something `CreateOpenRouterPromptVersionParams` cannot assert about an
+ * than an implementation detail. A seed needs no allocator at all, because the number it writes is a
+ * compile-time constant — something `CreateOpenRouterPromptVersionParams` cannot assert about an
  * arbitrary caller.
+ *
+ * No transaction, at any scope. A version document carries a whole prompt's text, so a registry of them
+ * can put megabytes through a single commit, and a commit — transaction or write batch alike — is capped
+ * around 10MB. The run is instead one read pass over every prompt document, then each definition
+ * published independently through its OWN write batch, at most
+ * {@link OPENROUTER_SEED_PROMPTS_MAX_PARALLEL_UPDATES} at a time. The batch is what keeps a publish
+ * atomic — the version, the lock on the head it replaces, and the pointer move land together or not at
+ * all — while holding any one commit to the three documents a single definition touches.
+ *
+ * What that costs is the transaction's read set: the check that nothing else already holds the number
+ * being written is now a read taken shortly before the commit rather than a conflict detected at it.
+ * Losing that window means a seed overwrites a version an operator published under the same number in
+ * the same instant — narrow enough to trade for a run whose size cannot refuse it.
  *
  * @param context - The actions context.
  * @returns The seed action.
@@ -378,7 +421,7 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
   return async (params: SeedOpenRouterPromptsParams): Promise<SeedOpenRouterPromptsResult> => {
     const { promptKeys } = params;
     const keyFilter = promptKeys == null ? undefined : new Set(promptKeys);
-    const definitions = openRouterPromptService.promptDefinitions.filter((x) => keyFilter == null || keyFilter.has(x.promptKey));
+    const definitions = (await openRouterPromptService.loadPromptDefinitions()).filter((x) => keyFilter == null || keyFilter.has(x.promptKey));
     const warnings: string[] = [];
 
     // Every definition is validated before anything is written: half-seeding a registry because entry
@@ -400,47 +443,40 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
     });
 
     /**
-     * Seeds one definition in its own transaction.
+     * Publishes one definition, starting from the prompt the opening read already produced.
      *
-     * One transaction PER definition rather than one for the registry: the documents are disjoint, so a
-     * contention retry on one must not roll the rest back, and a registry of any size must not approach
-     * the 500-write ceiling.
-     *
-     * @param definition - The definition to publish.
-     * @returns What the transaction did.
+     * @param target - The definition and the prompt document it seeds.
+     * @returns What the write did.
      */
-    async function seedDefinition(definition: OpenRouterPromptDefinition): Promise<SeedOpenRouterPromptOutcome> {
+    async function seedTarget(target: SeedOpenRouterPromptTarget): Promise<SeedOpenRouterPromptOutcome> {
+      const { definition, promptDocument, prompt } = target;
       const { promptKey, version } = definition;
 
-      return openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
-        const promptDocument = openRouterPromptCollection.documentAccessorForTransaction(transaction).loadDocumentForId(promptKey);
-        const versionCollection = openRouterPromptVersionCollectionFactory(promptDocument).documentAccessorForTransaction(transaction);
-        const targetVersionDocument = versionCollection.loadDocumentForId(openRouterPromptVersionId(version));
+      const latestVersion = prompt?.lv ?? 0;
+      // An ARCHIVED prompt is never resurrected: retirement is a deliberate act, and a scheduled
+      // reseed silently undoing it is the same class of bug as reverting an operator's rename. Decided
+      // from the prompt alone, so an archived definition costs no further read.
+      const archived = prompt?.s === OpenRouterPromptState.ARCHIVED;
 
-        // Both addresses come from the definition alone, so they resolve together. Reading the target
-        // puts it in the transaction's read set, which is what makes the pinned write race-safe.
-        const [prompt, targetVersionExists] = await Promise.all([promptDocument.snapshotData(), targetVersionDocument.accessor.exists()]);
+      let outcome: SeedOpenRouterPromptOutcome;
 
-        const latestVersion = prompt?.lv ?? 0;
-        // An ARCHIVED prompt is never resurrected: retirement is a deliberate act, and a scheduled
-        // reseed silently undoing it is the same class of bug as reverting an operator's rename.
-        const archived = prompt?.s === OpenRouterPromptState.ARCHIVED;
-        const publish = !archived && version > latestVersion && !targetVersionExists;
+      if (archived) {
+        outcome = 'skipped';
+      } else {
+        const versionCollection = openRouterPromptVersionCollectionFactory(promptDocument);
+        const versionAccessor = versionCollection.documentAccessor();
+        const targetVersionId = openRouterPromptVersionId(version);
+        // Existence rather than data: nothing here reads what a version at that number SAYS, only
+        // whether the number is already taken.
+        const targetVersionExists = await versionAccessor.loadDocumentForId(targetVersionId).accessor.exists();
 
-        let outcome: SeedOpenRouterPromptOutcome;
-
-        if (publish) {
-          // The outgoing head's address comes from the prompt's own `lv`, so this read cannot batch
-          // with the one that produced it. Strictly `<`: at `lv === version` the document under the
-          // lock is the one this transaction is about to create. Existence-checked because `.update()`
-          // throws on a missing document, and a `set` on a deleted version would resurrect it holding
-          // nothing but a lock.
-          const previousVersionDocument = latestVersion > 0 && latestVersion < version ? versionCollection.loadDocumentForId(openRouterPromptVersionId(latestVersion)) : undefined;
-          const previousVersionExists = previousVersionDocument == null ? false : await previousVersionDocument.accessor.exists();
-
-          if (previousVersionDocument != null && previousVersionExists) {
-            await previousVersionDocument.update({ lk: true });
-          }
+        if (version > latestVersion && !targetVersionExists) {
+          // The outgoing head's address comes from the prompt's own `lv`, and `version > latestVersion`
+          // above is what guarantees it is not the document about to be written. Existence-checked
+          // because a batched `update` on a missing document fails the whole commit, and a `set` on a
+          // deleted version would resurrect it holding nothing but a lock.
+          const previousVersionId = latestVersion > 0 ? openRouterPromptVersionId(latestVersion) : undefined;
+          const previousVersionExists = previousVersionId == null ? false : await versionAccessor.loadDocumentForId(previousVersionId).accessor.exists();
 
           const versionData: OpenRouterPromptVersion = {
             cat: new Date(),
@@ -451,36 +487,61 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
             nt: `Seeded from the code definition declaring version ${version}.`
           };
 
-          await targetVersionDocument.accessor.set(versionData);
+          // One batch for this definition and nothing else. Atomic, so a prompt never ends up pointing
+          // at a version the run failed to write, and bounded, so the commit carries one prompt's text
+          // rather than the registry's.
+          const writeBatch = openRouterPromptCollection.firestoreContext.batch();
+          const versionWriteAccessor = versionCollection.documentAccessorForWriteBatch(writeBatch);
+          const promptWriteDocument = openRouterPromptCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(promptKey);
+
+          if (previousVersionId != null && previousVersionExists) {
+            await versionWriteAccessor.loadDocumentForId(previousVersionId).update({ lk: true });
+          }
+
+          await versionWriteAccessor.loadDocumentForId(targetVersionId).accessor.set(versionData);
 
           if (prompt == null) {
-            await promptDocument.accessor.set({ cat: new Date(), n: definition.name, d: definition.description, s: OpenRouterPromptState.ACTIVE, lv: version, av: version });
+            await promptWriteDocument.accessor.set({ cat: new Date(), n: definition.name, d: definition.description, s: OpenRouterPromptState.ACTIVE, lv: version, av: version });
           } else {
             // `n`/`d`/`t` are deliberately untouched: they are operator-editable through
             // updateOpenRouterPrompt, and a scheduled reseed reverting a rename is a silent regression.
-            await promptDocument.update({ lv: version, av: version, s: OpenRouterPromptState.ACTIVE, uat: new Date() });
+            await promptWriteDocument.update({ lv: version, av: version, s: OpenRouterPromptState.ACTIVE, uat: new Date() });
           }
 
+          await writeBatch.commit();
+
+          // Only the prompts that actually changed, and only once the commit landed. Missing this
+          // leaves a scheduled reseed invisible for the whole OPENROUTER_PROMPT_CACHE_DURATION window.
+          openRouterPromptService.clearCachedPrompt(promptKey);
           outcome = prompt == null ? 'created' : 'published';
         } else {
           // The only way to land on `upToDate` is a prompt whose `lv` already covers the declared
           // number AND whose document at that number is present — anything else is drift the seed
           // refuses to paper over by overwriting a number someone else wrote.
-          outcome = archived || version > latestVersion || !targetVersionExists ? 'skipped' : 'upToDate';
+          outcome = version > latestVersion || !targetVersionExists ? 'skipped' : 'upToDate';
         }
+      }
 
-        return outcome;
-      });
+      return outcome;
     }
+
+    // Every prompt document up front, in one pass, before a single write: the addresses are the keys the
+    // definitions declare, so they all resolve together, and reading them here is what lets the write
+    // phase decide each definition without a transaction to re-read them in.
+    const promptDocumentAccessor = openRouterPromptCollection.documentAccessor();
+    const promptTuples = await getDocumentSnapshotDataTuples(definitions.map((x) => promptDocumentAccessor.loadDocumentForId(x.promptKey)));
+    const targets: SeedOpenRouterPromptTarget[] = definitions.map((definition, i) => ({ definition, promptDocument: promptTuples[i][0], prompt: promptTuples[i][1] }));
+
+    // Disjoint by construction — one definition per key, one commit per definition — so the only reason
+    // these run bounded rather than all at once is the connection count.
+    const outcomes = await runAsyncTasksForValues(targets, seedTarget, { maxParallelTasks: OPENROUTER_SEED_PROMPTS_MAX_PARALLEL_UPDATES });
 
     let promptsCreated = 0;
     let versionsPublished = 0;
     let upToDate = 0;
     let skipped = 0;
 
-    for (const definition of definitions) {
-      const outcome = await seedDefinition(definition);
-
+    outcomes.forEach((outcome) => {
       switch (outcome) {
         case 'created':
           promptsCreated += 1;
@@ -496,13 +557,7 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
           skipped += 1;
           break;
       }
-
-      if (outcome === 'created' || outcome === 'published') {
-        // Only the prompts that actually changed. Missing this leaves a scheduled reseed invisible for
-        // the whole OPENROUTER_PROMPT_CACHE_DURATION window.
-        openRouterPromptService.clearCachedPrompt(definition.promptKey);
-      }
-    }
+    });
 
     return { considered: definitions.length, promptsCreated, versionsPublished, upToDate, skipped, warnings };
   };

@@ -45,14 +45,19 @@ export const OPENROUTER_PROMPT_CACHE_DURATION: Milliseconds = MS_IN_MINUTE * 5;
  */
 export abstract class OpenRouterPromptService {
   /**
-   * The prompt definitions this service resolves against, de-duplicated by key.
+   * Loads the prompt definitions this service resolves against, de-duplicated by key.
    *
    * Exposed so a seeder publishes the exact values the resolver would otherwise stand in with, rather
    * than a second registry wired in parallel that can drift from this one. De-duplicated because
    * `definitionsByKey` is what resolution actually reads: `arrayToMap` is last-wins, so iterating the
    * raw config array would let a seeder publish a definition that never resolves.
+   *
+   * Async even though the configured implementation answers from memory: a later one may read its
+   * registry from somewhere the process does not already hold it — a manifest in storage, another
+   * service — and a getter is the one shape that cannot be widened to cover that without breaking
+   * every caller.
    */
-  abstract get promptDefinitions(): readonly OpenRouterPromptDefinition[];
+  abstract loadPromptDefinitions(): Promise<OpenRouterPromptDefinition[]>;
   /**
    * Loads a prompt document by key.
    *
@@ -118,8 +123,14 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
   const duration = cacheDuration ?? OPENROUTER_PROMPT_CACHE_DURATION;
 
   const definitionsByKey = arrayToMap(definitions ?? [], (definition) => definition.promptKey);
-  const promptDefinitions: readonly OpenRouterPromptDefinition[] = Array.from(definitionsByKey.values());
   const cache = new Map<string, Getter<Promise<OpenRouterResolvedPrompt>>>();
+
+  async function loadPromptDefinitions(): Promise<OpenRouterPromptDefinition[]> {
+    // A fresh array each call rather than one built at construction: the returned type is mutable, and
+    // handing every caller the same array would let a seeder's own filtering reach the registry
+    // resolution reads.
+    return Array.from(definitionsByKey.values());
+  }
 
   function loadPromptDocument(promptKey: OpenRouterPromptKey): OpenRouterPromptDocument {
     return openRouterPromptCollection.documentAccessor().loadDocumentForId(promptKey);
@@ -242,5 +253,5 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     }
   }
 
-  return { promptDefinitions, loadPrompt, resolvePrompt, clearCachedPrompt };
+  return { loadPromptDefinitions, loadPrompt, resolvePrompt, clearCachedPrompt };
 }
