@@ -3,7 +3,7 @@ import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
+import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, StorageFileState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
 import { OpenRouterRunTaskState, openRouterPromptVersionId } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
 import { DEMO_RESUME_CHECK_PROMPT_KEY, DEMO_RESUME_CHECK_PROMPT_VERSION, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
@@ -46,16 +46,26 @@ demoApiFunctionContextFactory((f) => {
     demoAuthorizedUserAdminContext({ f }, (au) => {
       demoProfileContext({ f, u: au }, (p) => {
         /**
-         * Uploads a PDF to the user's resume uploads folder.
+         * Uploads a PDF to the user's single resume upload slot.
          */
-        async function uploadResumePdf(lines: string[], fileName = 'resume.pdf'): Promise<StoragePath> {
+        async function uploadResumePdf(lines: string[]): Promise<StoragePath> {
           const bytes = await makeTestPdf(lines);
           expect(bytes.length).toBeLessThan(10 * 1024); // the upload policy's cap
 
-          const file = f.storageContext.file(userResumeFileUploadsFilePath(au.uid, fileName));
+          const file = f.storageContext.file(userResumeFileUploadsFilePath(au.uid));
           await file.upload(bytes, { contentType: 'application/pdf' });
 
           return { bucketId: file.storagePath.bucketId, pathString: file.storagePath.pathString };
+        }
+
+        /**
+         * Uploads a resume and initializes it, yielding its StorageFile.
+         */
+        async function uploadAndInitialize(lines: string[] = RESUME_PDF_LINES): Promise<StorageFileDocument> {
+          const uploadedFilePath = await uploadResumePdf(lines);
+          const initialize = await f.storageFileServerActions.initializeStorageFileFromUpload({ bucketId: uploadedFilePath.bucketId, pathString: uploadedFilePath.pathString });
+
+          return initialize();
         }
 
         /**
@@ -75,9 +85,7 @@ demoApiFunctionContextFactory((f) => {
          * that does not is what covers resolution falling back to the code definition.
          */
         async function uploadAndBeginProcessing(lines: string[] = RESUME_PDF_LINES) {
-          const uploadedFilePath = await uploadResumePdf(lines);
-          const initialize = await f.storageFileServerActions.initializeStorageFileFromUpload({ bucketId: uploadedFilePath.bucketId, pathString: uploadedFilePath.pathString });
-          const storageFileDocument = await initialize();
+          const storageFileDocument = await uploadAndInitialize(lines);
 
           const processAll = await f.storageFileServerActions.processAllQueuedStorageFiles({});
           await processAll();
@@ -112,9 +120,7 @@ demoApiFunctionContextFactory((f) => {
           it('should initialize an uploaded resume and queue it for processing', async () => {
             await seedPrompts();
 
-            const uploadedFilePath = await uploadResumePdf(RESUME_PDF_LINES);
-            const initialize = await f.storageFileServerActions.initializeStorageFileFromUpload({ bucketId: uploadedFilePath.bucketId, pathString: uploadedFilePath.pathString });
-            const storageFileDocument = await initialize();
+            const storageFileDocument = await uploadAndInitialize();
 
             const storageFile = await assertSnapshotData(storageFileDocument);
             expect(storageFile.p).toBe(USER_RESUME_FILE_PURPOSE);
@@ -125,9 +131,42 @@ demoApiFunctionContextFactory((f) => {
             const profile = await assertSnapshotData(p.document);
             expect(profile.resume.storageFile).toBe(storageFileDocument.key);
             expect(profile.resume.state).toBe(ProfileResumeState.CHECKING);
-            expect(profile.resume.filename).toBe('resume.pdf');
             expect(profile.resume.uploadedAt).toBeDefined();
             expect(profile.resume.checkedAt).toBeFalsy();
+          });
+
+          it('should replace and mark the previous resume for deletion when a new one is uploaded', async () => {
+            const previousStorageFileDocument = await uploadAndInitialize();
+            const previousPathString = (await assertSnapshotData(previousStorageFileDocument)).pathString;
+
+            const newStorageFileDocument = await uploadAndInitialize();
+            const newStorageFile = await assertSnapshotData(newStorageFileDocument);
+
+            // The destination is timestamped rather than fixed, so the replacement never lands on the
+            // superseded file's object — which is what makes flagging the previous one safe to sweep.
+            expect(newStorageFile.pathString).not.toBe(previousPathString);
+            expect(newStorageFile.fs).toBe(StorageFileState.OK);
+            expect(newStorageFile.sdat).not.toBeDefined();
+
+            const previousStorageFile = await assertSnapshotData(previousStorageFileDocument);
+            expect(previousStorageFile.fs).toBe(StorageFileState.QUEUED_FOR_DELETE);
+            expect(previousStorageFile.sdat).toBeDefined();
+            expect(previousStorageFile.sdat).toBeBefore(new Date());
+
+            // The Profile points at the replacement.
+            const profile = await assertSnapshotData(p.document);
+            expect(profile.resume.storageFile).toBe(newStorageFileDocument.key);
+
+            const deleteInstance = await f.storageFileServerActions.deleteAllQueuedStorageFiles({});
+            const deleteResult = await deleteInstance();
+
+            expect(deleteResult.storageFilesDeleted).toBeGreaterThanOrEqual(1);
+            expect(await previousStorageFileDocument.exists()).toBe(false);
+
+            // The point of the whole exercise: the sweep resolves the object to delete from the
+            // superseded document's own path, so the live resume must have survived it.
+            expect(await newStorageFileDocument.exists()).toBe(true);
+            expect(await f.storageContext.file(newStorageFile).exists()).toBe(true);
           });
 
           it('should seed the resume-check prompt at the version the code declares, idempotently', async () => {
@@ -247,7 +286,7 @@ demoApiFunctionContextFactory((f) => {
 
             // ...without dropping what the upload initializer put there.
             expect(profile.resume.storageFile).toBe(storageFileDocument.key);
-            expect(profile.resume.filename).toBe('resume.pdf');
+            expect(profile.resume.uploadedAt).toBeDefined();
           });
 
           describe('signedUploadUrl', () => {
@@ -257,13 +296,23 @@ demoApiFunctionContextFactory((f) => {
               const result = await callCreateSignedUploadUrl({
                 purpose: USER_RESUME_FILE_PURPOSE,
                 contentType: 'application/pdf',
-                filename: 'resume.pdf',
                 fileSizeBytes: 2048
               });
 
-              expect(result.uploadPath).toBe(userResumeFileUploadsFilePath(au.uid, 'resume.pdf'));
+              expect(result.uploadPath).toBe(userResumeFileUploadsFilePath(au.uid));
               expect(result.purpose).toBe(USER_RESUME_FILE_PURPOSE);
               expect(result.maxFileSizeBytes).toBe(10 * 1024);
+            });
+
+            it('ignores a supplied filename, since the resume has a single fixed slot', async () => {
+              const result = await callCreateSignedUploadUrl({
+                purpose: USER_RESUME_FILE_PURPOSE,
+                contentType: 'application/pdf',
+                filename: 'my-latest-resume.pdf',
+                fileSizeBytes: 2048
+              });
+
+              expect(result.uploadPath).toBe(userResumeFileUploadsFilePath(au.uid));
             });
 
             itShouldFail('with FILE_TOO_LARGE when the file exceeds the 10kb inline cap', async () => {
@@ -272,7 +321,6 @@ demoApiFunctionContextFactory((f) => {
                   callCreateSignedUploadUrl({
                     purpose: USER_RESUME_FILE_PURPOSE,
                     contentType: 'application/pdf',
-                    filename: 'resume.pdf',
                     fileSizeBytes: 64 * 1024
                   }),
                 expectFailAssertHttpErrorServerErrorCode('FILE_TOO_LARGE')
@@ -285,7 +333,6 @@ demoApiFunctionContextFactory((f) => {
                   callCreateSignedUploadUrl({
                     purpose: USER_RESUME_FILE_PURPOSE,
                     contentType: 'text/plain',
-                    filename: 'resume.txt',
                     fileSizeBytes: 1024
                   }),
                 expectFailAssertHttpErrorServerErrorCode('INVALID_CONTENT_TYPE')

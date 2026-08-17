@@ -262,29 +262,22 @@ export const USER_RESUME_FILE_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIde
 export const USER_RESUME_FILE_UPLOADS_ALLOWED_FILE_TYPES = ['application/pdf'];
 
 /**
- * Folder under `/uploads/u/{userId}/` where resume files are uploaded.
+ * A user has exactly one resume, so the upload is a single fixed slot rather than a folder.
+ *
+ * Should be uploaded to "/uploads/u/{userid}/resume.pdf"
  */
-export const USER_RESUME_FILE_UPLOADS_FOLDER_NAME: string = 'resume';
+export const USER_RESUME_FILE_UPLOADS_FILE_NAME: SlashPathFile = 'resume.pdf';
 
 /**
- * Returns the uploads folder path for a user's resume files.
+ * Returns the uploads file path for a user's resume.
+ *
+ * The resume is always uploaded to a fixed path based on the user ID.
  *
  * @param userId - The Firebase Auth user ID.
- * @returns The SlashPathFolder where resume uploads are stored for this user.
+ * @returns The SlashPathFile where the resume upload is stored.
  */
-export function userResumeFileUploadsFolderPath(userId: FirebaseAuthUserId): SlashPathFolder {
-  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_RESUME_FILE_UPLOADS_FOLDER_NAME}/`;
-}
-
-/**
- * Returns the full uploads file path for a user's resume with the given name.
- *
- * @param userId - The Firebase Auth user ID.
- * @param name - The file name within the resume uploads folder.
- * @returns The full SlashPath to the uploaded resume.
- */
-export function userResumeFileUploadsFilePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
-  return `${userResumeFileUploadsFolderPath(userId)}${name}`;
+export function userResumeFileUploadsFilePath(userId: FirebaseAuthUserId): SlashPathFile {
+  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_RESUME_FILE_UPLOADS_FILE_NAME}`;
 }
 
 export const USER_RESUME_FILE_PURPOSE: StorageFilePurpose = 'resume';
@@ -292,14 +285,18 @@ export const USER_RESUME_FILE_PURPOSE: StorageFilePurpose = 'resume';
 export const USER_RESUME_FILE_STORAGE_FOLDER_PATH: SlashPathFolder = 'resume/';
 
 /**
- * Returns the final storage path for a user's resume after upload processing.
+ * The upload slot is fixed, but the destination must not be: replacing a resume flags the previous
+ * StorageFile for delete, and the delete sweep resolves the object to remove from that superseded
+ * document's own path. A stable destination would therefore delete the live file.
+ *
+ * This function creates a new storage path for the resume, based on the user's id and the current time.
  *
  * @param userId - The Firebase Auth user ID.
- * @param name - The file name within the storage folder.
- * @returns The full SlashPath to the stored resume.
+ * @returns A unique SlashPath for the stored resume.
  */
-export function userResumeFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
-  return userStorageFolderPath(userId, USER_RESUME_FILE_STORAGE_FOLDER_PATH, name);
+export function makeUserResumeFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
+  const timestamp = stringFromTimeFactory(7)();
+  return userStorageFolderPath(userId, USER_RESUME_FILE_STORAGE_FOLDER_PATH, `${timestamp}.pdf`);
 }
 
 /**
@@ -424,8 +421,8 @@ export const USER_RESUME_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
   purpose: USER_RESUME_FILE_PURPOSE,
   allowedMimeTypes: USER_RESUME_FILE_UPLOADS_ALLOWED_FILE_TYPES,
   maxFileSizeBytes: USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
-  buildUploadPath: ({ uid, filename }) => userResumeFileUploadsFilePath(uid, filename as SlashPathFile),
-  requiresFilenameInput: true
+  buildUploadPath: ({ uid }) => userResumeFileUploadsFilePath(uid),
+  requiresFilenameInput: false
 };
 
 /**

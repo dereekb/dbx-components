@@ -2,8 +2,8 @@ import { StorageFileProcessingState, copyStoragePath, delayCompletion } from '@d
 import { type StorageFileProcessingPurposeSubtaskCleanupOutput, type StorageFileProcessingPurposeSubtaskInput, type StorageFileProcessingPurposeSubtaskProcessorConfig, type StorageFileProcessingPurposeSubtaskResult } from '@dereekb/firebase-server/model';
 import { type OpenRouterFileReference, type OpenRouterRunTaskKey } from '@dereekb/openrouter';
 import { type OpenRouterRunTaskService, openRouterRunTaskOutcome } from '@dereekb/openrouter/firebase-server';
-import { MS_IN_MINUTE, type Milliseconds, slashPathName } from '@dereekb/util';
-import { DEMO_RESUME_CHECK_PROMPT_KEY, type ProfileFirestoreCollection, type ProfileResume, ProfileResumeState, USER_RESUME_FILE_PURPOSE, USER_RESUME_FILE_PURPOSE_RETRIEVE_SUBTASK, USER_RESUME_FILE_PURPOSE_SEND_SUBTASK, type UserResumeFileMetadata, type UserResumeFileProcessingSubtask, type UserResumeFileProcessingSubtaskMetadata, demoResumeCheckVerdictFromOutput } from 'demo-firebase';
+import { MS_IN_MINUTE, type Milliseconds } from '@dereekb/util';
+import { DEMO_RESUME_CHECK_PROMPT_KEY, type ProfileFirestoreCollection, type ProfileResume, ProfileResumeState, USER_RESUME_FILE_PURPOSE, USER_RESUME_FILE_PURPOSE_RETRIEVE_SUBTASK, USER_RESUME_FILE_PURPOSE_SEND_SUBTASK, USER_RESUME_FILE_UPLOADS_FILE_NAME, type UserResumeFileMetadata, type UserResumeFileProcessingSubtask, type UserResumeFileProcessingSubtaskMetadata, demoResumeCheckVerdictFromOutput } from 'demo-firebase';
 
 /**
  * How long `retrieve` waits before looking at an in-flight run again.
@@ -99,9 +99,10 @@ export function demoUserResumeFileProcessingSubtaskProcessor(config: DemoUserRes
     const file: OpenRouterFileReference = {
       bucket: storagePath.bucketId,
       storagePath: storagePath.pathString,
-      // The extension is what tells OpenRouter how to treat the attachment, so the real filename is
-      // carried through rather than a synthesized one.
-      filename: slashPathName(storagePath.pathString)
+      // The extension is what tells OpenRouter how to treat the attachment. The stored object's own
+      // name is a bare timestamp, so the upload slot's name is carried instead — it is the real name
+      // of the one resume a user has.
+      filename: USER_RESUME_FILE_UPLOADS_FILE_NAME
     };
 
     await openRouterRunTaskService.enqueueRunTask({ key, promptKey: DEMO_RESUME_CHECK_PROMPT_KEY, files: [file] });

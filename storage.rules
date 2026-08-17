@@ -25,7 +25,7 @@ service firebase.storage {
 
       // MARK: Resume File
       // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_RESUME_FILE_PURPOSE].
-      match /resume/{filename=**} {
+      match /resume.pdf {
         allow write: if (isUploadUser() && isAllowedResumeFile()) || userClaimsIsSysAdmin();
       }
 

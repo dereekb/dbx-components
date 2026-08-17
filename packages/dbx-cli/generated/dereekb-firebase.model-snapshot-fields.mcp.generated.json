@@ -125,7 +125,7 @@
         "field",
         "optionalfirestorepassthroughjsonfield"
       ],
-      "example": "fields: {\n  // { model: 'm', temperature: undefined, provider: { only: ['openai'], sort: undefined } }\n  // stores as { model: 'm', provider: { only: ['openai'] } }\n  config: optionalFirestorePassthroughJsonField<MyVendorConfig>(),\n  // don't store the field at all when nothing survives the filtering\n  usage: optionalFirestorePassthroughJsonField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })\n}",
+      "example": "fields: {\n  // { model: 'm', temperature: undefined, provider: { only: ['openai'], sort: undefined } }\n  // stores as { model: 'm', provider: { only: ['openai'] } }\n  config: optionalFirestorePassthroughJsonField<MyVendorConfig>(),\n  // store null rather than an empty object when nothing survives the filtering\n  usage: optionalFirestorePassthroughJsonField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })\n}",
       "relatedSlugs": [
         "optional-firestore-field",
         "firestore-pass-through-field",

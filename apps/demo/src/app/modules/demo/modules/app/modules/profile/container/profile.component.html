@@ -34,19 +34,19 @@
               @if (resumeSignal(); as resume) {
                 @switch (resume.state) {
                   @case (profileResumeState.CHECKING) {
-                    <dbx-label-block [header]="resume.filename">
+                    <dbx-label-block header="Resume">
                       <div class="dbx-hint">Uploaded {{ resume.uploadedAt | timeDistance }} &mdash; checking with OpenRouter...</div>
                     </dbx-label-block>
                   }
                   @case (profileResumeState.CHECKED) {
-                    <dbx-label-block [header]="resume.filename">
+                    <dbx-label-block header="Resume">
                       <div [class]="resume.isResume ? 'dbx-success' : 'dbx-warn'">{{ resume.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
                       <div class="dbx-hint">{{ resume.reason }}</div>
                       <div class="dbx-hint">Checked {{ resume.checkedAt | timeDistance }}.</div>
                     </dbx-label-block>
                   }
                   @case (profileResumeState.FAILED) {
-                    <dbx-label-block [header]="resume.filename">
+                    <dbx-label-block header="Resume">
                       <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
                     </dbx-label-block>
                   }
