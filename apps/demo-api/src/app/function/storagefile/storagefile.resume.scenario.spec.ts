@@ -4,10 +4,9 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
-import { OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
+import { OpenRouterRunTaskState, openRouterPromptVersionId } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
 import { DEMO_RESUME_CHECK_PROMPT_KEY, DEMO_RESUME_CHECK_PROMPT_VERSION, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
-import { seedDemoOpenRouterPrompts } from '../../common/model/openrouter/openrouter.seed';
 import { demoResumeCheckRunTaskKey } from '../../common/model/notification/handlers/storagefile/task.handler.storagefile.resume';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
@@ -60,11 +59,22 @@ demoApiFunctionContextFactory((f) => {
         }
 
         /**
+         * Publishes the app's prompt definitions to the store.
+         *
+         * Package logic now: the definitions the prompt service resolves against carry everything the
+         * stored prompt needs, so there is nothing app-shaped left to write.
+         */
+        async function seedPrompts() {
+          return f.openRouterPromptServerActions.seedOpenRouterPrompts({});
+        }
+
+        /**
          * Uploads a resume, initializes it, and drives it into PROCESSING with its notification task queued.
+         *
+         * Deliberately does NOT seed: a caller that wants the stored prompt seeds first, and the one
+         * that does not is what covers resolution falling back to the code definition.
          */
         async function uploadAndBeginProcessing(lines: string[] = RESUME_PDF_LINES) {
-          await seedDemoOpenRouterPrompts({ openRouterPromptActions: f.openRouterPromptServerActions, demoFirestoreCollections: f.demoFirestoreCollections });
-
           const uploadedFilePath = await uploadResumePdf(lines);
           const initialize = await f.storageFileServerActions.initializeStorageFileFromUpload({ bucketId: uploadedFilePath.bucketId, pathString: uploadedFilePath.pathString });
           const storageFileDocument = await initialize();
@@ -100,7 +110,7 @@ demoApiFunctionContextFactory((f) => {
 
         describe('resume storage file', () => {
           it('should initialize an uploaded resume and queue it for processing', async () => {
-            await seedDemoOpenRouterPrompts({ openRouterPromptActions: f.openRouterPromptServerActions, demoFirestoreCollections: f.demoFirestoreCollections });
+            await seedPrompts();
 
             const uploadedFilePath = await uploadResumePdf(RESUME_PDF_LINES);
             const initialize = await f.storageFileServerActions.initializeStorageFileFromUpload({ bucketId: uploadedFilePath.bucketId, pathString: uploadedFilePath.pathString });
@@ -120,18 +130,36 @@ demoApiFunctionContextFactory((f) => {
             expect(profile.resume.checkedAt).toBeFalsy();
           });
 
-          it('should seed the resume-check prompt idempotently', async () => {
-            const first = await seedDemoOpenRouterPrompts({ openRouterPromptActions: f.openRouterPromptServerActions, demoFirestoreCollections: f.demoFirestoreCollections });
-            const second = await seedDemoOpenRouterPrompts({ openRouterPromptActions: f.openRouterPromptServerActions, demoFirestoreCollections: f.demoFirestoreCollections });
+          it('should seed the resume-check prompt at the version the code declares, idempotently', async () => {
+            const first = await seedPrompts();
+            const second = await seedPrompts();
 
-            expect(first.created).toBe(true);
-            expect(first.version).toBe(1);
-            // Minting a version locks the one before it, so re-seeding must NOT mint a second identical one.
-            expect(second.created).toBe(false);
-            expect(second.version).toBe(1);
+            expect(first.considered).toBe(1);
+            expect(first.promptsCreated).toBe(1);
+            expect(first.versionsPublished).toBe(1);
+            expect(first.skipped).toBe(0);
+
+            // A re-seed is a fixed point rather than a step toward convergence: the write address is the
+            // number the definition declares, not one allocated from `lv`.
+            expect(second.versionsPublished).toBe(0);
+            expect(second.upToDate).toBe(1);
+            expect(second.skipped).toBe(0);
+
+            const promptDocument = f.demoFirestoreCollections.openRouterPromptCollection.documentAccessor().loadDocumentForId(DEMO_RESUME_CHECK_PROMPT_KEY);
+            const prompt = await assertSnapshotData(promptDocument);
+
+            expect(prompt.lv).toBe(DEMO_RESUME_CHECK_PROMPT_VERSION);
+            expect(prompt.av).toBe(DEMO_RESUME_CHECK_PROMPT_VERSION);
+
+            // The version an allocating seeder would have minted instead. Its absence is what closes the
+            // gap that used to leave the store permanently one deploy behind the code.
+            const firstVersion = await f.demoFirestoreCollections.openRouterPromptVersionCollectionFactory(promptDocument).documentAccessor().loadDocumentForId(openRouterPromptVersionId(1)).snapshotData();
+            expect(firstVersion).toBeUndefined();
           });
 
           it('should enqueue an OpenRouterRunTask carrying only the object path', async () => {
+            await seedPrompts();
+
             const storageFileDocument = await uploadAndBeginProcessing();
 
             const processing = await assertSnapshotData(storageFileDocument);
@@ -144,9 +172,9 @@ demoApiFunctionContextFactory((f) => {
 
             expect(runTask).toBeDefined();
             expect(runTask?.pk).toBe(DEMO_RESUME_CHECK_PROMPT_KEY);
-            // The code definition, not the version the seeder published: it ships ahead of the store, so
-            // the resolver serves it. Asserted against the constant so a config change that bumps the
-            // version does not have to be mirrored here.
+            // The STORED version, which now carries the number the definition declares — the seed pins
+            // rather than allocates, so the two no longer disagree. Asserted against the constant so a
+            // config change that bumps the version does not have to be mirrored here.
             expect(runTask?.pv).toBe(DEMO_RESUME_CHECK_PROMPT_VERSION);
             expect(runTask?.s).toBe(OpenRouterRunTaskState.QUEUED);
             expect(runTask?.fp).toHaveLength(1);
@@ -160,7 +188,23 @@ demoApiFunctionContextFactory((f) => {
             expect(stored).not.toContain('http');
           });
 
+          it('should enqueue against the code definition when nothing has been seeded', async () => {
+            const storageFileDocument = await uploadAndBeginProcessing();
+
+            await runNotificationTasks();
+
+            const runTask = await f.demoFirestoreCollections.openRouterRunTaskCollection.documentAccessor().loadDocumentForId(demoResumeCheckRunTaskKey(storageFileDocument.id)).snapshotData();
+
+            // No prompt document exists at all, so the definition is the only thing that can serve —
+            // which is the path that lets a fresh emulator run a resume check without a seed first.
+            expect(await f.demoFirestoreCollections.openRouterPromptCollection.documentAccessor().loadDocumentForId(DEMO_RESUME_CHECK_PROMPT_KEY).snapshotData()).toBeUndefined();
+            expect(runTask?.pk).toBe(DEMO_RESUME_CHECK_PROMPT_KEY);
+            expect(runTask?.pv).toBe(DEMO_RESUME_CHECK_PROMPT_VERSION);
+          });
+
           it('should delay rather than fail when the run is still queued', async () => {
+            await seedPrompts();
+
             const storageFileDocument = await uploadAndBeginProcessing();
 
             await runNotificationTasks();
@@ -175,6 +219,8 @@ demoApiFunctionContextFactory((f) => {
           });
 
           it('should land the verdict on the StorageFile and the Profile once the run completes', async () => {
+            await seedPrompts();
+
             const storageFileDocument = await uploadAndBeginProcessing();
 
             // `send` — enqueues the run.
@@ -250,6 +296,8 @@ demoApiFunctionContextFactory((f) => {
           // MARK: The live block — the only thing that proves inline base64 reaches a real model
           describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live', () => {
             it('should land the model verdict on the StorageFile', async () => {
+              await seedPrompts();
+
               const storageFileDocument = await uploadAndBeginProcessing();
 
               // `send`

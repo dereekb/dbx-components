@@ -45,6 +45,15 @@ export const OPENROUTER_PROMPT_CACHE_DURATION: Milliseconds = MS_IN_MINUTE * 5;
  */
 export abstract class OpenRouterPromptService {
   /**
+   * The prompt definitions this service resolves against, de-duplicated by key.
+   *
+   * Exposed so a seeder publishes the exact values the resolver would otherwise stand in with, rather
+   * than a second registry wired in parallel that can drift from this one. De-duplicated because
+   * `definitionsByKey` is what resolution actually reads: `arrayToMap` is last-wins, so iterating the
+   * raw config array would let a seeder publish a definition that never resolves.
+   */
+  abstract get promptDefinitions(): readonly OpenRouterPromptDefinition[];
+  /**
    * Loads a prompt document by key.
    *
    * Reads the STORE only — a prompt that exists solely as a code definition has no document, so this
@@ -109,6 +118,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
   const duration = cacheDuration ?? OPENROUTER_PROMPT_CACHE_DURATION;
 
   const definitionsByKey = arrayToMap(definitions ?? [], (definition) => definition.promptKey);
+  const promptDefinitions: readonly OpenRouterPromptDefinition[] = Array.from(definitionsByKey.values());
   const cache = new Map<string, Getter<Promise<OpenRouterResolvedPrompt>>>();
 
   function loadPromptDocument(promptKey: OpenRouterPromptKey): OpenRouterPromptDocument {
@@ -232,5 +242,5 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     }
   }
 
-  return { loadPrompt, resolvePrompt, clearCachedPrompt };
+  return { promptDefinitions, loadPrompt, resolvePrompt, clearCachedPrompt };
 }

@@ -1,7 +1,7 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type FirestoreContextReference, type FirestoreModelKey, firestoreModelId, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterModelConfig, type OpenRouterPromptKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
+import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import {
   type CreateOpenRouterPromptVersionParams,
   type CreateOpenRouterPromptVersionResult,
@@ -58,6 +58,57 @@ export interface CreateOpenRouterPromptParams {
 }
 
 /**
+ * Parameters for {@link OpenRouterPromptServerActions.seedOpenRouterPrompts}.
+ *
+ * Server-side only, and deliberately not part of the model API, for the same reason
+ * {@link CreateOpenRouterPromptParams} is not: the only input is a filter over keys the code itself
+ * declares, and every caller is server-side. Seeding is also not CRUD on `openRouterPrompt` — exposing
+ * it over callModel would hand any admin a button that rewrites prompt pointers.
+ */
+export interface SeedOpenRouterPromptsParams {
+  /**
+   * Restrict the run to these keys. Omit to seed every definition the prompt service carries.
+   */
+  readonly promptKeys?: Maybe<OpenRouterPromptKey[]>;
+}
+
+/**
+ * Result of {@link OpenRouterPromptServerActions.seedOpenRouterPrompts}.
+ *
+ * The counts partition the run: `considered === versionsPublished + upToDate + skipped`.
+ */
+export interface SeedOpenRouterPromptsResult {
+  /**
+   * Definitions looked at, after filtering.
+   */
+  readonly considered: number;
+  /**
+   * Prompt documents created. Always `<= versionsPublished`, since creating one always publishes its
+   * declared version too.
+   */
+  readonly promptsCreated: number;
+  /**
+   * Versions written at their declared number.
+   */
+  readonly versionsPublished: number;
+  /**
+   * Definitions whose declared number the store already carried — the steady state, so a scheduled
+   * reseed reports every definition here once it has converged.
+   */
+  readonly upToDate: number;
+  /**
+   * The only drift alarm: a definition the seed refused to write. Either the store advanced past it,
+   * something else already wrote the number it declares, or the prompt is ARCHIVED. Recovery is to bump
+   * the definition's version, which works precisely because the seed pins rather than allocates.
+   */
+  readonly skipped: number;
+  /**
+   * Config warnings raised while validating the definitions, each prefixed with its prompt key.
+   */
+  readonly warnings: string[];
+}
+
+/**
  * Server actions for managing prompts.
  *
  * The writes exist instead of an Angular UI: they reach the model API, and the existing callModel MCP
@@ -70,6 +121,11 @@ export abstract class OpenRouterPromptServerActions {
   abstract updateOpenRouterPrompt(params: UpdateOpenRouterPromptParams): Promise<(document: OpenRouterPromptDocument) => Promise<OpenRouterPromptDocument>>;
   abstract createOpenRouterPromptVersion(params: CreateOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptDocument) => Promise<CreateOpenRouterPromptVersionResult>>;
   abstract updateOpenRouterPromptVersion(params: UpdateOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptVersionDocument) => Promise<UpdateOpenRouterPromptVersionResult>>;
+  /**
+   * Uncurried, like {@link createOpenRouterPrompt}: a seed has no target document to curry over — the
+   * documents it writes are the ones it is deciding whether to create.
+   */
+  abstract seedOpenRouterPrompts(params: SeedOpenRouterPromptsParams): Promise<SeedOpenRouterPromptsResult>;
 }
 
 /**
@@ -83,7 +139,8 @@ export function openRouterPromptServerActions(context: OpenRouterPromptServerAct
     createOpenRouterPrompt: createOpenRouterPromptFactory(context),
     updateOpenRouterPrompt: updateOpenRouterPromptFactory(context),
     createOpenRouterPromptVersion: createOpenRouterPromptVersionFactory(context),
-    updateOpenRouterPromptVersion: updateOpenRouterPromptVersionFactory(context)
+    updateOpenRouterPromptVersion: updateOpenRouterPromptVersionFactory(context),
+    seedOpenRouterPrompts: seedOpenRouterPromptsFactory(context)
   };
 }
 
@@ -284,4 +341,169 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
       return { warnings: validation.warnings };
     };
   });
+}
+
+/**
+ * What one definition's seed transaction did.
+ */
+type SeedOpenRouterPromptOutcome = 'created' | 'published' | 'upToDate' | 'skipped';
+
+/**
+ * Publishes each code definition the prompt service carries at ITS OWN declared version number.
+ *
+ * The number is a compile-time constant rather than one allocated from `lv`, which is the whole point:
+ * an auto-allocating writer cannot converge on a number chosen in code, because its write address moves
+ * with its own effect — so a store seeded by {@link createOpenRouterPromptVersionFactory} sits
+ * permanently behind the definition and the resolver stands in for it forever. Pinning makes the write
+ * address a pure function of the definition, so a re-seed is a no-op rather than a step toward
+ * convergence, and a scheduled reseed can keep the store in step with deploys.
+ *
+ * Publishing is gated on `lv` rather than `av`: `lv` is the allocator and is monotone, while `av` is a
+ * pointer an operator can move backwards — gating on it would let a demotion re-trigger a publish on
+ * every scheduled tick, forever.
+ *
+ * Deliberately NOT built on {@link createOpenRouterPromptVersionFactory}: that action is reachable over
+ * callModel/MCP, and its in-transaction allocation is a race-safety contract on a public surface rather
+ * than an implementation detail. This gets equivalent safety by a different mechanism — reading the
+ * target version id puts it in the transaction's read set — which is only sound because that id is a
+ * compile-time constant, something `CreateOpenRouterPromptVersionParams` cannot assert about an
+ * arbitrary caller.
+ *
+ * @param context - The actions context.
+ * @returns The seed action.
+ */
+export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActionsContext) {
+  const { openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
+
+  return async (params: SeedOpenRouterPromptsParams): Promise<SeedOpenRouterPromptsResult> => {
+    const { promptKeys } = params;
+    const keyFilter = promptKeys == null ? undefined : new Set(promptKeys);
+    const definitions = openRouterPromptService.promptDefinitions.filter((x) => keyFilter == null || keyFilter.has(x.promptKey));
+    const warnings: string[] = [];
+
+    // Every definition is validated before anything is written: half-seeding a registry because entry
+    // three is broken leaves a state no rerun explains.
+    definitions.forEach((definition) => {
+      const { promptKey, version, config } = definition;
+
+      if (!Number.isInteger(version) || version < 1) {
+        throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": the definition declares version ${version}, which is not an integer >= 1.`);
+      }
+
+      const validation = validateOpenRouterModelConfig(config);
+
+      if (!validation.valid) {
+        throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": ${validation.errors.join(' ')}`);
+      }
+
+      validation.warnings.forEach((warning) => warnings.push(`${promptKey}: ${warning}`));
+    });
+
+    /**
+     * Seeds one definition in its own transaction.
+     *
+     * One transaction PER definition rather than one for the registry: the documents are disjoint, so a
+     * contention retry on one must not roll the rest back, and a registry of any size must not approach
+     * the 500-write ceiling.
+     *
+     * @param definition - The definition to publish.
+     * @returns What the transaction did.
+     */
+    async function seedDefinition(definition: OpenRouterPromptDefinition): Promise<SeedOpenRouterPromptOutcome> {
+      const { promptKey, version } = definition;
+
+      return openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
+        const promptDocument = openRouterPromptCollection.documentAccessorForTransaction(transaction).loadDocumentForId(promptKey);
+        const versionCollection = openRouterPromptVersionCollectionFactory(promptDocument).documentAccessorForTransaction(transaction);
+        const targetVersionDocument = versionCollection.loadDocumentForId(openRouterPromptVersionId(version));
+
+        // Both addresses come from the definition alone, so they resolve together. Reading the target
+        // puts it in the transaction's read set, which is what makes the pinned write race-safe.
+        const [prompt, targetVersionExists] = await Promise.all([promptDocument.snapshotData(), targetVersionDocument.accessor.exists()]);
+
+        const latestVersion = prompt?.lv ?? 0;
+        // An ARCHIVED prompt is never resurrected: retirement is a deliberate act, and a scheduled
+        // reseed silently undoing it is the same class of bug as reverting an operator's rename.
+        const archived = prompt?.s === OpenRouterPromptState.ARCHIVED;
+        const publish = !archived && version > latestVersion && !targetVersionExists;
+
+        let outcome: SeedOpenRouterPromptOutcome;
+
+        if (publish) {
+          // The outgoing head's address comes from the prompt's own `lv`, so this read cannot batch
+          // with the one that produced it. Strictly `<`: at `lv === version` the document under the
+          // lock is the one this transaction is about to create. Existence-checked because `.update()`
+          // throws on a missing document, and a `set` on a deleted version would resurrect it holding
+          // nothing but a lock.
+          const previousVersionDocument = latestVersion > 0 && latestVersion < version ? versionCollection.loadDocumentForId(openRouterPromptVersionId(latestVersion)) : undefined;
+          const previousVersionExists = previousVersionDocument == null ? false : await previousVersionDocument.accessor.exists();
+
+          if (previousVersionDocument != null && previousVersionExists) {
+            await previousVersionDocument.update({ lk: true });
+          }
+
+          const versionData: OpenRouterPromptVersion = {
+            cat: new Date(),
+            v: version,
+            i: definition.instructions,
+            m: definition.messages?.map(({ role, content }) => ({ r: role, c: content })),
+            c: definition.config,
+            nt: `Seeded from the code definition declaring version ${version}.`
+          };
+
+          await targetVersionDocument.accessor.set(versionData);
+
+          if (prompt == null) {
+            await promptDocument.accessor.set({ cat: new Date(), n: definition.name, d: definition.description, s: OpenRouterPromptState.ACTIVE, lv: version, av: version });
+          } else {
+            // `n`/`d`/`t` are deliberately untouched: they are operator-editable through
+            // updateOpenRouterPrompt, and a scheduled reseed reverting a rename is a silent regression.
+            await promptDocument.update({ lv: version, av: version, s: OpenRouterPromptState.ACTIVE, uat: new Date() });
+          }
+
+          outcome = prompt == null ? 'created' : 'published';
+        } else {
+          // The only way to land on `upToDate` is a prompt whose `lv` already covers the declared
+          // number AND whose document at that number is present — anything else is drift the seed
+          // refuses to paper over by overwriting a number someone else wrote.
+          outcome = archived || version > latestVersion || !targetVersionExists ? 'skipped' : 'upToDate';
+        }
+
+        return outcome;
+      });
+    }
+
+    let promptsCreated = 0;
+    let versionsPublished = 0;
+    let upToDate = 0;
+    let skipped = 0;
+
+    for (const definition of definitions) {
+      const outcome = await seedDefinition(definition);
+
+      switch (outcome) {
+        case 'created':
+          promptsCreated += 1;
+          versionsPublished += 1;
+          break;
+        case 'published':
+          versionsPublished += 1;
+          break;
+        case 'upToDate':
+          upToDate += 1;
+          break;
+        case 'skipped':
+          skipped += 1;
+          break;
+      }
+
+      if (outcome === 'created' || outcome === 'published') {
+        // Only the prompts that actually changed. Missing this leaves a scheduled reseed invisible for
+        // the whole OPENROUTER_PROMPT_CACHE_DURATION window.
+        openRouterPromptService.clearCachedPrompt(definition.promptKey);
+      }
+    }
+
+    return { considered: definitions.length, promptsCreated, versionsPublished, upToDate, skipped, warnings };
+  };
 }
