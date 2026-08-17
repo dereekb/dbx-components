@@ -31,17 +31,13 @@ export const demoDevelopmentSeedOpenRouterPromptsParamsType = type({}) as Type<D
 
 export interface DemoDevelopmentSeedOpenRouterPromptsResult {
   /**
-   * Whether the prompt document was created by this call.
+   * Number of prompts whose declared version this call published to the store.
+   *
+   * A single count rather than the richer server-side result: this component is shared with the browser
+   * build, so it cannot alias `SeedOpenRouterPromptsResult` from `@dereekb/openrouter/firebase-server`.
+   * The full counts stay available server-side, for schedules and tests.
    */
-  readonly created: boolean;
-  /**
-   * The version that is now active.
-   */
-  readonly version: number;
-  /**
-   * Config problems that did not prevent publishing.
-   */
-  readonly warnings: string[];
+  readonly promptsSynced: number;
 }
 
 export type DemoDevelopmentFunctionTypeMap = FirebaseDevelopmentFunctionTypeMap & {
