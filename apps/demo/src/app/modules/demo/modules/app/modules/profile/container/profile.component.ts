@@ -21,12 +21,6 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
 import { ProfileResumeState, USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDistancePipe } from '@dereekb/dbx-core';
-import { type SlashPathFile, isSlashPathFile } from '@dereekb/util';
-
-/**
- * Fallback name for an upload whose own name is not usable as a path part.
- */
-const DEFAULT_DEMO_PROFILE_RESUME_FILENAME: SlashPathFile = 'resume.pdf';
 
 /**
  * The signed-in user's own profile page.
@@ -107,12 +101,11 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly resumeUploadHandler: StorageFileUploadHandler = storageFileUploadHandler({
     storageService: this.storageService,
-    storageFileUploadConfigFactory: (file: File): StorageFileUploadConfig => {
+    storageFileUploadConfigFactory: (_file: File): StorageFileUploadConfig => {
       const uid = this.userIdentifierSignal();
-      // The uploads folder is what the API matches on to pick the resume initializer, and the name is
-      // carried all the way to OpenRouter as the attachment's filename.
-      const filename = isSlashPathFile(file.name) ? file.name : DEFAULT_DEMO_PROFILE_RESUME_FILENAME;
-      const storagePath = userResumeFileUploadsFilePath(uid, filename);
+      // A user has one resume, so the upload always replaces the same slot — and that fixed file name
+      // is what the API matches on to pick the resume initializer.
+      const storagePath = userResumeFileUploadsFilePath(uid);
 
       return {
         storagePath

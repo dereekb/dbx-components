@@ -82,10 +82,6 @@ export interface ProfileResume {
    */
   storageFile?: Maybe<StorageFileKey>;
   /**
-   * The uploaded file's name.
-   */
-  filename?: Maybe<string>;
-  /**
    * When the upload was initialized.
    */
   uploadedAt?: Maybe<Date>;
@@ -150,7 +146,6 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
         fields: {
           state: firestoreEnum<ProfileResumeState>({ default: ProfileResumeState.NONE }),
           storageFile: optionalFirestoreString(),
-          filename: optionalFirestoreString(),
           uploadedAt: optionalFirestoreDate(),
           checkedAt: optionalFirestoreDate(),
           isResume: optionalFirestoreBoolean(),
