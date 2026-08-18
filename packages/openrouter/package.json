@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/openrouter",
-  "version": "13.36.0",
+  "version": "13.37.0",
   "exports": {
     "./firebase": {
       "module": "./firebase/index.esm.js",
@@ -16,7 +16,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.36.0",
+    "@dereekb/util": "13.37.0",
     "@openrouter/sdk": "^1.2.26"
   }
 }
