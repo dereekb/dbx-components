@@ -27,6 +27,47 @@
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">
+      <dbx-section header="Resume" hint="Uploads a PDF, then asks OpenRouter whether the document actually is a resume.">
+        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf">
+          <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
+            <dbx-loading dbxActionLoadingContext>
+              @if (resumeSignal(); as resume) {
+                @switch (resume.state) {
+                  @case (profileResumeState.CHECKING) {
+                    <dbx-label-block header="Resume">
+                      <div class="dbx-hint">Uploaded {{ resume.uploadedAt | timeDistance }} &mdash; checking with OpenRouter...</div>
+                    </dbx-label-block>
+                  }
+                  @case (profileResumeState.CHECKED) {
+                    <dbx-label-block header="Resume">
+                      <div [class]="resume.isResume ? 'dbx-success' : 'dbx-warn'">{{ resume.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
+                      <div class="dbx-hint">{{ resume.reason }}</div>
+                      <div class="dbx-hint">Checked {{ resume.checkedAt | timeDistance }}.</div>
+                    </dbx-label-block>
+                  }
+                  @case (profileResumeState.FAILED) {
+                    <dbx-label-block header="Resume">
+                      <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
+                    </dbx-label-block>
+                  }
+                  @default {
+                    <dbx-label-block header="No Resume">
+                      <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
+                    </dbx-label-block>
+                  }
+                }
+              }
+            </dbx-loading>
+          </div>
+          <span class="dbx-spacer"></span>
+          <!-- Action Space -->
+          <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="resumeUploadHandler" [triggerOnFiles]="true">
+            <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Resume" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+          </div>
+        </div>
+      </dbx-section>
+    </dbx-content-box>
+    <dbx-content-box [wide]="true">
       <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ usernameSignal() }})" hint="Change your profile username.">
         <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>

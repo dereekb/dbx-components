@@ -6,8 +6,7 @@
  * `ClickableFilterPreset` shape — as read-only resources for clients that
  * prefer browsing data over calling `dbx_filter_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
@@ -77,7 +76,7 @@ export function registerFiltersResource(server: McpServer, options: RegisterFilt
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Filter'
@@ -93,7 +92,7 @@ export function registerFiltersResource(server: McpServer, options: RegisterFilt
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawKind = variables.kind;
+      const rawKind = variables['kind'];
       const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as FilterKind | undefined;
 
       const valid = kind && FILTER_KIND_ORDER.includes(kind);

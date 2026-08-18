@@ -6,8 +6,7 @@
  * `dbx_action_lookup` (single-directive docs) by answering "how do I compose
  * these directives into a working action stack?".
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { ACTION_EXAMPLE_PATTERNS, getActionExamplePattern, type ActionExampleDepth, type ActionExamplePattern } from './data/patterns/action-patterns.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

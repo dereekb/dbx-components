@@ -6,8 +6,7 @@
  * downstream packages) — as read-only resources for clients that prefer
  * browsing data over calling `dbx_model_snapshot_field_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
@@ -88,7 +87,7 @@ export function registerModelSnapshotFieldsResource(server: McpServer, options: 
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Model snapshot field'
@@ -104,7 +103,7 @@ export function registerModelSnapshotFieldsResource(server: McpServer, options: 
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const category = pickFirstVariable(variables.category);
+      const category = pickFirstVariable(variables['category']);
       let text: string;
       let valid = false;
       if (category && registry.categories.includes(category)) {
@@ -135,7 +134,7 @@ export function registerModelSnapshotFieldsResource(server: McpServer, options: 
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const module = pickFirstVariable(variables.module);
+      const module = pickFirstVariable(variables['module']);
       let text: string;
       let valid = false;
       if (module && registry.modules.includes(module)) {
@@ -166,7 +165,7 @@ export function registerModelSnapshotFieldsResource(server: McpServer, options: 
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tag = pickFirstVariable(variables.tag);
+      const tag = pickFirstVariable(variables['tag']);
       let text: string;
       let valid = false;
       if (tag && tag.length > 0) {

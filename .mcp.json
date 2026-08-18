@@ -7,7 +7,7 @@
     },
     "demo-api-mcp-dev": {
       "type": "http",
-      "url": "http://localhost:9902/dereekb-components/us-central1/api/mcp"
+      "url": "http://localhost:9901/mcp"
     }
   }
 }

@@ -221,7 +221,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
         .catch((e) => {
           let publicUrlBackup: string;
 
-          if (e instanceof Error && e.name === 'SigningError' && (isTestNodeEnv() || process.env.FIREBASE_STORAGE_EMULATOR_HOST)) {
+          if (e instanceof Error && e.name === 'SigningError' && (isTestNodeEnv() || process.env['FIREBASE_STORAGE_EMULATOR_HOST'])) {
             // NOTE: Signing does not behave properly in the emulator as it is not supported.
             // https://github.com/firebase/firebase-tools/issues/3400
 

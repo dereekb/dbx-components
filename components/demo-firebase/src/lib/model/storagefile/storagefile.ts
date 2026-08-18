@@ -1,4 +1,5 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileMetadata, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { type OpenRouterRunTaskKey } from '@dereekb/openrouter';
 import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 import { profileIdentity } from '../profile';
 
@@ -240,6 +241,112 @@ export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGrou
   return [userProfileStorageFileGroupId(userId)];
 }
 
+// === User Resume File ===
+/**
+ * A PDF resume uploaded by a user.
+ *
+ * The demo's AI fixture: the upload is copied to its final storage path and
+ * then PROCESSED — a `send` subtask enqueues an `OpenRouterRunTask` asking a
+ * model whether the document actually is a resume, and a `retrieve` subtask
+ * polls that run and writes the verdict back onto the StorageFile.
+ *
+ * Like `log`, its initializer ships in
+ * `apps/demo-api/.../storagefile/handlers/upload.user.resume.ts` rather than
+ * inline in `storagefile.upload.service.ts`.
+ */
+export const USER_RESUME_FILE_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_resume_file';
+
+/**
+ * Allowed mime types for user resume uploads.
+ */
+export const USER_RESUME_FILE_UPLOADS_ALLOWED_FILE_TYPES = ['application/pdf'];
+
+/**
+ * A user has exactly one resume, so the upload is a single fixed slot rather than a folder.
+ *
+ * Should be uploaded to "/uploads/u/{userid}/resume.pdf"
+ */
+export const USER_RESUME_FILE_UPLOADS_FILE_NAME: SlashPathFile = 'resume.pdf';
+
+/**
+ * Returns the uploads file path for a user's resume.
+ *
+ * The resume is always uploaded to a fixed path based on the user ID.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @returns The SlashPathFile where the resume upload is stored.
+ */
+export function userResumeFileUploadsFilePath(userId: FirebaseAuthUserId): SlashPathFile {
+  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_RESUME_FILE_UPLOADS_FILE_NAME}`;
+}
+
+export const USER_RESUME_FILE_PURPOSE: StorageFilePurpose = 'resume';
+
+export const USER_RESUME_FILE_STORAGE_FOLDER_PATH: SlashPathFolder = 'resume/';
+
+/**
+ * The upload slot is fixed, but the destination must not be: replacing a resume flags the previous
+ * StorageFile for delete, and the delete sweep resolves the object to remove from that superseded
+ * document's own path. A stable destination would therefore delete the live file.
+ *
+ * This function creates a new storage path for the resume, based on the user's id and the current time.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @returns A unique SlashPath for the stored resume.
+ */
+export function makeUserResumeFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
+  const timestamp = stringFromTimeFactory(7)();
+  return userStorageFolderPath(userId, USER_RESUME_FILE_STORAGE_FOLDER_PATH, `${timestamp}.pdf`);
+}
+
+/**
+ * Returns the list of StorageFileGroupIds that a user's resume belongs to.
+ *
+ * @param userId - The Firebase Auth user ID.
+ * @returns Array of StorageFileGroupIds for the user's resume group membership.
+ */
+export function userResumeFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
+  return [userProfileStorageFileGroupId(userId)];
+}
+
+/**
+ * Enqueues the OpenRouter run task that asks the model about the resume.
+ */
+export const USER_RESUME_FILE_PURPOSE_SEND_SUBTASK: StorageFileProcessingSubtask = 'send';
+
+/**
+ * Polls that run task and writes its verdict onto the StorageFile.
+ */
+export const USER_RESUME_FILE_PURPOSE_RETRIEVE_SUBTASK: StorageFileProcessingSubtask = 'retrieve';
+
+export type UserResumeFileProcessingSubtask = typeof USER_RESUME_FILE_PURPOSE_SEND_SUBTASK | typeof USER_RESUME_FILE_PURPOSE_RETRIEVE_SUBTASK;
+
+export interface UserResumeFileProcessingSubtaskMetadata extends StorageFileProcessingSubtaskMetadata {
+  /**
+   * The OpenRouterRunTask the `send` subtask enqueued, which `retrieve` polls.
+   *
+   * Derived from the StorageFile's id, so re-entering `send` reuses the run rather than queueing a
+   * second one.
+   */
+  readonly runTaskKey?: Maybe<OpenRouterRunTaskKey>;
+  /**
+   * How many times `retrieve` has seen the run in a non-recoverable state.
+   *
+   * A run that FAILED may still succeed on a fresh enqueue (a transport blip, a rate limit), so the
+   * subtask spends a small budget before giving up on the file entirely.
+   */
+  readonly attempts?: Maybe<number>;
+}
+
+/**
+ * The model's verdict, written onto the StorageFile document once the run completes.
+ */
+export interface UserResumeFileMetadata extends StorageFileMetadata {
+  readonly isResume?: Maybe<boolean>;
+  readonly reason?: Maybe<string>;
+  readonly checkedAt?: Maybe<Date>;
+}
+
 // MARK: Upload Policy Registry
 /**
  * Soft cap for user avatar uploads. Matches the 2 MB ceiling declared in
@@ -299,6 +406,26 @@ export const USER_LOG_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
 };
 
 /**
+ * Hard cap for user resume uploads.
+ *
+ * Deliberately tiny. A resume is sent to OpenRouter as inline base64 whenever the object is not
+ * publicly reachable (the emulator), base64 inflates it by roughly a third, and that cost is re-paid on
+ * every attempt — so 10 KB keeps a full request comfortably under 14 KB.
+ */
+export const USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES = 10 * 1024;
+
+/**
+ * Upload policy for {@link USER_RESUME_FILE_PURPOSE}.
+ */
+export const USER_RESUME_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_RESUME_FILE_PURPOSE,
+  allowedMimeTypes: USER_RESUME_FILE_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid }) => userResumeFileUploadsFilePath(uid),
+  requiresFilenameInput: false
+};
+
+/**
  * Registry of every {@link StorageFilePurposeUploadPolicy} the app supports.
  *
  * The signed-upload-url handler reads this list at request time and resolves
@@ -306,4 +433,4 @@ export const USER_LOG_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
  * purpose means appending an entry here AND updating `storage.rules` so the
  * corresponding path is writable.
  */
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY];
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY, USER_RESUME_FILE_UPLOAD_POLICY];

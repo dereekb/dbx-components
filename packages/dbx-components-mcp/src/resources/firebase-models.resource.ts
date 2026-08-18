@@ -5,8 +5,7 @@
  * that prefer browsing registry data over calling tools. Companion to
  * `dbx_model_decode` which consumes the same registry.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { FIREBASE_MODELS, getFirebaseBucketKeyedByIdModels, getFirebaseDistrictKeyedByIdModels, getFirebaseExternalIdKeyedByIdModels, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseRegionKeyedByIdModels, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels, type FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy } from '../tools/model-hierarchy.formatter.js';
 
@@ -106,7 +105,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawName = variables.name;
+      const rawName = variables['name'];
       const name = Array.isArray(rawName) ? rawName[0] : rawName;
       const model = name ? getFirebaseModel(name) : undefined;
 
@@ -143,7 +142,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawPrefix = variables.prefix;
+      const rawPrefix = variables['prefix'];
       const prefix = Array.isArray(rawPrefix) ? rawPrefix[0] : rawPrefix;
 
       let text: string;
@@ -181,7 +180,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawParent = variables.parent;
+      const rawParent = variables['parent'];
       const parent = Array.isArray(rawParent) ? rawParent[0] : rawParent;
 
       let text: string;
@@ -237,7 +236,7 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawRoot = variables.root;
+      const rawRoot = variables['root'];
       const root = Array.isArray(rawRoot) ? rawRoot[0] : rawRoot;
       let text: string;
       let mimeType = 'application/json';

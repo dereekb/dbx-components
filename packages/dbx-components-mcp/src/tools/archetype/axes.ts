@@ -50,20 +50,20 @@ export function deriveAxes(archetype: ModelArchetypeInfo, q: ArchetypeQuestionna
   switch (archetype.slug) {
     case 'single-item-sub': {
       const subPurpose = deriveSingleItemSubPurpose(q);
-      if (subPurpose) axes.subPurpose = subPurpose;
+      if (subPurpose) axes['subPurpose'] = subPurpose;
       break;
     }
     case 'denormalised-aggregate': {
       if (q.docIdSource && ['parent-id', 'bucket-code', 'composite-flat-key', 'numeric-short-id'].includes(q.docIdSource)) {
-        axes.keying = q.docIdSource;
+        axes['keying'] = q.docIdSource;
       }
       if (q.syncMode && ['trigger-eventual', 'flag-eventual', 'scheduled-rebuild'].includes(q.syncMode)) {
-        axes.syncMode = q.syncMode;
+        axes['syncMode'] = q.syncMode;
       }
       break;
     }
     case 'reference-registry': {
-      if (q.hasInheritance !== undefined) axes.hasInheritance = String(q.hasInheritance);
+      if (q.hasInheritance !== undefined) axes['hasInheritance'] = String(q.hasInheritance);
       break;
     }
     default:
@@ -110,9 +110,9 @@ export function deriveAxisAlternatives(archetype: ModelArchetypeInfo, q: Archety
   const alternatives: { [axisName: string]: string[] } = {};
   if (archetype.slug === 'denormalised-aggregate' && q.parentRelation === 'user-uid') {
     if (q.docIdSource === 'bucket-code') {
-      alternatives.keying = ['composite-flat-key'];
+      alternatives['keying'] = ['composite-flat-key'];
     } else if (q.docIdSource === 'composite-flat-key') {
-      alternatives.keying = ['bucket-code'];
+      alternatives['keying'] = ['bucket-code'];
     }
   }
   return alternatives;

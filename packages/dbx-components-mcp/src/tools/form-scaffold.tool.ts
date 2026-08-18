@@ -12,8 +12,7 @@
  * The tool emits imports, a `FormConfig` wrapper, and an optional
  * `*Value` interface inferred from each entry's `produces` + `arrayOutput`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type FormFieldInfo, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

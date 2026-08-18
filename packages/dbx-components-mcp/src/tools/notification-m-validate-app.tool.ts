@@ -13,8 +13,7 @@
  *
  * Paths escaping the cwd are rejected.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type DbxTool } from './types.js';
 import { createTwoSideValidateTool } from './validate-tool.js';
 import { notificationValidateApp } from '@dereekb/dbx-cli/validate';

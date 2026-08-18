@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC, type Client } from 'oidc-provider';
 import { DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
 import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds, resolveTieredServerMaxSeconds, shouldRotateRefreshToken } from './oidc.session-ttl';
@@ -8,11 +8,12 @@ import { OidcServerFirestoreCollections } from '../model';
 import { GRANTABLE_MODEL_NAMES, createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
-import { DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA, oidcClientProviderProfileScopes } from '../profile';
+import { adminOnlyScopesForOidcProviderConfig, DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA, oidcClientProviderProfileScopes } from '../profile';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 import { cachedGetter, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
+import { buildOidcInteractionPolicy } from './oidc.interaction-policy';
 import { type DecodedIdToken } from 'firebase-admin/auth';
 import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
 
@@ -39,6 +40,7 @@ export interface ResolveLoginDurationTier {
  */
 @Injectable()
 export class OidcService {
+  private readonly _logger = new Logger(OidcService.name);
   private readonly _getProvider = cachedGetter(() => this._buildProvider());
 
   // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
@@ -338,7 +340,7 @@ export class OidcService {
         url: async (_ctx: unknown, interaction: Interaction) => {
           let baseUrl: WebsiteUrlWithPrefix;
 
-          const client_id = interaction.params.client_id as string;
+          const client_id = interaction.params['client_id'] as string;
 
           let paramsToEncode = {
             uid: interaction.uid,
@@ -354,12 +356,24 @@ export class OidcService {
             const client = await this.findClientPayload(client_id);
 
             if (client) {
-              const scopes = interaction.params.scope as OAuthInteractionScopes;
+              const requestedScopes = (interaction.params['scope'] as OAuthInteractionScopes).split(' ').filter(Boolean);
+
+              // Withhold admin-only scopes from a non-admin's consent screen. The consent gate
+              // hard-rejects a non-admin who consents to one, and the UI checkbox list is built from
+              // the scopes passed here — so offering them (pre-checked) turns "just deselect it" into
+              // a trap that ends an otherwise valid authorization in `access_denied`. Dropping them
+              // here means the user is never asked, the scope lands in the consent submit's `rejected`
+              // set, and the flow completes without it. The gate stays as defense in depth for a
+              // submit that tries to grant one anyway.
+              const isAdmin = await this._isAdminInteractionUser(interaction);
+              const adminOnlyScopes = isAdmin ? undefined : adminOnlyScopesForOidcProviderConfig(providerConfig);
+              const offeredScopes = adminOnlyScopes ? requestedScopes.filter((scope) => !adminOnlyScopes.has(scope)) : requestedScopes;
+              const scopes = offeredScopes.join(' ') as OAuthInteractionScopes;
 
               // Surface the scopes the client's provider profiles force-require so the consent UI can
-              // render them as required. Intersect with the actually-requested scopes so only visible
+              // render them as required. Intersect with the actually-offered scopes so only visible
               // scope rows are flagged.
-              const requestedScopeSet = new Set(scopes.split(' ').filter(Boolean));
+              const requestedScopeSet = new Set(offeredScopes);
               const { required } = oidcClientProviderProfileScopes(providerConfig.providerProfiles, client.dbx_provider_profiles ?? undefined);
               const requiredScopes = Array.from(required).filter((scope) => requestedScopeSet.has(scope));
 
@@ -490,10 +504,14 @@ export class OidcService {
     const adapterFactory = createAdapterFactory(this.collections, this.encryptionService);
     const providerConfiguration = this.buildProviderConfiguration([cookieKey]);
 
-    const { default: ProviderClass } = await import('oidc-provider');
+    const { default: ProviderClass, interactionPolicy } = await import('oidc-provider');
 
     const provider = new ProviderClass(config.issuer, {
       ...providerConfiguration,
+      // The policy is applied here rather than in buildProviderConfiguration() because it needs the
+      // `interactionPolicy` namespace off the dynamic (ESM-only) import, which that sync method has no
+      // access to. Spread the configured `interactions` so its `url` builder survives.
+      interactions: { ...providerConfiguration.interactions, policy: buildOidcInteractionPolicy(interactionPolicy) },
       adapter: adapterFactory,
       findAccount: findAccount as any,
       jwks: { keys: [signingKey] as any[] }
@@ -506,11 +524,56 @@ export class OidcService {
     // on resume → "authorization request has expired".
     provider.proxy = config.trustProxy ?? true;
 
+    this._attachProviderErrorLogging(provider);
+
     if (config.suppressBodyParserWarning) {
       // TODO: Will re-apply to logging in testing. Need to resolve.
       // suppressOidcProviderBodyParserWarning();
     }
 
     return provider;
+  }
+
+  /**
+   * Whether the user an interaction resolved to is an admin.
+   *
+   * Reads the same `isAdminUser` delegate the consent admin-only gate uses. Fails closed — an
+   * interaction with no resolved account (the login prompt, before authentication) or a delegate
+   * that does not implement the hook is treated as non-admin, so admin-only scopes are withheld
+   * unless admin status is positively established.
+   *
+   * @param interaction - The interaction whose session account should be checked.
+   * @returns True when the interaction's account resolves to an admin user.
+   */
+  private async _isAdminInteractionUser(interaction: Interaction): Promise<boolean> {
+    const accountId = interaction.session?.accountId;
+    return accountId ? (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
+  }
+
+  /**
+   * Wires oidc-provider's error events to the Nest logger.
+   *
+   * oidc-provider catches everything thrown inside its koa stack and renders the generic
+   * `{"error":"server_error","error_description":"oops! something went wrong"}` body. The real
+   * cause is only ever handed to the `server_error` event — with no listener it is dropped, and a
+   * failing authorization request is undiagnosable from either the response or the function logs.
+   *
+   * `grant.error` / `introspection.error` / `revocation.error` cover the token-endpoint equivalents.
+   * These are all genuine server-side faults; expected protocol rejections (`invalid_client`,
+   * `access_denied`, …) travel as normal responses and are NOT emitted here, so this stays quiet in
+   * healthy operation.
+   *
+   * @param provider - The constructed oidc-provider instance to attach listeners to.
+   */
+  private _attachProviderErrorLogging(provider: Provider): void {
+    const logError = (event: string) => (ctx: Maybe<KoaContextWithOIDC>, err: unknown) => {
+      const route = ctx ? `${ctx.method} ${ctx.path}` : 'unknown route';
+      this._logger.error(`oidc-provider ${event} on ${route}: ${err instanceof Error ? err.stack : String(err)}`);
+    };
+
+    provider.on('server_error', logError('server_error'));
+    provider.on('grant.error', logError('grant.error'));
+    provider.on('introspection.error', logError('introspection.error'));
+    provider.on('revocation.error', logError('revocation.error'));
   }
 }

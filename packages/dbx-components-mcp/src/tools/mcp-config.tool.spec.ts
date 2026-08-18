@@ -78,15 +78,15 @@ describe('dbx_mcp_config', () => {
 
       const scanRaw = await readFile(join(workspaceRoot, 'components/demo-shared/dbx-mcp.scan.json'), 'utf8');
       const scan = JSON.parse(scanRaw) as Record<string, unknown>;
-      expect(scan.version).toBe(1);
-      expect(scan.uiComponents).toBeDefined();
-      expect(scan.pipes).toBeDefined();
-      expect((scan.uiComponents as Record<string, unknown>).out).toBe('../../.tmp/dbx-mcp/demo-shared.ui.json');
+      expect(scan['version']).toBe(1);
+      expect(scan['uiComponents']).toBeDefined();
+      expect(scan['pipes']).toBeDefined();
+      expect((scan['uiComponents'] as Record<string, unknown>)['out']).toBe('../../.tmp/dbx-mcp/demo-shared.ui.json');
 
       const configRaw = await readFile(join(workspaceRoot, 'dbx-mcp.config.json'), 'utf8');
       const config = JSON.parse(configRaw) as Record<string, { sources: string[] }>;
-      expect(config.uiComponents.sources).toContain('.tmp/dbx-mcp/demo-shared.ui.json');
-      expect(config.pipes.sources).toContain('.tmp/dbx-mcp/demo-shared.pipes.json');
+      expect(config['uiComponents'].sources).toContain('.tmp/dbx-mcp/demo-shared.ui.json');
+      expect(config['pipes'].sources).toContain('.tmp/dbx-mcp/demo-shared.pipes.json');
     });
 
     it('dryRun does not write files', async () => {
@@ -110,12 +110,12 @@ describe('dbx_mcp_config', () => {
       await MCP_CONFIG_TOOL.run({ op: 'init', cwd: workspaceRoot });
       const scanRaw = await readFile(join(workspaceRoot, 'components/demo-shared/dbx-mcp.scan.json'), 'utf8');
       const scan = JSON.parse(scanRaw) as Record<string, Record<string, unknown>>;
-      expect(scan.uiComponents.out).toBe('custom-out.json');
-      expect((scan.uiComponents.include as string[])[0]).toBe('custom/**/*.ts');
+      expect(scan['uiComponents']['out']).toBe('custom-out.json');
+      expect((scan['uiComponents']['include'] as string[])[0]).toBe('custom/**/*.ts');
 
       const configRaw = await readFile(join(workspaceRoot, 'dbx-mcp.config.json'), 'utf8');
       const config = JSON.parse(configRaw) as Record<string, { sources: string[] }>;
-      expect(config.uiComponents.sources).toContain('components/demo-shared/custom-out.json');
+      expect(config['uiComponents'].sources).toContain('components/demo-shared/custom-out.json');
     });
 
     it('is idempotent — re-running yields no changes', async () => {

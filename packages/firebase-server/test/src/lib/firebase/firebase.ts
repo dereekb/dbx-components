@@ -79,8 +79,8 @@ export function generateNewProjectId() {
  */
 export function rollNewGCloudProjectEnvironmentVariable() {
   const projectId = generateNewProjectId();
-  process.env.GCLOUD_TEST_PROJECT = projectId;
-  process.env.GCLOUD_PROJECT = projectId;
+  process.env['GCLOUD_TEST_PROJECT'] = projectId;
+  process.env['GCLOUD_PROJECT'] = projectId;
   applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv();
   return projectId;
 }
@@ -93,7 +93,7 @@ export function rollNewGCloudProjectEnvironmentVariable() {
  * @returns The current value of `process.env.GCLOUD_PROJECT`, or `undefined` when unset.
  */
 export function getGCloudProjectId() {
-  return process.env.GCLOUD_PROJECT;
+  return process.env['GCLOUD_PROJECT'];
 }
 
 /**
@@ -106,7 +106,7 @@ export function getGCloudProjectId() {
  * @returns The current value of `process.env.GCLOUD_TEST_PROJECT`, or `undefined` when unset.
  */
 export function getGCloudTestProjectId() {
-  return process.env.GCLOUD_TEST_PROJECT;
+  return process.env['GCLOUD_TEST_PROJECT'];
 }
 
 /**
@@ -129,11 +129,11 @@ export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
     throw new Error('No test project id was available in the environment. Did you call initFirebaseAdminTestEnvironment() first?');
   }
 
-  const config: any = JSON.parse(process.env.FIREBASE_CONFIG ?? '{}');
+  const config: any = JSON.parse(process.env['FIREBASE_CONFIG'] ?? '{}');
   config.projectId = testProjectId;
 
-  process.env.FIREBASE_CONFIG = JSON.stringify(config);
-  process.env.GCLOUD_PROJECT = testProjectId; // re-apply to GCLOUD_PROJECT too
+  process.env['FIREBASE_CONFIG'] = JSON.stringify(config);
+  process.env['GCLOUD_PROJECT'] = testProjectId; // re-apply to GCLOUD_PROJECT too
 
   return testProjectId;
 }

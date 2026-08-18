@@ -33,8 +33,8 @@ describe('testWithMockItemFixture', () => {
         expect(isDate(result.data.lat)).toBe(true); // should set the default date
 
         let rawData = (await systemStateDocument.accessor.getWithConverter(null).then((x) => x.data())) as DocumentData;
-        expect(rawData.data.lat).toBeDefined();
-        expect(typeof rawData.data.lat).toBe('string');
+        expect(rawData['data'].lat).toBeDefined();
+        expect(typeof rawData['data'].lat).toBe('string');
 
         // then update it and pass the same data
         await systemStateDocument.update({
@@ -51,8 +51,8 @@ describe('testWithMockItemFixture', () => {
         // raw data should have saved a string still
         rawData = (await systemStateDocument.accessor.getWithConverter(null).then((x) => x.data())) as DocumentData;
 
-        expect(rawData.data.lat).toBeDefined();
-        expect(typeof rawData.data.lat).toBe('string');
+        expect(rawData['data'].lat).toBeDefined();
+        expect(typeof rawData['data'].lat).toBe('string');
       });
     });
   });

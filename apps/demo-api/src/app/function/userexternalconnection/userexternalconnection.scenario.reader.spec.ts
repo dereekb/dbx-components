@@ -88,7 +88,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               expect(result.credentials?.accessToken).toBe('access-token');
               expect(result.credentials?.refreshToken).toBe('refresh-token');
               // proves the whole credentials map survived the encrypted round trip, not just the token
-              expect(result.credentials?.extra?.accountsServer).toBe('https://accounts.zoho.com');
+              expect(result.credentials?.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
             });
 
             it('should return both halves as null for a provider the user never connected', async () => {
@@ -266,7 +266,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
 
                 expect(result.refreshToken).toBe('refresh-token');
-                expect(result.extra?.accountsServer).toBe('https://accounts.zoho.com');
+                expect(result.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
                 expect(result.externalAccountId).toBe('cal-123');
                 expect(result.label).toBe('user@example.com');
 
@@ -274,8 +274,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 const storedCredentials = (await uec.loadUserExternalConnectionPrivate())?.cr[CALCOM];
                 expect(storedCredentials?.accessToken).toBe('refreshed-access-token');
                 expect(storedCredentials?.refreshToken).toBe('refresh-token');
-                expect(storedCredentials?.extra?.accountsServer).toBe('https://accounts.zoho.com');
-                expect(storedCredentials?.extra?.apiDomain).toBe('https://www.zohoapis.com');
+                expect(storedCredentials?.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
+                expect(storedCredentials?.extra?.['apiDomain']).toBe('https://www.zohoapis.com');
               });
 
               it('should pass the stored credentials to the refresher', async () => {
@@ -287,7 +287,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 expect(refreshInputs).toHaveLength(1);
                 expect(refreshInputs[0].credentials.refreshToken).toBe('refresh-token');
-                expect(refreshInputs[0].credentials.extra?.accountsServer).toBe('https://accounts.zoho.com');
+                expect(refreshInputs[0].credentials.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
               });
 
               it('should mark the connection errored and rethrow when the refresh fails', async () => {
@@ -404,7 +404,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               const result = await f.userExternalConnectionReader.readerForUser({ uid: u.uid })(CALCOM).readUserExternalConnectionForProvider();
 
               expect(result.entry?.st).toBe('connected');
-              expect(result.credentials?.extra?.accountsServer).toBe('https://accounts.zoho.com');
+              expect(result.credentials?.extra?.['accountsServer']).toBe('https://accounts.zoho.com');
             });
 
             it('should carry the user and provider it was narrowed to', () => {

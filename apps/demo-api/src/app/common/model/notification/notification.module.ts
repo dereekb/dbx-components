@@ -8,6 +8,8 @@ import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoNotificationSendServiceFactory } from './notification.send.service';
 import { demoNotificationInitServerActionsContextConfig } from './notification.init';
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
+import { OPENROUTER_RUN_TASK_SERVICE_TOKEN } from '@dereekb/openrouter/firebase-server';
+import { DemoApiOpenRouterDependencyModule } from '../../../api/openrouter';
 
 /**
  * The demo's delivery health check windows.
@@ -29,7 +31,10 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
  * Dependencies for the NotificationModule
  */
 @Module({
-  imports: [DemoApiActionModule],
+  // DemoApiOpenRouterDependencyModule supplies the run-task queue the `resume` storage-file purpose
+  // enqueues into. Imported here rather than in the model module because the task service is what needs
+  // it, and the task service is built here.
+  imports: [DemoApiActionModule, DemoApiOpenRouterDependencyModule],
   providers: [
     {
       provide: NotificationSendService,
@@ -39,7 +44,7 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
     {
       provide: NotificationTaskService,
       useFactory: demoNotificationTaskServiceFactory,
-      inject: [DemoFirebaseServerActionsContext]
+      inject: [DemoFirebaseServerActionsContext, OPENROUTER_RUN_TASK_SERVICE_TOKEN]
     },
     {
       provide: BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN,

@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestEnum } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { createEnumInfoTool, resolveEnumInfoOutput, ENUM_INFO_TOOL_NAME, type EnumInfoToolOutput } from './mcp.tool.enum-info';
@@ -54,7 +54,7 @@ describe('createEnumInfoTool', () => {
     });
 
     it('singularizes the description for one enum', () => {
-      const tool = createEnumInfoTool({ enums: { DayOfWeek: ENUMS.DayOfWeek } });
+      const tool = createEnumInfoTool({ enums: { DayOfWeek: ENUMS['DayOfWeek'] } });
       expect(tool.description).toContain('1 enum');
       expect(tool.description).not.toContain('1 enums');
     });

@@ -93,7 +93,7 @@ async function readEntry(input: ReadEntryInput): Promise<AppEntry | undefined> {
   }
   let result: AppEntry | undefined;
   if (!readError && isRecord(parsed)) {
-    const name = typeof parsed.name === 'string' ? parsed.name : (input.projectRoot.split(sep).pop() ?? input.projectRoot);
+    const name = typeof parsed['name'] === 'string' ? parsed['name'] : (input.projectRoot.split(sep).pop() ?? input.projectRoot);
     const ports = collectPorts(parsed);
     result = {
       name,
@@ -105,21 +105,21 @@ async function readEntry(input: ReadEntryInput): Promise<AppEntry | undefined> {
 }
 
 function collectPorts(projectJson: Record<string, unknown>): readonly number[] {
-  const targets = isRecord(projectJson.targets) ? projectJson.targets : undefined;
-  const serve = targets && isRecord(targets.serve) ? targets.serve : undefined;
+  const targets = isRecord(projectJson['targets']) ? projectJson['targets'] : undefined;
+  const serve = targets && isRecord(targets['serve']) ? targets['serve'] : undefined;
   const out = new Set<number>();
   if (!serve) {
     return [];
   }
-  const options = isRecord(serve.options) ? serve.options : undefined;
-  if (options && typeof options.port === 'number') {
-    out.add(options.port);
+  const options = isRecord(serve['options']) ? serve['options'] : undefined;
+  if (options && typeof options['port'] === 'number') {
+    out.add(options['port']);
   }
-  const configurations = isRecord(serve.configurations) ? serve.configurations : undefined;
+  const configurations = isRecord(serve['configurations']) ? serve['configurations'] : undefined;
   if (configurations) {
     for (const value of Object.values(configurations)) {
-      if (isRecord(value) && typeof value.port === 'number') {
-        out.add(value.port);
+      if (isRecord(value) && typeof value['port'] === 'number') {
+        out.add(value['port']);
       }
     }
   }

@@ -119,6 +119,33 @@ export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: P
 }
 
 /**
+ * Checks whether the value is a "plain" object, meaning an object literal or an object created with a
+ * null prototype.
+ *
+ * Arrays, `Date`, `RegExp`, `Map`, `Set`, and class instances are NOT plain objects. This is the check
+ * to use before recursing into a value's keys: a class instance's keys are an implementation detail and
+ * copying them key-by-key produces a lifeless imitation of the original (a `Date` becomes `{}`).
+ *
+ * @param value - The value to check.
+ * @returns `true` if the value is an object literal or has a null prototype.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilTags object, pojo, plain, literal, type-guard, check
+ * @dbxUtilRelated object-has-no-keys, copy-value-deep
+ */
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  let result = false;
+
+  if (value != null && typeof value === 'object') {
+    const proto = Object.getPrototypeOf(value);
+    result = proto === Object.prototype || proto === null;
+  }
+
+  return result;
+}
+
+/**
  * Returns a copy of the input object.
  */
 export type CopyObjectFunction<T> = (input: T) => T;

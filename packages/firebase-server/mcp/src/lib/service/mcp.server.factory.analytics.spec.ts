@@ -6,7 +6,7 @@ import { McpServerFactoryService } from './mcp.server.factory';
 import { MCP_MANIFEST_VERSION } from './mcp.manifest';
 import { DEFAULT_MCP_SERVER_INSTRUCTIONS, type McpModuleConfig } from '../mcp.config';
 import { type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
-import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { dispatchMcpDiscover, dispatchMcpToolCall } from './mcp.spec-driver';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type ModelApiDetailsResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 
@@ -85,10 +85,7 @@ function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Part
 }
 
 async function callTool(factory: McpServerFactoryService, name: string, options: { args?: Record<string, unknown>; auth?: FirebaseServerAuthData } = {}): Promise<{ isError?: boolean }> {
-  const server = factory.createServer({ rawRequest: {} as any, auth: options.auth });
-  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
-  const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
-  return (await callHandler({ method: 'tools/call', params: { name, arguments: options.args ?? {} } }, {} as any)) as { isError?: boolean };
+  return dispatchMcpToolCall<{ isError?: boolean }>({ factory, ctx: { auth: options.auth }, name, args: options.args ?? {} });
 }
 
 describe('McpServerFactoryService MCP analytics', () => {
@@ -264,17 +261,15 @@ describe('McpServerFactoryService MCP analytics reason parameter', () => {
 });
 
 describe('McpServerFactoryService configurable instructions', () => {
-  it('uses the default instructions when serverInstructions is unset', () => {
+  it('uses the default instructions when serverInstructions is unset', async () => {
     const factory = makeFactory({ models: {} });
-    const server = factory.createServer({ rawRequest: {} as any });
-    const instructions = (server.server as any)._instructions as string;
-    expect(instructions).toBe(DEFAULT_MCP_SERVER_INSTRUCTIONS);
+    const discover = await dispatchMcpDiscover(factory);
+    expect(discover.instructions).toBe(DEFAULT_MCP_SERVER_INSTRUCTIONS);
   });
 
-  it('uses the serverInstructions override when provided', () => {
+  it('uses the serverInstructions override when provided', async () => {
     const factory = makeFactory({ models: {} }, { config: { serverInstructions: 'custom instructions text' } });
-    const server = factory.createServer({ rawRequest: {} as any });
-    const instructions = (server.server as any)._instructions as string;
-    expect(instructions).toBe('custom instructions text');
+    const discover = await dispatchMcpDiscover(factory);
+    expect(discover.instructions).toBe('custom instructions text');
   });
 });

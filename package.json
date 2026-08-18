@@ -28,7 +28,8 @@
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/pubsub": "^5.3.0",
     "@google-cloud/storage": "^7.19.0",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
@@ -45,7 +46,8 @@
     "@ngrx/operators": "^21.1.0",
     "@ngrx/store": "^21.1.0",
     "@nx/devkit": "22.7.0",
-    "@openrouter/sdk": "^0.12.79",
+    "@openrouter/agent": "^0.9.0",
+    "@openrouter/sdk": "^1.2.26",
     "@placemarkio/geo-viewport": "^1.0.2",
     "@typeform/api-client": "^2.10.2",
     "@uirouter/angular": "21.0.0",
@@ -83,14 +85,14 @@
     "oidc-provider": "^9.8.2",
     "openai": "^6.34.0",
     "raw-body": "^3.0.2",
+    "rollup": "4.62.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxjs": "^7.8.2",
     "sharp": "0.35.2",
     "stripe": "^20.4.1",
     "ts-essentials": "^10.2.0",
     "tslib": "^2.8.1",
-    "twilio": "^6.0.2",
-    "rollup": "4.62.0"
+    "twilio": "^6.0.2"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "~2.5.0",
@@ -211,7 +213,8 @@
   },
   "overrides": {
     "@ng-forge/dynamic-forms": "$@ng-forge/dynamic-forms",
-    "@ng-forge/dynamic-forms-material": "$@ng-forge/dynamic-forms-material"
+    "@ng-forge/dynamic-forms-material": "$@ng-forge/dynamic-forms-material",
+    "@openrouter/sdk": "$@openrouter/sdk"
   },
   "engines": {
     "node": ">=24.0.0"

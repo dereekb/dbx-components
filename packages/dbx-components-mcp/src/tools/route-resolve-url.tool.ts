@@ -11,8 +11,7 @@
  * resolved component file, ancestor chain, declared params/resolves, and
  * sibling states for context when adding adjacent pages.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { resolveUrlToState, type ResolveUrlMatch, type ResolveUrlMultiple, type ResolveUrlNotFound, type ResolveUrlResult } from './route/resolve-url.js';
 import { formatMissingRouteModelLine, formatPageModelLine } from './route/page-models.js';

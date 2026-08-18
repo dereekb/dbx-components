@@ -134,6 +134,11 @@ service cloud.firestore {
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 
+    // NOTE: there is deliberately NO match block for /orp (OpenRouterPrompt), /orpv
+    // (OpenRouterPromptVersion) or /orrt (OpenRouterRunTask). They are server-only models: prompts are
+    // authored through the admin-gated callable model API, and a run task carries the model's raw input
+    // and output. The implicit default-deny is what protects them; a block here could only weaken that.
+
     // MARK: OIDC Adapter
     match /oidc_e/{entryId} {
       // Owners can read their own Client entries (type == 'Client' && o = 'pr/<uid>')

@@ -183,9 +183,9 @@ async function readTsconfigPaths(workspaceRoot: string): Promise<PackagePathsMap
   const tsconfigPath = join(workspaceRoot, TSCONFIG_BASE);
   const json = await readJsonFileSafe(tsconfigPath, stripJsonComments);
   let result: PackagePathsMap | undefined;
-  if (isRecord(json) && isRecord(json.compilerOptions) && isRecord(json.compilerOptions.paths)) {
+  if (isRecord(json) && isRecord(json['compilerOptions']) && isRecord(json['compilerOptions']['paths'])) {
     const entries = new Map<string, string>();
-    for (const [alias, target] of Object.entries(json.compilerOptions.paths)) {
+    for (const [alias, target] of Object.entries(json['compilerOptions']['paths'])) {
       if (!Array.isArray(target) || target.length === 0) continue;
       const first = target[0];
       if (typeof first !== 'string') continue;

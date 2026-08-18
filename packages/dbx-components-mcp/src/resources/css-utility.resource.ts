@@ -5,8 +5,7 @@
  * read-only resources for clients that prefer browsing data over calling
  * the `dbx_css_class_lookup` tool.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { CSS_UTILITY_ROLES, type CssUtilityRoleValue, type CssUtilityRegistry } from '@dereekb/dbx-cli';
 
 const CSS_UTILITY_URI = 'dbx://css-utility/entries';
@@ -74,7 +73,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawSlug = variables.slug;
+      const rawSlug = variables['slug'];
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
       const entry = slug === undefined ? undefined : registry.findByName(slug);
       let text: string;
@@ -106,7 +105,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawRole = variables.role;
+      const rawRole = variables['role'];
       const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole) as CssUtilityRoleValue | undefined;
       const valid = role !== undefined && (CSS_UTILITY_ROLES as readonly string[]).includes(role);
       let text: string;
@@ -137,7 +136,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawSource = variables.source;
+      const rawSource = variables['source'];
       const source = Array.isArray(rawSource) ? rawSource[0] : rawSource;
       let text: string;
       if (source === undefined) {
@@ -167,7 +166,7 @@ export function registerCssUtilityResource(server: McpServer, options: RegisterC
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawSlug = variables.slug;
+      const rawSlug = variables['slug'];
       const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
       let text: string;
       if (slug === undefined) {

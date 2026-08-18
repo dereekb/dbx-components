@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type ModelAccessMultiReadResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
@@ -139,8 +139,8 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
 }
 
 function parseModelGetInput(args: Record<string, unknown>): ModelGetToolInput {
-  const modelType = args.modelType;
-  const keys = args.keys;
+  const modelType = args['modelType'];
+  const keys = args['keys'];
 
   if (typeof modelType !== 'string' || modelType.length === 0) {
     throw new Error('model-get: "modelType" is required and must be a non-empty string.');

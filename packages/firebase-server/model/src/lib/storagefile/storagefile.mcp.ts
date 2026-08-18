@@ -61,7 +61,7 @@ function enrichSignedUploadUrlInputSchema(defaultInputSchema: Maybe<object>, pur
 
   if (defaultInputSchema != null && typeof defaultInputSchema === 'object') {
     const base = defaultInputSchema as { readonly properties?: Record<string, unknown> };
-    const purposeProperty = base.properties?.purpose;
+    const purposeProperty = base.properties?.['purpose'];
 
     if (purposeProperty != null && typeof purposeProperty === 'object') {
       const quotedPurposes = purposeKeys.map((purpose) => `"${purpose}"`).join(', ');

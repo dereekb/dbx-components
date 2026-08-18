@@ -12,8 +12,7 @@
  *   4. Class name match → entry
  *   5. Fuzzy substring → "did you mean…"
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type Maybe } from '@dereekb/util';
 import type { FilterEntryInfo, FilterRegistry } from '@dereekb/dbx-cli';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';

@@ -17,13 +17,38 @@ export interface DemoDevelopmentExampleResult {
 
 export const DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER = 'example';
 
+/**
+ * Seeds the app's OpenRouter prompts. Idempotent.
+ *
+ * A prompt lives in Firestore rather than in a vendor dashboard, so a fresh environment (or a fresh
+ * emulator run) has none until something writes them.
+ */
+export const DEMO_APP_SEED_OPENROUTER_PROMPTS_DEVELOPMENT_FUNCTION_SPECIFIER = 'seedOpenRouterPrompts';
+
+export interface DemoDevelopmentSeedOpenRouterPromptsParams {}
+
+export const demoDevelopmentSeedOpenRouterPromptsParamsType = type({}) as Type<DemoDevelopmentSeedOpenRouterPromptsParams>;
+
+export interface DemoDevelopmentSeedOpenRouterPromptsResult {
+  /**
+   * Number of prompts whose declared version this call published to the store.
+   *
+   * A single count rather than the richer server-side result: this component is shared with the browser
+   * build, so it cannot alias `SeedOpenRouterPromptsResult` from `@dereekb/openrouter/firebase-server`.
+   * The full counts stay available server-side, for schedules and tests.
+   */
+  readonly promptsSynced: number;
+}
+
 export type DemoDevelopmentFunctionTypeMap = FirebaseDevelopmentFunctionTypeMap & {
   [DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER]: [DemoDevelopmentExampleParams, DemoDevelopmentExampleResult];
+  [DEMO_APP_SEED_OPENROUTER_PROMPTS_DEVELOPMENT_FUNCTION_SPECIFIER]: [DemoDevelopmentSeedOpenRouterPromptsParams, DemoDevelopmentSeedOpenRouterPromptsResult];
 };
 
 export const demoDevelopmentFunctionsConfig: DevelopmentFirebaseFunctionConfigMap<DemoDevelopmentFunctionTypeMap> = {
   scheduledFunction: null,
-  example: null
+  example: null,
+  seedOpenRouterPrompts: null
 };
 
 /**
@@ -36,4 +61,5 @@ export const demoDevelopmentFunctionMap = developmentFirebaseFunctionMapFactory<
  */
 export abstract class DemoDevelopmentFunctions extends FirebaseDevelopmentFunctions implements DevelopmentFirebaseFunctionMap<DemoDevelopmentFunctionTypeMap> {
   abstract example: FirebaseFunctionMapFunction<DemoDevelopmentFunctionTypeMap, 'example'>;
+  abstract seedOpenRouterPrompts: FirebaseFunctionMapFunction<DemoDevelopmentFunctionTypeMap, 'seedOpenRouterPrompts'>;
 }

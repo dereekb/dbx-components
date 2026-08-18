@@ -21,7 +21,7 @@
 
 import { access } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { applyIdempotency, formatResult, scaffoldArtifact, type ArtifactKind, type ScaffoldArtifactInput } from './artifact-scaffold/index.js';

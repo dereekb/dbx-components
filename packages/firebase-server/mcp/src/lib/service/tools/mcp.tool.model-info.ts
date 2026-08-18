@@ -1,5 +1,5 @@
 import { type Maybe, makeValuesGroupMap } from '@dereekb/util';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestEnum, type McpManifestModelEntry, type McpManifestModelField } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
@@ -614,7 +614,7 @@ export const ENUM_TABLE_SCHEMA = {
 } as const;
 
 // MCP's `tools/list` validator requires `outputSchema.type === 'object'` at the root
-// (see @modelcontextprotocol/sdk Zod schema), so the variants are expressed via a top-level
+// (see the MCP SDK's `ToolSchema`), so the variants are expressed via a top-level
 // object whose nested `oneOf` discriminates by the `mode` literal.
 const MODEL_INFO_OUTPUT_SCHEMA = {
   type: 'object',

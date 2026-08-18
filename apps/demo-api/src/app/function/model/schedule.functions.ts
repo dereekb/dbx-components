@@ -2,6 +2,7 @@ import { exampleUsageOfSchedule, hourlySchedule } from '../example/example.sched
 import { onScheduleWithDemoNestContext } from '../function.context';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
 import { storageFileHourlyUpdateSchedule } from '../storagefile/storagefile.schedule';
+import { openRouterRunTaskExpirationSweepSchedule, openRouterRunTaskSweepSchedule } from '../openrouter/openrouter.schedule';
 
 // MARK: Example
 export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
@@ -14,5 +15,7 @@ export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
     await hourlySchedule(x);
     await storageFileHourlyUpdateSchedule(x);
     await notificationHourlyUpdateSchedule(x);
+    await openRouterRunTaskSweepSchedule(x);
+    await openRouterRunTaskExpirationSweepSchedule(x);
   }
 );

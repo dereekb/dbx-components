@@ -4,7 +4,7 @@ import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type Request } from 'express';
-import { type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/server';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
 import { classifyVisibility, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
 

@@ -15,8 +15,7 @@
  * Heuristic discovery comes from `discover-downstream-packages.ts`; the four
  * ops are split into per-op modules under `./mcp-config/`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { resolve } from 'node:path';

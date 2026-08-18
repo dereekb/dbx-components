@@ -17,6 +17,7 @@
     "resolveJsonModule": true,
     "noUnusedLocals": false,
     "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
     "strict": true,
     "baseUrl": ".",
     "paths": {
@@ -79,6 +80,9 @@
       "@dereekb/nestjs/twilio": ["packages/nestjs/twilio/src/index.ts"],
       "@dereekb/nestjs/typeform": ["packages/nestjs/typeform/src/index.ts"],
       "@dereekb/nestjs/eslint": ["packages/nestjs/eslint/src/index.ts"],
+      "@dereekb/openrouter": ["packages/openrouter/src/index.ts"],
+      "@dereekb/openrouter/firebase": ["packages/openrouter/firebase/src/index.ts"],
+      "@dereekb/openrouter/firebase-server": ["packages/openrouter/firebase-server/src/index.ts"],
       "@dereekb/rxjs": ["packages/rxjs/src/index.ts"],
       "@dereekb/util": ["packages/util/src/index.ts"],
       "@dereekb/util/eslint": ["packages/util/eslint/src/index.ts"],

@@ -366,7 +366,7 @@ demoApiFunctionContextFactory((f) => {
               const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.RECIPIENT_DISABLED);
 
               expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-              expect(issue?.d?.scope).toBe('global');
+              expect(issue?.d?.['scope']).toBe('global');
             });
 
             it('should report the default config flag as an account-wide problem', async () => {
@@ -376,7 +376,7 @@ demoApiFunctionContextFactory((f) => {
               const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.RECIPIENT_DISABLED);
 
               expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-              expect(issue?.d?.scope).toBe('default');
+              expect(issue?.d?.['scope']).toBe('default');
             });
 
             it('should report each disabled scope separately', async () => {
@@ -385,7 +385,7 @@ demoApiFunctionContextFactory((f) => {
               const { healthCheck } = await runHealthCheck();
               const disabledIssues = healthCheck.is.filter((x) => x.c === KnownNotificationHealthCheckIssueCode.RECIPIENT_DISABLED);
 
-              expect(disabledIssues.map((x) => x.d?.scope)).toEqual(expect.arrayContaining(['global', 'default']));
+              expect(disabledIssues.map((x) => x.d?.['scope'])).toEqual(expect.arrayContaining(['global', 'default']));
             });
           });
 
@@ -398,7 +398,7 @@ demoApiFunctionContextFactory((f) => {
               const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.NOTIFICATION_BOX_EXCLUSIONS);
 
               expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-              expect(issue?.d?.exclusions).toEqual(['guestbook']);
+              expect(issue?.d?.['exclusions']).toEqual(['guestbook']);
             });
           });
 
@@ -439,7 +439,7 @@ demoApiFunctionContextFactory((f) => {
               const issue = issueForCode(textResult?.is ?? [], KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE);
 
               expect(issue?.s).toBe(NotificationHealthCheckStatus.SKIPPED);
-              expect(issue?.d?.method).toBe(NotificationDeliveryMethod.TEXT);
+              expect(issue?.d?.['method']).toBe(NotificationDeliveryMethod.TEXT);
               // there is nothing the user can do about a provider integration that does not exist
               expect(issue?.f).toBeUndefined();
             });
@@ -456,7 +456,7 @@ demoApiFunctionContextFactory((f) => {
               const issue = issueForCode(textResult?.is ?? [], KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE);
 
               expect(issue?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
-              expect(issue?.d?.error).toContain('provider unreachable');
+              expect(issue?.d?.['error']).toContain('provider unreachable');
             });
 
             describe('probe accounting', () => {
@@ -820,7 +820,7 @@ demoApiFunctionContextFactory((f) => {
                 const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_NOT_READY);
 
                 expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-                expect(issue?.d?.notificationBoxIds).toEqual([nb.documentId]);
+                expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
               });
 
               it('should report a broken subscription instead of a not-ready one', async () => {
@@ -830,7 +830,7 @@ demoApiFunctionContextFactory((f) => {
                 const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_BROKEN);
 
                 expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
-                expect(issue?.d?.notificationBoxIds).toEqual([nb.documentId]);
+                expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
                 // a broken box is reported as broken only, even though it is also uninitialized
                 expect(issueCodes(healthCheck.is)).not.toContain(KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_NOT_READY);
               });
@@ -843,7 +843,7 @@ demoApiFunctionContextFactory((f) => {
                 const issue = issueForCode(healthCheck.is, KnownNotificationHealthCheckIssueCode.NEEDS_CONFIG_SYNC);
 
                 expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-                expect(issue?.d?.notificationBoxIds).toEqual([nb.documentId]);
+                expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
               });
 
               it('should report a delivery method switched off for one of the subscriptions', async () => {
@@ -854,7 +854,7 @@ demoApiFunctionContextFactory((f) => {
                 const issue = issueForCode(textResult?.is ?? [], KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX);
 
                 expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
-                expect(issue?.d?.notificationBoxIds).toEqual([nb.documentId]);
+                expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
               });
 
               it('should drop every subscription finding when subscription checks are skipped', async () => {

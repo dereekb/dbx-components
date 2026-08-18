@@ -18,9 +18,9 @@ import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { userAvatarUploadsFilePath } from 'demo-firebase';
+import { ProfileResumeState, USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
+import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDistancePipe } from '@dereekb/dbx-core';
 
 /**
  * The signed-in user's own profile page.
@@ -31,6 +31,7 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
   imports: [
+    TimeDistancePipe,
     DbxLoadingProgressComponent,
     DemoProfileUsernameFormComponent,
     DemoProfileFormComponent,
@@ -91,6 +92,27 @@ export class DemoProfileViewComponent implements OnInit {
     }
   });
 
+  readonly resumeMaxFileSizeKb = USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES / 1024;
+
+  /**
+   * The template cannot reach module scope, so the enum it switches on is exposed here.
+   */
+  readonly profileResumeState = ProfileResumeState;
+
+  readonly resumeUploadHandler: StorageFileUploadHandler = storageFileUploadHandler({
+    storageService: this.storageService,
+    storageFileUploadConfigFactory: (_file: File): StorageFileUploadConfig => {
+      const uid = this.userIdentifierSignal();
+      // A user has one resume, so the upload always replaces the same slot — and that fixed file name
+      // is what the API matches on to pick the resume initializer.
+      const storagePath = userResumeFileUploadsFilePath(uid);
+
+      return {
+        storagePath
+      };
+    }
+  });
+
   readonly avatarFileModifierFn: DbxFirebaseStorageFileUploadFileModifier = dbxFirebaseStorageFileImageCompressionFileModifier({
     compression: {
       maxDimension: 1280,
@@ -108,6 +130,12 @@ export class DemoProfileViewComponent implements OnInit {
 
   readonly avatarUrlSignal = toSignal(this.avatarUrl$);
   readonly avatarStorageFileKeySignal = toSignal(this.avatarStorageFileKey$);
+
+  /**
+   * The upload initializer opens this as CHECKING and the `retrieve` subtask closes it out, so the
+   * section follows the whole check by streaming the profile it already loads.
+   */
+  readonly resumeSignal = toSignal(this.profileData$.pipe(map((x) => x.resume)));
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 

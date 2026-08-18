@@ -10,8 +10,7 @@
  * `depth='full'` lists the parent chain, params, resolves, siblings, and
  * children. `depth='brief'` shows only the headline.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type RouteManifestModelEntry, type RouteTreeNode } from '@dereekb/dbx-cli';
 import { loadRouteContext } from './route/load-context.js';

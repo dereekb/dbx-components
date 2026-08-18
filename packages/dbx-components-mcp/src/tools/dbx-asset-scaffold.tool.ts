@@ -17,8 +17,7 @@
  * fragment emits a fluent member call instead of a fresh
  * `localAsset` / `remoteAsset` call.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

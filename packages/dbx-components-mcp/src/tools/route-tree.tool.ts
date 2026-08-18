@@ -14,8 +14,7 @@
  *   • `depth_limit` — max tree depth to render.
  *   • `cwd`      — overrides server cwd; constrained to descend the cwd.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { loadRouteContext } from './route/load-context.js';
 import { formatRouteTree, type RouteTreeFormat } from './route/format.js';

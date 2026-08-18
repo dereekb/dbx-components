@@ -26,6 +26,38 @@ interface StartAuthRequestWithResourceInput {
   readonly scope: string;
 }
 
+/**
+ * Input for the service-token suite's `driveServiceFlow` helper.
+ */
+interface DriveServiceFlowInput {
+  readonly uid: string;
+  readonly clientId: string;
+  readonly scope: string;
+  /**
+   * The scopes the simulated consent UI submits as still-checked. Omitted entirely means "grant
+   * everything requested".
+   */
+  readonly grantedOIDCScopes?: readonly string[];
+  readonly extraAuthParams?: Record<string, string | number>;
+}
+
+/**
+ * Result of driving the full auth-code flow via `driveServiceFlow`.
+ */
+interface DriveServiceFlowResult {
+  /**
+   * The final callback URL, carrying either `code` or `error`.
+   */
+  readonly callbackUrl: URL;
+  /**
+   * The URL of the consent SCREEN, built by the provider's `interactions.url`. Its `scopes` param is
+   * the checkbox list the UI renders, so it is what admin-only withholding acts on.
+   */
+  readonly consentRedirectUrl: URL;
+  readonly cookieHeader: string;
+  readonly codeVerifier: string;
+}
+
 async function startAuthRequestWithResourceHelper(input: StartAuthRequestWithResourceInput): Promise<request.Response> {
   const { app, oidcClientService, resource, scope } = input;
   const { client_id } = await oidcClientService.createClient({
@@ -158,6 +190,42 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         expect(res.body.authorization_servers).toEqual([oidcModuleConfig.issuer]);
         expect(res.body.resource).toBe(mcpModuleConfig.mcpUrl);
+      });
+
+      it('should serve the same document at the RFC 9728 §3.1 path-suffixed URL', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource/mcp').expect(200);
+
+        expect(res.body.authorization_servers).toEqual([oidcModuleConfig.issuer]);
+        expect(res.body.resource).toBe(mcpModuleConfig.mcpUrl);
+      });
+
+      it('should advertise the scopes an arbitrary client can request', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
+
+        expect(res.body.scopes_supported).toContain('openid');
+        expect(res.body.scopes_supported).toContain('demo');
+        expect(res.body.scopes_supported).toContain('model.read');
+      });
+
+      // A dynamic-registration MCP client requests this list verbatim, and the consent unlock gate
+      // judges the REQUEST — so advertising `lms`/`reports` (unlocked only by an assigned provider
+      // profile) ended every such client's flow in `access_denied` with no way to deselect them.
+      // The issuer's own discovery document still advertises them ('still lists the gated scopes in
+      // discovery scopes_supported' below); only this resource-level list is narrowed.
+      it('should omit the provider-profile-gated scopes a fresh client cannot obtain', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
+
+        expect(res.body.scopes_supported).not.toContain('lms');
+        expect(res.body.scopes_supported).not.toContain('reports');
+      });
+
+      // Dropped by the demo's own `scopesSupported` filter rather than the framework: a service token
+      // is admin-only and makes the grant long-lived + non-rotating, which an interactive MCP
+      // connection should not be asking for.
+      it('should omit the admin-only service token scope', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
+
+        expect(res.body.scopes_supported).not.toContain('token.service');
       });
     });
   });
@@ -423,7 +491,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(clientData!.type).toBe('Client');
 
         const storedPayload = clientData!.payload as Record<string, unknown>;
-        expect(storedPayload.client_id).toBe(client_id);
+        expect(storedPayload['client_id']).toBe(client_id);
         // selectiveFieldEncryptor strips the original plaintext key and stores the ciphertext
         // under the `$<field>` prefixed key. So `client_secret` must be absent and
         // `$client_secret` must hold the encrypted value.
@@ -1877,7 +1945,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(tokenRes.body.id_token).toBeDefined();
 
             const idTokenClaims = decodeJwt(tokenRes.body.id_token as string);
-            expect(idTokenClaims.nonce).toBe(requestNonce);
+            expect(idTokenClaims['nonce']).toBe(requestNonce);
           });
         });
 
@@ -2026,7 +2094,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
          * Drives the full auth-code flow (auth → login → consent[approved] → callback) for a given
          * user, returning the final callback URL (which carries either `code` or `error`).
          */
-        async function driveServiceFlow(input: { readonly uid: string; readonly clientId: string; readonly scope: string; readonly grantedOIDCScopes?: readonly string[]; readonly extraAuthParams?: Record<string, string | number> }): Promise<{ callbackUrl: URL; cookieHeader: string; codeVerifier: string }> {
+        async function driveServiceFlow(input: DriveServiceFlowInput): Promise<DriveServiceFlowResult> {
           const server = app.getHttpServer();
           const cookieJar = new Map<string, string>();
 
@@ -2069,10 +2137,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
           expect(consentRedirectRes.status).toBe(303);
           collectCookies(consentRedirectRes);
-          const consentUid = new URL(consentRedirectRes.headers['location'], 'http://localhost').searchParams.get('uid')!;
+          const consentRedirectUrl = new URL(consentRedirectRes.headers['location'], 'http://localhost');
+          const consentUid = consentRedirectUrl.searchParams.get('uid')!;
 
-          // Omitting grantedOIDCScopes entirely means "grant everything requested"; passing it mirrors the
-          // consent UI submitting only the checkboxes the user left selected.
           const consentRes = await request(server)
             .post(`/interaction/${consentUid}/consent`)
             .set('Cookie', cookieHeader())
@@ -2084,7 +2151,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
           expect(callbackRedirectRes.status).toBe(303);
 
-          return { callbackUrl: new URL(callbackRedirectRes.headers['location']), cookieHeader: cookieHeader(), codeVerifier };
+          return { callbackUrl: new URL(callbackRedirectRes.headers['location']), consentRedirectUrl, cookieHeader: cookieHeader(), codeVerifier };
         }
 
         /**
@@ -2194,6 +2261,40 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           // longer than the non-admin ceiling would mean the tier was picked from the request instead.
           const grantTtl = await maxGrantTtlForUid(nonAdmin.uid);
           expect(grantTtl).toBeLessThanOrEqual(45 * ONE_DAY + SLACK_SECONDS);
+        });
+
+        // Deselecting is the escape hatch, but it only helps a user who notices the checkbox — the
+        // consent UI renders every offered scope pre-checked, so a non-admin who just clicks Allow
+        // hits the gate. Withholding the scope from the screen entirely means they are never asked.
+        it('non-admin: the consent screen is not offered the admin-only scope at all', async () => {
+          const { client_id } = await oidcClientService.createClient({
+            client_name: 'svc-nonadmin-not-offered',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { consentRedirectUrl } = await driveServiceFlow({
+            uid: nonAdmin.uid,
+            clientId: client_id,
+            scope: 'openid email demo offline_access token.service',
+            grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access']
+          });
+
+          const offeredScopes = (consentRedirectUrl.searchParams.get('scopes') ?? '').split(' ');
+          expect(offeredScopes).not.toContain('token.service');
+          expect(offeredScopes).toContain('demo');
+        });
+
+        it('admin: the consent screen is still offered the admin-only scope', async () => {
+          const { client_id } = await oidcClientService.createClient({
+            client_name: 'svc-admin-offered',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { consentRedirectUrl } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service' });
+
+          expect((consentRedirectUrl.searchParams.get('scopes') ?? '').split(' ')).toContain('token.service');
         });
 
         it('admin normal login clamps to the 90-day ceiling', async () => {

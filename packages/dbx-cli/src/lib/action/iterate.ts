@@ -197,11 +197,11 @@ function _defaultBuildRequestData<TParams>(params: TParams, state: IterateDbxCli
   const base = { ...(params as Record<string, unknown>) };
 
   if (state.cursorDocumentKey != null) {
-    base.cursorDocumentKey = state.cursorDocumentKey;
+    base['cursorDocumentKey'] = state.cursorDocumentKey;
   }
 
   if (limit != null) {
-    base.limit = limit;
+    base['limit'] = limit;
   }
 
   return base as TParams;

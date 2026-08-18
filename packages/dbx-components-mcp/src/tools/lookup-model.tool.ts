@@ -7,13 +7,12 @@
  * models — plus any downstream `<x>-firebase` packages discovered under
  * the caller's workspace.
  *
- * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
- * API (not `McpServer.registerTool`) because registerTool requires a zod
- * schema — the workspace standard is arktype. Input validation happens in
- * {@link parseLookupModelArgs} using arktype.
+ * Registered via the low-level `server.setRequestHandler('tools/call', ...)`
+ * API rather than `McpServer.registerTool` — see the schema-strategy note in
+ * `tools/index.ts`. Input validation happens in {@link parseLookupModelArgs}
+ * using arktype.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { formatFirebaseModelCatalog, formatFirebaseModelEntry, formatFirebaseStoreShapeTaxonomy } from './firebase-lookup.formatter.js';

@@ -6,8 +6,7 @@
  * (plus any downstream packages) — as read-only resources for clients
  * that prefer browsing data over calling `dbx_util_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { UtilRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
@@ -86,7 +85,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Util'
@@ -102,7 +101,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const category = pickFirstVariable(variables.category);
+      const category = pickFirstVariable(variables['category']);
       let text: string;
       let valid = false;
       if (category && registry.categories.includes(category)) {
@@ -133,7 +132,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const module = pickFirstVariable(variables.module);
+      const module = pickFirstVariable(variables['module']);
       let text: string;
       let valid = false;
       if (module && registry.modules.includes(module)) {
@@ -164,7 +163,7 @@ export function registerUtilsResource(server: McpServer, options: RegisterUtilsR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tag = pickFirstVariable(variables.tag);
+      const tag = pickFirstVariable(variables['tag']);
       let text: string;
       let valid = false;
       if (tag && tag.length > 0) {

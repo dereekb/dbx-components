@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body, Logger, Optional } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcProviderConfigService } from '../service';
-import { adminOnlyScopesForOidcProviderProfiles, type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
-import { oidcClientProviderProfileScopes } from '../profile';
+import { adminOnlyScopesForOidcProviderConfig, oidcClientProviderProfileScopes } from '../profile';
 import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
 import { OIDC_ANALYTICS_SERVICE, emitOidcAnalyticsEvent, noopOidcAnalyticsService, type OidcAnalyticsService } from '../service/analytics';
 
@@ -148,10 +148,10 @@ export class OidcInteractionController {
       const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
 
-      clientId = params.client_id as string;
+      clientId = params['client_id'] as string;
       accountId = session?.accountId ?? '';
 
-      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+      const missingOIDCScope = (prompt.details['missingOIDCScope'] as string[] | undefined) ?? [];
 
       // When the grant already exists (re-consent), find it up-front so its encountered scopes feed
       // both the admin-only gate below and the silent-no-op handling further down. A new grant is
@@ -225,8 +225,13 @@ export class OidcInteractionController {
       // cannot know the caller's admin status when it builds that request. Gating on the request would
       // make an admin-only scope in `scopes_supported` fatal for every non-admin — deselecting it at
       // consent has to be a way through.
+      //
+      // A non-admin should not normally reach this gate at all: the consent URL builder withholds
+      // admin-only scopes from their consent screen, so the scope never enters the consented set (see
+      // `adminOnlyScopesForOidcProviderConfig`, which both sides read). This remains as defense in
+      // depth for a consent submit that names the scope anyway.
       const configAdminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
-      const adminOnlyScopes = new Set<string>([...configAdminOnlyScopes, ...adminOnlyScopesForOidcProviderProfiles(providerProfiles ?? [])]);
+      const adminOnlyScopes = adminOnlyScopesForOidcProviderConfig(this.accountService.providerConfig);
       const consentedAdminOnlyScopes = Array.from(adminOnlyScopes).filter((scope) => consentedOIDCScopeSet.has(scope));
 
       // Deliberately sourced from the provider config's `adminOnlyScopes` ALONE, unlike the gate above:
@@ -267,7 +272,7 @@ export class OidcInteractionController {
 
       const encounteredOIDCClaims = grant.getOIDCClaimsEncountered();
 
-      const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
+      const missingOIDCClaims = (prompt.details['missingOIDCClaims'] as string[] | undefined) ?? [];
 
       if (missingOIDCClaims.length > 0) {
         const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCClaims, requestedSubset: body.grantedOIDCClaims, alreadyEncountered: encounteredOIDCClaims });
@@ -281,7 +286,7 @@ export class OidcInteractionController {
         }
       }
 
-      const missingResourceScopes = (prompt.details.missingResourceScopes as Record<string, string[]> | undefined) ?? {};
+      const missingResourceScopes = (prompt.details['missingResourceScopes'] as Record<string, string[]> | undefined) ?? {};
 
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
         // A submission with no explicit per-resource selection falls back to the OIDC scope selection

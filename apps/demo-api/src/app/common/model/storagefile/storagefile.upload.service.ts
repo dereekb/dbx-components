@@ -5,6 +5,7 @@ import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, det
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
 import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
+import { makeUserResumeFileUploadInitializer } from './handlers/upload.user.resume';
 
 /**
  * Soft target output size for the demo user avatar (≈500KB). The shared image
@@ -161,8 +162,9 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   };
 
   const userLogFileInitializer = makeUserLogFileUploadInitializer(demoFirebaseServerActionsContext);
+  const userResumeFileInitializer = makeUserResumeFileUploadInitializer(demoFirebaseServerActionsContext);
 
-  const userFileInitializers = [userTestFileInitializer, userTestAvatarInitializer, userLogFileInitializer];
+  const userFileInitializers = [userTestFileInitializer, userTestAvatarInitializer, userLogFileInitializer, userResumeFileInitializer];
 
   // MARK: System Upload Files
 

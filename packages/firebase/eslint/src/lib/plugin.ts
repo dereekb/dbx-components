@@ -15,6 +15,7 @@ import { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE } from './require-can
 import { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE } from './require-api-crud-spec-for-group.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE } from './require-dbx-model-api-params-tag.rule';
 import { FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE } from './require-use-model-roles.rule';
+import { FIREBASE_PREFER_CLEARABLE_ARKTYPE_RULE } from './prefer-clearable-arktype.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -38,6 +39,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-api-crud-spec-for-group': typeof FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE;
     readonly 'require-dbx-model-api-params-tag': typeof FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE;
     readonly 'require-use-model-roles': typeof FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE;
+    readonly 'prefer-clearable-arktype': typeof FIREBASE_PREFER_CLEARABLE_ARKTYPE_RULE;
   };
 }
 
@@ -65,7 +67,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-canonical-api-spec-filename': FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE,
     'require-api-crud-spec-for-group': FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE,
     'require-dbx-model-api-params-tag': FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE,
-    'require-use-model-roles': FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE
+    'require-use-model-roles': FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE,
+    'prefer-clearable-arktype': FIREBASE_PREFER_CLEARABLE_ARKTYPE_RULE
   }
 };
 

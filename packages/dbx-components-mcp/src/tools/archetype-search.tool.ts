@@ -7,8 +7,7 @@
  * archetype filtering is exclusive to this tool — `dbx_model_search` is
  * unchanged.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, resolveModelArchetype, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';

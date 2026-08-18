@@ -4,7 +4,11 @@
  * Schema strategy: tools advertise plain JSON Schema `inputSchema` entries
  * (through `tools/list`) and validate payloads with arktype inside each
  * handler. The high-level `McpServer.registerTool` API is deliberately
- * skipped because it is zod-coupled — arktype is the workspace standard.
+ * skipped: arktype is the workspace standard, and this dispatcher owns tool
+ * routing so registry-bound tools can be assembled at startup. SDK v2 would
+ * now accept these JSON Schema definitions through `fromJsonSchema()`, but
+ * moving to `registerTool` would also start validating arguments before each
+ * handler runs — a behavior change worth its own pass.
  *
  * Each tool module exports a {@link DbxTool} containing its definition and
  * `run(args)` handler. This file sets the `tools/list` and `tools/call`
@@ -103,8 +107,7 @@
  * | dbx_log_search                      | Discovery     | "Search per-change markdown logs (fuzzy/keyword/list)."  |
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { createLookupFormTool } from './lookup-form.tool.js';
 import { createSearchFormTool } from './search-form.tool.js';
 import { FORM_EXAMPLES_TOOL } from './form-examples.tool.js';
@@ -193,7 +196,7 @@ import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
 import { createAuthListAppTool } from './auth-list-app.tool.js';
 import { type ActionRegistry, type AuthRegistry, type FilterRegistry, type ForgeFieldRegistry, type PipeRegistry, type UtilRegistry, type ModelSnapshotFieldRegistry, type SemanticTypeRegistry, type TokenRegistry, type CssUtilityRegistry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import { toolError, type DbxTool } from './types.js';
+import { toCallToolResult, toolError, type DbxTool } from './types.js';
 
 /**
  * Every registered tool in order of presentation in `tools/list`.
@@ -418,13 +421,14 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
     tools.push(...createAuthClusterTools(options.authRegistry));
   }
 
-  underlyingServer.setRequestHandler(ListToolsRequestSchema, async () => {
+  underlyingServer.setRequestHandler('tools/list', async () => {
     return { tools: tools.map((t) => t.definition) };
   });
 
-  underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
+  underlyingServer.setRequestHandler('tools/call', async (request) => {
     const { name, arguments: toolArgs } = request.params;
     const tool = tools.find((t) => t.definition.name === name);
-    return tool ? tool.run(toolArgs) : toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
+    const result = tool ? await tool.run(toolArgs) : toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
+    return toCallToolResult(result);
   });
 }

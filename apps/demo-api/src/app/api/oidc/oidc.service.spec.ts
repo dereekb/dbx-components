@@ -142,9 +142,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const claims = await account!.claims('userinfo', 'openid demo');
 
           expect(claims.sub).toBe(u.uid);
-          expect(claims.o).toBe(1); // default user is onboarded
-          expect(claims.a).toBe(0); // default user is not admin
-          expect(claims.fr).toBeUndefined(); // no file restriction by default
+          expect(claims['o']).toBe(1); // default user is onboarded
+          expect(claims['a']).toBe(0); // default user is not admin
+          expect(claims['fr']).toBeUndefined(); // no file restriction by default
         });
       });
 
@@ -157,8 +157,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const claims = await account!.claims('userinfo', 'openid demo');
 
             expect(claims.sub).toBe(adminUser.uid);
-            expect(claims.o).toBe(1);
-            expect(claims.a).toBe(1); // admin user
+            expect(claims['o']).toBe(1);
+            expect(claims['a']).toBe(1); // admin user
           });
         });
       });

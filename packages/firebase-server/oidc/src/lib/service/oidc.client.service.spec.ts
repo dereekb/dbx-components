@@ -106,8 +106,8 @@ describe('OidcClientService', () => {
       const payload = await clientAdapter(provider).find(result.client_id);
 
       expect(payload).toBeDefined();
-      expect(payload?.token_endpoint_auth_method).toBe('none');
-      expect(payload?.client_secret).toBeUndefined();
+      expect(payload?.['token_endpoint_auth_method']).toBe('none');
+      expect(payload?.['client_secret']).toBeUndefined();
     });
 
     it('should generate a client_secret for confidential methods (unchanged behavior)', async () => {

@@ -22,7 +22,7 @@
  */
 
 import { resolve } from 'node:path';
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { ensurePathInsideCwd, fixtureValidate } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
