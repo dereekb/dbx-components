@@ -6,7 +6,7 @@ import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/f
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
+import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpModelRolesTargetUidPredicate } from '../mcp.config';
 import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
@@ -14,6 +14,7 @@ import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
+import { createModelRolesTool } from './tools/mcp.tool.model-roles';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
 import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
@@ -66,7 +67,8 @@ export class McpServerFactoryService {
     @Optional() @Inject(ModelApiGetService) private readonly modelApiGetService?: ModelApiGetService,
     @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader,
     @Optional() @Inject(MCP_ANALYTICS_SERVICE) analyticsService?: McpAnalyticsService,
-    @Optional() @Inject(FirebaseServerStorageService) private readonly storageService?: FirebaseServerStorageService
+    @Optional() @Inject(FirebaseServerStorageService) private readonly storageService?: FirebaseServerStorageService,
+    @Optional() @Inject(MCP_MODEL_ROLES_TARGET_UID_PREDICATE) private readonly modelRolesTargetUidPredicate?: McpModelRolesTargetUidPredicate
   ) {
     this._analyticsService = analyticsService ?? noopMcpAnalyticsService();
   }
@@ -253,6 +255,11 @@ export class McpServerFactoryService {
           createModelGetTool({
             readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
             resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
+          }),
+          createModelRolesTool({
+            readRoleMaps: (params) => getService.readRoleMaps(params),
+            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
+            canTargetOtherUids: this.modelRolesTargetUidPredicate
           })
         );
 

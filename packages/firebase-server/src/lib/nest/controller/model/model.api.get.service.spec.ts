@@ -1,8 +1,9 @@
 import { HttpsError } from 'firebase-functions/https';
 import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
+import { fullAccessRoleMap, noAccessRoleMap, type GrantedRoleMap } from '@dereekb/model';
 import { forbiddenError, notFoundError } from '../../../function/error';
 import { nestFirebaseDoesNotExistError } from '../../model/permission.error';
-import { ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure } from './model.api.get.service';
+import { ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure, modelAccessRoleMapResultFromGrantedRoles } from './model.api.get.service';
 import { type ModelApiDispatchConfig } from './model.api.dispatch';
 
 describe('modelAccessReadErrorFromUseMultipleModelsFailure()', () => {
@@ -216,5 +217,207 @@ describe('ModelApiGetService — OIDC scope enforcement on direct reads', () => 
     // ...but is blocked from an untagged model (hellosubs default applies), even holding model.read.
     expect(await codeOfRejected(() => service.readDocument('guestbook', 'gb/1', oidcAuth('openid model.read lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
     expect(useModel).toHaveBeenCalledTimes(1);
+  });
+});
+
+// MARK: Role-map flattening (model-roles)
+describe('modelAccessRoleMapResultFromGrantedRoles()', () => {
+  function grantedFor(roleMap: GrantedRoleMap<string>, exists = true) {
+    return { key: 'gb/abc', granted: { data: { exists }, roleMap } };
+  }
+
+  it('collapses the full-access marker into fullAccess with an empty role list', () => {
+    const mapped = modelAccessRoleMapResultFromGrantedRoles(grantedFor(fullAccessRoleMap()));
+
+    expect(mapped.fullAccess).toBe(true);
+    expect(mapped.roles).toEqual([]);
+  });
+
+  // REGRESSION: noAccessRoleMap() is `{ __EMPTY__: true }` and is what BOTH a missing document and an
+  // explicit no-access grant carry. The marker was not filtered, so "no access" reported
+  // `roles: ['__EMPTY__']` — indistinguishable from a real single-role grant, and the exact case the
+  // tool exists to make legible.
+  it('reports the no-access marker as an empty role list rather than leaking __EMPTY__', () => {
+    const mapped = modelAccessRoleMapResultFromGrantedRoles(grantedFor(noAccessRoleMap()));
+
+    expect(mapped.fullAccess).toBe(false);
+    expect(mapped.roles).toEqual([]);
+  });
+
+  it('returns the granted role names sorted', () => {
+    const mapped = modelAccessRoleMapResultFromGrantedRoles(grantedFor({ update: true, read: true, delete: true }));
+
+    expect(mapped.roles).toEqual(['delete', 'read', 'update']);
+  });
+
+  it('excludes roles whose value is not true', () => {
+    const mapped = modelAccessRoleMapResultFromGrantedRoles(grantedFor({ read: true, publish: false, like: null } as GrantedRoleMap<string>));
+
+    expect(mapped.roles).toEqual(['read']);
+  });
+
+  it('derives exists from the resolved output', () => {
+    expect(modelAccessRoleMapResultFromGrantedRoles(grantedFor({ read: true }, true)).exists).toBe(true);
+    expect(modelAccessRoleMapResultFromGrantedRoles(grantedFor(noAccessRoleMap(), false)).exists).toBe(false);
+    // roleMapForKeyContext() returns no data at all when the key could not be loaded
+    expect(modelAccessRoleMapResultFromGrantedRoles({ key: 'gb/abc', granted: { roleMap: noAccessRoleMap() } }).exists).toBe(false);
+  });
+
+  it('echoes the requested key back', () => {
+    expect(modelAccessRoleMapResultFromGrantedRoles(grantedFor({ read: true })).key).toBe('gb/abc');
+  });
+});
+
+// MARK: readRoleMaps (model-roles)
+describe('ModelApiGetService — readRoleMaps', () => {
+  interface BuildRoleMapServiceInput {
+    /**
+     * Per-key role resolution. Throwing simulates a failed key.
+     */
+    readonly roleMapForKey?: (key: string) => unknown;
+    readonly defaultRequiredScope?: OidcScopeTerm;
+    readonly users?: Record<string, { readonly customClaims?: Record<string, unknown>; readonly email?: string; readonly emailVerified?: boolean }>;
+  }
+
+  function buildService(input?: BuildRoleMapServiceInput) {
+    const roleMapForKey = vi.fn(async (key: string) => (input?.roleMapForKey ? input.roleMapForKey(key) : { data: { exists: true }, roleMap: { read: true } }));
+    // records the context each resolution ran under, so we can assert WHOSE auth the roles resolved as
+    const contexts: any[] = [];
+    const firebaseModelsService = vi.fn((_modelType: string, context: any) => {
+      contexts.push(context);
+      return { roleMapForKey };
+    });
+
+    const userContext = vi.fn((uid: string) => {
+      const record = input?.users?.[uid];
+      return {
+        exists: async () => record != null,
+        loadRecord: async () => record
+      };
+    });
+
+    const nestContext = {
+      makeModelContext: (authRef: any) => ({ auth: authRef.auth }),
+      firebaseModelsService,
+      authService: { userContext }
+    };
+
+    const config: ModelApiDispatchConfig = {
+      callModelFn: (() => undefined) as any,
+      makeNestContext: (() => nestContext) as any,
+      defaultRequiredScope: input?.defaultRequiredScope
+    };
+
+    return { service: new ModelApiGetService(config, {} as any), roleMapForKey, contexts, userContext };
+  }
+
+  function callerAuth(uid = 'user-1'): any {
+    return { uid, token: { uid, sub: uid, admin: true } };
+  }
+
+  it('resolves roles as the caller by default', async () => {
+    const { service, contexts } = buildService();
+    const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a', 'gb/b'], auth: callerAuth() });
+
+    expect(result.targeted).toBe(false);
+    expect(result.uid).toBe('user-1');
+    expect(result.errors).toEqual([]);
+    expect(result.results).toEqual([
+      { key: 'gb/a', exists: true, fullAccess: false, roles: ['read'] },
+      { key: 'gb/b', exists: true, fullAccess: false, roles: ['read'] }
+    ]);
+    expect(contexts[0].auth.uid).toBe('user-1');
+  });
+
+  it('omits uid entirely for an unauthenticated resolution', async () => {
+    const { service } = buildService();
+    const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: undefined });
+
+    expect(result.uid).toBeUndefined();
+    expect(result.targeted).toBe(false);
+  });
+
+  it('captures per-key failures in errors rather than throwing', async () => {
+    const { service } = buildService({
+      roleMapForKey: (key) => {
+        if (key === 'gb/forbidden') {
+          throw forbiddenError('forbidden');
+        }
+        return { data: { exists: true }, roleMap: { read: true } };
+      }
+    });
+
+    const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/ok', 'gb/forbidden'], auth: callerAuth() });
+
+    expect(result.results.map((x) => x.key)).toEqual(['gb/ok']);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].key).toBe('gb/forbidden');
+    expect(result.errors[0].code).toBe('FORBIDDEN');
+  });
+
+  it('reports a missing document as exists:false rather than an error', async () => {
+    const { service } = buildService({ roleMapForKey: () => ({ data: { exists: false }, roleMap: noAccessRoleMap() }) });
+    const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/missing'], auth: callerAuth() });
+
+    expect(result.errors).toEqual([]);
+    expect(result.results[0]).toEqual({ key: 'gb/missing', exists: false, fullAccess: false, roles: [] });
+  });
+
+  // Mirrors the readDocuments/readDocument scope gate — role resolution reads the document through the
+  // model's permission delegate, so it must sit behind the same model.read gate.
+  it('gates the resolution on the OIDC model.read scope', async () => {
+    const { service, roleMapForKey } = buildService();
+    const oidcAuth = { uid: 'user-1', oidcValidatedToken: { sub: 'user-1', scope: 'openid demo' } } as any;
+    let caught: any;
+
+    try {
+      await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: oidcAuth });
+    } catch (e) {
+      caught = e;
+    }
+
+    expect((caught?.details ?? caught)?.code).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(roleMapForKey).not.toHaveBeenCalled();
+  });
+
+  it('allows the resolution when the OIDC caller holds model.read', async () => {
+    const { service, roleMapForKey } = buildService();
+    const oidcAuth = { uid: 'user-1', oidcValidatedToken: { sub: 'user-1', scope: 'openid model.read' } } as any;
+
+    await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: oidcAuth });
+
+    expect(roleMapForKey).toHaveBeenCalledTimes(1);
+  });
+
+  describe('targeting another uid', () => {
+    it('resolves as the target user, carrying their custom claims into the context', async () => {
+      const { service, contexts, userContext } = buildService({ users: { 'other-user': { customClaims: { a: 'admin' }, email: 'other@dereekb.com', emailVerified: true } } });
+      const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: callerAuth(), targetUid: 'other-user' });
+
+      expect(result.targeted).toBe(true);
+      expect(result.uid).toBe('other-user');
+      expect(userContext).toHaveBeenCalledWith('other-user');
+      // the roles resolved against the TARGET's claims, not the caller's
+      expect(contexts[0].auth.uid).toBe('other-user');
+      expect(contexts[0].auth.token).toMatchObject({ a: 'admin', uid: 'other-user', sub: 'other-user', email: 'other@dereekb.com', email_verified: true });
+      expect(contexts[0].auth.token.admin).toBeUndefined();
+    });
+
+    it('treats the caller targeting their own uid as untargeted and skips the auth record lookup', async () => {
+      const { service, contexts, userContext } = buildService();
+      const result = await service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: callerAuth('user-1'), targetUid: 'user-1' });
+
+      expect(result.targeted).toBe(false);
+      expect(result.uid).toBe('user-1');
+      expect(userContext).not.toHaveBeenCalled();
+      expect(contexts[0].auth.token.admin).toBe(true);
+    });
+
+    it('throws when no user exists for the target uid', async () => {
+      const { service, roleMapForKey } = buildService({ users: {} });
+
+      await expect(service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: callerAuth(), targetUid: 'ghost' })).rejects.toThrow('No user exists with uid "ghost"');
+      expect(roleMapForKey).not.toHaveBeenCalled();
+    });
   });
 });

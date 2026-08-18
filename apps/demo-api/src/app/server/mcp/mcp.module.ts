@@ -2,9 +2,10 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import { Module } from '@nestjs/common';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '@dereekb/firebase-server/mcp';
+import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAuthRoleReader, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
 import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
 import { SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { AUTH_ADMIN_ROLE, type AuthClaims } from '@dereekb/util';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
@@ -97,6 +98,19 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
 const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SERVICE.toRoles(claims);
 
 /**
+ * McpModelRolesTargetUidPredicate implementation for the demo app — gates the `model-roles` `uid`
+ * parameter on the admin role.
+ *
+ * Resolving roles for another user's uid answers "what is *that* user allowed to do here?", which
+ * discloses the target's effective access, so it is admin-only. Every caller can still resolve
+ * roles for themselves; without this provider the `uid` parameter would fail closed for everyone.
+ *
+ * @param auth - The calling request's auth data, or undefined for an unauthenticated request.
+ * @returns True when the caller holds the admin role.
+ */
+const demoMcpModelRolesTargetUidPredicate: McpModelRolesTargetUidPredicate = (auth) => DEMO_AUTH_CLAIMS_SERVICE.toRoles((auth?.token ?? {}) as unknown as AuthClaims).has(AUTH_ADMIN_ROLE);
+
+/**
  * Dependency module for the Demo MCP module.
  *
  * Re-exports {@link DemoModelApiModule} so its `ModelApiCallModelDispatchService`
@@ -116,9 +130,13 @@ const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SE
     {
       provide: MCP_AUTH_ROLE_READER,
       useValue: demoMcpAuthRoleReader
+    },
+    {
+      provide: MCP_MODEL_ROLES_TARGET_UID_PREDICATE,
+      useValue: demoMcpModelRolesTargetUidPredicate
     }
   ],
-  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, DemoModelApiModule, DemoApiOidcModule]
+  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, DemoModelApiModule, DemoApiOidcModule]
 })
 export class DemoMcpDependencyModule {}
 

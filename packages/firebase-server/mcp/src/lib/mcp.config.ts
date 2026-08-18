@@ -1,4 +1,5 @@
-import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
+import { type AuthClaims, type AuthRoleSet, type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 
 /**
@@ -256,3 +257,25 @@ export type McpAuthRoleReader = (claims: AuthClaims) => AuthRoleSet;
  * NestJS injection token for the optional {@link McpAuthRoleReader} provider.
  */
 export const MCP_AUTH_ROLE_READER = 'MCP_AUTH_ROLE_READER';
+
+/**
+ * Signature for the optional predicate that authorizes `model-roles` calls which target another
+ * user's uid.
+ *
+ * `model-roles` resolves permissions for the calling user by default, which is always safe. Passing
+ * a `uid` asks the server "what can *that* user do here?" — an answer that leaks the target's
+ * effective access, so it is gated behind this app-supplied predicate rather than being open.
+ *
+ * Receives the calling request's auth data (`undefined` for an unauthenticated request) and returns
+ * true if that caller may resolve roles for arbitrary uids. Typically an admin check, e.g.
+ * `(auth) => authRoleClaimsService.toRoles(auth?.token ?? {}).has('admin')`.
+ *
+ * When no predicate is provided the `uid` parameter fails closed for every caller — the tool is
+ * still registered and still answers for the caller themselves.
+ */
+export type McpModelRolesTargetUidPredicate = (auth: Maybe<FirebaseServerAuthData>) => PromiseOrValue<boolean>;
+
+/**
+ * NestJS injection token for the optional {@link McpModelRolesTargetUidPredicate} provider.
+ */
+export const MCP_MODEL_ROLES_TARGET_UID_PREDICATE = 'MCP_MODEL_ROLES_TARGET_UID_PREDICATE';
