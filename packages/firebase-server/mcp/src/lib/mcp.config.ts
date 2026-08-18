@@ -92,8 +92,9 @@ export interface McpReasonParameterConfig {
 /**
  * Filter applied to the OIDC provider's advertised scope list when building the MCP
  * protected-resource metadata's `scopes_supported`. Receives every scope the provider
- * issues (from `OidcProviderConfigService.scopesSupported`) and returns the subset to
- * advertise. Supplied via {@link McpModuleConfig.scopesSupported}; when unset, all are advertised.
+ * issues to an arbitrary client (from `OidcProviderConfigService.clientRequestableScopesSupported`)
+ * and returns the subset to advertise. Supplied via {@link McpModuleConfig.scopesSupported};
+ * when unset, all of them are advertised.
  */
 export type McpScopesSupportedFilter = (allScopes: readonly OidcScope[]) => readonly OidcScope[];
 
@@ -139,11 +140,12 @@ export abstract class McpModuleConfig {
    * protected-resource discovery document's `scopes_supported` (RFC 9728 §2).
    *
    * The base list is pulled automatically from the OIDC provider config via the
-   * injected {@link OidcProviderConfigService.scopesSupported} (i.e.
-   * `Object.keys(providerConfig.claims)`), so the MCP resource advertises exactly
-   * the scopes the issuer supports without the app restating them. Provide this
-   * only to narrow that set — it receives every scope the provider issues and
-   * returns the subset to advertise. When unset, all of them are advertised.
+   * injected {@link OidcProviderConfigService.clientRequestableScopesSupported}, so
+   * the MCP resource advertises the scopes the issuer grants an arbitrary client
+   * without the app restating them. Scopes only an admin-assigned provider profile
+   * unlocks are already excluded — requesting one is fatal at the consent unlock
+   * gate. Provide this only to narrow the set further; it returns the subset to
+   * advertise. When unset, the whole base list is advertised.
    *
    * Advertising these matters because dynamic-registration MCP clients (the Claude
    * Code CLI) read `scopes_supported` to decide which scopes to request on the

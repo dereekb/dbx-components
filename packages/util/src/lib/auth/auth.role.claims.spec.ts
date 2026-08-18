@@ -89,9 +89,9 @@ describe('authRoleClaimsFactory()', () => {
         const result = service.toClaims(roles);
 
         expect(Object.keys(result).length).toBe(3);
-        expect(result.test).toBe(emptyValue);
-        expect(result.u).toBe(claimsConfig['u'].value);
-        expect(result.m).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+        expect(result['test']).toBe(emptyValue);
+        expect(result['u']).toBe(claimsConfig['u'].value);
+        expect(result['m']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
 
       it('should have an empty value for claims that do not have all the roles.', () => {

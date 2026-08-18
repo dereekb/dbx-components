@@ -8,8 +8,7 @@
  *
  * Pure data — no AST, no file I/O.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { formatSpec, getFileConventionSpec, listArtifactKinds, type ArtifactKind } from './artifact-file-convention/index.js';

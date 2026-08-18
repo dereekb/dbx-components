@@ -10,8 +10,7 @@
  * `@dereekb/dbx-web` manifest plus any external manifests declared in
  * `dbx-mcp.config.json`.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentEntry, type UiComponentRegistry } from '@dereekb/dbx-cli';

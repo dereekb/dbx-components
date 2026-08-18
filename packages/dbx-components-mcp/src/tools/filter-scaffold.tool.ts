@@ -15,8 +15,7 @@
  *
  * Plus a "Notes" section pointing at the matching `dbx_filter_lookup` slugs.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

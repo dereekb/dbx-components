@@ -5,8 +5,7 @@
  * pipes, and services — as read-only resources for clients that prefer
  * browsing data over calling the `dbx_ui_*` tools.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
@@ -80,7 +79,7 @@ export function registerUiComponentsResource(server: McpServer, options: Registe
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => {
           const slugHits = registry.findBySlug(slug);
           return slugHits.length > 0 ? slugHits[0] : (registry.findByClassName(slug) ?? registry.findBySelector(slug));
@@ -99,7 +98,7 @@ export function registerUiComponentsResource(server: McpServer, options: Registe
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawCategory = variables.category;
+      const rawCategory = variables['category'];
       const category = (Array.isArray(rawCategory) ? rawCategory[0] : rawCategory) as UiComponentCategoryValue | undefined;
 
       const valid = category !== undefined && UI_COMPONENT_CATEGORIES.includes(category);
@@ -132,7 +131,7 @@ export function registerUiComponentsResource(server: McpServer, options: Registe
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawKind = variables.kind;
+      const rawKind = variables['kind'];
       const kind = (Array.isArray(rawKind) ? rawKind[0] : rawKind) as UiComponentKindValue | undefined;
 
       const valid = kind !== undefined && UI_COMPONENT_KINDS.includes(kind);

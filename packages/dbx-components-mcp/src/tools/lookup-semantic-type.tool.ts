@@ -11,8 +11,7 @@
  * resolves in multiple packages (rare cross-package collision) the tool
  * returns every match in brief form.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
 import { formatSemanticTypeCatalog, formatSemanticTypeCollision, formatSemanticTypeEntry } from './semantic-type-lookup.formatter.js';

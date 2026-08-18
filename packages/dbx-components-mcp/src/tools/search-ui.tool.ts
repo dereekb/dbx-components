@@ -11,8 +11,7 @@
  *
  * Reads from a {@link UiComponentRegistry} supplied at construction time.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY, type DbxDocsUiExampleEntry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

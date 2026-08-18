@@ -6,8 +6,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
+import { McpServer } from '@modelcontextprotocol/server';
 import { dirname, isAbsolute, resolve as resolvePath } from 'node:path';
 import {
   findAndLoadConfig,
@@ -57,8 +57,8 @@ import {
 } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import type { fixtureValidate, modelValidate } from '@dereekb/dbx-cli/validate';
-import { registerResources } from './resources/index.js';
-import { registerTools } from './tools/index.js';
+import { registerResources, type RegisterResourcesOptions } from './resources/index.js';
+import { registerTools, type RegisterToolsOptions } from './tools/index.js';
 import type { LogSearchConfig } from './tools/log-search.tool.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -180,9 +180,28 @@ export interface DownstreamHint {
 }
 
 /**
- * Builds a fresh `McpServer` and registers every resource/tool exposed by
- * dbx-components-mcp. Returns the configured server without connecting it so
- * tests can mount any transport (stdio, in-memory) without duplicating setup.
+ * Everything {@link buildServer} needs, already loaded from disk.
+ *
+ * Exists so the expensive half of bootstrapping — config discovery and the
+ * registry loaders — runs once, while server construction stays cheap and
+ * repeatable. {@link runStdioServer} depends on that split: `serveStdio`
+ * invokes its factory once per connection *plus* once for a discarded
+ * `server/discover` probe, so a factory that loaded registries itself would
+ * walk the filesystem twice on every startup.
+ */
+export interface DbxComponentsMcpServerContext {
+  /**
+   * Registries consumed by {@link registerResources}.
+   */
+  readonly resources: RegisterResourcesOptions;
+  /**
+   * Registries and config consumed by {@link registerTools}.
+   */
+  readonly tools: RegisterToolsOptions;
+}
+
+/**
+ * Loads the config and every registry the server exposes.
  *
  * Side effects: loads the merged semantic-types registry from the bundled
  * `@dereekb/*` manifests plus any external sources declared in
@@ -191,25 +210,9 @@ export interface DownstreamHint {
  * assert on them.
  *
  * @param options - Bootstrap inputs (cwd, pre-built registry, observer hook)
- * @returns A configured server ready to be connected to a transport.
+ * @returns The loaded context, ready to hand to {@link buildServer}.
  */
-export async function createServer(options: CreateServerOptions = {}): Promise<McpServer> {
-  const server = new McpServer(
-    {
-      name: SERVER_NAME,
-      version: SERVER_VERSION
-    },
-    {
-      instructions: SERVER_INSTRUCTIONS
-    }
-  );
-
-  // McpServer auto-declares capabilities when registerTool/registerResource is
-  // called. Our tools go through the low-level setRequestHandler API instead,
-  // so we advertise the `tools` capability explicitly. Resources still use
-  // McpServer.registerResource, which declares its own capability.
-  server.server.registerCapabilities({ tools: {} });
-
+export async function loadServerContext(options: CreateServerOptions = {}): Promise<DbxComponentsMcpServerContext> {
   const externalCounts: Partial<Record<DownstreamCluster, number>> = {};
   const cwd = options.cwd ?? process.cwd();
 
@@ -379,10 +382,59 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
 
   await emitDownstreamHints({ cwd, externalCounts, onDownstreamHints: options.onDownstreamHints });
 
-  registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd, logSearchConfig });
+  const context: DbxComponentsMcpServerContext = {
+    resources: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry },
+    tools: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd, logSearchConfig }
+  };
+
+  return context;
+}
+
+/**
+ * Builds a fresh `McpServer` and registers every resource/tool exposed by
+ * dbx-components-mcp. Returns the configured server without connecting it so
+ * tests can mount any transport (stdio, in-memory) without duplicating setup.
+ *
+ * Pure with respect to the filesystem — {@link loadServerContext} has already
+ * done that work — so it is cheap to call once per connection.
+ *
+ * @param context - The loaded registries and config.
+ * @returns A configured server ready to be connected to a transport.
+ */
+export function buildServer(context: DbxComponentsMcpServerContext): McpServer {
+  const server = new McpServer(
+    {
+      name: SERVER_NAME,
+      version: SERVER_VERSION
+    },
+    {
+      instructions: SERVER_INSTRUCTIONS
+    }
+  );
+
+  // McpServer auto-declares capabilities when registerTool/registerResource is
+  // called. Our tools go through the low-level setRequestHandler API instead,
+  // so we advertise the `tools` capability explicitly. Resources still use
+  // McpServer.registerResource, which declares its own capability.
+  server.server.registerCapabilities({ tools: {} });
+
+  registerResources(server, context.resources);
+  registerTools(server, context.tools);
 
   return server;
+}
+
+/**
+ * Loads the server context and builds one server from it.
+ *
+ * The one-shot composition of {@link loadServerContext} and {@link buildServer},
+ * for callers that only need a single server instance (tests, tooling).
+ *
+ * @param options - Bootstrap inputs (cwd, pre-built registry, observer hook)
+ * @returns A configured server ready to be connected to a transport.
+ */
+export async function createServer(options: CreateServerOptions = {}): Promise<McpServer> {
+  return buildServer(await loadServerContext(options));
 }
 
 interface ResolveOptionalRegistryArgs<TRegistry, TResult> {
@@ -485,13 +537,21 @@ function resolveLogSearchConfig(config: Maybe<{ readonly logs?: { readonly baseP
 }
 
 /**
- * Production entry point — creates the server and binds it to a stdio
- * transport so it can be invoked from a Claude Code config block.
+ * Production entry point — serves MCP over stdio so the server can be invoked
+ * from a Claude Code config block.
+ *
+ * `serveStdio` owns the era decision for the connection: the opening exchange
+ * selects 2026-07-28 or the 2025 era, and one instance from the factory is
+ * pinned for that connection's lifetime. `legacy` is left at its `'serve'`
+ * default so 2025-era clients keep working exactly as before.
+ *
+ * The context is loaded once, up front: `serveStdio` calls the factory once
+ * per connection plus once for a discarded `server/discover` probe, and
+ * loading every registry twice per startup would be plainly wasteful.
  */
 export async function runStdioServer(): Promise<void> {
-  const server = await createServer();
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  const context = await loadServerContext();
+  serveStdio(() => buildServer(context));
 }
 
 /**

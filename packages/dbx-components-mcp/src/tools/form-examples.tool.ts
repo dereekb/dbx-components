@@ -5,8 +5,7 @@
  * "address form"). Complements `dbx_form_lookup` — lookup shows a SINGLE field's
  * docs, examples show how to compose several into a working form.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { EXAMPLE_PATTERNS, getExamplePattern, type ExampleDepth, type ExamplePattern } from './data/patterns/form-patterns.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

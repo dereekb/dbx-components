@@ -1,3 +1,20 @@
+# [13.37.0](https://github.com/dereekb/dbx-components/compare/v13.36.0-dev...v13.37.0) (2026-08-18)
+
+
+### Bug Fixes
+
+- **dbx-web:** support encrypted PDFs while page editing is on ([8d721b8d](https://github.com/dereekb/dbx-components/commit/8d721b8d6f82a1eb81445c9aedf45434afd19c5d))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([18f284f2](https://github.com/dereekb/dbx-components/commit/18f284f2e1604dad47fe94e255210f2eb28b80b9))
+
+
+### Features
+
+- openrouter model ([#54](https://github.com/dereekb/dbx-components/issues/54)) ([7db2c418](https://github.com/dereekb/dbx-components/commit/7db2c4187d4a1d68f6ffbd93f5bb0f373e19a935)), closes [#54](https://github.com/dereekb/dbx-components/issues/54) [passthrou#JSON](https://github.com/dereekb/passthrou/issues/JSON) [firebase-tools#3400](https://github.com/dereekb/firebase-tools/issues/3400) [passthrou#json](https://github.com/dereekb/passthrou/issues/json)
+
 # [13.36.0](https://github.com/dereekb/dbx-components/compare/v13.35.0-dev...v13.36.0) (2026-08-12)
 
 

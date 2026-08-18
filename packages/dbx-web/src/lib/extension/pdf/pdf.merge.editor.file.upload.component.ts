@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
+import { MatIconModule } from '@angular/material/icon';
 import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay, switchMap } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -12,7 +13,7 @@ import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/ab
 import { DbxButtonComponent } from '../../button/button.component';
 import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from '../../action/action.confirm.directive';
 import { DbxActionSnackbarErrorDirective } from '../../error/error.snackbar.action.directive';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView, type PdfMergePageView } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DBX_PDF_MERGE_SUPERSEDED_SLOT_MESSAGE, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView, type PdfMergePageView } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
@@ -147,6 +148,12 @@ const DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT = 'Cancel';
         </div>
       }
     </div>
+    @if (supersededByEncryptedSignal()) {
+      <div class="dbx-pdf-merge-editor-file-upload-superseded dbx-hint dbx-small">
+        <mat-icon class="dbx-pdf-merge-editor-file-upload-superseded-icon">lock</mat-icon>
+        <span>{{ supersededMessage }}</span>
+      </div>
+    }
     @if (showUploadAreaSignal()) {
       <dbx-file-upload [accept]="acceptSignal()" [multiple]="multipleSignal()" [mode]="modeSignal()" [hint]="hintSignal()" [text]="textSignal()" [icon]="iconSignal()" (filesChanged)="onFiles($event)"></dbx-file-upload>
     }
@@ -168,9 +175,10 @@ const DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT = 'Cancel';
     class: 'dbx-pdf-merge-editor-file-upload d-block dbx-mb3',
     '[class.dbx-pdf-merge-editor-file-upload--invalid]': 'stateSignal() === "invalid"',
     '[class.dbx-pdf-merge-editor-file-upload--valid]': 'stateSignal() === "valid"',
-    '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"'
+    '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"',
+    '[class.dbx-pdf-merge-editor-file-upload--superseded]': 'supersededByEncryptedSignal()'
   },
-  imports: [CdkDropList, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
+  imports: [CdkDropList, MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -243,9 +251,28 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   );
 
   /**
-   * Whether the slot still has room for more files. Gates every add affordance — once the slot is at capacity neither the drop area nor the header Add button is offered, and the user must clear the slot (or remove an entry) to add another.
+   * Whether an encrypted PDF in another section (or in the editor's own upload area) has taken over the whole document under `focus` handling, leaving this section with nothing to contribute.
+   *
+   * Anything added here while that is true would be ignored by the merge, so the slot withdraws its add affordances rather than inviting an upload it will silently drop — and waives its own `required` check in {@link isValid$}, since an untouchable section must not be able to block the merge forever.
    */
-  readonly canAddFilesSignal = computed(() => this.ownedEntriesSignal().length < this.capacitySignal());
+  readonly supersededByEncrypted$: Observable<boolean> = combineLatest([this.store.encryptedFocusEntry$, toObservable(this.slotId)]).pipe(
+    map(([focusEntry, slotId]) => focusEntry != null && focusEntry.slotId !== slotId),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly supersededByEncryptedSignal = toSignal(this.supersededByEncrypted$, { initialValue: false });
+
+  readonly supersededMessage = DBX_PDF_MERGE_SUPERSEDED_SLOT_MESSAGE;
+
+  /**
+   * Whether the slot still has room for more files. Gates every add affordance — once the slot is at capacity, or an encrypted document has superseded the section, neither the drop area nor the header Add button is offered, and the user must clear the slot (or remove an entry) to add another.
+   */
+  readonly canAddFilesSignal = computed(() => {
+    const ownedEntries = this.ownedEntriesSignal();
+    const capacity = this.capacitySignal();
+    return !this.supersededByEncryptedSignal() && ownedEntries.length < capacity;
+  });
 
   readonly showAddButtonConfigSignal = computed(() => this.config()?.showAddButton ?? true);
   readonly showClearButtonConfigSignal = computed(() => this.config()?.showClearButton ?? true);
@@ -356,13 +383,15 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
 
   /**
    * Per-slot validity stream consumed by {@link DbxPdfMergeEditorFileUploadValidatorDirective}. Reports `true` when the slot is `valid` or when the slot is `no_file` and not `required`. An `invalid` state always reports `false`, even on optional slots — bad files block the merge until the user removes them.
+   *
+   * A slot superseded by an encrypted document reports `true` unconditionally: its contents cannot reach the output either way, so holding the merge for a section the user can no longer fill would make an encrypted upload impossible to complete in a slotted editor.
    */
-  readonly isValid$: Observable<boolean> = this.state$.pipe(
-    map((state) => {
+  readonly isValid$: Observable<boolean> = combineLatest([this.state$, this.supersededByEncrypted$]).pipe(
+    map(([state, superseded]) => {
       const required = this.requiredSignal();
       let valid: boolean;
 
-      if (state === 'valid') {
+      if (superseded || state === 'valid') {
         valid = true;
       } else if (state === 'no_file') {
         valid = !required;
@@ -440,7 +469,9 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
     const remaining = capacity - ownedCount;
     let filesToAdd: readonly File[];
 
-    if (accepted.length === 0 || remaining <= 0) {
+    // The superseded check is a guard, not the affordance: the drop area and Add button are already
+    // withdrawn, but a file that arrives anyway would land in a section the merge cannot use.
+    if (accepted.length === 0 || remaining <= 0 || this.supersededByEncryptedSignal()) {
       filesToAdd = [];
     } else if (Number.isFinite(remaining) && remaining < accepted.length) {
       filesToAdd = accepted.slice(0, remaining);

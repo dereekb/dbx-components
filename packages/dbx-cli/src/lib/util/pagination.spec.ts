@@ -115,10 +115,10 @@ describe('runPaginatedList', () => {
 
     const printed = JSON.parse(logSpy.mock.calls[0]?.[0] as string) as { ok: boolean; meta: Record<string, unknown> };
     expect(printed.ok).toBe(true);
-    expect(printed.meta.pagesFetched).toBe(3);
-    expect(printed.meta.totalRecords).toBe(3);
-    expect(printed.meta.hasMorePagesAvailable).toBe(false);
-    expect(typeof printed.meta.dumpFile).toBe('string');
+    expect(printed.meta['pagesFetched']).toBe(3);
+    expect(printed.meta['totalRecords']).toBe(3);
+    expect(printed.meta['hasMorePagesAvailable']).toBe(false);
+    expect(typeof printed.meta['dumpFile']).toBe('string');
   });
 
   it('multi-page pages mode applies --pick filter to record data', async () => {
@@ -174,8 +174,8 @@ describe('runPaginatedList', () => {
     const printed = JSON.parse(logSpy.mock.calls[0]?.[0] as string) as { data: { id: number }[]; meta: Record<string, unknown> };
     expect(printed.data.map((r) => r.id)).toEqual([1, 2, 3]);
     // metaOf for the last fetched page used input.cursor === 2
-    expect(printed.meta.cursor).toBe(2);
-    expect(printed.meta.pagesFetched).toBe(2);
+    expect(printed.meta['cursor']).toBe(2);
+    expect(printed.meta['pagesFetched']).toBe(2);
   });
 
   it('short-circuits when adapter signals end of data before requested pages', async () => {

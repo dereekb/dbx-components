@@ -17,8 +17,7 @@
  * they stay caller-supplied while the factory owns the parsing, resolution,
  * fuzzy scoring, and handler boilerplate.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

@@ -5,16 +5,15 @@
  * tier name, alias, or the literal `'list'`) and a depth and returns markdown
  * documentation for `@dereekb/dbx-form` form entries.
  *
- * Registered via the low-level `server.setRequestHandler(CallToolRequestSchema, ...)`
- * API (not `McpServer.registerTool`) because registerTool requires a zod
- * schema — the workspace standard is arktype. Input validation happens in
- * {@link parseLookupFormArgs} using arktype.
+ * Registered via the low-level `server.setRequestHandler('tools/call', ...)`
+ * API rather than `McpServer.registerTool` — see the schema-strategy note in
+ * `tools/index.ts`. Input validation happens in {@link parseLookupFormArgs}
+ * using arktype.
  *
  * The tool is built around a {@link ForgeFieldRegistry} loaded at server
  * startup; tests can drive it via {@link createForgeFieldRegistryFromEntries}.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FORM_TIER_ORDER, type FormFieldInfo, type FormTier, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { resolveTopicAlias } from './form-alias-resolver.js';

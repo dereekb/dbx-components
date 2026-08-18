@@ -93,6 +93,46 @@
       "example": "fields: {\n  payload: firestorePassThroughField<MyType>()\n}"
     },
     {
+      "slug": "optional-firestore-passthrough-json-field",
+      "name": "optionalFirestorePassthroughJsonField",
+      "kind": "factory",
+      "category": "object",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestorePassthroughJsonField(config?: OptionalFirestorePassthroughJsonFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>",
+      "description": "Creates a field mapping configuration for an optional object field that is stored as-is, aside from\nthe values the filter strips out on the way in.\n\nThis is the field for json a converter should not model: a third-party api response, a request config\nwhose parameters the vendor extends without warning, an sdk-shaped payload. A strict converter would\nsilently drop whatever it does not name; this one keeps everything.\n\nThe one thing it does not keep is a value Firestore rejects. Firestore refuses an explicit `undefined`\noutright — one absent optional field anywhere in the payload fails the whole write — and such a value\nis exactly what assembling json from `Maybe` inputs produces (a usage object built from whichever\ntoken counts a response happened to report, a config a caller spread a `Maybe` into). Solved per-writer\nit has to be remembered at every call site; solved here it cannot be forgotten.\n\nThe filtering is RECURSIVE, since json of this kind is nested and its interior is just as capable of\ncarrying an `undefined` as its top level. Non-plain values are retained by reference, so a `Date` (or\na `Timestamp`, or a `DocumentReference`) survives the copy intact.\n\nFiltering happens on WRITE only. Reads are the plain passthrough — no copy, no traversal — since data\nthat came out of Firestore cannot contain the values being filtered in the first place.\n\nA top-level `null` still clears the field: {@link optionalFirestoreField} short-circuits `x == null`\nahead of the transform, so `update({ myField: null })` is untouched by this.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestorePassthroughJsonFieldConfig<T>",
+          "description": "- Filtering and storage configuration. Defaults to stripping `undefined` values at every depth.",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional passthrough json values.",
+      "tags": [
+        "json",
+        "passthrough",
+        "object",
+        "raw",
+        "optional",
+        "undefined",
+        "filter",
+        "recursive",
+        "factory",
+        "firestore",
+        "field",
+        "optionalfirestorepassthroughjsonfield"
+      ],
+      "example": "fields: {\n  // { model: 'm', temperature: undefined, provider: { only: ['openai'], sort: undefined } }\n  // stores as { model: 'm', provider: { only: ['openai'] } }\n  config: optionalFirestorePassthroughJsonField<MyVendorConfig>(),\n  // store null rather than an empty object when nothing survives the filtering\n  usage: optionalFirestorePassthroughJsonField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })\n}",
+      "relatedSlugs": [
+        "optional-firestore-field",
+        "firestore-pass-through-field",
+        "firestore-sub-object"
+      ]
+    },
+    {
       "slug": "firestore-string",
       "name": "firestoreString",
       "kind": "factory",

@@ -1,6 +1,6 @@
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type FirebaseServerStorageService } from '@dereekb/firebase-server';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createBatchExecuteTool, batchOperationCoordKey, BATCH_EXECUTE_TOOL_NAME, type BatchExecuteToolResult, type BatchOperationAuthorization } from './mcp.tool.batch-execute';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 

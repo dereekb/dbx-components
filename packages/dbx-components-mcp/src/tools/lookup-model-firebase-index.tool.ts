@@ -13,8 +13,7 @@
  *   3. Exact export name → entry
  *   4. Fuzzy substring across slug + name + model + tags + description → "did you mean…"
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type Maybe } from '@dereekb/util';
 import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';

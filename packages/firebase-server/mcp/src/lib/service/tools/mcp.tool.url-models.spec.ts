@@ -1,5 +1,5 @@
 import { type FirestoreModelIdentity } from '@dereekb/firebase';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createUrlModelsTool, readUrlModelsImpersonationUid, URL_MODELS_TOOL_NAME, type CreateUrlModelsToolDeps } from './mcp.tool.url-models';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from '../mcp.route-manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';

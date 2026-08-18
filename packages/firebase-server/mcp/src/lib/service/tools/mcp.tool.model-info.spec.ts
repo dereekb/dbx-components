@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestModelEntry } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { createModelInfoTool, findModelEntry, MODEL_INFO_TOOL_NAME, MODEL_INFO_GROUPS_HINT, MODEL_INFO_UNGROUPED_LABEL, type ModelInfoToolOutput } from './mcp.tool.model-info';

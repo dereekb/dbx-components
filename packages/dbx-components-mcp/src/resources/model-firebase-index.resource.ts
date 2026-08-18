@@ -10,8 +10,7 @@
  * Also publishes the static rules reference (composite vs. fieldOverride)
  * and a schema reference for `firestore.indexes.json`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
@@ -146,7 +145,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Model firebase index'
@@ -162,7 +161,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const collection = pickFirstVariable(variables.collection);
+      const collection = pickFirstVariable(variables['collection']);
       let text: string;
       let valid = false;
       if (collection !== undefined && registry.collections.includes(collection)) {
@@ -193,7 +192,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const model = pickFirstVariable(variables.model);
+      const model = pickFirstVariable(variables['model']);
       let text: string;
       let valid = false;
       if (model !== undefined && registry.models.includes(model)) {
@@ -224,7 +223,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const category = pickFirstVariable(variables.category);
+      const category = pickFirstVariable(variables['category']);
       let text: string;
       let valid = false;
       if (category !== undefined && registry.categories.includes(category)) {
@@ -255,7 +254,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const module = pickFirstVariable(variables.module);
+      const module = pickFirstVariable(variables['module']);
       let text: string;
       let valid = false;
       if (module !== undefined && registry.modules.includes(module)) {
@@ -286,7 +285,7 @@ export function registerModelFirebaseIndexResource(server: McpServer, options: R
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const tag = pickFirstVariable(variables.tag);
+      const tag = pickFirstVariable(variables['tag']);
       let text: string;
       let valid = false;
       if (tag !== undefined && tag.length > 0) {

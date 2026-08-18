@@ -198,6 +198,41 @@ describe('DbxPdfMergeEditorStore page editing', () => {
       expect((await firstValueFrom(store.unexpandableEntries$)).map((x) => x.id)).toEqual(['a']);
     });
 
+    it('keeps an encrypted entry mergeable even though it contributes no pages', async () => {
+      store.addFiles({ entries: [{ ...readyEntry('a', await makeRealPdfFile('a.pdf', 2)), encrypted: true }] });
+
+      expect(await firstValueFrom(store.encryptedPassthrough$)).toBe(true);
+      expect(await firstValueFrom(store.hasMergeablePages$)).toBe(true);
+      expect(await firstValueFrom(store.isValid$)).toBe(true);
+    });
+
+    it('passes the encrypted file through as the merge output', async () => {
+      const file = await makeRealPdfFile('a.pdf', 2);
+      store.addFiles({ entries: [{ ...readyEntry('a', file), encrypted: true }] });
+
+      expect((await firstValueFrom(store.mergeOutput$)).size).toBe(file.size);
+    });
+
+    it('passes the encrypted file through when other entries are ignored around it', async () => {
+      const file = await makeRealPdfFile('a.pdf', 2);
+      store.addFiles({ entries: [{ ...readyEntry('a', file), encrypted: true }, readyEntry('b', await makeRealPdfFile('b.pdf', 1))] });
+
+      expect(await firstValueFrom(store.encryptedPassthrough$)).toBe(true);
+      expect((await firstValueFrom(store.mergeOutput$)).size).toBe(file.size);
+    });
+
+    it('lists an ignored entry as unexpandable so it does not vanish from the page list', async () => {
+      store.addFiles({ entries: [{ ...readyEntry('a', await makeRealPdfFile('a.pdf', 2)), encrypted: true }, readyEntry('b', await makeRealPdfFile('b.pdf', 1))] });
+
+      expect((await firstValueFrom(store.unexpandableEntries$)).map((x) => x.id)).toEqual(['a', 'b']);
+    });
+
+    it('reports no passthrough for an ordinary entry', async () => {
+      store.addFiles({ entries: [readyEntry('a', await makeRealPdfFile('a.pdf', 2))] });
+
+      expect(await firstValueFrom(store.encryptedPassthrough$)).toBe(false);
+    });
+
     it('drops page state belonging to a removed entry', async () => {
       store.addFiles({ entries: [readyEntry('a', await makeRealPdfFile('a.pdf', 2)), readyEntry('b', await makeRealPdfFile('b.pdf', 1))] });
       await firstValueFrom(store.pages$);

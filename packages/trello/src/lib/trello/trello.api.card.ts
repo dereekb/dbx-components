@@ -33,11 +33,11 @@ export function createCard(context: TrelloContext): CreateCardFunction {
     const query: Record<string, unknown> = { ...rest };
 
     if (idLabels) {
-      query.idLabels = idLabels.join(',');
+      query['idLabels'] = idLabels.join(',');
     }
 
     if (idMembers) {
-      query.idMembers = idMembers.join(',');
+      query['idMembers'] = idMembers.join(',');
     }
 
     const queryString = makeUrlSearchParams(query);
@@ -63,11 +63,11 @@ export function updateCard(context: TrelloContext): UpdateCardFunction {
     const body: Record<string, unknown> = { ...rest };
 
     if (idLabels) {
-      body.idLabels = idLabels.join(',');
+      body['idLabels'] = idLabels.join(',');
     }
 
     if (idMembers) {
-      body.idMembers = idMembers.join(',');
+      body['idMembers'] = idMembers.join(',');
     }
 
     return context.fetchJson(`/cards/${cardId}`, 'PUT', body);

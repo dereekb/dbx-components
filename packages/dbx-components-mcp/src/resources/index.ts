@@ -28,8 +28,7 @@
  * artifact) don't expose data endpoints because their output is computed from
  * caller input rather than a fixed catalog.
  */
-
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { type ActionRegistry, type AuthRegistry, type FilterRegistry, type ForgeFieldRegistry, type PipeRegistry, type UtilRegistry, type ModelSnapshotFieldRegistry, type SemanticTypeRegistry, type TokenRegistry, type CssUtilityRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { registerFormFieldsResource } from './form-fields.resource.js';

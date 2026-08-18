@@ -2626,7 +2626,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null and non-undefined values.",
@@ -2653,7 +2653,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null, non-undefined, and non-empty values.",
@@ -7082,6 +7082,88 @@
       ]
     },
     {
+      "slug": "copy-value-deep-function",
+      "name": "copyValueDeepFunction",
+      "kind": "factory",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.copy",
+      "signature": "copyValueDeepFunction(config?: Maybe<CopyValueDeepConfig>): CopyValueDeepFunction",
+      "description": "Creates a reusable {@link CopyValueDeepFunction}.\n\nPlain objects and arrays are copied recursively. Every other value is retained by reference:\nprimitives have nothing to copy, and a `Date`/`Map`/`Set`/class instance is a value in its own right,\nnot a bag of keys to rebuild — copying one key-by-key would replace a `Date` with `{}`. This is what\nmakes the function safe to use on data that carries such instances (a Firestore `Timestamp`, a\n`DocumentReference`) alongside plain json.\n\nThe root value itself is never filtered — only the values found within an object or array are, since\nthe filter is a decision about a key/value pair. A root `undefined` therefore copies to `undefined`.\n\nRepeated and cyclical references are tracked, so a value referenced twice is copied once and a cycle\nterminates rather than overflowing the stack.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Maybe<CopyValueDeepConfig>",
+          "description": "- Filter, array handling, and transform configuration. Defaults to removing `undefined` values.",
+          "optional": true
+        }
+      ],
+      "returns": "Recursively copies any input value.",
+      "tags": [
+        "object",
+        "copy",
+        "clone",
+        "deep",
+        "recursive",
+        "filter",
+        "transform",
+        "undefined",
+        "factory",
+        "value",
+        "function",
+        "copyvaluedeepfunction"
+      ],
+      "example": "// remove undefined values at any depth\nconst copyFn = copyValueDeepFunction();\ncopyFn({ a: 1, b: undefined, c: { d: undefined, e: [1, undefined] } });\n// { a: 1, c: { e: [1] } }\n\n// remove null and undefined values, and prune anything left empty\nconst copyCleanFn = copyValueDeepFunction({ filter: KeyValueTypleValueFilter.NULL, filterEmptyValues: true });\ncopyCleanFn({ a: 1, b: { c: null } });\n// { a: 1 }",
+      "relatedSlugs": [
+        "copy-value-deep",
+        "filter-from-pojo-function",
+        "copy-object"
+      ]
+    },
+    {
+      "slug": "copy-value-deep",
+      "name": "copyValueDeep",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.copy",
+      "signature": "copyValueDeep(value: T, config?: Maybe<CopyValueDeepConfig>): T",
+      "description": "Recursively copies a value, filtering values as it goes.\n\nSee {@link copyValueDeepFunction} for the copy/filter semantics. Prefer the factory when copying more\nthan one value with the same configuration.",
+      "params": [
+        {
+          "name": "value",
+          "type": "T",
+          "description": "- The value to copy.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<CopyValueDeepConfig>",
+          "description": "- Filter, array handling, and transform configuration. Defaults to removing `undefined` values.",
+          "optional": true
+        }
+      ],
+      "returns": "A recursive copy of the value.",
+      "tags": [
+        "object",
+        "copy",
+        "clone",
+        "deep",
+        "recursive",
+        "filter",
+        "transform",
+        "undefined",
+        "value",
+        "copyvaluedeep"
+      ],
+      "example": "copyValueDeep({ a: 1, b: { c: undefined } });\n// { a: 1, b: {} }",
+      "relatedSlugs": [
+        "copy-value-deep-function",
+        "filter-from-pojo",
+        "copy-object"
+      ]
+    },
+    {
       "slug": "object-is-empty",
       "name": "objectIsEmpty",
       "kind": "function",
@@ -7968,6 +8050,39 @@
         "dictionary",
         "to",
         "maptoobject"
+      ]
+    },
+    {
+      "slug": "is-plain-object",
+      "name": "isPlainObject",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object",
+      "signature": "isPlainObject(value: unknown): value is Record<string, unknown>",
+      "description": "Checks whether the value is a \"plain\" object, meaning an object literal or an object created with a\nnull prototype.\n\nArrays, `Date`, `RegExp`, `Map`, `Set`, and class instances are NOT plain objects. This is the check\nto use before recursing into a value's keys: a class instance's keys are an implementation detail and\ncopying them key-by-key produces a lifeless imitation of the original (a `Date` becomes `{}`).",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` if the value is an object literal or has a null prototype.",
+      "tags": [
+        "object",
+        "pojo",
+        "plain",
+        "literal",
+        "type-guard",
+        "check",
+        "is",
+        "isplainobject"
+      ],
+      "relatedSlugs": [
+        "object-has-no-keys",
+        "copy-value-deep"
       ]
     },
     {
@@ -10760,7 +10875,7 @@
       "category": "string",
       "module": "@dereekb/util",
       "subpath": "string/replace",
-      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
+      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
       "description": "Escapes the input string so it can be safely used as a literal value in a regular expression.\n\nFor instance, `'hello.world'` will be escaped to `'hello\\\\.world'`.",
       "params": [],
       "returns": "The escaped string with all regex special characters prefixed with a backslash.",

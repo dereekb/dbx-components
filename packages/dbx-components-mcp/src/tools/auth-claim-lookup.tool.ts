@@ -11,8 +11,7 @@
  *      Optionally scoped to an app slug.
  *   3. Interface name match (case-insensitive) → every claim on the interface
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import type { AuthClaimInfo, AuthRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

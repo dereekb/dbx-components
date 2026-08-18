@@ -36,6 +36,13 @@ const DEFAULT_CLEAR_CONFIRM: DbxActionConfirmConfig = {
   cancelText: 'Cancel'
 };
 
+const ENCRYPTED_BANNER_MESSAGE = 'Encrypted PDF detected — only the encrypted file will be used; other files are ignored.';
+
+/**
+ * Page-editing variant of {@link ENCRYPTED_BANNER_MESSAGE}. An encrypted document cannot be opened, so it contributes no editable pages and is uploaded exactly as it arrived.
+ */
+const ENCRYPTED_BANNER_PAGE_EDITING_MESSAGE = 'Encrypted PDF detected — it is used as-is, so its pages cannot be edited and other files are ignored.';
+
 /**
  * Shown in place of {@link DEFAULT_CLEAR_CONFIRM} when the editor has a programmatic baseline, since Clear resets to that document rather than emptying.
  */
@@ -236,6 +243,17 @@ export class DbxPdfMergeEditorComponent {
    * Mirrors {@link DbxPdfMergeEditorStore.focusActive$} — `true` while `encryptedHandling === 'focus'` and at least one ready encrypted entry exists. Drives the encrypted-PDF focus banner.
    */
   readonly focusActiveSignal = toSignal(this.store.focusActive$, { initialValue: false });
+
+  /**
+   * Mirrors {@link DbxPdfMergeEditorStore.encryptedPassthrough$} — `true` while the output is a single encrypted file passed through unchanged. Suppresses the page count, which is not knowable for a document `pdf-lib` cannot open.
+   */
+  readonly encryptedPassthroughSignal = toSignal(this.store.encryptedPassthrough$, { initialValue: false });
+
+  /**
+   * Text of the encrypted-focus banner. Page editing gets the longer wording, since the pages of an encrypted document cannot be listed or edited and the user would otherwise be left wondering where they went.
+   */
+  readonly encryptedBannerMessageSignal = computed<string>(() => (this.pageEditingSignal() ? ENCRYPTED_BANNER_PAGE_EDITING_MESSAGE : ENCRYPTED_BANNER_MESSAGE));
+
   /**
    * Mirrors {@link DbxPdfMergeEditorStore.isValid$}. Defaults to `true` when no validator delegate is registered, so the Preview/Download buttons are gated only by the registered validator's output (if any).
    */

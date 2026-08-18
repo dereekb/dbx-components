@@ -115,7 +115,8 @@ export default [
       'dereekb-firebase/require-dbx-model-service-factory-tag': 'warn', // dbx-components-mcp model registry: require `@dbxModelServiceFactory <modelType>` JSDoc on every `firebaseModelServiceFactory(...)` export so the MCP catalog can join factory metadata onto model entries
       'dereekb-firebase/require-service-factory-for-dbx-model': 'warn', // dbx-components-mcp model registry: cross-file check that every `@dbxModel`-marked interface has a matching `@dbxModelServiceFactory <modelType>` declaration somewhere in the workspace
       'dereekb-firebase/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
-      'dereekb-firebase/require-use-model-roles': 'warn' // require an explicit `roles` (or `roles: []`) on `nest.useModel` / `useMultipleModels` selections so model access asserts the roles it requires; silence with a `roles` value or an inline eslint-disable
+      'dereekb-firebase/require-use-model-roles': 'warn', // require an explicit `roles` (or `roles: []`) on `nest.useModel` / `useMultipleModels` selections so model access asserts the roles it requires; silence with a `roles` value or an inline eslint-disable
+      'dereekb-firebase/prefer-clearable-arktype': 'warn' // require `clearable('TYPE')` from `@dereekb/model` over an inline `'TYPE | null | undefined'` (or `.or('null | undefined')`) arktype definition — auto-fixable, and adds the import when it is missing
     }
   },
   {

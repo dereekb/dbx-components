@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
 import { type McpAuthRoleReader } from '../../mcp.config';
 import { type McpManifestAuth, type McpManifestAuthClaim } from '../mcp.manifest';
@@ -192,7 +192,7 @@ function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHand
 
 // Coerces the `detail` input into a WhoamiDetailLevel, defaulting unknown or absent values to `summary`.
 function parseDetailLevel(args: Record<string, unknown>): WhoamiDetailLevel {
-  const value = args.detail;
+  const value = args['detail'];
   return value === 'claims' || value === 'full' ? value : 'summary';
 }
 

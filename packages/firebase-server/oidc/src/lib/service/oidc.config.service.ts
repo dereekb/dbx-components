@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { OidcModuleConfig, type OidcProviderConfig } from '../oidc.config';
 import { OidcAccountService } from './oidc.account.service';
 import { type WebsiteUrl, websiteUrlFromPaths } from '@dereekb/util';
-import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { assignmentOnlyScopesForOidcProviderProfiles, type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 
 // MARK: Routes
@@ -98,6 +98,21 @@ export class OidcProviderConfigService {
   readonly scopesSupported: string[];
 
   /**
+   * {@link scopesSupported} minus the scopes only an admin-assigned {@link OidcProviderProfile}
+   * unlocks — what an arbitrary client (a dynamically registered one included) may actually put in
+   * an authorization request.
+   *
+   * The issuer's own discovery document keeps advertising the full {@link scopesSupported}: the
+   * provider does support those scopes, for the clients holding the profile. This narrower list is
+   * for metadata a client treats as a request template — notably an MCP protected-resource
+   * document's `scopes_supported`, which dynamic-registration clients (the Claude Code CLI) copy
+   * verbatim onto `/authorize`. An assignment-only scope advertised there ends the flow in
+   * `access_denied`: the consent unlock gate judges the REQUEST, so unlike an admin-only scope
+   * there is no deselect-at-consent way through.
+   */
+  readonly clientRequestableScopesSupported: string[];
+
+  /**
    * Flat list of all unique claim names from the claims configuration.
    */
   readonly claimsSupported: string[];
@@ -114,6 +129,10 @@ export class OidcProviderConfigService {
   ) {
     this.providerConfig = accountService.providerConfig;
     this.scopesSupported = Object.keys(this.providerConfig.claims);
+
+    const assignmentOnlyScopes = assignmentOnlyScopesForOidcProviderProfiles(this.providerConfig.providerProfiles ?? []);
+    this.clientRequestableScopesSupported = this.scopesSupported.filter((scope) => !assignmentOnlyScopes.has(scope));
+
     this.claimsSupported = Array.from(new Set(Object.values(this.providerConfig.claims).flat()));
     this.tokenEndpointAuthMethodsSupported = this.config.tokenEndpointAuthMethods ?? [...DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS];
 

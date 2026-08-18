@@ -5,8 +5,7 @@
  * for clients that prefer browsing data over calling the `dbx_css_token_lookup` /
  * `dbx_ui_smell_check` tools.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { TOKEN_ROLES, TOKEN_SOURCES, type TokenRoleValue, type TokenSourceValue, type TokenRegistry } from '@dereekb/dbx-cli';
 
 const TOKENS_URI = 'dbx://token/entries';
@@ -72,7 +71,7 @@ export function registerTokensResource(server: McpServer, options: RegisterToken
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawSource = variables.source;
+      const rawSource = variables['source'];
       const source = (Array.isArray(rawSource) ? rawSource[0] : rawSource) as TokenSourceValue | undefined;
       const valid = source !== undefined && (TOKEN_SOURCES as readonly string[]).includes(source);
       let text: string;
@@ -103,7 +102,7 @@ export function registerTokensResource(server: McpServer, options: RegisterToken
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawRole = variables.role;
+      const rawRole = variables['role'];
       const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole) as TokenRoleValue | undefined;
       const valid = role !== undefined && (TOKEN_ROLES as readonly string[]).includes(role);
       let text: string;
@@ -134,7 +133,7 @@ export function registerTokensResource(server: McpServer, options: RegisterToken
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawVar = variables.cssVariable;
+      const rawVar = variables['cssVariable'];
       const cssVariable = Array.isArray(rawVar) ? rawVar[0] : rawVar;
       let text: string;
       let entry;

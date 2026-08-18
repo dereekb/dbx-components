@@ -1,4 +1,5 @@
 import { type Maybe } from '../value/maybe.type';
+import { isPlainObject } from './object';
 
 /**
  * Configuration for {@link flattenObject}.
@@ -62,7 +63,7 @@ export function flattenObject(input: Maybe<Record<string, unknown>>, config?: Fl
         const value = obj[key];
         const fullKey = prefix ? `${prefix}${separator}${key}` : key;
 
-        if (_isPlainObject(value) && currentDepth < maxDepth && !seen.has(value)) {
+        if (isPlainObject(value) && currentDepth < maxDepth && !seen.has(value)) {
           recurse(value, fullKey, currentDepth + 1);
         } else {
           result[fullKey] = value;
@@ -71,23 +72,6 @@ export function flattenObject(input: Maybe<Record<string, unknown>>, config?: Fl
     };
 
     recurse(input, '', 0);
-  }
-
-  return result;
-}
-
-/**
- * Returns true if the value is a plain object (not an array, Date, RegExp, null, etc.).
- *
- * @param value - The value to check.
- * @returns True if the value is a plain object with an Object or null prototype.
- */
-function _isPlainObject(value: unknown): value is Record<string, unknown> {
-  let result = false;
-
-  if (value != null && typeof value === 'object') {
-    const proto = Object.getPrototypeOf(value);
-    result = proto === Object.prototype || proto === null;
   }
 
   return result;

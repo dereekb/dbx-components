@@ -10,8 +10,7 @@
  * Pure scoring lives in `./archetype/score.ts`; this file owns input parsing,
  * downstream-catalog plumbing, and markdown assembly.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, resolveModelArchetype, type DownstreamCatalog, type FirebaseModel, type ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';

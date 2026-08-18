@@ -5,8 +5,7 @@
  * date-pipe family, the async helper, etc. — as read-only resources for
  * clients that prefer browsing data over calling `dbx_pipe_lookup`.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
@@ -79,7 +78,7 @@ export function registerPipesResource(server: McpServer, options: RegisterPipesR
     async (uri, variables) =>
       buildSlugDetailResponse({
         uri,
-        rawSlug: variables.slug,
+        rawSlug: variables['slug'],
         resolveEntry: (slug) => registry.findBySlug(slug),
         listAvailableSlugs: () => registry.all.map((e) => e.slug),
         label: 'Pipe'
@@ -95,7 +94,7 @@ export function registerPipesResource(server: McpServer, options: RegisterPipesR
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawCategory = variables.category;
+      const rawCategory = variables['category'];
       const category = (Array.isArray(rawCategory) ? rawCategory[0] : rawCategory) as PipeCategory | undefined;
 
       const valid = category && PIPE_CATEGORY_ORDER.includes(category);

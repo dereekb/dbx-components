@@ -1,4 +1,4 @@
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type McpManifestModelEntry } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { createModelDecodeTool, decodeFirestoreModelKey, MODEL_DECODE_TOOL_NAME, type ModelDecodeToolOutput } from './mcp.tool.model-decode';

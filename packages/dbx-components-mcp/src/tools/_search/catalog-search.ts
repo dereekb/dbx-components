@@ -17,8 +17,7 @@
  * weights) keep their own local scorers; this module is only for the canonical
  * pattern.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { JSONObject, Tool } from '@modelcontextprotocol/server';
 import { type QueryToken, type SearchHit } from './score.js';
 
 // MARK: Shared limits
@@ -164,7 +163,7 @@ export function scoreCatalogEntryToken<TEntry extends CatalogScorableEntry>(entr
  * additional filters merge their own properties in via
  * {@link buildCatalogSearchInputSchema}.
  */
-const CATALOG_BASE_SCHEMA_PROPERTIES: Record<string, object> = {
+const CATALOG_BASE_SCHEMA_PROPERTIES: JSONObject = {
   query: {
     type: 'string',
     description: 'One or more space-separated keywords.'
@@ -199,7 +198,7 @@ export interface BuildCatalogSearchInputSchemaInput {
    * Extra schema properties merged after the standard `query`/`limit`/
    * `category`/`module` block (e.g. `optional` for the snapshot-field tool).
    */
-  readonly extraProperties?: Record<string, object>;
+  readonly extraProperties?: JSONObject;
 }
 
 /**
@@ -210,13 +209,13 @@ export interface BuildCatalogSearchInputSchemaInput {
  * @returns A JSON-Schema object suitable for `Tool['inputSchema']`.
  */
 export function buildCatalogSearchInputSchema(input?: BuildCatalogSearchInputSchemaInput): Tool['inputSchema'] {
-  const properties: Record<string, object> = { ...CATALOG_BASE_SCHEMA_PROPERTIES };
+  const properties: JSONObject = { ...CATALOG_BASE_SCHEMA_PROPERTIES };
   const overrides = input?.descriptions;
   if (overrides?.category !== undefined) {
-    properties.category = { ...(properties.category as Record<string, unknown>), description: overrides.category };
+    properties['category'] = { ...(properties['category'] as JSONObject), description: overrides.category };
   }
   if (overrides?.module !== undefined) {
-    properties.module = { ...(properties.module as Record<string, unknown>), description: overrides.module };
+    properties['module'] = { ...(properties['module'] as JSONObject), description: overrides.module };
   }
   const extras = input?.extraProperties;
   if (extras !== undefined) {

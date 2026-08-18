@@ -493,15 +493,15 @@ describe('ZohoUserExternalConnectionOAuthService', () => {
       stubRefresh();
       const result = await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_EU_API_URL) });
 
-      expect(result.extra?.location).toBe('eu');
-      expect(result.extra?.accountsServer).toBe(ZOHO_ACCOUNTS_EU_API_URL);
+      expect(result.extra?.['location']).toBe('eu');
+      expect(result.extra?.['accountsServer']).toBe(ZOHO_ACCOUNTS_EU_API_URL);
     });
 
     it('should take the api domain from the refresh response', async () => {
       stubRefresh({ ...ACCESS_TOKEN_RESPONSE, api_domain: 'https://www.zohoapis.eu' });
       const result = await service.refreshCredentials({ uid: TEST_UID, credentials: storedCredentials(ZOHO_ACCOUNTS_EU_API_URL) });
 
-      expect(result.extra?.apiDomain).toBe('https://www.zohoapis.eu');
+      expect(result.extra?.['apiDomain']).toBe('https://www.zohoapis.eu');
     });
 
     it('should throw when the stored credentials carry no refresh token', async () => {

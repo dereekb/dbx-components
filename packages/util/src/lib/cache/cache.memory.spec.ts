@@ -60,7 +60,7 @@ describe('inMemoryAsyncKeyedValueCache()', () => {
   it('load() should return a copy that callers cannot mutate', async () => {
     const cache = inMemoryAsyncKeyedValueCache<number>({ a: 1 });
     const snapshot = await cache.load();
-    snapshot.a = 999;
+    snapshot['a'] = 999;
     expect(await cache.get('a')).toBe(1);
   });
 });

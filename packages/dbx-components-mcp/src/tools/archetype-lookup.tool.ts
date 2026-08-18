@@ -5,8 +5,7 @@
  * `"list"` and returns markdown documentation for the matched archetype —
  * shape, sync mode, when-to-use, axes, and implementation pointers.
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { MODEL_ARCHETYPES, resolveModelArchetype, type ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import { formatArchetypeCatalog, formatArchetypeEntry } from './archetype/format.js';

@@ -3,6 +3,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type DbxImageCompressionConfig } from '../image';
+import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { type PdfMergeEntry } from './pdf.merge';
 import { type DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorStoreDirective } from './pdf.merge.editor.store.directive';
@@ -33,6 +34,20 @@ function readyEntry(id: string, slotId?: Maybe<string>): PdfMergeEntry {
     encrypted: false,
     validation: Promise.resolve({ ok: true })
   };
+}
+
+/**
+ * Ready entry flagged as encrypted, i.e. what validation produces for a password-protected PDF.
+ */
+function encryptedEntry(id: string, slotId?: Maybe<string>): PdfMergeEntry {
+  return { ...readyEntry(id, slotId), encrypted: true, validation: Promise.resolve({ ok: true, encrypted: true }) };
+}
+
+/**
+ * The event a {@link DbxFileUploadComponent} emits for one accepted file.
+ */
+function filesChangedEvent(file: File): DbxFileUploadFilesChangedEvent {
+  return { allFiles: [file], matchResult: { multiple: false, input: [file], accepted: [file], rejected: [], acceptedType: [file], rejectedType: [] } };
 }
 
 @Component({
@@ -190,6 +205,64 @@ describe('DbxPdfMergeEditorFileUploadComponent header add/clear controls', () =>
     expect(confirm.autoConfirm).toBe(true);
     // Untouched fields still come from the defaults.
     expect(confirm.confirmText).toBe('Clear');
+  });
+
+  it('withdraws the drop area and waives the requirement while an encrypted PDF in another slot takes over the document', async () => {
+    store.addFiles({ entries: [encryptedEntry('locked', 'cert')] });
+    fixture.detectChanges();
+
+    const slot = component.slot();
+
+    expect(slot.supersededByEncryptedSignal()).toBe(true);
+    expect(slot.showUploadAreaSignal()).toBe(false);
+    expect(slot.showAddButtonSignal()).toBe(false);
+    // Required and empty, which would normally block the merge — but nothing added here could reach it.
+    expect(slot.stateSignal()).toBe('no_file');
+    expect(await firstValueFrom(slot.isValid$)).toBe(true);
+  });
+
+  it('is superseded by an encrypted PDF added outside any slot', () => {
+    store.addFiles({ entries: [encryptedEntry('locked', null)] });
+    fixture.detectChanges();
+
+    expect(component.slot().supersededByEncryptedSignal()).toBe(true);
+  });
+
+  it('is not superseded by the encrypted PDF it owns itself', () => {
+    store.addFiles({ entries: [encryptedEntry('locked', SLOT_ID)] });
+    fixture.detectChanges();
+
+    const slot = component.slot();
+
+    expect(slot.supersededByEncryptedSignal()).toBe(false);
+    // Capacity, not supersession, is what withholds Add here — the slot is single-file and now full.
+    expect(slot.showClearButtonSignal()).toBe(true);
+  });
+
+  it('restores the drop area once the encrypted entry is removed', () => {
+    store.addFiles({ entries: [encryptedEntry('locked', 'cert')] });
+    fixture.detectChanges();
+
+    store.removeEntry('locked');
+    fixture.detectChanges();
+
+    const slot = component.slot();
+
+    expect(slot.supersededByEncryptedSignal()).toBe(false);
+    expect(slot.showUploadAreaSignal()).toBe(true);
+  });
+
+  it('drops files handed to a superseded slot instead of adding entries the merge would ignore', async () => {
+    store.addFiles({ entries: [encryptedEntry('locked', 'cert')] });
+    fixture.detectChanges();
+
+    const slot = component.slot();
+    const file = new File([new Uint8Array([1])], 'extra.pdf', { type: 'application/pdf' });
+
+    await slot.onFiles(filesChangedEvent(file));
+    fixture.detectChanges();
+
+    expect(slot.ownedEntriesSignal().length).toBe(0);
   });
 
   it('clears only the entries this slot owns when the clear action runs', async () => {

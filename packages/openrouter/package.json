@@ -1,0 +1,22 @@
+{
+  "name": "@dereekb/openrouter",
+  "version": "13.37.0",
+  "exports": {
+    "./firebase": {
+      "module": "./firebase/index.esm.js",
+      "types": "./firebase/index.d.ts",
+      "import": "./firebase/index.cjs.mjs",
+      "default": "./firebase/index.cjs.js"
+    },
+    "./firebase-server": {
+      "module": "./firebase-server/index.esm.js",
+      "types": "./firebase-server/index.d.ts",
+      "import": "./firebase-server/index.cjs.mjs",
+      "default": "./firebase-server/index.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/util": "13.37.0",
+    "@openrouter/sdk": "^1.2.26"
+  }
+}

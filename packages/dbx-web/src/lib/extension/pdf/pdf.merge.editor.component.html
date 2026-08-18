@@ -14,7 +14,7 @@
 @if (focusActiveSignal()) {
   <div class="dbx-pdf-merge-editor-encrypted-banner">
     <mat-icon>lock</mat-icon>
-    <span>Encrypted PDF detected — only the encrypted file will be used; other files are ignored.</span>
+    <span>{{ encryptedBannerMessageSignal() }}</span>
   </div>
 }
 @switch (outputSizeStateSignal()) {
@@ -33,7 +33,9 @@
 }
 <div class="dbx-pdf-merge-editor-actions">
   <span class="dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
-  @if (pageEditingSignal()) {
+  <!-- Suppressed during an encrypted passthrough: the document cannot be opened, so its page count is
+       unknown and a literal "0 page(s)" beside an enabled Preview button reads as a defect. -->
+  @if (pageEditingSignal() && !encryptedPassthroughSignal()) {
     <span class="dbx-hint dbx-small">{{ mergeablePageCountSignal() }} page(s)</span>
   }
   <span class="dbx-spacer"></span>

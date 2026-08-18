@@ -8,8 +8,7 @@
  * three modes: `fuzzy` (default with a query), `keyword` (substring), and
  * `list` (no query, just enumerate).
  */
-
-import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
 import { basename } from 'node:path';
 import { discoverLogs, resolveLogBasePath } from './log-search/discover-logs.js';

@@ -18,8 +18,7 @@
  * the registry as a parameter rather than importing it from a module-level
  * static.
  */
-
-import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
 
 const SEMANTIC_TYPES_URI = 'dbx://semantic-type/entries';
@@ -84,7 +83,7 @@ export function registerSemanticTypesResource(server: McpServer, config: Registe
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawName = variables.name;
+      const rawName = variables['name'];
       const name = Array.isArray(rawName) ? rawName[0] : rawName;
       const matches = name ? registry.findByName(name) : [];
       let text: string;
@@ -120,7 +119,7 @@ export function registerSemanticTypesResource(server: McpServer, config: Registe
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawTopic = variables.topic;
+      const rawTopic = variables['topic'];
       const topic = Array.isArray(rawTopic) ? rawTopic[0] : rawTopic;
       let text: string;
       let mimeType: string;
@@ -153,7 +152,7 @@ export function registerSemanticTypesResource(server: McpServer, config: Registe
       mimeType: 'application/json'
     },
     async (uri, variables) => {
-      const rawPackage = variables.package;
+      const rawPackage = variables['package'];
       const packageLabel = Array.isArray(rawPackage) ? rawPackage[0] : rawPackage;
       let text: string;
       let mimeType: string;

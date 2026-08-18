@@ -52,8 +52,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   it('should read default times', async () => {
                     const rawData = (await ge.document.accessor.getWithConverter(null)).data();
 
-                    expect(rawData?.updatedAt).toBeNull();
-                    expect(rawData?.createdAt).toBeNull();
+                    expect(rawData?.['updatedAt']).toBeNull();
+                    expect(rawData?.['createdAt']).toBeNull();
 
                     const data = await ge.document.snapshotData();
 
