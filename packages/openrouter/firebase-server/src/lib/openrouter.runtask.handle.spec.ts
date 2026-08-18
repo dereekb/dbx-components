@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type OpenRouterRunTask, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
-import { handleOpenRouterRunTaskResult, handleOpenRouterRunTaskResultFactory, openRouterRunTaskOutcome } from './openrouter.runtask.handle';
+import { handleOpenRouterRunTaskResultFactory, openRouterRunTaskOutcome } from './openrouter.runtask.handle';
 import { mergeOpenRouterRunUsage, openRouterRunTaskKeyFromBroadcastAttributes } from './openrouter.broadcast';
 
 function task(state: OpenRouterRunTaskState): OpenRouterRunTask {
@@ -25,7 +25,7 @@ describe('openRouterRunTaskOutcome()', () => {
   });
 });
 
-describe('handleOpenRouterRunTaskResult()', () => {
+describe('handleOpenRouterRunTaskResultFactory()', () => {
   const handlers = {
     onComplete: () => 'complete' as const,
     onQueued: () => 'queued' as const,
@@ -34,14 +34,14 @@ describe('handleOpenRouterRunTaskResult()', () => {
   };
 
   it('should dispatch to the matching handler', async () => {
-    expect(await handleOpenRouterRunTaskResult(task(OpenRouterRunTaskState.COMPLETE), handlers)).toBe('complete');
-    expect(await handleOpenRouterRunTaskResult(task(OpenRouterRunTaskState.RUNNING), handlers)).toBe('queued');
-    expect(await handleOpenRouterRunTaskResult(task(OpenRouterRunTaskState.FAILED), handlers)).toBe('failure');
-    expect(await handleOpenRouterRunTaskResult(null, handlers)).toBe('missing');
+    expect(await handleOpenRouterRunTaskResultFactory(handlers)(task(OpenRouterRunTaskState.COMPLETE))).toBe('complete');
+    expect(await handleOpenRouterRunTaskResultFactory(handlers)(task(OpenRouterRunTaskState.RUNNING))).toBe('queued');
+    expect(await handleOpenRouterRunTaskResultFactory(handlers)(task(OpenRouterRunTaskState.FAILED))).toBe('failure');
+    expect(await handleOpenRouterRunTaskResultFactory(handlers)(null)).toBe('missing');
   });
 
   it('should await an async handler', async () => {
-    expect(await handleOpenRouterRunTaskResult(task(OpenRouterRunTaskState.COMPLETE), { ...handlers, onComplete: async () => 'async' as const })).toBe('async');
+    expect(await handleOpenRouterRunTaskResultFactory({ ...handlers, onComplete: async () => 'async' as const })(task(OpenRouterRunTaskState.COMPLETE))).toBe('async');
   });
 
   it('should produce a reusable dispatcher', async () => {
