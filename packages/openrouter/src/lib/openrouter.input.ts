@@ -168,7 +168,7 @@ export interface OpenRouterAttachedFileReference {
  * @returns One content part per file.
  */
 export function openRouterInputFilePartsForAttachedFiles(files: Maybe<OpenRouterAttachedFileReference[]>): OpenRouterInputFilePart[] {
-  return (files ?? []).map(({ file, fileUrl, fileData }) => (fileData != null ? openRouterInputFileDataPart(fileData, file.filename) : openRouterInputFileUrlPart(fileUrl as string, file.filename)));
+  return (files ?? []).map(({ file, fileUrl, fileData }) => (fileData == null ? openRouterInputFileUrlPart(fileUrl as string, file.filename) : openRouterInputFileDataPart(fileData, file.filename)));
 }
 
 /**
@@ -210,7 +210,7 @@ export function openRouterMessagesWithFreshFileAttachments<T extends { readonly 
 
             if (fresh != null) {
               const { fileUrl: _staleUrl, fileData: _staleData, ...rest } = part;
-              updatedPart = { ...rest, ...(fresh.fileData != null ? { fileData: fresh.fileData } : { fileUrl: fresh.fileUrl }) };
+              updatedPart = { ...rest, ...(fresh.fileData == null ? { fileUrl: fresh.fileUrl } : { fileData: fresh.fileData }) };
             }
           }
 
