@@ -73,36 +73,6 @@ export interface OpenRouterRunTaskResultHandlers<T> {
 }
 
 /**
- * Dispatches a run task to the handler matching its state.
- *
- * @param task - The run task, or null.
- * @param handlers - The per-outcome handlers.
- * @returns Whatever the matched handler returns.
- */
-export async function handleOpenRouterRunTaskResult<T>(task: Maybe<OpenRouterRunTask>, handlers: OpenRouterRunTaskResultHandlers<T>): Promise<T> {
-  const outcome = openRouterRunTaskOutcome(task);
-  let result: T;
-
-  switch (outcome) {
-    case 'complete':
-      result = await handlers.onComplete(task as OpenRouterRunTask);
-      break;
-    case 'queued':
-      result = await handlers.onQueued(task as OpenRouterRunTask);
-      break;
-    case 'failure':
-      result = await handlers.onFailure(task as OpenRouterRunTask);
-      break;
-    case 'missing':
-    default:
-      result = await handlers.onMissing();
-      break;
-  }
-
-  return result;
-}
-
-/**
  * Creates a reusable dispatcher for a fixed set of handlers.
  *
  * @param handlers - The per-outcome handlers.
@@ -111,5 +81,26 @@ export async function handleOpenRouterRunTaskResult<T>(task: Maybe<OpenRouterRun
  * @__NO_SIDE_EFFECTS__
  */
 export function handleOpenRouterRunTaskResultFactory<T>(handlers: OpenRouterRunTaskResultHandlers<T>): (task: Maybe<OpenRouterRunTask>) => Promise<T> {
-  return (task: Maybe<OpenRouterRunTask>) => handleOpenRouterRunTaskResult(task, handlers);
+  return async (task: Maybe<OpenRouterRunTask>) => {
+    const outcome = openRouterRunTaskOutcome(task);
+    let result: T;
+
+    switch (outcome) {
+      case 'complete':
+        result = await handlers.onComplete(task as OpenRouterRunTask);
+        break;
+      case 'queued':
+        result = await handlers.onQueued(task as OpenRouterRunTask);
+        break;
+      case 'failure':
+        result = await handlers.onFailure(task as OpenRouterRunTask);
+        break;
+      case 'missing':
+      default:
+        result = await handlers.onMissing();
+        break;
+    }
+
+    return result;
+  };
 }

@@ -117,7 +117,7 @@ import {
   openRouterPromptVersionNumberFromId
 } from '@dereekb/openrouter/firebase';
 import { OPENROUTER_RUN_TASK_SERVICE_TOKEN, OpenRouterPromptServerActions, type OpenRouterRunTaskService, type SeedOpenRouterPromptsParams, type SeedOpenRouterPromptsResult, openRouterPromptServerActions, openRouterPromptService } from '@dereekb/openrouter/firebase-server';
-import { type FirebaseServerEnvironmentConfig, assertSnapshotData } from '@dereekb/firebase-server';
+import { type FirebaseServerEnvironmentConfig, FirebaseServerEnvService, assertSnapshotData } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
@@ -148,6 +148,7 @@ export interface DemoApiContext {
   get authService(): DemoApiAuthService;
   get mailgunService(): MailgunService;
   get storageContext(): FirebaseStorageContext;
+  get envService(): FirebaseServerEnvService;
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
@@ -222,6 +223,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get storageContext() {
     return this.instance.storageContext;
+  }
+
+  get envService() {
+    return this.instance.envService;
   }
 
   get profileServerActions() {
@@ -318,6 +323,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
     return this.get(OPENROUTER_RUN_TASK_SERVICE_TOKEN);
   }
 
+  get envService(): FirebaseServerEnvService {
+    return this.get(FirebaseServerEnvService);
+  }
+
   get profileServerActions() {
     return this.get(ProfileServerActions);
   }
@@ -375,6 +384,10 @@ export const demoApiContextFactory = (buildTests: BuildTestsWithContextFunction<
 export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, TestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
   get storageContext() {
     return this.instance.storageContext;
+  }
+
+  get envService() {
+    return this.instance.envService;
   }
 
   get serverActionsContext() {
@@ -525,6 +538,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get openRouterRunTaskService(): OpenRouterRunTaskService {
     return this.get(OPENROUTER_RUN_TASK_SERVICE_TOKEN);
+  }
+
+  get envService(): FirebaseServerEnvService {
+    return this.get(FirebaseServerEnvService);
   }
 
   get profileServerActions() {
