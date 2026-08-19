@@ -75,7 +75,7 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
         count: Boolean(argv.count)
       });
 
-      outputResult(result, { source: 'firestore' });
+      outputResult(result, { source: 'firestore', sessionFromCache: models.session.fromCache });
     })
   };
 }

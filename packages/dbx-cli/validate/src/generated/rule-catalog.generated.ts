@@ -654,6 +654,105 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     ]
   },
   {
+    code: 'MODEL_SERVER_ONLY_MISSING_RUNTIME_FLAG',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'error',
+    title: "The rules file grants no client read for the model's collection, but its service config has no `serverOnly: true`",
+    whatItFlags: "The rules file grants no client read for the model's collection, but its service config has no `serverOnly: true`.",
+    whenItApplies: 'A registered `firebaseModelServiceFactory` whose model collection is `denied` or `unmatched` for both `get` and `list` in `firestore.rules`.',
+    whenItDoesNotApply: 'Models whose collection has any non-constant-`false` read grant — those are legitimately client-readable.',
+    canonicalFix: "Add `serverOnly: true` to the model's `firebaseModelServiceFactory({ … })` config, beside `roleMapForModel`. Without it `ModelApiGetService` authorizes the read via `roleMapForModel` under the Admin SDK and hands a client a document `firestore.rules` would never release.",
+    canonicalFixTemplate: '```ts\nexport const <model>FirebaseModelServiceFactory = firebaseModelServiceFactory<Ctx, <Model>, <Model>Document, <Model>Roles>({\n// SERVER-ONLY: firestore.rules grants no client read for `<collection>`.\nserverOnly: true,\nroleMapForModel: …,\ngetFirestoreCollection: …\n});\n```',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_firestore_rules_scan'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_MISSING_TAG',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'warning',
+    title: "The rules file grants no client read for the model's collection, but its interface has no `@dbxModelServerOnly` tag",
+    whatItFlags: "The rules file grants no client read for the model's collection, but its interface has no `@dbxModelServerOnly` tag.",
+    whenItApplies: 'A model whose collection is server-only per `firestore.rules` and whose interface is resolvable in the scanned sources.',
+    whenItDoesNotApply: 'Models whose document data is a type alias rather than an interface (there is nothing to tag) — reported as `MODEL_SERVER_ONLY_NO_INTERFACE` instead.',
+    canonicalFix: "Add `@dbxModelServerOnly` to the model interface's JSDoc. The tag is what carries `serverOnly` onto the generated model manifest, letting the CLI refuse the read before choosing a transport instead of round-tripping to an API that will refuse it anyway.",
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_firestore_rules_scan'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_NO_INTERFACE',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'warning',
+    title: 'A model declared `serverOnly: true` at runtime but has no taggable interface (its document data is a type alias)',
+    whatItFlags: 'A model declared `serverOnly: true` at runtime but has no taggable interface (its document data is a type alias).',
+    whenItApplies: "Models whose service factory's data type argument resolves to a `type` alias (e.g. a framework-internal paged-items page) rather than an `interface`.",
+    whenItDoesNotApply: 'Models with a declared interface — those go through `MODEL_SERVER_ONLY_MISSING_TAG`.',
+    canonicalFix: 'Nothing to fix in most cases: the runtime flag is the load-bearing half and it is set. Recorded so the tag/flag reconciliation does not report a phantom mismatch for a model that has no interface to tag.'
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_NOT_IN_MANIFEST',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'warning',
+    title: 'A model carries `serverOnly` but does not appear in the generated CLI model manifest',
+    whatItFlags: 'A model carries `serverOnly` but does not appear in the generated CLI model manifest.',
+    whenItApplies: 'When a `manifestFile` is supplied and a server-only model type has no entry in it.',
+    whenItDoesNotApply: 'Runs without a `manifestFile` — the check is skipped entirely.',
+    canonicalFix: "The runtime gate still covers the model; only the CLI's LOCAL pre-transport refusal is missed, so the read costs a round-trip to an API that refuses it. Either tag the model interface with `@dbxModel` (an untagged interface is never assembled into a manifest entry) or widen the manifest generator's discovery to reach the package that declares the model."
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_RULES_ALLOW_READ',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'error',
+    title: 'A model declares `serverOnly` (tag and/or runtime flag) but its collection IS client-readable per the rules',
+    whatItFlags: 'A model declares `serverOnly` (tag and/or runtime flag) but its collection IS client-readable per the rules.',
+    whenItApplies: 'Any model carrying `@dbxModelServerOnly` or `serverOnly: true` whose collection has a non-constant-`false` `get` or `list` grant.',
+    whenItDoesNotApply: 'A deliberate belt-and-braces refusal — but state it in the rules too, by removing the client read grant, so the two artifacts do not disagree.',
+    canonicalFix: 'Either drop the `serverOnly` declaration (the model IS readable), or remove the read grant from `firestore.rules` so both artifacts say the same thing. A model that is server-only in code and readable in the rules is a refusal that only one of the two read paths honours.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_firestore_rules_scan'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_TAG_FLAG_MISMATCH',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'error',
+    title: 'The interface tag and the runtime flag disagree with each other',
+    whatItFlags: 'The interface tag and the runtime flag disagree with each other.',
+    whenItApplies: 'A model where exactly one of `@dbxModelServerOnly` / `serverOnly: true` is present, independent of what the rules say.',
+    whenItDoesNotApply: 'Models where both are present or both absent.',
+    canonicalFix: "Set both. The tag drives the CLI's local refusal and the MCP catalog; the flag drives the server's actual refusal. One without the other means the two read paths disagree about the same model."
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_TAG_WITHOUT_MODEL_TAG',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'warning',
+    title: 'An interface carries `@dbxModelServerOnly` but no `@dbxModel`, so the tag never reaches the model manifest',
+    whatItFlags: 'An interface carries `@dbxModelServerOnly` but no `@dbxModel`, so the tag never reaches the model manifest.',
+    whenItApplies: 'Any interface tagged `@dbxModelServerOnly` without a `@dbxModel` tag.',
+    whenItDoesNotApply: 'Interfaces that are not Firestore model documents at all — remove the `@dbxModelServerOnly` tag from those.',
+    canonicalFix: "Add `@dbxModel` to the interface. The model extractor only assembles manifest entries for `@dbxModel`-tagged interfaces, so a lone `@dbxModelServerOnly` is inert — `CliModelManifestEntry.serverOnly` never gets set and the CLI's local refusal never fires for the model."
+  },
+  {
+    code: 'MODEL_SERVER_ONLY_UNRESOLVED_IDENTITY',
+    source: 'dbx_model_server_only_validate_app',
+    severity: 'warning',
+    title: "A registered model service's collection could not be resolved to a `firestoreModelIdentity(...)` declaration",
+    whatItFlags: "A registered model service's collection could not be resolved to a `firestoreModelIdentity(...)` declaration.",
+    whenItApplies: 'When no scanned source declares an identity for the model type a `@dbxModelServiceFactory` tag names.',
+    whenItDoesNotApply: 'Models whose identity lives in a scanned directory — those resolve.',
+    canonicalFix: "Widen the validator's `modelDirs` to include the package that declares the identity (framework models live in `packages/firebase/src/lib/model`). Without the identity there is no collection name, so the rules leg of the reconciliation cannot run for this model."
+  },
+  {
     code: 'MODEL_GROUP_MISSING_CRUD_SPEC',
     source: 'dbx_model_test_validate_app',
     severity: 'warning',

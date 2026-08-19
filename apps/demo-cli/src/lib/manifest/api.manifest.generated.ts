@@ -798,6 +798,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {

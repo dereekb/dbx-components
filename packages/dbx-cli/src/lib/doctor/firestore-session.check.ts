@@ -3,7 +3,10 @@ import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { type CliEnvConfig, cliFirebaseEmulatorsInUse, isCliFirebaseConfigComplete, readEnvTokenEntry } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
+import { type CliFirestoreBinding } from '../firestore/firestore.models';
+import { type CliReadSourceReason } from '../firestore/firestore.read';
 import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
+import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { type DoctorCheck, type DoctorCheckResult } from './doctor.command.factory';
 
 /**
@@ -32,6 +35,85 @@ export interface CreateFirestoreSessionDoctorCheckInput {
    * Human-readable label for what the probe reads, surfaced in the check detail (e.g. `list /wk`).
    */
   readonly probeName?: string;
+  /**
+   * The same `firestore` binding passed to `runCli`. Doctor checks run PRE-AUTH with no `CliContext`,
+   * so the binding cannot be discovered — pass it here and the check reports whether
+   * `CliContext.getFirestoreModels` would exist, and therefore whether `--via auto` can ever go direct.
+   */
+  readonly firestore?: CliFirestoreBinding;
+  /**
+   * The same `modelManifest` passed to `runCli`, for the server-only model count.
+   */
+  readonly modelManifest?: CliModelManifest;
+  /**
+   * The same `firestoreQueryManifest` passed to `runCli`, for the invocable query-entry count.
+   */
+  readonly firestoreQueryManifest?: CliFirestoreQueryManifest;
+}
+
+/**
+ * The read-routing summary the check reports alongside the session handshake — the `--via auto`
+ * decision an operator would otherwise have to infer from three separate facts.
+ */
+export interface FirestoreSessionDoctorReadRouting {
+  /**
+   * Whether `CliContext.getFirestoreModels` exists — i.e. `runCli` was given a `firestore` binding.
+   */
+  readonly getFirestoreModels: boolean;
+  /**
+   * What `--via auto` would choose given the state this check just observed.
+   */
+  readonly readPreference: 'firestore' | 'api';
+  readonly reason: CliReadSourceReason;
+  /**
+   * Query-catalog entries whose factory bound to a real runtime export, and are therefore runnable
+   * by `firestore-query`. A non-invocable entry is listed by `firestore-queries` with `INVOCABLE = no`.
+   */
+  readonly invocableQueryEntries: number;
+  readonly totalQueryEntries: number;
+  /**
+   * Models the manifest marks `@dbxModelServerOnly` — refused on every `--via` value.
+   */
+  readonly serverOnlyModels: number;
+}
+
+/**
+ * Summarizes the `--via auto` routing decision from what doctor can observe.
+ *
+ * @param input - The wired bindings/manifests plus whether the session actually opened.
+ * @param input.firestore - The `firestore` binding, when supplied.
+ * @param input.modelManifest - The model manifest, when supplied.
+ * @param input.firestoreQueryManifest - The query manifest, when supplied.
+ * @param input.firebaseConfigComplete - Whether the env carries a complete Firebase client config.
+ * @param input.sessionOpened - Whether the session handshake succeeded in this run.
+ * @returns The routing summary.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function buildFirestoreSessionDoctorReadRouting(input: { readonly firestore?: CliFirestoreBinding; readonly modelManifest?: CliModelManifest; readonly firestoreQueryManifest?: CliFirestoreQueryManifest; readonly firebaseConfigComplete: boolean; readonly sessionOpened: boolean }): FirestoreSessionDoctorReadRouting {
+  const getFirestoreModels = input.firestore != null;
+  let reason: CliReadSourceReason;
+
+  if (!getFirestoreModels) {
+    reason = 'no-firestore-binding';
+  } else if (!input.firebaseConfigComplete) {
+    reason = 'firebase-config-incomplete';
+  } else if (input.sessionOpened) {
+    reason = 'session-available';
+  } else {
+    reason = 'session-unavailable';
+  }
+
+  const entries = input.firestoreQueryManifest ?? [];
+
+  return {
+    getFirestoreModels,
+    readPreference: reason === 'session-available' ? 'firestore' : 'api',
+    reason,
+    invocableQueryEntries: entries.filter((e) => e.factory != null).length,
+    totalQueryEntries: entries.length,
+    serverOnlyModels: (input.modelManifest ?? []).filter((m) => m.serverOnly === true).length
+  };
 }
 
 /**
@@ -60,33 +142,61 @@ export interface CreateFirestoreSessionDoctorCheckInput {
 export function createFirestoreSessionDoctorCheck(input: CreateFirestoreSessionDoctorCheckInput = {}): DoctorCheck {
   const { probe, probeName } = input;
 
+  /**
+   * Folds the read-routing summary onto whatever the session chain produced, so `doctor` answers
+   * "which path will a read take, and why" in one place instead of leaving it to be inferred.
+   *
+   * @param result - The session-chain result.
+   * @param firebaseConfigComplete - Whether the env carries a complete Firebase client config.
+   * @returns The result with `detail.readRouting` attached.
+   */
+  function withReadRouting(result: DoctorCheckResult, firebaseConfigComplete: boolean): DoctorCheckResult {
+    const readRouting = buildFirestoreSessionDoctorReadRouting({
+      ...(input.firestore === undefined ? {} : { firestore: input.firestore }),
+      ...(input.modelManifest === undefined ? {} : { modelManifest: input.modelManifest }),
+      ...(input.firestoreQueryManifest === undefined ? {} : { firestoreQueryManifest: input.firestoreQueryManifest }),
+      firebaseConfigComplete,
+      sessionOpened: result.ok
+    });
+
+    return { ...result, detail: { ...(typeof result.detail === 'object' && result.detail != null ? result.detail : {}), readRouting } };
+  }
+
   return async ({ cliName, envName, env }) => {
     let result: DoctorCheckResult;
 
     if (envName && env) {
-      if (isCliFirebaseConfigComplete(env.firebase)) {
+      const firebaseConfigComplete = isCliFirebaseConfigComplete(env.firebase);
+
+      if (firebaseConfigComplete) {
         const accessToken = await resolveDoctorAccessToken({ cliName, envName, env });
 
         if (accessToken) {
-          result = await runFirestoreSessionProbe({ cliName, envName, env, accessToken, probe, probeName });
+          result = withReadRouting(await runFirestoreSessionProbe({ cliName, envName, env, accessToken, probe, probeName }), true);
         } else {
-          result = {
-            name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
-            ok: false,
-            detail: { reason: 'no-access-token' },
-            suggestion: `Run \`${cliName} auth login --env ${envName}\`.`
-          };
+          result = withReadRouting(
+            {
+              name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
+              ok: false,
+              detail: { reason: 'no-access-token' },
+              suggestion: `Run \`${cliName} auth login --env ${envName}\`.`
+            },
+            true
+          );
         }
       } else {
-        result = {
-          name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
-          ok: false,
-          detail: { reason: 'firebase-config-incomplete' },
-          suggestion: `Set \`firebase.apiKey\`, \`firebase.projectId\`, and \`firebase.appId\` on env "${envName}" (or via ${envVarPrefix(cliName)}_FIREBASE_* environment variables).`
-        };
+        result = withReadRouting(
+          {
+            name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
+            ok: false,
+            detail: { reason: 'firebase-config-incomplete' },
+            suggestion: `Set \`firebase.apiKey\`, \`firebase.projectId\`, and \`firebase.appId\` on env "${envName}" (or via ${envVarPrefix(cliName)}_FIREBASE_* environment variables).`
+          },
+          false
+        );
       }
     } else {
-      result = { name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME, ok: false, detail: { reason: 'no-env' }, suggestion: 'No env to check.' };
+      result = withReadRouting({ name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME, ok: false, detail: { reason: 'no-env' }, suggestion: 'No env to check.' }, false);
     }
 
     return result;
@@ -124,7 +234,10 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
       expiresAt: context.session.expiresAt,
       appCheckTokenMinted: Boolean(context.session.appCheckToken),
       appCheckUsed,
-      usingEmulators
+      usingEmulators,
+      // the on-disk session cache is invisible from the outside — a cache hit means this run paid no
+      // `GET /session/firestore`, which is the difference between a fast read and a slow one
+      sessionFromCache: context.fromCache
     };
 
     if (probe) {

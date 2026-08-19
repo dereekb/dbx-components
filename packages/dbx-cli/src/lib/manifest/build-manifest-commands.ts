@@ -6,6 +6,8 @@ import { STANDARD_GLOBAL_OPTION_NAMES } from '../runner/run';
 import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { isStdinSentinel, readAllStdin } from '../util/stdin';
+import { CLI_READ_VIA_EPILOGUE } from '../api/get.command';
+import { CLI_READ_VIA_VALUES, DEFAULT_CLI_READ_VIA, cliReadResultMeta, coerceCliReadVia, getModelOverFirestore, resolveCliReadSource } from '../firestore/firestore.read';
 import { expandModelKeys } from '../api/expand-keys';
 import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelManifest } from './types';
 
@@ -391,10 +393,18 @@ function buildPerModelGetCommand(model: string, manifest: CliModelManifest | und
     command: `get ${placeholder}`,
     describe: commandDescribe,
     builder: (yargs: Argv) =>
-      yargs.positional(positionalName, {
-        type: 'string',
-        describe: positionalDescribe
-      }),
+      yargs
+        .positional(positionalName, {
+          type: 'string',
+          describe: positionalDescribe
+        })
+        .option('via', {
+          type: 'string',
+          choices: CLI_READ_VIA_VALUES as unknown as string[],
+          default: DEFAULT_CLI_READ_VIA,
+          describe: 'Read transport: auto (default), firestore, or api.'
+        })
+        .epilogue(CLI_READ_VIA_EPILOGUE),
     handler: wrapCommandHandler(async (argv: any) => {
       const ctx = requireCliContext();
       const raw = argv[positionalName];
@@ -408,8 +418,10 @@ function buildPerModelGetCommand(model: string, manifest: CliModelManifest | und
       }
 
       const resolvedKey = resolvePerModelGetKey(model, key, manifest);
-      const result = await ctx.getModel(model, resolvedKey);
-      outputResult(result);
+      const resolved = await resolveCliReadSource({ context: ctx, via: coerceCliReadVia(argv.via), modelType: model });
+      const result = resolved.models ? await getModelOverFirestore({ models: resolved.models, modelType: model, key: resolvedKey }) : await ctx.getModel(model, resolvedKey);
+
+      outputResult(result, cliReadResultMeta(resolved));
     })
   };
 }

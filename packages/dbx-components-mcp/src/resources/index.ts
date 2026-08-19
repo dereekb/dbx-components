@@ -23,6 +23,8 @@
  *   dbx://auth/role/tag/{tag}
  *   dbx://auth/scope/{scope}
  *   dbx://auth/app/{app}
+ *   dbx://firestore-rules/collections[/{collection}]
+ *   dbx://firestore-rules/reference
  *
  * Resource-less clusters (route, storagefile_m, notification_m, system_m,
  * artifact) don't expose data endpoints because their output is computed from
@@ -45,6 +47,7 @@ import { registerSemanticTypesResource } from './semantic-types.resource.js';
 import { registerTokensResource } from './tokens.resource.js';
 import { registerCssUtilityResource } from './css-utility.resource.js';
 import { registerAuthResource } from './auth.resource.js';
+import { registerFirestoreRulesResource } from './firestore-rules.resource.js';
 
 /**
  * Options consumed by {@link registerResources}. Mirrors {@link RegisterToolsOptions}
@@ -65,6 +68,11 @@ export interface RegisterResourcesOptions {
   readonly tokenRegistry?: TokenRegistry;
   readonly cssUtilityRegistry?: CssUtilityRegistry;
   readonly authRegistry?: AuthRegistry;
+  /**
+   * Directory the `firestore.rules` resource resolves its file against. Defaults to `process.cwd()`
+   * at request time.
+   */
+  readonly cwd?: string;
 }
 
 /**
@@ -114,4 +122,6 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
   if (options.authRegistry !== undefined) {
     registerAuthResource(server, { registry: options.authRegistry });
   }
+  // unconditional: there is no pre-loaded catalog to gate on — the rules file is read at request time
+  registerFirestoreRulesResource(server, { ...(options.cwd === undefined ? {} : { cwd: options.cwd }) });
 }

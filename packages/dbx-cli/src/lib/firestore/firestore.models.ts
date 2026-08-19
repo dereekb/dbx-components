@@ -120,6 +120,19 @@ export interface CliFirestoreModels {
    * instead of a `CliError` the CLI can render.
    */
   readonly serviceFor: (modelType: FirestoreModelType) => CliFirestoreModelService;
+  /**
+   * Resolves a SHORT COLLECTION NAME (`gb`, `gbe`) to the `modelType` the app registered its service
+   * under (`guestbook`, `guestbookEntry`).
+   *
+   * The query catalog records the collection name, not the model type — that is what
+   * `firestore.indexes.json` keys on and what `CliModelManifestEntry.collectionPrefix` joins to — but
+   * `<app>FirebaseModelServices` is keyed by model type. The join is derived from the registered
+   * collections' own `modelIdentity` rather than from a manifest, so it works for every app with no
+   * extra wiring.
+   *
+   * Memoized: resolving walks `allTypes()` building each service's collection until it matches.
+   */
+  readonly modelTypeForCollection: (collectionName: string) => FirestoreModelType;
 }
 
 /**
@@ -163,6 +176,7 @@ export interface CreateCliFirestoreModelsInput {
 export function createCliFirestoreModels(input: CreateCliFirestoreModelsInput): CliFirestoreModels {
   const { binding, session } = input;
   const collections = binding.collections(session.firestoreContext);
+  const collectionNameCache = new Map<FirestoreModelType, FirestoreModelType>();
 
   return {
     session,
@@ -181,6 +195,63 @@ export function createCliFirestoreModels(input: CreateCliFirestoreModelsInput): 
       }
 
       return binding.models(modelType, { app: collections });
-    }
+    },
+    modelTypeForCollection: (collectionName) => resolveModelTypeForCollection({ binding, collections, collectionName, cache: collectionNameCache })
   };
+}
+
+/**
+ * Resolves a short collection name to its registered model type, memoizing every identity it sees on
+ * the way so a second lookup is free.
+ *
+ * @param input - The binding, the built collections, the collection name, and the shared cache.
+ * @param input.binding - The app-supplied binding.
+ * @param input.collections - The built collections object.
+ * @param input.collectionName - The short collection name to resolve.
+ * @param input.cache - Cache of already-resolved collection names.
+ * @returns The model type registered for that collection.
+ * @throws {CliError} When no registered model declares that collection name.
+ */
+function resolveModelTypeForCollection(input: { readonly binding: CliFirestoreBinding; readonly collections: object; readonly collectionName: string; readonly cache: Map<string, FirestoreModelType> }): FirestoreModelType {
+  const { binding, collections, collectionName, cache } = input;
+  let result = cache.get(collectionName);
+
+  if (result == null) {
+    for (const modelType of binding.models.allTypes()) {
+      // an app may register a model whose collection accessor throws when its parent is absent; a
+      // model that cannot even report its identity is not the one being looked for
+      const identity = tryReadCollectionIdentity(binding, collections, modelType);
+
+      if (identity != null) {
+        cache.set(identity, modelType);
+
+        if (identity === collectionName) {
+          result = modelType;
+          break;
+        }
+      }
+    }
+  }
+
+  if (result == null) {
+    throw new CliError({
+      message: `No registered model uses the Firestore collection "${collectionName}".`,
+      code: 'INVALID_ARGUMENT',
+      suggestion: `The query catalog records collection names, which must match a registered model's \`firestoreModelIdentity\` collection name. Known collections: ${[...cache.keys()].sort().join(', ')}.`
+    });
+  }
+
+  return result;
+}
+
+function tryReadCollectionIdentity(binding: CliFirestoreBinding, collections: object, modelType: FirestoreModelType): string | undefined {
+  let result: string | undefined;
+
+  try {
+    result = binding.models(modelType, { app: collections }).getFirestoreCollection().modelIdentity.collectionName;
+  } catch {
+    result = undefined;
+  }
+
+  return result;
 }

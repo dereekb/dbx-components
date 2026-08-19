@@ -103,7 +103,10 @@ export async function runCliFirestoreQuery(input: RunCliFirestoreQueryInput): Pr
   const constraints = cliFirestoreQueryConstraints({ entry, params, rawParams, limit });
   const collection = cliFirestoreCollectionForQuery({
     models,
-    modelType: entry.collection,
+    // the catalog records the COLLECTION NAME (`gb`) because that is what `firestore.indexes.json`
+    // keys on, while the app's model services are keyed by MODEL TYPE (`guestbook`) — the join goes
+    // through the registered collections' own `modelIdentity`
+    modelType: models.modelTypeForCollection(entry.collection),
     scope: entry.scope,
     isNested: entry.isNested,
     parentKey: parent

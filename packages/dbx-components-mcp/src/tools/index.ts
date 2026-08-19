@@ -89,6 +89,8 @@
  * | dbx_model_firebase_index_search     | Discovery     | "Find query factories matching keywords (dirty, sync, …)" |
  * | dbx_model_firebase_index_list_app   | Discovery     | "What query factories does this component declare? Which are tagged?" |
  * | dbx_model_firebase_index_validate_app | Verification | "Does this app's firestore.indexes.json match what its factories require?" |
+ * | dbx_firestore_rules_scan            | Verification  | "Which collections can a client actually read? Which models are server-only?" |
+ * | dbx_model_server_only_validate_app  | Verification  | "Do the @dbxModelServerOnly tag, the runtime serverOnly flag, and firestore.rules agree?" |
  * | dbx_artifact_scaffold               | Generation    | "Give me the body for a new <artifact>."               |
  * | dbx_artifact_file_convention        | Reference     | "Where do I put a new <artifact>?"                     |
  * | dbx_css_token_lookup                | Documentation | "What's the canonical CSS token for X?" (intent/value/role)|
@@ -180,6 +182,8 @@ import { ARTIFACT_SCAFFOLD_TOOL } from './artifact-scaffold.tool.js';
 import { ARTIFACT_FILE_CONVENTION_TOOL } from './artifact-file-convention.tool.js';
 import { EXPLAIN_RULE_TOOL } from './explain-rule.tool.js';
 import { APP_VALIDATE_TOOL } from './app-validate.tool.js';
+import { FIRESTORE_RULES_SCAN_TOOL } from './firestore-rules-scan.tool.js';
+import { MODEL_SERVER_ONLY_VALIDATE_APP_TOOL } from './model-server-only-validate-app.tool.js';
 import { MODEL_LIST_COMPONENT_TOOL } from './model-list-component.tool.js';
 import { SERVER_ACTIONS_LIST_APP_TOOL } from './server-actions-list-app.tool.js';
 import { MCP_CONFIG_TOOL } from './mcp-config.tool.js';
@@ -270,6 +274,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   EXPLAIN_RULE_TOOL,
   // aggregate orchestrator
   APP_VALIDATE_TOOL,
+  // firestore.rules (the static routing source behind the model-level server-only gate)
+  FIRESTORE_RULES_SCAN_TOOL,
+  MODEL_SERVER_ONLY_VALIDATE_APP_TOOL,
   // downstream component introspection
   MODEL_LIST_COMPONENT_TOOL,
   SERVER_ACTIONS_LIST_APP_TOOL,

@@ -1,6 +1,8 @@
-import { createFirestoreSessionDoctorCheck, type DoctorCheck, type FirestoreSessionDoctorProbe } from '@dereekb/dbx-cli';
+import { cliFirestoreBinding, createFirestoreSessionDoctorCheck, type DoctorCheck, type FirestoreSessionDoctorProbe } from '@dereekb/dbx-cli';
 import { limit } from '@dereekb/firebase';
-import { makeDemoFirestoreCollections, profileIdentity } from 'demo-firebase';
+import { demoFirebaseModelServices, makeDemoFirestoreCollections, profileIdentity } from 'demo-firebase';
+import { DEMO_CLI_MODEL_MANIFEST } from './manifest/api.manifest.generated';
+import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from './manifest/query.manifest.generated';
 
 /**
  * The rules-protected read that proves the direct-Firestore session is genuinely usable.
@@ -29,6 +31,11 @@ const demoFirestoreSessionProbe: FirestoreSessionDoctorProbe = async (context) =
 export const DEMO_DOCTOR_CHECKS: DoctorCheck[] = [
   createFirestoreSessionDoctorCheck({
     probe: demoFirestoreSessionProbe,
-    probeName: `list ${profileIdentity.collectionName} (admin-only)`
+    probeName: `list ${profileIdentity.collectionName} (admin-only)`,
+    // doctor runs PRE-AUTH with no CliContext, so the binding + manifests have to be handed to it
+    // explicitly for it to report the `--via auto` read preference and the catalog/server-only counts
+    firestore: cliFirestoreBinding({ collections: makeDemoFirestoreCollections, models: demoFirebaseModelServices }),
+    modelManifest: DEMO_CLI_MODEL_MANIFEST,
+    firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST
   })
 ];

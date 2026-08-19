@@ -1128,6 +1128,7 @@ export const NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER: PagedItemConverter<No
  *
  * @dbxModel
  * @dbxModelRead system
+ * @dbxModelServerOnly
  */
 export interface NotificationLoggedEventDay {
   /**

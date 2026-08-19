@@ -383,7 +383,7 @@ export async function loadServerContext(options: CreateServerOptions = {}): Prom
   await emitDownstreamHints({ cwd, externalCounts, onDownstreamHints: options.onDownstreamHints });
 
   const context: DbxComponentsMcpServerContext = {
-    resources: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry },
+    resources: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry, cwd },
     tools: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd, logSearchConfig }
   };
 
