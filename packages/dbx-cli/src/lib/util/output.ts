@@ -236,6 +236,20 @@ export function configureCliErrorMapper(mapper?: CliErrorMapper): void {
 }
 
 /**
+ * Chains an additional {@link CliErrorMapper} BEHIND any already-registered one.
+ *
+ * Only one mapper slot exists, and an app may already own it (see `@dereekb/zoho/cli`). A built-in
+ * that wants to map its own error family therefore appends rather than installing, so the app's
+ * mapper keeps first refusal and the built-in only sees what the app declined.
+ *
+ * @param mapper - The mapper to consult after the current one defers.
+ */
+export function appendCliErrorMapper(mapper: CliErrorMapper): void {
+  const existing = _errorMapper;
+  _errorMapper = existing == null ? mapper : (error: unknown) => existing(error) ?? mapper(error);
+}
+
+/**
  * Applies the configured secret-redaction patterns to a string, replacing each match with `[REDACTED]`.
  *
  * @param value - The input string (typically an error message) to sanitize.

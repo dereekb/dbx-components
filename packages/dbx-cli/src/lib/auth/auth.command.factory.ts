@@ -5,6 +5,7 @@ import { loadCliConfig, maskEnv, maskSecret, mergeCliConfig } from '../config/cl
 import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault, withServiceTokenScopes } from '../config/env';
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
+import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
@@ -146,6 +147,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   const envVarName = input.envVarName;
   const paths = buildCliPaths({ cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+  const firestoreSessions = createCliFirestoreSessionCacheStore({ firestoreSessionCachePath: paths.firestoreSessionCachePath });
   const defaultEnvs = input.defaultEnvs;
 
   // MARK: setup
@@ -323,7 +325,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   // MARK: logout
   const logoutCommand: CommandModule = {
     command: 'logout',
-    describe: 'Clear cached tokens for the active env, optionally revoking on the server',
+    describe: 'Clear cached tokens and the cached direct-Firestore session for the active env, optionally revoking on the server',
     builder: (yargs: Argv) => withEnv(yargs).option('revoke', { type: 'boolean', default: false, describe: 'Call the OIDC revocation endpoint before clearing local tokens' }),
     handler: wrapCommandHandler(async (argv: any) => {
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs });
@@ -348,6 +350,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       }
 
       await tokens.remove(envName);
+      // the cached direct-Firestore session is a bearer credential minted for the user who just
+      // logged out, so it goes with the tokens
+      await firestoreSessions.remove(envName);
       outputResult({ loggedOut: true, env: envName });
     })
   };

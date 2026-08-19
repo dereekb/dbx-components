@@ -5,6 +5,7 @@ import { type Firestore, connectFirestoreEmulator, getFirestore } from 'firebase
 import { type FirestoreContext, clientFirebaseFirestoreContextFactory } from '@dereekb/firebase';
 import { type CliFirestoreSession, fetchFirestoreSession } from '../api/firestore-session.client';
 import { type CliEnvConfig, DEFAULT_CLI_FIREBASE_EMULATOR_HOST, cliFirebaseEmulatorsInUse, isCliFirebaseConfigComplete } from '../config/env';
+import { type CliFirestoreSessionCacheStore, isCliFirestoreSessionExpired } from '../config/firestore-session.cache';
 import { CliError } from '../util/output';
 
 /**
@@ -21,6 +22,11 @@ export interface CliFirestoreSessionContext {
    * The credential bundle the API minted for this session.
    */
   readonly session: CliFirestoreSession;
+  /**
+   * True when {@link session} came from the on-disk session cache rather than a fresh
+   * `GET /session/firestore`. Surfaced for `doctor` and `--verbose`, not for control flow.
+   */
+  readonly fromCache: boolean;
   readonly app: FirebaseApp;
   readonly auth: Auth;
   readonly firestore: Firestore;
@@ -36,6 +42,16 @@ export interface CreateCliFirestoreSessionContextInput {
    * Custom fetch implementation for tests.
    */
   readonly fetcher?: typeof fetch;
+  /**
+   * Optional on-disk session cache. When supplied, a live cached envelope for {@link envName} is
+   * reused instead of re-minting one, and a freshly minted envelope is written back.
+   */
+  readonly sessionCache?: CliFirestoreSessionCacheStore;
+  /**
+   * Skips the cache read for this call and re-mints, still writing the result back. Used by
+   * `doctor` and by a retry after a sign-in failure.
+   */
+  readonly refreshSession?: boolean;
 }
 
 /**
@@ -43,6 +59,10 @@ export interface CreateCliFirestoreSessionContextInput {
  *
  * Steps, in a strict order:
  *
+ * 0. When a `sessionCache` is supplied, reuse the env's cached credential envelope if it is still
+ *    live. Sessions are cached for up to an hour (see `CLI_FIRESTORE_SESSION_MAX_CACHE_MS`), which is
+ *    the ceiling the Firebase credentials themselves sit under. A hit skips step 1 only — the
+ *    Firebase app is per-process, so the sign-in in step 5 always runs.
  * 1. `GET <apiBaseUrl>/session/firestore` for a custom token + App Check attestation.
  * 2. `initializeApp` with the env's Firebase client config.
  * 3. `initializeAppCheck` with a `CustomProvider` handing back the server-minted token. **This must
@@ -57,12 +77,12 @@ export interface CreateCliFirestoreSessionContextInput {
  * There is deliberately NO fallback to the HTTP model API — a failure here throws so the operator
  * sees it. `createFirestoreSessionDoctorCheck` is the diagnostic surface for why.
  *
- * @param input - The CLI name, env, and access token to authenticate the session request with.
+ * @param input - The CLI name, env, access token, and optional session cache.
  * @returns The live {@link CliFirestoreSessionContext}.
  * @throws {CliError} When the env lacks Firebase client config, or any step of the handshake fails.
  */
 export async function createCliFirestoreSessionContext(input: CreateCliFirestoreSessionContextInput): Promise<CliFirestoreSessionContext> {
-  const { cliName, envName, env, accessToken, fetcher } = input;
+  const { cliName, envName, env, accessToken, fetcher, sessionCache, refreshSession = false } = input;
   const firebase = env.firebase;
 
   if (!isCliFirebaseConfigComplete(firebase)) {
@@ -73,7 +93,14 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
     });
   }
 
-  const session = await fetchFirestoreSession({ apiBaseUrl: env.apiBaseUrl, accessToken, fetcher });
+  const cached = sessionCache && !refreshSession ? await sessionCache.get(envName) : undefined;
+  const liveCached = isCliFirestoreSessionExpired(cached) ? undefined : cached;
+  const fromCache = liveCached != null;
+  const session = liveCached?.session ?? (await fetchFirestoreSession({ apiBaseUrl: env.apiBaseUrl, accessToken, fetcher }));
+
+  if (!fromCache && sessionCache) {
+    await sessionCache.set(envName, { session, cachedAt: Date.now(), uid: session.uid });
+  }
 
   const appName = `${cliName}-${envName}`;
   const app = getApps().find((x) => x.name === appName) ?? initializeApp({ apiKey: firebase.apiKey, authDomain: firebase.authDomain, projectId: firebase.projectId, appId: firebase.appId }, appName);
@@ -111,6 +138,14 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
   try {
     await signInWithCustomToken(auth, session.customToken);
   } catch (e) {
+    // A cached custom token that the Auth backend rejects is indistinguishable here from a genuinely
+    // broken config, so drop it and re-mint ONCE rather than making the operator clear the cache by
+    // hand. Only a cache hit is retried — a fresh token failing is a real configuration failure.
+    if (fromCache && sessionCache) {
+      await sessionCache.remove(envName);
+      return createCliFirestoreSessionContext({ ...input, refreshSession: true });
+    }
+
     throw new CliError({
       message: `Failed to sign in with the minted custom token: ${e instanceof Error ? e.message : String(e)}`,
       code: 'AUTH_UNAUTHORIZED',
@@ -120,6 +155,7 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
 
   return {
     session,
+    fromCache,
     app,
     auth,
     firestore,

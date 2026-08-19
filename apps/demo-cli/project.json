@@ -9,10 +9,30 @@
     "generate-api-manifest": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/src/lib/manifest/api.manifest.generated.ts"],
-      "dependsOn": [{ "projects": ["dbx-cli-firebase-api-manifest"], "target": "build" }],
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli-firebase-api-manifest"],
+          "target": "build"
+        }
+      ],
       "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/firebase-api-manifest/main.js", "{workspaceRoot}/components/demo-firebase/src/lib/functions.ts", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.api.ts", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.api.ts"],
       "options": {
         "command": "node dist/packages/dbx-cli/firebase-api-manifest/main.js --project=demo-cli --functions-config=components/demo-firebase/src/lib/functions.ts --output=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts --emit-models",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "generate-firestore-query-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/lib/manifest/query.manifest.generated.ts"],
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli-firestore-query-manifest"],
+          "target": "build"
+        }
+      ],
+      "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/firestore-query-manifest/main.js", "{workspaceRoot}/components/demo-firebase/dbx-mcp.scan.json", "{workspaceRoot}/components/demo-firebase/package.json", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.query.ts", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.ts"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/firestore-query-manifest/main.js --project=demo-cli --component=components/demo-firebase --output=apps/demo-cli/src/lib/manifest/query.manifest.generated.ts",
         "cwd": "{workspaceRoot}"
       }
     },
@@ -20,7 +40,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-api-manifest"],
+      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest"],
       "options": {
         "outputPath": "dist/apps/demo-cli",
         "main": "apps/demo-cli/src/index.ts",

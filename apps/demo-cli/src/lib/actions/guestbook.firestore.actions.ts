@@ -79,12 +79,12 @@ export async function queryPublishedGuestbookEntriesDirect(input: QueryPublished
   const perGuestbook: PublishedGuestbookEntriesDirectResult[] = [];
 
   for (const { document: guestbookDocument, snapshot: guestbookSnapshot } of guestbookPairs) {
-    const guestbook = guestbookDocument.converter.fromFirestore(guestbookSnapshot) as Guestbook;
+    const guestbook = guestbookDocument.converter.fromFirestore(guestbookSnapshot as never) as Guestbook;
     const entryPairs = await collections
       .guestbookEntryCollectionFactory(guestbookDocument)
       .queryDocument(...publishedGuestbookEntriesQuery({ published: true }))
       .getDocSnapshotDataPairs();
-    const entries = entryPairs.map((pair) => pair.document.converter.fromFirestore(pair.snapshot) as GuestbookEntry);
+    const entries = entryPairs.map((pair) => pair.document.converter.fromFirestore(pair.snapshot as never) as GuestbookEntry);
 
     perGuestbook.push({
       guestbook: guestbookDocument.key,

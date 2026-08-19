@@ -12,11 +12,16 @@ import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
-import { type CliModelManifest } from '../manifest/types';
+import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware, createPassthroughAuthMiddleware } from '../middleware/auth.middleware';
+import { cliFirestoreErrorMapper } from '../firestore/firestore.error';
+import { type CliFirestoreBinding } from '../firestore/firestore.models';
+import { buildFirestoreGetCommand } from '../firestore/firestore-get.command';
+import { buildFirestoreQueriesCommand } from '../firestore/firestore-queries.command';
+import { buildFirestoreQueryCommand } from '../firestore/firestore-query.command';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
-import { CLI_EXIT_CODE_HANDLER, outputError } from '../util/output';
+import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
 
 /**
  * Names of the global options registered by {@link createCli} that are not
@@ -117,6 +122,30 @@ export interface CreateCliInput {
    */
   readonly disableModelDecode?: boolean;
   /**
+   * The app-supplied direct-Firestore binding — `cliFirestoreBinding({ collections, models })`.
+   *
+   * `dbx-cli` cannot import an app's collections factory, so this one option is what makes the
+   * generic `firestore-get` / `firestore-query` commands possible at all. Supplying it wires them
+   * for EVERY registered model at once.
+   */
+  readonly firestore?: CliFirestoreBinding;
+  /**
+   * The generated Firestore query catalog (`<NS>_FIRESTORE_QUERY_MANIFEST`).
+   *
+   * Enables the auth-bypassed `firestore-queries` catalog command on its own, and — paired with
+   * {@link firestore} — the `firestore-query` execution command.
+   */
+  readonly firestoreQueryManifest?: CliFirestoreQueryManifest;
+  /**
+   * Disable the built-in `firestore-query` command even when {@link firestore} and
+   * {@link firestoreQueryManifest} are both provided.
+   */
+  readonly disableFirestoreQuery?: boolean;
+  /**
+   * Disable the built-in `firestore-get` command even when {@link firestore} is provided.
+   */
+  readonly disableFirestoreGet?: boolean;
+  /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
    *
@@ -166,6 +195,8 @@ export interface CreateCliInput {
  *   built-in `model-info` command. Opt-in per app.
  * @param input.disableModelInfo - When `true`, suppresses the auto-wired `model-info` command even
  *   if {@link CreateCliInput.modelManifest} is provided.
+ * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
+ * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @returns The configured yargs `Argv` ready to be `.parse()`-d.
  * @__NO_SIDE_EFFECTS__
  */
@@ -182,6 +213,10 @@ export function createCli(input: CreateCliInput): Argv {
     builtInConfigCommands.push(buildModelDecodeCommand(input.modelManifest));
   }
 
+  if (input.firestoreQueryManifest) {
+    builtInConfigCommands.push(buildFirestoreQueriesCommand(input.firestoreQueryManifest));
+  }
+
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [CALL_PASSTHROUGH_COMMAND];
 
@@ -189,11 +224,25 @@ export function createCli(input: CreateCliInput): Argv {
     builtInApiCommands.push(GET_COMMAND, GET_MANY_COMMAND);
   }
 
+  if (input.firestore) {
+    // appended, not installed: an app may already own the single mapper slot, and the Firestore
+    // family only needs to be reached once the app's mapper defers
+    appendCliErrorMapper(cliFirestoreErrorMapper);
+  }
+
+  if (input.firestore && input.firestoreQueryManifest && input.disableFirestoreQuery !== true) {
+    builtInApiCommands.push(buildFirestoreQueryCommand(input.firestoreQueryManifest));
+  }
+
+  if (input.firestore && input.disableFirestoreGet !== true) {
+    builtInApiCommands.push(buildFirestoreGetCommand());
+  }
+
   const actionCommands = buildActionCommands(input.actionCommands ?? []);
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? []), ...actionCommands];
 
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
-  const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest });
+  const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest, firestore: input.firestore });
 
   let parser = yargs(input.argv ?? hideBin(process.argv))
     .scriptName(cliName)

@@ -1,7 +1,9 @@
 import type { FirestoreContext, OnCallTypedModelParams } from '@dereekb/firebase';
 import type { Maybe } from '@dereekb/util';
 import { type CliEnvConfig } from '../config/env';
+import { type CliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttpChunked, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
+import { type CliFirestoreBinding, type CliFirestoreModels, createCliFirestoreModels } from '../firestore/firestore.models';
 import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { type CliModelManifest } from '../manifest/types';
 import { createContextSlot } from '../util/context.slot';
@@ -34,7 +36,9 @@ export interface CliContext {
    * same object the Angular app builds, so the same queries run through the same security rules.
    *
    * Lazy on purpose: the handshake costs an HTTP round-trip plus a sign-in, and the auth middleware
-   * builds a context on EVERY invocation, including ones that never touch Firestore.
+   * builds a context on EVERY invocation, including ones that never touch Firestore. Memoized within
+   * the invocation, and — when the runner supplies a session cache — the minted credential envelope
+   * is reused ACROSS invocations for up to an hour, so only the sign-in is repaid.
    *
    * OPTIONAL so that a hand-built test context (see `createPassthroughAuthMiddleware`) stays valid.
    * Calling it throws when the env carries no Firebase client config — there is no fallback to the
@@ -47,6 +51,14 @@ export interface CliContext {
    * session.
    */
   readonly getFirestoreSession?: () => Promise<CliFirestoreSessionContext>;
+  /**
+   * The app's models bound to the direct-Firestore session — what `firestore-get` /
+   * `firestore-query` dispatch through. Layered on the {@link CliContext.getFirestoreSession} memo,
+   * so all three thunks share ONE session.
+   *
+   * Present only when the CLI was configured with a `firestore` binding (`runCli({ firestore })`).
+   */
+  readonly getFirestoreModels?: () => Promise<CliFirestoreModels>;
 }
 
 /**
@@ -119,6 +131,17 @@ export interface CreateCliContextInput {
    * (e.g. `get <key>`) can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
    */
   readonly modelManifest?: CliModelManifest;
+  /**
+   * Optional on-disk direct-Firestore session cache. When supplied, the session opened by
+   * {@link CliContext.getFirestoreSession} is reused across invocations for up to an hour instead of
+   * costing a `GET /session/firestore` round-trip every time.
+   */
+  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore;
+  /**
+   * The app-supplied Firestore binding (`cliFirestoreBinding({ collections, models })`). When
+   * present, the context exposes {@link CliContext.getFirestoreModels}.
+   */
+  readonly firestore?: CliFirestoreBinding;
 }
 
 /**
@@ -133,6 +156,8 @@ export interface CreateCliContextInput {
  * @param input.env - The resolved {@link CliEnvConfig} for the active env.
  * @param input.accessToken - The Bearer access token to include on outgoing API calls.
  * @param input.modelManifest - Optional generated {@link CliModelManifest} for key→modelType resolution.
+ * @param input.firestoreSessionCache - Optional on-disk direct-Firestore session cache shared across invocations.
+ * @param input.firestore - Optional app-supplied Firestore binding enabling the generic direct-read commands.
  * @returns The constructed {@link CliContext}.
  * @__NO_SIDE_EFFECTS__
  */
@@ -150,7 +175,8 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
         cliName: input.cliName,
         envName: input.envName,
         env: input.env,
-        accessToken
+        accessToken,
+        sessionCache: input.firestoreSessionCache
       }).catch((e) => {
         // drop the memo so a caller that handles the failure can retry rather than replaying it
         firestoreSession = undefined;
@@ -160,6 +186,11 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
 
     return firestoreSession;
   }
+
+  const firestore = input.firestore;
+  // layered on the session memo rather than memoizing separately, so a dropped session memo drops
+  // this one too and both retry against one fresh session
+  const getFirestoreModels = firestore == null ? undefined : () => getFirestoreSession().then((session) => createCliFirestoreModels({ binding: firestore, session }));
 
   return {
     cliName: input.cliName,
@@ -188,6 +219,7 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
         keys
       }),
     getFirestoreSession,
-    getFirestoreContext: () => getFirestoreSession().then((x) => x.firestoreContext)
+    getFirestoreContext: () => getFirestoreSession().then((x) => x.firestoreContext),
+    getFirestoreModels
   };
 }

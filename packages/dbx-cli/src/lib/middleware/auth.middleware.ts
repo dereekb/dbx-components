@@ -1,10 +1,12 @@
 import type { MiddlewareFunction } from 'yargs';
 import { type CliEnvDefault, readEnvTokenEntry } from '../config/env';
 import { type CliEnvConfigComplete, resolveCliEnvOrThrow } from '../config/env.resolve';
+import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { type CliContext, createCliContext, setCliContext } from '../context/cli.context';
+import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliModelManifest } from '../manifest/types';
 import { CLI_EXIT_CODE_AUTH, CliError, outputError, setCliTimeoutMs, setCliVerbose } from '../util/output';
 
@@ -25,6 +27,11 @@ export interface CreateAuthMiddlewareInput {
    * can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
    */
   readonly modelManifest?: CliModelManifest;
+  /**
+   * The app-supplied direct-Firestore binding. When present, the attached {@link CliContext}
+   * exposes `getFirestoreModels()`.
+   */
+  readonly firestore?: CliFirestoreBinding;
 }
 
 /**
@@ -44,6 +51,7 @@ export interface CreateAuthMiddlewareInput {
 export function createAuthMiddleware(input: CreateAuthMiddlewareInput): MiddlewareFunction {
   const paths = buildCliPaths({ cliName: input.cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+  const firestoreSessionCache = createCliFirestoreSessionCacheStore({ firestoreSessionCachePath: paths.firestoreSessionCachePath });
 
   return async (argv: any) => {
     // Configure verbose/timeout as early as possible so HTTP calls made from this very
@@ -69,7 +77,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
 
       const entry = await resolveAccessTokenEntry({ cliName: input.cliName, envName, env, tokens });
 
-      setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest }));
+      setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
     } catch (e) {
       outputError(e);
       process.exit(CLI_EXIT_CODE_AUTH);
