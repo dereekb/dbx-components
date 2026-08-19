@@ -1,5 +1,5 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
+import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsernameQuery, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
@@ -58,7 +58,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
       if (!exists) {
         let username = uid;
-        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
+        const docs = await queryProfile(...profileWithUsernameQuery({ username })).getDocs(transaction);
 
         if (!docs.empty) {
           username = `${uid}-1`; // "-" isn't allowed in usernames by users, so this name should be safe.
@@ -110,7 +110,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
       // perform the change in a transaction
       await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
         // check that there are any conflicts with other profiles
-        const conflictingDoc = await queryProfile(profileWithUsername(username)).getFirstDoc(transaction);
+        const conflictingDoc = await queryProfile(...profileWithUsernameQuery({ username })).getFirstDoc(transaction);
 
         if (conflictingDoc && conflictingDoc.id !== documentRef.id) {
           throw usernameAlreadyTakenError(username);

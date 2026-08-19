@@ -1,4 +1,4 @@
-import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType, LMS_OIDC_SCOPE } from 'demo-firebase';
+import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntriesQuery, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType, LMS_OIDC_SCOPE } from 'demo-firebase';
 import { type FirestoreQueryConstraint, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, withApiDetails } from '@dereekb/firebase-server';
 import { type DemoInvokeModelFunction } from '../function.context';
@@ -32,7 +32,7 @@ export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPubli
     const limit = Math.min(data.limit ?? ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP, ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP);
     const collection = nest.demoFirestoreCollections.guestbookEntryCollectionGroup;
 
-    const buildConstraints = (): FirestoreQueryConstraint[] => [publishedGuestbookEntry(true)];
+    const buildConstraints = (): FirestoreQueryConstraint[] => publishedGuestbookEntriesQuery({ published: true });
 
     const loadCursorDocument = async (key: string) => {
       const doc = await nest.useModel('guestbookEntry', {

@@ -10,7 +10,7 @@ import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
-import { publishedGuestbookEntry } from 'demo-firebase';
+import { publishedGuestbookEntriesQuery } from 'demo-firebase';
 
 @Component({
   selector: 'app-guestbook-view',
@@ -23,7 +23,7 @@ export class DemoGuestbookViewComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);
   readonly matDialog = inject(MatDialog);
 
-  readonly entryConstraints = publishedGuestbookEntry();
+  readonly entryConstraints = publishedGuestbookEntriesQuery({ published: true });
 
   readonly documentStore = viewChild.required(GuestbookEntryDocumentStore);
 

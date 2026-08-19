@@ -39,5 +39,29 @@
       "density": "SPARSE_ALL"
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "gbe",
+      "fieldPath": "published",
+      "ttl": false,
+      "indexes": [
+        {
+          "queryScope": "COLLECTION",
+          "order": "ASCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "order": "DESCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "queryScope": "COLLECTION_GROUP",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncExampleUpdateAction, ExampleDocument, ExampleFirestoreCollections, exampleWithUsername, type SetExampleUsernameParams, setExampleUsernameParamsType } from 'FIREBASE_COMPONENTS_NAME';
+import { AsyncExampleUpdateAction, ExampleDocument, ExampleFirestoreCollections, exampleWithUsernameQuery, type SetExampleUsernameParams, setExampleUsernameParamsType } from 'FIREBASE_COMPONENTS_NAME';
 
 export interface ExampleServerActionsContext extends FirebaseServerActionsContext, ExampleFirestoreCollections {}
 
@@ -25,7 +25,7 @@ export function setExampleUsernameFactory({ firebaseServerActionTransformFunctio
 
       // perform the change in a transaction
       await exampleCollection.firestoreContext.runTransaction(async (transaction) => {
-        const docs = await queryExample(exampleWithUsername(username)).getDocs(transaction);
+        const docs = await queryExample(...exampleWithUsernameQuery({ username })).getDocs(transaction);
 
         if (docs.empty) {
           const documentInTransaction = exampleCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);

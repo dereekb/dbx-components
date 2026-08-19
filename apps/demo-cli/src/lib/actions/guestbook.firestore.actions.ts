@@ -1,6 +1,6 @@
 import { type ActionCommandSpec, type CliContext, requireCliFirestoreSession } from '@dereekb/dbx-cli';
 import { type FirebaseAuthUserId, limit } from '@dereekb/firebase';
-import { type GuestbookEntry, type GuestbookKey, guestbookIdentity, makeDemoFirestoreCollections, publishedGuestbook, publishedGuestbookEntry } from 'demo-firebase';
+import { type Guestbook, type GuestbookEntry, type GuestbookKey, guestbookIdentity, makeDemoFirestoreCollections, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
 
 // MARK: queryPublishedGuestbookEntriesDirect
 /**
@@ -66,17 +66,25 @@ export async function queryPublishedGuestbookEntriesDirect(input: QueryPublished
   const session = await requireCliFirestoreSession(input.context);
   const collections = makeDemoFirestoreCollections(session.firestoreContext);
 
-  // `publishedGuestbook()` is also what the Angular app's guestbook queries use — the constraint, the
-  // collections object, and the rules are all shared; only the transport differs.
-  const guestbookConstraints = [publishedGuestbook(), ...(input.limit == null ? [] : [limit(input.limit)])];
-  const guestbookDocs = await collections.guestbookCollection.queryDocument(...guestbookConstraints).getDocs();
+  // `publishedGuestbooksQuery` is also what the Angular app's guestbook list and the demo-api query
+  // handler use — the constraint, the collections object, and the rules are all shared; only the
+  // transport differs.
+  const guestbookConstraints = [...publishedGuestbooksQuery({ published: true }), ...(input.limit == null ? [] : [limit(input.limit)])];
+
+  // `getDocSnapshotDataPairs()` + the per-ref converter costs ONE read per row. `getDocs()` would cost
+  // two: `queryLike` is converter-less, so it re-loads every matched document from its ref just to
+  // apply the converter.
+  const guestbookPairs = await collections.guestbookCollection.queryDocument(...guestbookConstraints).getDocSnapshotDataPairs();
 
   const perGuestbook: PublishedGuestbookEntriesDirectResult[] = [];
 
-  for (const guestbookDocument of guestbookDocs) {
-    const guestbook = await guestbookDocument.snapshotData();
-    const entryDocs = await collections.guestbookEntryCollectionFactory(guestbookDocument).queryDocument(publishedGuestbookEntry()).getDocs();
-    const entries = (await Promise.all(entryDocs.map((x) => x.snapshotData()))).filter((x): x is GuestbookEntry => x != null);
+  for (const { document: guestbookDocument, snapshot: guestbookSnapshot } of guestbookPairs) {
+    const guestbook = guestbookDocument.converter.fromFirestore(guestbookSnapshot) as Guestbook;
+    const entryPairs = await collections
+      .guestbookEntryCollectionFactory(guestbookDocument)
+      .queryDocument(...publishedGuestbookEntriesQuery({ published: true }))
+      .getDocSnapshotDataPairs();
+    const entries = entryPairs.map((pair) => pair.document.converter.fromFirestore(pair.snapshot) as GuestbookEntry);
 
     perGuestbook.push({
       guestbook: guestbookDocument.key,

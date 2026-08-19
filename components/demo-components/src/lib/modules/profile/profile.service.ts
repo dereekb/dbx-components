@@ -1,4 +1,4 @@
-import { type ProfileDocument, DemoFirestoreCollections, profileWithUsername } from 'demo-firebase';
+import { type ProfileDocument, DemoFirestoreCollections, profileWithUsernameQuery } from 'demo-firebase';
 import { map, type Observable, of, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
@@ -18,6 +18,6 @@ export class DemoProfileService {
   }
 
   profileWithUsername(username: string): Observable<Maybe<ProfileDocument>> {
-    return of(username).pipe(switchMap((x) => this.collections.profileCollection.queryDocument(profileWithUsername(x)).getFirstDoc()));
+    return of(username).pipe(switchMap((x) => this.collections.profileCollection.queryDocument(...profileWithUsernameQuery({ username: x })).getFirstDoc()));
   }
 }

@@ -1,5 +1,5 @@
 import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { type Guestbook, publishedGuestbook } from 'demo-firebase';
+import { type Guestbook, publishedGuestbooksQuery } from 'demo-firebase';
 import { ChangeDetectionStrategy, Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent } from 'demo-components';
@@ -18,7 +18,7 @@ export class DemoGuestbookListPageComponent implements OnInit {
   readonly demoAppRouterService = inject(DemoAppRouterService);
   readonly demoGuestbookCollectionStoreDirective = viewChild(DemoGuestbookCollectionStoreDirective);
 
-  readonly guestbookConstraints = publishedGuestbook();
+  readonly guestbookConstraints = publishedGuestbooksQuery({ published: true });
 
   readonly guestbookListRef = this.demoAppRouterService.guestbookListRef();
   readonly makeGuestbookAnchor: AnchorForValueFunction<DocumentDataWithIdAndKey<Guestbook>> = (doc) => this.demoAppRouterService.guestbookRef(doc.id);

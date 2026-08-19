@@ -1,4 +1,4 @@
-import { type Guestbook, type QueryGuestbooksParams, publishedGuestbook } from 'demo-firebase';
+import { type Guestbook, type QueryGuestbooksParams, publishedGuestbooksQuery } from 'demo-firebase';
 import { type OnCallQueryModelResult, type FirestoreQueryConstraint } from '@dereekb/firebase';
 import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
@@ -32,7 +32,7 @@ export const guestbookQuery: DemoQueryModelFunction<QueryGuestbooksParams, OnCal
         const constraints: FirestoreQueryConstraint[] = [];
 
         if (published != null) {
-          constraints.push(publishedGuestbook(published));
+          constraints.push(...publishedGuestbooksQuery({ published }));
         }
 
         return constraints;

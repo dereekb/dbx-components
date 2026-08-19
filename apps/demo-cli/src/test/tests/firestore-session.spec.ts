@@ -7,7 +7,7 @@ import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { oAuthAuthorizedSuperTestContextFactory } from '@dereekb/firebase-server/test';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- demo-api fixture is intentionally shared with demo-cli specs (see apps/demo-cli/src/test/fixture.ts for the established pattern).
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoOAuthAuthorizedSuperTestContext } from 'demo-api/test';
-import { makeDemoFirestoreCollections, publishedGuestbook } from 'demo-firebase';
+import { makeDemoFirestoreCollections, publishedGuestbooksQuery } from 'demo-firebase';
 import { queryPublishedGuestbookEntriesDirect } from '../../lib/actions';
 import { DEMO_TEST_CLI_ENV_NAME, DEMO_TEST_CLI_NAME, buildDemoCliTestEnv, withDemoTestCli } from '../fixture';
 
@@ -104,7 +104,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
               // `/gb` allows a list only when it is constrained to published guestbooks (or the caller is
               // a sysadmin), so the constrained query succeeds and the unconstrained one is refused.
-              const published = await collections.guestbookCollection.queryDocument(publishedGuestbook()).getDocs();
+              const published = await collections.guestbookCollection.queryDocument(...publishedGuestbooksQuery({ published: true })).getDocs();
               expect(published.map((x) => x.key)).toContain(g.documentKey);
 
               await expect(collections.guestbookCollection.queryDocument().getDocs()).rejects.toMatchObject({ code: 'permission-denied' });

@@ -1,13 +1,27 @@
-/* eslint-disable dereekb-firebase/require-tagged-firestore-constraints -- legacy single-`FirestoreQueryConstraint` helper in this demo package; refactor to array-returning `@dbxModelFirebaseIndex`-tagged `*Query` factory in a future migration sweep */
 import { type FirestoreQueryConstraint, where } from '@dereekb/firebase';
 import { type Profile } from './profile';
 
 /**
- * Creates a Firestore query constraint that matches a profile by its unique username.
- *
- * @param username - The username to search for.
- * @returns A FirestoreQueryConstraint filtering on the 'username' field.
+ * Params for {@link profileWithUsernameQuery}.
  */
-export function profileWithUsername(username: string): FirestoreQueryConstraint {
-  return where<Profile>('username', '==', username);
+export interface ProfileWithUsernameQueryParams {
+  /**
+   * The username to match.
+   */
+  readonly username: string;
+}
+
+/**
+ * Query for the profile holding a given unique username.
+ *
+ * @param params - The username to match.
+ * @returns Firestore query constraints matching that username.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Profile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ */
+export function profileWithUsernameQuery(params: ProfileWithUsernameQueryParams): FirestoreQueryConstraint[] {
+  return [where<Profile>('username', '==', params.username)];
 }

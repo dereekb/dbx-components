@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { profileWithUsername, AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, type UpdateProfileParams, updateProfileParamsType } from 'FIREBASE_COMPONENTS_NAME';
+import { profileWithUsernameQuery, AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, type UpdateProfileParams, updateProfileParamsType } from 'FIREBASE_COMPONENTS_NAME';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 
@@ -39,7 +39,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
       if (!exists) {
         let username = uid;
-        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
+        const docs = await queryProfile(...profileWithUsernameQuery({ username })).getDocs(transaction);
 
         if (!docs.empty) {
           username = `${uid}-1`; // "-" isn't allowed in usernames by users, so this name should be safe.

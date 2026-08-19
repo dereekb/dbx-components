@@ -62,10 +62,11 @@
  * (Nx invokes with cwd: "{workspaceRoot}").
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { isAbsolute, relative, resolve } from 'node:path';
 
 import type { CliEnumManifest, CliModelManifestEntry } from '@dereekb/dbx-cli';
+import { writeGeneratedTsFile } from '../../../src/lib/scan-helpers/emit-generated-ts.js';
 import { parseFunctionsConfig } from './parse-functions';
 import { resolveModuleToPackage, relPath } from './resolve-package';
 import { findApiFiles } from './find-api-files';
@@ -98,7 +99,6 @@ async function main(): Promise<void> {
 
   const functionsConfigPath = resolveWorkspacePath(flags.functionsConfig);
   const outputFile = resolveWorkspacePath(flags.output);
-  const outputDir = dirname(outputFile);
   const projectName = flags.project ?? '<cli>';
   const namespace = deriveNamespace(flags.project);
 
@@ -200,15 +200,10 @@ async function main(): Promise<void> {
   const filteredModelEntries = flags.only ? modelEntries.filter((m) => flags.only?.has(m.modelType)) : modelEntries;
   const enumEntries: CliEnumManifest = flags.emitModels ? collectModelEnums({ extractions: modelSources, models: filteredModelEntries }) : {};
 
-  ensureOutputDir(outputDir);
   const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), enumEntries, enumNamespace: deriveEnumNamespace(flags.project), emitConverters: flags.emitModelConverters });
 
-  if (existsSync(outputFile) && readFileSync(outputFile, 'utf8') === formatted) {
-    console.log(`[unchanged] ${relative(WORKSPACE_ROOT, outputFile)}`);
-  } else {
-    writeFileSync(outputFile, formatted);
-    console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputFile)}`);
-  }
+  const outcome = writeGeneratedTsFile({ outputFile, contents: formatted });
+  console.log(`[${outcome}] ${relative(WORKSPACE_ROOT, outputFile)}`);
 
   const groupCount = packageCache.size === 0 ? 0 : new Set(collected.map((c) => c.entry.groupName)).size;
   const modelSummary = flags.emitModels ? ` · ${filteredModelEntries.length} models · ${Object.keys(enumEntries).length} enums` : '';
@@ -230,10 +225,6 @@ function compareEntries(a: CollectedEntry, b: CollectedEntry): number {
     result = a.entry.verb.localeCompare(b.entry.verb);
   }
   return result;
-}
-
-function ensureOutputDir(outputDir: string): void {
-  if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
 }
 
 function resolveWorkspacePath(value: string): string {
