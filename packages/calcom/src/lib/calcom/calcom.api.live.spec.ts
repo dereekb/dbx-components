@@ -1,15 +1,16 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { MS_IN_DAY, type Days, type ISO8601DayString, type Maybe } from '@dereekb/util';
+import { describe, it, expect, beforeAll, afterEach } from 'vitest';
+import { MS_IN_DAY, type Days, type ISO8601DayString, type Maybe, type TimezoneString } from '@dereekb/util';
 import { calcomOAuthFactory } from '../oauth/oauth.factory';
 import { calcomFactory } from './calcom.factory';
 import { type CalcomServerContext } from './calcom.config';
 import { getMe } from './calcom.api.user';
 import { type CalcomCalendar, calcomCalendarsToLoadFromConnectedCalendars, getBusyTimes, getBusyTimesForConnectedCalendars, getCalendars } from './calcom.api.calendar';
-import { getSchedules } from './calcom.api.schedule';
+import { type CalcomCreateScheduleInput, type CalcomSchedule, type CalcomScheduleOverride, createSchedule, deleteSchedule, getDefaultSchedule, getSchedule, getSchedules, updateSchedule } from './calcom.api.schedule';
 import { getEventTypes } from './calcom.api.eventtype';
 import { getAvailableSlots } from './calcom.api.slot';
 import { getBooking } from './calcom.api.booking';
 import { type CalcomServerError } from '../calcom.error.api';
+import { type CalcomScheduleId } from '../calcom.type';
 
 /**
  * Treat the placeholder values shipped in the committed `.env` as "no credentials".
@@ -41,6 +42,29 @@ const LIVE_TEST_TIMEOUT_MS = 45 * 1000;
  */
 const SLOT_WINDOW_START_DAYS: Days = 1;
 const SLOT_WINDOW_END_DAYS: Days = 30;
+
+/**
+ * Timezone for the throwaway schedules the write tests create. Arbitrary — it only has to echo back.
+ */
+const THROWAWAY_SCHEDULE_TIMEZONE: TimezoneString = 'America/Chicago';
+
+/**
+ * The exact field names a schedule override carries on the wire.
+ *
+ * Asserted as an EXACT key set rather than with `toBeDefined()` on each: the point of this suite is
+ * to catch the declared type drifting from the API, and a `toContain` check cannot see a field the
+ * API added that {@link CalcomScheduleOverride} does not declare.
+ */
+const CALCOM_SCHEDULE_OVERRIDE_KEYS = ['date', 'startTime', 'endTime'];
+
+/**
+ * A zero-length override range, which is how a full-day "unavailable" is expressed.
+ *
+ * See {@link CalcomScheduleOverride} — `startTime`/`endTime` are both required, so a day off cannot
+ * be sent as a bare date, but `00:00`-`00:00` is accepted and removes the day from availability.
+ */
+const FULL_DAY_UNAVAILABLE_START = '00:00';
+const FULL_DAY_UNAVAILABLE_END = '00:00';
 
 /**
  * Builds a server context that talks to the real api.cal.com/v2 with an api key.
@@ -103,6 +127,176 @@ describe.runIf(apiKey)('calcom.api (live)', () => {
         expect(schedule.ownerId).toBeDefined();
         expect(Array.isArray(schedule.overrides)).toBe(true);
         expect(Array.isArray(schedule.availability)).toBe(true);
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+  });
+
+  /**
+   * Write coverage for the /schedules endpoints, and the source of truth for the override shape.
+   *
+   * Every test here works on a THROWAWAY schedule it creates itself and deletes afterwards. Nothing
+   * in this block touches the account's default schedule: `isDefault` is pinned to false on create
+   * and never set to true, because flipping it would silently retarget the real default and every
+   * event type bound to it.
+   */
+  describe('schedule write lifecycle', () => {
+    /**
+     * Schedules created by the current test, deleted in afterEach even when the test fails.
+     */
+    let createdScheduleIds: CalcomScheduleId[] = [];
+
+    /**
+     * Creates a non-default throwaway schedule and registers it for cleanup.
+     *
+     * @param input - Overrides applied over the throwaway defaults. `isDefault` is intentionally not
+     * overridable here — see the block comment.
+     * @returns The created schedule.
+     */
+    async function createThrowawaySchedule(input: Partial<Omit<CalcomCreateScheduleInput, 'isDefault'>> = {}): Promise<CalcomSchedule> {
+      const response = await createSchedule(context)({
+        name: `dbx-live-spec-${Date.now()}`,
+        timeZone: THROWAWAY_SCHEDULE_TIMEZONE,
+        availability: [{ days: ['Monday', 'Friday'], startTime: '08:00', endTime: '12:00' }],
+        ...input,
+        isDefault: false
+      });
+
+      createdScheduleIds.push(response.data.id);
+      return response.data;
+    }
+
+    afterEach(async () => {
+      const ids = createdScheduleIds;
+      createdScheduleIds = [];
+
+      // a test that already deleted its schedule leaves a 404 here, which is not a failure
+      await Promise.all(ids.map((id) => deleteSchedule(context)(id).catch(() => undefined)));
+    });
+
+    it(
+      'should echo back a created schedule with overrides carrying exactly date/startTime/endTime',
+      async () => {
+        const date: ISO8601DayString = '2026-12-24';
+        const schedule = await createThrowawaySchedule({ overrides: [{ date, startTime: '10:00', endTime: '11:00' }] });
+
+        expect(schedule.id).toBeDefined();
+        expect(schedule.ownerId).toBeDefined();
+        expect(schedule.isDefault).toBe(false);
+        expect(schedule.timeZone).toBe(THROWAWAY_SCHEDULE_TIMEZONE);
+
+        // the caveat this replaces: the override entry shape was doc-derived and never seen on the wire
+        expect(schedule.overrides.length).toBe(1);
+        expect(Object.keys(schedule.overrides[0]).sort()).toEqual([...CALCOM_SCHEDULE_OVERRIDE_KEYS].sort());
+        expect(schedule.overrides[0].date).toBe(date);
+        expect(schedule.overrides[0].startTime).toBe('10:00');
+        expect(schedule.overrides[0].endTime).toBe('11:00');
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should read a created schedule back by id with the same override shape',
+      async () => {
+        const created = await createThrowawaySchedule({ overrides: [{ date: '2026-12-24', startTime: '10:00', endTime: '11:00' }] });
+        const result = await getSchedule(context)(created.id);
+
+        expect(result.status).toBe('success');
+        expect(result.data.id).toBe(created.id);
+        expect(Array.isArray(result.data.overrides)).toBe(true);
+        expect(Object.keys(result.data.overrides[0]).sort()).toEqual([...CALCOM_SCHEDULE_OVERRIDE_KEYS].sort());
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should accept a zero-length override as a full-day unavailable and round-trip it verbatim',
+      async () => {
+        const date: ISO8601DayString = '2026-12-28';
+        const created = await createThrowawaySchedule({
+          overrides: [{ date, startTime: FULL_DAY_UNAVAILABLE_START, endTime: FULL_DAY_UNAVAILABLE_END }]
+        });
+
+        const result = await getSchedule(context)(created.id);
+        const [override] = result.data.overrides;
+
+        // a zero-length range is NOT normalized away or widened — it persists as sent
+        expect(override.date).toBe(date);
+        expect(override.startTime).toBe(FULL_DAY_UNAVAILABLE_START);
+        expect(override.endTime).toBe(FULL_DAY_UNAVAILABLE_END);
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should reject an override that omits startTime/endTime',
+      async () => {
+        // the reason a day off must be sent as 00:00-00:00 rather than as a bare date
+        const bareDateOverride = { date: '2026-12-28' } as unknown as CalcomScheduleOverride;
+
+        const error: Maybe<CalcomServerError> = await createThrowawaySchedule({ overrides: [bareDateOverride] }).then(
+          () => undefined,
+          (e) => e as CalcomServerError
+        );
+
+        expect(error).toBeDefined();
+        expect(error?.error.code).toBe('BadRequestException');
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should apply a PATCH as a partial update, replacing overrides wholesale',
+      async () => {
+        const created = await createThrowawaySchedule({ overrides: [{ date: '2026-12-24', startTime: '10:00', endTime: '11:00' }] });
+
+        const renamed = await updateSchedule(context)(created.id, { name: `${created.name}-updated` });
+
+        expect(renamed.data.name).toBe(`${created.name}-updated`);
+        // untouched fields survive the partial update
+        expect(renamed.data.timeZone).toBe(THROWAWAY_SCHEDULE_TIMEZONE);
+        expect(renamed.data.availability.length).toBe(created.availability.length);
+        expect(renamed.data.overrides.length).toBe(1);
+
+        // overrides are REPLACED, not merged — an empty array clears them
+        const cleared = await updateSchedule(context)(created.id, { overrides: [] });
+        expect(cleared.data.overrides.length).toBe(0);
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should delete a schedule and return a bare status with no data',
+      async () => {
+        const created = await createThrowawaySchedule();
+
+        const result = await deleteSchedule(context)(created.id);
+        createdScheduleIds = createdScheduleIds.filter((id) => id !== created.id);
+
+        expect(result.status).toBe('success');
+        // unlike the event-type/webhook deletes, this one echoes nothing back
+        expect((result as unknown as Record<string, unknown>)['data']).toBeUndefined();
+
+        const readAfterDelete = await getSchedule(context)(created.id).then(
+          () => undefined,
+          (e) => e as CalcomServerError
+        );
+        expect(readAfterDelete).toBeDefined();
+      },
+      LIVE_TEST_TIMEOUT_MS
+    );
+
+    it(
+      'should return the account default schedule, which is never the throwaway',
+      async () => {
+        const created = await createThrowawaySchedule();
+        const result = await getDefaultSchedule(context)();
+
+        expect(result.status).toBe('success');
+        expect(result.data).toBeDefined();
+        expect(result.data?.isDefault).toBe(true);
+        // proof the write tests never retargeted the account's default
+        expect(result.data?.id).not.toBe(created.id);
       },
       LIVE_TEST_TIMEOUT_MS
     );
