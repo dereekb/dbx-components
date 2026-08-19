@@ -274,6 +274,7 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     ...(entry.description == null ? {} : { description: entry.description }),
     ...(entry.mcpToolNameSegment == null ? {} : { mcpToolNameSegment: entry.mcpToolNameSegment }),
     ...(entry.read == null ? {} : { read: entry.read }),
+    ...(entry.serverOnly == null ? {} : { serverOnly: entry.serverOnly }),
     ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory })
   };
   return projected;

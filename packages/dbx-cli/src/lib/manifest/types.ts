@@ -138,6 +138,14 @@ export interface CliModelManifestEntry {
    */
   readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
   /**
+   * True when the model declared `@dbxModelServerOnly` — no client may read it, on any path.
+   *
+   * Mirrors `FirebaseModelServiceConfig.serverOnly` on the runtime side. Carried on the manifest so
+   * the CLI can refuse the read locally, before choosing a transport, instead of round-tripping to
+   * an API that will refuse it anyway.
+   */
+  readonly serverOnly?: boolean;
+  /**
    * Resolved `@dbxModelServiceFactory <modelType>`-tagged export that implements this model.
    * Joined by `modelType` during model-manifest assembly. Absent when no factory was found
    * (surfaced as an orphan by the cross-file ESLint rule).
@@ -342,6 +350,13 @@ export interface McpManifestModelEntry {
    * build-time name validation so both compose the same names.
    */
   readonly mcpToolNameSegment?: string;
+  /**
+   * True when the model declared `@dbxModelServerOnly` — no client may read it, on any path.
+   *
+   * Surfaced in the MCP catalog so a tool consumer sees the refusal is structural (there is no
+   * client read grant in `firestore.rules` either) rather than a missing role it could be granted.
+   */
+  readonly serverOnly?: boolean;
 }
 
 /**

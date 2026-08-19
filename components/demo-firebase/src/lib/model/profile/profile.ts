@@ -194,6 +194,11 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
 // MARK: Profile Private Data
 export const profilePrivateDataIdentity = firestoreModelIdentity(profileIdentity, 'profilePrivate', 'prp');
 
+/**
+ * Private, server-managed half of a {@link Profile}.
+ *
+ * @dbxModelServerOnly
+ */
 export interface ProfilePrivateData {
   /**
    * Date the username was set at.

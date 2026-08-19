@@ -71,6 +71,7 @@ interface MutableInterfaceTagState {
   dbxModelOrganizationalGroupRoot: boolean;
   dbxModelCompositeKey: ExtractedCompositeKeyTag | undefined;
   dbxModelRead: DbxModelReadLevel | undefined;
+  dbxModelServerOnly: boolean;
   readonly dbxModelArchetypes: ExtractedArchetypeTag[];
   readonly dbxModelAggregatesFrom: string[];
 }
@@ -82,6 +83,7 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
     dbxModelOrganizationalGroupRoot: false,
     dbxModelCompositeKey: undefined,
     dbxModelRead: undefined,
+    dbxModelServerOnly: false,
     dbxModelArchetypes: [],
     dbxModelAggregatesFrom: []
   };
@@ -97,7 +99,8 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
     dbxModelAggregatesFrom: state.dbxModelAggregatesFrom,
     dbxModelOrganizationalGroupRoot: state.dbxModelOrganizationalGroupRoot,
     ...(state.dbxModelCompositeKey ? { dbxModelCompositeKey: state.dbxModelCompositeKey } : {}),
-    ...(state.dbxModelRead ? { dbxModelRead: state.dbxModelRead } : {})
+    ...(state.dbxModelRead ? { dbxModelRead: state.dbxModelRead } : {}),
+    ...(state.dbxModelServerOnly ? { dbxModelServerOnly: true } : {})
   };
 }
 
@@ -125,6 +128,9 @@ function applyInterfaceTag(state: MutableInterfaceTagState, tagName: string, val
       break;
     case 'dbxModelRead':
       applyReadTag(state, value);
+      break;
+    case 'dbxModelServerOnly':
+      state.dbxModelServerOnly = true;
       break;
     default:
       break;

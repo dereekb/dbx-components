@@ -86,6 +86,11 @@ export interface ExtractedInterfaceTags {
   readonly dbxModelOrganizationalGroupRoot: boolean;
   readonly dbxModelCompositeKey?: ExtractedCompositeKeyTag;
   readonly dbxModelRead?: DbxModelReadLevel;
+  /**
+   * True when the interface carries `@dbxModelServerOnly` — no client read grant exists in
+   * `firestore.rules`, and the model API must refuse the read too.
+   */
+  readonly dbxModelServerOnly?: boolean;
 }
 
 /**

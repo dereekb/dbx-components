@@ -192,6 +192,10 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
  * @dbxModelServiceFactory systemState
  */
 export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `sys`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: DemoFirebaseContext, _model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
     return grantFullAccessIfAdmin(context);
   },
@@ -256,6 +260,10 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<De
  * @dbxModelServiceFactory profilePrivateData
  */
 export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `pp`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
     return grantFullAccessIfAdmin(context);
   },
@@ -306,6 +314,10 @@ export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFa
  * @dbxModelServiceFactory notification
  */
 export const notificationFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Notification, NotificationDocument, NotificationRoles>({
+  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbn`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<Notification, NotificationDocument>, context: DemoFirebaseContext, _model: NotificationDocument): PromiseOrValue<GrantedRoleMap<NotificationRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -316,6 +328,10 @@ export const notificationFirebaseModelServiceFactory = firebaseModelServiceFacto
  * @dbxModelServiceFactory notificationWeek
  */
 export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationWeek, NotificationWeekDocument, NotificationWeekRoles>({
+  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbnw`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationWeek, NotificationWeekDocument>, context: DemoFirebaseContext, _model: NotificationWeekDocument): PromiseOrValue<GrantedRoleMap<NotificationWeekRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -413,6 +429,10 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
  * @dbxModelServiceFactory openRouterPrompt
  */
 export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPrompt, OpenRouterPromptDocument, OpenRouterPromptRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `orp`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPrompt, OpenRouterPromptDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — a prompt is operational configuration
   },
@@ -423,6 +443,10 @@ export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceF
  * @dbxModelServiceFactory openRouterPromptVersion
  */
 export const openRouterPromptVersionFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPromptVersion, OpenRouterPromptVersionDocument, OpenRouterPromptVersionRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `orpv`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPromptVersion, OpenRouterPromptVersionDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptVersionDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptVersionRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },

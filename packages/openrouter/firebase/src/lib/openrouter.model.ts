@@ -80,6 +80,7 @@ export enum OpenRouterPromptState {
  * @dbxModel
  * @dbxModelRead admin
  * @dbxModelUpdate admin
+ * @dbxModelServerOnly
  */
 export interface OpenRouterPrompt {
   /**
@@ -231,6 +232,7 @@ export interface OpenRouterPromptVersionMessage {
  *
  * @dbxModel
  * @dbxModelRead admin
+ * @dbxModelServerOnly
  */
 export interface OpenRouterPromptVersion {
   /**

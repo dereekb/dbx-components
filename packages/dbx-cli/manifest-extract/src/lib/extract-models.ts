@@ -92,6 +92,7 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
   const jsDocs = decl.getJsDocs();
   const hasDbxModelTag = jsDocsHaveTag(jsDocs, 'dbxModel');
   const dbxModelRead = readDbxModelReadTag(jsDocs);
+  const dbxModelServerOnly = jsDocsHaveTag(jsDocs, 'dbxModelServerOnly');
   const mcpToolNameSegment = readMcpToolNameSegmentTag(jsDocs);
   const extendsNames = decl.getExtends().map(resolveExtendsName);
   const props: ModelExtractionInterfaceProp[] = [];
@@ -117,6 +118,7 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
     extendsNames,
     props,
     ...(dbxModelRead === undefined ? {} : { dbxModelRead }),
+    ...(dbxModelServerOnly ? { dbxModelServerOnly: true } : {}),
     ...(mcpToolNameSegment === undefined ? {} : { mcpToolNameSegment })
   };
 }

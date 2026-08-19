@@ -3,7 +3,7 @@ import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, type OidcModelScopeRequiremen
 import { fullAccessRoleMap, noAccessRoleMap, type GrantedRoleMap } from '@dereekb/model';
 import { forbiddenError, notFoundError } from '../../../function/error';
 import { nestFirebaseDoesNotExistError } from '../../model/permission.error';
-import { ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure, modelAccessRoleMapResultFromGrantedRoles } from './model.api.get.service';
+import { MODEL_IS_SERVER_ONLY_ERROR_CODE, ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure, modelAccessRoleMapResultFromGrantedRoles } from './model.api.get.service';
 import { type ModelApiDispatchConfig } from './model.api.dispatch';
 
 describe('modelAccessReadErrorFromUseMultipleModelsFailure()', () => {
@@ -419,5 +419,84 @@ describe('ModelApiGetService — readRoleMaps', () => {
       await expect(service.readRoleMaps({ modelType: 'guestbook', keys: ['gb/a'], auth: callerAuth(), targetUid: 'ghost' })).rejects.toThrow('No user exists with uid "ghost"');
       expect(roleMapForKey).not.toHaveBeenCalled();
     });
+  });
+});
+
+// MARK: Server-only refusal on the direct-read (/get) path
+// The model API authorizes through `roleMapForModel` under the Admin SDK, which never consults
+// `firestore.rules`. For a model the rules file leaves unmatched (or denies outright), those two
+// systems disagree and this path is the one leaking the document. These assert the gate closes it —
+// on BOTH read shapes, BEFORE the role map runs, and with a code that says why.
+describe('ModelApiGetService — server-only refusal on direct reads', () => {
+  function buildService(serverOnlyTypes: readonly string[]) {
+    const useModel = vi.fn(async (_modelType: any, opts: any) => opts.use({ document: { accessor: { get: async () => ({ data: () => ({ name: 'Doc' }) }) } } }));
+    const useMultipleModels = vi.fn(async (_modelType: any, opts: any) => opts.use([{ document: { accessor: { get: async () => ({ data: () => ({ name: 'Doc' }) }), documentRef: { path: 'gb/1' } } } }], { errors: [] }));
+    const model = vi.fn(() => (type: string) => ({ serverOnly: serverOnlyTypes.includes(type) ? true : undefined }));
+    const nestContext = { useModel, useMultipleModels, model };
+
+    const config: ModelApiDispatchConfig = {
+      callModelFn: (() => undefined) as any,
+      makeNestContext: (() => nestContext) as any
+    };
+
+    return { service: new ModelApiGetService(config, {} as any), useModel, useMultipleModels };
+  }
+
+  async function codeOfRejected(fn: () => Promise<unknown>): Promise<string | undefined> {
+    let caught: any;
+
+    try {
+      await fn();
+    } catch (e) {
+      caught = e;
+    }
+
+    const details = caught?.details ?? caught?.errorInfo?.details ?? caught;
+    return details?.code ?? caught?.code;
+  }
+
+  const auth = { uid: 'user-1', token: {} } as any;
+
+  it('refuses a single read of a server-only model before the role map runs', async () => {
+    const { service, useModel } = buildService(['systemState']);
+
+    expect(await codeOfRejected(() => service.readDocument('systemState', 'sys/config', auth))).toBe(MODEL_IS_SERVER_ONLY_ERROR_CODE);
+    expect(useModel).not.toHaveBeenCalled();
+  });
+
+  it('refuses a multi read of a server-only model before the role map runs', async () => {
+    const { service, useMultipleModels } = buildService(['systemState']);
+
+    expect(await codeOfRejected(() => service.readDocuments('systemState', ['sys/config'], auth))).toBe(MODEL_IS_SERVER_ONLY_ERROR_CODE);
+    expect(useMultipleModels).not.toHaveBeenCalled();
+  });
+
+  it('says WHY, rather than implying a missing role', async () => {
+    const { service } = buildService(['systemState']);
+    let caught: any;
+
+    try {
+      await service.readDocument('systemState', 'sys/config', auth);
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught.message).toContain('server-only');
+    expect(caught.message).toContain('firestore.rules');
+  });
+
+  it('leaves a model that did NOT opt in completely unaffected', async () => {
+    const { service, useModel } = buildService(['systemState']);
+    const result = await service.readDocument('guestbook', 'gb/1', auth);
+
+    expect(result).toEqual({ key: 'gb/1', data: { name: 'Doc' } });
+    expect(useModel).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not refuse when no model opted in at all — the framework default is opt-out', async () => {
+    const { service, useModel } = buildService([]);
+    await service.readDocument('systemState', 'sys/config', auth);
+
+    expect(useModel).toHaveBeenCalledTimes(1);
   });
 });

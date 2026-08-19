@@ -745,6 +745,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'ut', longName: 'uniqueTask', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
     ],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -913,6 +914,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       }
     ],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationWeekFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1016,6 +1018,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {

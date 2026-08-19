@@ -6,7 +6,7 @@ import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 import { type FirebaseServerAuthData } from '../auth.context.server';
-import { firebaseServerErrorInfo } from '../../../function/error';
+import { firebaseServerErrorInfo, forbiddenError } from '../../../function/error';
 import { assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api.scope';
 
 // MARK: Types
@@ -14,6 +14,14 @@ import { assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api
  * Maximum number of keys allowed in a multi-read request.
  */
 export const MAX_MODEL_ACCESS_MULTI_READ_KEYS = 50;
+
+/**
+ * Error code returned when a read targets a model the app declared SERVER-ONLY.
+ *
+ * Deliberately distinct from a permission error: nothing the caller can be granted will make this
+ * read succeed, so the message needs to say WHY rather than implying a missing role.
+ */
+export const MODEL_IS_SERVER_ONLY_ERROR_CODE = 'MODEL_IS_SERVER_ONLY';
 
 /**
  * Result of a single document access read.
@@ -261,6 +269,55 @@ export class ModelApiGetService {
   }
 
   /**
+   * Refuses a read of a model the app declared SERVER-ONLY, BEFORE `useModel` runs.
+   *
+   * The model API authorizes through `roleMapForModel` under the Admin SDK, which bypasses
+   * `firestore.rules` entirely. For a model the rules file deliberately leaves unmatched (or denies
+   * outright), those two systems disagree and the model API is the one handing out the document.
+   * Gating here — ahead of the role map, and on the ONE service both `/model/<type>/get` and the
+   * `model-get` MCP tool share — is what makes the two read paths agree.
+   *
+   * @param modelType - The Firestore model type being read.
+   * @param auth - The request's auth data; used to build the context the service lookup needs.
+   * @throws {HttpsError} `MODEL_IS_SERVER_ONLY` when the model opted in via `serverOnly`.
+   */
+  private _assertNotServerOnly(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): void {
+    if (this._isServerOnlyModel(modelType, auth)) {
+      throw forbiddenError({
+        status: 403,
+        code: MODEL_IS_SERVER_ONLY_ERROR_CODE,
+        message: `Model "${modelType}" is server-only and cannot be read through the model API. It has no client read grant in firestore.rules either — reach it through a callable that owns its access policy.`,
+        data: { modelType }
+      });
+    }
+  }
+
+  /**
+   * Reads the `serverOnly` flag off the registered model service, tolerating a type whose service
+   * cannot be constructed (which `readDocument` then reports as an unknown model).
+   *
+   * @param modelType - The Firestore model type to inspect.
+   * @param auth - The request's auth data.
+   * @returns `true` when the model declared itself server-only.
+   */
+  private _isServerOnlyModel(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): boolean {
+    const authRef = this._makeAuthRef(auth);
+    let result = false;
+
+    try {
+      const inContextService = this._nestContext.model(authRef);
+      const modelService = inContextService(modelType as never) as unknown as { readonly serverOnly?: boolean };
+      result = modelService?.serverOnly === true;
+    } catch {
+      // an unregistered / unconstructable type is not our error to raise here — the subsequent
+      // useModel call reports it as an unknown model
+      result = false;
+    }
+
+    return result;
+  }
+
+  /**
    * Returns the registered {@link FirestoreModelIdentity} for the given `modelType` string, or
    * `undefined` when no model of that type is registered.
    *
@@ -309,6 +366,7 @@ export class ModelApiGetService {
    */
   async readDocument(modelType: FirestoreModelType, key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessReadResult> {
     this._assertReadScope(modelType, auth);
+    this._assertNotServerOnly(modelType, auth);
 
     const authRef = this._makeAuthRef(auth);
     const doc = await this._nestContext.useModel(modelType as any, {
@@ -339,6 +397,7 @@ export class ModelApiGetService {
    */
   async readDocuments(modelType: FirestoreModelType, keys: FirestoreModelKey[], auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessMultiReadResult> {
     this._assertReadScope(modelType, auth);
+    this._assertNotServerOnly(modelType, auth);
 
     const authRef = this._makeAuthRef(auth);
 

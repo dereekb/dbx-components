@@ -744,6 +744,7 @@ export interface NotificationSendCheckpoints {
  *
  * @dbxModel
  * @dbxModelRead system
+ * @dbxModelServerOnly
  */
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
@@ -971,6 +972,7 @@ export const NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT = 5000;
  *
  * @dbxModel
  * @dbxModelRead system
+ * @dbxModelServerOnly
  */
 export interface NotificationWeek {
   /**

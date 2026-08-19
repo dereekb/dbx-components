@@ -88,6 +88,10 @@
             "command": "npx nx test dbx-cli-firestore-query-manifest"
           },
           {
+            "description": "run dbx-cli-firestore-rules tests",
+            "command": "npx nx test dbx-cli-firestore-rules"
+          },
+          {
             "description": "run dbx-cli-manifest-extract tests",
             "command": "npx nx test dbx-cli-manifest-extract"
           },

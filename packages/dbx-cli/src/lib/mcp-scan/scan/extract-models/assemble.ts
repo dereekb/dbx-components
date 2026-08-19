@@ -223,7 +223,8 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     ...buildModelMarkerFlags(markers),
     ...buildModelArchetypeFields(archetypeInfo),
     ...(compositeKey ? { compositeKey } : {}),
-    ...(iface.tags.dbxModelRead ? { read: iface.tags.dbxModelRead } : {})
+    ...(iface.tags.dbxModelRead ? { read: iface.tags.dbxModelRead } : {}),
+    ...(iface.tags.dbxModelServerOnly ? { serverOnly: true } : {})
   };
 }
 

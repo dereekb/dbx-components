@@ -80,6 +80,7 @@ export type SystemStateStoredData = Record<string, any>;
  * @dbxModel
  * @dbxModelRead system
  * @dbxModelArchetype system-state-singleton
+ * @dbxModelServerOnly
  */
 export interface SystemState<T extends SystemStateStoredData = SystemStateStoredData> {
   /**
