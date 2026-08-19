@@ -1,6 +1,7 @@
-import { type ActionCommandSpec, type CliContext, requireCliFirestoreSession } from '@dereekb/dbx-cli';
+import { type ActionCommandSpec, type CliContext } from '@dereekb/dbx-cli';
 import { type FirebaseAuthUserId, limit } from '@dereekb/firebase';
-import { type Guestbook, type GuestbookEntry, type GuestbookKey, guestbookIdentity, makeDemoFirestoreCollections, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
+import { type Guestbook, type GuestbookEntry, type GuestbookKey, guestbookIdentity, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
+import { demoCliFirestore } from '../firestore';
 
 // MARK: queryPublishedGuestbookEntriesDirect
 /**
@@ -49,7 +50,8 @@ export interface QueryPublishedGuestbookEntriesDirectOutput {
  * aggregation over the model HTTP API — one round-trip per page, per guestbook. This version opens one
  * session (`GET /api/session/firestore`) and then reads Firestore itself, through the same security
  * rules the browser app is subject to, using the same `makeDemoFirestoreCollections` object the
- * Angular app builds.
+ * Angular app builds — reached through {@link demoCliFirestore}, so the collections arrive at their
+ * real `DemoFirestoreCollections` type and are not rebuilt here.
  *
  * Requires the env to carry a Firebase client config and the logged-in user to be an admin holding the
  * `session.firestore` scope. There is deliberately no fallback to the model API — a failure throws.
@@ -63,8 +65,9 @@ export interface QueryPublishedGuestbookEntriesDirectOutput {
  * ```
  */
 export async function queryPublishedGuestbookEntriesDirect(input: QueryPublishedGuestbookEntriesDirectInput): Promise<QueryPublishedGuestbookEntriesDirectOutput> {
-  const session = await requireCliFirestoreSession(input.context);
-  const collections = makeDemoFirestoreCollections(session.firestoreContext);
+  // one call for both: `collections` is typed `DemoFirestoreCollections`, and `session` is the very
+  // session the CLI already opened — no second collections build, no second session
+  const { collections, session } = await demoCliFirestore(input.context);
 
   // `publishedGuestbooksQuery` is also what the Angular app's guestbook list and the demo-api query
   // handler use — the constraint, the collections object, and the rules are all shared; only the

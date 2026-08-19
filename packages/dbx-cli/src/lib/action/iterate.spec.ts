@@ -60,8 +60,8 @@ function buildStubContext(callModel: ReturnType<typeof buildCallModelMock>['call
     env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' },
     accessToken: 'access-token',
     callModel: callModel as CliContext['callModel'],
-    getModel: vi.fn(async () => ({ result: null })) as CliContext['getModel'],
-    getMultipleModels: vi.fn(async () => ({ results: [] })) as CliContext['getMultipleModels']
+    getModel: vi.fn(async (_modelType: string, key: string) => ({ key, data: null })) as CliContext['getModel'],
+    getMultipleModels: vi.fn(async () => ({ results: [], errors: [] })) as CliContext['getMultipleModels']
   };
 }
 

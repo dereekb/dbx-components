@@ -12,6 +12,7 @@ function buildModels(input?: { readonly collectionForModel?: CliFirestoreModels[
     session: {} as never,
     collections: {},
     binding: { collections: () => ({}), models: (() => ({})) as never, collectionForModel: input?.collectionForModel },
+    models: (() => ({})) as never,
     allTypes: () => ['gb', 'gbe'],
     serviceFor: () => ({ loadModelForKey: (() => undefined) as never, getFirestoreCollection: () => REGISTERED }),
     modelTypeForCollection: (collectionName) => collectionName

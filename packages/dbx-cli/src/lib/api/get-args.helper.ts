@@ -98,7 +98,10 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  *    `modelType` or a {@link CliError} is thrown (the backend route is single-modelType per call).
  * 2. Otherwise `firstArg` is treated as the explicit `modelType` and `rest` are the keys.
  *
- * Always rejects empty key lists and lists exceeding 50 keys.
+ * Always rejects an empty key list. There is deliberately NO length cap: `get-many -` reads its keys
+ * from stdin and is unbounded, and both read paths batch for themselves —
+ * `getMultipleModelsOverHttpChunked` chunks at 50 per request, and `getMultipleModelsOverFirestore`
+ * holds a sliding window of 50 in-flight reads.
  *
  * @param input - Positionals captured by yargs plus the optional model manifest.
  * @param input.firstArg - The first positional from yargs.

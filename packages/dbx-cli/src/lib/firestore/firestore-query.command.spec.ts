@@ -47,6 +47,7 @@ function buildModels(): CliFirestoreModels {
     session: { fromCache: false } as never,
     collections: {},
     binding: { collections: () => ({}), models: (() => ({})) as never },
+    models: (() => ({})) as never,
     allTypes: () => ['guestbook'],
     serviceFor: () => ({ loadModelForKey: (() => undefined) as never, getFirestoreCollection: () => collection as never }),
     modelTypeForCollection: () => 'guestbook'

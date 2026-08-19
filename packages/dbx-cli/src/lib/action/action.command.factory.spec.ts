@@ -12,8 +12,8 @@ function buildStubContext(overrides?: Partial<CliContext>): CliContext {
     env: { apiBaseUrl: 'http://localhost', oidcIssuer: 'http://localhost', clientId: 'cid' },
     accessToken: 'access-token',
     callModel: vi.fn(async () => ({ ok: true })) as CliContext['callModel'],
-    getModel: vi.fn(async () => ({ result: null })) as CliContext['getModel'],
-    getMultipleModels: vi.fn(async () => ({ results: [] })) as CliContext['getMultipleModels'],
+    getModel: vi.fn(async (_modelType: string, key: string) => ({ key, data: null })) as CliContext['getModel'],
+    getMultipleModels: vi.fn(async () => ({ results: [], errors: [] })) as CliContext['getMultipleModels'],
     ...overrides
   };
 }

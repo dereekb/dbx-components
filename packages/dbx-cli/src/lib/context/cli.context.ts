@@ -54,7 +54,8 @@ export interface CliContext {
   /**
    * The app's models bound to the direct-Firestore session — what `firestore-get` /
    * `firestore-query` dispatch through. Layered on the {@link CliContext.getFirestoreSession} memo,
-   * so all three thunks share ONE session.
+   * so all three thunks share ONE session, and separately memoized itself, so the app's collections
+   * object is built ONCE per invocation rather than once per call.
    *
    * Present only when the CLI was configured with a `firestore` binding (`runCli({ firestore })`).
    */
@@ -165,9 +166,14 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
   const apiBaseUrl = input.env.apiBaseUrl;
   const accessToken = input.accessToken;
 
-  // memoized thunk — keeps this factory synchronous and side-effect-free while paying the session
-  // cost only for commands that actually reach for Firestore
+  // memoized thunks — keep this factory synchronous and side-effect-free while paying the session
+  // cost only for commands that actually reach for Firestore. Declared together, and above
+  // `getFirestoreSession`, because its `.catch` clears both.
   let firestoreSession: Maybe<Promise<CliFirestoreSessionContext>>;
+  // second memo, layered on the session memo: `createCliFirestoreModels` calls
+  // `binding.collections(...)`, which rebuilds the app's ENTIRE collections object — without this,
+  // every `getFirestoreModels()` call rebuilds it even though the session behind it is shared.
+  let firestoreModels: Maybe<Promise<CliFirestoreModels>>;
 
   function getFirestoreSession(): Promise<CliFirestoreSessionContext> {
     if (firestoreSession == null) {
@@ -178,8 +184,11 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
         accessToken,
         sessionCache: input.firestoreSessionCache
       }).catch((e) => {
-        // drop the memo so a caller that handles the failure can retry rather than replaying it
+        // drop the memo so a caller that handles the failure can retry rather than replaying it —
+        // and the models memo with it, since a models view built over a dead session is dead too.
+        // Both must clear together or a retry would rebuild the collections against the old session.
         firestoreSession = undefined;
+        firestoreModels = undefined;
         throw e;
       });
     }
@@ -188,9 +197,25 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
   }
 
   const firestore = input.firestore;
-  // layered on the session memo rather than memoizing separately, so a dropped session memo drops
-  // this one too and both retry against one fresh session
-  const getFirestoreModels = firestore == null ? undefined : () => getFirestoreSession().then((session) => createCliFirestoreModels({ binding: firestore, session }));
+
+  function getFirestoreModelsForBinding(binding: CliFirestoreBinding): Promise<CliFirestoreModels> {
+    if (firestoreModels == null) {
+      firestoreModels = getFirestoreSession()
+        .then((session) => createCliFirestoreModels({ binding, session }))
+        .catch((e) => {
+          // drop only THIS memo, not the session's: reaching here past an opened session means
+          // `binding.collections` itself threw, and the session is still good — so a retry rebuilds
+          // the collections without paying to re-open a healthy session. (A session failure clears
+          // both, from the session memo's own `.catch` above.)
+          firestoreModels = undefined;
+          throw e;
+        });
+    }
+
+    return firestoreModels;
+  }
+
+  const getFirestoreModels = firestore == null ? undefined : () => getFirestoreModelsForBinding(firestore);
 
   return {
     cliName: input.cliName,

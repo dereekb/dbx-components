@@ -23,17 +23,30 @@ function buildEntry(input: Partial<CliModelManifestEntry> & { readonly modelType
 
 const MANIFEST: CliModelManifest = [buildEntry({ modelType: 'guestbook', collectionPrefix: 'gb' }), buildEntry({ modelType: 'systemState', collectionPrefix: 'sys', serverOnly: true })];
 
+const REGISTERED_MODEL_TYPES: readonly string[] = ['guestbook', 'guestbookEntry'];
+
 function buildModels(loadModelForKey?: (key: string) => unknown): CliFirestoreModels {
+  const allTypes = () => [...REGISTERED_MODEL_TYPES];
+
   return {
     session: { fromCache: true } as never,
     collections: {},
     binding: { collections: () => ({}), models: (() => ({})) as never },
-    allTypes: () => ['guestbook'],
-    serviceFor: () =>
-      ({
+    models: (() => ({})) as never,
+    allTypes,
+    // validates against `allTypes()` the way `createCliFirestoreModels` does. The fixture used to hand
+    // back a service for ANY model type, which left `getMultipleModelsOverFirestore`'s hoisted
+    // `serviceFor` call untestable — an unregistered type could not fail here at all.
+    serviceFor: ((modelType: string) => {
+      if (!allTypes().includes(modelType)) {
+        throw new CliError({ message: `Unknown model type "${modelType}".`, code: 'INVALID_ARGUMENT' });
+      }
+
+      return {
         loadModelForKey: ((key: string) => ({ snapshotData: async () => (loadModelForKey ? loadModelForKey(key) : { name: key }) })) as never,
         getFirestoreCollection: (() => undefined) as never
-      }) as never,
+      } as never;
+    }) as never,
     modelTypeForCollection: (collectionName) => collectionName
   };
 }
@@ -245,7 +258,9 @@ describe('getMultipleModelsOverFirestore()', () => {
 
   it("caps concurrency at the API path's batch width while preserving key order", async () => {
     // `get-many -` reads unbounded keys from stdin, so one Promise.all over the whole list would open
-    // thousands of concurrent reads. The batches are sequential; reads within a batch are not.
+    // thousands of concurrent reads. `performAsyncTasks` holds a SLIDING WINDOW of that width open —
+    // there is no barrier between batches, so a lane dispatches its next key the moment its own read
+    // settles rather than waiting for 49 siblings.
     let inFlight = 0;
     let peak = 0;
     const keys = Array.from({ length: MAX_MODEL_ACCESS_MULTI_READ_KEYS * 2 + 20 }, (_unused, index) => `gb/${index}`);
@@ -264,9 +279,14 @@ describe('getMultipleModelsOverFirestore()', () => {
     const result = await getMultipleModelsOverFirestore({ models, modelType: 'guestbook', keys });
 
     expect(result.results).toHaveLength(keys.length);
+    // load-bearing BEYOND this function: `performAsyncTasks` indexes its outcome array by DISPATCH
+    // order (`currentRunIndex`), which coincides with input order only because tasks are popped in
+    // input order from a single dispatch site. That is an implementation detail of
+    // `performTasksInParallelFunction`, not a documented contract — this assertion is what would
+    // catch it changing, and `getMultipleModelsOverFirestore` documents key order as preserved.
     expect(result.results.map((r) => r.key)).toEqual(keys);
-    // exactly the batch width: `toBe` pins BOTH halves at once -- above 1 proves the reads within a
-    // batch really do overlap, and not `keys.length` proves the batching caps them.
+    // exactly the window width: `toBe` pins BOTH halves at once -- above 1 proves the reads really do
+    // overlap, and not `keys.length` proves the window caps them.
     expect(peak).toBe(MAX_MODEL_ACCESS_MULTI_READ_KEYS);
   });
 
@@ -281,5 +301,62 @@ describe('getMultipleModelsOverFirestore()', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]?.key).toBe('gb/bad');
     expect(result.errors[0]?.code).toBe('INVALID_ARGUMENT');
+  });
+
+  it('preserves key order within BOTH partitions when failures interleave', async () => {
+    // the partition is built from one dispatch-ordered outcome list, so interleaving failures must not
+    // reorder either side. Alternating is the shape that would expose a scheme that appended a failure
+    // to `results` (or a success to `errors`) out of turn.
+    const keys = Array.from({ length: 10 }, (_unused, index) => `gb/${index}`);
+    const isBad = (key: string) => Number(key.slice(3)) % 2 === 1;
+    const models = buildModels((key) => {
+      if (isBad(key)) throw new Error(`unexpected key/path "${key}" for expected type guestbook`);
+      return { name: key };
+    });
+
+    const result = await getMultipleModelsOverFirestore({ models, modelType: 'guestbook', keys });
+
+    expect(result.results.map((r) => r.key)).toEqual(keys.filter((key) => !isBad(key)));
+    expect(result.errors.map((e) => e.key)).toEqual(keys.filter(isBad));
+  });
+
+  it('preserves key order across the window boundary under uneven latency', async () => {
+    // the sliding window is where order is easiest to lose: a lane that finishes early dispatches the
+    // next key immediately, so completion order genuinely differs from input order here. Making the
+    // EARLIEST keys the slowest maximises that divergence -- key 0 settles last, yet must come first.
+    const keys = Array.from({ length: MAX_MODEL_ACCESS_MULTI_READ_KEYS + 15 }, (_unused, index) => `gb/${index}`);
+    const completionOrder: string[] = [];
+    const models = buildModels(async (key) => {
+      const index = Number(key.slice(3));
+      await new Promise((resolve) => setTimeout(resolve, Math.max(0, 12 - index)));
+      completionOrder.push(key);
+      return { name: key };
+    });
+
+    const result = await getMultipleModelsOverFirestore({ models, modelType: 'guestbook', keys });
+
+    expect(result.results.map((r) => r.key)).toEqual(keys);
+    // guards the guard: if the latencies collapsed to uniform, completion order would equal input
+    // order and the assertion above would hold for a fully sequential implementation too.
+    expect(completionOrder).not.toEqual(keys);
+  });
+
+  it('fails the whole call for an unregistered modelType rather than every key', async () => {
+    // `serviceFor` is hoisted out of the task fn on purpose: resolving it per key would report N
+    // unreadable documents in `errors` for what is really one wiring mistake.
+    let error: unknown;
+    try {
+      await getMultipleModelsOverFirestore({ models: buildModels(), modelType: 'notAModel', keys: ['x/a', 'x/b'] });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(CliError);
+    expect((error as CliError).code).toBe('INVALID_ARGUMENT');
+  });
+
+  it('returns empty partitions for no keys', async () => {
+    const result = await getMultipleModelsOverFirestore({ models: buildModels(), modelType: 'guestbook', keys: [] });
+    expect(result).toEqual({ results: [], errors: [] });
   });
 });

@@ -21,14 +21,22 @@ rules never consult `roleMapForModel`. See [Rules vs roleMap](#rules-vs-rolemap)
 
 ### Wiring
 
-`dbx-cli` cannot import an app's collections factory, so the direct path needs one opt-in hook:
+`dbx-cli` cannot import an app's collections factory, so the direct path needs one opt-in hook.
+Register it ONCE with `cliFirestoreAccessorFactory`, then wire the CLI with its `.binding`:
 
 ```ts
+// src/lib/firestore.ts — the one place the app names its <X>FirestoreCollections
+export const demoCliFirestore = cliFirestoreAccessorFactory({
+  collections: makeDemoFirestoreCollections,
+  models: demoFirebaseModelServices
+});
+
+// src/index.ts
 runCli({
   cliName: 'demo-cli',
   modelManifest: DEMO_CLI_MODEL_MANIFEST,
   // one hook wires `firestore-get` / `firestore-query` for EVERY registered model
-  firestore: cliFirestoreBinding({ collections: makeDemoFirestoreCollections, models: demoFirebaseModelServices }),
+  firestore: demoCliFirestore.binding,
   firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST
 });
 ```
@@ -37,6 +45,32 @@ runCli({
 - `firestoreQueryManifest` enables the auth-bypassed `firestore-queries` catalog on its own; paired
   with `firestore` it also enables `firestore-query`.
 - `disableFirestoreGet` / `disableFirestoreQuery` suppress either command.
+
+Pass the SAME `demoCliFirestore.binding` object to `runCli`, to `createFirestoreSessionDoctorCheck`,
+and to `buildTestCliContext`. The accessor reuses the context's memoized collections only when it
+recognizes its own binding by identity, so calling `cliFirestoreBinding` a second time with the same
+arguments would quietly build the collections twice.
+
+### Typed reads in your own actions
+
+`cliFirestoreBinding` erases `C` on purpose — that erasure is what keeps generics out of `CliContext`
+and `runCli`. The accessor is how an action gets the types back:
+
+```ts
+export async function queryPublishedEntriesDirect(input: { readonly context: CliContext }) {
+  // collections: DemoFirestoreCollections — NOT `object`
+  const { collections, serviceFor, session } = await demoCliFirestore(input.context);
+  const docs = await collections.guestbookCollection.queryDocument(limit(10)).getDocs();
+
+  // loadModelForKey returns GuestbookDocument — NOT FirestoreDocument<unknown>
+  const guestbook = await serviceFor('guestbook').loadModelForKey(key).snapshotData();
+}
+```
+
+Reads always go through the collection's own `documentAccessor()`, and always through
+`snapshotData()` — never a raw `getWithConverter(null)`. The converter is what applies declared
+defaults, strips undeclared fields, and decodes `firestoreEncodedArray` / `firestoreBitwiseSet`
+fields; skipping it is what would make `--via firestore` and `--via api` disagree.
 
 ### Commands
 

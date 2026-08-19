@@ -173,6 +173,84 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                     expect(direct.data.key).toBe(overApi.data.key);
                     expect(direct.data.data).toEqual(overApi.data.data);
                   });
+
+                  it('matches `get` field-for-field on a POPULATED DATE model too', async () => {
+                    // the Guestbook parity case above never exercises a populated date: the fixture leaves
+                    // `lockedAt` undefined, so both transports agree on a field neither one emits. A
+                    // GuestbookEntry has non-optional `createdAt` / `updatedAt` (`firestoreDate({
+                    // saveDefaultAsNow: true })`), which is what actually pins converter parity -- a raw
+                    // read would surface a Timestamp here where `snapshotData()` surfaces an ISO string.
+                    const direct = parseEnvelope((await runCli(['firestore-get', e.documentKey])).stdoutText);
+                    const overApi = parseEnvelope((await runCli(['get', e.documentKey, '--via', 'api'])).stdoutText);
+
+                    expect(direct.ok).toBe(true);
+                    expect(overApi.ok).toBe(true);
+                    expect(direct.data.key).toBe(overApi.data.key);
+                    expect(direct.data.data).toEqual(overApi.data.data);
+                    // guards the guard: a `toEqual` over two absent fields would pass vacuously
+                    expect(typeof direct.data.data.createdAt).toBe('string');
+                    expect(typeof direct.data.data.updatedAt).toBe('string');
+                    expect(direct.data.data.message).toBe('queried directly');
+                  });
+                });
+
+                describe('get-many --via firestore', () => {
+                  it('emits the same {results,errors} envelope as --via api', async () => {
+                    // the ONLY emulator coverage of `getMultipleModelsOverFirestore` -- `get.spec.ts` runs
+                    // on a context whose scopes omit FIRESTORE_SESSION_OIDC_SCOPE, so its `--via auto`
+                    // falls back to the API path and never reaches the direct fan-out.
+                    const direct = parseEnvelope((await runCli(['get-many', g.documentKey, '--via', 'firestore'])).stdoutText);
+                    const overApi = parseEnvelope((await runCli(['get-many', g.documentKey, '--via', 'api'])).stdoutText);
+
+                    expect(direct.ok).toBe(true);
+                    expect(direct.meta).toMatchObject({ source: 'firestore', via: 'firestore' });
+                    expect(overApi.meta).toMatchObject({ source: 'api', via: 'api' });
+                    expect(direct.data).toEqual(overApi.data);
+                    expect(direct.data.results).toHaveLength(1);
+                    expect(direct.data.results[0].key).toBe(g.documentKey);
+                    expect(direct.data.errors).toEqual([]);
+                  });
+
+                  it('partitions a rules-refused missing document into errors and still returns the rest', async () => {
+                    // NOT `data: null`, and that is a genuine --via divergence worth pinning: `/gb` is
+                    // `allow read: if resourceIsPublished()`, and for a document that does not exist
+                    // `resource` is null, so the predicate fails and the rules REFUSE the read. The direct
+                    // path therefore reports permission-denied where the API path -- Admin SDK, authorized
+                    // by `roleMapForModel`, rules bypassed -- reports the document as absent.
+                    //
+                    // The `data: null` branch is unreachable from out here for any demo model (every one is
+                    // `resource`-predicated); it is covered as a unit in
+                    // `packages/dbx-cli/src/lib/firestore/firestore.read.spec.ts`.
+                    const missing = 'gb/does-not-exist-12345';
+                    const envelope = parseEnvelope((await runCli(['get-many', g.documentKey, missing, '--via', 'firestore'])).stdoutText);
+
+                    // one refused key does not fail the batch -- the whole point of the partition
+                    expect(envelope.ok).toBe(true);
+                    expect(envelope.data.results.map((r: { readonly key: string }) => r.key)).toEqual([g.documentKey]);
+                    expect(envelope.data.errors).toHaveLength(1);
+                    expect(envelope.data.errors[0].key).toBe(missing);
+                    // the emulator reports the refusal as an `evaluation error at l<line>` naming the rule
+                    // line that dereferenced the null `resource`; production Firestore reports the coarser
+                    // "Missing or insufficient permissions". Accept either -- the transport-specific wording
+                    // is not the invariant, the refusal reaching `errors` is.
+                    expect(String(envelope.data.errors[0].error)).toMatch(/evaluation error|permission/i);
+                  });
+
+                  it('partitions a malformed key into errors without failing the batch', async () => {
+                    // the EXPLICIT-modelType form on purpose: `parseGetManyArgs` decodes the keys in the
+                    // inferred form, so a bad shape would be rejected at parse time and never reach the
+                    // read. Naming the model skips the decode, so `documentRefForKey` is what rejects the
+                    // path (its parent collection is `b`, not `gb`) -- and that has to land in `errors`
+                    // for that ONE key while the good key still comes back.
+                    const malformed = 'gb/a/b/c';
+                    const envelope = parseEnvelope((await runCli(['get-many', 'guestbook', g.documentKey, malformed, '--via', 'firestore'])).stdoutText);
+
+                    expect(envelope.ok).toBe(true);
+                    expect(envelope.data.results.map((r: { readonly key: string }) => r.key)).toEqual([g.documentKey]);
+                    expect(envelope.data.errors).toHaveLength(1);
+                    expect(envelope.data.errors[0].key).toBe(malformed);
+                    expect(envelope.data.errors[0].code).toBe('INVALID_ARGUMENT');
+                  });
                 });
 
                 describe('get --via', () => {

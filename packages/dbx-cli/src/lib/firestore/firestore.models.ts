@@ -1,4 +1,4 @@
-import { type FirebaseAppModelContext, type FirebaseModelsService, type FirestoreCollectionLike, type FirestoreContext, type FirestoreDocument, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type FirebaseAppModelContext, type FirebaseModelServiceGetter, type FirebaseModelsService, type FirebaseModelsServiceTypes, type FirestoreCollectionLike, type FirestoreContext, type FirestoreDocument, type FirestoreModelKey, type FirestoreModelType, type InContextFirebaseModelCollectionLoader, type InContextFirebaseModelLoader } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type CliContext } from '../context/cli.context';
 import { CliError } from '../util/output';
@@ -39,12 +39,24 @@ export interface CliFirestoreCollectionForModelInput {
  * `dbx-cli` cannot import an app's collections factory — that is the whole reason there is no
  * generic direct command without this. Supplying it wires `firestore-get` / `firestore-query`
  * for EVERY registered model at once; there is no per-model codegen.
+ *
+ * `C` appears in exactly one position — the RETURN of {@link collections} — and that is deliberate.
+ * Because the use is purely covariant, `CliFirestoreBinding<DemoFirestoreCollections>` is assignable
+ * to `CliFirestoreBinding<object>`, which is what lets `CreateCliInput.firestore` keep accepting a
+ * typed binding with no cast and keeps generics out of `CliContext` / `runCli` entirely.
+ *
+ * Adding `C` (or the models generic `Y`) to {@link models} or to
+ * {@link CliFirestoreCollectionForModelInput} would put it in a PARAMETER position, and under
+ * `strictFunctionTypes` that destroys the assignability above — cascading generics through
+ * `CreateCliInput` → `createAuthMiddleware` → `createCliContext` → `CliContext`. Don't.
+ *
+ * @template C - The app's collections type, e.g. `DemoFirestoreCollections`.
  */
-export interface CliFirestoreBinding {
+export interface CliFirestoreBinding<C extends object = object> {
   /**
    * The app's `make<App>FirestoreCollections`.
    */
-  readonly collections: (firestoreContext: FirestoreContext) => object;
+  readonly collections: (firestoreContext: FirestoreContext) => C;
   /**
    * The app's `<app>FirebaseModelServices`.
    */
@@ -57,28 +69,40 @@ export interface CliFirestoreBinding {
 }
 
 /**
- * Input for {@link cliFirestoreBinding}.
+ * Input for {@link cliFirestoreBinding} and {@link cliFirestoreAccessorFactory}.
+ *
+ * `Y` sits in a PROPERTY position here, which is safe precisely because this is the INPUT type and
+ * never the binding: nothing assigns a `CliFirestoreBindingInput` to `CreateCliInput.firestore`, so
+ * the variance rule on {@link CliFirestoreBinding} does not apply. Capturing it is what lets
+ * `cliFirestoreAccessorFactory` hand back the app's real model types.
+ *
+ * @template C - The app's collections type, e.g. `DemoFirestoreCollections`.
+ * @template Y - The app's `<app>FirebaseModelServices` type.
  */
-export interface CliFirestoreBindingInput<C extends object> {
+export interface CliFirestoreBindingInput<C extends object, Y extends FirebaseModelsService<any, FirebaseAppModelContext<C>> = FirebaseModelsService<any, FirebaseAppModelContext<C>>> {
   readonly collections: (firestoreContext: FirestoreContext) => C;
-  readonly models: FirebaseModelsService<any, FirebaseAppModelContext<C>>;
+  readonly models: Y;
   readonly collectionForModel?: (input: CliFirestoreCollectionForModelInput) => Maybe<FirestoreCollectionLike<unknown>>;
 }
 
 /**
  * Builds a {@link CliFirestoreBinding} from an app's collections factory and model services.
  *
- * Typed so the app site needs no cast — the one erasure the CLI requires (`C` → `object`, and the
- * app's model-service union → {@link CliFirestoreModelService}) is absorbed here rather than at
- * every call site.
+ * Typed so the app site needs no cast — `C` is carried through on {@link CliFirestoreBinding.collections},
+ * and the one erasure the CLI requires (the app's model-service union → {@link CliFirestoreModelService})
+ * is absorbed here rather than at every call site.
  *
  * The `{ app: collections }` context handed to the model service is COMPLETE for the two members
  * the CLI uses: `FirebasePermissionContext`, `FirebasePermissionErrorContext` and
  * `FirebaseAuthContext` are all-optional, `firebaseModelsService` self-injects `service`, and
  * neither `loadModelForKey` nor `getFirestoreCollection` reads `auth`.
  *
+ * Most apps should reach for {@link cliFirestoreAccessorFactory} instead, which calls this and ALSO
+ * hands back a typed accessor for the app's own actions. Use this directly only when the binding is
+ * all you need.
+ *
  * @param input - The app's collections factory, model services, and optional per-model override.
- * @returns The erased binding `runCli` accepts.
+ * @returns The binding `runCli` accepts, still carrying `C`.
  *
  * @example
  * ```ts
@@ -89,9 +113,9 @@ export interface CliFirestoreBindingInput<C extends object> {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function cliFirestoreBinding<C extends object>(input: CliFirestoreBindingInput<C>): CliFirestoreBinding {
+export function cliFirestoreBinding<C extends object>(input: CliFirestoreBindingInput<C>): CliFirestoreBinding<C> {
   return {
-    collections: input.collections as (firestoreContext: FirestoreContext) => object,
+    collections: input.collections,
     models: input.models as unknown as CliFirestoreModelsService,
     collectionForModel: input.collectionForModel
   };
@@ -99,27 +123,76 @@ export function cliFirestoreBinding<C extends object>(input: CliFirestoreBinding
 
 // MARK: Resolved models
 /**
- * The per-invocation, session-bound view of an app's models over a direct Firestore connection.
+ * The default `Y` for {@link CliFirestoreModels}: a registry admitting ANY `FirestoreModelType`, with
+ * every model erased to `unknown`.
+ *
+ * Chosen so the defaulted generic form reproduces the pre-`Y` interface member-for-member — which is
+ * why `CliContext.getFirestoreModels?: () => Promise<CliFirestoreModels>` needs no change, and why
+ * every string-dispatched caller inside `dbx-cli` still compiles.
  */
-export interface CliFirestoreModels {
+export type CliErasedFirebaseModelsService = FirebaseModelsService<Record<FirestoreModelType, FirebaseModelServiceGetter<any, unknown>>, any>;
+
+/**
+ * Resolves the app's REAL `T` / `D` for one registered model type out of its `<app>FirebaseModelServices`.
+ *
+ * Deliberately only the loader half — {@link CliFirestoreModelService} explains why the permission
+ * half (`roleMapForModel`, `requireRole`, `use`) is excluded: `dbx-cli` authorizes through
+ * `firestore.rules`, not the app's role map, and the `{ app: collections }` context it hands the
+ * service carries no `auth` for a role map to read.
+ *
+ * @template Y - The app's `<app>FirebaseModelServices` type.
+ * @template K - The registered model type to resolve.
+ */
+export type CliFirestoreModelServiceForType<Y extends FirebaseModelsService<any, any>, K extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (K extends keyof X ? (X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, any> ? InContextFirebaseModelLoader<T, D> & InContextFirebaseModelCollectionLoader<T, D> : never) : never) : never;
+
+/**
+ * The per-invocation, session-bound view of an app's models over a direct Firestore connection.
+ *
+ * @template C - The app's collections type, e.g. `DemoFirestoreCollections`.
+ * @template Y - The app's `<app>FirebaseModelServices` type. Defaults to
+ *   {@link CliErasedFirebaseModelsService}, which reproduces the erased pre-`Y` interface exactly.
+ */
+export interface CliFirestoreModels<C extends object = object, Y extends FirebaseModelsService<any, any> = CliErasedFirebaseModelsService> {
   readonly session: CliFirestoreSessionContext;
   /**
    * The app's collections object, built against the session's `FirestoreContext`.
    */
-  readonly collections: object;
+  readonly collections: C;
   /**
    * The binding the app supplied, for consumers that need `collectionForModel`.
+   *
+   * Typed `CliFirestoreBinding<C>`, NOT `CliFirestoreBinding<C, Y>` — `Y` must never reach the
+   * binding, or the binding stops being assignable to `CliFirestoreBinding<object>`. See the
+   * variance note on {@link CliFirestoreBinding}.
    */
-  readonly binding: CliFirestoreBinding;
-  readonly allTypes: () => FirestoreModelType[];
+  readonly binding: CliFirestoreBinding<C>;
+  /**
+   * The app's `<app>FirebaseModelServices`, at its real type.
+   *
+   * Runtime-identical to `binding.models` — the same object — but honestly typed, so callers that
+   * hold a typed `CliFirestoreModels` can reach the full service (permissions included) when they
+   * genuinely want it, rather than the CLI-erased slice {@link serviceFor} hands back.
+   */
+  readonly models: Y;
+  readonly allTypes: () => FirebaseModelsServiceTypes<Y>[];
   /**
    * Resolves the model service for `modelType`, validating against {@link allTypes} FIRST.
    *
    * The validation is load-bearing, not defensive: `firebaseModelsService` indexes its factory map
    * and calls the result immediately, so an unregistered type surfaces as a bare `TypeError`
    * instead of a `CliError` the CLI can render.
+   *
+   * An OVERLOAD PAIR, specific-first, and the order is what keeps this non-breaking. A literal
+   * (`serviceFor('guestbook')`) satisfies `K extends FirebaseModelsServiceTypes<Y>` and gets the app's
+   * real `GuestbookDocument`; a runtime `string` off argv does not, and falls through to the erased
+   * signature — which is why every string-dispatched caller in `dbx-cli` compiles untouched. Under
+   * the default erased `Y`, `FirebaseModelsServiceTypes<Y>` widens to `FirestoreModelType` and
+   * signature 1 collapses into signature 2.
    */
-  readonly serviceFor: (modelType: FirestoreModelType) => CliFirestoreModelService;
+  readonly serviceFor: {
+    <K extends FirebaseModelsServiceTypes<Y>>(modelType: K): CliFirestoreModelServiceForType<Y, K>;
+    (modelType: FirestoreModelType): CliFirestoreModelService;
+  };
   /**
    * Resolves a SHORT COLLECTION NAME (`gb`, `gbe`) to the `modelType` the app registered its service
    * under (`guestbook`, `guestbookEntry`).
@@ -132,7 +205,7 @@ export interface CliFirestoreModels {
    *
    * Memoized: resolving walks `allTypes()` building each service's collection until it matches.
    */
-  readonly modelTypeForCollection: (collectionName: string) => FirestoreModelType;
+  readonly modelTypeForCollection: (collectionName: string) => FirebaseModelsServiceTypes<Y>;
 }
 
 /**
@@ -160,30 +233,41 @@ export async function requireCliFirestoreModels(context: CliContext): Promise<Cl
 /**
  * Input for {@link createCliFirestoreModels}.
  */
-export interface CreateCliFirestoreModelsInput {
-  readonly binding: CliFirestoreBinding;
+export interface CreateCliFirestoreModelsInput<C extends object = object> {
+  readonly binding: CliFirestoreBinding<C>;
   readonly session: CliFirestoreSessionContext;
 }
 
 /**
  * Binds an app's {@link CliFirestoreBinding} to an open session.
  *
+ * `Y` is inferred from the caller's annotation rather than from `input` — the binding erased its
+ * models to {@link CliFirestoreModelsService} on the way in (it must, for variance), so there is
+ * nothing left here to infer it from. {@link cliFirestoreAccessorFactory} is what re-attaches the
+ * app's real `Y`, having captured it at the app site.
+ *
  * @param input - The binding and the open session.
  * @returns The {@link CliFirestoreModels} view.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function createCliFirestoreModels(input: CreateCliFirestoreModelsInput): CliFirestoreModels {
+export function createCliFirestoreModels<C extends object = object, Y extends FirebaseModelsService<any, any> = CliErasedFirebaseModelsService>(input: CreateCliFirestoreModelsInput<C>): CliFirestoreModels<C, Y> {
   const { binding, session } = input;
   const collections = binding.collections(session.firestoreContext);
   const collectionNameCache = new Map<FirestoreModelType, FirestoreModelType>();
 
+  // the one cast this generic buys: TypeScript cannot check an implementation against
+  // `CliFirestoreModelServiceForType<Y, K>` — a conditional type it cannot resolve while `Y` is still
+  // an unresolved type parameter. Every member below is runtime-correct for any `Y` the app supplies,
+  // since `Y` only ever renames what `binding.models` already returns. `@dereekb/firebase` makes the
+  // identical concession in `firebaseModelsService` / `inContextFirebaseModelsServiceFactory`.
   return {
     session,
     collections,
     binding,
+    models: binding.models,
     allTypes: () => binding.models.allTypes(),
-    serviceFor: (modelType) => {
+    serviceFor: (modelType: FirestoreModelType) => {
       const allTypes = binding.models.allTypes();
 
       if (!allTypes.includes(modelType)) {
@@ -196,8 +280,8 @@ export function createCliFirestoreModels(input: CreateCliFirestoreModelsInput): 
 
       return binding.models(modelType, { app: collections });
     },
-    modelTypeForCollection: (collectionName) => resolveModelTypeForCollection({ binding, collections, collectionName, cache: collectionNameCache })
-  };
+    modelTypeForCollection: (collectionName: string) => resolveModelTypeForCollection({ binding, collections, collectionName, cache: collectionNameCache })
+  } as unknown as CliFirestoreModels<C, Y>;
 }
 
 /**

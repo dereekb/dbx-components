@@ -28,15 +28,26 @@ npx nx run demo-cli:generate-api-manifest              # prints [unchanged] when
 npx nx run demo-cli:generate-firestore-query-manifest
 ```
 
-## Wiring (`src/index.ts`)
+## Wiring (`src/lib/firestore.ts` + `src/index.ts`)
+
+`DemoFirestoreCollections` is named in exactly one place:
 
 ```ts
+// src/lib/firestore.ts
+export const demoCliFirestore = cliFirestoreAccessorFactory({
+  collections: makeDemoFirestoreCollections,
+  models: demoFirebaseModelServices
+});
+```
+
+```ts
+// src/index.ts
 void runCli({
   cliName: 'demo-cli',
   doctorChecks: DEMO_DOCTOR_CHECKS,
   defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
   modelManifest: DEMO_CLI_MODEL_MANIFEST,
-  firestore: cliFirestoreBinding({ collections: makeDemoFirestoreCollections, models: demoFirebaseModelServices }),
+  firestore: demoCliFirestore.binding,
   firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
   apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
   actionCommands: DEMO_CLI_ACTION_COMMANDS
@@ -46,6 +57,12 @@ void runCli({
 The `firestore` binding is the one hook that makes the generic direct-read commands possible — it
 hands the CLI the same `makeDemoFirestoreCollections` factory the Angular app uses, so both read the
 same collections through the same `firestore.rules`.
+
+`src/index.ts`, `src/lib/doctor.checks.ts`, and `src/test/fixture.ts` all pass the SAME
+`demoCliFirestore.binding` object. That shared identity is what lets `await demoCliFirestore(context)`
+inside an action reuse the collections the CLI already built, instead of building a second copy —
+which is what `guestbook.firestore.actions.ts` used to do just to recover the
+`DemoFirestoreCollections` type the CLI boundary erased.
 
 ## Direct Firestore reads
 

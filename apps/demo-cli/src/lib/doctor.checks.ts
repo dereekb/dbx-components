@@ -1,6 +1,7 @@
-import { cliFirestoreBinding, createFirestoreSessionDoctorCheck, type DoctorCheck, type FirestoreSessionDoctorProbe } from '@dereekb/dbx-cli';
+import { createFirestoreSessionDoctorCheck, type DoctorCheck, type FirestoreSessionDoctorProbe } from '@dereekb/dbx-cli';
 import { limit } from '@dereekb/firebase';
-import { demoFirebaseModelServices, makeDemoFirestoreCollections, profileIdentity } from 'demo-firebase';
+import { makeDemoFirestoreCollections, profileIdentity } from 'demo-firebase';
+import { demoCliFirestore } from './firestore';
 import { DEMO_CLI_MODEL_MANIFEST } from './manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from './manifest/query.manifest.generated';
 
@@ -34,7 +35,7 @@ export const DEMO_DOCTOR_CHECKS: DoctorCheck[] = [
     probeName: `list ${profileIdentity.collectionName} (admin-only)`,
     // doctor runs PRE-AUTH with no CliContext, so the binding + manifests have to be handed to it
     // explicitly for it to report the `--via auto` read preference and the catalog/server-only counts
-    firestore: cliFirestoreBinding({ collections: makeDemoFirestoreCollections, models: demoFirebaseModelServices }),
+    firestore: demoCliFirestore.binding,
     modelManifest: DEMO_CLI_MODEL_MANIFEST,
     firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST
   })

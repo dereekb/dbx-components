@@ -1,6 +1,7 @@
 export * from './firestore-get.command';
 export * from './firestore-queries.command';
 export * from './firestore-query.command';
+export * from './firestore.accessor';
 export * from './firestore.collection';
 export * from './firestore.error';
 export * from './firestore.models';

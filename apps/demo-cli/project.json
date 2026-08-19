@@ -73,6 +73,18 @@
         }
       }
     },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest"],
+      "options": {
+        "commands": ["npx tsc -p apps/demo-cli/tsconfig.lib.json --noEmit", "npx tsc -p apps/demo-cli/tsconfig.spec.json --noEmit"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

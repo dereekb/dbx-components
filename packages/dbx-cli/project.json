@@ -51,6 +51,17 @@
     "build-base": {
       "dependsOn": []
     },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "commands": ["npx tsc -p packages/dbx-cli/tsconfig.lib.json --noEmit", "npx tsc -p packages/dbx-cli/tsconfig.spec.json --noEmit"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],

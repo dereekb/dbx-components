@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { buildManifestCommands, cliFirestoreBinding, type CliEnvConfig, type CliFirebaseConfig, type CreateCliInput } from '@dereekb/dbx-cli';
+import { buildManifestCommands, type CliEnvConfig, type CliFirebaseConfig, type CreateCliInput } from '@dereekb/dbx-cli';
 import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- @dereekb/dbx-cli/test is a test-only sibling sub-project; demo-cli specs are the intended consumer.
@@ -8,18 +8,12 @@ import { buildTestCliContext, listenOnNestAppForTest, runCliCommand, type RunCli
 import { type OAuthAuthorizedSuperTestFixture } from '@dereekb/firebase-server/test';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- demo-api fixture is intentionally shared with demo-cli specs; the import lives in src/test/ which is excluded from the production build.
 import { type DemoApiFunctionContextFixture } from 'demo-api/test';
-import { demoFirebaseModelServices, makeDemoFirestoreCollections } from 'demo-firebase';
 import { DEMO_CLI_ACTION_COMMANDS } from '../lib/actions';
 import { DEMO_DOCTOR_CHECKS } from '../lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from '../lib/env.defaults';
+import { demoCliFirestore } from '../lib/firestore';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from '../lib/manifest/query.manifest.generated';
-
-/**
- * The same direct-Firestore binding `src/index.ts` hands `runCli`, so a spec drives the shipped
- * `firestore-get` / `firestore-query` / `--via firestore` wiring rather than a test-only stand-in.
- */
-const DEMO_TEST_CLI_FIRESTORE_BINDING = cliFirestoreBinding({ collections: makeDemoFirestoreCollections, models: demoFirebaseModelServices });
 
 export const DEMO_TEST_CLI_NAME = 'demo-cli';
 export const DEMO_TEST_CLI_ENV_NAME = 'test';
@@ -161,14 +155,18 @@ export function withDemoTestCli(params: WithDemoTestCliParams, buildTests: (ctx:
         env,
         accessToken: oauth.accessToken,
         modelManifest: DEMO_CLI_MODEL_MANIFEST,
-        firestore: DEMO_TEST_CLI_FIRESTORE_BINDING
+        // the SAME binding identity `src/index.ts` and the doctor check use, so a spec drives the shipped
+        // `firestore-get` / `firestore-query` / `--via firestore` wiring rather than a test-only
+        // stand-in — and `demoCliFirestore(context)` reuses this context's collections rather than
+        // building a second copy
+        firestore: demoCliFirestore.binding
       });
 
       const input: CreateCliInput = {
         cliName: DEMO_TEST_CLI_NAME,
         defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
         modelManifest: DEMO_CLI_MODEL_MANIFEST,
-        firestore: DEMO_TEST_CLI_FIRESTORE_BINDING,
+        firestore: demoCliFirestore.binding,
         firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
         apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
         actionCommands: DEMO_CLI_ACTION_COMMANDS,

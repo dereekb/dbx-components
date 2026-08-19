@@ -1,5 +1,5 @@
-import { type Maybe } from '@dereekb/util';
-import { MAX_MODEL_ACCESS_MULTI_READ_KEYS, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
+import { performAsyncTasks, type Maybe } from '@dereekb/util';
+import { MAX_MODEL_ACCESS_MULTI_READ_KEYS, type GetModelOverHttpResult, type GetMultipleModelsOverHttpErrorEntry, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
 import { isCliFirebaseConfigComplete } from '../config/env';
 import { type CliContext } from '../context/cli.context';
 import { type CliModelManifest } from '../manifest/types';
@@ -289,8 +289,6 @@ export async function getModelOverFirestore<T = unknown>(input: { readonly model
   return { key, data };
 }
 
-type DirectReadOutcome<T> = { readonly key: string; readonly data: Maybe<T> } | { readonly key: string; readonly error: string; readonly code?: string };
-
 /**
  * Batch-reads documents directly from Firestore by model key.
  *
@@ -298,46 +296,59 @@ type DirectReadOutcome<T> = { readonly key: string; readonly data: Maybe<T> } | 
  * key: a rules refusal or a malformed key for one document lands in `errors` and the rest still come
  * back, which is the behaviour `get-many` callers already handle.
  *
- * Reads within a batch are issued concurrently (each is an independent single-document fetch through
- * the same session, so serializing them would make a batch as deep as it is wide), but the batch
- * width is capped at {@link MAX_MODEL_ACCESS_MULTI_READ_KEYS} — the same chunk size the API path
- * uses. `get-many -` reads its keys from stdin and is unbounded, so one `Promise.all` over the whole
- * list would open thousands of concurrent reads on a large input.
+ * Reads are issued concurrently (each is an independent single-document fetch through the same
+ * session, so serializing them would make a batch as deep as it is wide) through a SLIDING WINDOW of
+ * {@link MAX_MODEL_ACCESS_MULTI_READ_KEYS} in-flight reads — the same width the API path chunks at,
+ * but without its barrier between chunks, so a slow document no longer stalls the reads behind it.
+ * The cap itself is load-bearing: `get-many -` reads its keys from stdin and is unbounded, so one
+ * unbounded `Promise.all` would open thousands of concurrent reads on a large input.
  *
  * @param input - The read inputs.
  * @param input.models - The session-bound models view.
  * @param input.modelType - The model type to load through.
  * @param input.keys - The document keys to read.
  * @returns `{ results, errors }`, key order preserved within each partition.
+ * @throws {CliError} `INVALID_ARGUMENT` when `modelType` is not a registered model.
  */
 export async function getMultipleModelsOverFirestore<T = unknown>(input: { readonly models: CliFirestoreModels; readonly modelType: string; readonly keys: ReadonlyArray<string> }): Promise<GetMultipleModelsOverHttpResult<Maybe<T>>> {
   const { models, modelType, keys } = input;
+  // hoisted deliberately: `serviceFor` throws INVALID_ARGUMENT for an unregistered type. Resolving it
+  // inside the task fn instead would land that one wiring mistake in `errors` once per key, reporting
+  // N unreadable documents for what is really a single failure of the whole call.
   const service = models.serviceFor(modelType);
-  const settled: DirectReadOutcome<T>[] = [];
 
-  for (let offset = 0; offset < keys.length; offset += MAX_MODEL_ACCESS_MULTI_READ_KEYS) {
-    const batch = await Promise.all(
-      keys.slice(offset, offset + MAX_MODEL_ACCESS_MULTI_READ_KEYS).map(async (key): Promise<DirectReadOutcome<T>> => {
-        let outcome: DirectReadOutcome<T>;
-
-        try {
-          outcome = { key, data: ((await service.loadModelForKey(key).snapshotData()) ?? null) as Maybe<T> };
-        } catch (e) {
-          const mapped = asKeyShapeError(e, modelType, key);
-          outcome = { key, error: mapped.message, ...(mapped instanceof CliError ? { code: mapped.code } : {}) };
-        }
-
-        return outcome;
-      })
-    );
-
-    settled.push(...batch);
-  }
+  const taskResult = await performAsyncTasks<string, Maybe<T>>([...keys], async (key) => ((await service.loadModelForKey(key).snapshotData()) ?? null) as Maybe<T>, {
+    // explicit: `performAsyncTasks` runs the WHOLE input at once when this is omitted
+    maxParallelTasks: MAX_MODEL_ACCESS_MULTI_READ_KEYS,
+    // load-bearing: `true` (the default) rejects the whole run on the first rules refusal AND stops
+    // dispatching, collapsing the documented `{ results, errors }` partition into one thrown error.
+    // With `false`, a synchronous throw from `loadModelForKey` and an async rejection from
+    // `snapshotData` are both captured identically, so the mapping happens once at the partition site
+    // below rather than in a try/catch inside the task.
+    throwError: false,
+    // a rules refusal is definitive; retrying it only burns reads
+    retriesAllowed: 0
+    // deliberately NO `nonConcurrentTaskKeyFactory`: it is the one config that makes
+    // `performAsyncTasks` stop preserving input order, and both partitions here are ordered by key
+  });
 
   return {
-    results: settled.filter((x): x is { readonly key: string; readonly data: Maybe<T> } => 'data' in x),
-    errors: settled.filter((x): x is { readonly key: string; readonly error: string; readonly code?: string } => 'error' in x)
+    results: taskResult.results.map(([key, data]) => ({ key, data })),
+    errors: taskResult.errors.map(([key, error]) => asCliReadErrorEntry(error, modelType, key))
   };
+}
+
+/**
+ * Maps one failed read into the API path's `{ key, error, code? }` error entry.
+ *
+ * @param error - The thrown value captured by `performAsyncTasks`.
+ * @param modelType - The model type the read was dispatched through.
+ * @param key - The key that failed.
+ * @returns The error entry for the `errors` partition.
+ */
+function asCliReadErrorEntry(error: unknown, modelType: string, key: string): GetMultipleModelsOverHttpErrorEntry {
+  const mapped = asKeyShapeError(error, modelType, key);
+  return { key, error: mapped.message, ...(mapped instanceof CliError ? { code: mapped.code } : {}) };
 }
 
 /**
