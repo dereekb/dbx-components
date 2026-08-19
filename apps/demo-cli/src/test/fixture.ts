@@ -10,6 +10,7 @@ import { type OAuthAuthorizedSuperTestFixture } from '@dereekb/firebase-server/t
 import { type DemoApiFunctionContextFixture } from 'demo-api/test';
 import { demoFirebaseModelServices, makeDemoFirestoreCollections } from 'demo-firebase';
 import { DEMO_CLI_ACTION_COMMANDS } from '../lib/actions';
+import { DEMO_DOCTOR_CHECKS } from '../lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from '../lib/env.defaults';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from '../lib/manifest/query.manifest.generated';
@@ -171,6 +172,10 @@ export function withDemoTestCli(params: WithDemoTestCliParams, buildTests: (ctx:
         firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
         apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
         actionCommands: DEMO_CLI_ACTION_COMMANDS,
+        // the same list `src/index.ts` hands `runCli`. Without it the in-process CLI runs only the
+        // dbx-cli built-in checks, so `doctor` silently omits `firestore-session` -- and a spec
+        // asserting on it would be asserting against a CLI that is not the shipped one.
+        doctorChecks: DEMO_DOCTOR_CHECKS,
         testCliContext
       };
 

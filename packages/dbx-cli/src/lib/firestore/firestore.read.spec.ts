@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_MODEL_ACCESS_MULTI_READ_KEYS } from '../api/call-model.client';
 import { type CliEnvConfig } from '../config/env';
 import { type CliContext } from '../context/cli.context';
 import { type CliModelManifest, type CliModelManifestEntry } from '../manifest/types';
@@ -247,19 +248,26 @@ describe('getMultipleModelsOverFirestore()', () => {
     // thousands of concurrent reads. The batches are sequential; reads within a batch are not.
     let inFlight = 0;
     let peak = 0;
-    const keys = Array.from({ length: 120 }, (_unused, index) => `gb/${index}`);
-    const models = buildModels((key) => {
+    const keys = Array.from({ length: MAX_MODEL_ACCESS_MULTI_READ_KEYS * 2 + 20 }, (_unused, index) => `gb/${index}`);
+    const models = buildModels(async (key) => {
       inFlight += 1;
       peak = Math.max(peak, inFlight);
+      // a REAL suspension point between the increment and the decrement. Without one, the counter
+      // would rise and fall inside a single synchronous block and observe a peak of 1 no matter how
+      // the reads were scheduled -- the assertion below would then pass vacuously against a fully
+      // serial implementation.
+      await new Promise((resolve) => setTimeout(resolve, 0));
       inFlight -= 1;
       return { name: key };
     });
 
     const result = await getMultipleModelsOverFirestore({ models, modelType: 'guestbook', keys });
 
-    expect(result.results).toHaveLength(120);
+    expect(result.results).toHaveLength(keys.length);
     expect(result.results.map((r) => r.key)).toEqual(keys);
-    expect(peak).toBeLessThanOrEqual(50);
+    // exactly the batch width: `toBe` pins BOTH halves at once -- above 1 proves the reads within a
+    // batch really do overlap, and not `keys.length` proves the batching caps them.
+    expect(peak).toBe(MAX_MODEL_ACCESS_MULTI_READ_KEYS);
   });
 
   it('partitions a per-key failure into errors and still returns the rest', async () => {
