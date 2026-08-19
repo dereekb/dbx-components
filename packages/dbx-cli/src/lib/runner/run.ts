@@ -7,7 +7,7 @@ import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
-import { type CliContext } from '../context/cli.context';
+import { type CliContext, getCliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
@@ -293,7 +293,28 @@ export async function runCli(input: CreateCliInput): Promise<void> {
     await createCli(input).parse();
   } catch (e) {
     outputError(e);
+    // teardown before exiting: `process.exit` here would otherwise skip the `finally` entirely
+    await closeCliFirestoreSessionForExit();
     process.exit(CLI_EXIT_CODE_HANDLER);
+  }
+
+  // A command that opened a direct-Firestore session leaves a signed-in `Auth` and a live
+  // `Firestore` holding the event loop open, so without this the process prints its result and never
+  // exits. Runs after the parser has fully settled, so the command's output is already emitted.
+  await closeCliFirestoreSessionForExit();
+}
+
+/**
+ * Closes the invocation's direct-Firestore session, if one was opened, swallowing any failure.
+ *
+ * Teardown is best-effort by design: it runs once the command has already produced its output, so a
+ * failure here must not change what the caller sees or the exit code they get.
+ */
+async function closeCliFirestoreSessionForExit(): Promise<void> {
+  try {
+    await getCliContext()?.closeFirestoreSession?.();
+  } catch {
+    // nothing actionable — the result is already on stdout
   }
 }
 

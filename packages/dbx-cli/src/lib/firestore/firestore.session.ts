@@ -1,4 +1,4 @@
-import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
+import { type FirebaseApp, deleteApp, getApps, initializeApp } from 'firebase/app';
 import { CustomProvider, initializeAppCheck } from 'firebase/app-check';
 import { type Auth, connectAuthEmulator, getAuth, signInWithCustomToken } from 'firebase/auth';
 import { type Firestore, connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
@@ -161,6 +161,32 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
     firestore,
     firestoreContext: clientFirebaseFirestoreContextFactory(firestore)
   };
+}
+
+/**
+ * Tears down a session opened by {@link createCliFirestoreSessionContext}.
+ *
+ * Required for the CLI to EXIT. A signed-in `Auth` and a live `Firestore` both hold open handles
+ * that keep the Node event loop alive indefinitely, so without this a command prints its result and
+ * then hangs forever — the process never returns to the shell. Nothing in the CLI is long-lived
+ * enough to want that: a session is opened for one invocation and is dead weight afterwards.
+ *
+ * `deleteApp` is the single call that covers it — it disposes every registered component, which for
+ * Firestore runs the same shutdown `terminate()` does, and for Auth stops the token-refresh timer.
+ *
+ * Deliberately tolerant: teardown runs in a `finally` after the command has already produced its
+ * output, so a failure here must not change the exit code or mask the real result. A session that
+ * was never opened is a no-op.
+ *
+ * @param session - The session context to close.
+ */
+export async function closeCliFirestoreSessionContext(session: CliFirestoreSessionContext): Promise<void> {
+  try {
+    await deleteApp(session.app);
+  } catch {
+    // an already-deleted app (or one whose components failed to dispose) leaves nothing to salvage,
+    // and the command's result has already been emitted
+  }
 }
 
 /**

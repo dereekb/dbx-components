@@ -118,6 +118,23 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(second.session.customToken).toBe(first.session.customToken);
             expect(second.firestore).toBe(first.firestore);
           });
+
+          it('releases the Firebase app on close, which is what lets the CLI exit', async () => {
+            // A signed-in `Auth` and a live `Firestore` hold the Node event loop open, so before
+            // `closeFirestoreSession` existed the built binary printed its result and then hung
+            // forever. That is invisible to the rest of this suite: `runCliCommand` drives the CLI
+            // in-process and never depends on the process exiting — and the `afterEach` above
+            // deletes the app itself, compensating for the very teardown production code lacked.
+            // Assert on the app registry, which is the observable consequence either way.
+            const context = await buildSessionCliContext(oauth.accessToken);
+            const session = await context.getFirestoreSession!();
+
+            expect(getApps()).toContain(session.app);
+
+            await context.closeFirestoreSession!();
+
+            expect(getApps()).not.toContain(session.app);
+          });
         });
 
         describe('queryPublishedGuestbookEntriesDirect()', () => {

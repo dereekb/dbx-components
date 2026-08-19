@@ -29,17 +29,26 @@ const demoFirestoreSessionAdminPredicate: FirestoreSessionAdminPredicate = (auth
  * app the Angular client and demo-cli initialize with, since an attestation minted for a different
  * appId is rejected wherever App Check is enforced.
  *
- * It is only supplied outside of tests: `admin.appCheck().createToken()` calls the live App Check
- * backend, which has no emulator, so a test/emulator run would fail the whole handshake on a
- * credential the emulators never verify anyway. `createCliFirestoreSessionContext` likewise skips
- * `initializeAppCheck` when the CLI env targets emulators, so both halves agree.
+ * It is only supplied when DEPLOYED: `admin.appCheck().createToken()` calls the live App Check
+ * backend, which has no emulator, so anywhere the emulators are in play the call fails the whole
+ * handshake on a credential those emulators never verify anyway.
  *
- * @param envService - The Firebase server environment service, used to detect a test environment.
+ * `isProduction` is the right gate rather than `isTestingEnv`, because the set that matters is
+ * "running against real Firebase", not "running under a test runner". It is true for every deploy
+ * including staging, and false for a local emulator run — where the App Check backend is both
+ * unreachable and pointless. Keying off `isTestingEnv` instead left local `nx run demo-api:serve`
+ * (not a test, but not deployed either) trying to mint a real attestation, which fails during
+ * service-account discovery and takes the whole session handshake down with it.
+ *
+ * `createCliFirestoreSessionContext` likewise skips `initializeAppCheck` when the CLI env targets
+ * emulators, so both halves agree.
+ *
+ * @param envService - The Firebase server environment service, used to detect a deployed environment.
  * @returns The session module config for this environment.
  */
 export function demoSessionApiModuleConfigFactory(envService: FirebaseServerEnvService): SessionApiModuleConfig {
   return {
-    ...(envService.isTestingEnv ? undefined : { appCheckAppId: DEMO_FIREBASE_CLIENT_CONFIG.appId })
+    ...(envService.isProduction ? { appCheckAppId: DEMO_FIREBASE_CLIENT_CONFIG.appId } : undefined)
   };
 }
 

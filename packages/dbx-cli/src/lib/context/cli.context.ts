@@ -4,7 +4,7 @@ import { type CliEnvConfig } from '../config/env';
 import { type CliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttpChunked, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
 import { type CliFirestoreBinding, type CliFirestoreModels, createCliFirestoreModels } from '../firestore/firestore.models';
-import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
+import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { type CliModelManifest } from '../manifest/types';
 import { createContextSlot } from '../util/context.slot';
 import { CliError } from '../util/output';
@@ -60,6 +60,17 @@ export interface CliContext {
    * Present only when the CLI was configured with a `firestore` binding (`runCli({ firestore })`).
    */
   readonly getFirestoreModels?: () => Promise<CliFirestoreModels>;
+  /**
+   * Releases the direct-Firestore session opened during this invocation, if any.
+   *
+   * {@link runCli} calls this once the command has finished. Without it the CLI PRINTS ITS RESULT AND
+   * THEN HANGS: the signed-in `Auth` and live `Firestore` keep the Node event loop alive, so the
+   * process never exits and a caller piping the output waits forever.
+   *
+   * Never opens a session in order to close one — a command that never touched Firestore resolves
+   * immediately. Safe to call more than once.
+   */
+  readonly closeFirestoreSession?: () => Promise<void>;
 }
 
 /**
@@ -217,6 +228,28 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
 
   const getFirestoreModels = firestore == null ? undefined : () => getFirestoreModelsForBinding(firestore);
 
+  async function closeFirestoreSession(): Promise<void> {
+    const opened = firestoreSession;
+
+    // read the memo rather than calling the thunk — calling it would OPEN a session just to close it
+    // on every command that never touched Firestore, paying a round-trip and a sign-in for nothing.
+    if (opened != null) {
+      // clear both memos first so a caller that keeps using this context past teardown re-opens
+      // rather than handing out the closed session's dead `Firestore`.
+      firestoreSession = undefined;
+      firestoreModels = undefined;
+
+      // a session that failed to open has nothing to tear down, and its rejection was already
+      // surfaced to whoever awaited the thunk — swallowing it here avoids a second, duplicate throw
+      // out of teardown.
+      const session = await opened.catch(() => undefined);
+
+      if (session != null) {
+        await closeCliFirestoreSessionContext(session);
+      }
+    }
+  }
+
   return {
     cliName: input.cliName,
     envName: input.envName,
@@ -245,6 +278,7 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
       }),
     getFirestoreSession,
     getFirestoreContext: () => getFirestoreSession().then((x) => x.firestoreContext),
-    getFirestoreModels
+    getFirestoreModels,
+    closeFirestoreSession
   };
 }

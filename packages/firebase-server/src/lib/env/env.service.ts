@@ -16,15 +16,39 @@ export interface FirebaseServerEnvServiceRef<S extends FirebaseServerEnvService 
  */
 export abstract class FirebaseServerEnvService {
   /**
-   * Whether the server is running in a test/CI environment.
+   * Whether the server is running under a test runner / in CI.
+   *
+   * NOT the complement of {@link isProduction}. There are three distinct situations, and a local
+   * emulator run (`nx run <app>:serve`) is the third one — neither testing nor deployed:
+   *
+   * | situation                  | isTestingEnv | isProduction |
+   * | -------------------------- | ------------ | ------------ |
+   * | test / CI run              | true         | false        |
+   * | local emulator `serve`     | false        | false        |
+   * | deployed (staging or prod) | false        | true         |
+   *
+   * Use this only to branch on "a test runner is driving this" — seeded fixtures, relaxed timeouts,
+   * assertions. To decide whether real Firebase infrastructure is reachable, use {@link isProduction}:
+   * `!isTestingEnv` wrongly includes local emulator runs, which is a common source of calls to live
+   * backends (App Check, IAM signing, service-account discovery) that fail with no emulator behind them.
    */
   abstract readonly isTestingEnv: boolean;
   /**
-   * Whether the server is running in production mode. (This may be true in both prod or a staging running as production).
+   * Whether the server is DEPLOYED — true for every deployed environment, including staging.
+   *
+   * This is the gate for "real Firebase infrastructure is reachable": services with no emulator
+   * (App Check token minting, IAM signing, GCE metadata service-account discovery) may only be
+   * called when this is true. It is false for both a test run and a local emulator `serve`, which is
+   * what makes it — and not `!isTestingEnv` — the correct check for those calls.
+   *
+   * Use {@link isStaging} to distinguish staging from true production.
    */
   abstract readonly isProduction: boolean;
   /**
-   * Whether the server is running in a staging environment. isProduction is also typically true when this is true.
+   * Whether the server is running in a staging environment.
+   *
+   * Narrows within a deployed environment: {@link isProduction} is also true when this is true, since
+   * staging runs as production against real infrastructure.
    */
   abstract readonly isStaging: boolean;
   /**

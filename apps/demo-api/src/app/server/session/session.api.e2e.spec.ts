@@ -55,9 +55,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const res = await oauth.authRequest('get', SESSION_ENDPOINT_PATH).expect(200);
             const result = res.body as FirestoreSessionResult;
 
-            // demoSessionApiModuleConfigFactory withholds `appCheckAppId` under `isTestingEnv`:
+            // demoSessionApiModuleConfigFactory supplies `appCheckAppId` only when `isProduction`:
             // `admin.appCheck().createToken()` reaches the live App Check backend, which has no
-            // emulator, and the emulators would not verify the attestation anyway.
+            // emulator, and the emulators would not verify the attestation anyway. That covers this
+            // run and a local emulator `serve` alike — neither is deployed.
             expect(result.appCheckToken).toBeUndefined();
           });
 

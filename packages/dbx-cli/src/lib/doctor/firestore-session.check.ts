@@ -5,7 +5,7 @@ import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliReadSourceReason } from '../firestore/firestore.read';
-import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
+import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { type DoctorCheck, type DoctorCheckResult } from './doctor.command.factory';
 
@@ -267,6 +267,14 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
       detail: { stage: 'session-handshake', error: handshakeError instanceof Error ? handshakeError.message : String(handshakeError) },
       suggestion: `The API must register the firebase-server session module and list '/api/session' in the OIDC \`protectedPaths\`, and the logged-in user must be an admin holding the \`session.firestore\` scope. Re-run \`${cliName} auth login --env ${envName}\` if the scope is newly added.`
     };
+  }
+
+  // This probe opens its OWN session rather than going through the context's memo, so the runner's
+  // teardown does not cover it — and a doctor run that left it open would hang the CLI after
+  // printing its report, which is exactly the failure `closeCliFirestoreSessionContext` exists to
+  // prevent. Closing here rather than in the caller keeps ownership with whoever opened it.
+  if (context) {
+    await closeCliFirestoreSessionContext(context);
   }
 
   return result;
