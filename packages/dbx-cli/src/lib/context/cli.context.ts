@@ -5,6 +5,7 @@ import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttpChunked, 
 import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { type CliModelManifest } from '../manifest/types';
 import { createContextSlot } from '../util/context.slot';
+import { CliError } from '../util/output';
 
 /**
  * The CLI context attached to argv by the auth middleware.
@@ -46,6 +47,48 @@ export interface CliContext {
    * session.
    */
   readonly getFirestoreSession?: () => Promise<CliFirestoreSessionContext>;
+}
+
+/**
+ * Returns the context's {@link CliFirestoreSessionContext} thunk result, or throws a {@link CliError}
+ * when the context has none.
+ *
+ * {@link CliContext.getFirestoreSession} is optional so a hand-built test context stays valid, which
+ * would otherwise leave every consumer action writing the same guard. Every context built by
+ * {@link createCliContext} does provide it, so reaching this error in practice means the action ran
+ * against a context that was assembled by hand.
+ *
+ * @param context - The live CLI context.
+ * @returns The opened (and memoized) direct-Firestore session.
+ * @throws {CliError} When the context does not support direct-Firestore sessions.
+ */
+export async function requireCliFirestoreSession(context: CliContext): Promise<CliFirestoreSessionContext> {
+  const getFirestoreSession = context.getFirestoreSession;
+
+  if (!getFirestoreSession) {
+    throw new CliError({
+      message: 'This CLI context does not support direct-Firestore sessions.',
+      code: 'INVALID_ARGUMENT',
+      suggestion: 'Use a context built by `createCliContext` (the auth middleware does this automatically).'
+    });
+  }
+
+  return getFirestoreSession();
+}
+
+/**
+ * Returns the client `FirestoreContext` for the current invocation, opening the direct-Firestore
+ * session on first use.
+ *
+ * The returned context is the exact analogue of the server's, so an app's
+ * `make<App>FirestoreCollections(context)` accepts it unchanged.
+ *
+ * @param context - The live CLI context.
+ * @returns The client `FirestoreContext` an app's collections factory consumes.
+ * @throws {CliError} When the context does not support direct-Firestore sessions.
+ */
+export async function requireCliFirestoreContext(context: CliContext): Promise<FirestoreContext> {
+  return (await requireCliFirestoreSession(context)).firestoreContext;
 }
 
 /**

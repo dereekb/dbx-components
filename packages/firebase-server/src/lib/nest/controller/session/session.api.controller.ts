@@ -45,8 +45,13 @@ export class SessionApiController {
     } else {
       const status = error?.status ?? error?.httpErrorCode?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
       const message = error?.message ?? 'Internal server error';
+      // `forbiddenError`/`unauthenticatedError` build an HttpsError whose top-level `code` is the
+      // coarse functions code ('permission-denied'), with the specific one under `details`. Prefer
+      // the specific code so a client can tell FIRESTORE_SESSION_FORBIDDEN_ERROR (not an admin) apart
+      // from MISSING_ENDPOINT_OIDC_SCOPE_ERROR (admin, but the token lacks `session.firestore`).
+      const code = error?.details?.code ?? error?.code;
 
-      result = new HttpException({ statusCode: status, message, code: error?.code }, status);
+      result = new HttpException({ statusCode: status, message, code }, status);
     }
 
     return result;

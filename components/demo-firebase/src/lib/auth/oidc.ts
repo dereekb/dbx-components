@@ -1,4 +1,4 @@
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcProviderProfile, type OidcProviderProfileDetails, oidcProviderProfileDetails, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, type ServiceTokenOidcScope, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, FIRESTORE_SESSION_OIDC_SCOPE_DETAILS, type FirestoreSessionOidcScope, type OidcProviderProfile, type OidcProviderProfileDetails, oidcProviderProfileDetails, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, type ServiceTokenOidcScope, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
 
 // MARK: Scopes
 /**
@@ -15,8 +15,13 @@ import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, ty
  *   issued grant long-lived and non-rotating, for non-interactive server/API use.
  *   Hard-rejected for non-admins and disables refresh-token rotation (wired in
  *   `DemoApiOidcModule`).
+ * - {@link FirestoreSessionOidcScope} (`session.firestore`): admin-only scope that lets a headless
+ *   client trade its access token for a direct-Firestore session (a custom token + App Check
+ *   attestation) and read through the same security rules the browser app is subject to. Enforced by
+ *   `GET /api/session/firestore` (see `DemoSessionApiModule`), which is admin-gated first — the scope
+ *   is defence in depth.
  */
-export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope | DemoOidcProviderProfileScope;
+export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope | FirestoreSessionOidcScope | DemoOidcProviderProfileScope;
 
 /**
  * The `lms` OIDC scope — unlocked (and force-required) by the `lms` provider profile, and used as a
@@ -63,7 +68,7 @@ export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
  * so every gated scope requires an explicit assignment. Were a default profile added, its scopes would
  * belong back in this picker — every client can obtain them.
  */
-export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS, SERVICE_TOKEN_OIDC_SCOPE_DETAILS];
+export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, FIRESTORE_SESSION_OIDC_SCOPE_DETAILS];
 
 /**
  * OIDC provider profiles for the demo app. Admins assign these to a client to unlock otherwise-restricted

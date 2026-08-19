@@ -4,7 +4,7 @@ import { Module } from '@nestjs/common';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAuthRoleReader, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
 import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
-import { SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { FIRESTORE_SESSION_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { AUTH_ADMIN_ROLE, type AuthClaims } from '@dereekb/util';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
@@ -75,10 +75,15 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
   return {
     oidcIssuer: oidcModuleConfig.issuer,
     mcpUrl,
-    // A service token is admin-only and makes the grant long-lived + non-rotating — not what an
-    // interactive MCP connection should be asking for, so it is not advertised to MCP clients (which
-    // request the advertised list verbatim). Other OIDC clients can still request it directly.
-    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE),
+    // Admin-only scopes are not advertised to MCP clients, which request the advertised list
+    // verbatim. Other OIDC clients can still request either one directly.
+    //
+    // - token.service makes the grant long-lived + non-rotating — not what an interactive MCP
+    //   connection should be asking for.
+    // - session.firestore unlocks a DIRECT Firestore connection, which the MCP tools have no use for
+    //   (they reach data through callModel), and asking for it would put every admin MCP grant in the
+    //   widened admin-only-scope TTL tier for no benefit.
+    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE),
     serverName: 'demo-api-mcp',
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
