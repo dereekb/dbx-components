@@ -13,6 +13,7 @@
     "@dereekb/util": "13.37.0",
     "arktype": "^2.2.0",
     "demo-firebase": "*",
+    "firebase": "^12.12.1",
     "vitest": "4.1.5",
     "yargs": "^18.0.0"
   },

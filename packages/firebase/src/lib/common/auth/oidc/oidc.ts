@@ -189,6 +189,40 @@ export const SERVICE_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<Servi
   description: 'Admin-only: issue a long-lived, non-rotating token for server/API use'
 };
 
+// MARK: Firestore Session Scope
+/**
+ * Custom OIDC scope that requests a short-lived direct-Firestore session — a Firebase Auth custom
+ * token plus an App Check attestation minted by the server on the caller's behalf.
+ *
+ * Lets a headless client (a `@dereekb/dbx-cli`-based CLI) connect to Firestore as the authenticated
+ * user and read through the SAME security rules the browser app is subject to, without distributing
+ * service-account credentials. It is the direct-connection counterpart to the `model.*` scopes, which
+ * only reach data over the model HTTP API.
+ *
+ * This scope is privileged: the minted App Check token attests as the app's registered web app, so
+ * provider-side wiring is expected to hard-reject the request for non-admin users (via
+ * {@link OidcProviderConfig.adminOnlyScopes}). The generic `@dereekb/firebase-server` package stays
+ * app-agnostic — the scope is only activated when an app lists it in that config array and supplies
+ * the session endpoint's admin predicate.
+ *
+ * Scope-gating alone is NOT a sufficient gate: `oidcScopesFromScopeClaim` returns `undefined` for a
+ * non-OIDC caller (a plain Firebase ID token) and every enforcement site treats `undefined` as
+ * "skip". The endpoint's admin predicate is the load-bearing check; this scope is defence in depth.
+ */
+export const FIRESTORE_SESSION_OIDC_SCOPE = 'session.firestore' as const;
+
+export type FirestoreSessionOidcScope = typeof FIRESTORE_SESSION_OIDC_SCOPE;
+
+/**
+ * Pre-built scope picker entry for {@link FIRESTORE_SESSION_OIDC_SCOPE}. Labeled as an admin-only
+ * scope so consent screens and admin pickers signal that it is restricted to privileged users.
+ */
+export const FIRESTORE_SESSION_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<FirestoreSessionOidcScope> = {
+  label: 'Direct Firestore session (admin)',
+  value: FIRESTORE_SESSION_OIDC_SCOPE,
+  description: 'Admin-only: connect directly to Firestore as you, through security rules'
+};
+
 // MARK: Scope Terms (callModel AND-of-ORs enforcement)
 /**
  * A single requirement TERM in the callModel OIDC scope model.

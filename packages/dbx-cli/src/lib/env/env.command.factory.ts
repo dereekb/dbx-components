@@ -1,7 +1,7 @@
 import type { Argv, CommandModule } from 'yargs';
 import { type Maybe, noop } from '@dereekb/util';
 import { type CliConfig, loadCliConfig, maskEnv, mergeCliConfig, saveCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, type CliFirebaseConfig, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore } from '../config/token.cache';
 import { CliError, outputResult } from '../util/output';
@@ -25,6 +25,30 @@ interface ResolveEnvWithDefaultInput {
 interface ResolvedEnvWithDefault {
   readonly env: CliEnvConfig;
   readonly defaultName?: string;
+}
+
+/**
+ * Builds the optional {@link CliFirebaseConfig} from the `env add --firebase-*` flags, or `undefined`
+ * when none were passed (so an env that only targets the model API stores no empty firebase block).
+ *
+ * Emulator targets are intentionally not flags — they belong on a registered {@link CliEnvDefault} for
+ * a `local` env, or on the `<PREFIX>_FIREBASE_*_EMULATOR_PORT` env vars.
+ *
+ * @param argv - The parsed yargs arguments.
+ * @returns The Firebase client config, or `undefined` when no flag was supplied.
+ */
+function cliFirebaseConfigFromArgv(argv: any): Maybe<CliFirebaseConfig> {
+  const apiKey = argv.firebaseApiKey as string | undefined;
+  const authDomain = argv.firebaseAuthDomain as string | undefined;
+  const projectId = argv.firebaseProjectId as string | undefined;
+  const appId = argv.firebaseAppId as string | undefined;
+  let result: Maybe<CliFirebaseConfig>;
+
+  if (apiKey || authDomain || projectId || appId) {
+    result = { apiKey, authDomain, projectId, appId };
+  }
+
+  return result;
 }
 
 function resolveEnvWithDefault(input: ResolveEnvWithDefaultInput): Maybe<ResolvedEnvWithDefault> {
@@ -99,13 +123,27 @@ export function createEnvCommand(input: CreateEnvCommandInput): CommandModule {
   const addCommand: CommandModule = {
     command: 'add <name>',
     describe: 'Create a new env (defaults are merged in if a matching default is registered; then run `auth setup --env <name>`)',
-    builder: (yargs: Argv) => yargs.positional('name', { type: 'string', demandOption: true }).option('api-base-url', { type: 'string' }).option('oidc-issuer', { type: 'string' }).option('app-client-url', { type: 'string' }).option('redirect-uri', { type: 'string' }).option('set-active', { type: 'boolean', default: false }),
+    builder: (yargs: Argv) =>
+      yargs
+        .positional('name', { type: 'string', demandOption: true })
+        .option('api-base-url', { type: 'string' })
+        .option('oidc-issuer', { type: 'string' })
+        .option('app-client-url', { type: 'string' })
+        .option('redirect-uri', { type: 'string' })
+        .option('firebase-api-key', { type: 'string', describe: 'Firebase web API key (enables the direct-Firestore session)' })
+        .option('firebase-auth-domain', { type: 'string', describe: 'Firebase auth domain' })
+        .option('firebase-project-id', { type: 'string', describe: 'Firebase project id' })
+        .option('firebase-app-id', { type: 'string', describe: 'Registered Firebase WEB app id' })
+        .option('set-active', { type: 'boolean', default: false }),
     handler: wrapCommandHandler(async (argv: any) => {
+      const firebase = cliFirebaseConfigFromArgv(argv);
+
       const stored: CliEnvConfig = {
         apiBaseUrl: argv.apiBaseUrl ?? '',
         oidcIssuer: argv.oidcIssuer ?? '',
         appClientUrl: argv.appClientUrl,
-        redirectUri: argv.redirectUri
+        redirectUri: argv.redirectUri,
+        ...(firebase ? { firebase } : undefined)
       };
 
       const merged = await mergeCliConfig({

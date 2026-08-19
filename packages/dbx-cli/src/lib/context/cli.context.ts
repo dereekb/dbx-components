@@ -1,6 +1,8 @@
-import type { OnCallTypedModelParams } from '@dereekb/firebase';
+import type { FirestoreContext, OnCallTypedModelParams } from '@dereekb/firebase';
+import type { Maybe } from '@dereekb/util';
 import { type CliEnvConfig } from '../config/env';
 import { callModelOverHttp, getModelOverHttp, getMultipleModelsOverHttpChunked, type GetModelOverHttpResult, type GetMultipleModelsOverHttpResult } from '../api/call-model.client';
+import { type CliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { type CliModelManifest } from '../manifest/types';
 import { createContextSlot } from '../util/context.slot';
 
@@ -25,6 +27,25 @@ export interface CliContext {
   readonly getModel: <TResult = unknown>(modelType: string, key: string) => Promise<GetModelOverHttpResult<TResult>>;
   readonly getMultipleModels: <TResult = unknown>(modelType: string, keys: ReadonlyArray<string>) => Promise<GetMultipleModelsOverHttpResult<TResult>>;
   readonly modelManifest?: CliModelManifest;
+  /**
+   * Opens (once per invocation) a direct Firestore connection as the authenticated user and returns
+   * the `FirestoreContext` an app's `make<App>FirestoreCollections(context)` factory consumes — the
+   * same object the Angular app builds, so the same queries run through the same security rules.
+   *
+   * Lazy on purpose: the handshake costs an HTTP round-trip plus a sign-in, and the auth middleware
+   * builds a context on EVERY invocation, including ones that never touch Firestore.
+   *
+   * OPTIONAL so that a hand-built test context (see `createPassthroughAuthMiddleware`) stays valid.
+   * Calling it throws when the env carries no Firebase client config — there is no fallback to the
+   * HTTP model API by design.
+   */
+  readonly getFirestoreContext?: () => Promise<FirestoreContext>;
+  /**
+   * The full session behind {@link CliContext.getFirestoreContext} — the signed-in `Auth`, the raw
+   * `Firestore`, and the minted credential envelope. Memoized alongside it, so calling both opens one
+   * session.
+   */
+  readonly getFirestoreSession?: () => Promise<CliFirestoreSessionContext>;
 }
 
 /**
@@ -75,6 +96,28 @@ export interface CreateCliContextInput {
 export function createCliContext(input: CreateCliContextInput): CliContext {
   const apiBaseUrl = input.env.apiBaseUrl;
   const accessToken = input.accessToken;
+
+  // memoized thunk — keeps this factory synchronous and side-effect-free while paying the session
+  // cost only for commands that actually reach for Firestore
+  let firestoreSession: Maybe<Promise<CliFirestoreSessionContext>>;
+
+  function getFirestoreSession(): Promise<CliFirestoreSessionContext> {
+    if (firestoreSession == null) {
+      firestoreSession = createCliFirestoreSessionContext({
+        cliName: input.cliName,
+        envName: input.envName,
+        env: input.env,
+        accessToken
+      }).catch((e) => {
+        // drop the memo so a caller that handles the failure can retry rather than replaying it
+        firestoreSession = undefined;
+        throw e;
+      });
+    }
+
+    return firestoreSession;
+  }
+
   return {
     cliName: input.cliName,
     envName: input.envName,
@@ -100,6 +143,8 @@ export function createCliContext(input: CreateCliContextInput): CliContext {
         accessToken,
         modelType,
         keys
-      })
+      }),
+    getFirestoreSession,
+    getFirestoreContext: () => getFirestoreSession().then((x) => x.firestoreContext)
   };
 }

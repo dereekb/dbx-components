@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { applyEnvVarOverrides, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, readEnvTokenEntry, resolveActiveEnvName, withServiceTokenScopes, type CliEnvDefault } from './env';
+import { applyEnvVarOverrides, cliFirebaseEmulatorsInUse, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, isCliFirebaseConfigComplete, mergeCliEnvWithDefault, readEnvTokenEntry, resolveActiveEnvName, withServiceTokenScopes, type CliEnvDefault } from './env';
 
 describe('resolveActiveEnvName', () => {
   const ENV_VAR = '__TEST_RESOLVE_ACTIVE_ENV_VAR__';
@@ -250,5 +250,95 @@ describe('readEnvTokenEntry', () => {
   it('derives the env-var prefix from the cli name (dashes → underscores, upper-cased)', () => {
     process.env['MY_CLI_REFRESH_TOKEN'] = 'rt-xyz';
     expect(readEnvTokenEntry({ cliName: 'my-cli' })?.refreshToken).toBe('rt-xyz');
+  });
+});
+
+describe('firebase client config', () => {
+  const FIREBASE_KEYS = ['MY_CLI_FIREBASE_API_KEY', 'MY_CLI_FIREBASE_AUTH_DOMAIN', 'MY_CLI_FIREBASE_PROJECT_ID', 'MY_CLI_FIREBASE_APP_ID', 'MY_CLI_FIREBASE_EMULATOR_HOST', 'MY_CLI_FIREBASE_AUTH_EMULATOR_PORT', 'MY_CLI_FIREBASE_FIRESTORE_EMULATOR_PORT'];
+
+  beforeEach(() => {
+    FIREBASE_KEYS.forEach((k) => delete process.env[k]);
+  });
+
+  afterEach(() => {
+    FIREBASE_KEYS.forEach((k) => delete process.env[k]);
+  });
+
+  describe('isCliFirebaseConfigComplete()', () => {
+    it('requires apiKey, projectId, and appId', () => {
+      expect(isCliFirebaseConfigComplete(undefined)).toBe(false);
+      expect(isCliFirebaseConfigComplete({ apiKey: 'k', projectId: 'p' })).toBe(false);
+      expect(isCliFirebaseConfigComplete({ apiKey: 'k', projectId: 'p', appId: 'a' })).toBe(true);
+    });
+  });
+
+  describe('isCliEnvConfigComplete()', () => {
+    it('does not require the firebase config (existing CLIs must keep working)', () => {
+      expect(isCliEnvConfigComplete({ apiBaseUrl: 'u', oidcIssuer: 'i', clientId: 'c', clientSecret: 's', redirectUri: 'r' })).toBe(true);
+    });
+  });
+
+  describe('cliFirebaseEmulatorsInUse()', () => {
+    it('is false without emulator config', () => {
+      expect(cliFirebaseEmulatorsInUse({ apiKey: 'k', projectId: 'p', appId: 'a' })).toBe(false);
+    });
+
+    it('is true when a port is configured and not explicitly disabled', () => {
+      expect(cliFirebaseEmulatorsInUse({ emulators: { firestorePort: 9904 } })).toBe(true);
+    });
+
+    it('is false when explicitly disabled', () => {
+      expect(cliFirebaseEmulatorsInUse({ emulators: { useEmulators: false, firestorePort: 9904 } })).toBe(false);
+    });
+  });
+
+  describe('mergeCliEnvWithDefault()', () => {
+    it('merges the firebase config field by field', () => {
+      const merged = mergeCliEnvWithDefault({
+        env: { apiBaseUrl: '', oidcIssuer: '', firebase: { projectId: 'stored-project' } },
+        defaultEnv: { apiBaseUrl: 'u', oidcIssuer: 'i', firebase: { apiKey: 'default-key', projectId: 'default-project', appId: 'default-app' } }
+      });
+
+      expect(merged?.firebase?.apiKey).toBe('default-key');
+      expect(merged?.firebase?.projectId).toBe('stored-project');
+      expect(merged?.firebase?.appId).toBe('default-app');
+    });
+
+    it('leaves firebase undefined when neither side supplies one', () => {
+      const merged = mergeCliEnvWithDefault({ env: { apiBaseUrl: 'u', oidcIssuer: 'i' } });
+      expect(merged?.firebase).toBeUndefined();
+    });
+  });
+
+  describe('applyEnvVarOverrides()', () => {
+    it('reads the <PREFIX>_FIREBASE_* overrides', () => {
+      process.env['MY_CLI_FIREBASE_API_KEY'] = 'env-key';
+      process.env['MY_CLI_FIREBASE_PROJECT_ID'] = 'env-project';
+      process.env['MY_CLI_FIREBASE_APP_ID'] = 'env-app';
+      process.env['MY_CLI_FIREBASE_FIRESTORE_EMULATOR_PORT'] = '9904';
+
+      const env = applyEnvVarOverrides({ cliName: 'my-cli', env: { apiBaseUrl: 'u', oidcIssuer: 'i' } });
+
+      expect(env?.firebase?.apiKey).toBe('env-key');
+      expect(env?.firebase?.projectId).toBe('env-project');
+      expect(env?.firebase?.appId).toBe('env-app');
+      expect(env?.firebase?.emulators?.firestorePort).toBe(9904);
+      expect(cliFirebaseEmulatorsInUse(env?.firebase)).toBe(true);
+    });
+
+    it('shadows the stored firebase config but keeps unset fields', () => {
+      process.env['MY_CLI_FIREBASE_PROJECT_ID'] = 'env-project';
+
+      const env = applyEnvVarOverrides({ cliName: 'my-cli', env: { apiBaseUrl: 'u', oidcIssuer: 'i', firebase: { apiKey: 'stored-key', projectId: 'stored-project', appId: 'stored-app' } } });
+
+      expect(env?.firebase?.projectId).toBe('env-project');
+      expect(env?.firebase?.apiKey).toBe('stored-key');
+      expect(env?.firebase?.appId).toBe('stored-app');
+    });
+
+    it('leaves firebase undefined when neither stored config nor overrides supply one', () => {
+      const env = applyEnvVarOverrides({ cliName: 'my-cli', env: { apiBaseUrl: 'u', oidcIssuer: 'i' } });
+      expect(env?.firebase).toBeUndefined();
+    });
   });
 });

@@ -21,7 +21,10 @@ export function maskEnv(env: CliEnvConfig): Record<string, unknown> {
     clientId: env.clientId ? maskSecret(env.clientId) : undefined,
     clientSecret: env.clientSecret ? maskSecret(env.clientSecret) : undefined,
     redirectUri: env.redirectUri,
-    scopes: env.scopes
+    scopes: env.scopes,
+    // The Firebase web config is public by design (it ships in the browser bundle), so it is shown
+    // unmasked — hiding it would only make a misconfigured direct-Firestore session harder to debug.
+    firebase: env.firebase
   };
 }
 

@@ -5,6 +5,7 @@ export * from './config';
 export * from './context';
 export * from './doctor';
 export * from './env';
+export * from './firestore';
 export * from './manifest';
 export * from './mcp-scan';
 export * from './middleware';
