@@ -6,7 +6,6 @@ const h = vi.hoisted(() => ({
   setMock: vi.fn(),
   removeMock: vi.fn(),
   refreshMock: vi.fn(),
-  setCliContextMock: vi.fn(),
   resolveEnvMock: vi.fn()
 }));
 
@@ -20,15 +19,14 @@ vi.mock('../auth/oidc.client', () => ({
   refreshAccessToken: h.refreshMock
 }));
 
-vi.mock('../context/cli.context', () => ({
-  setCliContext: h.setCliContextMock,
-  createCliContext: (input: unknown) => input
-}));
-
 vi.mock('../config/env.resolve', () => ({
   resolveCliEnvOrThrow: h.resolveEnvMock
 }));
 
+// NOT mocked: `../context/cli.context` is read back through its real module-level slot below.
+// `createCliContext` is synchronous and opens nothing (its Firestore thunks are lazy), and a mock
+// here would replace the module for every OTHER spec that shares the registry.
+import { getCliContext, setCliContext } from '../context/cli.context';
 import { createAuthMiddleware } from './auth.middleware';
 
 const COMPLETE_ENV = { apiBaseUrl: 'http://x/api', oidcIssuer: 'http://x/oidc', clientId: 'id', clientSecret: 'secret', redirectUri: 'urn:cb' };
@@ -45,13 +43,15 @@ describe('createAuthMiddleware token resolution', () => {
     h.setMock.mockReset();
     h.removeMock.mockReset();
     h.refreshMock.mockReset();
-    h.setCliContextMock.mockReset();
     h.resolveEnvMock.mockReset();
     h.resolveEnvMock.mockResolvedValue({ envName: 'dev', env: COMPLETE_ENV });
+    // cleared so "the middleware attached a context" is distinguishable from a leftover one
+    setCliContext(undefined);
     delete process.env[REFRESH_TOKEN_ENV_KEY];
   });
 
   afterEach(() => {
+    setCliContext(undefined);
     delete process.env[REFRESH_TOKEN_ENV_KEY];
   });
 
@@ -63,8 +63,7 @@ describe('createAuthMiddleware token resolution', () => {
 
     expect(h.refreshMock).not.toHaveBeenCalled();
     expect(h.setMock).not.toHaveBeenCalled();
-    expect(h.setCliContextMock).toHaveBeenCalledTimes(1);
-    expect(h.setCliContextMock.mock.calls[0][0].accessToken).toBe('cached-access');
+    expect(getCliContext()?.accessToken).toBe('cached-access');
   });
 
   it('env fallback: with no cache, mints an access token from the env refresh token and does NOT write it back', async () => {
@@ -78,8 +77,7 @@ describe('createAuthMiddleware token resolution', () => {
     expect(h.refreshMock.mock.calls[0][0].refreshToken).toBe('env-refresh-token');
     // fromEnv entries are never persisted.
     expect(h.setMock).not.toHaveBeenCalled();
-    expect(h.setCliContextMock).toHaveBeenCalledTimes(1);
-    expect(h.setCliContextMock.mock.calls[0][0].accessToken).toBe('minted-access');
+    expect(getCliContext()?.accessToken).toBe('minted-access');
   });
 
   it('cache expired: refreshes and writes the refreshed entry back to the cache', async () => {
@@ -90,6 +88,6 @@ describe('createAuthMiddleware token resolution', () => {
 
     expect(h.refreshMock).toHaveBeenCalledTimes(1);
     expect(h.setMock).toHaveBeenCalledTimes(1);
-    expect(h.setCliContextMock.mock.calls[0][0].accessToken).toBe('new-access');
+    expect(getCliContext()?.accessToken).toBe('new-access');
   });
 });
