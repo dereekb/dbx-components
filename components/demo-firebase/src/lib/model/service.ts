@@ -113,7 +113,7 @@ import {
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
-import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup, profileIdentity } from './profile';
+import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
 export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
@@ -123,8 +123,8 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
   abstract readonly guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
   abstract readonly profileCollection: ProfileFirestoreCollection;
-  abstract readonly profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
-  abstract readonly profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
+  abstract readonly profilePrivateCollectionFactory: ProfilePrivateFirestoreCollectionFactory;
+  abstract readonly profilePrivateCollectionGroup: ProfilePrivateFirestoreCollectionGroup;
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
   abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
   abstract readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
@@ -163,8 +163,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     guestbookEntryCollectionGroup: guestbookEntryFirestoreCollectionGroup(firestoreContext),
     guestbookEntryCollectionFactory: guestbookEntryFirestoreCollectionFactory(firestoreContext),
     profileCollection: profileFirestoreCollection(firestoreContext),
-    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
-    profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext),
+    profilePrivateCollectionFactory: profilePrivateFirestoreCollectionFactory(firestoreContext),
+    profilePrivateCollectionGroup: profilePrivateFirestoreCollectionGroup(firestoreContext),
     notificationUserCollection: notificationUserFirestoreCollection(firestoreContext),
     notificationSummaryCollection: notificationSummaryFirestoreCollection(firestoreContext),
     notificationBoxCollection: notificationBoxFirestoreCollection(firestoreContext),
@@ -259,15 +259,15 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<De
 /**
  * @dbxModelServiceFactory profilePrivate
  */
-export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivate, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
+export const profilePrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivate, ProfilePrivateDocument, ProfilePrivateRoles>({
   // SERVER-ONLY: firestore.rules has no match block for `pp`, so no client can read it there.
   // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
   // never consults the rules — would hand the document to a client anyway.
   serverOnly: true,
-  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivate, ProfilePrivateDataDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
+  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivate, ProfilePrivateDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateRoles>> {
     return grantFullAccessIfAdmin(context);
   },
-  getFirestoreCollection: (c) => c.app.profilePrivateDataCollectionGroup
+  getFirestoreCollection: (c) => c.app.profilePrivateCollectionGroup
 });
 
 // MARK: NotificationBox
@@ -484,7 +484,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   guestbook: guestbookFirebaseModelServiceFactory,
   guestbookEntry: guestbookEntryFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
-  profilePrivate: profilePrivateDataFirebaseModelServiceFactory,
+  profilePrivate: profilePrivateFirebaseModelServiceFactory,
   notificationUser: notificationUserFirebaseModelServiceFactory,
   notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,

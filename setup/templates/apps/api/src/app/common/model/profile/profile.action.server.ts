@@ -27,7 +27,7 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
 }
 
 // MARK: Actions
-export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
   return async (uid: string) => {
@@ -53,8 +53,8 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         });
 
         // create the private profile data
-        const profilePrivateData = profilePrivateDataCollectionFactory(profile);
-        await profilePrivateData.loadDocument().accessor.set({
+        const profilePrivate = profilePrivateCollectionFactory(profile);
+        await profilePrivate.loadDocument().accessor.set({
           createdAt: new Date()
         });
       }

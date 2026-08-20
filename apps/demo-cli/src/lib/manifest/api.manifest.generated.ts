@@ -980,7 +980,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
   {
     modelType: 'profilePrivate',
     modelName: 'ProfilePrivate',
-    identityConst: 'profilePrivateDataIdentity',
+    identityConst: 'profilePrivateIdentity',
     collectionPrefix: 'prp',
     parentIdentityConst: 'profileIdentity',
     description: 'Private, server-managed half of a {@link Profile}.',
@@ -991,7 +991,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'createdAt', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date the profile was created at.' }
     ],
     serverOnly: true,
-    serviceFactory: { exportName: 'profilePrivateDataFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+    serviceFactory: { exportName: 'profilePrivateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFile',

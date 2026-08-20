@@ -111,11 +111,11 @@ Two *extra* exports appear at the bottom of every model file; they are consumed 
 ```ts
 export interface ProfileFirestoreCollections {
   profileCollection: ProfileFirestoreCollection;
-  profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
-  profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
+  profilePrivateCollectionFactory: ProfilePrivateFirestoreCollectionFactory;
+  profilePrivateCollectionGroup: ProfilePrivateFirestoreCollectionGroup;
 }
 
-export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIdentity;
+export type ProfileTypes = typeof profileIdentity | typeof profilePrivateIdentity;
 ```
 
 Why are they useful?
