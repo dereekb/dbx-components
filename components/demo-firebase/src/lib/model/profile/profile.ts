@@ -99,6 +99,12 @@ export interface ProfileResume {
   reason?: Maybe<string>;
 }
 
+/**
+ * A user's public-facing profile, keyed by their uid.
+ *
+ * @dbxModel
+ * @dbxModelRead owner
+ */
 export interface Profile extends UserRelated, UserRelatedById {
   /**
    * Avatar URL
