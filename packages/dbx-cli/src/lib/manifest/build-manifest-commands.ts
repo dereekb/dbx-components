@@ -438,10 +438,14 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
     command: action,
     describe: describeOneLine,
     builder: (yargs: Argv) => {
-      let y = yargs.option('data', {
-        type: 'string',
-        describe: 'JSON-encoded payload (defaults to {} when omitted)'
-      });
+      let y = yargs
+        .option('data', {
+          type: 'string',
+          describe: 'JSON-encoded payload (defaults to {} when omitted), or `-` to read it from stdin'
+        })
+        // `nargs` is what makes `--data -` bind the `-` as the value; without it yargs reads the `-`
+        // as the start of the next option and `--data` silently parses as boolean `true`.
+        .nargs('data', 1);
 
       if (expandKeysAvailable) {
         y = y.option('expand-keys', {

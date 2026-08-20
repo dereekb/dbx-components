@@ -22,6 +22,7 @@ import { buildFirestoreQueryCommand } from '../firestore/firestore-query.command
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
 import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
+import { setCliRawArgv } from '../util/stdin';
 
 /**
  * Names of the global options registered by {@link createCli} that are not
@@ -244,7 +245,13 @@ export function createCli(input: CreateCliInput): Argv {
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
   const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest, firestore: input.firestore });
 
-  let parser = yargs(input.argv ?? hideBin(process.argv))
+  const rawArgv = input.argv ?? hideBin(process.argv);
+
+  // recorded before parsing: yargs coerces a lone `-` positional to `''`, so the stdin sentinel can
+  // only be recovered by consulting the argv the parser was actually given
+  setCliRawArgv(rawArgv);
+
+  let parser = yargs(rawArgv)
     .scriptName(cliName)
     .usage('$0 <command> [options]')
     .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Emit stderr trace lines for HTTP calls' })

@@ -3,7 +3,7 @@ import { type CliContext, requireCliContext } from '../context/cli.context';
 import { CLI_READ_VIA_VALUES, DEFAULT_CLI_READ_VIA, cliReadResultMeta, coerceCliReadVia, getMultipleModelsOverFirestore, resolveCliReadSource } from '../firestore/firestore.read';
 import { outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
-import { isStdinSentinel, readStdinTokens } from '../util/stdin';
+import { isStdinPositionalSentinel, readStdinTokens } from '../util/stdin';
 import { CLI_READ_VIA_EPILOGUE } from './get.command';
 import { parseGetManyArgs } from './get-args.helper';
 
@@ -55,7 +55,9 @@ export const GET_MANY_COMMAND: CommandModule = {
     let resolvedFirst = firstArg;
     let resolvedRest = rest;
 
-    if (firstArg && isStdinSentinel(firstArg)) {
+    // `isStdinPositionalSentinel`, not `isStdinSentinel`: yargs coerces a lone `-` positional to `''`
+    // before the handler runs, so this must not be guarded on `firstArg` being truthy either.
+    if (isStdinPositionalSentinel(firstArg)) {
       const stdinKeys = await readStdinTokens();
       resolvedFirst = stdinKeys[0];
       resolvedRest = stdinKeys.slice(1);

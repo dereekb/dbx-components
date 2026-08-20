@@ -131,13 +131,18 @@ export interface CallModelArgs {
  * @returns The same yargs builder with the model-call positionals and `--data` option chained on.
  */
 export function withCallModelArgs<T>(yargs: Argv<T>): Argv<T & CallModelArgs> {
-  return yargs
-    .positional('model', { type: 'string', demandOption: true, describe: 'Firestore model type (e.g. profile, guestbook)' })
-    .positional('verb', {
-      type: 'string',
-      demandOption: true,
-      describe: 'CRUD verb, invoke, or custom action type (create, read, update, delete, query, invoke, or app-specific)'
-    })
-    .positional('specifier', { type: 'string', describe: 'Optional sub-function specifier' })
-    .option('data', { type: 'string', describe: 'JSON-encoded payload (defaults to {} when omitted)' });
+  return (
+    yargs
+      .positional('model', { type: 'string', demandOption: true, describe: 'Firestore model type (e.g. profile, guestbook)' })
+      .positional('verb', {
+        type: 'string',
+        demandOption: true,
+        describe: 'CRUD verb, invoke, or custom action type (create, read, update, delete, query, invoke, or app-specific)'
+      })
+      .positional('specifier', { type: 'string', describe: 'Optional sub-function specifier' })
+      .option('data', { type: 'string', describe: 'JSON-encoded payload (defaults to {} when omitted), or `-` to read it from stdin' })
+      // `nargs` is what makes `--data -` bind the `-` as the value; without it yargs reads the `-` as
+      // the start of the next option and `--data` silently parses as boolean `true`.
+      .nargs('data', 1)
+  );
 }
