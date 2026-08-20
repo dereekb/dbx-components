@@ -74,7 +74,7 @@ This is the heart of the model. Key sections:
    * Provides `get`, `set`, `query`, etc., all fully typed.
 
 6. **Sub-collections & collection groups**
-   Demonstrated with `ProfilePrivateData` – shows how to nest additional data under a document.
+   Demonstrated with `ProfilePrivate` – shows how to nest additional data under a document.
 
 Together, these pieces give you IDE autocompletion and compile-time safety for every Firestore operation.
 

@@ -203,9 +203,15 @@ export const profilePrivateDataIdentity = firestoreModelIdentity(profileIdentity
 /**
  * Private, server-managed half of a {@link Profile}.
  *
+ * Named to match the `profilePrivate` modelType rather than the
+ * `profilePrivateData*` symbols around it: the manifest generator resolves a
+ * model's interface as `capitalize(modelType)`, so a mismatch here silently
+ * drops the model — and with it this `@dbxModelServerOnly` declaration.
+ *
+ * @dbxModel
  * @dbxModelServerOnly
  */
-export interface ProfilePrivateData {
+export interface ProfilePrivate {
   /**
    * Date the username was set at.
    */
@@ -218,13 +224,13 @@ export interface ProfilePrivateData {
 
 export type ProfilePrivateDataRoles = 'owner' | GrantedReadRole;
 
-export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument, typeof profilePrivateDataIdentity> {
+export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivate, ProfilePrivateDataDocument, typeof profilePrivateDataIdentity> {
   get modelIdentity() {
     return profilePrivateDataIdentity;
   }
 }
 
-export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePrivateData>({
+export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePrivate>({
   fields: {
     usernameSetAt: firestoreDate({ saveDefaultAsNow: false }),
     createdAt: firestoreDate({ saveDefaultAsNow: true })
@@ -233,26 +239,26 @@ export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePri
 
 /**
  * Creates a factory function that returns the subcollection reference for
- * ProfilePrivateData documents under a given Profile parent document.
+ * ProfilePrivate documents under a given Profile parent document.
  *
  * @param context - The FirestoreContext used to resolve the subcollection.
- * @returns Accepts a ProfileDocument and returns its ProfilePrivateData subcollection reference.
+ * @returns Accepts a ProfileDocument and returns its ProfilePrivate subcollection reference.
  */
-export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
+export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivate> {
   return (profile: ProfileDocument) => {
     return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collectionName);
   };
 }
 
-export type ProfilePrivateDataFirestoreCollection = SingleItemFirestoreCollection<ProfilePrivateData, Profile, ProfilePrivateDataDocument>;
+export type ProfilePrivateDataFirestoreCollection = SingleItemFirestoreCollection<ProfilePrivate, Profile, ProfilePrivateDataDocument>;
 export type ProfilePrivateDataFirestoreCollectionFactory = (parent: ProfileDocument) => ProfilePrivateDataFirestoreCollection;
 
 /**
- * Creates a factory that produces ProfilePrivateData single-item Firestore collection
+ * Creates a factory that produces ProfilePrivate single-item Firestore collection
  * accessors scoped to a specific parent Profile document.
  *
  * @param firestoreContext - The FirestoreContext used to build the subcollection.
- * @returns A factory function that accepts a ProfileDocument parent and returns its ProfilePrivateData collection.
+ * @returns A factory function that accepts a ProfileDocument parent and returns its ProfilePrivate collection.
  */
 export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: FirestoreContext): ProfilePrivateDataFirestoreCollectionFactory {
   const factory = profilePrivateDataCollectionReferenceFactory(firestoreContext);
@@ -270,20 +276,20 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
 }
 
 /**
- * Returns the collection group reference for all ProfilePrivateData documents
+ * Returns the collection group reference for all ProfilePrivate documents
  * across every parent Profile, enabling cross-profile queries.
  *
  * @param context - The FirestoreContext used to resolve the collection group.
- * @returns A CollectionGroup reference for ProfilePrivateData documents.
+ * @returns A CollectionGroup reference for ProfilePrivate documents.
  */
-export function profilePrivateDataCollectionReference(context: FirestoreContext): CollectionGroup<ProfilePrivateData> {
+export function profilePrivateDataCollectionReference(context: FirestoreContext): CollectionGroup<ProfilePrivate> {
   return context.collectionGroup(profilePrivateDataIdentity.collectionName);
 }
 
-export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGroup<ProfilePrivateData, ProfilePrivateDataDocument>;
+export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGroup<ProfilePrivate, ProfilePrivateDataDocument>;
 
 /**
- * Creates the Firestore collection group accessor for ProfilePrivateData documents,
+ * Creates the Firestore collection group accessor for ProfilePrivate documents,
  * allowing queries across all profile private data subcollections.
  *
  * @param firestoreContext - The FirestoreContext used to build the collection group.

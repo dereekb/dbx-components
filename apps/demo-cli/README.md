@@ -137,14 +137,13 @@ dbx_model_server_only_validate_app {
 }
 ```
 
-Expected today: **0 errors, 6 warnings** — every resolvable leg agrees, and the warnings are the three
+Expected today: **0 errors, 4 warnings** — every resolvable leg agrees, and the warnings are the two
 known gaps:
 
 | Warning | Model(s) | Why it is accepted |
 | --- | --- | --- |
-| `MODEL_SERVER_ONLY_NOT_IN_MANIFEST` | `profilePrivate`, `notificationLoggedEventDayPage`, `openRouterPrompt`, `openRouterPromptVersion` | The api-manifest generator's model discovery walks packages reached via the app's functions config, and these are not reached (or their interface is untagged). The **runtime** gate still refuses them; only the CLI's local pre-transport refusal is missed, so the read costs one round-trip to an API that refuses it. |
+| `MODEL_SERVER_ONLY_NOT_IN_MANIFEST` | `notificationLoggedEventDayPage`, `openRouterPrompt`, `openRouterPromptVersion` | The api-manifest generator's model discovery walks packages reached via the app's functions config, and these are not reached (or their interface is untagged). The **runtime** gate still refuses them; only the CLI's local pre-transport refusal is missed, so the read costs one round-trip to an API that refuses it. |
 | `MODEL_SERVER_ONLY_NO_INTERFACE` | `notificationLoggedEventDayPage` | `NotificationLoggedEventDayPageDocumentData` is a `type` alias over `PagedItemPageData<NotificationItem>`, so there is no interface to carry `@dbxModelServerOnly`. The runtime flag is the whole declaration for it. |
-| `MODEL_SERVER_ONLY_TAG_WITHOUT_MODEL_TAG` | `ProfilePrivateData` | The interface carries `@dbxModelServerOnly` but no `@dbxModel`, so the extractor skips it entirely. Adding `@dbxModel` would add a whole new model manifest entry (and command tree) — a wider change than this gate needs. |
 
 `apps/demo-api/src/test/tests/firestore.rules.spec.ts` is the dynamic oracle for the same semantics —
 it drives the real rules engine via `@firebase/rules-unit-testing`.
