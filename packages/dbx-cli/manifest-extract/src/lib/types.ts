@@ -164,6 +164,12 @@ export interface ModelExtractionInterface {
    */
   readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions';
   /**
+   * True when the interface carries `@dbxModelServerOnly` — the model has no client read grant in
+   * `firestore.rules` and must be refused on the model API too. See
+   * `FirebaseModelServiceConfig.serverOnly`, the runtime half of the same declaration.
+   */
+  readonly dbxModelServerOnly?: boolean;
+  /**
    * Per-model MCP tool-name segment from `@dbxModelMcpToolNameSegment <segment>`. Replaces the model
    * type in generated tool names (e.g. the collection prefix). Absent when the tag is omitted or invalid.
    */

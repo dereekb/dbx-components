@@ -2,9 +2,10 @@ import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import { Module } from '@nestjs/common';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '@dereekb/firebase-server/mcp';
+import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAuthRoleReader, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
 import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
-import { SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { FIRESTORE_SESSION_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { AUTH_ADMIN_ROLE, type AuthClaims } from '@dereekb/util';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
@@ -74,10 +75,15 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
   return {
     oidcIssuer: oidcModuleConfig.issuer,
     mcpUrl,
-    // A service token is admin-only and makes the grant long-lived + non-rotating — not what an
-    // interactive MCP connection should be asking for, so it is not advertised to MCP clients (which
-    // request the advertised list verbatim). Other OIDC clients can still request it directly.
-    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE),
+    // Admin-only scopes are not advertised to MCP clients, which request the advertised list
+    // verbatim. Other OIDC clients can still request either one directly.
+    //
+    // - token.service makes the grant long-lived + non-rotating — not what an interactive MCP
+    //   connection should be asking for.
+    // - session.firestore unlocks a DIRECT Firestore connection, which the MCP tools have no use for
+    //   (they reach data through callModel), and asking for it would put every admin MCP grant in the
+    //   widened admin-only-scope TTL tier for no benefit.
+    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE),
     serverName: 'demo-api-mcp',
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
@@ -95,6 +101,19 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
  * @returns The AuthRoleSet derived from the claims, used by the MCP visibility check.
  */
 const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SERVICE.toRoles(claims);
+
+/**
+ * McpModelRolesTargetUidPredicate implementation for the demo app — gates the `model-roles` `uid`
+ * parameter on the admin role.
+ *
+ * Resolving roles for another user's uid answers "what is *that* user allowed to do here?", which
+ * discloses the target's effective access, so it is admin-only. Every caller can still resolve
+ * roles for themselves; without this provider the `uid` parameter would fail closed for everyone.
+ *
+ * @param auth - The calling request's auth data, or undefined for an unauthenticated request.
+ * @returns True when the caller holds the admin role.
+ */
+const demoMcpModelRolesTargetUidPredicate: McpModelRolesTargetUidPredicate = (auth) => DEMO_AUTH_CLAIMS_SERVICE.toRoles((auth?.token ?? {}) as unknown as AuthClaims).has(AUTH_ADMIN_ROLE);
 
 /**
  * Dependency module for the Demo MCP module.
@@ -116,9 +135,13 @@ const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SE
     {
       provide: MCP_AUTH_ROLE_READER,
       useValue: demoMcpAuthRoleReader
+    },
+    {
+      provide: MCP_MODEL_ROLES_TARGET_UID_PREDICATE,
+      useValue: demoMcpModelRolesTargetUidPredicate
     }
   ],
-  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, DemoModelApiModule, DemoApiOidcModule]
+  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, DemoModelApiModule, DemoApiOidcModule]
 })
 export class DemoMcpDependencyModule {}
 

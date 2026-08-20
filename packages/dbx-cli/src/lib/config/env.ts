@@ -141,7 +141,49 @@ export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Mayb
       clientId: nonEmpty(e?.clientId) ?? nonEmpty(d?.clientId),
       clientSecret: nonEmpty(e?.clientSecret) ?? nonEmpty(d?.clientSecret),
       redirectUri: nonEmpty(e?.redirectUri) ?? nonEmpty(d?.redirectUri),
-      scopes: nonEmpty(e?.scopes) ?? nonEmpty(d?.scopes)
+      scopes: nonEmpty(e?.scopes) ?? nonEmpty(d?.scopes),
+      firebase: mergeCliFirebaseConfig(e?.firebase, d?.firebase)
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Merges a stored Firebase client config on top of a default one, field by field, so an env can
+ * override just the `projectId` of a registered default without restating the whole block.
+ *
+ * @param env - The user's persisted Firebase config, if any.
+ * @param defaultEnv - The registered default's Firebase config, if any.
+ * @returns The merged config, or `undefined` when neither side supplies one.
+ */
+export function mergeCliFirebaseConfig(env: Maybe<CliFirebaseConfig>, defaultEnv: Maybe<CliFirebaseConfig>): CliFirebaseConfig | undefined {
+  let result: CliFirebaseConfig | undefined;
+
+  if (env || defaultEnv) {
+    const emulators = mergeCliFirebaseEmulatorsConfig(env?.emulators, defaultEnv?.emulators);
+
+    result = {
+      apiKey: nonEmpty(env?.apiKey) ?? nonEmpty(defaultEnv?.apiKey),
+      authDomain: nonEmpty(env?.authDomain) ?? nonEmpty(defaultEnv?.authDomain),
+      projectId: nonEmpty(env?.projectId) ?? nonEmpty(defaultEnv?.projectId),
+      appId: nonEmpty(env?.appId) ?? nonEmpty(defaultEnv?.appId),
+      ...(emulators ? { emulators } : undefined)
+    };
+  }
+
+  return result;
+}
+
+function mergeCliFirebaseEmulatorsConfig(env: Maybe<CliFirebaseEmulatorsConfig>, defaultEnv: Maybe<CliFirebaseEmulatorsConfig>): CliFirebaseEmulatorsConfig | undefined {
+  let result: CliFirebaseEmulatorsConfig | undefined;
+
+  if (env || defaultEnv) {
+    result = {
+      useEmulators: env?.useEmulators ?? defaultEnv?.useEmulators,
+      host: nonEmpty(env?.host) ?? nonEmpty(defaultEnv?.host),
+      authPort: env?.authPort ?? defaultEnv?.authPort,
+      firestorePort: env?.firestorePort ?? defaultEnv?.firestorePort
     };
   }
 
@@ -150,6 +192,98 @@ export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Mayb
 
 function nonEmpty(value: Maybe<string>): string | undefined {
   return value != null && value.length > 0 ? value : undefined;
+}
+
+/**
+ * Local Firebase emulator targets for a CLI env.
+ *
+ * Mirrors the semantics of `DbxFirebaseEmulatorsConfig` in `@dereekb/dbx-firebase` (whose parse
+ * helper is Angular-bound and not reusable here): the presence of this object means "use emulators"
+ * unless {@link useEmulators} is explicitly `false`.
+ *
+ * App Check is auto-disabled whenever emulators are in use — the emulators do not verify
+ * attestations, and `initializeAppCheck` against a fake project only gets in the way.
+ */
+export interface CliFirebaseEmulatorsConfig {
+  /**
+   * Set `false` to keep the emulator targets configured but inactive. Defaults to `true`.
+   */
+  readonly useEmulators?: boolean;
+  /**
+   * Host the emulators are reachable at. Defaults to {@link DEFAULT_CLI_FIREBASE_EMULATOR_HOST}.
+   */
+  readonly host?: string;
+  /**
+   * Port of the Auth emulator. When unset, Auth is not redirected to an emulator.
+   */
+  readonly authPort?: number;
+  /**
+   * Port of the Firestore emulator. When unset, Firestore is not redirected to an emulator.
+   */
+  readonly firestorePort?: number;
+}
+
+/**
+ * Firebase client-SDK configuration for a CLI env, used only by the direct-Firestore session
+ * (`CliContext.getFirestoreContext`). Everything else the CLI does goes over the model HTTP API and
+ * needs none of this.
+ *
+ * These are the same public values the app's browser client initializes with — copy them from the
+ * target app's environment file. `appId` in particular must be the registered **web** app, since the
+ * server mints its App Check attestation for that app.
+ */
+export interface CliFirebaseConfig {
+  /**
+   * The Firebase web API key.
+   */
+  readonly apiKey?: string;
+  /**
+   * The project's auth domain (e.g. `my-project.firebaseapp.com`).
+   */
+  readonly authDomain?: string;
+  /**
+   * The Firebase project id.
+   */
+  readonly projectId?: string;
+  /**
+   * The registered **web** app id (e.g. `1:1234567890:web:abcdef`).
+   */
+  readonly appId?: string;
+  /**
+   * Optional emulator targets for local development.
+   */
+  readonly emulators?: CliFirebaseEmulatorsConfig;
+}
+
+/**
+ * Default host used for Firebase emulator connections when a {@link CliFirebaseEmulatorsConfig}
+ * omits one.
+ */
+export const DEFAULT_CLI_FIREBASE_EMULATOR_HOST = 'localhost';
+
+/**
+ * Returns true when the env carries the minimum Firebase client config needed to open a direct
+ * Firestore session.
+ *
+ * Deliberately separate from {@link isCliEnvConfigComplete}: the Firebase config is optional, and
+ * folding it into the general completeness check would break every CLI that only uses the model API.
+ *
+ * @param firebase - The env's Firebase client config, if any.
+ * @returns `true` when `apiKey`, `projectId`, and `appId` are all present and non-empty.
+ */
+export function isCliFirebaseConfigComplete(firebase: Maybe<CliFirebaseConfig>): firebase is Required<Pick<CliFirebaseConfig, 'apiKey' | 'projectId' | 'appId'>> & CliFirebaseConfig {
+  return Boolean(firebase?.apiKey && firebase?.projectId && firebase?.appId);
+}
+
+/**
+ * Returns true when the env's emulator config is present and active.
+ *
+ * @param firebase - The env's Firebase client config, if any.
+ * @returns `true` when emulators are configured and not explicitly disabled.
+ */
+export function cliFirebaseEmulatorsInUse(firebase: Maybe<CliFirebaseConfig>): boolean {
+  const emulators = firebase?.emulators;
+  return Boolean(emulators && emulators.useEmulators !== false && (emulators.authPort != null || emulators.firestorePort != null));
 }
 
 /**
@@ -204,6 +338,12 @@ export interface CliEnvConfig {
    * Space-separated OAuth scopes to request. Defaults to {@link DEFAULT_CLI_OIDC_SCOPES}.
    */
   readonly scopes?: string;
+  /**
+   * Optional Firebase client config enabling the direct-Firestore session
+   * (`CliContext.getFirestoreContext()`). Optional by design — a CLI that only calls the model API
+   * never needs it, and requiring it would break every existing consumer.
+   */
+  readonly firebase?: CliFirebaseConfig;
 }
 
 /**
@@ -244,6 +384,15 @@ export function resolveActiveEnvName(input: ResolveActiveEnvInput): Maybe<string
  *   - `DEMO_CLI_CLIENT_SECRET`
  *   - `DEMO_CLI_REDIRECT_URI`
  *   - `DEMO_CLI_SCOPES`
+ *
+ * Plus the optional direct-Firestore session config:
+ *   - `DEMO_CLI_FIREBASE_API_KEY`
+ *   - `DEMO_CLI_FIREBASE_AUTH_DOMAIN`
+ *   - `DEMO_CLI_FIREBASE_PROJECT_ID`
+ *   - `DEMO_CLI_FIREBASE_APP_ID`
+ *   - `DEMO_CLI_FIREBASE_EMULATOR_HOST`
+ *   - `DEMO_CLI_FIREBASE_AUTH_EMULATOR_PORT`
+ *   - `DEMO_CLI_FIREBASE_FIRESTORE_EMULATOR_PORT`
  */
 export interface EnvVarOverrideInput {
   readonly cliName: string;
@@ -268,12 +417,40 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
   const redirectUri = process.env[`${prefix}_REDIRECT_URI`];
   const scopes = process.env[`${prefix}_SCOPES`];
 
-  const hasOverrides = apiBaseUrl || oidcIssuer || appClientUrl || clientId || clientSecret || redirectUri || scopes;
+  const firebaseApiKey = process.env[`${prefix}_FIREBASE_API_KEY`];
+  const firebaseAuthDomain = process.env[`${prefix}_FIREBASE_AUTH_DOMAIN`];
+  const firebaseProjectId = process.env[`${prefix}_FIREBASE_PROJECT_ID`];
+  const firebaseAppId = process.env[`${prefix}_FIREBASE_APP_ID`];
+  const firebaseEmulatorHost = process.env[`${prefix}_FIREBASE_EMULATOR_HOST`];
+  const firebaseAuthEmulatorPort = parsePort(process.env[`${prefix}_FIREBASE_AUTH_EMULATOR_PORT`]);
+  const firebaseFirestoreEmulatorPort = parsePort(process.env[`${prefix}_FIREBASE_FIRESTORE_EMULATOR_PORT`]);
+
+  const hasFirebaseOverrides = Boolean(firebaseApiKey || firebaseAuthDomain || firebaseProjectId || firebaseAppId || firebaseEmulatorHost || firebaseAuthEmulatorPort != null || firebaseFirestoreEmulatorPort != null);
+  const hasOverrides = apiBaseUrl || oidcIssuer || appClientUrl || clientId || clientSecret || redirectUri || scopes || hasFirebaseOverrides;
   let result: Maybe<CliEnvConfig>;
 
   if (!input.env && !hasOverrides) {
     result = undefined;
   } else {
+    const firebase = mergeCliFirebaseConfig(
+      {
+        apiKey: firebaseApiKey,
+        authDomain: firebaseAuthDomain,
+        projectId: firebaseProjectId,
+        appId: firebaseAppId,
+        ...(firebaseEmulatorHost || firebaseAuthEmulatorPort != null || firebaseFirestoreEmulatorPort != null
+          ? {
+              emulators: {
+                host: firebaseEmulatorHost,
+                authPort: firebaseAuthEmulatorPort,
+                firestorePort: firebaseFirestoreEmulatorPort
+              }
+            }
+          : undefined)
+      },
+      input.env?.firebase
+    );
+
     result = {
       apiBaseUrl: apiBaseUrl ?? input.env?.apiBaseUrl ?? '',
       oidcIssuer: oidcIssuer ?? input.env?.oidcIssuer ?? '',
@@ -281,11 +458,17 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
       clientId: clientId ?? input.env?.clientId,
       clientSecret: clientSecret ?? input.env?.clientSecret,
       redirectUri: redirectUri ?? input.env?.redirectUri,
-      scopes: scopes ?? input.env?.scopes
+      scopes: scopes ?? input.env?.scopes,
+      ...(input.env?.firebase || hasFirebaseOverrides ? { firebase } : undefined)
     };
   }
 
   return result;
+}
+
+function parsePort(value: Maybe<string>): number | undefined {
+  const parsed = value != null && value.length > 0 ? Number(value) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 /**

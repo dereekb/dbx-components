@@ -8,6 +8,7 @@ export interface CliPaths {
   readonly configDir: string;
   readonly configFilePath: string;
   readonly tokenCachePath: string;
+  readonly firestoreSessionCachePath: string;
 }
 
 export interface CliPathsConfig {
@@ -29,11 +30,12 @@ export interface CliPathsConfig {
  * Layout:
  *   - `<configDir>/config.json` — the persistent CLI config (envs, output settings)
  *   - `<configDir>/.tokens.json` — per-env access/refresh token cache (mode 0600)
+ *   - `<configDir>/.firestore-sessions.json` — per-env direct-Firestore session cache (mode 0600)
  *
  * @param config - The path-building inputs.
  * @param config.cliName - The CLI's binary name; the default config dir is `~/.<cliName>`.
  * @param config.configDirOverride - Optional override that replaces the default config directory verbatim (used by tests).
- * @returns The {@link CliPaths} pointing at `configDir`, the config file, and the token cache file.
+ * @returns The {@link CliPaths} pointing at `configDir`, the config file, the token cache file, and the Firestore session cache file.
  * @__NO_SIDE_EFFECTS__
  */
 export function buildCliPaths(config: CliPathsConfig): CliPaths {
@@ -42,6 +44,7 @@ export function buildCliPaths(config: CliPathsConfig): CliPaths {
   return {
     configDir,
     configFilePath: join(configDir, 'config.json'),
-    tokenCachePath: join(configDir, '.tokens.json')
+    tokenCachePath: join(configDir, '.tokens.json'),
+    firestoreSessionCachePath: join(configDir, '.firestore-sessions.json')
   };
 }

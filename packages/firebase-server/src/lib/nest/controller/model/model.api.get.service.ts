@@ -1,11 +1,12 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import { type GrantedRoleMap, isFullAccessRoleMap, FULL_ACCESS_ROLE_KEY, NO_ACCESS_ROLE_KEY } from '@dereekb/model';
+import { type FirebaseAuthUserId, type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 import { type FirebaseServerAuthData } from '../auth.context.server';
-import { firebaseServerErrorInfo } from '../../../function/error';
+import { firebaseServerErrorInfo, forbiddenError } from '../../../function/error';
 import { assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api.scope';
 
 // MARK: Types
@@ -13,6 +14,14 @@ import { assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api
  * Maximum number of keys allowed in a multi-read request.
  */
 export const MAX_MODEL_ACCESS_MULTI_READ_KEYS = 50;
+
+/**
+ * Error code returned when a read targets a model the app declared SERVER-ONLY.
+ *
+ * Deliberately distinct from a permission error: nothing the caller can be granted will make this
+ * read succeed, so the message needs to say WHY rather than implying a missing role.
+ */
+export const MODEL_IS_SERVER_ONLY_ERROR_CODE = 'MODEL_IS_SERVER_ONLY';
 
 /**
  * Result of a single document access read.
@@ -37,6 +46,120 @@ export interface ModelAccessReadError {
   readonly key: FirestoreModelKey;
   readonly message: string;
   readonly code?: string;
+}
+
+/**
+ * The resolved permission state for a single model key, as computed by that model's
+ * `roleMapForModel()` delegate for a specific user.
+ */
+export interface ModelAccessRoleMapResult {
+  readonly key: FirestoreModelKey;
+  /**
+   * Whether the underlying document exists.
+   *
+   * Roles are only computed for documents that exist — `FirebaseModelPermissionServiceInstance`
+   * gates on `isUsableOutputForRoles(output) => output.exists`, so a missing document always
+   * resolves to an empty role set. Surfacing existence separately is what lets a caller tell
+   * "the document is not there" apart from "the document is there and you may not touch it";
+   * both otherwise present as `roles: []`.
+   */
+  readonly exists: boolean;
+  /**
+   * True when the model granted the full-access marker ({@link FULL_ACCESS_ROLE_KEY}) rather than
+   * an enumerated role set — the shape admin short-circuits like `fullAccessRoleMap()` produce.
+   * When true, {@link roles} is empty and every role is implicitly granted.
+   */
+  readonly fullAccess: boolean;
+  /**
+   * The granted role names, sorted. Empty when {@link fullAccess} is true or nothing was granted.
+   */
+  readonly roles: string[];
+}
+
+/**
+ * Result of a multi-key role-map resolution.
+ */
+export interface ModelAccessMultiRoleMapResult {
+  /**
+   * The uid the roles were resolved for — the caller's own uid unless the request targeted
+   * another user. `undefined` for an unauthenticated resolution.
+   */
+  readonly uid?: string;
+  /**
+   * True when {@link uid} is someone other than the calling user.
+   */
+  readonly targeted: boolean;
+  readonly results: ModelAccessRoleMapResult[];
+  readonly errors: ModelAccessReadError[];
+}
+
+/**
+ * Input for {@link ModelApiGetService.readRoleMaps}.
+ */
+export interface ModelAccessRoleMapParams {
+  readonly modelType: FirestoreModelType;
+  readonly keys: FirestoreModelKey[];
+  /**
+   * The calling request's auth data.
+   */
+  readonly auth: Maybe<FirebaseServerAuthData>;
+  /**
+   * Resolve roles as this user instead of the caller. Callers are responsible for authorizing
+   * this before passing it — the service performs no permission check of its own on the target.
+   */
+  readonly targetUid?: Maybe<FirebaseAuthUserId>;
+}
+
+/**
+ * Input for {@link modelAccessRoleMapResultFromGrantedRoles}.
+ */
+export interface ModelAccessRoleMapResultParams {
+  readonly key: FirestoreModelKey;
+  /**
+   * The resolved `ContextGrantedModelRoles` for the key. Typed structurally (rather than importing
+   * the generic) so the mapper stays testable with a plain object.
+   */
+  readonly granted: {
+    readonly data?: Maybe<{ readonly exists?: boolean }>;
+    readonly roleMap: GrantedRoleMap<string>;
+  };
+}
+
+/**
+ * Role-map keys that are structural markers rather than granted role names, so they are never
+ * reported as roles.
+ *
+ * {@link FULL_ACCESS_ROLE_KEY} is surfaced through `fullAccess` instead. {@link NO_ACCESS_ROLE_KEY}
+ * is what `noAccessRoleMap()` sets and means "no roles at all" — both a missing document and an
+ * explicit no-access grant carry it, so leaking it would report `__EMPTY__` as a granted role and
+ * make the no-access case indistinguishable from a real one-role grant.
+ */
+const MODEL_ACCESS_ROLE_MAP_MARKER_KEYS: ReadonlySet<string> = new Set<string>([FULL_ACCESS_ROLE_KEY, NO_ACCESS_ROLE_KEY]);
+
+/**
+ * Maps a resolved `ContextGrantedModelRoles` into the flat {@link ModelAccessRoleMapResult} wire
+ * shape — collapsing the full-access marker into a boolean, dropping the structural marker keys, and
+ * sorting the enumerated role keys so output is stable across calls.
+ *
+ * @param input - The key and its resolved granted-roles result.
+ * @returns The flattened per-key permission state.
+ */
+export function modelAccessRoleMapResultFromGrantedRoles(input: ModelAccessRoleMapResultParams): ModelAccessRoleMapResult {
+  const { key, granted } = input;
+  const fullAccess = isFullAccessRoleMap(granted.roleMap);
+  const roles = fullAccess
+    ? []
+    : Object.entries(granted.roleMap as Record<string, unknown>)
+        .filter(([roleKey, value]) => value === true && !MODEL_ACCESS_ROLE_MAP_MARKER_KEYS.has(roleKey))
+        .map(([roleKey]) => roleKey)
+        .sort();
+
+  return {
+    key,
+    exists: granted.data?.exists === true,
+    fullAccess,
+    roles
+  };
 }
 
 /**
@@ -146,6 +269,55 @@ export class ModelApiGetService {
   }
 
   /**
+   * Refuses a read of a model the app declared SERVER-ONLY, BEFORE `useModel` runs.
+   *
+   * The model API authorizes through `roleMapForModel` under the Admin SDK, which bypasses
+   * `firestore.rules` entirely. For a model the rules file deliberately leaves unmatched (or denies
+   * outright), those two systems disagree and the model API is the one handing out the document.
+   * Gating here — ahead of the role map, and on the ONE service both `/model/<type>/get` and the
+   * `model-get` MCP tool share — is what makes the two read paths agree.
+   *
+   * @param modelType - The Firestore model type being read.
+   * @param auth - The request's auth data; used to build the context the service lookup needs.
+   * @throws {HttpsError} `MODEL_IS_SERVER_ONLY` when the model opted in via `serverOnly`.
+   */
+  private _assertNotServerOnly(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): void {
+    if (this._isServerOnlyModel(modelType, auth)) {
+      throw forbiddenError({
+        status: 403,
+        code: MODEL_IS_SERVER_ONLY_ERROR_CODE,
+        message: `Model "${modelType}" is server-only and cannot be read through the model API. It has no client read grant in firestore.rules either — reach it through a callable that owns its access policy.`,
+        data: { modelType }
+      });
+    }
+  }
+
+  /**
+   * Reads the `serverOnly` flag off the registered model service, tolerating a type whose service
+   * cannot be constructed (which `readDocument` then reports as an unknown model).
+   *
+   * @param modelType - The Firestore model type to inspect.
+   * @param auth - The request's auth data.
+   * @returns `true` when the model declared itself server-only.
+   */
+  private _isServerOnlyModel(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): boolean {
+    const authRef = this._makeAuthRef(auth);
+    let result = false;
+
+    try {
+      const inContextService = this._nestContext.model(authRef);
+      const modelService = inContextService(modelType as never) as unknown as { readonly serverOnly?: boolean };
+      result = modelService?.serverOnly === true;
+    } catch {
+      // an unregistered / unconstructable type is not our error to raise here — the subsequent
+      // useModel call reports it as an unknown model
+      result = false;
+    }
+
+    return result;
+  }
+
+  /**
    * Returns the registered {@link FirestoreModelIdentity} for the given `modelType` string, or
    * `undefined` when no model of that type is registered.
    *
@@ -194,6 +366,7 @@ export class ModelApiGetService {
    */
   async readDocument(modelType: FirestoreModelType, key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessReadResult> {
     this._assertReadScope(modelType, auth);
+    this._assertNotServerOnly(modelType, auth);
 
     const authRef = this._makeAuthRef(auth);
     const doc = await this._nestContext.useModel(modelType as any, {
@@ -224,6 +397,7 @@ export class ModelApiGetService {
    */
   async readDocuments(modelType: FirestoreModelType, keys: FirestoreModelKey[], auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessMultiReadResult> {
     this._assertReadScope(modelType, auth);
+    this._assertNotServerOnly(modelType, auth);
 
     const authRef = this._makeAuthRef(auth);
 
@@ -249,6 +423,103 @@ export class ModelApiGetService {
         return { results, errors };
       }
     });
+  }
+
+  /**
+   * Resolves the granted role map for one or more keys of the same model type — i.e. "what is this
+   * user actually allowed to do with this document?".
+   *
+   * This is the same computation the permission-checked read path runs (`roleMapForModel()` on the
+   * model's registered service factory), but the resolved roles are returned instead of being
+   * consumed to allow/deny an operation. Because it runs the model's real delegate, derived and
+   * cascading roles are included exactly as the API would grant them.
+   *
+   * Per-key failures are captured in `errors` rather than thrown, matching {@link readDocuments}.
+   * A key that resolves to a missing document is NOT an error — it comes back with
+   * `exists: false, roles: []`, which is what distinguishes "not there" from "no access".
+   *
+   * @param params - Model type, keys, calling auth, and an optional target uid.
+   * @returns The per-key permission state plus the uid the roles were resolved for.
+   */
+  async readRoleMaps(params: ModelAccessRoleMapParams): Promise<ModelAccessMultiRoleMapResult> {
+    const { modelType, keys, auth, targetUid } = params;
+    this._assertReadScope(modelType, auth);
+
+    const targeted = targetUid != null && targetUid !== auth?.uid;
+    const authRef = targeted ? await this._makeAuthRefForUid(targetUid as FirebaseAuthUserId) : this._makeAuthRef(auth);
+    const context = this._nestContext.makeModelContext(authRef);
+    const service = (this._nestContext.firebaseModelsService as any)(modelType, context);
+
+    const settled = await Promise.all(
+      keys.map(async (key) => {
+        let entry: { readonly result?: ModelAccessRoleMapResult; readonly error?: ModelAccessReadError };
+
+        try {
+          const granted = await service.roleMapForKey(key);
+          entry = { result: modelAccessRoleMapResultFromGrantedRoles({ key, granted }) };
+        } catch (error) {
+          entry = { error: modelAccessReadErrorFromUseMultipleModelsFailure({ key, error }) };
+        }
+
+        return entry;
+      })
+    );
+
+    const results: ModelAccessRoleMapResult[] = [];
+    const errors: ModelAccessReadError[] = [];
+
+    settled.forEach((entry) => {
+      if (entry.result != null) {
+        results.push(entry.result);
+      } else if (entry.error != null) {
+        errors.push(entry.error);
+      }
+    });
+
+    const uid = authRef.auth?.uid;
+
+    return {
+      ...(uid == null ? {} : { uid }),
+      targeted,
+      results,
+      errors
+    };
+  }
+
+  /**
+   * Builds a synthetic {@link AuthData} for an arbitrary uid so role resolution can run *as* that
+   * user rather than as the caller.
+   *
+   * The target's custom claims are read from their Firebase Auth record and spread into the
+   * synthetic token, mirroring how Firebase merges custom claims into a real decoded ID token —
+   * so claim-reading permission delegates behave identically to a live request from that user.
+   *
+   * @param uid - The uid to resolve as.
+   * @returns An auth ref carrying the target user's claims.
+   * @throws {Error} If no Firebase Auth user exists for the uid.
+   */
+  private async _makeAuthRefForUid(uid: FirebaseAuthUserId): Promise<{ auth?: AuthData }> {
+    const userContext = this._nestContext.authService.userContext(uid);
+    const exists = await userContext.exists();
+
+    if (!exists) {
+      throw new Error(`No user exists with uid "${uid}".`);
+    }
+
+    const record = await userContext.loadRecord();
+
+    return {
+      auth: {
+        uid,
+        token: {
+          ...record.customClaims,
+          uid,
+          sub: uid,
+          email: record.email,
+          email_verified: record.emailVerified
+        }
+      } as AuthData
+    };
   }
 
   /**

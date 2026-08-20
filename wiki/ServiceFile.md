@@ -57,7 +57,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   guestbook: guestbookFirebaseModelServiceFactory,
   guestbookEntry: guestbookEntryFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
-  profilePrivate: profilePrivateDataFirebaseModelServiceFactory,
+  profilePrivate: profilePrivateFirebaseModelServiceFactory,
   // …notification factories…
 };
 

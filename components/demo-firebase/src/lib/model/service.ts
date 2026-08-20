@@ -113,7 +113,7 @@ import {
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
-import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup, profileIdentity } from './profile';
+import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
 export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
@@ -123,8 +123,8 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
   abstract readonly guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
   abstract readonly profileCollection: ProfileFirestoreCollection;
-  abstract readonly profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
-  abstract readonly profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
+  abstract readonly profilePrivateCollectionFactory: ProfilePrivateFirestoreCollectionFactory;
+  abstract readonly profilePrivateCollectionGroup: ProfilePrivateFirestoreCollectionGroup;
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
   abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
   abstract readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
@@ -163,8 +163,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     guestbookEntryCollectionGroup: guestbookEntryFirestoreCollectionGroup(firestoreContext),
     guestbookEntryCollectionFactory: guestbookEntryFirestoreCollectionFactory(firestoreContext),
     profileCollection: profileFirestoreCollection(firestoreContext),
-    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
-    profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext),
+    profilePrivateCollectionFactory: profilePrivateFirestoreCollectionFactory(firestoreContext),
+    profilePrivateCollectionGroup: profilePrivateFirestoreCollectionGroup(firestoreContext),
     notificationUserCollection: notificationUserFirestoreCollection(firestoreContext),
     notificationSummaryCollection: notificationSummaryFirestoreCollection(firestoreContext),
     notificationBoxCollection: notificationBoxFirestoreCollection(firestoreContext),
@@ -192,6 +192,10 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
  * @dbxModelServiceFactory systemState
  */
 export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `sys`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: DemoFirebaseContext, _model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
     return grantFullAccessIfAdmin(context);
   },
@@ -253,13 +257,17 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<De
 });
 
 /**
- * @dbxModelServiceFactory profilePrivateData
+ * @dbxModelServiceFactory profilePrivate
  */
-export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
+export const profilePrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivate, ProfilePrivateDocument, ProfilePrivateRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `pp`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
+  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivate, ProfilePrivateDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateRoles>> {
     return grantFullAccessIfAdmin(context);
   },
-  getFirestoreCollection: (c) => c.app.profilePrivateDataCollectionGroup
+  getFirestoreCollection: (c) => c.app.profilePrivateCollectionGroup
 });
 
 // MARK: NotificationBox
@@ -306,6 +314,10 @@ export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFa
  * @dbxModelServiceFactory notification
  */
 export const notificationFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Notification, NotificationDocument, NotificationRoles>({
+  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbn`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<Notification, NotificationDocument>, context: DemoFirebaseContext, _model: NotificationDocument): PromiseOrValue<GrantedRoleMap<NotificationRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -316,6 +328,10 @@ export const notificationFirebaseModelServiceFactory = firebaseModelServiceFacto
  * @dbxModelServiceFactory notificationWeek
  */
 export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationWeek, NotificationWeekDocument, NotificationWeekRoles>({
+  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbnw`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationWeek, NotificationWeekDocument>, context: DemoFirebaseContext, _model: NotificationWeekDocument): PromiseOrValue<GrantedRoleMap<NotificationWeekRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -326,6 +342,10 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
  * @dbxModelServiceFactory notificationLoggedEventDay
  */
 export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDay, NotificationLoggedEventDayDocument, NotificationLoggedEventDayRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `nbnle`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDay, NotificationLoggedEventDayDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -336,6 +356,10 @@ export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseMod
  * @dbxModelServiceFactory notificationLoggedEventDayPage
  */
 export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `nbnlep`, so no client can read it there.
+  // `NotificationLoggedEventDayPageDocumentData` is a type alias, not an interface, so there is no
+  // declaration to carry `@dbxModelServerOnly` — this flag is the whole declaration for this model.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayPageDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — pages are framework-internal
   },
@@ -413,6 +437,10 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
  * @dbxModelServiceFactory openRouterPrompt
  */
 export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPrompt, OpenRouterPromptDocument, OpenRouterPromptRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `orp`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPrompt, OpenRouterPromptDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — a prompt is operational configuration
   },
@@ -423,6 +451,10 @@ export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceF
  * @dbxModelServiceFactory openRouterPromptVersion
  */
 export const openRouterPromptVersionFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPromptVersion, OpenRouterPromptVersionDocument, OpenRouterPromptVersionRoles>({
+  // SERVER-ONLY: firestore.rules has no match block for `orpv`, so no client can read it there.
+  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
+  // never consults the rules — would hand the document to a client anyway.
+  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPromptVersion, OpenRouterPromptVersionDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptVersionDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptVersionRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -452,7 +484,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   guestbook: guestbookFirebaseModelServiceFactory,
   guestbookEntry: guestbookEntryFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
-  profilePrivate: profilePrivateDataFirebaseModelServiceFactory,
+  profilePrivate: profilePrivateFirebaseModelServiceFactory,
   notificationUser: notificationUserFirebaseModelServiceFactory,
   notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,

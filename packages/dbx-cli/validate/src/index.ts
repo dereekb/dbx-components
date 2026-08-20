@@ -39,6 +39,11 @@ export * from './lib/_core/validate-two-side-folder.js';
 // the tool wrapper (they depend on the source-only `@dereekb/dbx-cli/firestore-indexes`).
 export { ModelFirebaseIndexValidateAppCode, type ModelFirebaseIndexValidateAppCodeString } from './lib/model-firebase-index-validate-app/index.js';
 
+// server-only reconciliation violation codes (catalog source for `dbx_model_server_only_validate_app`).
+// The extraction + reconciliation logic stays in `@dereekb/dbx-components-mcp` for the same reason as
+// the firebase-index cluster above: it depends on the source-only `@dereekb/dbx-cli/firestore-rules`.
+export { ModelServerOnlyValidateAppCode, type ModelServerOnlyValidateAppCodeString } from './lib/model-server-only-validate-app/index.js';
+
 // per-domain validators (namespaced to avoid generic-name collisions)
 export * as modelValidate from './lib/model-validate/index.js';
 export * as modelValidateApi from './lib/model-validate-api/index.js';

@@ -745,6 +745,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'ut', longName: 'uniqueTask', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
     ],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -797,6 +798,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -913,6 +915,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       }
     ],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'notificationWeekFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -937,6 +940,58 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     ],
     read: 'permissions',
     serviceFactory: { exportName: 'oidcEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'profile',
+    modelName: 'Profile',
+    identityConst: 'profileIdentity',
+    collectionPrefix: 'pr',
+    description: "A user's public-facing profile, keyed by their uid.",
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.ts',
+    fields: [
+      { name: 'uid', longName: 'uid', optional: false },
+      { name: 'avatar', longName: 'avatar', tsType: 'Maybe<WebsiteUrl>', optional: true, description: 'Avatar URL' },
+      { name: 'avatarStorageFile', longName: 'avatarStorageFile', tsType: 'Maybe<StorageFileKey>', optional: true, description: 'Avatar storage file' },
+      {
+        name: 'resume',
+        longName: 'resume',
+        tsType: 'ProfileResume',
+        optional: false,
+        description: "The user's resume and the resume check's verdict on it.",
+        enumRef: 'ProfileResumeState',
+        nestedFields: [
+          { name: 'state', longName: 'state', tsType: 'ProfileResumeState', optional: false, description: 'The current state of the resume check.', enumRef: 'ProfileResumeState' },
+          { name: 'storageFile', longName: 'storageFile', tsType: 'Maybe<StorageFileKey>', optional: true, description: 'The StorageFile the resume was copied to.' },
+          { name: 'uploadedAt', longName: 'uploadedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the upload was initialized.' },
+          { name: 'checkedAt', longName: 'checkedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the verdict was written, if it has been.' },
+          { name: 'isResume', longName: 'isResume', tsType: 'Maybe<boolean>', optional: true, description: "The model's verdict, if it answered." },
+          { name: 'reason', longName: 'reason', tsType: 'Maybe<string>', optional: true, description: "The model's reasoning for the verdict." }
+        ],
+        nestedIsArray: false
+      },
+      { name: 'username', longName: 'username', tsType: 'string', optional: false, description: 'Unique username.' },
+      { name: 'bio', longName: 'bio', tsType: 'Maybe<string>', optional: true, description: 'Profile biography' },
+      { name: 'updatedAt', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Last date the profile was updated at.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'profileFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'profilePrivate',
+    modelName: 'ProfilePrivate',
+    identityConst: 'profilePrivateIdentity',
+    collectionPrefix: 'prp',
+    parentIdentityConst: 'profileIdentity',
+    description: 'Private, server-managed half of a {@link Profile}.',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.ts',
+    fields: [
+      { name: 'usernameSetAt', longName: 'usernameSetAt', tsType: 'Date', optional: false, description: 'Date the username was set at.' },
+      { name: 'createdAt', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date the profile was created at.' }
+    ],
+    serverOnly: true,
+    serviceFactory: { exportName: 'profilePrivateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFile',
@@ -1016,6 +1071,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
     fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
     read: 'system',
+    serverOnly: true,
     serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1075,6 +1131,16 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'LOGGED_EVENT', value: 4, description: 'A write-only logged event notification.' }
     ],
     description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
+  },
+  ProfileResumeState: {
+    name: 'ProfileResumeState',
+    values: [
+      { name: 'NONE', value: 0, description: 'No resume has been uploaded.' },
+      { name: 'CHECKING', value: 1, description: 'A resume was uploaded and its check is queued or in flight.' },
+      { name: 'CHECKED', value: 2, description: 'The check finished and wrote a verdict.' },
+      { name: 'FAILED', value: 3, description: 'Every check attempt was spent without a verdict.' }
+    ],
+    description: "Where the user's resume sits in the upload -> check -> verdict lifecycle."
   },
   StorageFileCreationType: {
     name: 'StorageFileCreationType',

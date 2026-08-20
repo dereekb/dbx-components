@@ -78,7 +78,7 @@ import {
 import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { Example, ExampleDocument, ExampleRoles, ExampleTypes, exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './example';
-import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
+import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivate, ProfilePrivateDocument, ProfilePrivateFirestoreCollectionFactory, ProfilePrivateFirestoreCollectionGroup, ProfilePrivateRoles, ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup } from './profile';
 import { APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap } from './system';
 
 export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreContextReference, ExampleFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections {
@@ -86,8 +86,8 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreCo
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly exampleCollection: ExampleFirestoreCollection;
   abstract readonly profileCollection: ProfileFirestoreCollection;
-  abstract readonly profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
-  abstract readonly profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
+  abstract readonly profilePrivateCollectionFactory: ProfilePrivateFirestoreCollectionFactory;
+  abstract readonly profilePrivateCollectionGroup: ProfilePrivateFirestoreCollectionGroup;
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
   abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
   abstract readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
@@ -109,8 +109,8 @@ export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: Firest
     systemStateCollection: systemStateFirestoreCollection(firestoreContext, APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap),
     exampleCollection: exampleFirestoreCollection(firestoreContext),
     profileCollection: profileFirestoreCollection(firestoreContext),
-    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
-    profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext),
+    profilePrivateCollectionFactory: profilePrivateFirestoreCollectionFactory(firestoreContext),
+    profilePrivateCollectionGroup: profilePrivateFirestoreCollectionGroup(firestoreContext),
     notificationUserCollection: notificationUserFirestoreCollection(firestoreContext),
     notificationSummaryCollection: notificationSummaryFirestoreCollection(firestoreContext),
     notificationBoxCollection: notificationBoxFirestoreCollection(firestoreContext),
@@ -155,11 +155,11 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<AP
   getFirestoreCollection: (c) => c.app.profileCollection
 });
 
-export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: APP_CODE_PREFIXFirebaseContext, model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
+export const profilePrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<APP_CODE_PREFIXFirebaseContext, ProfilePrivate, ProfilePrivateDocument, ProfilePrivateRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivate, ProfilePrivateDocument>, context: APP_CODE_PREFIXFirebaseContext, model: ProfilePrivateDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateRoles>> {
     return grantFullAccessIfAdmin(context);
   },
-  getFirestoreCollection: (c) => c.app.profilePrivateDataCollectionGroup
+  getFirestoreCollection: (c) => c.app.profilePrivateCollectionGroup
 });
 
 // MARK: NotificationBox
@@ -246,7 +246,7 @@ export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   systemState: systemStateFirebaseModelServiceFactory,
   example: exampleFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
-  profilePrivate: profilePrivateDataFirebaseModelServiceFactory,
+  profilePrivate: profilePrivateFirebaseModelServiceFactory,
   notificationUser: notificationUserFirebaseModelServiceFactory,
   notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,

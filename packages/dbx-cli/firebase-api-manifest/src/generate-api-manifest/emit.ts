@@ -9,8 +9,7 @@
  */
 
 import type { CliEnumManifest, CliModelEnum, CliModelEnumValue, CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
-import { format, resolveConfig } from 'prettier';
-import { compareStrings } from '@dereekb/util';
+import { formatGeneratedTs, renderGroupedImportLines, type GeneratedTsImport } from '../../../src/lib/scan-helpers/emit-generated-ts.js';
 import type { CollectedEntry } from './types';
 
 /**
@@ -64,20 +63,13 @@ export interface RenderManifestInput {
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
   const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, enumEntries, enumNamespace, emitConverters = false } = input;
 
-  const importsByPackage = new Map<string, Set<string>>();
+  const validatorImports: GeneratedTsImport[] = [];
   for (const entry of entries) {
     if (!entry.packageName || !entry.validatorName) continue;
-    const set = importsByPackage.get(entry.packageName) ?? new Set<string>();
-    set.add(entry.validatorName);
-    importsByPackage.set(entry.packageName, set);
+    validatorImports.push({ packageName: entry.packageName, identifier: entry.validatorName });
   }
 
-  const importLines = [...importsByPackage.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([pkg, names]) => {
-      const sortedNames = [...names].sort(compareStrings).join(', ');
-      return `import { ${sortedNames} } from '${pkg}';`;
-    });
+  const importLines = renderGroupedImportLines(validatorImports);
 
   const entryLines = entries.map((e) => renderEntry(e));
   const emitModels = Boolean(modelEntries && modelEntries.length > 0 && modelNamespace);
@@ -114,7 +106,7 @@ ${entryLines.join(',\n')}
 ];${modelSection}${enumSection}
 `;
 
-  return formatWithPrettier(source, outputFile);
+  return formatGeneratedTs(source, outputFile);
 }
 
 function renderEntry({ entry, validatorName }: CollectedEntry): string {
@@ -149,11 +141,6 @@ function renderDocFields(fields: readonly { readonly name: string; readonly type
   return `[${items.join(', ')}]`;
 }
 
-async function formatWithPrettier(source: string, outputFile: string): Promise<string> {
-  const config = await resolveConfig(outputFile);
-  return format(source, { ...config, filepath: outputFile });
-}
-
 function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean): string {
   const fields: (string | undefined)[] = [
     `modelType: ${JSON.stringify(entry.modelType)}`,
@@ -168,6 +155,7 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
     `fields: ${renderModelFields(entry.fields, emitConverters)}`,
     entry.mcpToolNameSegment ? `mcpToolNameSegment: ${JSON.stringify(entry.mcpToolNameSegment)}` : undefined,
     entry.read ? `read: ${JSON.stringify(entry.read)}` : undefined,
+    entry.serverOnly ? 'serverOnly: true' : undefined,
     entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined
   ];
   return `  { ${fields.filter(Boolean).join(', ')} }`;

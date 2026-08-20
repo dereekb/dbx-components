@@ -1,3 +1,43 @@
+# [13.38.0](https://github.com/dereekb/dbx-components/compare/v13.37.0-dev...v13.38.0) (2026-08-20)
+
+
+### Bug Fixes
+
+- **dbx-cli:** close the firestore session so the CLI exits ([4f0522c2](https://github.com/dereekb/dbx-components/commit/4f0522c24456678ec5cac7a2261654a97bdd59a3))
+- **dbx-cli:** keep auth status usable when the access token expired ([28396d55](https://github.com/dereekb/dbx-components/commit/28396d55ad1a381005bf35d6d18339457d6c430b))
+- **dbx-cli:** make the `-` stdin sentinel actually reach handlers ([3f13e7cf](https://github.com/dereekb/dbx-components/commit/3f13e7cf7cd06c0814661000e8e2100233528af3))
+- **dbx-cli:** pin vitest isolation so CI mocks stop leaking ([9f3ecf11](https://github.com/dereekb/dbx-components/commit/9f3ecf111acc756572bfc7d6eea2b17b848731c4))
+- **demo-firebase:** make ProfilePrivate's @dbxModelServerOnly reachable ([9c14e580](https://github.com/dereekb/dbx-components/commit/9c14e58040894da24c96251a43b509348bd0a84b))
+- **demo-firebase:** tag Profile @dbxModel so the CLI knows the pr prefix ([da02d9cd](https://github.com/dereekb/dbx-components/commit/da02d9cdc9472c05ca9cd5bc473ba44c47ca1fcd))
+
+
+### Build System
+
+- **dbx-cli:** add the firestore-query-manifest eslint config ([b74ce55e](https://github.com/dereekb/dbx-components/commit/b74ce55e0620fd2fc2eef378ec9ad3176013e395))
+
+
+### Code Refactoring
+
+- **demo-firebase:** rename the ProfilePrivateData symbol family ([c30a1157](https://github.com/dereekb/dbx-components/commit/c30a1157f1be1bf1d004b387b9e6ed704b97ec96))
+- **demo-firebase:** tag the query catalog + share CLI emit helpers ([ec89d282](https://github.com/dereekb/dbx-components/commit/ec89d2821dc8faf0f369d44070b5812d54fdbc9e))
+
+
+### Features
+
+- **calcom:** wrap the remaining /v2/schedules write endpoints ([610e2df5](https://github.com/dereekb/dbx-components/commit/610e2df51ec9fb30f2506d2ca285eb8e5bd3d96e))
+- **dbx-cli:** generic direct-Firestore reads + a cached session ([b5bcfa75](https://github.com/dereekb/dbx-components/commit/b5bcfa75c2098ae5481bf7f7cb37495f694c7afb))
+- **dbx-cli:** route reads via --via and gate server-only models ([0aace32f](https://github.com/dereekb/dbx-components/commit/0aace32fa4b6d77aaa4be8537e210c52973b88f1))
+- **dbx-cli:** type firestore reads through the app's collections ([779b0da8](https://github.com/dereekb/dbx-components/commit/779b0da87a312051e6974fb0e24d8083b9d06c2c))
+- **demo-api:** wire the CLI Firestore session bridge into demo ([1ff50139](https://github.com/dereekb/dbx-components/commit/1ff50139c87d6d8c749c74aea35aa83c236fcf75))
+- **firebase-server:** add direct-Firestore CLI session bridge ([a716641d](https://github.com/dereekb/dbx-components/commit/a716641d6cb829a29fc15e29be87859cc7f0d4ef))
+- **firebase-server:** add model-roles mcp tool ([e65c7f6d](https://github.com/dereekb/dbx-components/commit/e65c7f6d8ad4e8a392060f3cd87507878d5807c3))
+- **firebase:** refuse client reads of server-only models ([f12f4673](https://github.com/dereekb/dbx-components/commit/f12f46734cac60a08e917e971c3cbfff9399637c))
+
+
+### Tests
+
+- **dbx-cli:** wire demo-cli doctor checks + fix the concurrency spec ([e3f09f79](https://github.com/dereekb/dbx-components/commit/e3f09f794d8a026e64768e4d747649ba08c68e81))
+
 # [13.37.0](https://github.com/dereekb/dbx-components/compare/v13.36.0-dev...v13.37.0) (2026-08-18)
 
 

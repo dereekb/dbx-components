@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import type { Maybe } from '@dereekb/util';
 import { type INestApplication } from '@nestjs/common';
-import { type CliContext, type CliEnvConfig, type CliModelManifest, type CreateCliInput, createCli, createCliContext } from '@dereekb/dbx-cli';
+import { type CliContext, type CliEnvConfig, type CliFirestoreBinding, type CliFirestoreSessionCacheStore, type CliModelManifest, type CreateCliInput, createCli, createCliContext } from '@dereekb/dbx-cli';
 
 /**
  * Input for {@link buildTestCliContext}.
@@ -12,6 +12,16 @@ export interface BuildTestCliContextInput {
   readonly env: CliEnvConfig;
   readonly accessToken: string;
   readonly modelManifest?: CliModelManifest;
+  /**
+   * The app-supplied direct-Firestore binding. Supply it when the test drives `firestore-get` /
+   * `firestore-query`, which reach for `context.getFirestoreModels()`.
+   */
+  readonly firestore?: CliFirestoreBinding;
+  /**
+   * Optional on-disk direct-Firestore session cache. Point it at a temp dir when a test wants the
+   * cross-invocation caching behaviour.
+   */
+  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore;
 }
 
 /**
@@ -20,7 +30,7 @@ export interface BuildTestCliContextInput {
  * Thin wrapper around {@link createCliContext} that exists so test code can import from a single
  * test-only entry without pulling in production-only types.
  *
- * @param input - The context inputs (cliName, envName, env, accessToken, optional modelManifest).
+ * @param input - The context inputs (cliName, envName, env, accessToken, optional modelManifest / firestore binding / session cache).
  * @returns The constructed {@link CliContext} that drives `callModel` / `getModel` / `getMultipleModels`
  *   against `input.env.apiBaseUrl` with `input.accessToken` as the Bearer token.
  * @__NO_SIDE_EFFECTS__
@@ -31,7 +41,9 @@ export function buildTestCliContext(input: BuildTestCliContextInput): CliContext
     envName: input.envName,
     env: input.env,
     accessToken: input.accessToken,
-    modelManifest: input.modelManifest
+    modelManifest: input.modelManifest,
+    firestore: input.firestore,
+    firestoreSessionCache: input.firestoreSessionCache
   });
 }
 

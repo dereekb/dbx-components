@@ -1,5 +1,5 @@
-import { publishedGuestbookEntry, type GuestbookEntry, type QueryAllGuestbookEntriesParams, type QueryGuestbookEntriesParams } from 'demo-firebase';
-import { type OnCallQueryModelResult, type FirestoreQueryConstraint } from '@dereekb/firebase';
+import { publishedGuestbookEntriesQuery, type GuestbookEntry, type QueryAllGuestbookEntriesParams, type QueryGuestbookEntriesParams } from 'demo-firebase';
+import { type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQueryModelRequest } from '@dereekb/firebase-server';
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
 
@@ -39,15 +39,7 @@ export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesPa
 
         return doc.accessor.get();
       },
-      buildConstraints: () => {
-        const constraints: FirestoreQueryConstraint[] = [];
-
-        if (published != null) {
-          constraints.push(publishedGuestbookEntry(published));
-        }
-
-        return constraints;
-      }
+      buildConstraints: () => (published == null ? [] : publishedGuestbookEntriesQuery({ published }))
     });
   }
 });
@@ -86,15 +78,7 @@ export const guestbookEntryEntriesQuery: DemoQueryModelFunction<QueryAllGuestboo
 
         return doc.accessor.get();
       },
-      buildConstraints: () => {
-        const constraints: FirestoreQueryConstraint[] = [];
-
-        if (published != null) {
-          constraints.push(publishedGuestbookEntry(published));
-        }
-
-        return constraints;
-      }
+      buildConstraints: () => (published == null ? [] : publishedGuestbookEntriesQuery({ published }))
     });
   }
 });

@@ -6,6 +6,7 @@ import { type Maybe } from '@dereekb/util';
 import { type DbxFirebaseEnvironmentOptions } from '@dereekb/dbx-firebase';
 import { type DbxMapboxEnvironmentOptions } from '@dereekb/dbx-web/mapbox';
 import { type DbxAppEnvironment } from '@dereekb/dbx-core';
+import { DEMO_FIREBASE_CLIENT_CONFIG } from 'demo-firebase';
 import firebaseInfo from '../../../../firebase.json';
 
 /**
@@ -60,13 +61,12 @@ export const base: DemoEnvironment = {
   },
   firebase: {
     enabledLoginMethods: ['email', 'google', 'github'],
-    apiKey: 'AIzaSyBl5QlQNS-AGrGIuZRI4CDHHBzUovUDABM',
-    authDomain: 'dereekb-components.firebaseapp.com',
+    // apiKey / authDomain / projectId / appId come from demo-firebase so the app, demo-api's App
+    // Check attestation, and demo-cli's direct-Firestore session can never target different apps
+    ...DEMO_FIREBASE_CLIENT_CONFIG,
     databaseURL: 'https://dereekb-components-default-rtdb.firebaseio.com',
-    projectId: 'dereekb-components',
     storageBucket: 'dereekb-components.appspot.com',
     messagingSenderId: '124286307516',
-    appId: '1:124286307516:web:eb5a7cf891a6fd1b1ed4b9',
     measurementId: 'G-516GZEXT2Z',
     emulators: {
       ...firebaseInfo.emulators,

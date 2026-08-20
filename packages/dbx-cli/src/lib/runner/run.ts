@@ -7,16 +7,22 @@ import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
-import { type CliContext } from '../context/cli.context';
+import { type CliContext, getCliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
 import { buildModelDecodeCommand } from '../manifest/build-model-decode-command';
 import { buildModelInfoCommand } from '../manifest/build-model-info-command';
-import { type CliModelManifest } from '../manifest/types';
+import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { createAuthMiddleware, createPassthroughAuthMiddleware } from '../middleware/auth.middleware';
+import { cliFirestoreErrorMapper } from '../firestore/firestore.error';
+import { type CliFirestoreBinding } from '../firestore/firestore.models';
+import { buildFirestoreGetCommand } from '../firestore/firestore-get.command';
+import { buildFirestoreQueriesCommand } from '../firestore/firestore-queries.command';
+import { buildFirestoreQueryCommand } from '../firestore/firestore-query.command';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
-import { CLI_EXIT_CODE_HANDLER, outputError } from '../util/output';
+import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
+import { setCliRawArgv } from '../util/stdin';
 
 /**
  * Names of the global options registered by {@link createCli} that are not
@@ -117,6 +123,30 @@ export interface CreateCliInput {
    */
   readonly disableModelDecode?: boolean;
   /**
+   * The app-supplied direct-Firestore binding — `cliFirestoreBinding({ collections, models })`.
+   *
+   * `dbx-cli` cannot import an app's collections factory, so this one option is what makes the
+   * generic `firestore-get` / `firestore-query` commands possible at all. Supplying it wires them
+   * for EVERY registered model at once.
+   */
+  readonly firestore?: CliFirestoreBinding;
+  /**
+   * The generated Firestore query catalog (`<NS>_FIRESTORE_QUERY_MANIFEST`).
+   *
+   * Enables the auth-bypassed `firestore-queries` catalog command on its own, and — paired with
+   * {@link firestore} — the `firestore-query` execution command.
+   */
+  readonly firestoreQueryManifest?: CliFirestoreQueryManifest;
+  /**
+   * Disable the built-in `firestore-query` command even when {@link firestore} and
+   * {@link firestoreQueryManifest} are both provided.
+   */
+  readonly disableFirestoreQuery?: boolean;
+  /**
+   * Disable the built-in `firestore-get` command even when {@link firestore} is provided.
+   */
+  readonly disableFirestoreGet?: boolean;
+  /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
    *
@@ -166,6 +196,8 @@ export interface CreateCliInput {
  *   built-in `model-info` command. Opt-in per app.
  * @param input.disableModelInfo - When `true`, suppresses the auto-wired `model-info` command even
  *   if {@link CreateCliInput.modelManifest} is provided.
+ * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
+ * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @returns The configured yargs `Argv` ready to be `.parse()`-d.
  * @__NO_SIDE_EFFECTS__
  */
@@ -182,6 +214,10 @@ export function createCli(input: CreateCliInput): Argv {
     builtInConfigCommands.push(buildModelDecodeCommand(input.modelManifest));
   }
 
+  if (input.firestoreQueryManifest) {
+    builtInConfigCommands.push(buildFirestoreQueriesCommand(input.firestoreQueryManifest));
+  }
+
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [CALL_PASSTHROUGH_COMMAND];
 
@@ -189,13 +225,33 @@ export function createCli(input: CreateCliInput): Argv {
     builtInApiCommands.push(GET_COMMAND, GET_MANY_COMMAND);
   }
 
+  if (input.firestore) {
+    // appended, not installed: an app may already own the single mapper slot, and the Firestore
+    // family only needs to be reached once the app's mapper defers
+    appendCliErrorMapper(cliFirestoreErrorMapper);
+  }
+
+  if (input.firestore && input.firestoreQueryManifest && input.disableFirestoreQuery !== true) {
+    builtInApiCommands.push(buildFirestoreQueryCommand(input.firestoreQueryManifest));
+  }
+
+  if (input.firestore && input.disableFirestoreGet !== true) {
+    builtInApiCommands.push(buildFirestoreGetCommand());
+  }
+
   const actionCommands = buildActionCommands(input.actionCommands ?? []);
   const allApiCommands = [...builtInApiCommands, ...(input.apiCommands ?? []), ...actionCommands];
 
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
-  const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest });
+  const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest, firestore: input.firestore });
 
-  let parser = yargs(input.argv ?? hideBin(process.argv))
+  const rawArgv = input.argv ?? hideBin(process.argv);
+
+  // recorded before parsing: yargs coerces a lone `-` positional to `''`, so the stdin sentinel can
+  // only be recovered by consulting the argv the parser was actually given
+  setCliRawArgv(rawArgv);
+
+  let parser = yargs(rawArgv)
     .scriptName(cliName)
     .usage('$0 <command> [options]')
     .option('verbose', { alias: 'v', type: 'boolean', default: false, global: true, describe: 'Emit stderr trace lines for HTTP calls' })
@@ -244,7 +300,28 @@ export async function runCli(input: CreateCliInput): Promise<void> {
     await createCli(input).parse();
   } catch (e) {
     outputError(e);
+    // teardown before exiting: `process.exit` here would otherwise skip the `finally` entirely
+    await closeCliFirestoreSessionForExit();
     process.exit(CLI_EXIT_CODE_HANDLER);
+  }
+
+  // A command that opened a direct-Firestore session leaves a signed-in `Auth` and a live
+  // `Firestore` holding the event loop open, so without this the process prints its result and never
+  // exits. Runs after the parser has fully settled, so the command's output is already emitted.
+  await closeCliFirestoreSessionForExit();
+}
+
+/**
+ * Closes the invocation's direct-Firestore session, if one was opened, swallowing any failure.
+ *
+ * Teardown is best-effort by design: it runs once the command has already produced its output, so a
+ * failure here must not change what the caller sees or the exit code they get.
+ */
+async function closeCliFirestoreSessionForExit(): Promise<void> {
+  try {
+    await getCliContext()?.closeFirestoreSession?.();
+  } catch {
+    // nothing actionable — the result is already on stdout
   }
 }
 

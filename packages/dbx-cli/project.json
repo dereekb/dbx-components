@@ -30,6 +30,9 @@
             "command": "npx nx run dbx-cli-generate-firestore-indexes:build-base"
           },
           {
+            "command": "npx nx run dbx-cli-firestore-query-manifest:build-base"
+          },
+          {
             "command": "npx nx run dbx-cli-generate-mcp-manifest:build-base"
           },
           {
@@ -47,6 +50,17 @@
     },
     "build-base": {
       "dependsOn": []
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": [],
+      "options": {
+        "commands": ["npx tsc -p packages/dbx-cli/tsconfig.lib.json --noEmit", "npx tsc -p packages/dbx-cli/tsconfig.spec.json --noEmit"],
+        "cwd": "{workspaceRoot}",
+        "parallel": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -79,6 +93,14 @@
           {
             "description": "run dbx-cli-firestore-indexes tests",
             "command": "npx nx test dbx-cli-firestore-indexes"
+          },
+          {
+            "description": "run dbx-cli-firestore-query-manifest tests",
+            "command": "npx nx test dbx-cli-firestore-query-manifest"
+          },
+          {
+            "description": "run dbx-cli-firestore-rules tests",
+            "command": "npx nx test dbx-cli-firestore-rules"
           },
           {
             "description": "run dbx-cli-manifest-extract tests",

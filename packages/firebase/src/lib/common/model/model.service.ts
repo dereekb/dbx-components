@@ -24,7 +24,14 @@ export type FirebaseModelServiceContext = FirebasePermissionContext & FirebasePe
  * @template D - the FirestoreDocument wrapper type
  * @template R - the granted role type for this model
  */
-export interface FirebaseModelService<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends FirebaseModelPermissionService<C, T, D, R>, FirebaseModelLoader<C, T, D>, FirebaseModelCollectionLoader<any, T, D> {}
+export interface FirebaseModelService<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends FirebaseModelPermissionService<C, T, D, R>, FirebaseModelLoader<C, T, D>, FirebaseModelCollectionLoader<any, T, D> {
+  /**
+   * Whether this model is SERVER-ONLY: unreachable by any client, on any read path.
+   *
+   * See {@link FirebaseModelServiceConfig.serverOnly}.
+   */
+  readonly serverOnly?: boolean;
+}
 
 /**
  * Lazy getter for a {@link FirebaseModelService}, typically used in the service factory map.
@@ -37,7 +44,24 @@ export type FirebaseModelServiceGetter<C extends FirebaseModelServiceContext, T,
  * Provides the collection loader and the role-mapping delegate. Model loading is derived automatically
  * from the collection loader.
  */
-export interface FirebaseModelServiceConfig<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends Omit<FirebasePermissionServiceInstanceDelegate<C, T, D, R>, 'loadModelForKey'>, FirebaseModelCollectionLoader<C, T, D> {}
+export interface FirebaseModelServiceConfig<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends Omit<FirebasePermissionServiceInstanceDelegate<C, T, D, R>, 'loadModelForKey'>, FirebaseModelCollectionLoader<C, T, D> {
+  /**
+   * Marks this model SERVER-ONLY: no client may read it, on any path.
+   *
+   * `roleMapForModel` and `firestore.rules` are two independent authorization systems, and the
+   * model API runs under the Admin SDK — so it evaluates the former and bypasses the latter
+   * entirely. For a model whose rules file has no match block (or an `allow read: if false`), that
+   * divergence is a LEAK: the rules say server-only, and the model API hands the document to a
+   * client anyway.
+   *
+   * Setting this closes the gap by refusing the read ahead of `useModel`, so both read paths agree.
+   * It is a routing decision, not a permission computation — hence a flag rather than a role.
+   *
+   * Opt-in by design: absent means today's behaviour, which is the backward-compatible direction
+   * for a framework. Downstream apps are unaffected until they set it.
+   */
+  readonly serverOnly?: boolean;
+}
 
 /**
  * Creates a {@link FirebaseModelService} that wires together model loading and permission evaluation.
@@ -66,6 +90,7 @@ export function firebaseModelService<C extends FirebaseModelServiceContext, T, D
   const permissionService = firebaseModelPermissionService(permissionServiceDelegate);
 
   const service: FirebaseModelService<C, T, D, R> = {
+    ...(config.serverOnly ? { serverOnly: true } : {}),
     getFirestoreCollection: config.getFirestoreCollection,
     roleMapForModelContext: (model, context) => permissionService.roleMapForModelContext(model, context),
     roleMapForKeyContext: (key, context) => permissionService.roleMapForKeyContext(key, context),
@@ -109,7 +134,14 @@ export type LimitedInContextFirebaseModelService<C extends FirebasePermissionErr
  * Calling `service(modelOrKey)` returns an {@link InModelContextFirebaseModelService} with role checking and assertions.
  * Also provides `forKey(key)` for key-based lookup.
  */
-export type InContextFirebaseModelService<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelServiceFactory<C, T, D, R> & LimitedInContextFirebaseModelService<C, T, D, R>;
+export type InContextFirebaseModelService<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelServiceFactory<C, T, D, R> &
+  LimitedInContextFirebaseModelService<C, T, D, R> & {
+    /**
+     * Mirrors {@link FirebaseModelServiceConfig.serverOnly}, so a caller holding only the
+     * context-bound service can gate on it without reaching back for the config.
+     */
+    readonly serverOnly?: boolean;
+  };
 
 /**
  * Factory that binds a {@link FirebaseModelService} to a specific context, producing an {@link InContextFirebaseModelService}.
@@ -185,6 +217,7 @@ export function inContextFirebaseModelServiceFactory<C extends FirebaseModelServ
         x.roleMapForKey = (key) => firebaseModelService.roleMapForKeyContext(key, context);
         x.loadModelForKey = (key) => firebaseModelService.loadModelForKey(key, context);
         x.getFirestoreCollection = getFirestoreCollection;
+        x.serverOnly = firebaseModelService.serverOnly;
       }
     });
 

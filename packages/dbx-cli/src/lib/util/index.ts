@@ -5,3 +5,4 @@ export * from './interactive';
 export * from './output';
 export * from './pagination';
 export * from './stdin';
+export * from './table';

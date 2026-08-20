@@ -269,6 +269,7 @@ function buildManifestEntry(input: BuildManifestEntryInput): CliModelManifestEnt
     fields,
     ...(iface.mcpToolNameSegment ? { mcpToolNameSegment: iface.mcpToolNameSegment } : {}),
     ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
+    ...(iface.dbxModelServerOnly ? { serverOnly: true } : {}),
     ...(serviceFactory ? { serviceFactory } : {})
   };
 }

@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm, type OnCallFunctionType, CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, callModelOidcScopeForCallType, oidcScopeTermSatisfied, oidcScopeTermsSatisfied, oidcScopesFromScopeClaim, resolveEffectiveOidcScopeTerms } from '@dereekb/firebase';
+import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm, type OnCallFunctionType, CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, callModelOidcScopeForCallType, oidcScopeTermSatisfied, oidcScopeTermsSatisfied, resolveEffectiveOidcScopeTerms } from '@dereekb/firebase';
 import { forbiddenError } from '../../../function/error';
+import { oidcScopesFromRequestAuth } from '../api.scope';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 
 // MARK: Config
@@ -45,17 +46,15 @@ export interface ModelApiOidcScopeConfig {
  * `auth.oidcValidatedToken` (with the space-delimited `scope` string); a non-OIDC caller has neither
  * that field nor a `scope` on `auth.token`. Reading is defensive (the auth shape is only typed as
  * {@link FirebaseServerAuthData} here — the OIDC-specific `oidcValidatedToken` lives in the
- * `@dereekb/firebase-server/oidc` sub-package this core layer cannot import), delegating the actual
- * parse to the shared {@link oidcScopesFromScopeClaim} so there is no drift with `getOidcScopesFromRequest`.
+ * `@dereekb/firebase-server/oidc` sub-package this core layer cannot import), delegating entirely to the
+ * shared {@link oidcScopesFromRequestAuth} so there is no drift with `getOidcScopesFromRequest` or with
+ * the non-model endpoints that read scopes the same way.
  *
  * @param auth - The request auth data, or undefined for unauthenticated requests.
  * @returns The granted scope set, or `undefined` when the request carries no OIDC `scope` claim.
  */
 export function oidcScopesFromModelApiAuth(auth: Maybe<FirebaseServerAuthData>): Maybe<Set<OidcScope>> {
-  const oidcScope = (auth as Maybe<{ oidcValidatedToken?: { scope?: unknown } }>)?.oidcValidatedToken?.scope;
-  const tokenScope = (auth as Maybe<{ token?: { scope?: unknown } }>)?.token?.scope;
-  const scope = oidcScope ?? tokenScope;
-  return oidcScopesFromScopeClaim(scope);
+  return oidcScopesFromRequestAuth(auth);
 }
 
 // MARK: Enforcement

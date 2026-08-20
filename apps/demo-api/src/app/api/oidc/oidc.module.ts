@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
-import { EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { EMAIL_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
-import { type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
+import { FIREBASE_SERVER_SESSION_API_PROTECTED_PATH, type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PROVIDER_PROFILES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
@@ -26,6 +26,9 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     'model.invoke': [],
     // token.service is admin-only and adds no extra ID-token claims; it makes the grant long-lived and non-rotating.
     [SERVICE_TOKEN_OIDC_SCOPE]: [],
+    // session.firestore is admin-only and adds no extra ID-token claims; it authorizes
+    // `GET /api/session/firestore` to mint a direct-Firestore session (see DemoSessionApiModule).
+    [FIRESTORE_SESSION_OIDC_SCOPE]: [],
     // lms / reports are provider-profile-gated (see DEMO_OIDC_PROVIDER_PROFILES) — supported/issuable but
     // only obtainable by a client whose assigned profile unlocks them. They add no extra ID-token claims.
     lms: [],
@@ -33,8 +36,16 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token'],
-  // token.service is restricted to admins (hard-rejected at consent for non-admins) and its grants never rotate.
-  adminOnlyScopes: [SERVICE_TOKEN_OIDC_SCOPE],
+  // Scopes restricted to admins: withheld from a non-admin's consent screen entirely, and
+  // hard-rejected with `access_denied` if a consent submit names one anyway.
+  //
+  // session.firestore is here because the session it unlocks mints a Firebase custom token plus a
+  // valid web-app App Check attestation — that has to be admin-gated at consent, not just at the
+  // endpoint. Note the endpoint's own FIRESTORE_SESSION_ADMIN_PREDICATE is the load-bearing check:
+  // a non-OIDC caller (a plain Firebase ID token) carries no `scope` claim at all.
+  adminOnlyScopes: [SERVICE_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE],
+  // Only token.service disables refresh-token rotation. A session.firestore grant is an ordinary
+  // interactive grant that happens to be admin-only.
   nonRotatingScopes: [SERVICE_TOKEN_OIDC_SCOPE],
   // Provider profiles gate the lms/reports scopes to clients an admin has assigned the profile to.
   providerProfiles: DEMO_OIDC_PROVIDER_PROFILES
@@ -126,7 +137,10 @@ export class DemoApiOidcDependencyModule {}
     dependencyModule: DemoApiOidcDependencyModule,
     config: {
       suppressBodyParserWarning: true,
-      protectedPaths: ['/api/model', '/mcp'],
+      // FIREBASE_SERVER_SESSION_API_PROTECTED_PATH ('/api/session') is required by
+      // DemoSessionApiModule — the session controller reads `req.auth`, which only this bearer
+      // middleware populates.
+      protectedPaths: ['/api/model', '/mcp', FIREBASE_SERVER_SESSION_API_PROTECTED_PATH],
       appOAuthInteractionPath: DEMO_APP_OAUTH_INTERACTION_PATH,
       tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
       configureMcpResourceServer: true,

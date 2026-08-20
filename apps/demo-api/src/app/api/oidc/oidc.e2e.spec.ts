@@ -219,13 +219,15 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(res.body.scopes_supported).not.toContain('reports');
       });
 
-      // Dropped by the demo's own `scopesSupported` filter rather than the framework: a service token
-      // is admin-only and makes the grant long-lived + non-rotating, which an interactive MCP
-      // connection should not be asking for.
-      it('should omit the admin-only service token scope', async () => {
+      // Dropped by the demo's own `scopesSupported` filter rather than the framework — the framework
+      // only withholds provider-profile-gated scopes, so an admin-only scope reaches this document
+      // unless the app filters it. A service token makes the grant long-lived + non-rotating, and a
+      // direct-Firestore session is not something MCP tools (which go through callModel) can use.
+      it('should omit the admin-only scopes', async () => {
         const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
 
         expect(res.body.scopes_supported).not.toContain('token.service');
+        expect(res.body.scopes_supported).not.toContain('session.firestore');
       });
     });
   });

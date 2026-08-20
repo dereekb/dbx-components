@@ -1,4 +1,5 @@
 import { findCliModelManifestEntry } from '../api/expand-keys';
+import { indentLines, renderTable, truncate } from '../util/table';
 import type { CliModelField, CliModelManifest, CliModelManifestEntry } from './types';
 
 /**
@@ -114,48 +115,6 @@ function renderNestedFieldBlock(field: CliModelField, indent: number): string[] 
     const label = field.nestedIsArray ? 'array element' : 'sub-object';
     const plural = nested.length === 1 ? '' : 's';
     result = [indentLines(`↳ ${field.name} (${label}, ${nested.length} field${plural})`, indent + 2), renderFieldsTree(nested, indent + 4)];
-  }
-  return result;
-}
-
-function renderTable(rows: readonly (readonly string[])[]): string {
-  let result: string;
-  if (rows.length === 0) {
-    result = '';
-  } else {
-    const widths: number[] = [];
-    for (const row of rows) {
-      row.forEach((cell, i) => {
-        const cellWidth = cell.length;
-        widths[i] = Math.max(widths[i] ?? 0, cellWidth);
-      });
-    }
-    result = rows
-      .map((row) =>
-        row
-          .map((cell, i) => (i === row.length - 1 ? cell : cell.padEnd(widths[i] ?? 0)))
-          .join('  ')
-          .replace(/\s+$/, '')
-      )
-      .join('\n');
-  }
-  return result;
-}
-
-function truncate(text: string, max: number): string {
-  return text.length <= max ? text : text.slice(0, max - 1) + '…';
-}
-
-function indentLines(text: string, indent: number): string {
-  let result: string;
-  if (indent <= 0) {
-    result = text;
-  } else {
-    const pad = ' '.repeat(indent);
-    result = text
-      .split('\n')
-      .map((line) => (line.length > 0 ? pad + line : line))
-      .join('\n');
   }
   return result;
 }

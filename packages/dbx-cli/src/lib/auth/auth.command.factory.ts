@@ -5,6 +5,7 @@ import { loadCliConfig, maskEnv, maskSecret, mergeCliConfig } from '../config/cl
 import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault, withServiceTokenScopes } from '../config/env';
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
+import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
@@ -83,6 +84,29 @@ async function loadSessionInfoSafely(input: { readonly oidcIssuer: string; reado
 }
 
 /**
+ * Best-effort fetch of the userinfo claims for an access token. Returns `undefined` when the token
+ * is rejected or the endpoint errors, so a diagnostic command can still report everything it knows
+ * locally instead of failing outright.
+ *
+ * @param input - The lookup inputs.
+ * @param input.userinfoEndpoint - The discovered OIDC `userinfo` endpoint.
+ * @param input.accessToken - The Bearer access token.
+ * @returns The parsed claims, or `undefined` on any failure.
+ */
+async function loadUserInfoSafely(input: { readonly userinfoEndpoint: string; readonly accessToken: string }): Promise<Record<string, unknown> | undefined> {
+  let result: Record<string, unknown> | undefined;
+
+  try {
+    result = await fetchUserInfo({ userinfoEndpoint: input.userinfoEndpoint, accessToken: input.accessToken });
+  } catch {
+    // Supplemental — a rejected access token must not mask the locally-known session state.
+    result = undefined;
+  }
+
+  return result;
+}
+
+/**
  * Renders a human-readable session-lifetime summary, e.g. `valid until 2027-06-01T00:00:00.000Z (~365 days), rotation: disabled`.
  *
  * @param input - The session lifetime fields.
@@ -123,6 +147,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   const envVarName = input.envVarName;
   const paths = buildCliPaths({ cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+  const firestoreSessions = createCliFirestoreSessionCacheStore({ firestoreSessionCachePath: paths.firestoreSessionCachePath });
   const defaultEnvs = input.defaultEnvs;
 
   // MARK: setup
@@ -300,7 +325,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   // MARK: logout
   const logoutCommand: CommandModule = {
     command: 'logout',
-    describe: 'Clear cached tokens for the active env, optionally revoking on the server',
+    describe: 'Clear cached tokens and the cached direct-Firestore session for the active env, optionally revoking on the server',
     builder: (yargs: Argv) => withEnv(yargs).option('revoke', { type: 'boolean', default: false, describe: 'Call the OIDC revocation endpoint before clearing local tokens' }),
     handler: wrapCommandHandler(async (argv: any) => {
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs });
@@ -325,6 +350,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       }
 
       await tokens.remove(envName);
+      // the cached direct-Firestore session is a bearer credential minted for the user who just
+      // logged out, so it goes with the tokens
+      await firestoreSessions.remove(envName);
       outputResult({ loggedOut: true, env: envName });
     })
   };
@@ -346,24 +374,26 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         const session = describeSessionLifetime({ sessionExpiresAt: sessionExpiresAt ?? undefined, rotationDisabled });
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const userinfoEndpoint = meta.userinfo_endpoint;
+        // An expired access token is certain to be rejected by userinfo, so calling it only trades the
+        // locally-known state (which is the useful answer) for a predictable 401. Access tokens are
+        // short-lived by design and every non-`auth` command refreshes them transparently via
+        // `createAuthMiddleware` — an expired one means "needs a refresh", NOT "logged out". The
+        // session lifetime reported below is what says whether re-authentication is actually required.
+        const claims = userinfoEndpoint != null && !expired ? await loadUserInfoSafely({ userinfoEndpoint, accessToken: entry.accessToken }) : undefined;
 
-        if (userinfoEndpoint) {
-          const claims = await fetchUserInfo({ userinfoEndpoint, accessToken: entry.accessToken });
-          outputResult({
-            env: envName,
-            authenticated: !expired,
-            expiresAt: entry.expiresAt,
-            expired,
-            scope: entry.scope,
-            sessionExpiresAt,
-            rotationDisabled,
-            session,
-            sub: claims['sub'],
-            claims
-          });
-        } else {
-          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope, sessionExpiresAt, rotationDisabled, session });
-        }
+        outputResult({
+          env: envName,
+          authenticated: !expired,
+          expiresAt: entry.expiresAt,
+          expired,
+          scope: entry.scope,
+          sessionExpiresAt,
+          rotationDisabled,
+          session,
+          sub: claims?.['sub'],
+          claims,
+          suggestion: expired ? `Access token expired — it refreshes automatically on the next non-auth command. Run \`${cliName} auth login --env ${envName}\` only if the session itself has ended.` : undefined
+        });
       } else {
         outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
       }

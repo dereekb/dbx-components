@@ -1,5 +1,5 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsername, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
+import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsernameQuery, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
@@ -43,10 +43,10 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
  *
  * @param context
  * @param context.profileCollection - The Firestore collection accessor for profile documents.
- * @param context.profilePrivateDataCollectionFactory - Factory for creating private profile data subcollections.
+ * @param context.profilePrivateCollectionFactory - Factory for creating private profile data subcollections.
  * @returns An async function that takes a UID and returns the created or existing ProfileDocument.
  */
-export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
   return async (uid: string) => {
@@ -58,7 +58,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
       if (!exists) {
         let username = uid;
-        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
+        const docs = await queryProfile(...profileWithUsernameQuery({ username })).getDocs(transaction);
 
         if (!docs.empty) {
           username = `${uid}-1`; // "-" isn't allowed in usernames by users, so this name should be safe.
@@ -73,8 +73,8 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         });
 
         // create the private profile data
-        const profilePrivateData = profilePrivateDataCollectionFactory(profile);
-        await profilePrivateData.loadDocument().accessor.set({
+        const profilePrivate = profilePrivateCollectionFactory(profile);
+        await profilePrivate.loadDocument().accessor.set({
           usernameSetAt: new Date(),
           createdAt: new Date()
         });
@@ -93,11 +93,11 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
  * @param context
  * @param context.firebaseServerActionTransformFunctionFactory - Factory for creating validated action transform functions.
  * @param context.profileCollection - The Firestore collection accessor for profile documents.
- * @param context.profilePrivateDataCollectionFactory - Factory for creating private profile data subcollections.
+ * @param context.profilePrivateCollectionFactory - Factory for creating private profile data subcollections.
  * @returns An action transform function that validates params and updates the username.
  * @throws {Error} UsernameAlreadyTakenError when the requested username belongs to another profile.
  */
-export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
   return firebaseServerActionTransformFunctionFactory(setProfileUsernameParamsType, async (params) => {
@@ -110,14 +110,14 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
       // perform the change in a transaction
       await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
         // check that there are any conflicts with other profiles
-        const conflictingDoc = await queryProfile(profileWithUsername(username)).getFirstDoc(transaction);
+        const conflictingDoc = await queryProfile(...profileWithUsernameQuery({ username })).getFirstDoc(transaction);
 
         if (conflictingDoc && conflictingDoc.id !== documentRef.id) {
           throw usernameAlreadyTakenError(username);
         }
 
         const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
-        const profilePrivateDataDocument = profilePrivateDataCollectionFactory(documentInTransaction).loadDocumentForTransaction(transaction);
+        const profilePrivateDocument = profilePrivateCollectionFactory(documentInTransaction).loadDocumentForTransaction(transaction);
 
         // update the username
         const snapshot = await documentInTransaction.snapshotData();
@@ -128,8 +128,8 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
           await documentInTransaction.accessor.set({ username }, { merge: true });
 
           // update the data on the accessor
-          const profilePrivateData = profilePrivateDataDocument;
-          await profilePrivateData.accessor.set(
+          const profilePrivate = profilePrivateDocument;
+          await profilePrivate.accessor.set(
             {
               usernameSetAt: new Date()
             },

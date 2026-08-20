@@ -177,10 +177,15 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 
   /**
-   * Retrieves the data of the document, checking the cache first.
+   * Retrieves the data of the document, always fetching from Firestore.
    *
-   * If a fresh cache entry exists, returns it without hitting Firestore.
-   * Otherwise falls through to {@link snapshot} which populates the cache.
+   * Delegates to {@link snapshot}, so the read is unconditional and the cache is only WRITTEN to, not
+   * consulted — a caller that wants the cached value should read {@link cache} directly.
+   *
+   * The returned data is converter-applied: declared defaults are filled in, undeclared fields are
+   * stripped, and encoded fields (`firestoreEncodedArray`, `firestoreBitwiseSet`) are decoded. This is
+   * byte-for-byte what the model API's `readDocument` returns, which is what lets `dbx-cli` read the
+   * same document over either transport and get the same answer.
    *
    * @param options - Overrides forwarded to `DocumentSnapshot.data()`, if any.
    * @returns Resolves with the document data, or undefined when the document does not exist.
