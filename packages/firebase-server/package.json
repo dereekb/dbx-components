@@ -54,7 +54,7 @@
     "./mcp": {
       "module": "./mcp/index.esm.js",
       "types": "./mcp/index.d.ts",
-      "import": "./mcp/index.esm.js",
+      "import": "./mcp/index.cjs.mjs",
       "default": "./mcp/index.cjs.js"
     }
   },

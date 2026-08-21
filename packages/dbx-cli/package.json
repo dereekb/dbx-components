@@ -1,7 +1,6 @@
 {
   "name": "@dereekb/dbx-cli",
   "version": "13.38.0",
-  "type": "module",
   "sideEffects": false,
   "bin": {
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
@@ -51,7 +50,7 @@
     "./route": {
       "module": "./route/index.esm.js",
       "types": "./route/index.d.ts",
-      "import": "./route/index.esm.js",
+      "import": "./route/index.cjs.mjs",
       "default": "./route/index.cjs.js"
     },
     "./test": {
