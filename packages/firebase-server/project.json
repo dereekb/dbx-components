@@ -40,6 +40,10 @@
           },
           {
             "command": "npx nx run firebase-server-test:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/firebase-server"
           }
         ],
         "parallel": false

@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type Request } from 'express';
-import { validateRequest } from 'twilio';
+import { validateRequest } from '../twilio.interop';
 
 export interface TwilioWebhookVerificationConfig {
   /**

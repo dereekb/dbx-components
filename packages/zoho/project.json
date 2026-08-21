@@ -19,6 +19,10 @@
           },
           {
             "command": "npx nx run zoho-cli:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/zoho"
           }
         ],
         "parallel": false

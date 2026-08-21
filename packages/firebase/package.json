@@ -1,26 +1,25 @@
 {
   "name": "@dereekb/firebase",
-  "version": "13.38.0",
+  "version": "13.39.0",
+  "type": "module",
   "sideEffects": false,
   "exports": {
     "./test": {
-      "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
-      "import": "./test/index.cjs.mjs",
-      "default": "./test/index.cjs.js"
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
     },
     "./eslint": {
-      "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
-      "import": "./eslint/index.cjs.mjs",
-      "default": "./eslint/index.cjs.js"
+      "import": "./eslint/index.esm.js",
+      "default": "./eslint/index.esm.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.38.0",
-    "@dereekb/model": "13.38.0",
-    "@dereekb/rxjs": "13.38.0",
-    "@dereekb/util": "13.38.0",
+    "@dereekb/date": "13.39.0",
+    "@dereekb/model": "13.39.0",
+    "@dereekb/rxjs": "13.39.0",
+    "@dereekb/util": "13.39.0",
     "@firebase/rules-unit-testing": "5.0.0",
     "@marcbachmann/cel-js": "^7.6.1",
     "@typescript-eslint/parser": "8.59.3",

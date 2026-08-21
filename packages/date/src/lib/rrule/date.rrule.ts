@@ -1,5 +1,5 @@
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { RRule, type Options } from 'rrule';
+import { RRule, type Options } from './rrule.interop';
 import { type CalendarDate, type DateSet, type DateRange, type DateRangeParams, dateRange, maxFutureDate, durationSpanToDateRange } from '../date';
 import { type BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';

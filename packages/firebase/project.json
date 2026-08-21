@@ -20,6 +20,10 @@
           },
           {
             "command": "npx nx run firebase-eslint:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/firebase"
           }
         ],
         "parallel": false

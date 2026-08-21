@@ -1,16 +1,17 @@
 {
   "name": "@dereekb/firebase-server/discord",
-  "version": "13.38.0",
+  "version": "13.39.0",
+  "type": "module",
   "peerDependencies": {
-    "@dereekb/analytics": "13.38.0",
-    "@dereekb/date": "13.38.0",
-    "@dereekb/discord": "13.38.0",
-    "@dereekb/firebase": "13.38.0",
-    "@dereekb/firebase-server": "13.38.0",
-    "@dereekb/model": "13.38.0",
-    "@dereekb/nestjs": "13.38.0",
-    "@dereekb/rxjs": "13.38.0",
-    "@dereekb/util": "13.38.0",
+    "@dereekb/analytics": "13.39.0",
+    "@dereekb/date": "13.39.0",
+    "@dereekb/discord": "13.39.0",
+    "@dereekb/firebase": "13.39.0",
+    "@dereekb/firebase-server": "13.39.0",
+    "@dereekb/model": "13.39.0",
+    "@dereekb/nestjs": "13.39.0",
+    "@dereekb/rxjs": "13.39.0",
+    "@dereekb/util": "13.39.0",
     "@nestjs/common": "^11.1.19",
     "express": "^5.2.1"
   }

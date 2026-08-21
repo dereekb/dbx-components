@@ -6,7 +6,7 @@
  */
 import { type Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
-import { RRule } from 'rrule';
+import { RRule } from './rrule.interop';
 
 /**
  * Internal iteration arguments used by the RRule iteration engine.

@@ -11,7 +11,7 @@ const options = {
   tsConfig: './tsconfig.lib.json',
   project: './package.json',
   compiler: 'swc',
-  format: ['esm', 'cjs'],
+  format: ['esm'],
   external: 'all',
   buildLibsFromSource: false,
   generateExportsField: true,

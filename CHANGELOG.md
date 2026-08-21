@@ -1,3 +1,23 @@
+# [13.39.0](https://github.com/dereekb/dbx-components/compare/v13.38.0-dev...v13.39.0) (2026-08-21)
+
+
+### Bug Fixes
+
+- **date:** make the ESM build loadable under plain Node ([6d6dbcd0](https://github.com/dereekb/dbx-components/commit/6d6dbcd0fd5adac07e26dfec6baf7dca834c8c10))
+- **dbx-cli:** keep the source parse goal ESM after the dual-build fix ([68b930fd](https://github.com/dereekb/dbx-components/commit/68b930fd393d7394d59559aa85340872f70097a7))
+- **dbx-cli:** restore the dual build so Firestore class identity holds ([c9ec318c](https://github.com/dereekb/dbx-components/commit/c9ec318c567033d0d57752a87e7504987049dcc6))
+- **nestjs:** make the twilio ESM build loadable under plain Node ([347577f3](https://github.com/dereekb/dbx-components/commit/347577f3019c75922114e76ea5b56e87fadf6993))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([8da5d35d](https://github.com/dereekb/dbx-components/commit/8da5d35d537a96c54edfc59fc1c418c316e18704))
+
+
+### Features
+
+- **build:** publish the @dereekb packages as ESM only ([a102a457](https://github.com/dereekb/dbx-components/commit/a102a45799ec7b28f59af1b29ce921ff0c6e2208))
+
 # [13.38.0](https://github.com/dereekb/dbx-components/compare/v13.37.0-dev...v13.38.0) (2026-08-20)
 
 

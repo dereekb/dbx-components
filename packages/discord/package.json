@@ -1,19 +1,19 @@
 {
   "name": "@dereekb/discord",
-  "version": "13.38.0",
+  "version": "13.39.0",
+  "type": "module",
   "sideEffects": false,
   "exports": {
     "./nestjs": {
-      "module": "./nestjs/index.esm.js",
       "types": "./nestjs/index.d.ts",
-      "import": "./nestjs/index.cjs.mjs",
-      "default": "./nestjs/index.cjs.js"
+      "import": "./nestjs/index.esm.js",
+      "default": "./nestjs/index.esm.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.38.0",
-    "@dereekb/rxjs": "13.38.0",
-    "@dereekb/util": "13.38.0",
+    "@dereekb/nestjs": "13.39.0",
+    "@dereekb/rxjs": "13.39.0",
+    "@dereekb/util": "13.39.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "discord.js": "^14.26.3",

@@ -16,6 +16,10 @@
           },
           {
             "command": "npx nx run analytics-nestjs:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/analytics"
           }
         ],
         "parallel": false
