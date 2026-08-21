@@ -22,7 +22,10 @@ import {
   zohoAnalyticsCreateExportJobForSqlQuery,
   zohoAnalyticsGetExportJob,
   zohoAnalyticsDownloadExport,
-  zohoAnalyticsExportDataAndAwaitJob
+  zohoAnalyticsExportDataAndAwaitJob,
+  zohoAnalyticsAddRow,
+  zohoAnalyticsUpdateRows,
+  zohoAnalyticsDeleteRows
 } from '@dereekb/zoho';
 import { ZohoAnalyticsServiceConfig } from './analytics.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -256,5 +259,33 @@ export class ZohoAnalyticsApi {
    */
   get exportDataAndAwaitJob() {
     return zohoAnalyticsExportDataAndAwaitJob(this.analyticsContext);
+  }
+
+  // MARK: Row Accessors
+  /**
+   * Configured pass-through for {@link zohoAnalyticsAddRow}.
+   *
+   * @returns Adds a single row to a table. Prefer an import for bulk data.
+   */
+  get addRow() {
+    return zohoAnalyticsAddRow(this.analyticsContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoAnalyticsUpdateRows}.
+   *
+   * @returns Updates rows matching a criteria expression.
+   */
+  get updateRows() {
+    return zohoAnalyticsUpdateRows(this.analyticsContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoAnalyticsDeleteRows}.
+   *
+   * @returns Deletes rows matching a criteria expression.
+   */
+  get deleteRows() {
+    return zohoAnalyticsDeleteRows(this.analyticsContext);
   }
 }
