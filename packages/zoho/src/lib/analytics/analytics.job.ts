@@ -1,5 +1,5 @@
 import { type Maybe, type Milliseconds, MS_IN_SECOND, performTaskLoop, waitForMs } from '@dereekb/util';
-import { type ZohoAnalyticsJobId } from './analytics';
+import { type ZohoAnalyticsJobId, type ZohoAnalyticsTimestampString } from './analytics';
 
 /**
  * Status code of an asynchronous Zoho Analytics import or export job.
@@ -63,6 +63,13 @@ export const DEFAULT_ZOHO_ANALYTICS_JOB_MAX_POLLS = 150;
 export interface ZohoAnalyticsJobStatus {
   readonly jobId: ZohoAnalyticsJobId;
   readonly jobCode: ZohoAnalyticsJobCode;
+  /**
+   * Epoch milliseconds at which the job's result stops being retrievable, roughly an hour after
+   * completion.
+   *
+   * Returned by import jobs as well as export jobs, despite being documented only for exports.
+   */
+  readonly expiryTime?: ZohoAnalyticsTimestampString;
   /**
    * Human-readable status, e.g. `'JOB COMPLETED'`.
    */

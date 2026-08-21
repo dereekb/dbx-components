@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type ZohoAnalyticsJobId, type ZohoAnalyticsResponse, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsWorkspaceId } from './analytics';
 import { type ZohoAnalyticsContext } from './analytics.config';
-import { type ZohoAnalyticsImportConfig, type ZohoAnalyticsImportJobConfig, type ZohoAnalyticsImportJobNewTableConfig, type ZohoAnalyticsImportNewTableConfig, type ZohoAnalyticsImportResult } from './analytics.import';
+import { type ZohoAnalyticsImportConfig, type ZohoAnalyticsImportFileType, type ZohoAnalyticsImportJobConfig, type ZohoAnalyticsImportJobNewTableConfig, type ZohoAnalyticsImportNewTableConfig, type ZohoAnalyticsImportResult } from './analytics.import';
 import { type ZohoAnalyticsJobStatus, type PollZohoAnalyticsJobConfig, pollZohoAnalyticsJob } from './analytics.job';
 import { zohoAnalyticsConfigQuerySuffix } from './analytics.param';
 
@@ -33,38 +33,106 @@ export interface ZohoAnalyticsImportDataInput {
 }
 
 /**
+ * Options controlling how {@link zohoAnalyticsImportFormData} encodes the data.
+ */
+export interface ZohoAnalyticsImportFormDataOptions {
+  /**
+   * Sends `data`/`rows` as a `FILE` part rather than a `DATA` field.
+   *
+   * Required by the Bulk (async job) endpoints, which reject a `DATA` field with
+   * "The imported file is empty" — verified against the live API. The synchronous endpoints accept
+   * `DATA`, so this defaults to false.
+   */
+  readonly asFile?: Maybe<boolean>;
+  /**
+   * File type, used only to name the generated file part.
+   */
+  readonly fileType?: Maybe<ZohoAnalyticsImportFileType>;
+}
+
+/**
+ * Name given to the file part generated from `data`/`rows`.
+ *
+ * Zoho keys the parse off `CONFIG.fileType` rather than the file name, but a name is required by the
+ * multipart encoding and an accurate extension keeps the request self-describing.
+ */
+const ZOHO_ANALYTICS_GENERATED_IMPORT_FILE_NAME = 'import';
+
+/**
  * Builds the multipart body carrying the data of an import.
  *
  * @param input - The file, raw text, or rows to import.
+ * @param options - How to encode the data; see {@link ZohoAnalyticsImportFormDataOptions}.
  * @returns The multipart form body to send.
  * @throws {Error} When none of `file`, `data`, or `rows` is provided.
  */
-export function zohoAnalyticsImportFormData(input: ZohoAnalyticsImportDataInput): FormData {
+export function zohoAnalyticsImportFormData(input: ZohoAnalyticsImportDataInput, options?: Maybe<ZohoAnalyticsImportFormDataOptions>): FormData {
   const { file, data, rows } = input;
   const body = new FormData();
 
   if (file != null) {
     body.append('FILE', file);
-  } else if (data != null) {
-    body.append('DATA', data);
-  } else if (rows == null) {
+  } else if (data == null && rows == null) {
     throw new Error('zohoAnalyticsImportFormData(): one of file, data, or rows must be provided.');
   } else {
-    body.append('DATA', JSON.stringify(rows));
+    const content = data ?? JSON.stringify(rows);
+
+    if (options?.asFile) {
+      const fileType = options.fileType ?? (rows == null ? 'csv' : 'json');
+      body.append('FILE', new File([content], `${ZOHO_ANALYTICS_GENERATED_IMPORT_FILE_NAME}.${fileType}`, { type: fileType === 'json' ? 'application/json' : 'text/csv' }));
+    } else {
+      body.append('DATA', content);
+    }
   }
 
   return body;
 }
 
 /**
- * Resolves the effective `fileType` for an import, defaulting to `'json'` when rows were provided.
+ * Resolves the effective `fileType` for an import.
+ *
+ * Defaults to `'json'` when rows were provided, and otherwise infers from the file's extension, so a
+ * caller passing a `.csv` file does not have to restate the type.
  *
  * @param dataInput - The data being imported.
  * @param fileType - The explicitly configured file type, if any.
- * @returns The file type to send to Zoho Analytics.
+ * @returns The file type to send to Zoho Analytics, or undefined when it cannot be determined.
  */
-function zohoAnalyticsImportFileType(dataInput: ZohoAnalyticsImportDataInput, fileType: Maybe<string>): Maybe<string> {
-  return fileType ?? (dataInput.rows == null ? undefined : 'json');
+function zohoAnalyticsImportFileType(dataInput: ZohoAnalyticsImportDataInput, fileType: Maybe<ZohoAnalyticsImportFileType>): Maybe<ZohoAnalyticsImportFileType> {
+  const { file, rows } = dataInput;
+  let result: Maybe<ZohoAnalyticsImportFileType> = fileType;
+
+  if (result == null) {
+    if (rows != null) {
+      result = 'json';
+    } else if (file != null) {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      result = extension === 'json' || extension === 'csv' ? extension : undefined;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Resolves the `fileType` for a Bulk (async job) import, which cannot proceed without one.
+ *
+ * The Bulk endpoints reject a CONFIG with no `fileType` as "The parameter CONFIG is not proper",
+ * which names neither the parameter at fault nor the fix — verified against the live API.
+ *
+ * @param dataInput - The data being imported.
+ * @param fileType - The explicitly configured file type, if any.
+ * @returns The resolved file type.
+ * @throws {Error} When the file type is neither configured nor inferable.
+ */
+function zohoAnalyticsImportJobFileType(dataInput: ZohoAnalyticsImportDataInput, fileType: Maybe<ZohoAnalyticsImportFileType>): ZohoAnalyticsImportFileType {
+  const result = zohoAnalyticsImportFileType(dataInput, fileType);
+
+  if (result == null) {
+    throw new Error('zohoAnalyticsCreateImportJob(): config.fileType is required for an async import job when the data is not rows or a file with a .csv/.json name.');
+  }
+
+  return result;
 }
 
 /**
@@ -84,6 +152,10 @@ interface ZohoAnalyticsImportRequestConfig {
    * The data to import.
    */
   readonly dataInput: ZohoAnalyticsImportDataInput;
+  /**
+   * How to encode the data; the Bulk endpoints require it as a file part.
+   */
+  readonly formDataOptions?: Maybe<ZohoAnalyticsImportFormDataOptions>;
 }
 
 /**
@@ -97,8 +169,8 @@ interface ZohoAnalyticsImportRequestConfig {
  * @returns The parsed response body.
  */
 async function zohoAnalyticsImportRequest<R>(requestConfig: ZohoAnalyticsImportRequestConfig): Promise<R> {
-  const { context, url, config, dataInput } = requestConfig;
-  const body = zohoAnalyticsImportFormData(dataInput);
+  const { context, url, config, dataInput, formDataOptions } = requestConfig;
+  const body = zohoAnalyticsImportFormData(dataInput, formDataOptions);
   const response = await context.fetch(`${url}${zohoAnalyticsConfigQuerySuffix(config)}`, { method: 'POST', headers: { 'Content-Type': '' }, body });
   return response.json() as Promise<R>;
 }
@@ -231,8 +303,9 @@ export type ZohoAnalyticsCreateImportJobInTableFunction = (input: ZohoAnalyticsC
 export function zohoAnalyticsCreateImportJobInTable(context: ZohoAnalyticsContext): ZohoAnalyticsCreateImportJobInTableFunction {
   return (input: ZohoAnalyticsCreateImportJobInTableInput) => {
     const { workspaceId, viewId, config, ...dataInput } = input;
-    const requestConfig = { ...config, fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
-    return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/views/${viewId}/data`, config: requestConfig, dataInput });
+    const fileType = zohoAnalyticsImportJobFileType(dataInput, config.fileType);
+    const requestConfig = { ...config, fileType };
+    return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/views/${viewId}/data`, config: requestConfig, dataInput, formDataOptions: { asFile: true, fileType } });
   };
 }
 
@@ -260,8 +333,9 @@ export type ZohoAnalyticsCreateImportJobInNewTableFunction = (input: ZohoAnalyti
 export function zohoAnalyticsCreateImportJobInNewTable(context: ZohoAnalyticsContext): ZohoAnalyticsCreateImportJobInNewTableFunction {
   return (input: ZohoAnalyticsCreateImportJobInNewTableInput) => {
     const { workspaceId, config, ...dataInput } = input;
-    const requestConfig = { ...config, fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
-    return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/data`, config: requestConfig, dataInput });
+    const fileType = zohoAnalyticsImportJobFileType(dataInput, config.fileType);
+    const requestConfig = { ...config, fileType };
+    return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/data`, config: requestConfig, dataInput, formDataOptions: { asFile: true, fileType } });
   };
 }
 

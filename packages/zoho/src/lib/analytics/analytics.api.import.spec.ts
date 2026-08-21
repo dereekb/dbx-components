@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { type ZohoAnalyticsContext } from './analytics.config';
-import { zohoAnalyticsImportDataInNewTable, zohoAnalyticsImportDataInTable, zohoAnalyticsImportFormData } from './analytics.api.import';
+import { zohoAnalyticsCreateImportJobInNewTable, zohoAnalyticsCreateImportJobInTable, zohoAnalyticsImportDataInNewTable, zohoAnalyticsImportDataInTable, zohoAnalyticsImportFormData } from './analytics.api.import';
 
 /**
  * Builds a minimal mock {@link ZohoAnalyticsContext} whose `fetch` resolves to a JSON response,
@@ -97,6 +97,94 @@ describe('zohoAnalyticsImportDataInTable()', () => {
     await zohoAnalyticsImportDataInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append', fileType: 'csv' } });
 
     expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'csv' });
+  });
+});
+
+/**
+ * The Bulk endpoints diverge from the synchronous ones in two ways that are not in the OpenAPI spec
+ * and were found against the live API: they reject a `DATA` field with "The imported file is empty",
+ * and they reject a CONFIG without `fileType` as "The parameter CONFIG is not proper".
+ */
+describe('zohoAnalyticsCreateImportJobInTable()', () => {
+  const jobResponse = { status: 'success', summary: 'Import data', data: { jobId: 'j1' } };
+
+  it('should send rows as a FILE part rather than a DATA field', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(jobResponse);
+
+    await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append' } });
+
+    const [url, init] = fetch.mock.calls[0];
+    const body = init.body as FormData;
+
+    expect(url).toContain('/bulk/workspaces/w1/views/v1/data?');
+    expect(body.get('DATA')).toBeNull();
+    expect(body.get('FILE')).toBeInstanceOf(File);
+    expect(await (body.get('FILE') as File).text()).toBe(JSON.stringify([{ Region: 'East' }]));
+  });
+
+  it('should always send a fileType in the config', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(jobResponse);
+
+    await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append' } });
+
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'json' });
+  });
+
+  it('should infer the fileType from the file name', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(jobResponse);
+    const file = new File(['a,b\n1,2'], 'rows.CSV');
+
+    await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', file, config: { importType: 'append' } });
+
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'csv' });
+    expect((fetch.mock.calls[0][1].body as FormData).get('FILE')).toBe(file);
+  });
+
+  it('should refuse an undeterminable fileType rather than letting Zoho reject the CONFIG', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(jobResponse);
+
+    expect(() => zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', data: 'a,b\n1,2', config: { importType: 'append' } })).toThrow();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('zohoAnalyticsCreateImportJobInNewTable()', () => {
+  it('should send rows as a FILE part with a fileType', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext({ status: 'success', summary: 'Import data', data: { jobId: 'j1' } });
+
+    await zohoAnalyticsCreateImportJobInNewTable(context)({ workspaceId: 'w1', rows: [{ Region: 'East' }], config: { tableName: 'Sales' } });
+
+    const [url, init] = fetch.mock.calls[0];
+
+    expect(url).toContain('/bulk/workspaces/w1/data?');
+    expect((init.body as FormData).get('FILE')).toBeInstanceOf(File);
+    expect(readConfig(url)).toEqual({ tableName: 'Sales', fileType: 'json' });
+  });
+});
+
+describe('zohoAnalyticsImportFormData() asFile', () => {
+  it('should wrap rows in a file part named for the file type', async () => {
+    const body = zohoAnalyticsImportFormData({ rows: [{ Region: 'East' }] }, { asFile: true, fileType: 'json' });
+    const file = body.get('FILE') as File;
+
+    expect(body.get('DATA')).toBeNull();
+    expect(file.name).toBe('import.json');
+    expect(await file.text()).toBe(JSON.stringify([{ Region: 'East' }]));
+  });
+
+  it('should wrap raw text in a file part', async () => {
+    const body = zohoAnalyticsImportFormData({ data: 'a,b\n1,2' }, { asFile: true, fileType: 'csv' });
+    const file = body.get('FILE') as File;
+
+    expect(file.name).toBe('import.csv');
+    expect(await file.text()).toBe('a,b\n1,2');
+  });
+
+  it('should pass an already-provided file through untouched', () => {
+    const file = new File(['a,b\n1,2'], 'rows.csv');
+    const body = zohoAnalyticsImportFormData({ file }, { asFile: true, fileType: 'csv' });
+
+    expect(body.get('FILE')).toBe(file);
   });
 });
 

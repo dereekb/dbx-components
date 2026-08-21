@@ -1,5 +1,5 @@
 import { type WebsiteUrl } from '@dereekb/util';
-import { type ZohoAnalyticsCriteria, type ZohoAnalyticsName, type ZohoAnalyticsTimestampString } from './analytics';
+import { type ZohoAnalyticsCriteria, type ZohoAnalyticsName } from './analytics';
 import { type ZohoAnalyticsDelimiter, type ZohoAnalyticsQuoted } from './analytics.import';
 import { type ZohoAnalyticsJobStatus } from './analytics.job';
 
@@ -94,8 +94,4 @@ export interface ZohoAnalyticsExportJobStatus extends ZohoAnalyticsJobStatus {
    * URL the exported file can be downloaded from once the job has completed.
    */
   readonly downloadUrl?: WebsiteUrl;
-  /**
-   * Epoch milliseconds at which the download expires, roughly an hour after completion.
-   */
-  readonly expiryTime?: ZohoAnalyticsTimestampString;
 }

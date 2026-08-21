@@ -48,10 +48,15 @@ export interface ZohoAnalyticsAddRowInput {
 export interface ZohoAnalyticsAddRowResult {
   /**
    * The column values that were accepted.
+   *
+   * Echoed back as strings regardless of the column's type — a numeric `2` comes back as `'2'`.
    */
   readonly addedColumns?: ZohoAnalyticsRow;
   /**
-   * The column values that were rejected. Non-empty even on a successful response.
+   * The column values that were rejected.
+   *
+   * Always present, as an empty object when nothing was rejected — test it for emptiness rather
+   * than for presence. Verified against the live API.
    */
   readonly invalidColumns?: ZohoAnalyticsInvalidColumns;
 }

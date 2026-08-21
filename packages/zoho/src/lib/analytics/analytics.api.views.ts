@@ -72,9 +72,9 @@ export type ZohoAnalyticsGetViewDetailsFunction = (input: ZohoAnalyticsGetViewDe
  * Creates a {@link ZohoAnalyticsGetViewDetailsFunction} bound to the given context.
  *
  * Unlike the view listing, this endpoint is not workspace-scoped: view ids are globally unique, so
- * the path is `/views/{viewId}` rather than `/workspaces/{workspaceId}/views/{viewId}`. The
- * response also reports `viewType` in mixed case (`'Table'`) where the listing reports it
- * uppercased (`'TABLE'`).
+ * the path is `/views/{viewId}` rather than `/workspaces/{workspaceId}/views/{viewId}`. It returns a
+ * different field set than the listing rather than a superset — see {@link ZohoAnalyticsViewDetails}.
+ * Both endpoints report `viewType` in the same mixed case (`'Table'`), verified live.
  *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that retrieves a view by id.

@@ -4,12 +4,14 @@ import { type ZohoAnalyticsColumnId, type ZohoAnalyticsFolderId, type ZohoAnalyt
 /**
  * Type of a view in Zoho Analytics.
  *
- * Zoho returns this in mixed case across endpoints — `GET /workspaces/{id}/views` reports
- * `'TABLE'` while `GET /views/{id}` reports `'Table'` — so compare case-insensitively.
+ * Zoho returns this in mixed case — `'Table'`, not `'TABLE'` — from both `GET /workspaces/{id}/views`
+ * and `GET /views/{id}`, verified against the live API. Only `'Table'` has been confirmed against a
+ * real account; the other members are the documented view kinds and their casing is inferred, so
+ * compare case-insensitively rather than against these literals.
  *
  * @see https://www.zoho.com/analytics/api/v2/metadata-api/get-views.html
  */
-export type ZohoAnalyticsViewType = SuggestedString<'TABLE' | 'QUERYTABLE' | 'REPORT' | 'DASHBOARD'>;
+export type ZohoAnalyticsViewType = SuggestedString<'Table' | 'QueryTable' | 'Report' | 'Dashboard'>;
 
 /**
  * A view in Zoho Analytics: a table, query table, report, or dashboard.
@@ -25,10 +27,24 @@ export interface ZohoAnalyticsView {
   readonly folderName?: string;
   readonly createdBy?: string;
   readonly createdTime?: ZohoAnalyticsTimestampString;
+  /**
+   * View this one was derived from, for a query table or report.
+   */
+  readonly parentViewId?: ZohoAnalyticsViewId;
+  readonly lastModifiedTime?: ZohoAnalyticsTimestampString;
+  readonly lastModifiedBy?: string;
+  readonly isFavorite?: boolean;
+  /**
+   * Present when the view is shared with the authenticated user rather than owned by them.
+   */
+  readonly sharedBy?: string;
 }
 
 /**
  * Full details of a single view, which include the owning workspace and organization.
+ *
+ * Carries a different field set than the listing rather than a superset: it adds the owning
+ * workspace/org and the design-modification fields, and drops the folder and favorite fields.
  *
  * @see https://www.zoho.com/analytics/api/v2/metadata-api/view-details.html
  */
@@ -39,6 +55,17 @@ export interface ZohoAnalyticsViewDetails {
   readonly viewType?: ZohoAnalyticsViewType;
   readonly workspaceId?: ZohoAnalyticsWorkspaceId;
   readonly orgId?: ZohoAnalyticsOrgId;
+  readonly createdTime?: ZohoAnalyticsTimestampString;
+  readonly createdBy?: string;
+  readonly createdByName?: string;
+  readonly createdByZuId?: string;
+  /**
+   * When the view's design — its columns and formulas, not its rows — last changed.
+   */
+  readonly lastDesignModifiedTime?: ZohoAnalyticsTimestampString;
+  readonly lastDesignModifiedBy?: string;
+  readonly lastDesignModifiedByName?: string;
+  readonly lastDesignModifiedByZuId?: string;
 }
 
 /**
