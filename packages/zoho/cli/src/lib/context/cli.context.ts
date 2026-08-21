@@ -1,5 +1,5 @@
 import { type ZohoCliConfig, type ZohoCliResolvedProductCredentials, getTokenCachePath, resolveProductCredentials } from '../config/cli.config';
-import { ZohoAccountsApi, ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, type ZohoAccountsServiceConfig, type ZohoRecruitServiceConfig, type ZohoCrmServiceConfig, type ZohoDeskServiceConfig, type ZohoSignServiceConfig, memoryZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from '@dereekb/zoho/nestjs';
+import { ZohoAccountsApi, ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalyticsApi, type ZohoAccountsServiceConfig, type ZohoRecruitServiceConfig, type ZohoCrmServiceConfig, type ZohoDeskServiceConfig, type ZohoSignServiceConfig, type ZohoAnalyticsServiceConfig, memoryZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from '@dereekb/zoho/nestjs';
 import type { Maybe } from '@dereekb/util';
 
 export interface ZohoCliContext {
@@ -7,6 +7,7 @@ export interface ZohoCliContext {
   readonly crmApi: Maybe<ZohoCrmApi>;
   readonly deskApi: Maybe<ZohoDeskApi>;
   readonly signApi: Maybe<ZohoSignApi>;
+  readonly analyticsApi: Maybe<ZohoAnalyticsApi>;
 }
 
 /**
@@ -21,12 +22,12 @@ function credentialKey(creds: ZohoCliResolvedProductCredentials): string {
 }
 
 /**
- * Constructs the per-invocation {@link ZohoCliContext} containing the Recruit, CRM, Desk, and Sign API clients that the user has credentials for.
+ * Constructs the per-invocation {@link ZohoCliContext} containing the Recruit, CRM, Desk, Sign, and Analytics API clients that the user has credentials for.
  *
  * Shares a single token cache (memory + on-disk JSON) across all products and reuses one {@link ZohoAccountsApi} per unique `clientId:refreshToken` pair so token refreshes don't multiply across products. Sign uses a dedicated OAuth client, so it naturally gets its own cached accounts API keyed by its distinct `clientId:refreshToken`.
  *
  * @param config - Loaded CLI configuration; products without resolvable credentials produce `undefined` API entries on the returned context.
- * @returns A {@link ZohoCliContext} with `recruitApi`/`crmApi`/`deskApi`/`signApi` populated only for configured products.
+ * @returns A {@link ZohoCliContext} with `recruitApi`/`crmApi`/`deskApi`/`signApi`/`analyticsApi` populated only for configured products.
  */
 export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
   const cacheService = mergeZohoAccountsAccessTokenCacheServices([memoryZohoAccountsAccessTokenCacheService(), fileZohoAccountsAccessTokenCacheService(getTokenCachePath())]);
@@ -98,5 +99,15 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
     signApi = new ZohoSignApi(signConfig, accountsApi);
   }
 
-  return { recruitApi, crmApi, deskApi, signApi };
+  // Analytics (dedicated OAuth client — resolveProductCredentials requires its own credentials)
+  let analyticsApi: Maybe<ZohoAnalyticsApi>;
+  const analyticsCreds = resolveProductCredentials(config, 'analytics');
+
+  if (analyticsCreds) {
+    const accountsApi = getAccountsApi(analyticsCreds, 'analytics');
+    const analyticsConfig = { zohoAnalytics: { apiUrl: analyticsCreds.apiMode, orgId: analyticsCreds.orgId } } as ZohoAnalyticsServiceConfig;
+    analyticsApi = new ZohoAnalyticsApi(analyticsConfig, accountsApi);
+  }
+
+  return { recruitApi, crmApi, deskApi, signApi, analyticsApi };
 }

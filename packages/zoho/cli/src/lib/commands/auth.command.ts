@@ -18,7 +18,8 @@ const ZOHO_SCOPES: Record<string, string[]> = {
   recruit: ['ZohoRecruit.modules.ALL', 'ZohoRecruit.settings.all', 'ZohoRecruit.functions.execute.READ', 'ZohoRecruit.functions.execute.CREATE'],
   crm: ['ZohoCRM.modules.ALL', 'ZohoCRM.settings.ALL', 'ZohoCRM.functions.execute.READ', 'ZohoCRM.functions.execute.CREATE'],
   desk: ['Desk.tickets.ALL', 'Desk.tasks.ALL', 'Desk.contacts.ALL', 'Desk.settings.ALL', 'Desk.events.ALL', 'Desk.search.READ', 'Desk.articles.READ', 'Desk.basic.READ'],
-  sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL']
+  sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL'],
+  analytics: ['ZohoAnalytics.data.all', 'ZohoAnalytics.metadata.all', 'ZohoAnalytics.modeling.all']
 };
 
 /**

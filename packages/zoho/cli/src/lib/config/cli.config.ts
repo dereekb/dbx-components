@@ -5,9 +5,9 @@ import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign';
+export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign' | 'analytics';
 
-export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign'];
+export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign', 'analytics'];
 
 /**
  * Products that use a dedicated OAuth client and therefore must be configured with their own
@@ -15,7 +15,7 @@ export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 's
  * authorized under a separate `client_id` (its scopes cannot be granted alongside recruit/crm/desk),
  * so a shared-credential fallback would produce a client that lacks Sign access.
  */
-export const ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['sign']);
+export const ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['sign', 'analytics']);
 
 /**
  * Credentials for a single OAuth client.
@@ -50,7 +50,7 @@ export type ZohoCliOutputConfig = CliOutputConfig;
  *
  * Shared credentials are used as fallback when a product doesn't have its own, except for
  * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`) which always require their own credentials.
- * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`.
+ * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`, `analytics`.
  */
 export interface ZohoCliConfig {
   readonly shared: ZohoCliCredentials & {
@@ -61,6 +61,7 @@ export interface ZohoCliConfig {
   readonly crm?: ZohoCliProductConfig;
   readonly desk?: ZohoCliProductConfig;
   readonly sign?: ZohoCliProductConfig;
+  readonly analytics?: ZohoCliProductConfig;
   readonly output?: ZohoCliOutputConfig;
 }
 

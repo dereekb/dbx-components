@@ -3,7 +3,7 @@ import type { MiddlewareFunction } from 'yargs';
 import { loadCliConfig, configuredProducts } from '../config/cli.config';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
-import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi } from '@dereekb/zoho/nestjs';
+import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalyticsApi } from '@dereekb/zoho/nestjs';
 
 /**
  * Module-level context set by the auth middleware.
@@ -134,4 +134,24 @@ export function getSignApi(argv: any): ZohoSignApi {
   }
 
   return signApi;
+}
+
+/**
+ * Returns the configured {@link ZohoAnalyticsApi} for the active command.
+ *
+ * Zoho Analytics is treated as a dedicated-OAuth-client product, so it must be configured with its
+ * own credentials (it never falls back to the shared client).
+ *
+ * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
+ * @returns The Analytics API client.
+ * @throws {Error} When Analytics is not configured with its own valid credentials, instructing the user how to run `zoho-cli auth setup --product analytics`.
+ */
+export function getAnalyticsApi(argv: any): ZohoAnalyticsApi {
+  const { analyticsApi } = getCliContext(argv);
+
+  if (!analyticsApi) {
+    throw new Error('Analytics not configured. Zoho Analytics requires its own OAuth client. Run: zoho-cli auth setup --product analytics --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID');
+  }
+
+  return analyticsApi;
 }

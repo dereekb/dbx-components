@@ -112,6 +112,18 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
    * Parses service-specific rate limit headers into the common {@link ZohoRateLimitResponseDetails} shape.
    */
   readonly readRateLimitDetails: ZohoReadRateLimitDetailsFunction;
+  /**
+   * Whether the rate limiter stays enabled when a response carries no rate limit details.
+   *
+   * Defaults to false, which suits services that advertise their limits via response headers
+   * (CRM, Recruit, Sign, Desk): a header-less response there means the limiter has nothing to
+   * synchronize against, so throttling is suspended.
+   *
+   * Set to true for services that document a fixed limit but return no rate limit headers at all
+   * (Zoho Analytics). The limiter then self-counts each request against `maxRateLimit` and resets
+   * on its own `resetPeriod` schedule.
+   */
+  readonly enabledWithoutRateLimitDetails?: boolean;
 }
 
 /**
@@ -124,7 +136,8 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
  * - On each response, the limiter updates its remaining count and reset time via the provided reader
  * - When the API reports a different limit than configured, the limiter dynamically adjusts
  * - On 429 responses, the request is automatically retried after the rate limiter delay
- * - The limiter is disabled when responses lack rate limit headers (e.g., error responses)
+ * - The limiter is disabled when responses lack rate limit headers (e.g., error responses), unless
+ *   `enabledWithoutRateLimitDetails` is set, in which case it self-counts against `maxRateLimit`
  *
  * @param config - Configuration including the service-specific header reader, rate limit, reset period, and 429 handling.
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
@@ -132,7 +145,7 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
  * @__NO_SIDE_EFFECTS__
  */
 export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetchHandlerConfig): ZohoRateLimitedFetchHandler {
-  const { readRateLimitDetails } = config;
+  const { readRateLimitDetails, enabledWithoutRateLimitDetails = false } = config;
   const onTooManyRequests = config.onTooManyRequests === false ? undefined : (config.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION);
   const defaultLimit = config.maxRateLimit ?? DEFAULT_ZOHO_API_RATE_LIMIT;
   const defaultResetPeriod = config.resetPeriod ?? DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD;
@@ -175,7 +188,7 @@ export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetch
     updateWithResponse: function (response: Response, fetchResponseError?: FetchResponseError): PromiseOrValue<boolean> {
       const details = readRateLimitDetails(response.headers);
       let shouldRetry = false;
-      let enabled = false;
+      let enabled = enabledWithoutRateLimitDetails;
 
       if (details) {
         const { remaining, limit, resetAt } = details;
@@ -202,6 +215,15 @@ export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetch
           } catch {
             /* ignored */
           }
+        }
+      } else if (enabledWithoutRateLimitDetails && response.status === ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
+        // Services with no rate limit headers still surface throttling via the status code.
+        shouldRetry = true;
+
+        try {
+          void onTooManyRequests?.({ remaining: 0 }, response, fetchResponseError);
+        } catch {
+          /* ignored */
         }
       }
 
