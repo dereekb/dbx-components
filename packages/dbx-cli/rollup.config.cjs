@@ -12,6 +12,15 @@ const applyVisualizer = require('../../rollup.visualizer.config.cjs');
 // ESM-only `dbx-cli` loaded a second copy of `@firebase/firestore` and the `Firestore` instances it
 // created failed `collection()`'s brand check inside `@dereekb/firebase`. Keep this package
 // dual-build so Node consumers stay on one copy.
+//
+// That field was doing double duty, though: it also set the PARSE GOAL for this package's
+// TypeScript SOURCE. `packages/dbx-components-mcp/scripts/generate-manifests.mjs` registers the
+// `ts-node/esm` loader and `import()`s `src/lib/mcp-scan/scan/*.ts` directly, and ts-node picks a
+// file's module type from the nearest `package.json` `type`. Dropping it here made those sources
+// CommonJS, so an import cycle in `mcp-scan/scan` that ESM tolerates started failing with
+// `ERR_REQUIRE_CYCLE_MODULE`. `packages/dbx-cli/src/package.json` exists solely to declare
+// `"type": "module"` for the source tree — do not delete it. It cannot affect the published
+// package, whose shape comes from the `project` package.json referenced below.
 const options = {
   importPath: '@dereekb/dbx-cli',
   main: './src/index.ts',
