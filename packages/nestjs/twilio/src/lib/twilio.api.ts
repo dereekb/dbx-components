@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Twilio } from 'twilio';
+import { Twilio } from './twilio.interop';
 import { TwilioServiceConfig } from './twilio.config';
 
 @Injectable()

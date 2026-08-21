@@ -114,6 +114,13 @@
       "options": {
         "command": "node tools/scripts/update-peer-deps-from-imports.mjs --dry-run"
       }
+    },
+    "check-esm-imports": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/scripts/check-esm-named-imports.mjs"
+      }
     }
   }
 }
