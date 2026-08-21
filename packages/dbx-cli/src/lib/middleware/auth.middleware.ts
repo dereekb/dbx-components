@@ -5,7 +5,7 @@ import { createCliFirestoreSessionCacheStore } from '../config/firestore-session
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
-import { type CliContext, createCliContext, setCliContext } from '../context/cli.context';
+import { type CliContext, createCliContext, getCliContext, setCliContext } from '../context/cli.context';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliModelManifest } from '../manifest/types';
 import { CLI_EXIT_CODE_AUTH, CliError, outputError, setCliTimeoutMs, setCliVerbose } from '../util/output';
@@ -77,7 +77,22 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
 
       const entry = await resolveAccessTokenEntry({ cliName: input.cliName, envName, env, tokens });
 
-      setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
+      // yargs re-runs a global middleware once per COMMAND LEVEL, so a nested command like
+      // `action worker export` runs this three times (`action`, `action worker`, `action worker
+      // export`). Replacing the context on each run ORPHANS the previous one — and with it any
+      // direct-Firestore session opened on its memo, because the exit teardown closes the session of
+      // whichever context is in the slot LAST. That is a hang: the command prints its result and the
+      // orphaned session holds the event loop open forever.
+      //
+      // Every run of this middleware within one invocation resolves the same env and the same token,
+      // so the existing context is not merely reusable — it is the one the earlier command level
+      // already handed to a handler. Only a genuine change (a different env, a token refreshed
+      // mid-invocation) justifies replacing it.
+      const existing = getCliContext();
+
+      if (existing == null || existing.envName !== envName || existing.accessToken !== entry.accessToken) {
+        setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
+      }
     } catch (e) {
       outputError(e);
       process.exit(CLI_EXIT_CODE_AUTH);

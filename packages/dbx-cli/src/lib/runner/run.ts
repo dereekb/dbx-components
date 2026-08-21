@@ -19,6 +19,8 @@ import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { buildFirestoreGetCommand } from '../firestore/firestore-get.command';
 import { buildFirestoreQueriesCommand } from '../firestore/firestore-queries.command';
 import { buildFirestoreQueryCommand } from '../firestore/firestore-query.command';
+import { closeAllCliFirebaseApps } from '../firestore/firestore.session';
+import { type CliLifecycleHooks, type CliLifecycleRunner, cliLifecycleRunner } from './lifecycle';
 import { createOutputMiddleware } from '../middleware/output.middleware';
 import { createOutputCommand } from '../output/output.command.factory';
 import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
@@ -32,7 +34,7 @@ import { setCliRawArgv } from '../util/stdin';
  */
 export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all', 'pretty', 'timeout'];
 
-export interface CreateCliInput {
+export interface CreateCliInput extends CliLifecycleHooks {
   readonly cliName: string;
   /**
    * App-specific config/utility commands appended after the built-in `auth`, `env`, and `doctor` commands.
@@ -166,6 +168,16 @@ export interface CreateCliInput {
    */
   readonly version?: string;
   /**
+   * The lifecycle runner guarding this invocation's {@link CliLifecycleHooks}.
+   *
+   * Passed by {@link runCli} so the setup hook the parser runs and the teardown hook the exit path
+   * runs share ONE guard — two runners built from the same hooks would each track their own
+   * "already ran" flag, and the pairing between them is the whole contract.
+   *
+   * @internal Apps pass `setup` / `teardown`, not this.
+   */
+  readonly lifecycle?: CliLifecycleRunner;
+  /**
    * Optional shell-completion command name. When set, yargs registers
    * `<cli> <completionCommandName>` (defaults to `completion`) that emits a bash/zsh script.
    * Pass `false` to disable.
@@ -198,6 +210,9 @@ export interface CreateCliInput {
  *   if {@link CreateCliInput.modelManifest} is provided.
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
+ * @param input.setup - App hook run once before the command's handler; a throw aborts the command.
+ * @param input.teardown - App hook run once after the parser settles, before the Firestore session closes.
+ *   Only {@link runCli} runs it — a caller that drives `createCli().parse()` itself owns its own teardown.
  * @returns The configured yargs `Argv` ready to be `.parse()`-d.
  * @__NO_SIDE_EFFECTS__
  */
@@ -245,6 +260,11 @@ export function createCli(input: CreateCliInput): Argv {
   const skipCommandNames = new Set(allConfigCommands.map((c) => commandName(c)));
   const authMiddleware: MiddlewareFunction = input.testCliContext ? createPassthroughAuthMiddleware({ cliContext: input.testCliContext }) : createAuthMiddleware({ cliName, skipCommands: skipCommandNames, defaultEnvs, modelManifest: input.modelManifest, firestore: input.firestore });
 
+  const lifecycle = input.lifecycle ?? cliLifecycleRunner({ cliName, setup: input.setup, teardown: input.teardown });
+  // registered post-validation (unlike the auth middleware), so an invalid command line never runs
+  // an app's setup: yargs rejects it first and the hook's side effects never happen
+  const setupMiddleware: MiddlewareFunction = () => lifecycle.runSetup(getCliContext());
+
   const rawArgv = input.argv ?? hideBin(process.argv);
 
   // recorded before parsing: yargs coerces a lone `-` positional to `''`, so the stdin sentinel can
@@ -275,6 +295,10 @@ export function createCli(input: CreateCliInput): Argv {
     .alias('help', 'h')
     .wrap(Math.min(120, process.stdout.columns || 80));
 
+  if (input.setup != null) {
+    parser = parser.middleware([setupMiddleware]);
+  }
+
   if (input.version == null) {
     parser = parser.version(false);
   } else {
@@ -296,32 +320,70 @@ export function createCli(input: CreateCliInput): Argv {
  * @returns Resolves once the parser has finished. Rejects only when `process.exit` is stubbed (e.g. in tests).
  */
 export async function runCli(input: CreateCliInput): Promise<void> {
+  // built here, not in `createCli`, so the setup hook the parser runs and the teardown hook below
+  // share one guard
+  const lifecycle = input.lifecycle ?? cliLifecycleRunner({ cliName: input.cliName, setup: input.setup, teardown: input.teardown });
+
   try {
-    await createCli(input).parse();
+    await createCli({ ...input, lifecycle }).parse();
   } catch (e) {
     outputError(e);
     // teardown before exiting: `process.exit` here would otherwise skip the `finally` entirely
-    await closeCliFirestoreSessionForExit();
+    await runCliTeardown({ cliName: input.cliName, lifecycle });
     process.exit(CLI_EXIT_CODE_HANDLER);
   }
 
   // A command that opened a direct-Firestore session leaves a signed-in `Auth` and a live
   // `Firestore` holding the event loop open, so without this the process prints its result and never
   // exits. Runs after the parser has fully settled, so the command's output is already emitted.
-  await closeCliFirestoreSessionForExit();
+  await runCliTeardown({ cliName: input.cliName, lifecycle });
+}
+
+interface RunCliTeardownInput {
+  readonly cliName: string;
+  readonly lifecycle: CliLifecycleRunner;
+}
+
+/**
+ * Runs the invocation's teardown: the app's hook first, then the CLI's own Firestore teardown.
+ *
+ * The order is the point. An app's teardown may want to write a final record or flush something
+ * through the very session the CLI is about to close, so it runs while that session is still live —
+ * the reverse order would hand the hook a dead `Firestore`.
+ *
+ * @param input - The function inputs.
+ * @param input.cliName - The CLI name, used to find the Firebase apps this process opened.
+ * @param input.lifecycle - The invocation's lifecycle runner.
+ */
+async function runCliTeardown(input: RunCliTeardownInput): Promise<void> {
+  await input.lifecycle.runTeardown(getCliContext());
+  await closeCliFirestoreSessionForExit({ cliName: input.cliName });
 }
 
 /**
  * Closes the invocation's direct-Firestore session, if one was opened, swallowing any failure.
  *
+ * Two passes, because the context in the slot does not always own the open session. Closing through
+ * the context first is what clears its memos, so a context that outlives this call hands out a fresh
+ * session rather than a dead one; the sweep then deletes any Firebase app the context never knew
+ * about (a session opened on an orphaned context, one whose handshake failed past `initializeApp`, or
+ * a caller like the doctor probe that opens its own). Anything missed is a hang, not a leak the OS
+ * cleans up at exit — there is no exit.
+ *
  * Teardown is best-effort by design: it runs once the command has already produced its output, so a
  * failure here must not change what the caller sees or the exit code they get.
  */
-async function closeCliFirestoreSessionForExit(): Promise<void> {
+async function closeCliFirestoreSessionForExit(input: Pick<RunCliTeardownInput, 'cliName'>): Promise<void> {
   try {
     await getCliContext()?.closeFirestoreSession?.();
   } catch {
     // nothing actionable — the result is already on stdout
+  }
+
+  try {
+    await closeAllCliFirebaseApps({ cliName: input.cliName });
+  } catch {
+    // as above: the command's result is already emitted, and there is nothing left to salvage
   }
 }
 

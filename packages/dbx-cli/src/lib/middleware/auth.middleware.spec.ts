@@ -90,4 +90,53 @@ describe('createAuthMiddleware token resolution', () => {
     expect(h.setMock).toHaveBeenCalledTimes(1);
     expect(getCliContext()?.accessToken).toBe('new-access');
   });
+
+  // yargs re-runs a global middleware once per COMMAND LEVEL, so `action worker export` enters this
+  // middleware three times. Replacing the context each time orphaned the earlier one — and the
+  // direct-Firestore session opened on its memo with it, since the exit teardown closes the session
+  // belonging to whichever context is in the slot LAST. The observable symptom was a command that
+  // printed its result and then never exited.
+  it('nested commands: re-running the middleware for the same env + token keeps the SAME context', async () => {
+    h.getMock.mockResolvedValue({ accessToken: 'cached-access', refreshToken: 'cached-refresh', expiresAt: Date.now() + 3_600_000 });
+
+    await runMiddleware();
+    const first = getCliContext();
+    await runMiddleware();
+    const second = getCliContext();
+    await runMiddleware();
+    const third = getCliContext();
+
+    expect(first).toBeDefined();
+    expect(second).toBe(first);
+    expect(third).toBe(first);
+  });
+
+  it('replaces the context when the resolved access token changed', async () => {
+    h.getMock.mockResolvedValueOnce({ accessToken: 'first-access', refreshToken: 'cached-refresh', expiresAt: Date.now() + 3_600_000 });
+    await runMiddleware();
+    const first = getCliContext();
+
+    h.getMock.mockResolvedValueOnce({ accessToken: 'second-access', refreshToken: 'cached-refresh', expiresAt: Date.now() + 3_600_000 });
+    await runMiddleware();
+    const second = getCliContext();
+
+    expect(first?.accessToken).toBe('first-access');
+    expect(second).not.toBe(first);
+    expect(second?.accessToken).toBe('second-access');
+  });
+
+  it('replaces the context when the resolved env changed', async () => {
+    h.getMock.mockResolvedValue({ accessToken: 'cached-access', refreshToken: 'cached-refresh', expiresAt: Date.now() + 3_600_000 });
+
+    await runMiddleware();
+    const first = getCliContext();
+
+    h.resolveEnvMock.mockResolvedValue({ envName: 'prod', env: COMPLETE_ENV });
+    await runMiddleware();
+    const second = getCliContext();
+
+    expect(first?.envName).toBe('dev');
+    expect(second).not.toBe(first);
+    expect(second?.envName).toBe('prod');
+  });
 });

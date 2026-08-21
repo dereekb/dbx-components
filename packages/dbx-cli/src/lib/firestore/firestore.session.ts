@@ -55,6 +55,23 @@ export interface CreateCliFirestoreSessionContextInput {
 }
 
 /**
+ * The Firebase app name a direct-Firestore session registers for a CLI + env pair.
+ *
+ * Deriving the name rather than tracking apps in a side registry is what makes ONE app per CLI + env
+ * per process a property of the code instead of a convention: {@link createCliFirestoreSessionContext}
+ * looks this name up in `getApps()` before initializing, so repeated session opens in one process —
+ * a doctor probe alongside a command's own session, an action that re-resolves the accessor — all
+ * share a single app, and {@link closeAllCliFirebaseApps} finds it again from the name alone.
+ *
+ * @param input - The CLI name and env name the session targets.
+ * @returns The Firebase app name for that pair.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function cliFirebaseAppName(input: Pick<CreateCliFirestoreSessionContextInput, 'cliName' | 'envName'>): string {
+  return `${input.cliName}-${input.envName}`;
+}
+
+/**
  * Opens a direct Firestore connection as the authenticated CLI user.
  *
  * Steps, in a strict order:
@@ -102,7 +119,7 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
     await sessionCache.set(envName, { session, cachedAt: Date.now(), uid: session.uid });
   }
 
-  const appName = `${cliName}-${envName}`;
+  const appName = cliFirebaseAppName({ cliName, envName });
   const app = getApps().find((x) => x.name === appName) ?? initializeApp({ apiKey: firebase.apiKey, authDomain: firebase.authDomain, projectId: firebase.projectId, appId: firebase.appId }, appName);
 
   const useEmulators = cliFirebaseEmulatorsInUse(firebase);
@@ -181,12 +198,54 @@ export async function createCliFirestoreSessionContext(input: CreateCliFirestore
  * @param session - The session context to close.
  */
 export async function closeCliFirestoreSessionContext(session: CliFirestoreSessionContext): Promise<void> {
+  await closeCliFirebaseApp(session.app);
+}
+
+/**
+ * Deletes one Firebase app, swallowing any failure.
+ *
+ * @param app - The app to delete.
+ */
+async function closeCliFirebaseApp(app: FirebaseApp): Promise<void> {
   try {
-    await deleteApp(session.app);
+    await deleteApp(app);
   } catch {
     // an already-deleted app (or one whose components failed to dispose) leaves nothing to salvage,
     // and the command's result has already been emitted
   }
+}
+
+/**
+ * Deletes every still-live Firebase app this CLI opened, whether or not a session was handed back.
+ *
+ * The CLI's last line of defence against a hang. `closeCliFirestoreSessionContext` covers the normal
+ * path, but it needs a session to be handed to it, and three cases never produce one:
+ *
+ * - a handshake that fails AFTER `initializeApp` — a rejected custom token, a failed App Check
+ *   registration — throws, so the caller that catches it has an initialized app and no session;
+ * - a caller that opens its own session outside the context memo (the doctor probe) owns its own
+ *   teardown, and forgetting it hangs the process;
+ * - a {@link CliContext} orphaned mid-invocation carries the only reference to its session memo.
+ *
+ * Each leaves an app whose `Firestore` and signed-in `Auth` hold the Node event loop open forever.
+ * `getApps()` already tracks every live app and `deleteApp` removes it from that list, so the app
+ * names {@link cliFirebaseAppName} derives are enough to find them again — no side registry to keep
+ * in sync, and idempotent by construction.
+ *
+ * Tolerant of failures for the same reason {@link closeCliFirestoreSessionContext} is: it runs after
+ * the result is already on stdout.
+ *
+ * @param input - The function inputs.
+ * @param input.cliName - The CLI whose apps should be closed. Apps belonging to other Firebase
+ *   consumers in the same process are left alone.
+ * @returns Resolves once every matching app has been deleted.
+ */
+export async function closeAllCliFirebaseApps(input: Pick<CreateCliFirestoreSessionContextInput, 'cliName'>): Promise<void> {
+  // every env this process opened a session for, which is normally exactly one
+  const prefix = `${input.cliName}-`;
+  const apps = getApps().filter((x) => x.name.startsWith(prefix));
+
+  await Promise.all(apps.map((app) => closeCliFirebaseApp(app)));
 }
 
 /**
