@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/firebase/test",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/date": "13.38.0",
     "@dereekb/firebase": "13.38.0",

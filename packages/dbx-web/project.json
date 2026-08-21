@@ -23,6 +23,10 @@
           {
             "description": "finish dbx-web build script",
             "command": "sh packages/dbx-web/complete-dbx-web-build.sh"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/dbx-web"
           }
         ],
         "parallel": false,

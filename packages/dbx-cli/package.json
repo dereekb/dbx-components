@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "bin": {
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
@@ -12,10 +13,9 @@
   },
   "exports": {
     "./eslint": {
-      "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
-      "import": "./eslint/index.cjs.mjs",
-      "default": "./eslint/index.cjs.js"
+      "import": "./eslint/index.esm.js",
+      "default": "./eslint/index.esm.js"
     },
     "./firebase-api-manifest": {
       "default": "./firebase-api-manifest/main.js"
@@ -36,28 +36,24 @@
       "default": "./lint-cache/main.js"
     },
     "./manifest-extract": {
-      "module": "./manifest-extract/index.esm.js",
       "types": "./manifest-extract/index.d.ts",
-      "import": "./manifest-extract/index.cjs.mjs",
-      "default": "./manifest-extract/index.cjs.js"
+      "import": "./manifest-extract/index.esm.js",
+      "default": "./manifest-extract/index.esm.js"
     },
     "./model-test": {
-      "module": "./model-test/index.esm.js",
       "types": "./model-test/index.d.ts",
-      "import": "./model-test/index.cjs.mjs",
-      "default": "./model-test/index.cjs.js"
+      "import": "./model-test/index.esm.js",
+      "default": "./model-test/index.esm.js"
     },
     "./route": {
-      "module": "./route/index.esm.js",
       "types": "./route/index.d.ts",
-      "import": "./route/index.cjs.mjs",
-      "default": "./route/index.cjs.js"
+      "import": "./route/index.esm.js",
+      "default": "./route/index.esm.js"
     },
     "./test": {
-      "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
-      "import": "./test/index.cjs.mjs",
-      "default": "./test/index.cjs.js"
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
     },
     "./validate": {
       "default": "./validate/index.js"

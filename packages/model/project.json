@@ -10,8 +10,17 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/model"],
       "options": {
-        "command": "npx nx run model:build-base",
-        "color": true
+        "color": true,
+        "commands": [
+          {
+            "command": "npx nx run model:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/model"
+          }
+        ],
+        "parallel": false
       }
     },
     "build-base": {

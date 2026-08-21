@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli/test",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/date": "13.38.0",
     "@dereekb/dbx-cli": "13.38.0",

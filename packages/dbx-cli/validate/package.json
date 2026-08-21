@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli/validate",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "peerDependencies": {
     "@dereekb/dbx-cli": "13.38.0",

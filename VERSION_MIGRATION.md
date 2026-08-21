@@ -1,4 +1,46 @@
 
+## Migration to v13.39.x — the publishable packages are ESM-only
+
+### Overview
+Every rollup-built `@dereekb/*` package (and every one of their subpath entry points) now ships a
+**single ESM build**. The CommonJS build, the `index.cjs.mjs` bridge, and the bundler-only `module`
+condition are gone; each package declares `"type": "module"` and exports one shape:
+
+```jsonc
+".": {
+  "types":   "./index.d.ts",
+  "import":  "./index.esm.js",
+  "default": "./index.esm.js"
+}
+```
+
+Previously the standard `import` condition resolved to an ESM shim that re-exported the **CommonJS**
+build. Anything that `require()`d its way into that build then had to `require('arktype')`, which is
+ESM-only — so a consumer on a loader without `require(ESM)` support (notably vitest's jsdom VM
+CommonJS executor) died with `SyntaxError: Unexpected token 'export'`. `import` now resolves to
+genuine, Node-loadable ESM, which fixes that class of failure at the source.
+
+The Angular packages (`dbx-core`, `dbx-web`, `dbx-form`, `dbx-firebase`, `dbx-analytics`) already
+shipped ESM via `fesm2022/*.mjs` and are unchanged apart from their `eslint` subpath entries.
+
+### Breaking Changes
+- **No CommonJS build is published.** `require('@dereekb/<pkg>')` still works, because a `default`
+  condition is kept and Node has supported `require(ESM)` since **20.19 / 22.12** — but a loader
+  older than that, or one that does not implement `require(ESM)`, can no longer load these packages.
+  In practice this was already true: these packages depend on the ESM-only `arktype`, so loading
+  them already required a `require(ESM)`-capable loader.
+- **The `module` condition is gone.** A bundler config that resolved `@dereekb/*` through an explicit
+  `module`-first condition list now falls through to `import`, which is the real ESM build. No action
+  is needed; drop any `module` entry added specifically to reach the ESM bundle.
+
+### Migration Steps
+- **Node consumers:** ensure Node **>= 20.19** (>= 22.12 on the 22 line). Nothing else to do.
+- **Bundler / Angular consumers:** nothing to do.
+- **Vitest consumers:** remove any workaround that restored the `module` condition to
+  `resolve.conditions` to dodge the CJS/ESM error. It is no longer needed, and it never covered
+  externalized ESM packages anyway — those resolve their own imports through Node's resolver, which
+  never honors `module`.
+
 ## Migration of v13.x.x to v14.x.x
 ### Overview
 Version 14 is a **breaking visual** release for `@dereekb/dbx-web` and `@dereekb/dbx-form`. It

@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/firebase/eslint",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/util": "13.38.0",
     "@marcbachmann/cel-js": "^7.6.1",

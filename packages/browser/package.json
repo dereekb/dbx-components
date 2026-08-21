@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/browser",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/util": "13.38.0",
     "@dereekb/rxjs": "13.38.0",
@@ -8,10 +9,9 @@
   },
   "exports": {
     "./oidc": {
-      "module": "./oidc/index.esm.js",
       "types": "./oidc/index.d.ts",
-      "import": "./oidc/index.cjs.mjs",
-      "default": "./oidc/index.cjs.js"
+      "import": "./oidc/index.esm.js",
+      "default": "./oidc/index.esm.js"
     }
   },
   "dependencies": {}

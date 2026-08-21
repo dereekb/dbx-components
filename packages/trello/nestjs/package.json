@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/trello/nestjs",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/nestjs": "13.38.0",
     "@dereekb/rxjs": "13.38.0",

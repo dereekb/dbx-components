@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/rxjs",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "peerDependencies": {
     "rxjs": "^7.8.2",

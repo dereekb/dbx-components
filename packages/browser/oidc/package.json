@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/browser/oidc",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/util": "13.38.0",
     "@dereekb/util/oidc": "13.38.0",

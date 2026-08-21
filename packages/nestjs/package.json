@@ -1,57 +1,47 @@
 {
   "name": "@dereekb/nestjs",
   "version": "13.38.0",
-  "types": "./src/index.d.ts",
-  "module": "./index.esm.js",
-  "main": "./index.cjs.js",
+  "type": "module",
   "exports": {
     "./stripe": {
-      "module": "./stripe/index.esm.js",
       "types": "./stripe/index.d.ts",
-      "import": "./stripe/index.cjs.mjs",
-      "default": "./stripe/index.cjs.js"
+      "import": "./stripe/index.esm.js",
+      "default": "./stripe/index.esm.js"
     },
     "./mailgun": {
-      "module": "./mailgun/index.esm.js",
       "types": "./mailgun/index.d.ts",
-      "import": "./mailgun/index.cjs.mjs",
-      "default": "./mailgun/index.cjs.js"
+      "import": "./mailgun/index.esm.js",
+      "default": "./mailgun/index.esm.js"
     },
     "./vapiai": {
-      "module": "./vapiai/index.esm.js",
       "types": "./vapiai/index.d.ts",
-      "import": "./vapiai/index.cjs.mjs",
-      "default": "./vapiai/index.cjs.js"
+      "import": "./vapiai/index.esm.js",
+      "default": "./vapiai/index.esm.js"
     },
     "./openai": {
-      "module": "./openai/index.esm.js",
       "types": "./openai/index.d.ts",
-      "import": "./openai/index.cjs.mjs",
-      "default": "./openai/index.cjs.js"
+      "import": "./openai/index.esm.js",
+      "default": "./openai/index.esm.js"
     },
     "./openrouter": {
-      "module": "./openrouter/index.esm.js",
       "types": "./openrouter/index.d.ts",
-      "import": "./openrouter/index.cjs.mjs",
-      "default": "./openrouter/index.cjs.js"
+      "import": "./openrouter/index.esm.js",
+      "default": "./openrouter/index.esm.js"
     },
     "./twilio": {
-      "module": "./twilio/index.esm.js",
       "types": "./twilio/index.d.ts",
-      "import": "./twilio/index.cjs.mjs",
-      "default": "./twilio/index.cjs.js"
+      "import": "./twilio/index.esm.js",
+      "default": "./twilio/index.esm.js"
     },
     "./typeform": {
-      "module": "./typeform/index.esm.js",
       "types": "./typeform/index.d.ts",
-      "import": "./typeform/index.cjs.mjs",
-      "default": "./typeform/index.cjs.js"
+      "import": "./typeform/index.esm.js",
+      "default": "./typeform/index.esm.js"
     },
     "./eslint": {
-      "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
-      "import": "./eslint/index.cjs.mjs",
-      "default": "./eslint/index.cjs.js"
+      "import": "./eslint/index.esm.js",
+      "default": "./eslint/index.esm.js"
     }
   },
   "peerDependencies": {

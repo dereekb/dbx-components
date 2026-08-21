@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/nestjs/openrouter",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/util": "13.38.0",
     "@dereekb/nestjs": "13.38.0",

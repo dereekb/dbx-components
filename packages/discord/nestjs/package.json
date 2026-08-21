@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/discord/nestjs",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/discord": "13.38.0",
     "@dereekb/nestjs": "13.38.0",

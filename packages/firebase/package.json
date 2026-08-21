@@ -1,19 +1,18 @@
 {
   "name": "@dereekb/firebase",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "exports": {
     "./test": {
-      "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
-      "import": "./test/index.cjs.mjs",
-      "default": "./test/index.cjs.js"
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
     },
     "./eslint": {
-      "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
-      "import": "./eslint/index.cjs.mjs",
-      "default": "./eslint/index.cjs.js"
+      "import": "./eslint/index.esm.js",
+      "default": "./eslint/index.esm.js"
     }
   },
   "peerDependencies": {

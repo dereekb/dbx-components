@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/nestjs/openai",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/date": "13.38.0",
     "@dereekb/model": "13.38.0",

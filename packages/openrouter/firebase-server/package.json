@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/openrouter/firebase-server",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/analytics": "13.38.0",
     "@dereekb/date": "13.38.0",

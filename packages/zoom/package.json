@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/zoom",
   "version": "13.38.0",
+  "type": "module",
   "exports": {
     "./nestjs": {
-      "module": "./nestjs/index.esm.js",
       "types": "./nestjs/index.d.ts",
-      "import": "./nestjs/index.cjs.mjs",
-      "default": "./nestjs/index.cjs.js"
+      "import": "./nestjs/index.esm.js",
+      "default": "./nestjs/index.esm.js"
     }
   },
   "peerDependencies": {

@@ -10,8 +10,17 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/date"],
       "options": {
-        "command": "npx nx run date:build-base",
-        "color": true
+        "color": true,
+        "commands": [
+          {
+            "command": "npx nx run date:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/date"
+          }
+        ],
+        "parallel": false
       }
     },
     "build-base": {

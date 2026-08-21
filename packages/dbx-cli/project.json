@@ -42,7 +42,17 @@
             "command": "npx nx run dbx-cli-eslint:build-base"
           },
           {
+            "command": "npx nx run dbx-cli-validate:build-base"
+          },
+          {
+            "command": "npx nx run dbx-cli-model-test:build-base"
+          },
+          {
             "command": "npx nx run dbx-cli-test:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/dbx-cli"
           }
         ],
         "parallel": false

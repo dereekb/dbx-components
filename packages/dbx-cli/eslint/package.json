@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli/eslint",
   "version": "13.38.0",
+  "type": "module",
   "peerDependencies": {
     "@dereekb/dbx-cli": "13.38.0",
     "@dereekb/util": "13.38.0",

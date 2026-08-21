@@ -1,65 +1,55 @@
 {
   "name": "@dereekb/firebase-server",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "exports": {
     "./test": {
-      "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
-      "import": "./test/index.cjs.mjs",
-      "default": "./test/index.cjs.js"
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
     },
     "./calcom": {
-      "module": "./calcom/index.esm.js",
       "types": "./calcom/index.d.ts",
-      "import": "./calcom/index.cjs.mjs",
-      "default": "./calcom/index.cjs.js"
+      "import": "./calcom/index.esm.js",
+      "default": "./calcom/index.esm.js"
     },
     "./discord": {
-      "module": "./discord/index.esm.js",
       "types": "./discord/index.d.ts",
-      "import": "./discord/index.cjs.mjs",
-      "default": "./discord/index.cjs.js"
+      "import": "./discord/index.esm.js",
+      "default": "./discord/index.esm.js"
     },
     "./mailgun": {
-      "module": "./mailgun/index.esm.js",
       "types": "./mailgun/index.d.ts",
-      "import": "./mailgun/index.cjs.mjs",
-      "default": "./mailgun/index.cjs.js"
+      "import": "./mailgun/index.esm.js",
+      "default": "./mailgun/index.esm.js"
     },
     "./twilio": {
-      "module": "./twilio/index.esm.js",
       "types": "./twilio/index.d.ts",
-      "import": "./twilio/index.cjs.mjs",
-      "default": "./twilio/index.cjs.js"
+      "import": "./twilio/index.esm.js",
+      "default": "./twilio/index.esm.js"
     },
     "./zoho": {
-      "module": "./zoho/index.esm.js",
       "types": "./zoho/index.d.ts",
-      "import": "./zoho/index.cjs.mjs",
-      "default": "./zoho/index.cjs.js"
+      "import": "./zoho/index.esm.js",
+      "default": "./zoho/index.esm.js"
     },
     "./model": {
-      "module": "./model/index.esm.js",
       "types": "./model/index.d.ts",
-      "import": "./model/index.cjs.mjs",
-      "default": "./model/index.cjs.js"
+      "import": "./model/index.esm.js",
+      "default": "./model/index.esm.js"
     },
     "./oidc": {
-      "module": "./oidc/index.esm.js",
       "types": "./oidc/index.d.ts",
-      "import": "./oidc/index.cjs.mjs",
-      "default": "./oidc/index.cjs.js"
+      "import": "./oidc/index.esm.js",
+      "default": "./oidc/index.esm.js"
     },
     "./mcp": {
-      "module": "./mcp/index.esm.js",
       "types": "./mcp/index.d.ts",
-      "import": "./mcp/index.cjs.mjs",
-      "default": "./mcp/index.cjs.js"
+      "import": "./mcp/index.esm.js",
+      "default": "./mcp/index.esm.js"
     }
   },
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
   "peerDependencies": {
     "@cantoo/pdf-lib": "^2.6.5",
     "@dereekb/analytics": "13.38.0",

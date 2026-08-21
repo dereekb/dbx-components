@@ -1,31 +1,28 @@
 {
   "name": "@dereekb/util",
   "version": "13.38.0",
+  "type": "module",
   "sideEffects": false,
   "exports": {
     "./test": {
-      "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
-      "import": "./test/index.cjs.mjs",
-      "default": "./test/index.cjs.js"
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
     },
     "./fetch": {
-      "module": "./fetch/index.esm.js",
       "types": "./fetch/index.d.ts",
-      "import": "./fetch/index.cjs.mjs",
-      "default": "./fetch/index.cjs.js"
+      "import": "./fetch/index.esm.js",
+      "default": "./fetch/index.esm.js"
     },
     "./oidc": {
-      "module": "./oidc/index.esm.js",
       "types": "./oidc/index.d.ts",
-      "import": "./oidc/index.cjs.mjs",
-      "default": "./oidc/index.cjs.js"
+      "import": "./oidc/index.esm.js",
+      "default": "./oidc/index.esm.js"
     },
     "./eslint": {
-      "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
-      "import": "./eslint/index.cjs.mjs",
-      "default": "./eslint/index.cjs.js"
+      "import": "./eslint/index.esm.js",
+      "default": "./eslint/index.esm.js"
     }
   },
   "peerDependencies": {
