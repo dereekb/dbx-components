@@ -80,8 +80,9 @@ Browse the generated per-model query catalog. A **config** command — it never 
 because browsing a catalog is a documentation read.
 
 ```bash
-demo-cli firestore-queries                                # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE
+demo-cli firestore-queries                                 # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE · REACHABLE
 demo-cli firestore-queries --model guestbookEntry          # also --category, --tag
+demo-cli firestore-queries --invocable-only                # hide what this CLI cannot run
 demo-cli firestore-queries --json
 demo-cli firestore-queries published-guestbook-entries     # one entry in detail
 ```
@@ -90,6 +91,26 @@ demo-cli firestore-queries published-guestbook-entries     # one entry in detail
 cannot call it. The `manual` / `skip` / `excluded` flags govern **index emission** only — those
 entries are still invocable. A `dispatcher` entry is invocable but has an empty constraint sequence
 by design; follow its `relatedSlugs`.
+
+`REACHABLE` is the separate question of whether **`firestore.rules`** lets a client run the query —
+the factory can bind perfectly and still be a guaranteed `permission-denied`:
+
+| `REACHABLE` | Meaning |
+| --- | --- |
+| `yes` | The rules grant the read at the entry's own scope. |
+| `parent` | `scope: COLLECTION_GROUP` with no `match /{path=**}/<collection>/{id}` block, but the path-scoped read IS granted — run it with `--parent`. |
+| `no` | No client can run it at any scope. `firestore-query` refuses it locally. |
+| `?` | The query manifest was generated without `--rules`, so nothing is known. |
+
+The verdict is stamped at generation time by passing `--rules=<firestore.rules>` to
+`dbx-cli-generate-firestore-query-manifest`. **Absence of the flag means UNKNOWN, not reachable** —
+a CLI generated without it behaves exactly as it did before the field existed.
+
+A collection group query is authorized by the `/{path=**}/…` block **alone**; a path-scoped `match`
+does not cover it, however permissive. That is what makes `parent` a real distinction rather than a
+warning — the same collection is readable under its parent and dead as a group. The claim is
+cross-checked against the real rules engine by
+`apps/demo-api/src/test/tests/firestore.rules.spec.ts`.
 
 #### `firestore-query <query>`
 
@@ -126,8 +147,19 @@ the count with no rows.
 | entry | `--parent` |
 | --- | --- |
 | `COLLECTION_GROUP` + nested | optional — narrows the group to one parent |
+| `COLLECTION_GROUP` + nested + `REACHABLE = parent` | **required** — the group shape has no rule behind it, so this is the only way to run it |
 | `COLLECTION` + nested | **required** — the COLLECTION-scope composite index may not exist at group scope, so silently widening would turn a working query into a `FAILED_PRECONDITION` |
 | not nested | rejected |
+
+`--parent` is a **document** key at any depth — collection/id pairs all the way down to the parent
+document (`gb/abc`, `jl/abc/jlj/def`). It is validated before Firestore is touched: an odd-segment
+(collection) path is rejected, and when the rules declare the collection's ancestor chain a key
+naming a *different* chain is rejected too, rather than returning an empty result set that reads
+exactly like "no matching documents". `firestore-queries <query>` prints the required shape.
+
+Narrowing a `COLLECTION_GROUP` entry to one parent changes which index serves it: the factory emits
+a `COLLECTION_GROUP`-scope composite index, and Firestore does not use that for a path-scoped query.
+A multi-field factory may therefore need a `COLLECTION`-scope index as well.
 
 #### `firestore-get <modelOrKey> [key]`
 

@@ -623,6 +623,89 @@ export interface CliFirestoreQueryParam {
 export type CliFirestoreQueryFactory = (...args: readonly any[]) => readonly FirestoreQueryConstraint[];
 
 /**
+ * How the rules resolve one read operation on a collection, mirroring
+ * `FirestoreRulesAccess` from `@dereekb/dbx-cli/firestore-rules`.
+ *
+ * Restated here rather than imported: `firestore-rules` is an in-repo
+ * source-only package that cannot resolve to a built `.d.ts` during this
+ * package's declaration build, and the manifest is a SERIALIZED artifact — its
+ * types have to stand alone.
+ *
+ * - `allowed` — some `allow` covering the op has a condition that is not constant-`false`.
+ * - `denied` — the op is covered only by `allow`s whose condition is literally `false`.
+ * - `unmatched` — no `allow` covers the op at all, so Firestore's default-deny applies.
+ */
+export type CliFirestoreQueryRulesAccess = 'allowed' | 'denied' | 'unmatched';
+
+/**
+ * Whether a client can run a catalog entry AS DECLARED, per `firestore.rules`.
+ *
+ * - `reachable` — the rules grant the read at the entry's own scope.
+ * - `parent-only` — the COLLECTION_GROUP shape is dead (no `/{path=**}/<collection>/{id}` block),
+ *   but the path-scoped read IS granted, so `--parent <parentKey>` runs it.
+ * - `unreachable` — no client can run it at any scope.
+ */
+export type CliFirestoreQueryReachabilityVerdict = 'reachable' | 'parent-only' | 'unreachable';
+
+/**
+ * Why a catalog entry is not `reachable`.
+ *
+ * `denied` and `unmatched` are kept apart the way the rules scanner keeps them apart: a
+ * written-down `if false` is a deliberate no, an absence is an oversight, and a reviewer needs to
+ * know which one they are looking at.
+ */
+export type CliFirestoreQueryUnreachableReason =
+  /**
+   * `scope: 'COLLECTION_GROUP'` with no `/{path=**}/<collection>/{id}` block in the rules. A
+   * collection-group query is evaluated against that block alone — a path-scoped block does not
+   * authorize it, no matter how permissive.
+   */
+  | 'no-collection-group-rule'
+  /**
+   * Every `list` grant on the collection is a constant-`false`.
+   */
+  | 'list-denied'
+  /**
+   * No `list` grant covers the collection at all.
+   */
+  | 'list-unmatched';
+
+/**
+ * The rules-derived reachability of one catalog entry, resolved at GENERATION time.
+ *
+ * Absent from an entry when the generator was not given a `--rules` file — absence means UNKNOWN,
+ * never "reachable", so a CLI generated without the rules file keeps its previous behavior instead
+ * of refusing queries on a guess.
+ *
+ * This is deliberately scope-specific, which is why the model-level
+ * {@link CliModelManifestEntry.serverOnly} flag cannot express it: a model can be legitimately
+ * client-readable under its parent path while its collection-group shape is dead.
+ */
+export interface CliFirestoreQueryReachability {
+  readonly verdict: CliFirestoreQueryReachabilityVerdict;
+  /**
+   * The rules' `list` posture for {@link CliFirestoreQueryManifestEntry.collection}, merged across
+   * every match block that reaches it.
+   */
+  readonly list: CliFirestoreQueryRulesAccess;
+  /**
+   * True when the rules declare a `/{path=**}/<collection>/{id}` block — the only shape a
+   * collection-group query is authorized by.
+   */
+  readonly collectionGroup: boolean;
+  /**
+   * Present whenever {@link verdict} is not `reachable`.
+   */
+  readonly reason?: CliFirestoreQueryUnreachableReason;
+  /**
+   * The parent-document path templates a `--parent` key must match, read off the non-recursive
+   * rules match paths that reach this collection (e.g. `jl/{jobLocation}/jlj/{job}`). Lets the CLI
+   * name the required `--parent` shape instead of saying only "pass --parent".
+   */
+  readonly parentPaths?: readonly string[];
+}
+
+/**
  * One entry in the generated per-model Firestore query catalog.
  *
  * Produced by the `firestore-query-manifest` generator from the same
@@ -679,6 +762,15 @@ export interface CliFirestoreQueryManifestEntry {
    * constraint sequence is empty by design. See {@link relatedSlugs}.
    */
   readonly dispatcher?: boolean;
+  /**
+   * Whether `firestore.rules` lets a client run this entry at all — unlike the
+   * flags above, this one DOES affect callability.
+   *
+   * Absent when the generator was run without a `--rules` file (unknown, not
+   * reachable). Present, the CLI refuses an `unreachable` entry locally rather
+   * than paying a round trip for the `permission-denied` the rules guarantee.
+   */
+  readonly reachability?: CliFirestoreQueryReachability;
   /**
    * Absent when the identifier is not exported from {@link module}'s barrel
    * chain — the entry is listed but cannot be executed.

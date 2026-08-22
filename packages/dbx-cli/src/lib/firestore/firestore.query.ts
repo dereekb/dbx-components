@@ -4,6 +4,7 @@ import { CliError } from '../util/output';
 import { cliFirestoreCollectionForQuery } from './firestore.collection';
 import { type CliFirestoreModels } from './firestore.models';
 import { resolveCliFirestoreQueryArgs } from './firestore.query-params';
+import { assertCliFirestoreQueryIsReachable } from './query-reachability';
 
 /**
  * One row returned by {@link runCliFirestoreQuery}.
@@ -95,10 +96,15 @@ export function cliFirestoreQueryConstraints(input: { readonly entry: CliFiresto
  *
  * @param input - The models view, the entry, and the run options.
  * @returns The query result envelope.
- * @throws {CliError} On an argument, scoping, or invocability failure. Firestore's own errors (rules, missing index) surface via `cliFirestoreErrorMapper`.
+ * @throws {CliError} On an argument, scoping, reachability, or invocability failure. Firestore's own errors (rules, missing index) surface via `cliFirestoreErrorMapper`.
  */
 export async function runCliFirestoreQuery(input: RunCliFirestoreQueryInput): Promise<CliFirestoreQueryResult> {
   const { models, entry, params, rawParams, parent, limit, count = false } = input;
+
+  // refused BEFORE the constraints are built and before Firestore is touched: the rules verdict is
+  // a property of the entry, so paying a round trip to be told `permission-denied` teaches nothing.
+  // `parent` matters here — a group-unreachable entry is fine once scoped to one parent document.
+  assertCliFirestoreQueryIsReachable({ entry, parent });
 
   const constraints = cliFirestoreQueryConstraints({ entry, params, rawParams, limit });
   const collection = cliFirestoreCollectionForQuery({
@@ -109,7 +115,10 @@ export async function runCliFirestoreQuery(input: RunCliFirestoreQueryInput): Pr
     modelType: models.modelTypeForCollection(entry.collection),
     scope: entry.scope,
     isNested: entry.isNested,
-    parentKey: parent
+    parentKey: parent,
+    // lets a wrong --parent be rejected against the ancestor chain the rules declare, instead of
+    // returning an empty result set that reads exactly like "no matching documents"
+    ...(entry.reachability?.parentPaths === undefined ? {} : { parentPaths: entry.reachability.parentPaths })
   });
 
   const executable = collection.queryDocument(...constraints);

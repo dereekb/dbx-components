@@ -7,7 +7,7 @@
 
 import { compareStrings } from '@dereekb/util';
 import { formatGeneratedTs, renderGroupedImportLines, type GeneratedTsImport } from '../../src/lib/scan-helpers/emit-generated-ts.js';
-import type { BoundQueryEntry } from './types.js';
+import type { BoundQueryEntry, CollectedQueryEntry } from './types.js';
 
 /**
  * Input for {@link renderQueryManifest}.
@@ -75,10 +75,17 @@ function renderEntry({ entry, bound }: BoundQueryEntry): string {
     entry.skip ? 'skip: true' : undefined,
     entry.excluded ? 'excluded: true' : undefined,
     entry.dispatcher ? 'dispatcher: true' : undefined,
+    entry.reachability ? `reachability: ${renderReachability(entry.reachability)}` : undefined,
     bound ? `factory: ${entry.name}` : undefined
   ];
 
   return `  { ${fields.filter(Boolean).join(', ')} }`;
+}
+
+function renderReachability(reachability: NonNullable<CollectedQueryEntry['reachability']>): string {
+  const parts: (string | undefined)[] = [`verdict: ${JSON.stringify(reachability.verdict)}`, `list: ${JSON.stringify(reachability.list)}`, `collectionGroup: ${reachability.collectionGroup ? 'true' : 'false'}`, reachability.reason ? `reason: ${JSON.stringify(reachability.reason)}` : undefined, reachability.parentPaths && reachability.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(reachability.parentPaths)}` : undefined];
+
+  return `{ ${parts.filter(Boolean).join(', ')} }`;
 }
 
 function renderParams(params: readonly { readonly name: string; readonly type: string; readonly description?: string; readonly optional: boolean }[]): string {

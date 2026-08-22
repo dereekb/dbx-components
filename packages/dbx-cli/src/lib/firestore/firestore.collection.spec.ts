@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type FirestoreCollectionLike } from '@dereekb/firebase';
 import { CliError } from '../util/output';
-import { cliFirestoreCollectionForQuery } from './firestore.collection';
+import { assertCliFirestoreQueryParentKey, cliFirestoreCollectionForQuery } from './firestore.collection';
 import { type CliFirestoreModels } from './firestore.models';
 
 const REGISTERED = { __registered: true } as unknown as FirestoreCollectionLike<unknown>;
@@ -73,5 +73,66 @@ describe('cliFirestoreCollectionForQuery()', () => {
     }
     expect(error).toBeInstanceOf(CliError);
     expect((error as CliError).suggestion).toContain('collectionForModel');
+  });
+
+  it('validates --parent before reaching the scoping derivation', () => {
+    // an odd-segment key would otherwise reach `docAtPath` and surface as a raw Firestore assertion
+    let error: unknown;
+    try {
+      cliFirestoreCollectionForQuery({ models: buildModels(), modelType: 'gbe', scope: 'COLLECTION_GROUP', isNested: true, parentKey: 'gb' });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(CliError);
+    expect((error as CliError).message).toContain('not a document key');
+  });
+});
+
+describe('assertCliFirestoreQueryParentKey()', () => {
+  it('accepts a one-level document key', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'gbe', parentKey: 'gb/abc' })).not.toThrow();
+  });
+
+  it('accepts a deep document key', () => {
+    // the `jlja` shape — the parent of a doubly-nested collection is itself two pairs deep
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'jlja', parentKey: 'jl/abc/jlj/def' })).not.toThrow();
+  });
+
+  it('rejects a collection path (odd segments)', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'jlja', parentKey: 'jl/abc/jlj' })).toThrow(CliError);
+  });
+
+  it('rejects an empty key', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'gbe', parentKey: '/' })).toThrow(CliError);
+  });
+
+  it('tolerates surrounding slashes', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'gbe', parentKey: '/gb/abc/' })).not.toThrow();
+  });
+
+  it('accepts a key whose collection chain matches a declared parent path', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'jlja', parentKey: 'jl/abc/jlj/def', parentPaths: ['jl/{jobLocation}/jlj/{job}'] })).not.toThrow();
+  });
+
+  it('rejects a well-formed key naming the WRONG ancestor chain', () => {
+    // this is the failure mode that otherwise returns an empty result set indistinguishable from
+    // "no matching documents"
+    let error: unknown;
+    try {
+      assertCliFirestoreQueryParentKey({ modelType: 'jlja', parentKey: 'gb/abc', parentPaths: ['jl/{jobLocation}/jlj/{job}'] });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(CliError);
+    expect((error as CliError).suggestion).toContain('jl/{jobLocation}/jlj/{job}');
+  });
+
+  it('accepts any of several declared parent paths', () => {
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'x', parentKey: 'b/1', parentPaths: ['a/{aId}', 'b/{bId}'] })).not.toThrow();
+  });
+
+  it('skips the chain check when no parent paths are known', () => {
+    // an unscanned manifest must not start rejecting keys it previously accepted
+    expect(() => assertCliFirestoreQueryParentKey({ modelType: 'jlja', parentKey: 'gb/abc' })).not.toThrow();
   });
 });

@@ -6,6 +6,7 @@ import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache'
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliReadSourceReason } from '../firestore/firestore.read';
 import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
+import { isCliFirestoreQueryInvocable } from '../firestore/query-reachability';
 import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { type DoctorCheck, type DoctorCheckResult } from './doctor.command.factory';
 
@@ -66,11 +67,31 @@ export interface FirestoreSessionDoctorReadRouting {
   readonly readPreference: 'firestore' | 'api';
   readonly reason: CliReadSourceReason;
   /**
-   * Query-catalog entries whose factory bound to a real runtime export, and are therefore runnable
-   * by `firestore-query`. A non-invocable entry is listed by `firestore-queries` with `INVOCABLE = no`.
+   * Query-catalog entries `firestore-query` can actually run: the factory bound to a real runtime
+   * export AND `firestore.rules` does not refuse the query at every scope.
+   *
+   * Rules-unreachable entries are deliberately EXCLUDED. Counting them was the bug this number had:
+   * an entry with a bound factory over a collection with no `/{path=**}/` rule reported as invocable
+   * and then failed with `permission-denied` on every call, so `invocableQueryEntries: 128/128` was
+   * a claim the CLI could not honour for about a third of the catalog.
    */
   readonly invocableQueryEntries: number;
   readonly totalQueryEntries: number;
+  /**
+   * Entries `firestore.rules` refuses at every scope — the query-level analogue of
+   * {@link serverOnlyModels}, surfaced the same way because it has the same consequence.
+   */
+  readonly rulesUnreachableQueryEntries: number;
+  /**
+   * Entries runnable ONLY when scoped with `--parent`: their collection-group shape has no
+   * `/{path=**}/` rule, but the path-scoped read is granted.
+   */
+  readonly parentOnlyQueryEntries: number;
+  /**
+   * Whether the query manifest carries rules verdicts at all — false when its generator ran without
+   * `--rules`, in which case the two counts above are structurally `0` rather than genuinely clean.
+   */
+  readonly queryReachabilityScanned: boolean;
   /**
    * Models the manifest marks `@dbxModelServerOnly` — refused on every `--via` value.
    */
@@ -110,8 +131,11 @@ export function buildFirestoreSessionDoctorReadRouting(input: { readonly firesto
     getFirestoreModels,
     readPreference: reason === 'session-available' ? 'firestore' : 'api',
     reason,
-    invocableQueryEntries: entries.filter((e) => e.factory != null).length,
+    invocableQueryEntries: entries.filter((e) => isCliFirestoreQueryInvocable(e)).length,
     totalQueryEntries: entries.length,
+    rulesUnreachableQueryEntries: entries.filter((e) => e.reachability?.verdict === 'unreachable').length,
+    parentOnlyQueryEntries: entries.filter((e) => e.reachability?.verdict === 'parent-only').length,
+    queryReachabilityScanned: entries.some((e) => e.reachability != null),
     serverOnlyModels: (input.modelManifest ?? []).filter((m) => m.serverOnly === true).length
   };
 }

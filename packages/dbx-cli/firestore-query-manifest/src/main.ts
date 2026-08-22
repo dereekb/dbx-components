@@ -11,7 +11,11 @@
  *   3. Confirm each identifier is exported from the component's barrel chain. A miss warns
  *      `[no-factory]` and emits the entry with `factory: undefined` (it lists as non-invocable),
  *      mirroring the api-manifest generator's `[no-validator]`. `--strict` makes a miss fatal.
- *   4. Emit `<NS>_FIRESTORE_QUERY_MANIFEST` with grouped per-package imports of the real factories.
+ *   4. When `--rules` is supplied, stamp each entry with the verdict `firestore.rules` gives it, so
+ *      an entry no client can ever run is marked HERE instead of discovered as an
+ *      `AUTH_FORBIDDEN` at call time. Without the flag the field is omitted — absent means
+ *      UNKNOWN, and a manifest that guessed "reachable" would be worse than no field at all.
+ *   5. Emit `<NS>_FIRESTORE_QUERY_MANIFEST` with grouped per-package imports of the real factories.
  *      The write is skipped when the bytes are unchanged, preserving mtime for incremental builds.
  *
  * This is a SEPARATE generator rather than an `--emit-queries` flag on the api-manifest bin.
@@ -26,6 +30,7 @@
  *   --output=<path>     (required) path to the manifest TS file to write.
  *   --project=<name>    Project name for the banner; also derives the constant name
  *                        (`demo-cli` → `DEMO_CLI_FIRESTORE_QUERY_MANIFEST`).
+ *   --rules=<path>      The app's `firestore.rules`, for the reachability verdict.
  *   --strict            Exit 1 when any factory fails to bind.
  *   --check             Do not write; exit 1 when the file would change.
  *
@@ -38,6 +43,7 @@ import { isAbsolute, relative, resolve } from 'node:path';
 
 import packageJson from '../package.json' with { type: 'json' };
 import { writeGeneratedTsFile } from '../../src/lib/scan-helpers/emit-generated-ts.js';
+import { annotateQueryEntryReachability } from './annotate-reachability.js';
 import { bindQueryFactories } from './bind-factories.js';
 import { renderQueryManifest } from './emit.js';
 import { findQueryEntries } from './find-query-entries.js';
@@ -47,6 +53,7 @@ interface Flags {
   readonly components: readonly string[];
   readonly output: string | undefined;
   readonly project: string | undefined;
+  readonly rules: string | undefined;
   readonly strict: boolean;
   readonly check: boolean;
 }
@@ -91,7 +98,19 @@ async function main(): Promise<void> {
     console.warn(warning);
   }
 
-  const formatted = await renderQueryManifest({ outputFile, entries: collected, projectName, namespace });
+  const reachability = applyReachability({ collected, rules: flags.rules });
+
+  if (reachability.kind === 'failure') {
+    console.error(reachability.message);
+    process.exit(1);
+    return;
+  }
+
+  for (const warning of reachability.warnings) {
+    console.warn(warning);
+  }
+
+  const formatted = await renderQueryManifest({ outputFile, entries: reachability.entries, projectName, namespace });
   const relOutput = relative(WORKSPACE_ROOT, outputFile);
 
   if (flags.check) {
@@ -110,12 +129,60 @@ async function main(): Promise<void> {
   }
 
   const boundCount = collected.filter((x) => x.bound).length;
-  console.log(`Summary: ${flags.components.length} component(s) · ${collected.length} entries · ${boundCount} invocable · ${collected.length - boundCount} unbound · ${droppedSpecOnly} spec-only dropped`);
+  console.log(`Summary: ${flags.components.length} component(s) · ${collected.length} entries · ${boundCount} bound · ${collected.length - boundCount} unbound · ${droppedSpecOnly} spec-only dropped · rules: ${reachability.summary}`);
 
   if (flags.strict && boundCount < collected.length) {
     console.error(`[strict] ${collected.length - boundCount} factor(y|ies) failed to bind — failing build.`);
     process.exit(1);
   }
+}
+
+type ApplyReachabilityResult = { readonly kind: 'success'; readonly entries: readonly BoundQueryEntry[]; readonly warnings: readonly string[]; readonly summary: string } | { readonly kind: 'failure'; readonly message: string };
+
+/**
+ * Runs the reachability stage over the bound entries, or passes them through untouched when no
+ * `--rules` was supplied.
+ *
+ * A missing rules FILE is fatal rather than a silent skip: the flag was passed on purpose, and
+ * quietly emitting a manifest with no verdicts is how a stale path turns a whole catalog back into
+ * "unknown" without anyone noticing.
+ *
+ * @param input - The bound entries and the raw `--rules` value.
+ * @param input.collected - The bound entries.
+ * @param input.rules - The raw `--rules` value, when supplied.
+ * @returns The annotated entries with a summary + per-entry warnings, or a failure message.
+ */
+function applyReachability(input: { readonly collected: readonly BoundQueryEntry[]; readonly rules: string | undefined }): ApplyReachabilityResult {
+  const { collected, rules } = input;
+  let result: ApplyReachabilityResult;
+
+  if (rules) {
+    const rulesFile = resolveWorkspacePath(rules);
+
+    if (existsSync(rulesFile)) {
+      const annotated = annotateQueryEntryReachability({ entries: collected.map((x) => x.entry), rulesSource: readFileSync(rulesFile, 'utf8') });
+      // index-aligned: `annotateQueryEntryReachability` maps 1:1 over the entries it is given
+      const entries = annotated.entries.map((entry, index) => ({ ...collected[index], entry }));
+      const warnings = annotated.unreachableSlugs.map((slug) => `[rules-unreachable] ${slug} — no client can run this query; see \`firestore-queries ${slug}\`.`);
+
+      if (annotated.parentOnlySlugs.length > 0) {
+        warnings.push(`[rules-parent-only] ${annotated.parentOnlySlugs.length} quer${annotated.parentOnlySlugs.length === 1 ? 'y' : 'ies'} run only with --parent: ${annotated.parentOnlySlugs.join(', ')}`);
+      }
+
+      result = {
+        kind: 'success',
+        entries,
+        warnings,
+        summary: `${annotated.reachable} reachable · ${annotated.parentOnlySlugs.length} parent-only · ${annotated.unreachableSlugs.length} unreachable`
+      };
+    } else {
+      result = { kind: 'failure', message: `[rules] ${relative(WORKSPACE_ROOT, rulesFile)} does not exist — fix --rules or drop it.` };
+    }
+  } else {
+    result = { kind: 'success', entries: collected, warnings: [], summary: 'not scanned (pass --rules=<firestore.rules> to flag unreachable queries)' };
+  }
+
+  return result;
 }
 
 function resolveWorkspacePath(value: string): string {
@@ -132,6 +199,7 @@ function parseFlags(argv: readonly string[]): Flags {
   const components: string[] = [];
   let output: string | undefined;
   let project: string | undefined;
+  let rules: string | undefined;
   let strict = false;
   let check = false;
 
@@ -147,10 +215,13 @@ function parseFlags(argv: readonly string[]): Flags {
       output = arg.slice('--output='.length);
     } else if (arg.startsWith('--project=')) {
       project = arg.slice('--project='.length);
+    } else if (arg.startsWith('--rules=')) {
+      const value = arg.slice('--rules='.length).trim();
+      if (value) rules = value;
     }
   }
 
-  return { components, output, project, strict, check };
+  return { components, output, project, rules, strict, check };
 }
 
 function printUsageAndExit(): void {
@@ -161,7 +232,7 @@ Usage:
     --project=<name> \
     --component=<component-dir> [--component=<component-dir> ...] \
     --output=<path-to-query.manifest.generated.ts> \
-    [--strict] [--check]
+    [--rules=<path-to-firestore.rules>] [--strict] [--check]
 
 Required flags:
   --component=<dir>  A "-firebase" component root to scan. Repeatable.
@@ -169,6 +240,9 @@ Required flags:
 
 Optional:
   --project=<name>   Project name for the regenerate banner; also derives the constant name.
+  --rules=<path>     The app's firestore.rules. Stamps each entry with whether a client can run it
+                     at all, so a catalogued-but-unreachable query is flagged at generation time
+                     instead of surfacing as AUTH_FORBIDDEN at call time. Omitted => unknown.
   --strict           Fail when any tagged factory is not exported from its component barrel.
   --check            Do not write; fail when the committed file is out of date.`);
   process.exit(1);

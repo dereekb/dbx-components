@@ -6,6 +6,7 @@ import { outputResult } from '../util/output';
 import { requireCliFirestoreModels } from './firestore.models';
 import { runCliFirestoreQuery } from './firestore.query';
 import { resolveCliFirestoreQueryEntry } from './query-info-utils';
+import { assertCliFirestoreQueryIsReachable } from './query-reachability';
 import { createCliFirestoreQueryRegistry } from './query-registry';
 
 /**
@@ -30,7 +31,11 @@ const EPILOGUE = [
   'Dates are coerced from strings: at the top level whenever the parameter type mentions `Date`,',
   'and inside an object parameter only for strict ISO-8601 datetimes carrying a time AND a zone —',
   'a bare YYYY-MM-DD is left alone, because `firestoreDate` persists an ISO string and coercing one',
-  'would silently break an equality match. `--raw-params` disables all coercion.'
+  'would silently break an equality match. `--raw-params` disables all coercion.',
+  '',
+  'A query `firestore-queries` reports as REACHABLE = parent has no collection-group rule backing it,',
+  'so it runs ONLY against one parent document: pass --parent with the full ancestor chain the rules',
+  'declare (any depth). REACHABLE = no means no client can run it on any transport.'
 ].join('\n');
 
 /**
@@ -57,12 +62,19 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
         .positional('query', { type: 'string', describe: 'Slug or exported identifier of the query to run. See `firestore-queries`.' })
         .option('params', { type: 'string', describe: 'JSON array (positional) or object (by name / single params object) of factory arguments.' })
         .option('raw-params', { type: 'boolean', default: false, describe: 'Disable date coercion on --params.' })
-        .option('parent', { type: 'string', describe: 'Parent document key to scope a nested model to (e.g. "gb/abc").' })
+        .option('parent', { type: 'string', describe: 'Parent DOCUMENT key to scope a nested model to — any depth (e.g. "gb/abc", "jl/abc/jlj/def").' })
         .option('limit', { type: 'number', describe: "Replace the query's limit with this value." })
         .option('count', { type: 'boolean', default: false, describe: 'Return only the matching count, with no rows.' })
         .epilogue(EPILOGUE),
     handler: wrapCommandHandler(async (argv: any) => {
       const entry = resolveCliFirestoreQueryEntry(registry, String(argv.query));
+      const parent = typeof argv.parent === 'string' ? argv.parent : undefined;
+
+      // refused before the session is opened, mirroring `firestore-get`'s server-only check: the
+      // rules verdict is a property of the entry, so paying for a handshake to be told
+      // `permission-denied` teaches nothing. `runCliFirestoreQuery` re-checks for programmatic callers.
+      assertCliFirestoreQueryIsReachable({ entry, parent });
+
       const models = await requireCliFirestoreModels(requireCliContext());
 
       const result = await runCliFirestoreQuery({
@@ -70,7 +82,7 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
         entry,
         params: typeof argv.params === 'string' ? argv.params : undefined,
         rawParams: Boolean(argv.rawParams),
-        parent: typeof argv.parent === 'string' ? argv.parent : undefined,
+        parent,
         limit: typeof argv.limit === 'number' ? argv.limit : undefined,
         count: Boolean(argv.count)
       });
