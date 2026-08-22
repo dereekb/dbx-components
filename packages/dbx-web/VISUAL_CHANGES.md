@@ -1,31 +1,72 @@
-# Visual Changes Ledger — dbx-web + dbx-form (v13 → v14)
+# Visual Changes Ledger — dbx-web + dbx-form
 
 This ledger records every intentional **visual** change made during the breaking
 visual-simplification pass over `@dereekb/dbx-web` and `@dereekb/dbx-form`. It is the
-review surface for each batch and the source for the v13 → v14 downstream release notes
+review surface for each batch and the source for the downstream release notes
 (cross-linked from the root [`VERSION_MIGRATION.md`](../../VERSION_MIGRATION.md)).
 
 The pass burns down the M2-era visual tech debt that the rendering-identical tokenization
 pass (commit `3c92a4157`) deliberately deferred, leaning the component defaults onto
 Angular Material **M3** system tokens.
 
+## Which release shipped what
+
+The pass runs in numbered batches, landed a batch (or sub-batch) at a time:
+
+| Batches | Shipped in | Notes |
+|---|---|---|
+| 1 – 5 | **`v13.18.0`** (squash `17b783cec`) | `CHANGELOG.md` carries the matching `### BREAKING CHANGES` block. |
+| 6 – 11 | v13 line, minor-with-`BREAKING CHANGE:` footer | This round. See each batch entry. |
+
+**Versioning choice (do not re-litigate):** breaking visual work lands in the **v13 line as a
+minor** carrying a `BREAKING CHANGE:` footer, so `nx release` renders a `### BREAKING CHANGES`
+block in `CHANGELOG.md`. The prose accumulates in the `v13.x → v14.x` section of
+[`VERSION_MIGRATION.md`](../../VERSION_MIGRATION.md), which is a **cumulative staging document
+for the eventual v14 cut** — it is *not* a claim that the change first shipped in v14. `nx.json`
+sets `git.commit/tag: false`, so cutting and bumping stays a maintainer action.
+
 ## How to read this ledger
 
 Each entry lists the file, the before → after rule, and the resulting visual delta.
-Screenshots were **not** captured for this pass (maintainer decision); to preview a batch
-yourself, serve the demo and mount the showcase:
+To preview a batch yourself, serve the demo and open the review surfaces:
 
 ```bash
-npm exec nx serve demo   # http://localhost:9010
-# Showcase playground: /#/doc/examples/playground
-# Chips:               /#/doc/text
-# Layout / dividers:   /#/doc/layout
-# Interaction:         /#/doc/interaction
-# Forms:               /#/doc/form
+npm exec nx serve demo   # http://localhost:9010 (UIRouter useHash: false — plain paths)
+# Showcase playground: /doc/examples/playground
+# Chips + text:        /doc/text/text
+# Lists:               /doc/layout/list
+# Sections / dividers: /doc/layout/section
+# Prompt / overlays:   /doc/interaction/prompt
+# Form fields:         /doc/form/value
 ```
 
-Dark mode in the demo has no UI toggle — swap the root class `doc-app` → `doc-app-dark`
-(the `DbxStyleService` suffix mechanism, `src/lib/layout/style/style.service.ts`).
+### Capture protocol
+
+Captures for Batches 6+ are taken interactively through the Chrome MCP at a pinned
+**1440×900** viewport and stored **outside the repo** (binaries stay out of git) under:
+
+```
+~/.claude/cloud-sync/notes/dbx-web-visual-pass/screenshots/<round>/<page>-<light|dark>.jpg
+#   <round> = baseline | batch-6 | batch-7a | …
+#   <page>  = playground | text | list | section | prompt | form-value
+```
+
+Batch entries reference those files by name. Batches 1–5 have **no** captures — they shipped
+before the protocol existed, and their deltas are recorded in prose only.
+
+Flip dark mode with:
+
+```js
+document.body.className = 'doc-app-dark'; // back to light: 'doc-app'
+```
+
+The demo *does* render a "Toggle Dark Theme" toolbar button
+(`apps/demo/src/app/container/layout.component.ts`, wired to
+`DbxStyleService.toggleDarkSuffix()`), but as of this round **the toolbar's clickable
+`dbx-anchor` buttons are inert** — neither "Toggle Dark Theme" nor "Style Controls" fires its
+`onClick`, so the class swap above (or `styleService.toggleDarkSuffix()` from a console with the
+injector) is the reliable path. That is an anchor-click bug, not a styling bug; it is filed
+separately and is **not** in this pass's scope.
 
 `KEEP-n` entries record literals intentionally left in place, each with the criteria that
 would later justify removing or tokenizing it.
@@ -45,8 +86,8 @@ sha256 `3a9ff611779296eb863cf7c83484e232e26fda469dd09f7c09f790eba9b5c36f`.
 | `src/lib/interaction/popup/_popup.scss:10` | `$dbx-popup-border-radius` | |
 | `src/lib/interaction/detach/_detach.scss:8` | `$dbx-detach-border-radius` | |
 | `src/lib/layout/section/_section.scss:10` | `$header-bottom-margin` | |
-| `dbx-form `…`/formly/field/value/date/_date.scss:4-7` | `$dbx-datetime-button-spacing`, `$dbx-datetime-date-and-time-spacing`, `$dbx-datetime-button-width`, `$dbx-datetime-row-width` | Entire chain was self-referential and unused. |
-| `dbx-form `…`/formly/field/wrapper/_wrapper.scss:4-5` | `$form-flex-section-group-padding`, `$form-flex-section-group-item-padding` | |
+| `dbx-form `…`/forge/field/value/date/_date.scss:4-7` | `$dbx-datetime-button-spacing`, `$dbx-datetime-date-and-time-spacing`, `$dbx-datetime-button-width`, `$dbx-datetime-row-width` | Entire chain was self-referential and unused. |
+| `dbx-form `…`/forge/field/wrapper/_wrapper.scss:4-5` | `$form-flex-section-group-padding`, `$form-flex-section-group-item-padding` | |
 
 ---
 
@@ -95,10 +136,10 @@ which adapts per theme.
 | `dbx-web …/interaction/popup/_popup.scss:39` (`.dbx-popup-controls`) | `1px solid rgba(0,0,0,0.15)` → `1px solid var(--mat-sys-outline-variant)` | theme-aware divider; visible in dark |
 | `dbx-web …/interaction/detach/_detach.scss:32` (`.dbx-detach-controls`) | same | same |
 | `dbx-web …/layout/column/_column.scss:87` (`.dbx-two-column-head`) | `rgba(0,0,0,0.14)` → `var(--mat-sys-outline-variant)` | same |
-| `dbx-form …/formly/field/selection/sourceselect/_sourceselect.scss:23` | `rgba(0,0,0,0.12)` → `var(--mat-sys-outline-variant)` | same |
-| `dbx-form …/formly/field/checklist/_checklist.scss:36` | `1px solid black` → `1px solid var(--mat-sys-outline-variant)` | pure-black left border softens to the M3 outline-variant |
-| `dbx-form …/formly/field/value/array/_array.scss:8-9` (drag placeholder) | `background: #ccc` → `var(--mat-sys-surface-container-highest)`; `border: dotted 3px #999` → `dotted 3px var(--mat-sys-outline)` | drag placeholder now theme-aware |
-| `dbx-form …/formly/field/selection/searchable/_searchable.scss:60` (`.dbx-chip-input-error`) | `var(--mdc-theme-error, #f44336)` → `var(--mat-sys-error)` | error text uses the M3 error role, not legacy MDC red |
+| `dbx-form …/forge/field/selection/sourceselect/_sourceselect.scss:23` | `rgba(0,0,0,0.12)` → `var(--mat-sys-outline-variant)` | same |
+| `dbx-form …/forge/field/checklist/_checklist.scss:36` | `1px solid black` → `1px solid var(--mat-sys-outline-variant)` | pure-black left border softens to the M3 outline-variant |
+| `dbx-form …/forge/field/value/array/_array.scss:8-9` (drag placeholder) | `background: #ccc` → `var(--mat-sys-surface-container-highest)`; `border: dotted 3px #999` → `dotted 3px var(--mat-sys-outline)` | drag placeholder now theme-aware |
+| `dbx-form …/forge/field/selection/searchable/_searchable.scss:60` (`.dbx-chip-input-error`) | `var(--mdc-theme-error, #f44336)` → `var(--mat-sys-error)` | error text uses the M3 error role, not legacy MDC red |
 | `dbx-web …/extension/table/_table.scss:48` (full-summary row) | `var(--mat-table-row-item-outline-color, var(--mat-app-outline, rgba(0,0,0,0.12)))` → `var(--mat-table-row-item-outline-color, var(--mat-sys-outline-variant))` | keeps the MDC override first; drops the dead `--mat-app-outline` + black-alpha literal |
 | `dbx-form …/extension/calendar/_calendar.scss:78` (customized date-range pill) | `border-radius: 25px` → `var(--mat-sys-corner-full)` | identical full-pill render, now token-driven |
 | `dbx-form …/forge/field/selection/sourceselect/_sourceselect.scss:9` (loading bar) | `border-radius: 999px` → `var(--mat-sys-corner-full)` | same |
@@ -148,11 +189,41 @@ component-scoped token is minted for the prompt box inset.
 
 | File:line | Before → After | Delta |
 |---|---|---|
-| `dbx-form …/formly/field/value/duration/_duration.scss:44` (`.dbx-duration-picker-label`) | `opacity: 0.7` → `color: var(--mat-sys-on-surface-variant)` | the uppercase label renders in the M3 on-surface-variant color instead of 70%-opacity inherited text (better contrast, theme-aware) |
-| `dbx-form …/formly/field/value/duration/_duration.scss:49-50` (`.dbx-duration-picker-value`) | `font-size: 18px` → `var(--mat-sys-title-medium-size)` (≈16px); `font-weight: 500` → `var(--mat-sys-title-medium-weight)` | value text now uses the M3 title-medium role; ~2px smaller |
-| `dbx-form …/formly/field/value/date/_date.scss` (`.dbx-datetime-timezone-button .mat-mdc-button`) | `font-size: 18px` → `var(--mat-sys-title-medium-size)` | same title-medium alignment |
-| `dbx-form …/formly/field/value/phone/_phone.scss:16` (`button.country-selector`) | `opacity: 100` → `opacity: 1` | invalid CSS value (`100` clamps to `1`) corrected; **no render change**. Deletion was considered (line 12 sets `--ngxMatInputTel-selector-opacity: 100%`) but the conservative valid-value fix was chosen since screenshots were skipped — see KEEP-5 follow-up |
+| `dbx-form …/forge/field/value/duration/_duration.scss:44` (`.dbx-duration-picker-label`) | `opacity: 0.7` → `color: var(--mat-sys-on-surface-variant)` | the uppercase label renders in the M3 on-surface-variant color instead of 70%-opacity inherited text (better contrast, theme-aware) |
+| `dbx-form …/forge/field/value/duration/_duration.scss:49-50` (`.dbx-duration-picker-value`) | `font-size: 18px` → `var(--mat-sys-title-medium-size)` (≈16px); `font-weight: 500` → `var(--mat-sys-title-medium-weight)` | value text now uses the M3 title-medium role; ~2px smaller |
+| `dbx-form …/forge/field/value/date/_date.scss` (`.dbx-datetime-timezone-button .mat-mdc-button`) | `font-size: 18px` → `var(--mat-sys-title-medium-size)` | same title-medium alignment |
+| `dbx-form …/forge/field/value/phone/_phone.scss:16` (`button.country-selector`) | `opacity: 100` → `opacity: 1` | invalid CSS value (`100` clamps to `1`) corrected; **no render change**. Deletion was considered (line 12 sets `--ngxMatInputTel-selector-opacity: 100%`) but the conservative valid-value fix was chosen since screenshots were skipped — see KEEP-5 follow-up |
 | `dbx-web …/interaction/prompt/_prompt.scss:21` (`.dbx-prompt-box`) | `padding: 40px` → `padding: var(--dbx-prompt-box-padding, 40px)` | identical default render; mints **one** new override point `--dbx-prompt-box-padding` (annotation updated; CSS-token manifest regenerated) |
+
+---
+
+## Batch 6 — Drop the dead MDC-internal token layer (BREAKING)
+
+Angular Material's `--mdc-*` custom-property layer is the legacy MDC token surface; M3 components
+read `--mat-*`. Verified against the installed **`@angular/material@21.2.9`** bundle: it emits and
+reads **zero** `--mdc-list-*`, `--mdc-snackbar-*`, `--mdc-text-button-*`, and
+`--mat-mdc-button-persistent-ripple-color` custom properties (only the legacy *prebuilt* theme CSS
+and `button/_icon-button-theme.scss`'s `--mdc-icon-button-state-layer-size` still use the prefix).
+
+So every `--mdc-*` read in dbx-web was resolving to *nothing* and every `--mdc-*` write was going
+nowhere. All 14 occurrences are gone; the source tree now contains no `--mdc-*` reference outside a
+comment.
+
+| File:line | Before → After | Delta |
+|---|---|---|
+| `dbx-web …/layout/list/_list.scss:246-250` | **deleted** the `&.mdc-list-item--disabled .mdc-list-item__start.mat-icon` "Fixes:" rule (`color: var(--mdc-list-list-item-disabled-leading-icon-color, var(--mat-app-on-surface))` + `opacity: var(--mdc-list-list-item-disabled-leading-icon-opacity)`) | **Near-none, one real case.** Both `--mdc-list-*` tokens are dead and so is the `--mat-app-on-surface` fallback, so both declarations were invalid-at-computed-value-time. CSS resolves such a declaration to `unset`, which for `color` means *inherit* (already the case) but for `opacity` means the **initial value `1`** — so the rule was actively pinning disabled leading icons to full opacity. Removing it lets the icon dim with its row from Material's own `--mat-list-list-item-disabled-leading-icon-color/-opacity` (verified live: `0.38`) |
+| `dbx-web …/layout/list/_list.scss:540-546` (`.dbx-list-view-group-header`) | **deleted** `color: var(--mdc-list-list-item-label-text-color)` and the nested `.item-details { color: var(--mdc-list-list-item-supporting-text-color) }` | **None.** Dead reads; the header and its details already inherited their color. Group-header text now simply inherits the surface text color |
+| `dbx-web …/button/_button.scss:286-296` | **deleted** the whole `.dbx-icon-button > .mat-mdc-button > &.mat-unthemed` block (`--mdc-text-button-label-text-color: unset` + `--mat-mdc-button-persistent-ripple-color: unset`) and its `// TEMPORARY:` comment | **None.** Both tokens are dead in Material 21 (`--mat-button-text-label-text-color` is the live name). Unthemed icon buttons take the Material default label + ripple colors |
+| `dbx-web …/error/_error.scss:47-53` (`.dbx-error-snackbar`) | `--mdc-snackbar-container-color` / `--mdc-snackbar-supporting-text-color` → **`--mat-snack-bar-container-color`** / **`--mat-snack-bar-supporting-text-color`** (the read in `.dbx-error-snackbar-content .dbx-warn` re-pointed to match) | **Visible fix.** The error snackbar was silently rendering on the default Material snackbar surface because the `--mdc-` names are dead. It now actually paints `--dbx-warn-color` with `--dbx-warn-color-contrast` text, which is what the rule always intended |
+| `dbx-web …/router/layout/anchorlist/_anchorlist.scss:11-30` | the hand-rolled `--parent-mdc-list-list-item-*` relay → `--dbx-anchor-list-parent-item-icon-size` / `--dbx-anchor-list-parent-item-text-size`, reading and writing **`--mat-list-list-item-leading-icon-size`** / **`--mat-list-list-item-label-text-size`**. SCSS var `$default-mdc-list-list-item-leading-icon-size` renamed to `$default-anchor-list-item-leading-icon-size` | **None by default** — at the parent level the relay resolves to Material's own list metrics exactly as before. What changes is that `--dbx-anchor-list-item-child-list-item-icon-size` and `--dbx-anchor-list-item-child-list-item-text-size` are **no longer dead**: setting either now actually resizes nested child-row icons/labels (previously the child wrote a token nothing read, so only our own `font-size` read followed and the text size override did nothing at all). Relay names are also no longer squatting on a vendor prefix |
+
+**Review surface:** Lists + Navigation sections of the playground; `/doc/layout/list` (group headers,
+disabled rows), `/doc/router` + any sidenav (nested anchor lists), `/doc/interaction/error`
+(snackbar), `/doc/interaction/button` (icon buttons). Captures: `screenshots/batch-6/`.
+
+**Downstream:** an app that set `--mdc-snackbar-container-color`, `--mdc-list-list-item-*`, or
+`--mdc-text-button-label-text-color` expecting dbx-web to honor it must move to the `--mat-*` name.
+Those overrides were already inert, so nothing that *worked* before stops working.
 
 ---
 

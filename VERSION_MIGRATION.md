@@ -42,6 +42,15 @@ shipped ESM via `fesm2022/*.mjs` and are unchanged apart from their `eslint` sub
   never honors `module`.
 
 ## Migration of v13.x.x to v14.x.x
+
+> **This section is a cumulative staging document for the eventual v14 cut, not a record of when a
+> change first shipped.** The breaking visual + color work described below lands incrementally in the
+> **v13 line** as minors carrying a `BREAKING CHANGE:` footer (Batches 1–5 shipped in `v13.18.0`;
+> Batches 6+ follow in later v13 minors). Each such release renders its own `### BREAKING CHANGES`
+> block in [`CHANGELOG.md`](CHANGELOG.md). This section accumulates the migration prose so that, when
+> v14 is actually cut, the upgrade guide is already written. Per-rule before/after detail lives in
+> [`packages/dbx-web/VISUAL_CHANGES.md`](packages/dbx-web/VISUAL_CHANGES.md).
+
 ### Overview
 Version 14 is a **breaking visual** release for `@dereekb/dbx-web` and `@dereekb/dbx-form`. It
 burns down the M2-era visual technical debt that prior passes deliberately preserved, leaning the

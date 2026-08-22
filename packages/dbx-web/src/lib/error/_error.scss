@@ -45,11 +45,11 @@ $error-message-button-margin: 12px;
   }
 
   .mat-mdc-snack-bar-container.dbx-error-snackbar {
-    --mdc-snackbar-container-color: var(--dbx-warn-color);
-    --mdc-snackbar-supporting-text-color: var(--dbx-warn-color-contrast);
+    --mat-snack-bar-container-color: var(--dbx-warn-color);
+    --mat-snack-bar-supporting-text-color: var(--dbx-warn-color-contrast);
 
     .dbx-error-snackbar-content .dbx-warn {
-      color: var(--mdc-snackbar-supporting-text-color);
+      color: var(--mat-snack-bar-supporting-text-color);
     }
   }
 }
