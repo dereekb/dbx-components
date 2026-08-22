@@ -96,9 +96,9 @@
       "intents": [
         "anchor list item child list item icon size"
       ],
-      "description": "Component-scoped override point (`anchorlist`) read in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--parent-mdc-list-list-item-leading-icon-size)`.",
+      "description": "Component-scoped override point (`anchorlist`) read in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-anchor-list-parent-item-icon-size)`.",
       "defaults": {
-        "light": "var(--parent-mdc-list-list-item-leading-icon-size)"
+        "light": "var(--dbx-anchor-list-parent-item-icon-size)"
       },
       "componentScope": "anchorlist"
     },
@@ -109,9 +109,9 @@
       "intents": [
         "anchor list item child list item text size"
       ],
-      "description": "Component-scoped override point (`anchorlist`) read in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--parent-mdc-list-list-item-label-text-size)`.",
+      "description": "Component-scoped override point (`anchorlist`) read in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-anchor-list-parent-item-text-size)`.",
       "defaults": {
-        "light": "var(--parent-mdc-list-list-item-label-text-size)"
+        "light": "var(--dbx-anchor-list-parent-item-text-size)"
       },
       "componentScope": "anchorlist"
     },
@@ -139,6 +139,32 @@
       "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
         "light": "var(--dbx-list-item-selected-on-color, var(--mat-sys-on-primary-container))"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-parent-item-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "anchor list parent item icon size"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-list-list-item-leading-icon-size, 24px)"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-parent-item-text-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "anchor list parent item text size"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-list-list-item-label-text-size, 14px)"
       },
       "componentScope": "anchorlist"
     },

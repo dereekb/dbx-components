@@ -90,7 +90,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       // mid-invocation) justifies replacing it.
       const existing = getCliContext();
 
-      if (existing == null || existing.envName !== envName || existing.accessToken !== entry.accessToken) {
+      if (existing?.envName !== envName || existing.accessToken !== entry.accessToken) {
         setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest, firestoreSessionCache, firestore: input.firestore }));
       }
     } catch (e) {

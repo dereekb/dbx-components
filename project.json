@@ -6,7 +6,7 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build dbx-web" }, { "command": "npx nx run-many -t build --all" }],
+        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build dbx-web" }, { "command": "npx nx run-many -t build --all --exclude=demo-api" }, { "command": "npx nx build demo-api" }],
         "parallel": false,
         "color": true
       }
