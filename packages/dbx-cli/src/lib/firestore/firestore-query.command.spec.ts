@@ -40,13 +40,15 @@ function buildStubCollection() {
   };
 }
 
-function buildModels(): CliFirestoreModels {
+function buildModels(input?: { readonly scopeToParent?: boolean }): CliFirestoreModels {
   const collection = buildStubCollection();
 
   return {
     session: { fromCache: false } as never,
     collections: {},
-    binding: { collections: () => ({}), models: (() => ({})) as never },
+    // the stub collection carries no `config`, so the generic parent-scoping derivation cannot run
+    // against it; an app-supplied `collectionForModel` is the documented way to scope explicitly
+    binding: { collections: () => ({}), models: (() => ({})) as never, ...(input?.scopeToParent ? { collectionForModel: () => collection as never } : {}) },
     models: (() => ({})) as never,
     allTypes: () => ['guestbook'],
     serviceFor: () => ({ loadModelForKey: (() => undefined) as never, getFirestoreCollection: () => collection as never }),
@@ -71,7 +73,39 @@ function buildEntry(input: Partial<CliFirestoreQueryManifestEntry> & { readonly 
 
 const PUBLISHED = buildEntry({ slug: 'published-guestbooks', name: 'publishedGuestbooksQuery' });
 const NOT_INVOCABLE = buildEntry({ slug: 'internal-scan', name: 'internalScanQuery', factory: undefined, params: [] });
-const MANIFEST: CliFirestoreQueryManifest = [PUBLISHED, NOT_INVOCABLE];
+
+/**
+ * The `jlja` shape from the production report: a bound COLLECTION_GROUP factory over a nested
+ * collection with no `/{path=**}/` rule. Running it went out to Firestore and came back
+ * `Missing or insufficient permissions.`; it must now be answered locally.
+ */
+const PARENT_CHILD = buildEntry({
+  slug: 'job-applications-not-closed',
+  name: 'jobApplicationsNotClosedQuery',
+  model: 'JobApplication',
+  collection: 'jlja',
+  isNested: true,
+  scope: 'COLLECTION_GROUP',
+  params: [],
+  factory: () => [where('closed', '==', false)],
+  queryMode: 'parent-child',
+  rules: { list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule', parentPaths: ['jl/{jobLocation}/jlj/{job}'] }
+});
+
+const UNAVAILABLE = buildEntry({
+  slug: 'billing-group-invoice-by-state',
+  name: 'billingGroupInvoiceByStateQuery',
+  model: 'BillingGroupInvoice',
+  collection: 'bgi',
+  isNested: true,
+  scope: 'COLLECTION_GROUP',
+  params: [],
+  factory: () => [where('s', '==', 1)],
+  queryMode: 'unavailable',
+  rules: { list: 'unmatched', collectionGroup: false, reason: 'list-unmatched' }
+});
+
+const MANIFEST: CliFirestoreQueryManifest = [PUBLISHED, NOT_INVOCABLE, PARENT_CHILD, UNAVAILABLE];
 
 function buildStubContext(models?: CliFirestoreModels): CliContext {
   return {
@@ -178,6 +212,63 @@ describe('buildFirestoreQueryCommand()', () => {
     expect(parsed).toMatchObject({ ok: false, code: 'FIRESTORE_QUERY_NOT_INVOCABLE' });
     expect(parsed.error).toContain('internalScanQuery');
     expect(parsed.error).toContain('demo-firebase');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuses an unavailable entry locally, without touching Firestore', async () => {
+    setCliContext(buildStubContext(buildModels()));
+    await expect(runQuery(['firestore-query', 'billing-group-invoice-by-state'])).rejects.toThrow(/process\.exit:1/);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed).toMatchObject({ ok: false, code: 'FIRESTORE_QUERY_UNAVAILABLE' });
+    expect(parsed.error).toContain('bgi');
+    // the point of the whole change: no round trip to be told `permission-denied`
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuses an unavailable entry BEFORE the firestore session is opened', async () => {
+    // ordering matters: refusing after `getFirestoreModels` would still pay the session handshake,
+    // which is exactly the cost this feature exists to avoid
+    let opened = false;
+    const context = buildStubContext(buildModels());
+    setCliContext({
+      ...context,
+      getFirestoreModels: async () => {
+        opened = true;
+        return buildModels();
+      }
+    });
+
+    await expect(runQuery(['firestore-query', 'billing-group-invoice-by-state'])).rejects.toThrow(/process\.exit:1/);
+    expect(opened).toBe(false);
+  });
+
+  it('refuses a parent-child entry with no --parent, naming the parent path the rules declare', async () => {
+    setCliContext(buildStubContext(buildModels()));
+    await expect(runQuery(['firestore-query', 'job-applications-not-closed'])).rejects.toThrow(/process\.exit:1/);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed).toMatchObject({ ok: false, code: 'FIRESTORE_QUERY_PARENT_REQUIRED' });
+    expect(parsed.suggestion).toContain('jl/{jobLocation}/jlj/{job}');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('runs a parent-child entry once --parent targets the parent collection', async () => {
+    setCliContext(buildStubContext(buildModels({ scopeToParent: true })));
+    await runQuery(['firestore-query', 'job-applications-not-closed', '--parent', 'jl/abc/jlj/def']);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.data.parent).toBe('jl/abc/jlj/def');
+    expect(calls).toHaveLength(1);
+  });
+
+  it('rejects a --parent naming an ancestor chain the rules do not declare', async () => {
+    setCliContext(buildStubContext(buildModels()));
+    await expect(runQuery(['firestore-query', 'job-applications-not-closed', '--parent', 'gb/abc'])).rejects.toThrow(/process\.exit:1/);
+
+    const parsed = JSON.parse(stdout.join(''));
+    expect(parsed).toMatchObject({ ok: false, code: 'INVALID_ARGUMENT' });
     expect(calls).toHaveLength(0);
   });
 

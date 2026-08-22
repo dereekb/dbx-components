@@ -13,6 +13,16 @@ const MODEL_MANIFEST = [
 
 const QUERY_MANIFEST = [{ slug: 'a', factory: () => [] }, { slug: 'b', factory: () => [] }, { slug: 'c' }] as unknown as CliFirestoreQueryManifest;
 
+/**
+ * A manifest generated WITH `--rules`: one plain model query, one runnable only under `--parent`,
+ * and one the rules refuse at every scope despite its factory binding fine.
+ */
+const SCANNED_QUERY_MANIFEST = [
+  { slug: 'model', factory: () => [], queryMode: 'model', rules: { list: 'allowed', collectionGroup: true } },
+  { slug: 'parent-child', factory: () => [], queryMode: 'parent-child', rules: { list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule' } },
+  { slug: 'unavailable', factory: () => [], queryMode: 'unavailable', rules: { list: 'unmatched', collectionGroup: false, reason: 'list-unmatched' } }
+] as unknown as CliFirestoreQueryManifest;
+
 describe('buildFirestoreSessionDoctorReadRouting()', () => {
   it('prefers firestore when the whole chain resolved', () => {
     const routing = buildFirestoreSessionDoctorReadRouting({ firestore: BINDING, firebaseConfigComplete: true, sessionOpened: true });
@@ -51,6 +61,31 @@ describe('buildFirestoreSessionDoctorReadRouting()', () => {
     expect(routing.invocableQueryEntries).toBe(2);
   });
 
+  it('reports the modes as unscanned when the manifest carries none', () => {
+    const routing = buildFirestoreSessionDoctorReadRouting({ firestoreQueryManifest: QUERY_MANIFEST, firebaseConfigComplete: true, sessionOpened: true });
+
+    // the zeroes below are structural, not a clean bill of health — this flag is what says so
+    expect(routing.queryModesScanned).toBe(false);
+    expect(routing.unavailableQueryEntries).toBe(0);
+  });
+
+  it('excludes an unavailable entry from the invocable count', () => {
+    // the reported bug: `invocableQueryEntries: 128/128` while ~1/3 of the catalog was a guaranteed
+    // permission-denied
+    const routing = buildFirestoreSessionDoctorReadRouting({ firestoreQueryManifest: SCANNED_QUERY_MANIFEST, firebaseConfigComplete: true, sessionOpened: true });
+
+    expect(routing.totalQueryEntries).toBe(3);
+    expect(routing.invocableQueryEntries).toBe(2);
+    expect(routing.queryModesScanned).toBe(true);
+  });
+
+  it('surfaces the unavailable and parent-child counts the way serverOnlyModels is surfaced', () => {
+    const routing = buildFirestoreSessionDoctorReadRouting({ firestoreQueryManifest: SCANNED_QUERY_MANIFEST, firebaseConfigComplete: true, sessionOpened: true });
+
+    expect(routing.unavailableQueryEntries).toBe(1);
+    expect(routing.parentChildQueryEntries).toBe(1);
+  });
+
   it('counts the server-only models', () => {
     const routing = buildFirestoreSessionDoctorReadRouting({ modelManifest: MODEL_MANIFEST, firebaseConfigComplete: true, sessionOpened: true });
     expect(routing.serverOnlyModels).toBe(2);
@@ -61,6 +96,9 @@ describe('buildFirestoreSessionDoctorReadRouting()', () => {
 
     expect(routing.totalQueryEntries).toBe(0);
     expect(routing.invocableQueryEntries).toBe(0);
+    expect(routing.unavailableQueryEntries).toBe(0);
+    expect(routing.parentChildQueryEntries).toBe(0);
+    expect(routing.queryModesScanned).toBe(false);
     expect(routing.serverOnlyModels).toBe(0);
   });
 });

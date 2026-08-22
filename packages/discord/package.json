@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/discord",
-  "version": "13.40.0",
+  "version": "13.41.0",
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -11,9 +11,9 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "13.40.0",
-    "@dereekb/rxjs": "13.40.0",
-    "@dereekb/util": "13.40.0",
+    "@dereekb/nestjs": "13.41.0",
+    "@dereekb/rxjs": "13.41.0",
+    "@dereekb/util": "13.41.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "discord.js": "^14.26.3",

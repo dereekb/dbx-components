@@ -22,6 +22,12 @@ export interface CliFirestoreCollectionForQueryInput {
    * The parent document key to narrow to, from `--parent`.
    */
   readonly parentKey?: FirestoreModelKey;
+  /**
+   * The parent-document path templates the rules declare for this collection, from
+   * `CliFirestoreQueryReachability.parentPaths` (e.g. `jl/{jobLocation}/jlj/{job}`). When supplied,
+   * a `--parent` whose collection chain does not match one of them is rejected locally.
+   */
+  readonly parentPaths?: readonly string[];
 }
 
 /**
@@ -45,7 +51,7 @@ export interface CliFirestoreCollectionForQueryInput {
  * @throws {CliError} When `--parent` is missing where required, supplied where rejected, or the registered collection cannot be scoped.
  */
 export function cliFirestoreCollectionForQuery(input: CliFirestoreCollectionForQueryInput): FirestoreCollectionLike<unknown> {
-  const { models, modelType, scope, isNested, parentKey } = input;
+  const { models, modelType, scope, isNested, parentKey, parentPaths } = input;
 
   if (parentKey != null && !isNested) {
     throw new CliError({
@@ -63,6 +69,10 @@ export function cliFirestoreCollectionForQuery(input: CliFirestoreCollectionForQ
     });
   }
 
+  if (parentKey != null) {
+    assertCliFirestoreQueryParentKey({ modelType, parentKey, ...(parentPaths === undefined ? {} : { parentPaths }) });
+  }
+
   const override = models.binding.collectionForModel?.({ collections: models.collections, modelType, parentKey });
   let result: FirestoreCollectionLike<unknown>;
 
@@ -74,6 +84,61 @@ export function cliFirestoreCollectionForQuery(input: CliFirestoreCollectionForQ
   }
 
   return result;
+}
+
+/**
+ * Validates a `--parent` value before it is turned into a document reference.
+ *
+ * Both checks exist because the failure they prevent is otherwise unreadable. An odd-segment
+ * `--parent` (a COLLECTION path, e.g. `jl/abc/jlj`) reaches `docAtPath` and comes back as a raw
+ * Firestore path assertion; a well-formed key for the WRONG ancestor chain (e.g. `gb/abc` for a
+ * collection that lives under `jl/{loc}/jlj/{job}`) silently produces an empty result set, which is
+ * indistinguishable from "no matching documents".
+ *
+ * The chain comparison is on COLLECTION NAMES only — document ids are the caller's data, and the
+ * rules templates carry `{wildcard}` placeholders there.
+ *
+ * @param input - The model type, the supplied parent key, and the rules-declared parent templates.
+ * @param input.modelType - The model being queried, for the message.
+ * @param input.parentKey - The raw `--parent` value.
+ * @param input.parentPaths - The rules-declared parent path templates, when known.
+ * @throws {CliError} `INVALID_ARGUMENT` when the key is not a document path, or names a chain the rules do not declare.
+ */
+export function assertCliFirestoreQueryParentKey(input: { readonly modelType: FirestoreModelType; readonly parentKey: FirestoreModelKey; readonly parentPaths?: readonly string[] }): void {
+  const { modelType, parentKey, parentPaths = [] } = input;
+  const segments = parentKey.split('/').filter((x) => x.length > 0);
+  const quotedPaths = parentPaths.map((x) => `\`${x}\``).join(' or ');
+
+  if (segments.length === 0 || segments.length % 2 !== 0) {
+    const shape = quotedPaths.length > 0 ? `, matching ${quotedPaths}` : ' (e.g. `gb/abc123`)';
+
+    throw new CliError({
+      message: `--parent "${parentKey}" is not a document key.`,
+      code: 'INVALID_ARGUMENT',
+      suggestion: `A parent key is an EVEN number of path segments — collection/id pairs down to the parent document${shape}.`
+    });
+  }
+
+  const chain = collectionChain(segments);
+  const expected = parentPaths.map((path) => collectionChain(path.split('/').filter((x) => x.length > 0)));
+
+  if (expected.length > 0 && !expected.some((x) => x.join('/') === chain.join('/'))) {
+    throw new CliError({
+      message: `--parent "${parentKey}" does not name a parent of "${modelType}": it walks ${chain.join(' → ')}.`,
+      code: 'INVALID_ARGUMENT',
+      suggestion: `\`firestore.rules\` places this collection under ${quotedPaths}. Pass a document key with that collection chain.`
+    });
+  }
+}
+
+/**
+ * The collection names of a document path, i.e. every even-indexed segment.
+ *
+ * @param segments - The path segments.
+ * @returns The collection names, in order.
+ */
+function collectionChain(segments: readonly string[]): string[] {
+  return segments.filter((_, index) => index % 2 === 0);
 }
 
 interface ScopeCollectionToParentInput {

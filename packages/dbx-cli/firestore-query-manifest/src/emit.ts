@@ -7,7 +7,7 @@
 
 import { compareStrings } from '@dereekb/util';
 import { formatGeneratedTs, renderGroupedImportLines, type GeneratedTsImport } from '../../src/lib/scan-helpers/emit-generated-ts.js';
-import type { BoundQueryEntry } from './types.js';
+import type { BoundQueryEntry, CollectedQueryEntry } from './types.js';
 
 /**
  * Input for {@link renderQueryManifest}.
@@ -75,10 +75,18 @@ function renderEntry({ entry, bound }: BoundQueryEntry): string {
     entry.skip ? 'skip: true' : undefined,
     entry.excluded ? 'excluded: true' : undefined,
     entry.dispatcher ? 'dispatcher: true' : undefined,
+    entry.queryMode ? `queryMode: ${JSON.stringify(entry.queryMode)}` : undefined,
+    entry.rules ? `rules: ${renderRules(entry.rules)}` : undefined,
     bound ? `factory: ${entry.name}` : undefined
   ];
 
   return `  { ${fields.filter(Boolean).join(', ')} }`;
+}
+
+function renderRules(rules: NonNullable<CollectedQueryEntry['rules']>): string {
+  const parts: (string | undefined)[] = [`list: ${JSON.stringify(rules.list)}`, `collectionGroup: ${rules.collectionGroup ? 'true' : 'false'}`, rules.reason ? `reason: ${JSON.stringify(rules.reason)}` : undefined, rules.parentPaths && rules.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(rules.parentPaths)}` : undefined];
+
+  return `{ ${parts.filter(Boolean).join(', ')} }`;
 }
 
 function renderParams(params: readonly { readonly name: string; readonly type: string; readonly description?: string; readonly optional: boolean }[]): string {

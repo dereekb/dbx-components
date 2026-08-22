@@ -80,8 +80,9 @@ Browse the generated per-model query catalog. A **config** command — it never 
 because browsing a catalog is a documentation read.
 
 ```bash
-demo-cli firestore-queries                                # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE
+demo-cli firestore-queries                                 # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE · MODE
 demo-cli firestore-queries --model guestbookEntry          # also --category, --tag
+demo-cli firestore-queries --invocable-only                # hide what this CLI cannot run
 demo-cli firestore-queries --json
 demo-cli firestore-queries published-guestbook-entries     # one entry in detail
 ```
@@ -90,6 +91,34 @@ demo-cli firestore-queries published-guestbook-entries     # one entry in detail
 cannot call it. The `manual` / `skip` / `excluded` flags govern **index emission** only — those
 entries are still invocable. A `dispatcher` entry is invocable but has an empty constraint sequence
 by design; follow its `relatedSlugs`.
+
+`MODE` is the separate question of **how the query must be invoked**, resolved from
+`firestore.rules`. The factory can bind perfectly and the query still be a guaranteed
+`permission-denied`, or still be unrunnable without a `--parent`:
+
+| `MODE` | Meaning |
+| --- | --- |
+| `model` | Run it directly against the collection or collection group. |
+| `parent-child` | It addresses ONE parent document's subcollection — pass `--parent`. Either it is `COLLECTION`-scope over a subcollection, or its `COLLECTION_GROUP` shape has no `match /{path=**}/<collection>/{id}` block while the path-scoped read IS granted. |
+| `unavailable` | No client can run it at any scope. `firestore-query` refuses it locally. |
+| `unknown` | The query manifest was generated without `--rules`, so nothing was resolved. |
+
+The mode is stamped at generation time by passing `--rules=<firestore.rules>` to
+`dbx-cli-generate-firestore-query-manifest`, alongside a sibling `rules` object carrying the
+evidence (`list`, `collectionGroup`, `reason`, `parentPaths`) — the answer and the why, kept apart.
+**Absence of the flag reads as `unknown`, not `model`** — a CLI generated without it behaves exactly
+as it did before the field existed.
+
+Note that `MODE` classifies on how you *invoke* the query, not purely on what the rules permit. A
+`COLLECTION`-scope entry over a subcollection is fully permitted and still cannot run unscoped, so
+it is `parent-child` rather than `model`; a pure permission verdict would call it runnable and be
+wrong about how to run it.
+
+A collection group query is authorized by the `/{path=**}/…` block **alone**; a path-scoped `match`
+does not cover it, however permissive. That is what makes the collection-group half of
+`parent-child` a real distinction rather than a warning — the same collection is readable under its
+parent and dead as a group. The claim is cross-checked against the real rules engine by
+`apps/demo-api/src/test/tests/firestore.rules.spec.ts`.
 
 #### `firestore-query <query>`
 
@@ -126,8 +155,19 @@ the count with no rows.
 | entry | `--parent` |
 | --- | --- |
 | `COLLECTION_GROUP` + nested | optional — narrows the group to one parent |
+| `MODE = parent-child` | **required** — the entry addresses one parent's subcollection, so this is the only way to run it |
 | `COLLECTION` + nested | **required** — the COLLECTION-scope composite index may not exist at group scope, so silently widening would turn a working query into a `FAILED_PRECONDITION` |
 | not nested | rejected |
+
+`--parent` is a **document** key at any depth — collection/id pairs all the way down to the parent
+document (`gb/abc`, `jl/abc/jlj/def`). It is validated before Firestore is touched: an odd-segment
+(collection) path is rejected, and when the rules declare the collection's ancestor chain a key
+naming a *different* chain is rejected too, rather than returning an empty result set that reads
+exactly like "no matching documents". `firestore-queries <query>` prints the required shape.
+
+Narrowing a `COLLECTION_GROUP` entry to one parent changes which index serves it: the factory emits
+a `COLLECTION_GROUP`-scope composite index, and Firestore does not use that for a path-scoped query.
+A multi-field factory may therefore need a `COLLECTION`-scope index as well.
 
 #### `firestore-get <modelOrKey> [key]`
 

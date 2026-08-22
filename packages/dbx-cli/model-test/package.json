@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/dbx-cli/model-test",
-  "version": "13.40.0",
+  "version": "13.41.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/util": "13.40.0",
+    "@dereekb/util": "13.41.0",
     "ts-morph": "^21.0.0"
   }
 }

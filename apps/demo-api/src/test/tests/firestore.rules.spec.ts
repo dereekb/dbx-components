@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds, firestoreRulesTestBuilder, readFirestoreRulesFile } from '@dereekb/firebase/test';
-import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, collectionGroup, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
 
 const OWNER_UID = 'rulestestowner';
 const OTHER_UID = 'rulestestother';
@@ -134,6 +134,50 @@ describe('firestore.rules', () => {
 
       it('should deny an unauthenticated write of the private document', async () => {
         await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'sysp', SYSTEM_STATE_TYPE), { data: { tampered: true } }));
+      });
+    });
+
+    /**
+     * The DYNAMIC oracle for the CLI query catalog's `reachability` verdict.
+     *
+     * `scanFirestoreRules()` reports `collectionGroup: true` only for a collection carrying a
+     * `/{path=**}/<collection>/{id}` block, and the query-manifest generator turns that into a
+     * refusal a `COLLECTION_GROUP`-scope entry is answered with locally. That refusal is only
+     * correct if a path-scoped `match` genuinely does NOT authorize a collection-group query — a
+     * claim the static scanner asserts and only the real rules engine can settle.
+     *
+     * The `gb` / `gbe` pair is the whole matrix: both are listable on their own path, and only
+     * `gbe` declares the collection-group block.
+     */
+    describe('collection group queries', () => {
+      const GUESTBOOK_ID = 'rulestestguestbook';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'gb', GUESTBOOK_ID), { published: true });
+          await setDoc(doc(firestore, 'gb', GUESTBOOK_ID, 'gbe', 'rulestestentry'), { published: true });
+        });
+      });
+
+      it('should allow a path-scoped list of the root collection', async () => {
+        await assertSucceeds(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'gb'), where('published', '==', true))));
+      });
+
+      it('should deny a collection group query over a collection with no {path=**} block', async () => {
+        // `gb` is listable at `/gb/{guestbook}` and nowhere declares `/{path=**}/gb/{id}`. This is
+        // the assertion the CLI's `unreachable` / `parent-only` verdicts rest on: a path-scoped
+        // grant, however permissive, does not carry over to the collection group.
+        await assertFails(getDocs(query(collectionGroup(f.firestoreForUser(OWNER_UID), 'gb'), where('published', '==', true))));
+      });
+
+      it('should allow a path-scoped list of the nested collection', async () => {
+        await assertSucceeds(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'gb', GUESTBOOK_ID, 'gbe'), where('published', '==', true))));
+      });
+
+      it('should allow a collection group query over a collection that declares {path=**}', async () => {
+        // the contrast case: `gbe` carries `match /{path=**}/gbe/{guestbookEntry}`, so the scanner
+        // reports `collectionGroup: true` and the CLI runs the entry without a --parent
+        await assertSucceeds(getDocs(query(collectionGroup(f.firestoreForUser(OWNER_UID), 'gbe'), where('published', '==', true))));
       });
     });
   });

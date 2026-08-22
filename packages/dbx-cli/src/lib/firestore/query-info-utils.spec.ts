@@ -57,8 +57,63 @@ const DISPATCHER = buildEntry({
   example: 'demo-cli firestore-query guestbooks --params \'{"kind":"published"}\''
 });
 
+/**
+ * A bound factory over a collection `firestore.rules` refuses outright — invocable, unreachable.
+ */
+const UNAVAILABLE = buildEntry({
+  slug: 'notifications',
+  name: 'notificationsQuery',
+  model: 'Notification',
+  collection: 'nbn',
+  isNested: true,
+  scope: 'COLLECTION_GROUP',
+  queryMode: 'unavailable',
+  rules: { list: 'denied', collectionGroup: false, reason: 'list-denied' }
+});
+
+/**
+ * The `jlja` shape: readable under its parent, dead as a collection group.
+ */
+const PARENT_CHILD = buildEntry({
+  slug: 'job-applications-not-closed',
+  name: 'jobApplicationsNotClosedQuery',
+  model: 'JobApplication',
+  collection: 'jlja',
+  isNested: true,
+  scope: 'COLLECTION_GROUP',
+  queryMode: 'parent-child',
+  rules: { list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule', parentPaths: ['jl/{jobLocation}/jlj/{job}'] }
+});
+
 const MANIFEST: CliFirestoreQueryManifest = [PUBLISHED_ENTRIES, PUBLISHED_GUESTBOOKS, NOT_INVOCABLE, DISPATCHER];
 const REGISTRY = createCliFirestoreQueryRegistry(MANIFEST);
+const SCANNED_REGISTRY = createCliFirestoreQueryRegistry([PUBLISHED_GUESTBOOKS, UNAVAILABLE, PARENT_CHILD, NOT_INVOCABLE]);
+
+/**
+ * The last two cells of a rendered table row — `INVOCABLE` and `MODE`.
+ *
+ * @param row - One rendered row.
+ * @returns The two trailing cell values.
+ */
+function trailingColumns(row: string): string[] {
+  return row
+    .trimEnd()
+    .split(/\s{2,}/)
+    .slice(-2);
+}
+
+/**
+ * Renders a one-entry list and returns the row for a slug.
+ *
+ * @param entries - The entries to render.
+ * @param slug - The slug whose row is wanted.
+ * @returns The matching row.
+ */
+function rowFor(entries: readonly CliFirestoreQueryManifestEntry[], slug: string): string {
+  return renderCliFirestoreQueryList(entries)
+    .split('\n')
+    .find((l) => l.includes(slug)) as string;
+}
 
 describe('resolveCliFirestoreQueryEntry()', () => {
   it('resolves by slug', () => {
@@ -116,6 +171,15 @@ describe('filterCliFirestoreQueries()', () => {
   it('combines filters', () => {
     expect(filterCliFirestoreQueries(REGISTRY, { model: 'gb', category: 'listing' }).map((x) => x.slug)).toEqual(['published-guestbooks']);
   });
+
+  it('drops unbound and unavailable entries under invocableOnly, keeping parent-child ones', () => {
+    // a parent-child entry IS runnable — with `--parent` — so hiding it would lose real capability
+    expect(filterCliFirestoreQueries(SCANNED_REGISTRY, { invocableOnly: true }).map((x) => x.slug)).toEqual(['job-applications-not-closed', 'published-guestbooks']);
+  });
+
+  it('keeps an unscanned entry under invocableOnly', () => {
+    expect(filterCliFirestoreQueries(REGISTRY, { invocableOnly: true }).map((x) => x.slug)).toEqual(['guestbooks', 'published-guestbook-entries', 'published-guestbooks']);
+  });
 });
 
 describe('renderCliFirestoreQueryList()', () => {
@@ -123,6 +187,7 @@ describe('renderCliFirestoreQueryList()', () => {
     const rendered = renderCliFirestoreQueryList(REGISTRY.all);
     expect(rendered.split('\n')[0]).toContain('SLUG');
     expect(rendered.split('\n')[0]).toContain('INVOCABLE');
+    expect(rendered.split('\n')[0]).toContain('MODE');
     expect(rendered).toContain('Guestbook (gb)');
     expect(rendered).toContain('COLLECTION_GROUP');
   });
@@ -132,14 +197,28 @@ describe('renderCliFirestoreQueryList()', () => {
       .split('\n')
       .find((l) => l.includes('internal-guestbook-scan'));
     expect(row).toBeDefined();
-    expect(row?.trimEnd().endsWith('no')).toBe(true);
+    expect(trailingColumns(row as string)).toEqual(['no', 'unknown']);
   });
 
   it('marks an invocable entry INVOCABLE = yes', () => {
     const row = renderCliFirestoreQueryList([PUBLISHED_GUESTBOOKS])
       .split('\n')
       .find((l) => l.includes('published-guestbooks'));
-    expect(row?.trimEnd().endsWith('yes')).toBe(true);
+    expect(trailingColumns(row as string)).toEqual(['yes', 'unknown']);
+  });
+
+  it('renders MODE = unknown for an entry the generator never scanned', () => {
+    // absence of a mode is UNKNOWN, and the table has to say so rather than imply `model`
+    expect(trailingColumns(rowFor([PUBLISHED_GUESTBOOKS], 'published-guestbooks'))).toEqual(['yes', 'unknown']);
+  });
+
+  it('marks an unavailable entry MODE = unavailable while INVOCABLE stays yes', () => {
+    // the two columns answer different questions: the factory bound fine, the rules refuse it
+    expect(trailingColumns(rowFor([UNAVAILABLE], 'notifications'))).toEqual(['yes', 'unavailable']);
+  });
+
+  it('marks a parent-child entry MODE = parent-child', () => {
+    expect(trailingColumns(rowFor([PARENT_CHILD], 'job-applications-not-closed'))).toEqual(['yes', 'parent-child']);
   });
 
   it('renders a placeholder for an empty catalog', () => {
@@ -169,6 +248,25 @@ describe('renderCliFirestoreQueryEntry()', () => {
 
   it('lists the governance flags, which do not affect callability', () => {
     expect(renderCliFirestoreQueryEntry(NOT_INVOCABLE)).toContain('Index flags: manual, skip');
+  });
+
+  it('says the mode is unknown when the manifest was generated without --rules', () => {
+    expect(renderCliFirestoreQueryEntry(PUBLISHED_GUESTBOOKS)).toContain('Mode: unknown');
+  });
+
+  it('names the missing collection-group rule and the --parent shape for a parent-child entry', () => {
+    const rendered = renderCliFirestoreQueryEntry(PARENT_CHILD);
+
+    expect(rendered).toContain('Mode: parent-child');
+    expect(rendered).toContain('match /{path=**}/jlja/{id}');
+    expect(rendered).toContain('jl/{jobLocation}/jlj/{job}');
+  });
+
+  it('reports an unavailable entry as such despite being invocable', () => {
+    const rendered = renderCliFirestoreQueryEntry(UNAVAILABLE);
+
+    expect(rendered).toContain('Invocable: yes');
+    expect(rendered).toContain('Mode: unavailable —');
   });
 
   it('explains a dispatcher and points at its related slugs', () => {

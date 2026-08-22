@@ -43,6 +43,7 @@ export function buildFirestoreQueriesCommand(manifest: CliFirestoreQueryManifest
         .option('model', { type: 'string', describe: 'Filter to one model (PascalCase name or collection prefix).' })
         .option('category', { type: 'string', describe: 'Filter to one @dbxModelFirebaseIndexCategory.' })
         .option('tag', { type: 'string', describe: 'Filter to entries carrying this tag.' })
+        .option('invocable-only', { type: 'boolean', default: false, describe: 'Hide entries this CLI cannot run — an unbound factory, or one `firestore.rules` refuses at every scope.' })
         .option('json', { type: 'boolean', default: false, describe: 'Emit a structured JSON envelope instead of the human-readable table.' }),
     handler: wrapSyncCommandHandler((argv: any) => {
       const query = typeof argv.query === 'string' && argv.query.length > 0 ? argv.query : undefined;
@@ -56,7 +57,7 @@ export function buildFirestoreQueriesCommand(manifest: CliFirestoreQueryManifest
           process.stdout.write(renderCliFirestoreQueryEntry(entry));
         }
       } else {
-        const entries = filterCliFirestoreQueries(registry, { model: argv.model, category: argv.category, tag: argv.tag });
+        const entries = filterCliFirestoreQueries(registry, { model: argv.model, category: argv.category, tag: argv.tag, invocableOnly: Boolean(argv.invocableOnly) });
 
         if (argv.json) {
           outputResult(entries.map(toJsonEntry));

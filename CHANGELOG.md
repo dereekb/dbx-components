@@ -1,3 +1,20 @@
+# [13.41.0](https://github.com/dereekb/dbx-components/compare/v13.40.0-dev...v13.41.0) (2026-08-22)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([9ec0c743](https://github.com/dereekb/dbx-components/commit/9ec0c743b6a865e8b92b88accda5a61525a3c931))
+
+
+### Code Refactoring
+
+- **dbx-cli:** classify queries by invocation mode, not reachability ([d2b05f1c](https://github.com/dereekb/dbx-components/commit/d2b05f1cd2b1fbb8b816c14f5bf3c74c46dd9120))
+
+
+### Features
+
+- **dbx-cli:** flag rules-unreachable queries in the query manifest ([252f8005](https://github.com/dereekb/dbx-components/commit/252f8005f3ffd2790bb889fe076adbc0b2269fcf))
+
 # [13.40.0](https://github.com/dereekb/dbx-components/compare/v13.39.0-dev...v13.40.0) (2026-08-22)
 
 

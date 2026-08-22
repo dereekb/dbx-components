@@ -1,6 +1,7 @@
 import { type CliFirestoreQueryManifestEntry } from '../manifest/types';
 import { CliError } from '../util/output';
 import { indentLines, renderTable, truncate } from '../util/table';
+import { cliFirestoreQueryMode, describeCliFirestoreQueryMode, isCliFirestoreQueryInvocable } from './query-mode';
 import { type CliFirestoreQueryRegistry } from './query-registry';
 
 /**
@@ -33,10 +34,15 @@ export interface CliFirestoreQueryListFilter {
   readonly model?: string;
   readonly category?: string;
   readonly tag?: string;
+  /**
+   * Drop the entries this CLI cannot run — an unbound factory, or a query `firestore.rules` refuses
+   * at every scope. A `parent-child` entry is KEPT: `--parent` runs it.
+   */
+  readonly invocableOnly?: boolean;
 }
 
 /**
- * Applies the `--model` / `--category` / `--tag` filters to the catalog.
+ * Applies the `--model` / `--category` / `--tag` / `--invocable-only` filters to the catalog.
  *
  * @param registry - The query catalog.
  * @param filter - The active filters.
@@ -53,6 +59,7 @@ export function filterCliFirestoreQueries(registry: CliFirestoreQueryRegistry, f
     const lower = filter.tag.toLowerCase();
     result = result.filter((x) => (x.tags ?? []).some((t) => t.toLowerCase() === lower));
   }
+  if (filter.invocableOnly) result = result.filter((x) => isCliFirestoreQueryInvocable(x));
 
   return result;
 }
@@ -71,10 +78,13 @@ export function renderCliFirestoreQueryList(entries: readonly CliFirestoreQueryM
   if (entries.length === 0) {
     result = 'No Firestore queries found.\n';
   } else {
-    const rows: string[][] = [['SLUG', 'MODEL', 'SCOPE', 'CATEGORY', 'PARAMS', 'INVOCABLE']];
+    // MODE is a SEPARATE column from INVOCABLE rather than folded into it: they fail for unrelated
+    // reasons (a missing barrel export vs. a missing rules grant) and have different fixes, and
+    // collapsing them would hide which one is wrong.
+    const rows: string[][] = [['SLUG', 'MODEL', 'SCOPE', 'CATEGORY', 'PARAMS', 'INVOCABLE', 'MODE']];
 
     for (const entry of entries) {
-      rows.push([entry.slug, `${entry.model} (${entry.collection})`, entry.scope, entry.category ?? '', renderParamsSummary(entry), entry.factory ? 'yes' : 'no']);
+      rows.push([entry.slug, `${entry.model} (${entry.collection})`, entry.scope, entry.category ?? '', renderParamsSummary(entry), entry.factory ? 'yes' : 'no', cliFirestoreQueryMode(entry)]);
     }
 
     result = renderTable(rows) + '\n';
@@ -98,7 +108,7 @@ export function renderCliFirestoreQueryEntry(entry: CliFirestoreQueryManifestEnt
   if (entry.tags && entry.tags.length > 0) lines.push(`Tags: ${entry.tags.join(', ')}`);
 
   const invocable = entry.factory ? 'yes' : `no — ${entry.name} is not exported from ${entry.module}`;
-  lines.push(`Invocable: ${invocable}`);
+  lines.push(`Invocable: ${invocable}`, `Mode: ${describeCliFirestoreQueryMode(entry)}`);
 
   const flags = governanceFlags(entry);
   if (flags.length > 0) lines.push(`Index flags: ${flags.join(', ')}`);

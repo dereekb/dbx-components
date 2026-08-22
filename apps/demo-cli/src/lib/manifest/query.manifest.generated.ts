@@ -20,6 +20,8 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
     description: 'Query for the profile holding a given unique username.',
     category: 'lookup',
     tags: ['lookup', 'profile', 'with', 'username', 'query', 'profilewithusernamequery', 'holding', 'given', 'unique'],
+    queryMode: 'model',
+    rules: { list: 'allowed', collectionGroup: false },
     factory: profileWithUsernameQuery
   },
   {
@@ -37,6 +39,8 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
       "Query for the guestbook entries in the given published state.\n\nDeclared at `COLLECTION_GROUP` scope because it is used both within a single guestbook's `gbe`\nsubcollection and across the `gbe` collection group. Firestore auto-indexes single fields at\nCOLLECTION scope only, so the group-scoped use needs the explicit `fieldOverrides` entry this\nscope tag emits — without it the group query fails `FAILED_PRECONDITION` against a real project\n(the emulator does not enforce indexes, so it passes locally either way).",
     category: 'listing',
     tags: ['listing', 'guestbookentry', 'published', 'guestbook', 'entries', 'query', 'publishedguestbookentriesquery', 'entry', 'given', 'state', 'declared', 'collection', 'group', 'scope', 'because', 'used'],
+    queryMode: 'model',
+    rules: { list: 'allowed', collectionGroup: true, parentPaths: ['gb/{guestbook}'] },
     factory: publishedGuestbookEntriesQuery
   },
   {
@@ -53,6 +57,8 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
     description: 'Query for the guestbooks in the given published state.',
     category: 'listing',
     tags: ['listing', 'guestbook', 'published', 'guestbooks', 'query', 'publishedguestbooksquery', 'given', 'state'],
+    queryMode: 'model',
+    rules: { list: 'allowed', collectionGroup: false },
     factory: publishedGuestbooksQuery
   }
 ];
