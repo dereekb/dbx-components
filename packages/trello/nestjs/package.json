@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/trello/nestjs",
-  "version": "13.40.0",
+  "version": "13.41.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/nestjs": "13.40.0",
-    "@dereekb/rxjs": "13.40.0",
-    "@dereekb/trello": "13.40.0",
-    "@dereekb/util": "13.40.0",
+    "@dereekb/nestjs": "13.41.0",
+    "@dereekb/rxjs": "13.41.0",
+    "@dereekb/trello": "13.41.0",
+    "@dereekb/util": "13.41.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "express": "^5.2.1"
