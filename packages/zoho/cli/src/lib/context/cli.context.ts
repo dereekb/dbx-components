@@ -1,4 +1,4 @@
-import { type ZohoCliConfig, type ZohoCliResolvedProductCredentials, getTokenCachePath, resolveProductCredentials } from '../config/cli.config';
+import { type ZohoCliConfig, type ZohoCliProduct, type ZohoCliResolvedProductCredentials, getTokenCachePath, resolveProductCredentials } from '../config/cli.config';
 import { ZohoAccountsApi, ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalyticsApi, type ZohoAccountsServiceConfig, type ZohoRecruitServiceConfig, type ZohoCrmServiceConfig, type ZohoDeskServiceConfig, type ZohoSignServiceConfig, type ZohoAnalyticsServiceConfig, memoryZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from '@dereekb/zoho/nestjs';
 import type { Maybe } from '@dereekb/util';
 
@@ -8,6 +8,42 @@ export interface ZohoCliContext {
   readonly deskApi: Maybe<ZohoDeskApi>;
   readonly signApi: Maybe<ZohoSignApi>;
   readonly analyticsApi: Maybe<ZohoAnalyticsApi>;
+}
+
+/**
+ * Any of the per-product API clients held by a {@link ZohoCliContext}.
+ *
+ * Every member exposes the {@link ZohoAccountsApi} that minted its token, so commands that only need
+ * the OAuth grant (`auth check`, `doctor`) can read `zohoAccountsApi` off the union without a cast.
+ */
+export type ZohoCliProductApi = ZohoRecruitApi | ZohoCrmApi | ZohoDeskApi | ZohoSignApi | ZohoAnalyticsApi;
+
+/**
+ * Lookup from every {@link ZohoCliProduct} to its API client, `undefined` when unconfigured.
+ */
+export type ZohoCliProductApis = Record<ZohoCliProduct, Maybe<ZohoCliProductApi>>;
+
+/**
+ * Maps each {@link ZohoCliProduct} to the context API authenticated with that product's credentials.
+ *
+ * Every product in {@link ZOHO_CLI_PRODUCTS} MUST appear below, and must be paired with its own API.
+ * The `Record<ZohoCliProduct, ...>` return type is the enforcement: a product added to the union but
+ * left out here fails to compile. This replaced an if/else chain that had no such check, under which
+ * `analytics` fell through to the desk branch — `auth check` and `doctor` reported Desk's granted
+ * scope under the `analytics` key (or `Not configured` when desk had no credentials) while the
+ * analytics credentials were never exercised at all.
+ *
+ * @param context - Per-invocation CLI context holding the configured product API clients.
+ * @returns The product-keyed API lookup.
+ */
+export function toZohoCliProductApis(context: ZohoCliContext): ZohoCliProductApis {
+  return {
+    recruit: context.recruitApi,
+    crm: context.crmApi,
+    desk: context.deskApi,
+    sign: context.signApi,
+    analytics: context.analyticsApi
+  };
 }
 
 /**

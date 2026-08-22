@@ -1,7 +1,7 @@
 import type { CommandModule, Argv } from 'yargs';
 import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials } from '../config/cli.config';
 import { noop, type Maybe } from '@dereekb/util';
-import { createCliContext } from '../context/cli.context';
+import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
 
 // MARK: Regions
@@ -392,30 +392,22 @@ const authCheckCommand: CommandModule = {
         } else {
           // Try token exchange for each configured product
           const context = createCliContext(config);
+          const productApis = toZohoCliProductApis(context);
           const results: Record<string, unknown> = {};
 
           for (const product of products) {
             try {
-              let api;
-
-              if (product === 'recruit') {
-                api = context.recruitApi;
-              } else if (product === 'crm') {
-                api = context.crmApi;
-              } else if (product === 'sign') {
-                api = context.signApi;
-              } else {
-                api = context.deskApi;
-              }
+              const api = productApis[product];
 
               if (!api) {
                 results[product] = { authenticated: false, error: 'Not configured' };
                 continue;
               }
 
-              // Access the underlying accounts API to verify token exchange
-              const accountsApi = (api as any).zohoAccountsApi;
-              const tokenResponse = await accountsApi.accessToken();
+              // Exchange through the product's own accounts API so the reported scope is the grant
+              // that product actually authenticates with. Only the scope and lifetime are echoed —
+              // never the access token itself.
+              const tokenResponse = await api.zohoAccountsApi.accessToken();
               results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
             } catch (e) {
               const message = e instanceof Error ? e.message : String(e);
