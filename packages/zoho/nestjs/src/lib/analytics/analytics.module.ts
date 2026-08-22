@@ -78,7 +78,7 @@ export interface ProvideAppZohoAnalyticsMetadataConfig extends Pick<ModuleMetada
  * (config, accounts, and API service) so consuming modules only need a single import.
  *
  * The generated module requires the following dependencies in order to initialize properly:
- * - {@link ZohoAccountsAccessTokenCacheService}
+ * - `ZohoAccountsAccessTokenCacheService`
  *
  * Use the `dependencyModule` config option to import a module that exports those dependencies.
  *

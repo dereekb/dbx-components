@@ -70,7 +70,7 @@ describe('zohoAnalyticsImportDataInTable()', () => {
     const [url, init] = fetch.mock.calls[0];
     expect(url).toContain('/workspaces/w1/views/v1/data?');
     expect(init.method).toBe('POST');
-    expect(readConfig(url)).toEqual({ importType: 'truncateadd', fileType: 'json' });
+    expect(readConfig(url)).toEqual({ importType: 'truncateadd', autoIdentify: true, fileType: 'json' });
   });
 
   it('should clear the Content-Type header so fetch derives the multipart boundary', async () => {
@@ -88,7 +88,7 @@ describe('zohoAnalyticsImportDataInTable()', () => {
 
     await zohoAnalyticsImportDataInTable(context)({ workspaceId: 'w1', viewId: 'v1', data: 'a,b\n1,2', config: { importType: 'append' } });
 
-    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append' });
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', autoIdentify: true });
   });
 
   it('should not override an explicitly configured fileType', async () => {
@@ -96,7 +96,7 @@ describe('zohoAnalyticsImportDataInTable()', () => {
 
     await zohoAnalyticsImportDataInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append', fileType: 'csv' } });
 
-    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'csv' });
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', autoIdentify: true, fileType: 'csv' });
   });
 });
 
@@ -127,7 +127,7 @@ describe('zohoAnalyticsCreateImportJobInTable()', () => {
 
     await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append' } });
 
-    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'json' });
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', autoIdentify: true, fileType: 'json' });
   });
 
   it('should infer the fileType from the file name', async () => {
@@ -136,7 +136,7 @@ describe('zohoAnalyticsCreateImportJobInTable()', () => {
 
     await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', file, config: { importType: 'append' } });
 
-    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', fileType: 'csv' });
+    expect(readConfig(fetch.mock.calls[0][0])).toEqual({ importType: 'append', autoIdentify: true, fileType: 'csv' });
     expect((fetch.mock.calls[0][1].body as FormData).get('FILE')).toBe(file);
   });
 
@@ -158,7 +158,7 @@ describe('zohoAnalyticsCreateImportJobInNewTable()', () => {
 
     expect(url).toContain('/bulk/workspaces/w1/data?');
     expect((init.body as FormData).get('FILE')).toBeInstanceOf(File);
-    expect(readConfig(url)).toEqual({ tableName: 'Sales', fileType: 'json' });
+    expect(readConfig(url)).toEqual({ tableName: 'Sales', autoIdentify: true, fileType: 'json' });
   });
 });
 
@@ -188,6 +188,37 @@ describe('zohoAnalyticsImportFormData() asFile', () => {
   });
 });
 
+/**
+ * `autoIdentify` reads like an optimization but is required by every import endpoint — a CONFIG
+ * without it is rejected with error 8504, which names no parameter. The client sends it so that no
+ * caller has to discover that.
+ */
+describe('import autoIdentify default', () => {
+  it('should send autoIdentify by default, since the API rejects a config without it', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(successResponse);
+
+    await zohoAnalyticsImportDataInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append' } });
+
+    expect((readConfig(fetch.mock.calls[0][0]) as { autoIdentify?: boolean }).autoIdentify).toBe(true);
+  });
+
+  it('should preserve an explicit autoIdentify of false rather than overriding it', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext(successResponse);
+
+    await zohoAnalyticsImportDataInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append', autoIdentify: false } });
+
+    expect((readConfig(fetch.mock.calls[0][0]) as { autoIdentify?: boolean }).autoIdentify).toBe(false);
+  });
+
+  it('should send autoIdentify on an async import job as well', async () => {
+    const { context, fetch } = mockZohoAnalyticsContext({ status: 'success', summary: 'Import data', data: { jobId: 'j1' } });
+
+    await zohoAnalyticsCreateImportJobInTable(context)({ workspaceId: 'w1', viewId: 'v1', rows: [{ Region: 'East' }], config: { importType: 'append' } });
+
+    expect((readConfig(fetch.mock.calls[0][0]) as { autoIdentify?: boolean }).autoIdentify).toBe(true);
+  });
+});
+
 describe('zohoAnalyticsImportDataInNewTable()', () => {
   it('should POST to the workspace data endpoint with the table name and no import type', async () => {
     const { context, fetch } = mockZohoAnalyticsContext(successResponse);
@@ -197,6 +228,6 @@ describe('zohoAnalyticsImportDataInNewTable()', () => {
     const [url] = fetch.mock.calls[0];
     expect(url).toContain('/workspaces/w1/data?');
     expect(url).not.toContain('/views/');
-    expect(readConfig(url)).toEqual({ tableName: 'Sales', fileType: 'json' });
+    expect(readConfig(url)).toEqual({ tableName: 'Sales', autoIdentify: true, fileType: 'json' });
   });
 });

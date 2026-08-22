@@ -115,6 +115,24 @@ function zohoAnalyticsImportFileType(dataInput: ZohoAnalyticsImportDataInput, fi
 }
 
 /**
+ * Resolves the `autoIdentify` an import sends.
+ *
+ * Both the synchronous and the Bulk import endpoints reject a CONFIG that omits it with error 8504,
+ * "The parameter CONFIG is not proper(Has not been sent or is less than required count)" — a message
+ * that names neither the missing parameter nor the fix. Since an import without it cannot succeed,
+ * it is defaulted here rather than left to the caller; pass `false` explicitly to opt out.
+ *
+ * Verified against the live API: an import of rows carrying only `importType`, and an import of a
+ * CSV file carrying only `importType` and `fileType`, both fail with 8504 until this is sent.
+ *
+ * @param autoIdentify - The explicitly configured value, if any.
+ * @returns The value to send to Zoho Analytics.
+ */
+function zohoAnalyticsImportAutoIdentify(autoIdentify: Maybe<boolean>): boolean {
+  return autoIdentify ?? true;
+}
+
+/**
  * Resolves the `fileType` for a Bulk (async job) import, which cannot proceed without one.
  *
  * The Bulk endpoints reject a CONFIG with no `fileType` as "The parameter CONFIG is not proper",
@@ -202,8 +220,10 @@ export type ZohoAnalyticsImportDataInTableFunction = (input: ZohoAnalyticsImport
  * {@link zohoAnalyticsCreateImportJobInTable} instead for large payloads, since a synchronous
  * import must finish inside the request timeout.
  *
- * A successful response can still describe rejected rows — inspect `data.importSummary` and
- * `data.importErrors`.
+ * What a bad row does depends on `config.onError`. Under `skiprow` or `setcolumnempty` the import
+ * resolves and describes the loss in `data.importSummary` and `data.importErrors`, so a resolved
+ * import does not mean every row landed. Under `abort` it throws error 7232 instead and nothing is
+ * written, not even the valid rows of the same request. Verified against the live API.
  *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that imports data into an existing table.
@@ -224,7 +244,7 @@ export type ZohoAnalyticsImportDataInTableFunction = (input: ZohoAnalyticsImport
 export function zohoAnalyticsImportDataInTable(context: ZohoAnalyticsContext): ZohoAnalyticsImportDataInTableFunction {
   return (input: ZohoAnalyticsImportDataInTableInput) => {
     const { workspaceId, viewId, config, ...dataInput } = input;
-    const requestConfig = { ...config, fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
+    const requestConfig = { ...config, autoIdentify: zohoAnalyticsImportAutoIdentify(config.autoIdentify), fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
     return zohoAnalyticsImportRequest<ZohoAnalyticsImportDataResponse>({ context, url: `/workspaces/${workspaceId}/views/${viewId}/data`, config: requestConfig, dataInput });
   };
 }
@@ -254,7 +274,7 @@ export type ZohoAnalyticsImportDataInNewTableFunction = (input: ZohoAnalyticsImp
 export function zohoAnalyticsImportDataInNewTable(context: ZohoAnalyticsContext): ZohoAnalyticsImportDataInNewTableFunction {
   return (input: ZohoAnalyticsImportDataInNewTableInput) => {
     const { workspaceId, config, ...dataInput } = input;
-    const requestConfig = { ...config, fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
+    const requestConfig = { ...config, autoIdentify: zohoAnalyticsImportAutoIdentify(config.autoIdentify), fileType: zohoAnalyticsImportFileType(dataInput, config.fileType) };
     return zohoAnalyticsImportRequest<ZohoAnalyticsImportDataResponse>({ context, url: `/workspaces/${workspaceId}/data`, config: requestConfig, dataInput });
   };
 }
@@ -304,7 +324,7 @@ export function zohoAnalyticsCreateImportJobInTable(context: ZohoAnalyticsContex
   return (input: ZohoAnalyticsCreateImportJobInTableInput) => {
     const { workspaceId, viewId, config, ...dataInput } = input;
     const fileType = zohoAnalyticsImportJobFileType(dataInput, config.fileType);
-    const requestConfig = { ...config, fileType };
+    const requestConfig = { ...config, autoIdentify: zohoAnalyticsImportAutoIdentify(config.autoIdentify), fileType };
     return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/views/${viewId}/data`, config: requestConfig, dataInput, formDataOptions: { asFile: true, fileType } });
   };
 }
@@ -334,7 +354,7 @@ export function zohoAnalyticsCreateImportJobInNewTable(context: ZohoAnalyticsCon
   return (input: ZohoAnalyticsCreateImportJobInNewTableInput) => {
     const { workspaceId, config, ...dataInput } = input;
     const fileType = zohoAnalyticsImportJobFileType(dataInput, config.fileType);
-    const requestConfig = { ...config, fileType };
+    const requestConfig = { ...config, autoIdentify: zohoAnalyticsImportAutoIdentify(config.autoIdentify), fileType };
     return zohoAnalyticsImportRequest<ZohoAnalyticsCreateImportJobResponse>({ context, url: `/bulk/workspaces/${workspaceId}/data`, config: requestConfig, dataInput, formDataOptions: { asFile: true, fileType } });
   };
 }
@@ -373,6 +393,10 @@ export type ZohoAnalyticsGetImportJobFunction = (input: ZohoAnalyticsGetImportJo
  *
  * Checking job status costs zero API units, so it can be polled freely within the request
  * frequency limit.
+ *
+ * A job id that does not exist is a thrown 404 (error 8137), not a resolved status carrying
+ * `ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND` — so a mistyped id rejects rather than reporting itself.
+ * Verified against the live API.
  *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that retrieves an import job's status.

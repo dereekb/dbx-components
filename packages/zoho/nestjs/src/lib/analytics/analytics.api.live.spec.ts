@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { type DynamicModule, Module } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type Getter, type Maybe, MS_IN_SECOND, cachedGetter } from '@dereekb/util';
+import { makeFileForFetch } from '@dereekb/util/fetch';
 import { type ExpectFailAssertionFunction, captureRejection, expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
 import { ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, pollZohoAnalyticsJob, type ZohoAnalyticsGetExportJobResponse, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
 import { appZohoAnalyticsModuleMetadata } from './analytics.module';
@@ -69,6 +70,27 @@ const BASELINE_WEST_ROW_COUNT = 1;
  * Zoho criteria are SQL-ish and quote the table and column: `"Table"."Column"='value'`.
  */
 const WEST_ROW_CRITERIA = `"${TEST_TABLE_NAME}"."Region"='West'`;
+
+/**
+ * A CSV upload with a header row and two data rows.
+ *
+ * The `file` input is the only one the CLI can produce (`zoho-cli analytics import --file` is a
+ * required option), and it takes a different path through the client than `rows` does — the data is
+ * sent as a multipart FILE part whose name determines the import's fileType. `rows` covers none of
+ * that, so the CSV path is exercised here directly.
+ */
+const CSV_IMPORT_CONTENT = 'Region,Rep,Amount\nNorth,Edsger,400\nNorth,Tony,450';
+
+const CSV_IMPORT_ROW_COUNT = 2;
+
+/**
+ * Builds the CSV upload, using the same helper the CLI's import command uses.
+ *
+ * @returns A CSV file carrying {@link CSV_IMPORT_CONTENT}.
+ */
+function csvImportFile(): File {
+  return makeFileForFetch({ content: CSV_IMPORT_CONTENT, fileName: 'rows.csv', mimeType: 'text/csv' });
+}
 
 /**
  * Criteria naming a column the test table does not have.
@@ -173,8 +195,9 @@ async function readExportedRows(response: Response): Promise<ZohoAnalyticsRow[]>
  * error codes and raises every one of them as the same error class, so the code each operation
  * actually reports is only knowable from a live call — and the codes are what a caller has to
  * branch on. They also pin down which failures are thrown and which are reported inside a 200,
- * a line Analytics draws in a place no reader would guess: an unrecognized column is a silent
- * partial success for `addRow()` but a thrown error for `updateRows()`.
+ * a line Analytics draws in a place no reader would guess: a row write carrying an unrecognized
+ * column is a silent partial success as long as ONE column is recognized, and a thrown error when
+ * none is.
  *
  * Writes are grouped so that only the tests asserting an absolute row count pay for a baseline
  * reset. The `no-op writes` and `failures` groups run against the table as they find it.
@@ -480,6 +503,52 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
         );
       });
 
+      describe('importDataInTable() with a file', () => {
+        it(
+          'should import the rows of a CSV file, treating its first line as the header',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv', autoIdentify: true, onError: 'abort' }
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + CSV_IMPORT_ROW_COUNT);
+            // the header line named the columns rather than becoming a row
+            expect(rows.filter((row) => row['Rep'] === 'Rep').length).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should import a CSV file when the config omits autoIdentify, which the API requires',
+          async () => {
+            // this is the config the CLI's import command sends — importType, fileType, and nothing
+            // else. Zoho rejects a CONFIG without autoIdentify as 8504 ("The parameter CONFIG is not
+            // proper"), so this passes only because the client defaults it; before that default,
+            // every CLI import failed
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv' }
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Rep').length).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
       describe('importDataInTableAndAwaitJob()', () => {
         it(
           'should complete the queued job and carry the import summary in jobInfo',
@@ -506,6 +575,28 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
             const rows = await loadTestTableRows();
             expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_JOB_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should queue a CSV file as an async import, passing the file through as the FILE part',
+          async () => {
+            const result = await api.importDataInTableAndAwaitJob({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv', autoIdentify: true, onError: 'abort' },
+              poll: LIVE_JOB_POLL
+            });
+
+            // the Bulk endpoints reject a DATA field outright, so a caller-supplied file is passed
+            // through as the FILE part rather than rewrapped — the only live coverage of that branch
+            expect(isZohoAnalyticsJobComplete(result.data.jobCode)).toBe(true);
+            expect(result.data.jobInfo?.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + CSV_IMPORT_ROW_COUNT);
           },
           LIVE_JOB_TEST_TIMEOUT_MS
         );
@@ -705,6 +796,7 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
             // the row-CRUD counterpart to a partial import: an unrecognized column does not fail
             // the call, the row lands without it, and the only record of the loss is invalidColumns
+            // (updateRows() does the same — see its partial test below)
             expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
             expect(result.data.addedColumns?.['Region']).toBe('North');
             expect(result.data.invalidColumns?.['NotAColumn']).toBe('nope');
@@ -724,6 +816,24 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
             expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
             expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should apply the recognized columns and report the rejected ones inside a success response',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Updated', NotAColumn: 'nope' }, criteria: WEST_ROW_CRITERIA } });
+
+            // the same partial-success contract as addRow(), and the only coverage of the
+            // invalidColumns field the update result type declares
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+            expect(result.data.updatedColumns?.['Rep']).toBe('Updated');
+            expect(result.data.invalidColumns?.['NotAColumn']).toBe('nope');
 
             const rows = await loadTestTableRows();
             expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
@@ -784,11 +894,22 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
     });
 
     describe('failures', () => {
+      /**
+       * Both row writes follow the same rule, verified against the live API: an unrecognized column
+       * is reported in `invalidColumns` inside a 200 as long as at least one column IS recognized,
+       * and only a write left with no recognized column at all is rejected.
+       */
       describe('updateRows()', () => {
         itShouldFail('when no column of the update is a column of the table', async () => {
-          // Zoho discards the unknown column and then rejects the request for carrying no columns
-          // at all, rather than reporting it in invalidColumns the way addRow() does
           await expectFail(() => api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { NotAColumn: 'nope' }, criteria: WEST_ROW_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(NO_COLUMN_PRESENT_ERROR_CODE));
+        });
+      });
+
+      describe('addRow()', () => {
+        itShouldFail('when no column of the row is a column of the table', async () => {
+          // the same code as updateRows(), so the rejection is about no column surviving rather
+          // than about which operation was called
+          await expectFail(() => api.addRow({ workspaceId, viewId: testViewId, config: { columns: { NotAColumn: 'nope' } } }), expectFailAssertZohoAnalyticsErrorCode(NO_COLUMN_PRESENT_ERROR_CODE));
         });
       });
 

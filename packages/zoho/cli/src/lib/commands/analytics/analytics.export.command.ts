@@ -38,16 +38,31 @@ function withExportOptions(yargs: Argv): Argv {
 }
 
 /**
+ * Parses a comma-separated column list, discarding blank entries so that a value of `','` reads as
+ * no columns rather than as two unnamed ones.
+ *
+ * @param value - Raw comma-separated value, if any.
+ * @returns The column names, or undefined when none were given.
+ */
+export function parseColumnList(value: Maybe<string>): Maybe<string[]> {
+  const columns = value
+    ?.split(',')
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0);
+  return columns?.length ? columns : undefined;
+}
+
+/**
  * Builds the export config shared by the export commands.
  *
  * @param argv - The yargs-parsed arguments object.
  * @returns The export config to send to Zoho Analytics.
  */
-function exportConfigFromArgv(argv: any) {
+export function exportConfigFromArgv(argv: any) {
   return {
     responseFormat: argv.format as ZohoAnalyticsExportResponseFormat,
     criteria: argv.criteria as Maybe<string> as string | undefined,
-    selectedColumns: argv.columns ? (argv.columns as string).split(',').map((x) => x.trim()) : undefined
+    selectedColumns: parseColumnList(argv.columns as Maybe<string>)
   };
 }
 

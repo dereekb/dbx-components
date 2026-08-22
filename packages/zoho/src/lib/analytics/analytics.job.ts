@@ -32,6 +32,10 @@ export const ZOHO_ANALYTICS_JOB_CODE_COMPLETED: ZohoAnalyticsJobCode = '1004';
 
 /**
  * No job exists for the given id.
+ *
+ * Declared by Zoho but not observed in practice: asking for a job that does not exist throws a 404
+ * (error 8120 for an export job, 8137 for an import job) rather than resolving with this code, so
+ * polling never terminates on it. Verified against the live API.
  */
 export const ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND: ZohoAnalyticsJobCode = '1005';
 
@@ -98,6 +102,9 @@ export function isZohoAnalyticsJobComplete(jobCode: ZohoAnalyticsJobCode): boole
 
 /**
  * Returns true when the job reached a terminal failure, either erroring or not existing.
+ *
+ * In practice only {@link ZOHO_ANALYTICS_JOB_CODE_ERROR} is reachable through the job endpoints: an
+ * unknown job id throws rather than reporting {@link ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND}.
  *
  * @param jobCode - The job's current status code.
  * @returns Whether the job failed.

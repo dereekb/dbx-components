@@ -115,3 +115,34 @@ which cost no import.
 
 If the table's schema ever drifts (a stray column, a changed type), delete the
 `DbxComponentsLiveTest` table in the Analytics UI — the next run recreates it from the baseline rows.
+
+## Driving the CLI against the same workspace
+
+The live suite reads credentials from `.env.local`, while `zoho-cli` reads its own
+`~/.zoho-cli/config.json` — configuring one does NOT configure the other. To point the CLI at the
+same account without going through the browser OAuth flow, hand it the values already in
+`.env.local`:
+
+```bash
+zoho-cli auth set --product analytics \
+  --client-id "$ZOHO_ANALYTICS_ACCOUNTS_CLIENT_ID" \
+  --client-secret "$ZOHO_ANALYTICS_ACCOUNTS_CLIENT_SECRET" \
+  --refresh-token "$ZOHO_ANALYTICS_ACCOUNTS_REFRESH_TOKEN" \
+  --org-id "$ZOHO_ANALYTICS_ORG_ID"
+```
+
+`auth setup` is the interactive alternative, and is only needed when there is no refresh token yet —
+it prints an authorization URL to open in a browser and takes the returned code back.
+
+Then, against the throwaway workspace:
+
+```bash
+zoho-cli analytics orgs list
+zoho-cli analytics views list $ZOHO_ANALYTICS_TEST_WORKSPACE_ID
+zoho-cli analytics import data $WS $VIEW -f rows.csv            # sync
+zoho-cli analytics import data $WS $VIEW -f rows.csv --async    # bulk job
+zoho-cli analytics export data $WS $VIEW --format json
+```
+
+Note that `zoho-cli analytics import new-table` creates a table that nothing can delete through the
+API — the Modeling API is not implemented — so drop leftovers in the Analytics UI.

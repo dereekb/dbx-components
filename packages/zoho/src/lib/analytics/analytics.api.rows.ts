@@ -77,7 +77,10 @@ export type ZohoAnalyticsAddRowFunction = (input: ZohoAnalyticsAddRowInput) => P
  * Intended for single rows. Use the import operations for bulk data — a row-at-a-time loop burns
  * through the request frequency limit and costs far more API units than one import.
  *
- * A successful response can still report rejected values in `invalidColumns`.
+ * A successful response can still report rejected values in `invalidColumns`: an unrecognized
+ * column does not fail the call, the row is written without it, and the response is the only record
+ * of the loss. The write is rejected outright only when NO column is recognized, as error 8016.
+ * {@link zohoAnalyticsUpdateRows} behaves identically. Verified against the live API.
  *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that adds a row to a table.
@@ -128,7 +131,19 @@ export interface ZohoAnalyticsUpdateRowsInput {
  */
 export interface ZohoAnalyticsUpdateRowsResult {
   readonly updatedColumns?: ZohoAnalyticsRow;
+  /**
+   * Number of rows the criteria matched and updated.
+   *
+   * Zero when the criteria matched nothing, which is a success rather than a failure — a resolved
+   * update says nothing about whether any row changed.
+   */
   readonly updatedRows?: number;
+  /**
+   * The column values that were rejected, as an empty object when none were.
+   *
+   * Populated for the same reason as on {@link ZohoAnalyticsAddRowResult}: an unrecognized column is
+   * dropped and reported here rather than failing the update. Verified against the live API.
+   */
   readonly invalidColumns?: ZohoAnalyticsInvalidColumns;
 }
 
@@ -147,6 +162,11 @@ export type ZohoAnalyticsUpdateRowsFunction = (input: ZohoAnalyticsUpdateRowsInp
  *
  * Requires either `criteria` or `updateAllRows`: an update with neither would target every row,
  * which is too destructive to infer.
+ *
+ * Two things a resolved call does NOT tell the caller, both verified against the live API: a
+ * criteria matching no row succeeds with `updatedRows: 0`, and an unrecognized column is dropped
+ * and reported in `invalidColumns` rather than failing. An update left with no recognized column at
+ * all is rejected as error 8016.
  *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that updates rows of a table.
@@ -197,6 +217,11 @@ export interface ZohoAnalyticsDeleteRowsInput {
  * Payload returned when rows are deleted.
  */
 export interface ZohoAnalyticsDeleteRowsResult {
+  /**
+   * Number of rows the criteria matched and deleted.
+   *
+   * Zero when the criteria matched nothing, which is a success rather than a failure.
+   */
   readonly deletedRows?: number;
 }
 

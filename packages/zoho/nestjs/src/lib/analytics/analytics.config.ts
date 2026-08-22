@@ -2,13 +2,13 @@ import { type ZohoAnalyticsConfig, type ZohoAnalyticsFactoryConfig } from '@dere
 import { assertValidZohoConfig } from '../zoho.config';
 
 /**
- * Zoho Analytics API configuration for the {@link ZohoAnalyticsApi}.
+ * Zoho Analytics API configuration for the `ZohoAnalyticsApi`.
  */
 export type ZohoAnalyticsServiceApiConfig = ZohoAnalyticsConfig;
 
 /**
  * Configuration for the Zoho Analytics service, used as the injection token for the
- * {@link ZohoAnalyticsApi}.
+ * `ZohoAnalyticsApi`.
  */
 export abstract class ZohoAnalyticsServiceConfig {
   readonly zohoAnalytics!: ZohoAnalyticsServiceApiConfig;

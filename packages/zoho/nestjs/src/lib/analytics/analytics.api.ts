@@ -79,8 +79,10 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetOrgs}.
    *
-   * @returns Lists the organizations available to the authenticated user. The only operation that
-   * works without a configured `orgId`.
+   * Lists the organizations available to the authenticated user. The only operation that works without a configured
+   * `orgId`.
+   *
+   * @returns Bound get orgs function.
    */
   get getOrgs() {
     return zohoAnalyticsGetOrgs(this.analyticsContext);
@@ -90,7 +92,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetAllWorkspaces}.
    *
-   * @returns Lists every accessible workspace, grouped into owned and shared.
+   * Lists every accessible workspace, grouped into owned and shared.
+   *
+   * @returns Bound get all workspaces function.
    */
   get getAllWorkspaces() {
     return zohoAnalyticsGetAllWorkspaces(this.analyticsContext);
@@ -99,7 +103,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetOwnedWorkspaces}.
    *
-   * @returns Lists the workspaces owned by the authenticated user.
+   * Lists the workspaces owned by the authenticated user.
+   *
+   * @returns Bound get owned workspaces function.
    */
   get getOwnedWorkspaces() {
     return zohoAnalyticsGetOwnedWorkspaces(this.analyticsContext);
@@ -108,7 +114,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetSharedWorkspaces}.
    *
-   * @returns Lists the workspaces shared with the authenticated user.
+   * Lists the workspaces shared with the authenticated user.
+   *
+   * @returns Bound get shared workspaces function.
    */
   get getSharedWorkspaces() {
     return zohoAnalyticsGetSharedWorkspaces(this.analyticsContext);
@@ -117,7 +125,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetWorkspaceDetails}.
    *
-   * @returns Retrieves a single workspace by id.
+   * Retrieves a single workspace by id.
+   *
+   * @returns Bound get workspace details function.
    */
   get getWorkspaceDetails() {
     return zohoAnalyticsGetWorkspaceDetails(this.analyticsContext);
@@ -127,7 +137,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetViews}.
    *
-   * @returns Lists every view in a workspace.
+   * Lists every view in a workspace.
+   *
+   * @returns Bound get views function.
    */
   get getViews() {
     return zohoAnalyticsGetViews(this.analyticsContext);
@@ -136,7 +148,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetViewDetails}.
    *
-   * @returns Retrieves a single view by its globally unique id.
+   * Retrieves a single view by its globally unique id.
+   *
+   * @returns Bound get view details function.
    */
   get getViewDetails() {
     return zohoAnalyticsGetViewDetails(this.analyticsContext);
@@ -145,7 +159,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetTableMetadata}.
    *
-   * @returns Retrieves a table's column metadata.
+   * Retrieves a table's column metadata.
+   *
+   * @returns Bound get table metadata function.
    */
   get getTableMetadata() {
     return zohoAnalyticsGetTableMetadata(this.analyticsContext);
@@ -155,7 +171,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsImportDataInTable}.
    *
-   * @returns Imports data into an existing table and waits for the result.
+   * Imports data into an existing table and waits for the result.
+   *
+   * @returns Bound import data in table function.
    */
   get importDataInTable() {
     return zohoAnalyticsImportDataInTable(this.analyticsContext);
@@ -164,7 +182,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsImportDataInNewTable}.
    *
-   * @returns Creates a table from the imported data.
+   * Creates a table from the imported data.
+   *
+   * @returns Bound import data in new table function.
    */
   get importDataInNewTable() {
     return zohoAnalyticsImportDataInNewTable(this.analyticsContext);
@@ -173,7 +193,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsCreateImportJobInTable}.
    *
-   * @returns Queues an asynchronous import into an existing table.
+   * Queues an asynchronous import into an existing table.
+   *
+   * @returns Bound create import job in table function.
    */
   get createImportJobInTable() {
     return zohoAnalyticsCreateImportJobInTable(this.analyticsContext);
@@ -182,7 +204,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsCreateImportJobInNewTable}.
    *
-   * @returns Queues an asynchronous import that creates a new table.
+   * Queues an asynchronous import that creates a new table.
+   *
+   * @returns Bound create import job in new table function.
    */
   get createImportJobInNewTable() {
     return zohoAnalyticsCreateImportJobInNewTable(this.analyticsContext);
@@ -191,7 +215,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetImportJob}.
    *
-   * @returns Retrieves an import job's status.
+   * Retrieves an import job's status.
+   *
+   * @returns Bound get import job function.
    */
   get getImportJob() {
     return zohoAnalyticsGetImportJob(this.analyticsContext);
@@ -200,7 +226,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsImportDataInTableAndAwaitJob}.
    *
-   * @returns Queues an asynchronous import and polls until the job reaches a terminal state.
+   * Queues an asynchronous import and polls until the job reaches a terminal state.
+   *
+   * @returns Bound import data in table and await job function.
    */
   get importDataInTableAndAwaitJob() {
     return zohoAnalyticsImportDataInTableAndAwaitJob(this.analyticsContext);
@@ -210,7 +238,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsExportData}.
    *
-   * @returns Exports a view's data, resolving with the raw response.
+   * Exports a view's data, resolving with the raw response.
+   *
+   * @returns Bound export data function.
    */
   get exportData() {
     return zohoAnalyticsExportData(this.analyticsContext);
@@ -219,7 +249,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsCreateExportJob}.
    *
-   * @returns Queues an asynchronous export of a view.
+   * Queues an asynchronous export of a view.
+   *
+   * @returns Bound create export job function.
    */
   get createExportJob() {
     return zohoAnalyticsCreateExportJob(this.analyticsContext);
@@ -228,7 +260,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsCreateExportJobForSqlQuery}.
    *
-   * @returns Queues an asynchronous export of a SQL query's results.
+   * Queues an asynchronous export of a SQL query's results.
+   *
+   * @returns Bound create export job for SQL query function.
    */
   get createExportJobForSqlQuery() {
     return zohoAnalyticsCreateExportJobForSqlQuery(this.analyticsContext);
@@ -237,7 +271,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsGetExportJob}.
    *
-   * @returns Retrieves an export job's status.
+   * Retrieves an export job's status.
+   *
+   * @returns Bound get export job function.
    */
   get getExportJob() {
     return zohoAnalyticsGetExportJob(this.analyticsContext);
@@ -246,7 +282,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsDownloadExport}.
    *
-   * @returns Downloads the file produced by a completed export job.
+   * Downloads the file produced by a completed export job.
+   *
+   * @returns Bound download export function.
    */
   get downloadExport() {
     return zohoAnalyticsDownloadExport(this.analyticsContext);
@@ -255,7 +293,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsExportDataAndAwaitJob}.
    *
-   * @returns Queues an asynchronous export and polls until the job reaches a terminal state.
+   * Queues an asynchronous export and polls until the job reaches a terminal state.
+   *
+   * @returns Bound export data and await job function.
    */
   get exportDataAndAwaitJob() {
     return zohoAnalyticsExportDataAndAwaitJob(this.analyticsContext);
@@ -265,7 +305,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsAddRow}.
    *
-   * @returns Adds a single row to a table. Prefer an import for bulk data.
+   * Adds a single row to a table. Prefer an import for bulk data.
+   *
+   * @returns Bound add row function.
    */
   get addRow() {
     return zohoAnalyticsAddRow(this.analyticsContext);
@@ -274,7 +316,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsUpdateRows}.
    *
-   * @returns Updates rows matching a criteria expression.
+   * Updates rows matching a criteria expression.
+   *
+   * @returns Bound update rows function.
    */
   get updateRows() {
     return zohoAnalyticsUpdateRows(this.analyticsContext);
@@ -283,7 +327,9 @@ export class ZohoAnalyticsApi {
   /**
    * Configured pass-through for {@link zohoAnalyticsDeleteRows}.
    *
-   * @returns Deletes rows matching a criteria expression.
+   * Deletes rows matching a criteria expression.
+   *
+   * @returns Bound delete rows function.
    */
   get deleteRows() {
     return zohoAnalyticsDeleteRows(this.analyticsContext);

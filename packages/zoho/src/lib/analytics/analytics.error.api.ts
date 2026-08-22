@@ -99,7 +99,7 @@ export const ZOHO_ANALYTICS_DAILY_UNIT_LIMIT_ERROR_CODES = ['6043', '6044'];
 /**
  * Error raised when a Zoho Analytics request omits the required organization id header.
  *
- * Indicates the {@link ZohoAnalyticsConfig} is missing its `orgId`.
+ * Indicates the `ZohoAnalyticsConfig` is missing its `orgId`.
  */
 export class ZohoAnalyticsMissingOrgIdError extends ZohoServerFetchResponseError {}
 
@@ -200,7 +200,7 @@ export async function parseZohoAnalyticsError(responseError: FetchResponseError)
  * Fetch response interceptor that detects a Zoho Analytics failure envelope returned with an HTTP
  * 200 status and converts it into a thrown error.
  *
- * The shared {@link interceptZohoErrorResponseFactory} cannot be reused here: it looks for an
+ * The shared `interceptZohoErrorResponseFactory` cannot be reused here: it looks for an
  * `error` key, which Analytics never sets.
  *
  * @param json - The parsed response body.

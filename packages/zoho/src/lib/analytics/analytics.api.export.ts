@@ -134,6 +134,9 @@ export type ZohoAnalyticsGetExportJobFunction = (input: ZohoAnalyticsGetExportJo
  *
  * Checking job status costs zero API units.
  *
+ * A job id that does not exist is a thrown 404 (error 8120), not a resolved status carrying
+ * `ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND`. Verified against the live API.
+ *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that retrieves an export job's status.
  *

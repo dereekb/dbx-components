@@ -71,6 +71,10 @@ export interface ZohoAnalyticsImportBaseConfig {
   readonly fileType?: ZohoAnalyticsImportFileType;
   /**
    * Whether Zoho should auto-identify the format of the incoming data.
+   *
+   * Required by every import endpoint, despite reading like an optimization: a CONFIG that omits it
+   * is rejected with error 8504, "The parameter CONFIG is not proper". The client therefore sends
+   * `true` when this is unset, so it only has to be given to opt out with `false`.
    */
   readonly autoIdentify?: boolean;
   readonly onError?: ZohoAnalyticsImportOnError;

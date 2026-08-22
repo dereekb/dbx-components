@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { type Maybe, noop } from '@dereekb/util';
 import { makeFileForFetch } from '@dereekb/util/fetch';
-import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsImportOnError, type ZohoAnalyticsImportType, isZohoAnalyticsJobComplete } from '@dereekb/zoho';
+import { type ZohoAnalyticsImportFileType, type ZohoAnalyticsImportOnError, type ZohoAnalyticsImportType, type ZohoAnalyticsName, isZohoAnalyticsJobComplete } from '@dereekb/zoho';
 import { getAnalyticsApi } from '../../middleware/auth.middleware';
 import { outputResult, outputError } from '../../util/output';
 
@@ -30,10 +30,34 @@ async function readImportFile(path: string): Promise<File> {
  * @param path - Path of the local file to import.
  * @returns The inferred file type, or undefined when it cannot be inferred.
  */
-function inferFileType(path: string): Maybe<ZohoAnalyticsImportFileType> {
+export function inferFileType(path: string): Maybe<ZohoAnalyticsImportFileType> {
   const extension = extname(path).toLowerCase();
   const byExtension: Record<string, ZohoAnalyticsImportFileType> = { '.json': 'json', '.csv': 'csv' };
   return byExtension[extension];
+}
+
+/**
+ * Parses the `--matching-columns` value, enforcing that the `updateadd` mode has one.
+ *
+ * Blank entries are discarded so that a value of `','` is treated as no columns rather than as two
+ * unnamed ones, which would reach Zoho as an unusable match set.
+ *
+ * @param importType - The import mode the command was given.
+ * @param value - Raw comma-separated `--matching-columns` value, if any.
+ * @returns The parsed column names, or undefined when none were given.
+ * @throws {Error} When the mode is `updateadd` and no usable column was given.
+ */
+export function importMatchingColumns(importType: ZohoAnalyticsImportType, value: Maybe<string>): Maybe<ZohoAnalyticsName[]> {
+  const columns = value
+    ?.split(',')
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0);
+
+  if (importType === 'updateadd' && !columns?.length) {
+    throw new Error('The updateadd mode requires --matching-columns.');
+  }
+
+  return columns?.length ? columns : undefined;
 }
 
 /**
@@ -63,12 +87,7 @@ const importDataCommand: CommandModule = {
     try {
       const api = getAnalyticsApi(argv);
       const importType = argv.mode as ZohoAnalyticsImportType;
-      const matchingColumns: Maybe<string[]> = argv.matchingColumns ? (argv.matchingColumns as string).split(',').map((x) => x.trim()) : undefined;
-
-      if (importType === 'updateadd' && !matchingColumns?.length) {
-        throw new Error('The updateadd mode requires --matching-columns.');
-      }
-
+      const matchingColumns = importMatchingColumns(importType, argv.matchingColumns as Maybe<string>);
       const file = await readImportFile(argv.file);
       const config = {
         importType,
