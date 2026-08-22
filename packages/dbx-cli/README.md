@@ -80,7 +80,7 @@ Browse the generated per-model query catalog. A **config** command — it never 
 because browsing a catalog is a documentation read.
 
 ```bash
-demo-cli firestore-queries                                 # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE · REACHABLE
+demo-cli firestore-queries                                 # table: SLUG · MODEL · SCOPE · CATEGORY · PARAMS · INVOCABLE · MODE
 demo-cli firestore-queries --model guestbookEntry          # also --category, --tag
 demo-cli firestore-queries --invocable-only                # hide what this CLI cannot run
 demo-cli firestore-queries --json
@@ -92,24 +92,32 @@ cannot call it. The `manual` / `skip` / `excluded` flags govern **index emission
 entries are still invocable. A `dispatcher` entry is invocable but has an empty constraint sequence
 by design; follow its `relatedSlugs`.
 
-`REACHABLE` is the separate question of whether **`firestore.rules`** lets a client run the query —
-the factory can bind perfectly and still be a guaranteed `permission-denied`:
+`MODE` is the separate question of **how the query must be invoked**, resolved from
+`firestore.rules`. The factory can bind perfectly and the query still be a guaranteed
+`permission-denied`, or still be unrunnable without a `--parent`:
 
-| `REACHABLE` | Meaning |
+| `MODE` | Meaning |
 | --- | --- |
-| `yes` | The rules grant the read at the entry's own scope. |
-| `parent` | `scope: COLLECTION_GROUP` with no `match /{path=**}/<collection>/{id}` block, but the path-scoped read IS granted — run it with `--parent`. |
-| `no` | No client can run it at any scope. `firestore-query` refuses it locally. |
-| `?` | The query manifest was generated without `--rules`, so nothing is known. |
+| `model` | Run it directly against the collection or collection group. |
+| `parent-child` | It addresses ONE parent document's subcollection — pass `--parent`. Either it is `COLLECTION`-scope over a subcollection, or its `COLLECTION_GROUP` shape has no `match /{path=**}/<collection>/{id}` block while the path-scoped read IS granted. |
+| `unavailable` | No client can run it at any scope. `firestore-query` refuses it locally. |
+| `unknown` | The query manifest was generated without `--rules`, so nothing was resolved. |
 
-The verdict is stamped at generation time by passing `--rules=<firestore.rules>` to
-`dbx-cli-generate-firestore-query-manifest`. **Absence of the flag means UNKNOWN, not reachable** —
-a CLI generated without it behaves exactly as it did before the field existed.
+The mode is stamped at generation time by passing `--rules=<firestore.rules>` to
+`dbx-cli-generate-firestore-query-manifest`, alongside a sibling `rules` object carrying the
+evidence (`list`, `collectionGroup`, `reason`, `parentPaths`) — the answer and the why, kept apart.
+**Absence of the flag reads as `unknown`, not `model`** — a CLI generated without it behaves exactly
+as it did before the field existed.
+
+Note that `MODE` classifies on how you *invoke* the query, not purely on what the rules permit. A
+`COLLECTION`-scope entry over a subcollection is fully permitted and still cannot run unscoped, so
+it is `parent-child` rather than `model`; a pure permission verdict would call it runnable and be
+wrong about how to run it.
 
 A collection group query is authorized by the `/{path=**}/…` block **alone**; a path-scoped `match`
-does not cover it, however permissive. That is what makes `parent` a real distinction rather than a
-warning — the same collection is readable under its parent and dead as a group. The claim is
-cross-checked against the real rules engine by
+does not cover it, however permissive. That is what makes the collection-group half of
+`parent-child` a real distinction rather than a warning — the same collection is readable under its
+parent and dead as a group. The claim is cross-checked against the real rules engine by
 `apps/demo-api/src/test/tests/firestore.rules.spec.ts`.
 
 #### `firestore-query <query>`
@@ -147,7 +155,7 @@ the count with no rows.
 | entry | `--parent` |
 | --- | --- |
 | `COLLECTION_GROUP` + nested | optional — narrows the group to one parent |
-| `COLLECTION_GROUP` + nested + `REACHABLE = parent` | **required** — the group shape has no rule behind it, so this is the only way to run it |
+| `MODE = parent-child` | **required** — the entry addresses one parent's subcollection, so this is the only way to run it |
 | `COLLECTION` + nested | **required** — the COLLECTION-scope composite index may not exist at group scope, so silently widening would turn a working query into a `FAILED_PRECONDITION` |
 | not nested | rejected |
 

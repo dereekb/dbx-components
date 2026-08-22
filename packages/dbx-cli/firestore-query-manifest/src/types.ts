@@ -2,7 +2,7 @@
  * Internal shapes shared by the query-manifest generator's stages.
  */
 
-import type { CliFirestoreQueryParam, CliFirestoreQueryReachability, CliFirestoreQueryScope } from '../../src/lib/manifest/types.js';
+import type { CliFirestoreQueryMode, CliFirestoreQueryParam, CliFirestoreQueryRules, CliFirestoreQueryScope } from '../../src/lib/manifest/types.js';
 
 /**
  * One catalog entry as collected from a component, before factory binding.
@@ -28,9 +28,10 @@ export interface CollectedQueryEntry {
   readonly excluded?: boolean;
   readonly dispatcher?: boolean;
   /**
-   * Set by the reachability stage; absent when the generator ran without `--rules`.
+   * Set by the query-mode stage; absent when the generator ran without `--rules`.
    */
-  readonly reachability?: CliFirestoreQueryReachability;
+  readonly queryMode?: CliFirestoreQueryMode;
+  readonly rules?: CliFirestoreQueryRules;
 }
 
 /**

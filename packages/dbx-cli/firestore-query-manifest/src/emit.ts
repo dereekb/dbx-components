@@ -75,15 +75,16 @@ function renderEntry({ entry, bound }: BoundQueryEntry): string {
     entry.skip ? 'skip: true' : undefined,
     entry.excluded ? 'excluded: true' : undefined,
     entry.dispatcher ? 'dispatcher: true' : undefined,
-    entry.reachability ? `reachability: ${renderReachability(entry.reachability)}` : undefined,
+    entry.queryMode ? `queryMode: ${JSON.stringify(entry.queryMode)}` : undefined,
+    entry.rules ? `rules: ${renderRules(entry.rules)}` : undefined,
     bound ? `factory: ${entry.name}` : undefined
   ];
 
   return `  { ${fields.filter(Boolean).join(', ')} }`;
 }
 
-function renderReachability(reachability: NonNullable<CollectedQueryEntry['reachability']>): string {
-  const parts: (string | undefined)[] = [`verdict: ${JSON.stringify(reachability.verdict)}`, `list: ${JSON.stringify(reachability.list)}`, `collectionGroup: ${reachability.collectionGroup ? 'true' : 'false'}`, reachability.reason ? `reason: ${JSON.stringify(reachability.reason)}` : undefined, reachability.parentPaths && reachability.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(reachability.parentPaths)}` : undefined];
+function renderRules(rules: NonNullable<CollectedQueryEntry['rules']>): string {
+  const parts: (string | undefined)[] = [`list: ${JSON.stringify(rules.list)}`, `collectionGroup: ${rules.collectionGroup ? 'true' : 'false'}`, rules.reason ? `reason: ${JSON.stringify(rules.reason)}` : undefined, rules.parentPaths && rules.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(rules.parentPaths)}` : undefined];
 
   return `{ ${parts.filter(Boolean).join(', ')} }`;
 }

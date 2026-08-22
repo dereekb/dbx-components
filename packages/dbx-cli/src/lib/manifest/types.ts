@@ -638,29 +638,46 @@ export type CliFirestoreQueryFactory = (...args: readonly any[]) => readonly Fir
 export type CliFirestoreQueryRulesAccess = 'allowed' | 'denied' | 'unmatched';
 
 /**
- * Whether a client can run a catalog entry AS DECLARED, per `firestore.rules`.
+ * How a catalog entry must be INVOKED, resolved from `firestore.rules` at generation time.
  *
- * - `reachable` — the rules grant the read at the entry's own scope.
- * - `parent-only` — the COLLECTION_GROUP shape is dead (no `/{path=**}/<collection>/{id}` block),
- *   but the path-scoped read IS granted, so `--parent <parentKey>` runs it.
- * - `unreachable` — no client can run it at any scope.
+ * This classifies on the axis a caller acts on — "how do I run this?" — rather than on the raw
+ * rules verdict. The two are not the same question: a `COLLECTION`-scope entry over a
+ * subcollection is fully permitted by the rules and still cannot be run without `--parent`, so a
+ * pure permission verdict would call it runnable-as-declared and be wrong about how to run it.
+ *
+ * - `model` — run it directly against the model's collection or collection group.
+ * - `parent-child` — it addresses ONE parent document's subcollection, so `--parent <parentKey>`
+ *   is required. Either the entry is `COLLECTION`-scope over a subcollection, or its
+ *   `COLLECTION_GROUP` shape has no `/{path=**}/<collection>/{id}` block behind it while the
+ *   path-scoped read IS granted.
+ * - `unavailable` — no client can run it, on any transport or scoping.
+ * - `unknown` — the query manifest was generated without a `--rules` file, so nothing was
+ *   resolved. Never stored; it is what {@link CliFirestoreQueryManifestEntry.queryMode} being
+ *   absent means, so a consumer's switch over this union stays total.
  */
-export type CliFirestoreQueryReachabilityVerdict = 'reachable' | 'parent-only' | 'unreachable';
+export type CliFirestoreQueryMode = 'model' | 'parent-child' | 'unavailable' | 'unknown';
 
 /**
- * Why a catalog entry is not `reachable`.
+ * Why an entry resolved to the {@link CliFirestoreQueryMode} it did.
  *
  * `denied` and `unmatched` are kept apart the way the rules scanner keeps them apart: a
  * written-down `if false` is a deliberate no, an absence is an oversight, and a reviewer needs to
  * know which one they are looking at.
  */
-export type CliFirestoreQueryUnreachableReason =
+export type CliFirestoreQueryModeReason =
   /**
    * `scope: 'COLLECTION_GROUP'` with no `/{path=**}/<collection>/{id}` block in the rules. A
    * collection-group query is evaluated against that block alone — a path-scoped block does not
-   * authorize it, no matter how permissive.
+   * authorize it, no matter how permissive. `parent-child` when the model is nested (the
+   * path-scoped read is the way in), `unavailable` when it is a root collection with no parent to
+   * scope to.
    */
   | 'no-collection-group-rule'
+  /**
+   * `scope: 'COLLECTION'` over a subcollection: the entry addresses one parent's subcollection by
+   * construction, independent of what the rules say.
+   */
+  | 'nested-collection-scope'
   /**
    * Every `list` grant on the collection is a constant-`false`.
    */
@@ -671,18 +688,16 @@ export type CliFirestoreQueryUnreachableReason =
   | 'list-unmatched';
 
 /**
- * The rules-derived reachability of one catalog entry, resolved at GENERATION time.
+ * The `firestore.rules` evidence behind an entry's {@link CliFirestoreQueryMode} — the WHY, kept
+ * beside the answer rather than inside it.
  *
- * Absent from an entry when the generator was not given a `--rules` file — absence means UNKNOWN,
- * never "reachable", so a CLI generated without the rules file keeps its previous behavior instead
- * of refusing queries on a guess.
+ * Split from the mode deliberately: a caller (or an agent) needs only the mode to decide what to
+ * do, while a reviewer auditing a surprising mode needs these facts to check the reasoning without
+ * re-reading the rules file.
  *
- * This is deliberately scope-specific, which is why the model-level
- * {@link CliModelManifestEntry.serverOnly} flag cannot express it: a model can be legitimately
- * client-readable under its parent path while its collection-group shape is dead.
+ * Absent, like the mode, when the generator was not given a `--rules` file.
  */
-export interface CliFirestoreQueryReachability {
-  readonly verdict: CliFirestoreQueryReachabilityVerdict;
+export interface CliFirestoreQueryRules {
   /**
    * The rules' `list` posture for {@link CliFirestoreQueryManifestEntry.collection}, merged across
    * every match block that reaches it.
@@ -694,9 +709,9 @@ export interface CliFirestoreQueryReachability {
    */
   readonly collectionGroup: boolean;
   /**
-   * Present whenever {@link verdict} is not `reachable`.
+   * Present whenever the mode is not `model`.
    */
-  readonly reason?: CliFirestoreQueryUnreachableReason;
+  readonly reason?: CliFirestoreQueryModeReason;
   /**
    * The parent-document path templates a `--parent` key must match, read off the non-recursive
    * rules match paths that reach this collection (e.g. `jl/{jobLocation}/jlj/{job}`). Lets the CLI
@@ -763,14 +778,20 @@ export interface CliFirestoreQueryManifestEntry {
    */
   readonly dispatcher?: boolean;
   /**
-   * Whether `firestore.rules` lets a client run this entry at all — unlike the
-   * flags above, this one DOES affect callability.
+   * How this entry must be invoked, per `firestore.rules` — unlike the flags
+   * above, this one DOES affect callability.
    *
-   * Absent when the generator was run without a `--rules` file (unknown, not
-   * reachable). Present, the CLI refuses an `unreachable` entry locally rather
-   * than paying a round trip for the `permission-denied` the rules guarantee.
+   * Absent when the generator ran without a `--rules` file, which reads as
+   * `unknown` rather than `model`: a guess here would be worse than no field.
+   * Present, the CLI refuses an `unavailable` entry locally rather than paying
+   * a round trip for the `permission-denied` the rules guarantee, and requires
+   * `--parent` for a `parent-child` one.
    */
-  readonly reachability?: CliFirestoreQueryReachability;
+  readonly queryMode?: CliFirestoreQueryMode;
+  /**
+   * The rules evidence behind {@link queryMode}. Set and unset together with it.
+   */
+  readonly rules?: CliFirestoreQueryRules;
   /**
    * Absent when the identifier is not exported from {@link module}'s barrel
    * chain — the entry is listed but cannot be executed.

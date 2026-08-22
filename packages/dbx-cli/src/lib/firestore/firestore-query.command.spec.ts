@@ -79,7 +79,7 @@ const NOT_INVOCABLE = buildEntry({ slug: 'internal-scan', name: 'internalScanQue
  * collection with no `/{path=**}/` rule. Running it went out to Firestore and came back
  * `Missing or insufficient permissions.`; it must now be answered locally.
  */
-const PARENT_ONLY = buildEntry({
+const PARENT_CHILD = buildEntry({
   slug: 'job-applications-not-closed',
   name: 'jobApplicationsNotClosedQuery',
   model: 'JobApplication',
@@ -88,10 +88,11 @@ const PARENT_ONLY = buildEntry({
   scope: 'COLLECTION_GROUP',
   params: [],
   factory: () => [where('closed', '==', false)],
-  reachability: { verdict: 'parent-only', list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule', parentPaths: ['jl/{jobLocation}/jlj/{job}'] }
+  queryMode: 'parent-child',
+  rules: { list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule', parentPaths: ['jl/{jobLocation}/jlj/{job}'] }
 });
 
-const UNREACHABLE = buildEntry({
+const UNAVAILABLE = buildEntry({
   slug: 'billing-group-invoice-by-state',
   name: 'billingGroupInvoiceByStateQuery',
   model: 'BillingGroupInvoice',
@@ -100,10 +101,11 @@ const UNREACHABLE = buildEntry({
   scope: 'COLLECTION_GROUP',
   params: [],
   factory: () => [where('s', '==', 1)],
-  reachability: { verdict: 'unreachable', list: 'unmatched', collectionGroup: false, reason: 'list-unmatched' }
+  queryMode: 'unavailable',
+  rules: { list: 'unmatched', collectionGroup: false, reason: 'list-unmatched' }
 });
 
-const MANIFEST: CliFirestoreQueryManifest = [PUBLISHED, NOT_INVOCABLE, PARENT_ONLY, UNREACHABLE];
+const MANIFEST: CliFirestoreQueryManifest = [PUBLISHED, NOT_INVOCABLE, PARENT_CHILD, UNAVAILABLE];
 
 function buildStubContext(models?: CliFirestoreModels): CliContext {
   return {
@@ -213,18 +215,18 @@ describe('buildFirestoreQueryCommand()', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('refuses a rules-unreachable entry locally, without touching Firestore', async () => {
+  it('refuses an unavailable entry locally, without touching Firestore', async () => {
     setCliContext(buildStubContext(buildModels()));
     await expect(runQuery(['firestore-query', 'billing-group-invoice-by-state'])).rejects.toThrow(/process\.exit:1/);
 
     const parsed = JSON.parse(stdout.join(''));
-    expect(parsed).toMatchObject({ ok: false, code: 'FIRESTORE_QUERY_RULES_UNREACHABLE' });
+    expect(parsed).toMatchObject({ ok: false, code: 'FIRESTORE_QUERY_UNAVAILABLE' });
     expect(parsed.error).toContain('bgi');
     // the point of the whole change: no round trip to be told `permission-denied`
     expect(calls).toHaveLength(0);
   });
 
-  it('refuses an unreachable entry BEFORE the firestore session is opened', async () => {
+  it('refuses an unavailable entry BEFORE the firestore session is opened', async () => {
     // ordering matters: refusing after `getFirestoreModels` would still pay the session handshake,
     // which is exactly the cost this feature exists to avoid
     let opened = false;
@@ -241,7 +243,7 @@ describe('buildFirestoreQueryCommand()', () => {
     expect(opened).toBe(false);
   });
 
-  it('refuses a parent-only entry with no --parent, naming the parent path the rules declare', async () => {
+  it('refuses a parent-child entry with no --parent, naming the parent path the rules declare', async () => {
     setCliContext(buildStubContext(buildModels()));
     await expect(runQuery(['firestore-query', 'job-applications-not-closed'])).rejects.toThrow(/process\.exit:1/);
 
@@ -251,7 +253,7 @@ describe('buildFirestoreQueryCommand()', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('runs a parent-only entry once --parent targets the parent collection', async () => {
+  it('runs a parent-child entry once --parent targets the parent collection', async () => {
     setCliContext(buildStubContext(buildModels({ scopeToParent: true })));
     await runQuery(['firestore-query', 'job-applications-not-closed', '--parent', 'jl/abc/jlj/def']);
 

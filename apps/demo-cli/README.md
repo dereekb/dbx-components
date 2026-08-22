@@ -72,22 +72,22 @@ Three `@dbxModelFirebaseIndex`-tagged factories in `components/demo-firebase` ar
 
 ```bash
 demo-cli firestore-queries
-# SLUG                             MODEL                  SCOPE             CATEGORY  PARAMS  INVOCABLE  REACHABLE
-# profile-with-username-query      Profile (pr)           COLLECTION        lookup    params  yes        yes
-# published-guestbook-entries-query GuestbookEntry (gbe)  COLLECTION_GROUP  listing   params  yes        yes
-# published-guestbooks-query       Guestbook (gb)         COLLECTION        listing   params  yes        yes
+# SLUG                             MODEL                  SCOPE             CATEGORY  PARAMS  INVOCABLE  MODE
+# profile-with-username-query      Profile (pr)           COLLECTION        lookup    params  yes        model
+# published-guestbook-entries-query GuestbookEntry (gbe)  COLLECTION_GROUP  listing   params  yes        model
+# published-guestbooks-query       Guestbook (gb)         COLLECTION        listing   params  yes        model
 
-demo-cli firestore-queries published-guestbook-entries-query   # signature, params, index flags, rules verdict
+demo-cli firestore-queries published-guestbook-entries-query   # signature, params, index flags, query mode
 demo-cli firestore-queries --json
 ```
 
 `firestore-queries` never asks for a login.
 
-`REACHABLE` is the verdict `firestore.rules` gives the query, stamped at generation time by the
+`MODE` is how the query must be invoked, resolved from `firestore.rules` at generation time by the
 `--rules=firestore.rules` flag on `generate-firestore-query-manifest`. All three demo entries are
-`yes`: `gbe` is queried at `COLLECTION_GROUP` scope and the rules declare
-`match /{path=**}/gbe/{guestbookEntry}` for exactly that reason. Drop that block and the entry turns
-`parent`, meaning it runs only under `--parent gb/<guestbookId>`.
+`model` — run them directly. `gbe` is queried at `COLLECTION_GROUP` scope and the rules declare
+`match /{path=**}/gbe/{guestbookEntry}` for exactly that reason; drop that block and the entry turns
+`parent-child`, meaning it runs only under `--parent gb/<guestbookId>`.
 
 ### Running one
 

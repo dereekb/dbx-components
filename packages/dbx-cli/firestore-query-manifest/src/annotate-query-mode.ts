@@ -1,5 +1,5 @@
 /**
- * Stage 2b — annotate each collected entry with the verdict `firestore.rules` gives it.
+ * Stage 2b — annotate each collected entry with the invocation mode `firestore.rules` implies.
  *
  * The two halves of this already existed and simply never met: `scanFirestoreRules()` has reported
  * `collectionGroup` / `list` per collection since it was written, and the catalog has always
@@ -7,19 +7,19 @@
  * "~1/3 of the catalog is a guaranteed `permission-denied`" from something every consumer
  * rediscovers one wasted call at a time into a field on the entry.
  *
- * The rule itself lives in the shipped package (`cliFirestoreQueryReachability`) so the CLI's
+ * The rule itself lives in the shipped package (`cliFirestoreQueryModeForRules`) so the CLI's
  * runtime refusal and this annotation can never drift apart. This module owns only the join: read
  * the rules file, look each entry's collection up, derive the `--parent` path templates.
  */
 
 import { firestoreRulesAccessForCollection, scanFirestoreRules, type FirestoreRulesScan } from '../../firestore-rules/src/index.js';
-import { cliFirestoreQueryReachability } from '../../src/lib/firestore/query-reachability.js';
+import { cliFirestoreQueryModeForRules } from '../../src/lib/firestore/query-mode.js';
 import type { CollectedQueryEntry } from './types.js';
 
 /**
- * Input for {@link annotateQueryEntryReachability}.
+ * Input for {@link annotateQueryEntryMode}.
  */
-export interface AnnotateQueryEntryReachabilityInput {
+export interface AnnotateQueryEntryModeInput {
   readonly entries: readonly CollectedQueryEntry[];
   /**
    * The full text of the app's `firestore.rules`.
@@ -30,41 +30,41 @@ export interface AnnotateQueryEntryReachabilityInput {
 /**
  * Tally of what the annotation found, for the generator's summary line.
  */
-export interface AnnotateQueryEntryReachabilityResult {
+export interface AnnotateQueryEntryModeResult {
   readonly entries: readonly CollectedQueryEntry[];
-  readonly reachable: number;
+  readonly model: number;
   /**
    * Slugs no client can run at any scope — the genuine defects, named rather than only counted so
    * the generator can warn per entry.
    */
-  readonly unreachableSlugs: readonly string[];
+  readonly unavailableSlugs: readonly string[];
   /**
    * Slugs that run only when scoped with `--parent`. Not a defect; a usage constraint.
    */
-  readonly parentOnlySlugs: readonly string[];
+  readonly parentChildSlugs: readonly string[];
 }
 
 /**
- * Stamps `reachability` onto every entry, from a scan of the supplied rules source.
+ * Stamps `queryMode` + `rules` onto every entry, from a scan of the supplied rules source.
  *
- * Every entry is annotated, including the reachable ones: absence of the field has to keep meaning
+ * Every entry is annotated, including the plain `model` ones: absence of the field has to keep meaning
  * "the generator was run without `--rules`", so that a manifest generated without the rules file
- * never reads as a fleet of reachable queries.
+ * never reads as a fleet of directly-runnable queries.
  *
  * @param input - The collected entries and the rules source.
- * @returns The annotated entries plus a per-verdict tally.
+ * @returns The annotated entries plus a per-mode tally.
  */
-export function annotateQueryEntryReachability(input: AnnotateQueryEntryReachabilityInput): AnnotateQueryEntryReachabilityResult {
+export function annotateQueryEntryMode(input: AnnotateQueryEntryModeInput): AnnotateQueryEntryModeResult {
   const { entries, rulesSource } = input;
   const scan = scanFirestoreRules(rulesSource);
 
-  let reachable = 0;
-  const unreachableSlugs: string[] = [];
-  const parentOnlySlugs: string[] = [];
+  let model = 0;
+  const unavailableSlugs: string[] = [];
+  const parentChildSlugs: string[] = [];
 
   const annotated = entries.map((entry) => {
     const rules = firestoreRulesAccessForCollection(scan, entry.collection);
-    const reachability = cliFirestoreQueryReachability({
+    const { mode, rules: entryRules } = cliFirestoreQueryModeForRules({
       scope: entry.scope,
       isNested: entry.isNested,
       collectionGroup: rules.collectionGroup,
@@ -72,18 +72,18 @@ export function annotateQueryEntryReachability(input: AnnotateQueryEntryReachabi
       parentPaths: parentPathsForCollection(scan, entry.collection)
     });
 
-    if (reachability.verdict === 'reachable') {
-      reachable += 1;
-    } else if (reachability.verdict === 'parent-only') {
-      parentOnlySlugs.push(entry.slug);
+    if (mode === 'model') {
+      model += 1;
+    } else if (mode === 'parent-child') {
+      parentChildSlugs.push(entry.slug);
     } else {
-      unreachableSlugs.push(entry.slug);
+      unavailableSlugs.push(entry.slug);
     }
 
-    return { ...entry, reachability };
+    return { ...entry, queryMode: mode, rules: entryRules };
   });
 
-  return { entries: annotated, reachable, unreachableSlugs, parentOnlySlugs };
+  return { entries: annotated, model, unavailableSlugs, parentChildSlugs };
 }
 
 /**

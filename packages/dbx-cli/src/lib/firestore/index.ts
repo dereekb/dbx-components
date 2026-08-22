@@ -10,5 +10,5 @@ export * from './firestore.query-params';
 export * from './firestore.read';
 export * from './firestore.session';
 export * from './query-info-utils';
-export * from './query-reachability';
+export * from './query-mode';
 export * from './query-registry';

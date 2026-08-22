@@ -6,7 +6,7 @@ import { outputResult } from '../util/output';
 import { requireCliFirestoreModels } from './firestore.models';
 import { runCliFirestoreQuery } from './firestore.query';
 import { resolveCliFirestoreQueryEntry } from './query-info-utils';
-import { assertCliFirestoreQueryIsReachable } from './query-reachability';
+import { assertCliFirestoreQueryCanRun } from './query-mode';
 import { createCliFirestoreQueryRegistry } from './query-registry';
 
 /**
@@ -33,9 +33,9 @@ const EPILOGUE = [
   'a bare YYYY-MM-DD is left alone, because `firestoreDate` persists an ISO string and coercing one',
   'would silently break an equality match. `--raw-params` disables all coercion.',
   '',
-  'A query `firestore-queries` reports as REACHABLE = parent has no collection-group rule backing it,',
-  'so it runs ONLY against one parent document: pass --parent with the full ancestor chain the rules',
-  'declare (any depth). REACHABLE = no means no client can run it on any transport.'
+  "A query `firestore-queries` reports as MODE = parent-child addresses ONE parent document's",
+  'subcollection: pass --parent with the full ancestor chain the rules declare (any depth).',
+  'MODE = unavailable means no client can run it on any transport.'
 ].join('\n');
 
 /**
@@ -71,9 +71,9 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
       const parent = typeof argv.parent === 'string' ? argv.parent : undefined;
 
       // refused before the session is opened, mirroring `firestore-get`'s server-only check: the
-      // rules verdict is a property of the entry, so paying for a handshake to be told
-      // `permission-denied` teaches nothing. `runCliFirestoreQuery` re-checks for programmatic callers.
-      assertCliFirestoreQueryIsReachable({ entry, parent });
+      // mode is a property of the entry, so paying for a handshake to be told `permission-denied`
+      // teaches nothing. `runCliFirestoreQuery` re-checks for programmatic callers.
+      assertCliFirestoreQueryCanRun({ entry, parent });
 
       const models = await requireCliFirestoreModels(requireCliContext());
 
