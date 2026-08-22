@@ -174,6 +174,28 @@ zoho-cli analytics export data $WS $VIEW --format json
 zoho-cli analytics views delete $WS $VIEW                       # drop a table created above
 ```
 
+### Checking a file against a table first
+
+`analytics diff schema` compares a file's columns against the target table's column metadata and
+reports what an import would lose, without writing anything:
+
+```bash
+zoho-cli analytics diff schema $WS $VIEW -f rows.csv
+```
+
+It reports four things: columns only in the file (an import discards these silently, since Zoho
+matches data to columns by name), columns only in the table, names that match except for case, and
+values that do not fit their column's declared type. It exits non-zero when it finds any of them, so
+it can gate an import:
+
+```bash
+zoho-cli analytics diff schema $WS $VIEW -f rows.csv --quiet \
+  && zoho-cli analytics import data $WS $VIEW -f rows.csv
+```
+
+A nullable column the file omits is reported but is not treated as drift, since that is what a
+partial `append` import looks like; pass `--strict` to fail on it too.
+
 `zoho-cli analytics import new-table` leaves a table behind; `analytics views delete` is how to drop
 it. The delete is irreversible and Zoho has no recycle bin, so check the id against
 `analytics views list` first. Deleting a whole workspace additionally requires repeating its id:

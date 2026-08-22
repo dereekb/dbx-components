@@ -7,6 +7,8 @@ export * from './analytics.job';
 export * from './analytics.org';
 export * from './analytics.view';
 export * from './analytics.import';
+export * from './analytics.data';
+export * from './analytics.diff';
 export * from './analytics.export';
 export * from './analytics.factory';
 export * from './analytics.api.orgs';

@@ -5,6 +5,7 @@ import { ANALYTICS_WORKSPACES_COMMAND } from './analytics/analytics.workspaces.c
 import { ANALYTICS_VIEWS_COMMAND } from './analytics/analytics.views.command';
 import { ANALYTICS_IMPORT_COMMAND } from './analytics/analytics.import.command';
 import { ANALYTICS_EXPORT_COMMAND } from './analytics/analytics.export.command';
+import { ANALYTICS_DIFF_COMMAND } from './analytics/analytics.diff.command';
 import { ANALYTICS_ROWS_COMMAND } from './analytics/analytics.rows.command';
 
 export const ANALYTICS_COMMAND: CommandModule = {
@@ -18,6 +19,7 @@ export const ANALYTICS_COMMAND: CommandModule = {
       .command(ANALYTICS_IMPORT_COMMAND)
       .command(ANALYTICS_EXPORT_COMMAND)
       .command(ANALYTICS_ROWS_COMMAND)
+      .command(ANALYTICS_DIFF_COMMAND)
       .demandCommand(1, 'Please specify an analytics subcommand.')
       .example([
         ['$0 analytics orgs list', 'Find the org id every other command needs'],
