@@ -51,6 +51,23 @@ const viewsColumnsCommand: CommandModule = {
   }
 };
 
+const viewsDeleteCommand: CommandModule = {
+  command: 'delete <workspaceId> <viewId>',
+  describe: 'Delete a view. This cannot be undone',
+  builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' }).option('dependent-views', { type: 'boolean', default: false, describe: 'Also delete the reports, dashboards and query tables built on this view' }),
+  handler: async (argv: any) => {
+    try {
+      const api = getAnalyticsApi(argv);
+      await api.deleteView({ workspaceId: argv.workspaceId, viewId: argv.viewId, config: { deleteDependentViews: argv.dependentViews } });
+      // a successful delete is a 204 with no body, so there is nothing to echo back but the target
+      outputResult({ deleted: true, workspaceId: argv.workspaceId, viewId: argv.viewId, deletedDependentViews: argv.dependentViews });
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
 export const ANALYTICS_VIEWS_COMMAND: CommandModule = {
   command: 'views',
   describe: 'Analytics view operations',
@@ -59,10 +76,12 @@ export const ANALYTICS_VIEWS_COMMAND: CommandModule = {
       .command(viewsListCommand)
       .command(viewsGetCommand)
       .command(viewsColumnsCommand)
+      .command(viewsDeleteCommand)
       .demandCommand(1)
       .example([
         ['$0 analytics views list 1767024000000060001', 'List the views of a workspace'],
-        ['$0 analytics views columns 1767024000000060001 1767024000000149001', 'Inspect a table before importing into it']
+        ['$0 analytics views columns 1767024000000060001 1767024000000149001', 'Inspect a table before importing into it'],
+        ['$0 analytics views delete 1767024000000060001 1767024000000149001', 'Drop a table created by "import new-table"']
       ]),
   handler: noop
 };

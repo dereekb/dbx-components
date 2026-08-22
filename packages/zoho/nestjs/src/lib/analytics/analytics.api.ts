@@ -25,7 +25,9 @@ import {
   zohoAnalyticsExportDataAndAwaitJob,
   zohoAnalyticsAddRow,
   zohoAnalyticsUpdateRows,
-  zohoAnalyticsDeleteRows
+  zohoAnalyticsDeleteRows,
+  zohoAnalyticsDeleteView,
+  zohoAnalyticsDeleteWorkspace
 } from '@dereekb/zoho';
 import { ZohoAnalyticsServiceConfig } from './analytics.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -333,5 +335,29 @@ export class ZohoAnalyticsApi {
    */
   get deleteRows() {
     return zohoAnalyticsDeleteRows(this.analyticsContext);
+  }
+
+  // MARK: Modeling Accessors
+  /**
+   * Configured pass-through for {@link zohoAnalyticsDeleteView}.
+   *
+   * Irreversibly deletes a table, query table, report or dashboard. Needs the
+   * `ZohoAnalytics.modeling.delete` scope, which `modeling.create` does not imply.
+   *
+   * @returns Bound delete view function.
+   */
+  get deleteView() {
+    return zohoAnalyticsDeleteView(this.analyticsContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoAnalyticsDeleteWorkspace}.
+   *
+   * Irreversibly deletes a workspace and every view inside it.
+   *
+   * @returns Bound delete workspace function.
+   */
+  get deleteWorkspace() {
+    return zohoAnalyticsDeleteWorkspace(this.analyticsContext);
   }
 }

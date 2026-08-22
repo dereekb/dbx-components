@@ -21,10 +21,14 @@ export const ZOHO_ANALYTICS_FORM_CONTENT_TYPE = 'application/x-www-form-urlencod
  *
  * Where that parameter is placed depends on the API family:
  *
- * - the query string for every `GET`, and for every Bulk API write (import/export); use
- *   {@link zohoAnalyticsConfigQuerySuffix}
- * - an `application/x-www-form-urlencoded` body for Data API row CRUD and Modeling API writes;
- *   use {@link zohoAnalyticsFormApiFetchJsonInput}
+ * - the query string for every `GET`, for every Bulk API write (import/export), and for the
+ *   Modeling API deletes; use {@link zohoAnalyticsConfigQuerySuffix}
+ * - an `application/x-www-form-urlencoded` body for Data API row CRUD; use
+ *   {@link zohoAnalyticsFormApiFetchJsonInput}
+ *
+ * The row-CRUD form body is the odd one out, and it is not the general rule for writes: the
+ * Modeling delete endpoints take their `CONFIG` in the query string despite also being writes.
+ * Verified against the live API.
  *
  * @see https://www.zoho.com/analytics/api/v2/api-specification.html
  */
@@ -71,8 +75,7 @@ export function zohoAnalyticsApiFetchJsonInput(method: string, body?: Maybe<Fetc
 
 /**
  * Constructs the FetchJsonInput for a Zoho Analytics call that carries its `CONFIG` in an
- * `application/x-www-form-urlencoded` body, as the Data API row operations and the Modeling API
- * writes require.
+ * `application/x-www-form-urlencoded` body, as the Data API row operations require.
  *
  * The content type is set explicitly to override the JSON default applied by the Analytics fetch
  * factory.

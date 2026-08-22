@@ -15,3 +15,4 @@ export * from './analytics.api.views';
 export * from './analytics.api.import';
 export * from './analytics.api.export';
 export * from './analytics.api.rows';
+export * from './analytics.api.modeling';

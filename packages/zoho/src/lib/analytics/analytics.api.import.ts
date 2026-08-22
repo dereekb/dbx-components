@@ -266,6 +266,13 @@ export type ZohoAnalyticsImportDataInNewTableFunction = (input: ZohoAnalyticsImp
 /**
  * Creates a {@link ZohoAnalyticsImportDataInNewTableFunction} bound to the given context.
  *
+ * The new table's id comes back on the result as `viewId`, so it does not have to be found by
+ * listing the workspace afterwards. Drop the table again with `zohoAnalyticsDeleteView()`, which is
+ * the only way to remove one through the API.
+ *
+ * A name already taken in the workspace is rejected rather than reused, so a caller that reruns this
+ * has to delete the previous table first.
+ *
  * @param context - Authenticated Zoho Analytics context providing fetch and rate limiting.
  * @returns Function that creates a table in a workspace and imports data into it.
  *

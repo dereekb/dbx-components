@@ -4,7 +4,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { type Getter, type Maybe, MS_IN_SECOND, cachedGetter } from '@dereekb/util';
 import { makeFileForFetch } from '@dereekb/util/fetch';
 import { type ExpectFailAssertionFunction, captureRejection, expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
-import { ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, pollZohoAnalyticsJob, type ZohoAnalyticsGetExportJobResponse, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
+import { ZOHO_ANALYTICS_METADATA_API_RATE_LIMIT, ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, pollZohoAnalyticsJob, type ZohoAnalyticsGetExportJobResponse, type ZohoAnalyticsGetImportJobResponse, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
 import { appZohoAnalyticsModuleMetadata } from './analytics.module';
 import { ZohoAnalyticsApi } from './analytics.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
@@ -48,6 +48,16 @@ const RUN_LIVE_TESTS = Boolean(TEST_WORKSPACE_ID && TEST_ORG_ID && TEST_REFRESH_
  * The name is also the SQL/criteria identifier, so it must stay free of spaces and quotes.
  */
 const TEST_TABLE_NAME: ZohoAnalyticsName = 'DbxComponentsLiveTest';
+
+/**
+ * Tables the modeling tests create and then delete within the same test.
+ *
+ * Kept distinct from {@link TEST_TABLE_NAME} so a modeling test can never delete the shared table
+ * the rest of the suite depends on, and distinct from each other so the two tests cannot collide
+ * when vitest runs them back to back.
+ */
+const NEW_TABLE_SYNC_NAME: ZohoAnalyticsName = 'DbxComponentsNewTableSync';
+const NEW_TABLE_ASYNC_NAME: ZohoAnalyticsName = 'DbxComponentsNewTableAsync';
 
 /**
  * Rows the test table is reset to before each write test.
@@ -116,6 +126,16 @@ const NON_EXISTENT_ID = '0000000000000000000';
  */
 const WORKSPACE_NOT_PRESENT_ERROR_CODE = '7103';
 const VIEW_NOT_PRESENT_ERROR_CODE = '7104';
+/**
+ * Reported for a view id that WAS a view in the workspace and has since been deleted, where an id
+ * that was never a view reports {@link VIEW_NOT_PRESENT_ERROR_CODE} instead.
+ *
+ * The two carry the identical message ("View is not present in the workspace"), so the code is the
+ * only thing separating "you deleted this" from "this was never here". Zoho documents neither, and
+ * the split is not a transient post-delete state — a view deleted minutes earlier still reports it,
+ * and `getViewDetails()` reports it for the same id.
+ */
+const DELETED_VIEW_NOT_PRESENT_ERROR_CODE = '7106';
 const IMPORT_ABORTED_ERROR_CODE = '7232';
 const UNKNOWN_COLUMN_IN_EXPORT_CRITERIA_ERROR_CODE = '7330';
 const EXPORT_CRITERIA_PARSE_ERROR_CODE = '7331';
@@ -260,6 +280,34 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
   }
 
   /**
+   * Finds a view of the test workspace by name.
+   *
+   * @param viewName - Name of the view to look for.
+   * @returns The view, or undefined when the workspace has none by that name.
+   */
+  async function findView(viewName: ZohoAnalyticsName): Promise<Maybe<ZohoAnalyticsView>> {
+    const { data } = await api.getViews({ workspaceId });
+    return data.views.find((view) => view.viewName === viewName);
+  }
+
+  /**
+   * Deletes a table left behind by an earlier interrupted run.
+   *
+   * A create fails outright when the name is taken, so without this a single failed modeling run
+   * would wedge the test until the table was dropped by hand — the exact problem delete exists to
+   * fix.
+   *
+   * @param viewName - Name of the table to remove if it is still present.
+   */
+  async function deleteViewIfPresent(viewName: ZohoAnalyticsName): Promise<void> {
+    const view = await findView(viewName);
+
+    if (view) {
+      await api.deleteView({ workspaceId, viewId: view.viewId });
+    }
+  }
+
+  /**
    * Exports the current contents of the test table as rows.
    *
    * @returns The rows currently in the test table.
@@ -286,6 +334,13 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
     nest = await Test.createTestingModule({ imports: [rootModule] }).compile();
     api = nest.get(ZohoAnalyticsApi);
+
+    // The client paces itself against the 100/min OVERALL Analytics limit, but this suite is
+    // dominated by metadata calls (every getViews/getViewDetails, and the modeling deletes), which
+    // Zoho throttles at 60/min instead. Paced at 100 the suite outruns that lower ceiling and tests
+    // fail with 6045 — as several unrelated tests all asserting '6045' at once, which reads like a
+    // broken client rather than a throttle. Pace to the ceiling this suite actually hits.
+    api.zohoRateLimiter.setConfig({ limit: ZOHO_ANALYTICS_METADATA_API_RATE_LIMIT }, true);
 
     const view = await loadTestTable();
     testViewId = view.viewId;
@@ -918,6 +973,119 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
           // the Data API reports an unknown criteria column as 8004, where the Bulk export API
           // reports the same mistake as 7330
           await expectFail(() => api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: UNKNOWN_COLUMN_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(UNKNOWN_COLUMN_IN_ROW_CRITERIA_ERROR_CODE));
+        });
+      });
+    });
+  });
+
+  // MARK: Modeling
+  /**
+   * The delete operations, and the two table-creating imports they finally make testable.
+   *
+   * Before delete existed, `importDataInNewTable()` and `createImportJobInNewTable()` had no live
+   * coverage at all: every run would have stranded another table in the workspace with no way to
+   * remove it through the API. Each test here creates the table it deletes and deletes it again at
+   * the end, so the pair is exercised as one round trip.
+   *
+   * None of these touch {@link TEST_TABLE_NAME}, so the group needs no baseline reset — the tables
+   * are its own, and the failure tests land nothing.
+   */
+  describe('modeling', () => {
+    describe('deleteView()', () => {
+      it(
+        'should delete the table importDataInNewTable() creates, and report a second delete of it differently than a delete of an id that never existed',
+        async () => {
+          await deleteViewIfPresent(NEW_TABLE_SYNC_NAME);
+
+          const created = await api.importDataInNewTable({
+            workspaceId,
+            config: { tableName: NEW_TABLE_SYNC_NAME, autoIdentify: true, onError: 'abort' },
+            rows: BASELINE_ROWS
+          });
+
+          // the first live coverage of importDataInNewTable(): the created table's id comes back on
+          // the import result rather than needing a listing to find it — which is also why no
+          // getViews() is spent confirming the table exists here, since the delete below only
+          // succeeds if it does
+          expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(created.data.importSummary.successRowCount).toBe(BASELINE_ROWS.length);
+          expect(created.data.viewId).toBeDefined();
+
+          const viewId = created.data.viewId as ZohoAnalyticsViewId;
+          const deleted = await api.deleteView({ workspaceId, viewId });
+
+          // a delete answers 204 with an empty body, so there is no envelope to read — the client
+          // resolves null, and confirming the delete means listing the views again
+          expect(deleted).toBeNull();
+          expect(await findView(NEW_TABLE_SYNC_NAME)).toBeUndefined();
+
+          // deleting it again is 7106, where NON_EXISTENT_ID is 7104 — same message, different code.
+          // captureRejection() rather than expectFail() because this is a plain it(): expectFail()
+          // signals its success by throwing, which only itShouldFail() knows to catch
+          const reDeleteError = await captureRejection(() => api.deleteView({ workspaceId, viewId }));
+
+          expect(reDeleteError).toBeInstanceOf(ZohoServerFetchResponseError);
+          expect((reDeleteError as ZohoServerFetchResponseError).code).toBe(DELETED_VIEW_NOT_PRESENT_ERROR_CODE);
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+
+      it(
+        'should delete the table createImportJobInNewTable() creates',
+        async () => {
+          await deleteViewIfPresent(NEW_TABLE_ASYNC_NAME);
+
+          const created = await api.createImportJobInNewTable({
+            workspaceId,
+            config: { tableName: NEW_TABLE_ASYNC_NAME, autoIdentify: true, onError: 'abort' },
+            rows: BASELINE_ROWS
+          });
+
+          expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(created.data.jobId).toBeDefined();
+
+          // there is no importDataInNewTableAndAwaitJob(), so the job is polled with the same
+          // library poller the existing-table import wraps
+          const job = await pollZohoAnalyticsJob<ZohoAnalyticsGetImportJobResponse>({
+            ...LIVE_JOB_POLL,
+            loadJob: () => api.getImportJob({ workspaceId, jobId: created.data.jobId }),
+            readJobCode: (x) => x.data.jobCode
+          });
+
+          expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+          expect(job.data.jobInfo?.importSummary.successRowCount).toBe(BASELINE_ROWS.length);
+
+          // unlike the synchronous import, the async job's result is not where the new table's id is
+          // found reliably, so the table is located by name
+          const view = await findView(NEW_TABLE_ASYNC_NAME);
+          expect(view).toBeDefined();
+
+          await api.deleteView({ workspaceId, viewId: (view as ZohoAnalyticsView).viewId });
+          expect(await findView(NEW_TABLE_ASYNC_NAME)).toBeUndefined();
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+    });
+
+    /**
+     * Deletes that are expected to be rejected, so they remove nothing and cost no import.
+     */
+    describe('failures', () => {
+      describe('deleteView()', () => {
+        itShouldFail('when the view id was never a view in the workspace', async () => {
+          await expectFail(() => api.deleteView({ workspaceId, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+        });
+
+        itShouldFail('when the workspace does not exist', async () => {
+          await expectFail(() => api.deleteView({ workspaceId: NON_EXISTENT_ID, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
+        });
+      });
+
+      describe('deleteWorkspace()', () => {
+        // the only safe live assertion for this operation: the test workspace itself must survive
+        // the suite, so a delete that is expected to succeed is never run
+        itShouldFail('when the workspace does not exist', async () => {
+          await expectFail(() => api.deleteWorkspace({ workspaceId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
         });
       });
     });

@@ -31,7 +31,24 @@ ZohoAnalytics.metadata.all
 ZohoAnalytics.modeling.all
 ```
 
-`modeling.all` is required because the suite creates its own test table.
+`modeling.all` is required because the suite creates and deletes its own tables.
+
+**Grant all three, and check what you actually got.** Zoho issues exactly the scopes the
+authorization URL asked for, and the granular ones do not imply each other — a token holding
+`ZohoAnalytics.modeling.create` can create a table but not delete one, and every delete fails with
+error **8540** ("This API request cannot be processed using the provided token"), which names a
+scope problem but not which scope. The grant is only visible on a token exchange, so read it back:
+
+```bash
+curl -s -X POST https://accounts.zoho.com/oauth/v2/token \
+  -d "refresh_token=$ZOHO_ANALYTICS_ACCOUNTS_REFRESH_TOKEN" \
+  -d "client_id=$ZOHO_ANALYTICS_ACCOUNTS_CLIENT_ID" \
+  -d "client_secret=$ZOHO_ANALYTICS_ACCOUNTS_CLIENT_SECRET" \
+  -d "grant_type=refresh_token" | jq .scope
+```
+
+If `ZohoAnalytics.modeling.delete` (or `.all`) is missing, redo step 3 — the modeling tests cannot
+pass without it.
 
 ## 3. Get a refresh token
 
@@ -97,6 +114,8 @@ key, so a cached "passed" from a credential-less run would otherwise be replayed
 - creates `DbxComponentsLiveTest` once, with columns `Region` / `Rep` / `Amount`
 - resets that table to three baseline rows before each test that asserts an absolute row count,
   and once more after the suite
+- creates `DbxComponentsNewTableSync` and `DbxComponentsNewTableAsync` in the `modeling` group and
+  deletes each one again inside the same test
 - creates async import/export jobs, which count against the org's daily API-unit allowance
 - never touches any other view in the workspace, and never deletes the workspace itself
 
@@ -109,12 +128,22 @@ a known starting point:
 | `no-op writes` | no | writes expected to affect zero rows |
 | `failures` | no | writes expected to be rejected, which land nothing |
 | `errors` | no | read-only not-found and bad-criteria calls |
+| `modeling` | no | the delete operations, which create and destroy their own tables |
 
-Adding a test that only needs a failure or a zero-row result belongs in one of the latter three,
+Adding a test that only needs a failure or a zero-row result belongs in one of the latter groups,
 which cost no import.
 
 If the table's schema ever drifts (a stray column, a changed type), delete the
-`DbxComponentsLiveTest` table in the Analytics UI — the next run recreates it from the baseline rows.
+`DbxComponentsLiveTest` table — `zoho-cli analytics views delete <workspaceId> <viewId>`, or by
+hand in the UI — and the next run recreates it from the baseline rows.
+
+### Rate limiting
+
+Analytics allows 100 requests per minute overall and 60/min for metadata, and the full suite runs
+close enough to that ceiling that a run started right after another one fails with error **6045** on
+whichever tests happen to be in flight. That failure is collateral, not a regression — the giveaway
+is several unrelated tests all asserting `'6045'` where they expected their own error code. Wait a
+minute and re-run before investigating.
 
 ## Driving the CLI against the same workspace
 
@@ -142,7 +171,10 @@ zoho-cli analytics views list $ZOHO_ANALYTICS_TEST_WORKSPACE_ID
 zoho-cli analytics import data $WS $VIEW -f rows.csv            # sync
 zoho-cli analytics import data $WS $VIEW -f rows.csv --async    # bulk job
 zoho-cli analytics export data $WS $VIEW --format json
+zoho-cli analytics views delete $WS $VIEW                       # drop a table created above
 ```
 
-Note that `zoho-cli analytics import new-table` creates a table that nothing can delete through the
-API — the Modeling API is not implemented — so drop leftovers in the Analytics UI.
+`zoho-cli analytics import new-table` leaves a table behind; `analytics views delete` is how to drop
+it. The delete is irreversible and Zoho has no recycle bin, so check the id against
+`analytics views list` first. Deleting a whole workspace additionally requires repeating its id:
+`analytics workspaces delete $WS --confirm $WS`.
