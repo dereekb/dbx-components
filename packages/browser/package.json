@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/browser",
-  "version": "13.39.0",
+  "version": "13.40.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/util": "13.39.0",
-    "@dereekb/rxjs": "13.39.0",
+    "@dereekb/util": "13.40.0",
+    "@dereekb/rxjs": "13.40.0",
     "rxjs": "^7.8.2"
   },
   "exports": {

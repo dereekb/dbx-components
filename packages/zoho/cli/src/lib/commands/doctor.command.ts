@@ -1,6 +1,7 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts } from '../config/cli.config';
-import { createCliContext } from '../context/cli.context';
+import type { Maybe } from '@dereekb/util';
+import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts, type ZohoCliProduct } from '../config/cli.config';
+import { createCliContext, toZohoCliProductApis, type ZohoCliProductApi, type ZohoCliProductApis } from '../context/cli.context';
 import { outputResult } from '../util/output';
 import { access, constants } from 'node:fs';
 import { dirname } from 'node:path';
@@ -66,31 +67,30 @@ async function checkTokenCacheDir(): Promise<DoctorCheck> {
   return { name: 'token-cache', status: 'warn', message: `Token cache directory not writable: ${cacheDir}` };
 }
 
-function checkConfiguredProducts(products: readonly string[]): DoctorCheck {
+function checkConfiguredProducts(products: readonly ZohoCliProduct[]): DoctorCheck {
   if (products.length > 0) {
     return { name: 'products', status: 'pass', message: `Configured products: ${products.join(', ')}` };
   }
   return { name: 'products', status: 'fail', message: 'No products have complete credentials' };
 }
 
-async function checkTokenExchanges(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly string[]): Promise<DoctorCheck[]> {
-  const context = createCliContext(config);
+async function checkTokenExchanges(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[]): Promise<DoctorCheck[]> {
+  const productApis: ZohoCliProductApis = toZohoCliProductApis(createCliContext(config));
   const results: DoctorCheck[] = [];
   for (const product of products) {
-    results.push(await checkTokenExchange(context, product));
+    results.push(await checkTokenExchange(productApis[product], product));
   }
   return results;
 }
 
-async function checkTokenExchange(context: ReturnType<typeof createCliContext>, product: string): Promise<DoctorCheck> {
-  const api = pickProductApi(context, product);
+async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCliProduct): Promise<DoctorCheck> {
   if (!api) {
     return { name: `${product}-token`, status: 'warn', message: `${product}: API not configured` };
   }
   let result: DoctorCheck;
   try {
-    const accountsApi = (api as any).zohoAccountsApi;
-    const tokenResponse = await accountsApi.accessToken();
+    // the product's own accounts API, so the reported scope is the grant it authenticates with
+    const tokenResponse = await api.zohoAccountsApi.accessToken();
     result = { name: `${product}-token`, status: 'pass', message: `${product}: Token exchange successful. Scope: ${tokenResponse.scope}` };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
@@ -99,14 +99,7 @@ async function checkTokenExchange(context: ReturnType<typeof createCliContext>, 
   return result;
 }
 
-function pickProductApi(context: ReturnType<typeof createCliContext>, product: string): unknown {
-  if (product === 'recruit') return context.recruitApi;
-  if (product === 'crm') return context.crmApi;
-  if (product === 'sign') return context.signApi;
-  return context.deskApi;
-}
-
-function checkDeskOrgId(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly string[]): DoctorCheck | undefined {
+function checkDeskOrgId(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[]): DoctorCheck | undefined {
   if (config.desk?.orgId) {
     return { name: 'desk-org-id', status: 'pass', message: `Desk org ID configured: ${config.desk.orgId}` };
   }

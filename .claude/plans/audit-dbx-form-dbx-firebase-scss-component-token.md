@@ -48,9 +48,8 @@ Deliver report to user. Sections per package:
 - [x] Phase 0 bootstrap complete
 - [x] Workflow launched (`wf_32f992b9-c38`)
 - [x] Report delivered — note: `cloud-sync/notes/dbx-form-firebase-scss-audit/dbx-form-firebase-scss-component-token-audit.md`
-- [ ] User approved edits
-- [ ] Edits applied + validated
-- [ ] Committed
+- [x] Edits applied + validated (both `npx sass` index compiles pass)
+- [x] Committed — `3f626eb07` (original 3 edits) + this commit (drift re-audit)
 
 ### Result (workflow `wf_32f992b9-c38`, 14 agents, ~690k tokens)
 **Token hygiene GOOD — 1 confirmed actionable finding, 0 rejected.**
@@ -59,6 +58,24 @@ Deliver report to user. Sections per package:
 - **The one change (value-preserving, adversarially confirmed):** `forge/style/_shared.scss:13` `padding: 6px 0;` → `padding: var(--dbx-padding-2) 0;`
 - Deferred (out of scope, non-CT lint): dead `@use '@angular/material' as mat` in both packages' `src/_index.scss`.
 - No CT-6 `generate-css-tokens` regen needed (0 tokens added/renamed/removed).
+
+### Phase 4 — Drift re-audit (2026-08-22)
+
+Commit `3f626eb07` applied all three edits (the CT-5 swap **and** both deferred `@use mat` removals) but never closed the plan out. Since that commit 13 `.scss` files changed and 2 new dbx-firebase partials appeared, so the drift was re-audited against CT-1…CT-6 with the same smell-check -> adversarial-verify lens.
+
+**1 new confirmed CT-5 finding (applied):**
+- `forge/field/value/array/_array.scss:64-65` — `padding-top/left: 6px` -> `var(--dbx-padding-2)`. Same class as the original `_shared.scss` fix; the file already consumes the token bare at L38/L70. Value-preserving (`--dbx-padding-2` is emitted globally at the theme root via `_root-variables.scss`, default `_config.scss:98` = 6px).
+
+**3 smell-check hits REJECTED on verification:**
+- `_array.scss:37` `margin-bottom: 8px` -> `--dbx-list-card-items-list-gap`: **regression**, not a swap. That token is *component-scoped* (declared inside `.dbx-list-card-items-list`, `dbx-web/.../_list.scss:342`), so it does not resolve in the repeat-array tray — the declaration would be dropped. Semantics are also wrong (list-card gap != tray outer margin).
+- `_wrapper.scss:101-102` `padding-top/right: 16px` -> `--dbx-step-block-gap`: that token has **no declaration anywhere** (pure CT-4 override point, consumed with an SCSS fallback at `_text.scss:174`), so bare use resolves to nothing. Also one half of the intentional coupled `-16/-16/-8` hit-area pair.
+- `_wrapper.scss:103` `padding-bottom: 8px`: same coupled pair + same unresolvable-token problem.
+
+**KEEP (verified clean):** `_texteditor.scss`, `_sourceselect.scss`, `_externalconnection.scss`, `oauth.consent.scope.default.view.component.scss` (all CT-4 override points with correct `--mat-sys-*` fallback chains, dark-safe); `_wrapper.scss:137` `padding: 0 6px` (badge geometry coupled to `--dbx-form-repeat-array-index-size, 22px`); empty `@mixin theme()` placeholders (known deliberate uniform API).
+
+**Ground-truth correction:** dbx-firebase is now **17** `.scss` files (was 15) and **no longer has a zero token surface** — `_externalconnection.scss` consumes `--dbx-list-card-items-list-gap` / `--dbx-avatar-size` as CT-4 override points and the oidc consent partial drives `--mat-checkbox-*` from `--mat-sys-*`. Both are correct usage; categories A/B/C stay empty.
+
+Still no CT-6 regeneration needed — zero tokens added/renamed/removed.
 
 ## Reference Links
 - Convention: `dbx-claude ref 4` (component-token)

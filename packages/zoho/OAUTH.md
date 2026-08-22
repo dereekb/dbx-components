@@ -48,6 +48,30 @@ https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoSign.documents.ALL,ZohoSign.t
 
 https://accounts.zoho.com/oauth/v2/auth?scope=ZohoSign.documents.ALL,ZohoSign.templates.ALL&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
+Analytics Examples:
+
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoAnalytics.data.all,ZohoAnalytics.metadata.all,ZohoAnalytics.modeling.all`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoAnalytics.data.all,ZohoAnalytics.metadata.all,ZohoAnalytics.modeling.all&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+
+The full Analytics scope list is at https://www.zoho.com/analytics/api/v2/prerequisites.html#scope. What `@dereekb/zoho` actually calls:
+
+| Scope | Needed for |
+| --- | --- |
+| `ZohoAnalytics.metadata.read` | `getOrgs`, `getAllWorkspaces` / `getOwnedWorkspaces` / `getSharedWorkspaces`, `getWorkspaceDetails`, `getViews`, `getViewDetails`, `getTableMetadata` |
+| `ZohoAnalytics.data.all` | `importDataInTable` (both `append` and `truncateadd`, which deletes), every export, and `addRow` / `updateRows` / `deleteRows` |
+| `ZohoAnalytics.modeling.create` | `importDataInNewTable` and `createImportJobInNewTable`, which create a table |
+
+`ZohoAnalytics.metadata.all` and `ZohoAnalytics.modeling.all` are the broader forms of the last two —
+grant those instead if you expect to use the Modeling API (creating and altering tables directly),
+which this package does not implement yet. `ZohoAnalytics.fullaccess.all` is never needed; the
+sharing, embed, and usermanagement scope groups have no callers here.
+
+Analytics requires its own OAuth client rather than sharing one with Recruit/CRM/Desk — it is listed
+in `ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS` for that reason. Its API also needs an organization id
+(`ZOHO_ANALYTICS_ORG_ID`), which `GET /orgs` is the one endpoint that works without and therefore
+the way to discover it: `zoho-cli analytics orgs list`.
+
 - The scope is the list of roles we want to grant this refresh token
 - The clientId is the client id generated in the previous step
 - The redirectUrl is where the web page will redirect us after we authorize the request.
@@ -77,4 +101,10 @@ https://accounts.zoho.com/oauth/v2/token?grant_type=authorization_code&client_id
 - client_id and client_secret come from the client generated in step 1
 - the auth code is the code from the url in step 3
 
-This refresh token will be used to retrieve new access tokens. Save this in your environment variables as `ZOHO_ACCOUNTS_REFRESH_TOKEN` or `ZOHO_CRM_ACCOUNTS_REFRESH_TOKEN`/`ZOHO_RECRUIT_ACCOUNTS_REFRESH_TOKEN`/etc. for a service-specific refresh token.
+This refresh token will be used to retrieve new access tokens. Save this in your environment variables as `ZOHO_ACCOUNTS_REFRESH_TOKEN` or `ZOHO_CRM_ACCOUNTS_REFRESH_TOKEN`/`ZOHO_RECRUIT_ACCOUNTS_REFRESH_TOKEN`/`ZOHO_ANALYTICS_ACCOUNTS_REFRESH_TOKEN`/etc. for a service-specific refresh token.
+
+Sign and Analytics must use the service-specific names: they authorize under their own client, so the
+shared `ZOHO_ACCOUNTS_*` fallback would hand them a token without their scopes.
+
+For running the Analytics live integration tests against a throwaway workspace, see
+`nestjs/docs/analytics-testing.md`.

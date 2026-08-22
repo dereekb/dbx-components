@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { KnownNotificationHealthCheckIssueCode, NotificationDeliveryMethod, type NotificationDeliveryMethodMap, type NotificationHealthCheck } from '@dereekb/firebase';
 import { DbxFirebaseNotificationHealthCheckPresentationService } from '../service/healthcheck.presentation.service';
+import { DbxFirebaseNotificationHealthCheckIssueComponent } from './healthcheck.issue.component';
 import { type DbxFirebaseNotificationHealthCheckMethodProbeActionConfig, DbxFirebaseNotificationHealthCheckMethodComponent } from './healthcheck.method.component';
 
 /**
@@ -36,10 +37,12 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
  * dialog, an admin view). The per-method test message actions are an input for the same reason: the
  * report renders them, whoever owns the store supplies them.
  *
- * The view is client-facing, so it shows only what the user can act on. The check's account-wide
- * findings (`is`), any method the system has no send service for, and the methods in
- * {@link HIDDEN_NOTIFICATION_DELIVERY_METHODS} are left out here — all of them remain on the check
- * itself for an API/callModel consumer.
+ * The view is client-facing, so it shows only what the user can act on. The account-wide findings
+ * (`is`) lead, because they are frequently the whole answer and no method section repeats them — a
+ * global opt-out or a disabled account leaves every method looking correctly configured. Any method
+ * the system has no send service for, and the methods in
+ * {@link HIDDEN_NOTIFICATION_DELIVERY_METHODS}, are left out — both remain on the check itself for an
+ * API/callModel consumer.
  */
 @Component({
   selector: 'dbx-firebase-notification-healthcheck',
@@ -54,6 +57,17 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
         </div>
       </div>
 
+      @if (accountIssuesSignal().length) {
+        <dbx-content-pit class="dbx-mb3">
+          <div class="dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-hint">Your Account</div>
+          @for (issue of accountIssuesSignal(); track $index) {
+            <div class="dbx-pt2">
+              <dbx-firebase-notification-healthcheck-issue [issue]="issue"></dbx-firebase-notification-healthcheck-issue>
+            </div>
+          }
+        </dbx-content-pit>
+      }
+
       @for (methodSection of methodSectionsSignal(); track methodSection.result.me) {
         <dbx-content-pit class="dbx-mb3">
           <dbx-firebase-notification-healthcheck-method [result]="methodSection.result" [probeAction]="methodSection.probeAction"></dbx-firebase-notification-healthcheck-method>
@@ -65,7 +79,7 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
     class: 'd-block dbx-firebase-notification-healthcheck'
   },
   standalone: true,
-  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckMethodComponent],
+  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent, DbxFirebaseNotificationHealthCheckMethodComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseNotificationHealthCheckComponent {
@@ -79,6 +93,15 @@ export class DbxFirebaseNotificationHealthCheckComponent {
    * Left unset the report is read-only, which is what an admin or historical view wants.
    */
   readonly probeActions = input<Maybe<DbxFirebaseNotificationHealthCheckProbeActionMap>>();
+
+  /**
+   * The account-wide findings, which apply however each individual method is configured.
+   *
+   * Shown in full rather than filtered: unlike a method section there is no "this channel is off"
+   * noise here, and an account-level finding is often the only explanation the report has — a global
+   * opt-out, a disabled account, or an unreadable auth record leaves every method looking fine.
+   */
+  readonly accountIssuesSignal = computed(() => this.healthCheck()?.is ?? []);
 
   readonly statusColorSignal = computed(() => {
     const status = this.healthCheck()?.s;

@@ -5,9 +5,9 @@ import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign';
+export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign' | 'analytics';
 
-export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign'];
+export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign', 'analytics'];
 
 /**
  * Products that use a dedicated OAuth client and therefore must be configured with their own
@@ -15,7 +15,14 @@ export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 's
  * authorized under a separate `client_id` (its scopes cannot be granted alongside recruit/crm/desk),
  * so a shared-credential fallback would produce a client that lacks Sign access.
  */
-export const ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['sign']);
+export const ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['sign', 'analytics']);
+
+/**
+ * Products whose API calls are scoped by an organization id, and for which `auth setup --org-id`
+ * therefore has to be persisted. Desk requires one for every request; Analytics requires one for
+ * every request except `GET /orgs`, which is how the id is discovered in the first place.
+ */
+export const ZOHO_CLI_ORG_ID_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['desk', 'analytics']);
 
 /**
  * Credentials for a single OAuth client.
@@ -50,7 +57,7 @@ export type ZohoCliOutputConfig = CliOutputConfig;
  *
  * Shared credentials are used as fallback when a product doesn't have its own, except for
  * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`) which always require their own credentials.
- * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`.
+ * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`, `analytics`.
  */
 export interface ZohoCliConfig {
   readonly shared: ZohoCliCredentials & {
@@ -61,6 +68,7 @@ export interface ZohoCliConfig {
   readonly crm?: ZohoCliProductConfig;
   readonly desk?: ZohoCliProductConfig;
   readonly sign?: ZohoCliProductConfig;
+  readonly analytics?: ZohoCliProductConfig;
   readonly output?: ZohoCliOutputConfig;
 }
 
@@ -146,7 +154,7 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
     const productConfigFromEnv = (product: string): Maybe<ZohoCliProductConfig> => {
       const prefix = product.toUpperCase();
       const apiUrl = envVar('API_URL', prefix);
-      const orgId = product === 'desk' ? envVar('DESK_ORG_ID') : undefined;
+      const orgId = ZOHO_CLI_ORG_ID_PRODUCTS.has(product as ZohoCliProduct) ? envVar('ORG_ID', prefix) : undefined;
       const fileProduct = fileConfig?.[product as ZohoCliProduct];
 
       // Only include env overrides that are actually service-specific (not the shared fallback)
@@ -172,12 +180,16 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
       return productResult;
     };
 
+    // every product in ZOHO_CLI_PRODUCTS must be listed here — one left out is not merely
+    // un-overridden by env vars, it is dropped from the loaded config entirely, and the CLI then
+    // reports it as unconfigured no matter what is on disk
     result = {
       shared,
       recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
       crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
       desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
       sign: productConfigFromEnv('sign') ?? fileConfig?.sign,
+      analytics: productConfigFromEnv('analytics') ?? fileConfig?.analytics,
       output: fileConfig?.output
     };
   }
@@ -244,7 +256,11 @@ export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
 /**
  * Merges new values into the existing config, preserving unmodified fields.
  *
- * Per-product blocks (`recruit`, `crm`, `desk`, `sign`) are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
+ * Per-product blocks are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
+ *
+ * Every product in {@link ZOHO_CLI_PRODUCTS} MUST appear below. A product missing from this literal
+ * is not merely left unmerged — it is absent from `merged` and therefore erased from the config file
+ * by the save, so its credentials can never be stored.
  *
  * @param updates - Partial config patch; only keys present in this object are touched.
  * @returns The fully merged config that was written to disk.
@@ -257,6 +273,7 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     crm: updates.crm === undefined ? existing?.crm : { ...existing?.crm, ...updates.crm },
     desk: updates.desk === undefined ? existing?.desk : { ...existing?.desk, ...updates.desk },
     sign: updates.sign === undefined ? existing?.sign : { ...existing?.sign, ...updates.sign },
+    analytics: updates.analytics === undefined ? existing?.analytics : { ...existing?.analytics, ...updates.analytics },
     output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 

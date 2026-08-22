@@ -1,0 +1,1147 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { type DynamicModule, Module } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { type Getter, type Maybe, MS_IN_SECOND, cachedGetter } from '@dereekb/util';
+import { makeFileForFetch } from '@dereekb/util/fetch';
+import { type ExpectFailAssertionFunction, captureRejection, expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
+import { ZOHO_ANALYTICS_METADATA_API_RATE_LIMIT, ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, pollZohoAnalyticsJob, type ZohoAnalyticsGetExportJobResponse, type ZohoAnalyticsGetImportJobResponse, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
+import { appZohoAnalyticsModuleMetadata } from './analytics.module';
+import { ZohoAnalyticsApi } from './analytics.api';
+import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
+
+/**
+ * Treats the placeholder values shipped in the committed `.env` as "no credentials".
+ *
+ * The repo commits `ZOHO_API_URL=placeholder` and friends, so a bare presence check would never
+ * skip on a machine that has only the committed defaults.
+ *
+ * @param value - Raw environment variable value.
+ * @returns The value, or undefined when it is missing or a committed placeholder.
+ */
+function real(value: Maybe<string>): Maybe<string> {
+  return value && value !== 'placeholder' ? value : undefined;
+}
+
+/**
+ * Workspace this suite runs against. See `docs/analytics-testing.md` for how to create it.
+ *
+ * This MUST be a throwaway workspace: the suite truncates its test table on nearly every test.
+ */
+const TEST_WORKSPACE_ID: Maybe<ZohoAnalyticsWorkspaceId> = real(process.env['ZOHO_ANALYTICS_TEST_WORKSPACE_ID']);
+
+/**
+ * Org id and refresh token the Analytics module needs. Read here only to decide whether to run —
+ * the module itself resolves them through the ConfigService.
+ */
+const TEST_ORG_ID = real(process.env['ZOHO_ANALYTICS_ORG_ID'] ?? process.env['ZOHO_ORG_ID']);
+const TEST_REFRESH_TOKEN = real(process.env['ZOHO_ANALYTICS_ACCOUNTS_REFRESH_TOKEN'] ?? process.env['ZOHO_ACCOUNTS_REFRESH_TOKEN']);
+
+/**
+ * Whether the live suite has everything it needs. All three are required: without the org id every
+ * endpoint but `GET /orgs` fails with 8083, and without a workspace id there is nothing to write to.
+ */
+const RUN_LIVE_TESTS = Boolean(TEST_WORKSPACE_ID && TEST_ORG_ID && TEST_REFRESH_TOKEN);
+
+/**
+ * Table this suite provisions inside the test workspace on first run and reuses afterwards.
+ *
+ * The name is also the SQL/criteria identifier, so it must stay free of spaces and quotes.
+ */
+const TEST_TABLE_NAME: ZohoAnalyticsName = 'DbxComponentsLiveTest';
+
+/**
+ * Tables the modeling tests create and then delete within the same test.
+ *
+ * Kept distinct from {@link TEST_TABLE_NAME} so a modeling test can never delete the shared table
+ * the rest of the suite depends on, and distinct from each other so the two tests cannot collide
+ * when vitest runs them back to back.
+ */
+const NEW_TABLE_SYNC_NAME: ZohoAnalyticsName = 'DbxComponentsNewTableSync';
+const NEW_TABLE_ASYNC_NAME: ZohoAnalyticsName = 'DbxComponentsNewTableAsync';
+
+/**
+ * Rows the test table is reset to before each write test.
+ *
+ * Deliberately tiny — every import costs API units against the org's daily allowance, and the
+ * assertions only need enough rows to tell "matched the criteria" from "hit everything".
+ */
+const BASELINE_ROWS: ZohoAnalyticsRow[] = [
+  { Region: 'East', Rep: 'Ada', Amount: 100 },
+  { Region: 'East', Rep: 'Grace', Amount: 200 },
+  { Region: 'West', Rep: 'Alan', Amount: 300 }
+];
+
+const BASELINE_EAST_ROW_COUNT = 2;
+const BASELINE_WEST_ROW_COUNT = 1;
+
+/**
+ * Criteria matching the single baseline West row.
+ *
+ * Zoho criteria are SQL-ish and quote the table and column: `"Table"."Column"='value'`.
+ */
+const WEST_ROW_CRITERIA = `"${TEST_TABLE_NAME}"."Region"='West'`;
+
+/**
+ * A CSV upload with a header row and two data rows.
+ *
+ * The `file` input is the only one the CLI can produce (`zoho-cli analytics import --file` is a
+ * required option), and it takes a different path through the client than `rows` does — the data is
+ * sent as a multipart FILE part whose name determines the import's fileType. `rows` covers none of
+ * that, so the CSV path is exercised here directly.
+ */
+const CSV_IMPORT_CONTENT = 'Region,Rep,Amount\nNorth,Edsger,400\nNorth,Tony,450';
+
+const CSV_IMPORT_ROW_COUNT = 2;
+
+/**
+ * Builds the CSV upload, using the same helper the CLI's import command uses.
+ *
+ * @returns A CSV file carrying {@link CSV_IMPORT_CONTENT}.
+ */
+function csvImportFile(): File {
+  return makeFileForFetch({ content: CSV_IMPORT_CONTENT, fileName: 'rows.csv', mimeType: 'text/csv' });
+}
+
+/**
+ * Criteria naming a column the test table does not have.
+ */
+const UNKNOWN_COLUMN_CRITERIA = `"${TEST_TABLE_NAME}"."NotAColumn"='x'`;
+
+/**
+ * Criteria that matches no row, for the writes that are expected to change nothing.
+ */
+const NO_MATCH_CRITERIA = `"${TEST_TABLE_NAME}"."Region"='Nowhere'`;
+
+/**
+ * Well-formed id that belongs to nothing, for the not-found tests.
+ */
+const NON_EXISTENT_ID = '0000000000000000000';
+
+/**
+ * Codes asserted by the failure tests.
+ *
+ * Analytics raises all of these as the same {@link ZohoServerFetchResponseError} class, so the
+ * numeric code is the only thing distinguishing one failure from another. Each was captured from
+ * the live API rather than taken from Zoho's documentation, which lists none of them.
+ */
+const WORKSPACE_NOT_PRESENT_ERROR_CODE = '7103';
+const VIEW_NOT_PRESENT_ERROR_CODE = '7104';
+/**
+ * Reported for a view id that WAS a view in the workspace and has since been deleted, where an id
+ * that was never a view reports {@link VIEW_NOT_PRESENT_ERROR_CODE} instead.
+ *
+ * The two carry the identical message ("View is not present in the workspace"), so the code is the
+ * only thing separating "you deleted this" from "this was never here". Zoho documents neither, and
+ * the split is not a transient post-delete state — a view deleted minutes earlier still reports it,
+ * and `getViewDetails()` reports it for the same id.
+ */
+const DELETED_VIEW_NOT_PRESENT_ERROR_CODE = '7106';
+const IMPORT_ABORTED_ERROR_CODE = '7232';
+const UNKNOWN_COLUMN_IN_EXPORT_CRITERIA_ERROR_CODE = '7330';
+const EXPORT_CRITERIA_PARSE_ERROR_CODE = '7331';
+const INVALID_SQL_TABLE_ERROR_CODE = '7409';
+const UNKNOWN_COLUMN_IN_ROW_CRITERIA_ERROR_CODE = '8004';
+const NO_COLUMN_PRESENT_ERROR_CODE = '8016';
+const EXPORT_JOB_NOT_FOUND_ERROR_CODE = '8120';
+const IMPORT_JOB_NOT_FOUND_ERROR_CODE = '8137';
+
+/**
+ * Wall-clock allowance for a live call. `zoho-nestjs` sets a 20s testTimeout, which is enough for a
+ * single request but not for a token refresh followed by an import.
+ */
+const LIVE_TEST_TIMEOUT_MS = 60 * MS_IN_SECOND;
+
+/**
+ * Wall-clock allowance for a polled async job, which Zoho queues behind other jobs in the org.
+ */
+const LIVE_JOB_TEST_TIMEOUT_MS = 120 * MS_IN_SECOND;
+
+/**
+ * Poll settings for the async job tests. Tighter than the library default (150 polls) so a stuck
+ * job fails the test instead of running out the suite's clock.
+ */
+const LIVE_JOB_POLL = { pollWait: 3 * MS_IN_SECOND, maxPolls: 30 };
+
+/**
+ * The JSON envelope of an export.
+ *
+ * Zoho's OpenAPI spec does not pin this — it declares every export as a file download regardless of
+ * `responseFormat` — so the shape here is the one the live API returned: a single `data` array, with
+ * every value stringified (a numeric column comes back as `'100'`, not `100`).
+ */
+interface ZohoAnalyticsExportedJson {
+  readonly data: ZohoAnalyticsRow[];
+}
+
+const cacheService = fileZohoAccountsAccessTokenCacheService();
+
+@Module(appZohoAnalyticsModuleMetadata({}))
+export class TestZohoAnalyticsModule {}
+
+/**
+ * Asserts a failure is a Zoho Analytics server error carrying the expected numeric code.
+ *
+ * @param expectedCode - Analytics error code the operation is expected to report.
+ * @returns Assertion function for use with `expectFail()`.
+ */
+function expectFailAssertZohoAnalyticsErrorCode(expectedCode: string): ExpectFailAssertionFunction {
+  return (error: unknown) => {
+    expect(error).toBeInstanceOf(ZohoServerFetchResponseError);
+    expect((error as ZohoServerFetchResponseError).code).toBe(expectedCode);
+  };
+}
+
+/**
+ * Reads the row array out of a JSON export response.
+ *
+ * @param response - Raw export response.
+ * @returns The exported rows, or an empty array when the body carries none.
+ */
+async function readExportedRows(response: Response): Promise<ZohoAnalyticsRow[]> {
+  const json = (await response.json()) as ZohoAnalyticsExportedJson;
+  return json.data;
+}
+
+/**
+ * Shape and failure assertions against the LIVE Zoho Analytics v2 API.
+ *
+ * These exist because the client was written against Zoho's published OpenAPI spec rather than a
+ * live account, and several response shapes in that spec are unusual enough to be worth confirming
+ * against real payloads — single objects returned under plural keys, a `viewType` that changes case
+ * between endpoints, partial import failures reported inside a 200, and row CRUD that sends its
+ * CONFIG as a form body where the prose docs show a query string.
+ *
+ * The failure tests carry as much weight as the successful ones. Analytics documents none of its
+ * error codes and raises every one of them as the same error class, so the code each operation
+ * actually reports is only knowable from a live call — and the codes are what a caller has to
+ * branch on. They also pin down which failures are thrown and which are reported inside a 200,
+ * a line Analytics draws in a place no reader would guess: a row write carrying an unrecognized
+ * column is a silent partial success as long as ONE column is recognized, and a thrown error when
+ * none is.
+ *
+ * Writes are grouped so that only the tests asserting an absolute row count pay for a baseline
+ * reset. The `no-op writes` and `failures` groups run against the table as they find it.
+ *
+ * Opt-in: skipped unless `ZOHO_ANALYTICS_TEST_WORKSPACE_ID`, `ZOHO_ANALYTICS_ORG_ID`, and an
+ * Analytics refresh token are set. Note that nx caches test results and no env var is a hash input,
+ * so pass `--skip-nx-cache` when toggling credentials on or off.
+ *
+ * The suite provisions its own {@link TEST_TABLE_NAME} table inside the configured workspace on
+ * first run and reuses it afterwards, so the workspace itself only has to exist and be empty.
+ */
+describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
+  const workspaceId = TEST_WORKSPACE_ID as ZohoAnalyticsWorkspaceId;
+
+  let nest: TestingModule;
+  let api: ZohoAnalyticsApi;
+  let testViewId: ZohoAnalyticsViewId;
+
+  /**
+   * Finds the test table in the workspace, creating it from {@link BASELINE_ROWS} the first time.
+   *
+   * Cached so the lookup and any creation happen once for the whole file rather than per test.
+   */
+  const loadTestTable: Getter<Promise<ZohoAnalyticsView>> = cachedGetter(async () => {
+    const { data } = await api.getViews({ workspaceId });
+    const existing = data.views.find((view) => view.viewName === TEST_TABLE_NAME);
+    let result: Maybe<ZohoAnalyticsView> = existing;
+
+    if (!result) {
+      const created = await api.importDataInNewTable({
+        workspaceId,
+        config: { tableName: TEST_TABLE_NAME, autoIdentify: true, onError: 'abort' },
+        rows: BASELINE_ROWS
+      });
+
+      const refreshed = await api.getViews({ workspaceId });
+      result = refreshed.data.views.find((view) => view.viewName === TEST_TABLE_NAME);
+
+      if (!result) {
+        throw new Error(`analytics.api (live): created table "${TEST_TABLE_NAME}" (viewId ${created.data.viewId}) was not returned by getViews().`);
+      }
+    }
+
+    return result;
+  });
+
+  /**
+   * Resets the test table to exactly {@link BASELINE_ROWS}, so each write test starts from a known
+   * row set regardless of what the previous one left behind.
+   *
+   * @returns Promise that resolves once the table has been replaced.
+   */
+  async function resetTestTable(): Promise<void> {
+    await api.importDataInTable({
+      workspaceId,
+      viewId: testViewId,
+      config: { importType: 'truncateadd', autoIdentify: true, onError: 'abort' },
+      rows: BASELINE_ROWS
+    });
+  }
+
+  /**
+   * Finds a view of the test workspace by name.
+   *
+   * @param viewName - Name of the view to look for.
+   * @returns The view, or undefined when the workspace has none by that name.
+   */
+  async function findView(viewName: ZohoAnalyticsName): Promise<Maybe<ZohoAnalyticsView>> {
+    const { data } = await api.getViews({ workspaceId });
+    return data.views.find((view) => view.viewName === viewName);
+  }
+
+  /**
+   * Deletes a table left behind by an earlier interrupted run.
+   *
+   * A create fails outright when the name is taken, so without this a single failed modeling run
+   * would wedge the test until the table was dropped by hand — the exact problem delete exists to
+   * fix.
+   *
+   * @param viewName - Name of the table to remove if it is still present.
+   */
+  async function deleteViewIfPresent(viewName: ZohoAnalyticsName): Promise<void> {
+    const view = await findView(viewName);
+
+    if (view) {
+      await api.deleteView({ workspaceId, viewId: view.viewId });
+    }
+  }
+
+  /**
+   * Exports the current contents of the test table as rows.
+   *
+   * @returns The rows currently in the test table.
+   */
+  async function loadTestTableRows(): Promise<ZohoAnalyticsRow[]> {
+    const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json' } });
+    return readExportedRows(response);
+  }
+
+  beforeAll(async () => {
+    const providers = [
+      {
+        provide: ZohoAccountsAccessTokenCacheService,
+        useValue: cacheService
+      }
+    ];
+
+    const rootModule: DynamicModule = {
+      module: TestZohoAnalyticsModule,
+      providers,
+      exports: providers,
+      global: true
+    };
+
+    nest = await Test.createTestingModule({ imports: [rootModule] }).compile();
+    api = nest.get(ZohoAnalyticsApi);
+
+    // The client paces itself against the 100/min OVERALL Analytics limit, but this suite is
+    // dominated by metadata calls (every getViews/getViewDetails, and the modeling deletes), which
+    // Zoho throttles at 60/min instead. Paced at 100 the suite outruns that lower ceiling and tests
+    // fail with 6045 — as several unrelated tests all asserting '6045' at once, which reads like a
+    // broken client rather than a throttle. Pace to the ceiling this suite actually hits.
+    api.zohoRateLimiter.setConfig({ limit: ZOHO_ANALYTICS_METADATA_API_RATE_LIMIT }, true);
+
+    const view = await loadTestTable();
+    testViewId = view.viewId;
+  }, LIVE_JOB_TEST_TIMEOUT_MS);
+
+  afterAll(async () => {
+    if (api != null && testViewId != null) {
+      await resetTestTable();
+    }
+  }, LIVE_TEST_TIMEOUT_MS);
+
+  // MARK: Metadata
+  describe('orgs', () => {
+    describe('getOrgs()', () => {
+      it(
+        'should return the configured org',
+        async () => {
+          const result = await api.getOrgs();
+
+          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(Array.isArray(result.data.orgs)).toBe(true);
+          expect(result.data.orgs.map((org) => org.orgId)).toContain(TEST_ORG_ID);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+  });
+
+  describe('workspaces', () => {
+    describe('getAllWorkspaces()', () => {
+      it(
+        'should split the result into ownedWorkspaces and sharedWorkspaces, including the test workspace',
+        async () => {
+          const result = await api.getAllWorkspaces();
+          const { ownedWorkspaces, sharedWorkspaces } = result.data;
+
+          expect(Array.isArray(ownedWorkspaces)).toBe(true);
+          expect(Array.isArray(sharedWorkspaces)).toBe(true);
+          expect([...ownedWorkspaces, ...sharedWorkspaces].map((workspace) => workspace.workspaceId)).toContain(workspaceId);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('getOwnedWorkspaces()', () => {
+      it(
+        'should return a flat workspaces array, unlike getAllWorkspaces()',
+        async () => {
+          const result = await api.getOwnedWorkspaces();
+
+          expect(Array.isArray(result.data.workspaces)).toBe(true);
+          expect(result.data.workspaces[0]?.workspaceName).toBeDefined();
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('getSharedWorkspaces()', () => {
+      it(
+        'should return a flat workspaces array, empty when nothing is shared with the user',
+        async () => {
+          const result = await api.getSharedWorkspaces();
+
+          // shares the response shape of getOwnedWorkspaces() rather than the split shape of
+          // getAllWorkspaces(); a test account normally has nothing shared with it, so only the
+          // shape can be asserted
+          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(Array.isArray(result.data.workspaces)).toBe(true);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('getWorkspaceDetails()', () => {
+      it(
+        'should return a single workspace object under the plural workspaces key',
+        async () => {
+          const result = await api.getWorkspaceDetails({ workspaceId });
+
+          expect(Array.isArray(result.data.workspaces)).toBe(false);
+          expect(result.data.workspaces.workspaceId).toBe(workspaceId);
+          expect(result.data.workspaces.workspaceName).toBeDefined();
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+  });
+
+  describe('views', () => {
+    describe('getViews()', () => {
+      it(
+        'should list the test table',
+        async () => {
+          const result = await api.getViews({ workspaceId });
+          const view = result.data.views.find((x) => x.viewName === TEST_TABLE_NAME);
+
+          expect(view).toBeDefined();
+          expect(view?.viewId).toBe(testViewId);
+          // mixed case, not the 'TABLE' the type's suggested literals once claimed
+          expect(view?.viewType).toBe('Table');
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('getViewDetails()', () => {
+      it(
+        'should return a single view object under the plural views key',
+        async () => {
+          const result = await api.getViewDetails({ viewId: testViewId });
+
+          expect(Array.isArray(result.data.views)).toBe(false);
+          expect(result.data.views.viewId).toBe(testViewId);
+          expect(result.data.views.viewName).toBe(TEST_TABLE_NAME);
+          // same casing as the listing — the two endpoints do NOT disagree, they just return
+          // different field sets
+          expect(result.data.views.viewType).toBe('Table');
+          expect(result.data.views.workspaceId).toBe(workspaceId);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('getTableMetadata()', () => {
+      it(
+        'should return the columns the baseline rows created',
+        async () => {
+          const result = await api.getTableMetadata({ workspaceId, viewId: testViewId });
+          const columnNames = result.data.columns.map((column) => column.columnName);
+
+          expect(columnNames).toContain('Region');
+          expect(columnNames).toContain('Rep');
+          expect(columnNames).toContain('Amount');
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+  });
+
+  // MARK: Import
+  describe('import', () => {
+    /**
+     * Tests whose assertions are absolute row counts, so each one starts from the baseline. That
+     * costs a `truncateadd` import per test, which is the price of not having them depend on each
+     * other.
+     */
+    describe('writes', () => {
+      beforeEach(async () => {
+        await resetTestTable();
+      }, LIVE_TEST_TIMEOUT_MS);
+
+      describe('importDataInTable()', () => {
+        it(
+          'should append rows without removing the existing ones',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }]
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(1);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should replace the whole table on truncateadd',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'truncateadd', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'South', Rep: 'Barbara', Amount: 500 }]
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(1);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should report a dropped row inside a success response rather than throwing',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'skiprow' },
+              rows: [
+                { Region: 'North', Rep: 'Edsger', Amount: 400 },
+                { Region: 'North', Rep: 'Broken', Amount: 'not-a-number' }
+              ]
+            });
+
+            const { importSummary, importErrors } = result.data;
+            const droppedRows = (importSummary.totalRowCount ?? 0) - (importSummary.successRowCount ?? 0);
+
+            // a partial failure is a 200 with the loss described in the summary — the whole reason
+            // callers cannot treat a resolved import as "everything landed".
+            // importErrors is tested for CONTENT, not presence: Zoho returns '' when nothing failed,
+            // so a presence check would pass on a clean import and assert nothing
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(droppedRows > 0 || (importErrors?.length ?? 0) > 0).toBe(true);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('importDataInTable() with a file', () => {
+        it(
+          'should import the rows of a CSV file, treating its first line as the header',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv', autoIdentify: true, onError: 'abort' }
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + CSV_IMPORT_ROW_COUNT);
+            // the header line named the columns rather than becoming a row
+            expect(rows.filter((row) => row['Rep'] === 'Rep').length).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should import a CSV file when the config omits autoIdentify, which the API requires',
+          async () => {
+            // this is the config the CLI's import command sends — importType, fileType, and nothing
+            // else. Zoho rejects a CONFIG without autoIdentify as 8504 ("The parameter CONFIG is not
+            // proper"), so this passes only because the client defaults it; before that default,
+            // every CLI import failed
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv' }
+            });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Rep').length).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('importDataInTableAndAwaitJob()', () => {
+        it(
+          'should complete the queued job and carry the import summary in jobInfo',
+          async () => {
+            const result = await api.importDataInTableAndAwaitJob({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }],
+              poll: LIVE_JOB_POLL
+            });
+
+            expect(isZohoAnalyticsJobComplete(result.data.jobCode)).toBe(true);
+            expect(result.data.jobInfo?.importSummary.successRowCount).toBe(1);
+
+            // the same job read back through the two-step path this function wraps
+            const job = await api.getImportJob({ workspaceId, jobId: result.data.jobId });
+
+            expect(job.data.jobId).toBe(result.data.jobId);
+            expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+            expect(job.data.jobInfo?.importSummary.successRowCount).toBe(1);
+            // returned for import jobs as well, though Zoho documents it only for exports
+            expect(job.data.expiryTime).toBeDefined();
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_JOB_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should queue a CSV file as an async import, passing the file through as the FILE part',
+          async () => {
+            const result = await api.importDataInTableAndAwaitJob({
+              workspaceId,
+              viewId: testViewId,
+              file: csvImportFile(),
+              config: { importType: 'append', fileType: 'csv', autoIdentify: true, onError: 'abort' },
+              poll: LIVE_JOB_POLL
+            });
+
+            // the Bulk endpoints reject a DATA field outright, so a caller-supplied file is passed
+            // through as the FILE part rather than rewrapped — the only live coverage of that branch
+            expect(isZohoAnalyticsJobComplete(result.data.jobCode)).toBe(true);
+            expect(result.data.jobInfo?.importSummary.successRowCount).toBe(CSV_IMPORT_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + CSV_IMPORT_ROW_COUNT);
+          },
+          LIVE_JOB_TEST_TIMEOUT_MS
+        );
+      });
+    });
+
+    /**
+     * Tests where nothing is expected to land. They assert against the table as they found it, so
+     * they need no baseline reset.
+     */
+    describe('failures', () => {
+      describe('importDataInTable()', () => {
+        it(
+          'should abort the entire import and leave the table untouched when onError is abort',
+          async () => {
+            const rowsBefore = await loadTestTableRows();
+
+            // the counterpart to the skiprow test above: under abort a bad row fails the whole
+            // request as a thrown error, and the valid row sent alongside it does not land either
+            const error = await captureRejection(() =>
+              api.importDataInTable({
+                workspaceId,
+                viewId: testViewId,
+                config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+                rows: [
+                  { Region: 'North', Rep: 'Edsger', Amount: 400 },
+                  { Region: 'North', Rep: 'Broken', Amount: 'not-a-number' }
+                ]
+              })
+            );
+
+            expect(error).toBeInstanceOf(ZohoServerFetchResponseError);
+            expect((error as ZohoServerFetchResponseError).code).toBe(IMPORT_ABORTED_ERROR_CODE);
+
+            const rowsAfter = await loadTestTableRows();
+            expect(rowsAfter.length).toBe(rowsBefore.length);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+    });
+  });
+
+  // MARK: Export
+  describe('export', () => {
+    beforeAll(async () => {
+      await resetTestTable();
+    }, LIVE_TEST_TIMEOUT_MS);
+
+    describe('exportData()', () => {
+      it(
+        'should export every baseline row as json',
+        async () => {
+          const rows = await loadTestTableRows();
+
+          expect(rows.length).toBe(BASELINE_ROWS.length);
+          expect(rows[0]?.['Region']).toBeDefined();
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+
+      it(
+        'should export only the rows matching the criteria',
+        async () => {
+          const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', criteria: WEST_ROW_CRITERIA } });
+          const rows = await readExportedRows(response);
+
+          expect(rows.length).toBe(BASELINE_WEST_ROW_COUNT);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+
+      it(
+        'should export only the selected columns',
+        async () => {
+          const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', selectedColumns: ['Region'] } });
+          const rows = await readExportedRows(response);
+
+          // selectedColumns is an array inside the JSON-encoded CONFIG parameter, which is the
+          // shape most likely to be mangled on the way out
+          expect(rows.length).toBe(BASELINE_ROWS.length);
+          expect(Object.keys(rows[0] ?? {})).toEqual(['Region']);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+
+      it(
+        'should export csv with a header row',
+        async () => {
+          const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'csv', includeHeader: true } });
+          const body = await response.text();
+          const [header] = body.split('\n');
+
+          expect(header).toContain('Region');
+          expect(body.split('\n').filter((line) => line.trim().length > 0).length).toBe(BASELINE_ROWS.length + 1);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('exportDataAndAwaitJob()', () => {
+      it(
+        'should complete the job and expose a downloadable export',
+        async () => {
+          const job = await api.exportDataAndAwaitJob({
+            workspaceId,
+            viewId: testViewId,
+            config: { responseFormat: 'csv' },
+            poll: LIVE_JOB_POLL
+          });
+
+          expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+          // a completed export job carries both, and the file stops being retrievable at expiryTime
+          expect(job.data.downloadUrl).toBeDefined();
+          expect(job.data.expiryTime).toBeDefined();
+
+          const download = await api.downloadExport({ workspaceId, jobId: job.data.jobId });
+          const body = await download.text();
+
+          expect(download.ok).toBe(true);
+          expect(body).toContain('Region');
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+    });
+
+    describe('createExportJobForSqlQuery()', () => {
+      it(
+        'should export the results of a SQL query over the test table',
+        async () => {
+          const created = await api.createExportJobForSqlQuery({
+            workspaceId,
+            config: { responseFormat: 'json', sqlQuery: `SELECT "Region", "Amount" FROM "${TEST_TABLE_NAME}" WHERE "Region" = 'East'` }
+          });
+
+          expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(created.data.jobId).toBeDefined();
+
+          // there is no exportSqlQueryAndAwaitJob(), so the job is polled with the same library
+          // poller the view export uses
+          const job = await pollZohoAnalyticsJob<ZohoAnalyticsGetExportJobResponse>({
+            ...LIVE_JOB_POLL,
+            loadJob: () => api.getExportJob({ workspaceId, jobId: created.data.jobId }),
+            readJobCode: (x) => x.data.jobCode
+          });
+
+          expect(job.data.jobId).toBe(created.data.jobId);
+          expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+
+          const download = await api.downloadExport({ workspaceId, jobId: created.data.jobId });
+          const rows = await readExportedRows(download);
+
+          // this is the only way to run ad-hoc SQL, so the query's result is worth asserting rather
+          // than stopping at "a job was queued": the WHERE clause narrowed the export, and the
+          // SELECT list narrowed the columns
+          expect(rows.length).toBe(BASELINE_EAST_ROW_COUNT);
+          expect(Object.keys(rows[0] ?? {})).toEqual(['Region', 'Amount']);
+          expect(rows.every((row) => row['Region'] === 'East')).toBe(true);
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+    });
+  });
+
+  // MARK: Rows
+  describe('rows', () => {
+    /**
+     * Tests that change the table, so each one starts from the baseline.
+     */
+    describe('writes', () => {
+      beforeEach(async () => {
+        await resetTestTable();
+      }, LIVE_TEST_TIMEOUT_MS);
+
+      describe('addRow()', () => {
+        it(
+          'should add a single row and echo back the added columns',
+          async () => {
+            const result = await api.addRow({ workspaceId, viewId: testViewId, config: { columns: { Region: 'North', Rep: 'Edsger', Amount: 400 } } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.addedColumns?.['Region']).toBe('North');
+            // values echo back stringified, and invalidColumns is an empty object rather than absent
+            expect(result.data.addedColumns?.['Amount']).toBe('400');
+            expect(Object.keys(result.data.invalidColumns ?? {})).toEqual([]);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should add the recognized columns and report the rejected ones inside a success response',
+          async () => {
+            const result = await api.addRow({ workspaceId, viewId: testViewId, config: { columns: { Region: 'North', NotAColumn: 'nope' } } });
+
+            // the row-CRUD counterpart to a partial import: an unrecognized column does not fail
+            // the call, the row lands without it, and the only record of the loss is invalidColumns
+            // (updateRows() does the same — see its partial test below)
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.addedColumns?.['Region']).toBe('North');
+            expect(result.data.invalidColumns?.['NotAColumn']).toBe('nope');
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('updateRows()', () => {
+        it(
+          'should update only the rows matching the criteria',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Updated' }, criteria: WEST_ROW_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should apply the recognized columns and report the rejected ones inside a success response',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Updated', NotAColumn: 'nope' }, criteria: WEST_ROW_CRITERIA } });
+
+            // the same partial-success contract as addRow(), and the only coverage of the
+            // invalidColumns field the update result type declares
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+            expect(result.data.updatedColumns?.['Rep']).toBe('Updated');
+            expect(result.data.invalidColumns?.['NotAColumn']).toBe('nope');
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('deleteRows()', () => {
+        it(
+          'should delete only the rows matching the criteria',
+          async () => {
+            const result = await api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: WEST_ROW_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.deletedRows).toBe(BASELINE_WEST_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_EAST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+    });
+
+    /**
+     * Writes that are expected to change nothing. They run against the table as they find it, which
+     * saves the baseline reset an absolute row count would need.
+     */
+    describe('no-op writes', () => {
+      describe('updateRows()', () => {
+        it(
+          'should report zero updated rows when the criteria matches nothing',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Nobody' }, criteria: NO_MATCH_CRITERIA } });
+
+            // a criteria that matches nothing is a success carrying a zero count, not a failure —
+            // so a resolved updateRows() says nothing about whether anything was updated
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('deleteRows()', () => {
+        it(
+          'should report zero deleted rows when the criteria matches nothing',
+          async () => {
+            const result = await api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: NO_MATCH_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.deletedRows).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+    });
+
+    describe('failures', () => {
+      /**
+       * Both row writes follow the same rule, verified against the live API: an unrecognized column
+       * is reported in `invalidColumns` inside a 200 as long as at least one column IS recognized,
+       * and only a write left with no recognized column at all is rejected.
+       */
+      describe('updateRows()', () => {
+        itShouldFail('when no column of the update is a column of the table', async () => {
+          await expectFail(() => api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { NotAColumn: 'nope' }, criteria: WEST_ROW_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(NO_COLUMN_PRESENT_ERROR_CODE));
+        });
+      });
+
+      describe('addRow()', () => {
+        itShouldFail('when no column of the row is a column of the table', async () => {
+          // the same code as updateRows(), so the rejection is about no column surviving rather
+          // than about which operation was called
+          await expectFail(() => api.addRow({ workspaceId, viewId: testViewId, config: { columns: { NotAColumn: 'nope' } } }), expectFailAssertZohoAnalyticsErrorCode(NO_COLUMN_PRESENT_ERROR_CODE));
+        });
+      });
+
+      describe('deleteRows()', () => {
+        itShouldFail('when the criteria names a column the table does not have', async () => {
+          // the Data API reports an unknown criteria column as 8004, where the Bulk export API
+          // reports the same mistake as 7330
+          await expectFail(() => api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: UNKNOWN_COLUMN_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(UNKNOWN_COLUMN_IN_ROW_CRITERIA_ERROR_CODE));
+        });
+      });
+    });
+  });
+
+  // MARK: Modeling
+  /**
+   * The delete operations, and the two table-creating imports they finally make testable.
+   *
+   * Before delete existed, `importDataInNewTable()` and `createImportJobInNewTable()` had no live
+   * coverage at all: every run would have stranded another table in the workspace with no way to
+   * remove it through the API. Each test here creates the table it deletes and deletes it again at
+   * the end, so the pair is exercised as one round trip.
+   *
+   * None of these touch {@link TEST_TABLE_NAME}, so the group needs no baseline reset — the tables
+   * are its own, and the failure tests land nothing.
+   */
+  describe('modeling', () => {
+    describe('deleteView()', () => {
+      it(
+        'should delete the table importDataInNewTable() creates, and report a second delete of it differently than a delete of an id that never existed',
+        async () => {
+          await deleteViewIfPresent(NEW_TABLE_SYNC_NAME);
+
+          const created = await api.importDataInNewTable({
+            workspaceId,
+            config: { tableName: NEW_TABLE_SYNC_NAME, autoIdentify: true, onError: 'abort' },
+            rows: BASELINE_ROWS
+          });
+
+          // the first live coverage of importDataInNewTable(): the created table's id comes back on
+          // the import result rather than needing a listing to find it — which is also why no
+          // getViews() is spent confirming the table exists here, since the delete below only
+          // succeeds if it does
+          expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(created.data.importSummary.successRowCount).toBe(BASELINE_ROWS.length);
+          expect(created.data.viewId).toBeDefined();
+
+          const viewId = created.data.viewId as ZohoAnalyticsViewId;
+          const deleted = await api.deleteView({ workspaceId, viewId });
+
+          // a delete answers 204 with an empty body, so there is no envelope to read — the client
+          // resolves null, and confirming the delete means listing the views again
+          expect(deleted).toBeNull();
+          expect(await findView(NEW_TABLE_SYNC_NAME)).toBeUndefined();
+
+          // deleting it again is 7106, where NON_EXISTENT_ID is 7104 — same message, different code.
+          // captureRejection() rather than expectFail() because this is a plain it(): expectFail()
+          // signals its success by throwing, which only itShouldFail() knows to catch
+          const reDeleteError = await captureRejection(() => api.deleteView({ workspaceId, viewId }));
+
+          expect(reDeleteError).toBeInstanceOf(ZohoServerFetchResponseError);
+          expect((reDeleteError as ZohoServerFetchResponseError).code).toBe(DELETED_VIEW_NOT_PRESENT_ERROR_CODE);
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+
+      it(
+        'should delete the table createImportJobInNewTable() creates',
+        async () => {
+          await deleteViewIfPresent(NEW_TABLE_ASYNC_NAME);
+
+          const created = await api.createImportJobInNewTable({
+            workspaceId,
+            config: { tableName: NEW_TABLE_ASYNC_NAME, autoIdentify: true, onError: 'abort' },
+            rows: BASELINE_ROWS
+          });
+
+          expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(created.data.jobId).toBeDefined();
+
+          // there is no importDataInNewTableAndAwaitJob(), so the job is polled with the same
+          // library poller the existing-table import wraps
+          const job = await pollZohoAnalyticsJob<ZohoAnalyticsGetImportJobResponse>({
+            ...LIVE_JOB_POLL,
+            loadJob: () => api.getImportJob({ workspaceId, jobId: created.data.jobId }),
+            readJobCode: (x) => x.data.jobCode
+          });
+
+          expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+          expect(job.data.jobInfo?.importSummary.successRowCount).toBe(BASELINE_ROWS.length);
+
+          // unlike the synchronous import, the async job's result is not where the new table's id is
+          // found reliably, so the table is located by name
+          const view = await findView(NEW_TABLE_ASYNC_NAME);
+          expect(view).toBeDefined();
+
+          await api.deleteView({ workspaceId, viewId: (view as ZohoAnalyticsView).viewId });
+          expect(await findView(NEW_TABLE_ASYNC_NAME)).toBeUndefined();
+        },
+        LIVE_JOB_TEST_TIMEOUT_MS
+      );
+    });
+
+    /**
+     * Deletes that are expected to be rejected, so they remove nothing and cost no import.
+     */
+    describe('failures', () => {
+      describe('deleteView()', () => {
+        itShouldFail('when the view id was never a view in the workspace', async () => {
+          await expectFail(() => api.deleteView({ workspaceId, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+        });
+
+        itShouldFail('when the workspace does not exist', async () => {
+          await expectFail(() => api.deleteView({ workspaceId: NON_EXISTENT_ID, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
+        });
+      });
+
+      describe('deleteWorkspace()', () => {
+        // the only safe live assertion for this operation: the test workspace itself must survive
+        // the suite, so a delete that is expected to succeed is never run
+        itShouldFail('when the workspace does not exist', async () => {
+          await expectFail(() => api.deleteWorkspace({ workspaceId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
+        });
+      });
+    });
+  });
+
+  // MARK: Errors
+  /**
+   * Every failure below arrives as the same {@link ZohoServerFetchResponseError} class, so these
+   * assert the numeric code as well — it is the only thing a caller can branch on.
+   */
+  describe('errors', () => {
+    describe('metadata', () => {
+      itShouldFail('with a ZohoServerFetchResponseError for an unknown workspace id', async () => {
+        await expectFail(() => api.getViews({ workspaceId: NON_EXISTENT_ID }), expectFailAssertErrorType(ZohoServerFetchResponseError));
+      });
+
+      itShouldFail('when the workspace does not exist', async () => {
+        await expectFail(() => api.getWorkspaceDetails({ workspaceId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
+      });
+
+      itShouldFail('when the view does not exist', async () => {
+        await expectFail(() => api.getViewDetails({ viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+      });
+
+      itShouldFail('when a table metadata lookup names a view that does not exist', async () => {
+        // the same code as getViewDetails(), even though this endpoint is workspace-scoped
+        await expectFail(() => api.getTableMetadata({ workspaceId, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+      });
+    });
+
+    describe('export', () => {
+      itShouldFail('when the export criteria names a column the table does not have', async () => {
+        await expectFail(() => api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', criteria: UNKNOWN_COLUMN_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(UNKNOWN_COLUMN_IN_EXPORT_CRITERIA_ERROR_CODE));
+      });
+
+      itShouldFail('when the export criteria cannot be parsed', async () => {
+        // exportData() resolves with a raw Response, so this also covers the fetch path that has no
+        // JSON interceptor: the failure surfaces as a typed error rather than an unhelpful body
+        await expectFail(() => api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', criteria: 'not a criteria' } }), expectFailAssertZohoAnalyticsErrorCode(EXPORT_CRITERIA_PARSE_ERROR_CODE));
+      });
+
+      itShouldFail('when a SQL query names a table that is not in the workspace', async () => {
+        await expectFail(() => api.createExportJobForSqlQuery({ workspaceId, config: { responseFormat: 'json', sqlQuery: 'SELECT * FROM "NoSuchTable"' } }), expectFailAssertZohoAnalyticsErrorCode(INVALID_SQL_TABLE_ERROR_CODE));
+      });
+    });
+
+    describe('jobs', () => {
+      // a job that does not exist is a thrown 404, NOT a job status carrying
+      // ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND — so polling one never terminates on that code
+      itShouldFail('when the export job does not exist', async () => {
+        await expectFail(() => api.getExportJob({ workspaceId, jobId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(EXPORT_JOB_NOT_FOUND_ERROR_CODE));
+      });
+
+      itShouldFail('when the import job does not exist', async () => {
+        await expectFail(() => api.getImportJob({ workspaceId, jobId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(IMPORT_JOB_NOT_FOUND_ERROR_CODE));
+      });
+    });
+  });
+});

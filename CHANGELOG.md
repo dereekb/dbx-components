@@ -1,3 +1,34 @@
+# [13.40.0](https://github.com/dereekb/dbx-components/compare/v13.39.0-dev...v13.40.0) (2026-08-22)
+
+
+### Bug Fixes
+
+- **dbx-cli:** keep a nested command from orphaning its Firestore session ([dafb6a4c](https://github.com/dereekb/dbx-components/commit/dafb6a4c15eef06cc74983cea7dfc6abfcdb631c))
+- **dbx-firebase:** render account-wide notification health findings ([dee9ae71](https://github.com/dereekb/dbx-components/commit/dee9ae710573d92dd0cd2f9918239a59b0b1e24e))
+- **dbx-form:** tokenize repeat-array bar padding to --dbx-padding-2 ([00fe3bab](https://github.com/dereekb/dbx-components/commit/00fe3bab80001ff9ac003b5d4739e42616707ec4))
+- **zoho:** check analytics against its own API in auth check ([146d21aa](https://github.com/dereekb/dbx-components/commit/146d21aa1f20e6298b9620e70b2f91a8fdb82523))
+- **zoho:** repair Bulk Analytics import and CLI analytics config ([d3952fed](https://github.com/dereekb/dbx-components/commit/d3952fed95f5a934f60ce691b7552a5083dc70be))
+- **zoho:** send the autoIdentify every Analytics import requires ([74252efa](https://github.com/dereekb/dbx-components/commit/74252efa99b55fb861f4b8581ba701899c863e3c))
+
+
+### Code Refactoring
+
+- fixes ([86ba83ed](https://github.com/dereekb/dbx-components/commit/86ba83eddc7e7f594a8ff45aba3bd23f4f56bcdc))
+
+
+### Features
+
+- **dbx-web:** drop the dead MDC-internal token layer ([621c5755](https://github.com/dereekb/dbx-components/commit/621c575580f258c46025dd883ed5838a6d964cca))
+- **zoho:** add a Zoho Analytics service to @dereekb/zoho ([4f1d3514](https://github.com/dereekb/dbx-components/commit/4f1d351483d4793bf9b3467ee7f76137d6b6d8c0))
+- **zoho:** add Analytics Modeling delete for views and workspaces ([fddae9bc](https://github.com/dereekb/dbx-components/commit/fddae9bc27461c351cd2b7c7642d4e99ee3be848))
+- **zoho:** add Analytics row CRUD with destructive-write guards ([f28f7562](https://github.com/dereekb/dbx-components/commit/f28f7562e03c7fc8c62bea9cc186afb85ef7c810))
+- **zoho:** add Analytics schema diff for pre-import checks ([effb4f2e](https://github.com/dereekb/dbx-components/commit/effb4f2e54ecd75f06701364f025181e3219451a))
+
+
+### Tests
+
+- **zoho:** broaden Zoho Analytics live and export coverage ([b05e47ed](https://github.com/dereekb/dbx-components/commit/b05e47edf3742fba156f5757469795fd7a92afa8))
+
 # [13.39.0](https://github.com/dereekb/dbx-components/compare/v13.38.0-dev...v13.39.0) (2026-08-21)
 
 

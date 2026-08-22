@@ -61,8 +61,8 @@
       border-radius: var(--dbx-form-repeat-array-field-container-shape, var(--dbx-corners-border-radius, var(--mat-sys-corner-medium)));
 
       .dbx-form-repeat-array-bar {
-        padding-top: 6px;
-        padding-left: 6px;
+        padding-top: var(--dbx-padding-2);
+        padding-left: var(--dbx-padding-2);
       }
 
       .dbx-form-repeat-array-field-content {

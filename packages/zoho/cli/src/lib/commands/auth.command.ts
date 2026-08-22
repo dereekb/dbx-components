@@ -1,7 +1,7 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials } from '../config/cli.config';
+import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials } from '../config/cli.config';
 import { noop, type Maybe } from '@dereekb/util';
-import { createCliContext } from '../context/cli.context';
+import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
 
 // MARK: Regions
@@ -18,7 +18,8 @@ const ZOHO_SCOPES: Record<string, string[]> = {
   recruit: ['ZohoRecruit.modules.ALL', 'ZohoRecruit.settings.all', 'ZohoRecruit.functions.execute.READ', 'ZohoRecruit.functions.execute.CREATE'],
   crm: ['ZohoCRM.modules.ALL', 'ZohoCRM.settings.ALL', 'ZohoCRM.functions.execute.READ', 'ZohoCRM.functions.execute.CREATE'],
   desk: ['Desk.tickets.ALL', 'Desk.tasks.ALL', 'Desk.contacts.ALL', 'Desk.settings.ALL', 'Desk.events.ALL', 'Desk.search.READ', 'Desk.articles.READ', 'Desk.basic.READ'],
-  sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL']
+  sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL'],
+  analytics: ['ZohoAnalytics.data.all', 'ZohoAnalytics.metadata.all', 'ZohoAnalytics.modeling.all']
 };
 
 /**
@@ -70,11 +71,11 @@ const authSetupCommand: CommandModule = {
       .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
       .option('redirect-uri', { type: 'string', default: 'http://localhost/oauth', describe: 'Redirect URI (must match API console config)' })
       .option('region', { type: 'string', default: 'us', choices: ['us', 'eu', 'in', 'au', 'jp'] as const, describe: 'Zoho region' })
-      .option('scopes', { type: 'string', default: 'recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign)' })
+      .option('scopes', { type: 'string', defaultDescription: '--product when given, otherwise recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign,analytics)' })
       .option('code', { type: 'string', describe: 'Authorization code or the full redirect URL (code is extracted automatically)' })
       .option('token', { type: 'string', describe: 'Set a refresh token directly (skips OAuth code exchange)' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store credentials for a specific product instead of shared' })
-      .option('org-id', { type: 'string', describe: 'Zoho Desk organization ID' })
+      .option('org-id', { type: 'string', describe: 'Organization ID, for the products scoped by one (desk, analytics)' })
       .option('api-mode', { type: 'string', default: 'production', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
       .example([
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz', 'Step 1: Get OAuth URL (saves shared credentials)'],
@@ -82,7 +83,8 @@ const authSetupCommand: CommandModule = {
         ['$0 auth setup --code "http://localhost/oauth?code=1000.AUTH.CODE&location=us"', 'Step 2: Paste the full redirect URL'],
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz --token 1000.REFRESH.TOKEN', 'Set shared refresh token directly'],
         ['$0 auth setup --product crm --client-id 1000.CRM --client-secret xyz --token 1000.CRM.TOKEN', 'Set CRM-specific credentials'],
-        ['$0 auth setup --product sign --client-id 1000.SIGN --client-secret xyz', 'Sign uses a separate OAuth client (sign-only scopes)']
+        ['$0 auth setup --product sign --client-id 1000.SIGN --client-secret xyz', 'Sign uses a separate OAuth client (sign-only scopes)'],
+        ['$0 auth setup --product analytics --client-id 1000.ANALYTICS --client-secret xyz --org-id 1234567', 'Analytics uses a separate OAuth client; --scopes defaults to analytics']
       ]),
   handler: async (argv: any) => {
     try {
@@ -121,6 +123,27 @@ interface AuthSetupContext {
   readonly orgId: string | undefined;
 }
 
+/**
+ * Products whose scopes are requested when neither `--scopes` nor `--product` is given.
+ */
+const DEFAULT_AUTH_SETUP_SCOPES = 'recruit,crm,desk';
+
+/**
+ * Resolves which products' OAuth scopes the authorization URL should request.
+ *
+ * Falls back to the targeted `--product` before the shared default: a product with a dedicated
+ * OAuth client ({@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS}) authorized under the default trio gets a
+ * token that lacks its scopes entirely, and every later call fails as an invalid token rather than
+ * as a setup mistake.
+ *
+ * @param scopes - Raw comma-separated `--scopes` value, when given.
+ * @param product - Product targeted by `--product`, when given.
+ * @returns Product keys whose scopes should be requested.
+ */
+export function authSetupScopes(scopes: Maybe<string>, product: Maybe<ZohoCliProduct>): readonly string[] {
+  return (scopes ?? product ?? DEFAULT_AUTH_SETUP_SCOPES).split(',').map((p: string) => p.trim());
+}
+
 function buildAuthSetupContext(argv: any, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
   const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
   // When a product is targeted, prefer its own stored client credentials before falling back to shared.
@@ -133,7 +156,7 @@ function buildAuthSetupContext(argv: any, existingConfig: Maybe<ZohoCliConfig>):
     clientSecret: (argv.clientSecret as string | undefined) ?? productConfig?.clientSecret ?? existingConfig?.shared?.clientSecret,
     redirectUri: argv.redirectUri as string,
     region,
-    scopes: (argv.scopes as string).split(',').map((p: string) => p.trim()),
+    scopes: authSetupScopes(argv.scopes as Maybe<string>, product),
     code: parseCodeFromInput(argv.code as string | undefined),
     token: argv.token as string | undefined,
     accountsUrl: ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'],
@@ -146,7 +169,7 @@ async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials
   if (ctx.product) {
     return mergeCliConfig({
       shared: existingShared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-      [ctx.product]: { ...creds, apiUrl: ctx.apiMode, orgId: ctx.product === 'desk' ? ctx.orgId : undefined }
+      [ctx.product]: { ...creds, apiUrl: ctx.apiMode, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(ctx.product) ? ctx.orgId : undefined }
     });
   }
   return mergeCliConfig({
@@ -271,7 +294,7 @@ const authSetCommand: CommandModule = {
       .option('refresh-token', { type: 'string', demandOption: true, describe: 'OAuth refresh token' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store for a specific product instead of shared' })
       .option('region', { type: 'string', default: 'us', describe: 'Zoho region (us, eu, in, au, jp)' })
-      .option('org-id', { type: 'string', describe: 'Zoho Desk organization ID' })
+      .option('org-id', { type: 'string', describe: 'Organization ID, for the products scoped by one (desk, analytics)' })
       .option('api-mode', { type: 'string', default: 'production', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
       .example([
         ['$0 auth set --client-id abc --client-secret xyz --refresh-token 1000.abc.xyz', 'Set shared credentials'],
@@ -291,7 +314,7 @@ const authSetCommand: CommandModule = {
       if (product) {
         merged = await mergeCliConfig({
           shared: (await loadCliConfig())?.shared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-          [product]: { ...creds, apiUrl: argv.apiMode, orgId: product === 'desk' ? argv.orgId : undefined }
+          [product]: { ...creds, apiUrl: argv.apiMode, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? argv.orgId : undefined }
         });
       } else {
         merged = await mergeCliConfig({
@@ -369,30 +392,22 @@ const authCheckCommand: CommandModule = {
         } else {
           // Try token exchange for each configured product
           const context = createCliContext(config);
+          const productApis = toZohoCliProductApis(context);
           const results: Record<string, unknown> = {};
 
           for (const product of products) {
             try {
-              let api;
-
-              if (product === 'recruit') {
-                api = context.recruitApi;
-              } else if (product === 'crm') {
-                api = context.crmApi;
-              } else if (product === 'sign') {
-                api = context.signApi;
-              } else {
-                api = context.deskApi;
-              }
+              const api = productApis[product];
 
               if (!api) {
                 results[product] = { authenticated: false, error: 'Not configured' };
                 continue;
               }
 
-              // Access the underlying accounts API to verify token exchange
-              const accountsApi = (api as any).zohoAccountsApi;
-              const tokenResponse = await accountsApi.accessToken();
+              // Exchange through the product's own accounts API so the reported scope is the grant
+              // that product actually authenticates with. Only the scope and lifetime are echoed —
+              // never the access token itself.
+              const tokenResponse = await api.zohoAccountsApi.accessToken();
               results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
             } catch (e) {
               const message = e instanceof Error ? e.message : String(e);

@@ -9,24 +9,29 @@ $anchor-list-item-active-opacity: 100%;
 $active-child-item-left-padding: 2px;
 
 $default-anchor-list-item-child-list-item-text-size: 14px;
-$default-mdc-list-list-item-leading-icon-size: 24px;
+$default-anchor-list-item-leading-icon-size: 24px;
 
 // MARK: Mixin
 @mixin core() {
   .dbx-anchor-list.mat-mdc-nav-list {
     padding-top: 0; // no padding
-    --parent-mdc-list-list-item-leading-icon-size: var(--mdc-list-list-item-leading-icon-size, #{$default-mdc-list-list-item-leading-icon-size});
-    --parent-mdc-list-list-item-label-text-size: var(--mdc-list-list-item-label-text-size, #{$default-anchor-list-item-child-list-item-text-size});
+
+    // Relays the list's effective item metrics down so a nested child list can size itself relative to
+    // its parent. Reads the M3 `--mat-list-*` tokens Angular Material actually consumes — the legacy
+    // `--mdc-list-*` names this relay used to read/write are not emitted or read by Material 21, which
+    // silently made the `--dbx-anchor-list-item-child-list-item-*` override points dead.
+    --dbx-anchor-list-parent-item-icon-size: var(--mat-list-list-item-leading-icon-size, #{$default-anchor-list-item-leading-icon-size});
+    --dbx-anchor-list-parent-item-text-size: var(--mat-list-list-item-label-text-size, #{$default-anchor-list-item-child-list-item-text-size});
 
     .mat-mdc-list-item .mat-icon.mat-mdc-list-item-icon {
-      font-size: var(--mdc-list-list-item-leading-icon-size, var(--parent-mdc-list-list-item-leading-icon-size));
-      padding-left: calc((var(--parent-mdc-list-list-item-leading-icon-size) - var(--mdc-list-list-item-leading-icon-size, var(--parent-mdc-list-list-item-leading-icon-size))) / 2); // align the icons
+      font-size: var(--mat-list-list-item-leading-icon-size, var(--dbx-anchor-list-parent-item-icon-size));
+      padding-left: calc((var(--dbx-anchor-list-parent-item-icon-size) - var(--mat-list-list-item-leading-icon-size, var(--dbx-anchor-list-parent-item-icon-size))) / 2); // align the icons
     }
 
     .dbx-anchor-list-child {
       // text and icon size text is smaller
-      --mdc-list-list-item-leading-icon-size: var(--dbx-anchor-list-item-child-list-item-icon-size, var(--parent-mdc-list-list-item-leading-icon-size));
-      --mdc-list-list-item-label-text-size: var(--dbx-anchor-list-item-child-list-item-text-size, var(--parent-mdc-list-list-item-label-text-size));
+      --mat-list-list-item-leading-icon-size: var(--dbx-anchor-list-item-child-list-item-icon-size, var(--dbx-anchor-list-parent-item-icon-size));
+      --mat-list-list-item-label-text-size: var(--dbx-anchor-list-item-child-list-item-text-size, var(--dbx-anchor-list-parent-item-text-size));
 
       .mat-mdc-list-item .mdc-list-item__content {
         padding-left: $active-child-item-left-padding;

@@ -242,12 +242,6 @@ $list-item-padded-min-height: 42px;
           min-height: 56px;
         }
       }
-
-      // Fixes:
-      &.mdc-list-item--disabled .mdc-list-item__start.mat-icon {
-        color: var(--mdc-list-list-item-disabled-leading-icon-color, var(--mat-app-on-surface));
-        opacity: var(--mdc-list-list-item-disabled-leading-icon-opacity);
-      }
     }
 
     .mat-selection-list.mat-mdc-list-base .dbx-list-view-item.mat-mdc-list-item .mat-mdc-list-item-content .mat-mdc-list-text {
@@ -538,12 +532,7 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-view-group-header {
-    color: var(--mdc-list-list-item-label-text-color);
     background: var(--dbx-list-view-group-header-background, var(--mat-sidenav-content-background-color));
-
-    .item-details {
-      color: var(--mdc-list-list-item-supporting-text-color);
-    }
 
     --mat-divider-width: 2px;
     border-bottom-style: solid;

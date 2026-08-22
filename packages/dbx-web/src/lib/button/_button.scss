@@ -285,14 +285,6 @@ $big-button-height: 46px; // 33% bigger
 
   .dbx-icon-button > .mat-mdc-button {
     background: inherit;
-
-    &.mat-unthemed {
-      // TEMPORARY: For now we just unset the ripple colors but later we want to make sure that
-      // the colors from dbx-primary, dbx-accent, etc... are set on these label colors instead
-      // for buttons. Button column isn't correct for now either...
-      --mdc-text-button-label-text-color: unset;
-      --mat-mdc-button-persistent-ripple-color: unset;
-    }
   }
 
   .dbx-icon-button.dbx-grey-bg {
