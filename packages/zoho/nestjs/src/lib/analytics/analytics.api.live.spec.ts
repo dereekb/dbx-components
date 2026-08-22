@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { type DynamicModule, Module } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { type Getter, type Maybe, MS_IN_SECOND, cachedGetter } from '@dereekb/util';
-import { expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
-import { ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
+import { type ExpectFailAssertionFunction, captureRejection, expectFail, expectFailAssertErrorType, itShouldFail } from '@dereekb/util/test';
+import { ZOHO_ANALYTICS_SUCCESS_STATUS, ZohoServerFetchResponseError, isZohoAnalyticsJobComplete, pollZohoAnalyticsJob, type ZohoAnalyticsGetExportJobResponse, type ZohoAnalyticsName, type ZohoAnalyticsRow, type ZohoAnalyticsViewId, type ZohoAnalyticsView, type ZohoAnalyticsWorkspaceId } from '@dereekb/zoho';
 import { appZohoAnalyticsModuleMetadata } from './analytics.module';
 import { ZohoAnalyticsApi } from './analytics.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
@@ -71,6 +71,39 @@ const BASELINE_WEST_ROW_COUNT = 1;
 const WEST_ROW_CRITERIA = `"${TEST_TABLE_NAME}"."Region"='West'`;
 
 /**
+ * Criteria naming a column the test table does not have.
+ */
+const UNKNOWN_COLUMN_CRITERIA = `"${TEST_TABLE_NAME}"."NotAColumn"='x'`;
+
+/**
+ * Criteria that matches no row, for the writes that are expected to change nothing.
+ */
+const NO_MATCH_CRITERIA = `"${TEST_TABLE_NAME}"."Region"='Nowhere'`;
+
+/**
+ * Well-formed id that belongs to nothing, for the not-found tests.
+ */
+const NON_EXISTENT_ID = '0000000000000000000';
+
+/**
+ * Codes asserted by the failure tests.
+ *
+ * Analytics raises all of these as the same {@link ZohoServerFetchResponseError} class, so the
+ * numeric code is the only thing distinguishing one failure from another. Each was captured from
+ * the live API rather than taken from Zoho's documentation, which lists none of them.
+ */
+const WORKSPACE_NOT_PRESENT_ERROR_CODE = '7103';
+const VIEW_NOT_PRESENT_ERROR_CODE = '7104';
+const IMPORT_ABORTED_ERROR_CODE = '7232';
+const UNKNOWN_COLUMN_IN_EXPORT_CRITERIA_ERROR_CODE = '7330';
+const EXPORT_CRITERIA_PARSE_ERROR_CODE = '7331';
+const INVALID_SQL_TABLE_ERROR_CODE = '7409';
+const UNKNOWN_COLUMN_IN_ROW_CRITERIA_ERROR_CODE = '8004';
+const NO_COLUMN_PRESENT_ERROR_CODE = '8016';
+const EXPORT_JOB_NOT_FOUND_ERROR_CODE = '8120';
+const IMPORT_JOB_NOT_FOUND_ERROR_CODE = '8137';
+
+/**
  * Wall-clock allowance for a live call. `zoho-nestjs` sets a 20s testTimeout, which is enough for a
  * single request but not for a token refresh followed by an import.
  */
@@ -104,6 +137,19 @@ const cacheService = fileZohoAccountsAccessTokenCacheService();
 export class TestZohoAnalyticsModule {}
 
 /**
+ * Asserts a failure is a Zoho Analytics server error carrying the expected numeric code.
+ *
+ * @param expectedCode - Analytics error code the operation is expected to report.
+ * @returns Assertion function for use with `expectFail()`.
+ */
+function expectFailAssertZohoAnalyticsErrorCode(expectedCode: string): ExpectFailAssertionFunction {
+  return (error: unknown) => {
+    expect(error).toBeInstanceOf(ZohoServerFetchResponseError);
+    expect((error as ZohoServerFetchResponseError).code).toBe(expectedCode);
+  };
+}
+
+/**
  * Reads the row array out of a JSON export response.
  *
  * @param response - Raw export response.
@@ -115,13 +161,23 @@ async function readExportedRows(response: Response): Promise<ZohoAnalyticsRow[]>
 }
 
 /**
- * Shape assertions against the LIVE Zoho Analytics v2 API.
+ * Shape and failure assertions against the LIVE Zoho Analytics v2 API.
  *
  * These exist because the client was written against Zoho's published OpenAPI spec rather than a
  * live account, and several response shapes in that spec are unusual enough to be worth confirming
  * against real payloads — single objects returned under plural keys, a `viewType` that changes case
  * between endpoints, partial import failures reported inside a 200, and row CRUD that sends its
  * CONFIG as a form body where the prose docs show a query string.
+ *
+ * The failure tests carry as much weight as the successful ones. Analytics documents none of its
+ * error codes and raises every one of them as the same error class, so the code each operation
+ * actually reports is only knowable from a live call — and the codes are what a caller has to
+ * branch on. They also pin down which failures are thrown and which are reported inside a 200,
+ * a line Analytics draws in a place no reader would guess: an unrecognized column is a silent
+ * partial success for `addRow()` but a thrown error for `updateRows()`.
+ *
+ * Writes are grouped so that only the tests asserting an absolute row count pay for a baseline
+ * reset. The `no-op writes` and `failures` groups run against the table as they find it.
  *
  * Opt-in: skipped unless `ZOHO_ANALYTICS_TEST_WORKSPACE_ID`, `ZOHO_ANALYTICS_ORG_ID`, and an
  * Analytics refresh token are set. Note that nx caches test results and no env var is a hash input,
@@ -264,6 +320,22 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
       );
     });
 
+    describe('getSharedWorkspaces()', () => {
+      it(
+        'should return a flat workspaces array, empty when nothing is shared with the user',
+        async () => {
+          const result = await api.getSharedWorkspaces();
+
+          // shares the response shape of getOwnedWorkspaces() rather than the split shape of
+          // getAllWorkspaces(); a test account normally has nothing shared with it, so only the
+          // shape can be asserted
+          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+          expect(Array.isArray(result.data.workspaces)).toBe(true);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+    });
+
     describe('getWorkspaceDetails()', () => {
       it(
         'should return a single workspace object under the plural workspaces key',
@@ -332,96 +404,148 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
   // MARK: Import
   describe('import', () => {
-    beforeEach(async () => {
-      await resetTestTable();
-    }, LIVE_TEST_TIMEOUT_MS);
+    /**
+     * Tests whose assertions are absolute row counts, so each one starts from the baseline. That
+     * costs a `truncateadd` import per test, which is the price of not having them depend on each
+     * other.
+     */
+    describe('writes', () => {
+      beforeEach(async () => {
+        await resetTestTable();
+      }, LIVE_TEST_TIMEOUT_MS);
 
-    describe('importDataInTable()', () => {
-      it(
-        'should append rows without removing the existing ones',
-        async () => {
-          const result = await api.importDataInTable({
-            workspaceId,
-            viewId: testViewId,
-            config: { importType: 'append', autoIdentify: true, onError: 'abort' },
-            rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }]
-          });
+      describe('importDataInTable()', () => {
+        it(
+          'should append rows without removing the existing ones',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }]
+            });
 
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(result.data.importSummary.successRowCount).toBe(1);
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(1);
 
-          const rows = await loadTestTableRows();
-          expect(rows.length).toBe(BASELINE_ROWS.length + 1);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
 
-      it(
-        'should replace the whole table on truncateadd',
-        async () => {
-          const result = await api.importDataInTable({
-            workspaceId,
-            viewId: testViewId,
-            config: { importType: 'truncateadd', autoIdentify: true, onError: 'abort' },
-            rows: [{ Region: 'South', Rep: 'Barbara', Amount: 500 }]
-          });
+        it(
+          'should replace the whole table on truncateadd',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'truncateadd', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'South', Rep: 'Barbara', Amount: 500 }]
+            });
 
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(result.data.importSummary.successRowCount).toBe(1);
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.importSummary.successRowCount).toBe(1);
 
-          const rows = await loadTestTableRows();
-          expect(rows.length).toBe(1);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
 
-      it(
-        'should report a dropped row inside a success response rather than throwing',
-        async () => {
-          const result = await api.importDataInTable({
-            workspaceId,
-            viewId: testViewId,
-            config: { importType: 'append', autoIdentify: true, onError: 'skiprow' },
-            rows: [
-              { Region: 'North', Rep: 'Edsger', Amount: 400 },
-              { Region: 'North', Rep: 'Broken', Amount: 'not-a-number' }
-            ]
-          });
+        it(
+          'should report a dropped row inside a success response rather than throwing',
+          async () => {
+            const result = await api.importDataInTable({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'skiprow' },
+              rows: [
+                { Region: 'North', Rep: 'Edsger', Amount: 400 },
+                { Region: 'North', Rep: 'Broken', Amount: 'not-a-number' }
+              ]
+            });
 
-          const { importSummary, importErrors } = result.data;
-          const droppedRows = (importSummary.totalRowCount ?? 0) - (importSummary.successRowCount ?? 0);
+            const { importSummary, importErrors } = result.data;
+            const droppedRows = (importSummary.totalRowCount ?? 0) - (importSummary.successRowCount ?? 0);
 
-          // a partial failure is a 200 with the loss described in the summary — the whole reason
-          // callers cannot treat a resolved import as "everything landed".
-          // importErrors is tested for CONTENT, not presence: Zoho returns '' when nothing failed,
-          // so a presence check would pass on a clean import and assert nothing
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(droppedRows > 0 || (importErrors?.length ?? 0) > 0).toBe(true);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+            // a partial failure is a 200 with the loss described in the summary — the whole reason
+            // callers cannot treat a resolved import as "everything landed".
+            // importErrors is tested for CONTENT, not presence: Zoho returns '' when nothing failed,
+            // so a presence check would pass on a clean import and assert nothing
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(droppedRows > 0 || (importErrors?.length ?? 0) > 0).toBe(true);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('importDataInTableAndAwaitJob()', () => {
+        it(
+          'should complete the queued job and carry the import summary in jobInfo',
+          async () => {
+            const result = await api.importDataInTableAndAwaitJob({
+              workspaceId,
+              viewId: testViewId,
+              config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+              rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }],
+              poll: LIVE_JOB_POLL
+            });
+
+            expect(isZohoAnalyticsJobComplete(result.data.jobCode)).toBe(true);
+            expect(result.data.jobInfo?.importSummary.successRowCount).toBe(1);
+
+            // the same job read back through the two-step path this function wraps
+            const job = await api.getImportJob({ workspaceId, jobId: result.data.jobId });
+
+            expect(job.data.jobId).toBe(result.data.jobId);
+            expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+            expect(job.data.jobInfo?.importSummary.successRowCount).toBe(1);
+            // returned for import jobs as well, though Zoho documents it only for exports
+            expect(job.data.expiryTime).toBeDefined();
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_JOB_TEST_TIMEOUT_MS
+        );
+      });
     });
 
-    describe('importDataInTableAndAwaitJob()', () => {
-      it(
-        'should complete the queued job and carry the import summary in jobInfo',
-        async () => {
-          const result = await api.importDataInTableAndAwaitJob({
-            workspaceId,
-            viewId: testViewId,
-            config: { importType: 'append', autoIdentify: true, onError: 'abort' },
-            rows: [{ Region: 'North', Rep: 'Edsger', Amount: 400 }],
-            poll: LIVE_JOB_POLL
-          });
+    /**
+     * Tests where nothing is expected to land. They assert against the table as they found it, so
+     * they need no baseline reset.
+     */
+    describe('failures', () => {
+      describe('importDataInTable()', () => {
+        it(
+          'should abort the entire import and leave the table untouched when onError is abort',
+          async () => {
+            const rowsBefore = await loadTestTableRows();
 
-          expect(isZohoAnalyticsJobComplete(result.data.jobCode)).toBe(true);
-          expect(result.data.jobInfo?.importSummary.successRowCount).toBe(1);
+            // the counterpart to the skiprow test above: under abort a bad row fails the whole
+            // request as a thrown error, and the valid row sent alongside it does not land either
+            const error = await captureRejection(() =>
+              api.importDataInTable({
+                workspaceId,
+                viewId: testViewId,
+                config: { importType: 'append', autoIdentify: true, onError: 'abort' },
+                rows: [
+                  { Region: 'North', Rep: 'Edsger', Amount: 400 },
+                  { Region: 'North', Rep: 'Broken', Amount: 'not-a-number' }
+                ]
+              })
+            );
 
-          const rows = await loadTestTableRows();
-          expect(rows.length).toBe(BASELINE_ROWS.length + 1);
-        },
-        LIVE_JOB_TEST_TIMEOUT_MS
-      );
+            expect(error).toBeInstanceOf(ZohoServerFetchResponseError);
+            expect((error as ZohoServerFetchResponseError).code).toBe(IMPORT_ABORTED_ERROR_CODE);
+
+            const rowsAfter = await loadTestTableRows();
+            expect(rowsAfter.length).toBe(rowsBefore.length);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
     });
   });
 
@@ -455,6 +579,20 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
       );
 
       it(
+        'should export only the selected columns',
+        async () => {
+          const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', selectedColumns: ['Region'] } });
+          const rows = await readExportedRows(response);
+
+          // selectedColumns is an array inside the JSON-encoded CONFIG parameter, which is the
+          // shape most likely to be mangled on the way out
+          expect(rows.length).toBe(BASELINE_ROWS.length);
+          expect(Object.keys(rows[0] ?? {})).toEqual(['Region']);
+        },
+        LIVE_TEST_TIMEOUT_MS
+      );
+
+      it(
         'should export csv with a header row',
         async () => {
           const response = await api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'csv', includeHeader: true } });
@@ -480,6 +618,9 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
           });
 
           expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+          // a completed export job carries both, and the file stops being retrievable at expiryTime
+          expect(job.data.downloadUrl).toBeDefined();
+          expect(job.data.expiryTime).toBeDefined();
 
           const download = await api.downloadExport({ workspaceId, jobId: job.data.jobId });
           const body = await download.text();
@@ -493,7 +634,7 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
     describe('createExportJobForSqlQuery()', () => {
       it(
-        'should queue a job for a SQL query over the test table',
+        'should export the results of a SQL query over the test table',
         async () => {
           const created = await api.createExportJobForSqlQuery({
             workspaceId,
@@ -503,8 +644,26 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
           expect(created.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
           expect(created.data.jobId).toBeDefined();
 
-          const job = await api.getExportJob({ workspaceId, jobId: created.data.jobId });
+          // there is no exportSqlQueryAndAwaitJob(), so the job is polled with the same library
+          // poller the view export uses
+          const job = await pollZohoAnalyticsJob<ZohoAnalyticsGetExportJobResponse>({
+            ...LIVE_JOB_POLL,
+            loadJob: () => api.getExportJob({ workspaceId, jobId: created.data.jobId }),
+            readJobCode: (x) => x.data.jobCode
+          });
+
           expect(job.data.jobId).toBe(created.data.jobId);
+          expect(isZohoAnalyticsJobComplete(job.data.jobCode)).toBe(true);
+
+          const download = await api.downloadExport({ workspaceId, jobId: created.data.jobId });
+          const rows = await readExportedRows(download);
+
+          // this is the only way to run ad-hoc SQL, so the query's result is worth asserting rather
+          // than stopping at "a job was queued": the WHERE clause narrowed the export, and the
+          // SELECT list narrowed the columns
+          expect(rows.length).toBe(BASELINE_EAST_ROW_COUNT);
+          expect(Object.keys(rows[0] ?? {})).toEqual(['Region', 'Amount']);
+          expect(rows.every((row) => row['Region'] === 'East')).toBe(true);
         },
         LIVE_JOB_TEST_TIMEOUT_MS
       );
@@ -513,66 +672,187 @@ describe.runIf(RUN_LIVE_TESTS)('analytics.api (live)', () => {
 
   // MARK: Rows
   describe('rows', () => {
-    beforeEach(async () => {
-      await resetTestTable();
-    }, LIVE_TEST_TIMEOUT_MS);
+    /**
+     * Tests that change the table, so each one starts from the baseline.
+     */
+    describe('writes', () => {
+      beforeEach(async () => {
+        await resetTestTable();
+      }, LIVE_TEST_TIMEOUT_MS);
 
-    describe('addRow()', () => {
-      it(
-        'should add a single row and echo back the added columns',
-        async () => {
-          const result = await api.addRow({ workspaceId, viewId: testViewId, config: { columns: { Region: 'North', Rep: 'Edsger', Amount: 400 } } });
+      describe('addRow()', () => {
+        it(
+          'should add a single row and echo back the added columns',
+          async () => {
+            const result = await api.addRow({ workspaceId, viewId: testViewId, config: { columns: { Region: 'North', Rep: 'Edsger', Amount: 400 } } });
 
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(result.data.addedColumns?.['Region']).toBe('North');
-          // values echo back stringified, and invalidColumns is an empty object rather than absent
-          expect(result.data.addedColumns?.['Amount']).toBe('400');
-          expect(Object.keys(result.data.invalidColumns ?? {})).toEqual([]);
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.addedColumns?.['Region']).toBe('North');
+            // values echo back stringified, and invalidColumns is an empty object rather than absent
+            expect(result.data.addedColumns?.['Amount']).toBe('400');
+            expect(Object.keys(result.data.invalidColumns ?? {})).toEqual([]);
 
-          const rows = await loadTestTableRows();
-          expect(rows.length).toBe(BASELINE_ROWS.length + 1);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+
+        it(
+          'should add the recognized columns and report the rejected ones inside a success response',
+          async () => {
+            const result = await api.addRow({ workspaceId, viewId: testViewId, config: { columns: { Region: 'North', NotAColumn: 'nope' } } });
+
+            // the row-CRUD counterpart to a partial import: an unrecognized column does not fail
+            // the call, the row lands without it, and the only record of the loss is invalidColumns
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.addedColumns?.['Region']).toBe('North');
+            expect(result.data.invalidColumns?.['NotAColumn']).toBe('nope');
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_ROWS.length + 1);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('updateRows()', () => {
+        it(
+          'should update only the rows matching the criteria',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Updated' }, criteria: WEST_ROW_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
+
+      describe('deleteRows()', () => {
+        it(
+          'should delete only the rows matching the criteria',
+          async () => {
+            const result = await api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: WEST_ROW_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.deletedRows).toBe(BASELINE_WEST_ROW_COUNT);
+
+            const rows = await loadTestTableRows();
+            expect(rows.length).toBe(BASELINE_EAST_ROW_COUNT);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
     });
 
-    describe('updateRows()', () => {
-      it(
-        'should update only the rows matching the criteria',
-        async () => {
-          const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Updated' }, criteria: WEST_ROW_CRITERIA } });
+    /**
+     * Writes that are expected to change nothing. They run against the table as they find it, which
+     * saves the baseline reset an absolute row count would need.
+     */
+    describe('no-op writes', () => {
+      describe('updateRows()', () => {
+        it(
+          'should report zero updated rows when the criteria matches nothing',
+          async () => {
+            const result = await api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { Rep: 'Nobody' }, criteria: NO_MATCH_CRITERIA } });
 
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(result.data.updatedRows).toBe(BASELINE_WEST_ROW_COUNT);
+            // a criteria that matches nothing is a success carrying a zero count, not a failure —
+            // so a resolved updateRows() says nothing about whether anything was updated
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.updatedRows).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
 
-          const rows = await loadTestTableRows();
-          expect(rows.filter((row) => row['Rep'] === 'Updated').length).toBe(BASELINE_WEST_ROW_COUNT);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+      describe('deleteRows()', () => {
+        it(
+          'should report zero deleted rows when the criteria matches nothing',
+          async () => {
+            const result = await api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: NO_MATCH_CRITERIA } });
+
+            expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
+            expect(result.data.deletedRows).toBe(0);
+          },
+          LIVE_TEST_TIMEOUT_MS
+        );
+      });
     });
 
-    describe('deleteRows()', () => {
-      it(
-        'should delete only the rows matching the criteria',
-        async () => {
-          const result = await api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: WEST_ROW_CRITERIA } });
+    describe('failures', () => {
+      describe('updateRows()', () => {
+        itShouldFail('when no column of the update is a column of the table', async () => {
+          // Zoho discards the unknown column and then rejects the request for carrying no columns
+          // at all, rather than reporting it in invalidColumns the way addRow() does
+          await expectFail(() => api.updateRows({ workspaceId, viewId: testViewId, config: { columns: { NotAColumn: 'nope' }, criteria: WEST_ROW_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(NO_COLUMN_PRESENT_ERROR_CODE));
+        });
+      });
 
-          expect(result.status).toBe(ZOHO_ANALYTICS_SUCCESS_STATUS);
-          expect(result.data.deletedRows).toBe(BASELINE_WEST_ROW_COUNT);
-
-          const rows = await loadTestTableRows();
-          expect(rows.length).toBe(BASELINE_EAST_ROW_COUNT);
-        },
-        LIVE_TEST_TIMEOUT_MS
-      );
+      describe('deleteRows()', () => {
+        itShouldFail('when the criteria names a column the table does not have', async () => {
+          // the Data API reports an unknown criteria column as 8004, where the Bulk export API
+          // reports the same mistake as 7330
+          await expectFail(() => api.deleteRows({ workspaceId, viewId: testViewId, config: { criteria: UNKNOWN_COLUMN_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(UNKNOWN_COLUMN_IN_ROW_CRITERIA_ERROR_CODE));
+        });
+      });
     });
   });
 
   // MARK: Errors
+  /**
+   * Every failure below arrives as the same {@link ZohoServerFetchResponseError} class, so these
+   * assert the numeric code as well — it is the only thing a caller can branch on.
+   */
   describe('errors', () => {
-    itShouldFail('with a ZohoServerFetchResponseError for an unknown workspace id', async () => {
-      await expectFail(() => api.getViews({ workspaceId: '0000000000000000000' }), expectFailAssertErrorType(ZohoServerFetchResponseError));
+    describe('metadata', () => {
+      itShouldFail('with a ZohoServerFetchResponseError for an unknown workspace id', async () => {
+        await expectFail(() => api.getViews({ workspaceId: NON_EXISTENT_ID }), expectFailAssertErrorType(ZohoServerFetchResponseError));
+      });
+
+      itShouldFail('when the workspace does not exist', async () => {
+        await expectFail(() => api.getWorkspaceDetails({ workspaceId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(WORKSPACE_NOT_PRESENT_ERROR_CODE));
+      });
+
+      itShouldFail('when the view does not exist', async () => {
+        await expectFail(() => api.getViewDetails({ viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+      });
+
+      itShouldFail('when a table metadata lookup names a view that does not exist', async () => {
+        // the same code as getViewDetails(), even though this endpoint is workspace-scoped
+        await expectFail(() => api.getTableMetadata({ workspaceId, viewId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(VIEW_NOT_PRESENT_ERROR_CODE));
+      });
+    });
+
+    describe('export', () => {
+      itShouldFail('when the export criteria names a column the table does not have', async () => {
+        await expectFail(() => api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', criteria: UNKNOWN_COLUMN_CRITERIA } }), expectFailAssertZohoAnalyticsErrorCode(UNKNOWN_COLUMN_IN_EXPORT_CRITERIA_ERROR_CODE));
+      });
+
+      itShouldFail('when the export criteria cannot be parsed', async () => {
+        // exportData() resolves with a raw Response, so this also covers the fetch path that has no
+        // JSON interceptor: the failure surfaces as a typed error rather than an unhelpful body
+        await expectFail(() => api.exportData({ workspaceId, viewId: testViewId, config: { responseFormat: 'json', criteria: 'not a criteria' } }), expectFailAssertZohoAnalyticsErrorCode(EXPORT_CRITERIA_PARSE_ERROR_CODE));
+      });
+
+      itShouldFail('when a SQL query names a table that is not in the workspace', async () => {
+        await expectFail(() => api.createExportJobForSqlQuery({ workspaceId, config: { responseFormat: 'json', sqlQuery: 'SELECT * FROM "NoSuchTable"' } }), expectFailAssertZohoAnalyticsErrorCode(INVALID_SQL_TABLE_ERROR_CODE));
+      });
+    });
+
+    describe('jobs', () => {
+      // a job that does not exist is a thrown 404, NOT a job status carrying
+      // ZOHO_ANALYTICS_JOB_CODE_NOT_FOUND — so polling one never terminates on that code
+      itShouldFail('when the export job does not exist', async () => {
+        await expectFail(() => api.getExportJob({ workspaceId, jobId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(EXPORT_JOB_NOT_FOUND_ERROR_CODE));
+      });
+
+      itShouldFail('when the import job does not exist', async () => {
+        await expectFail(() => api.getImportJob({ workspaceId, jobId: NON_EXISTENT_ID }), expectFailAssertZohoAnalyticsErrorCode(IMPORT_JOB_NOT_FOUND_ERROR_CODE));
+      });
     });
   });
 });

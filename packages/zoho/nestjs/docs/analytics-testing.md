@@ -95,9 +95,23 @@ key, so a cached "passed" from a credential-less run would otherwise be replayed
 ## What the suite does to the workspace
 
 - creates `DbxComponentsLiveTest` once, with columns `Region` / `Rep` / `Amount`
-- resets that table to three baseline rows before each write test, and once more after the suite
+- resets that table to three baseline rows before each test that asserts an absolute row count,
+  and once more after the suite
 - creates async import/export jobs, which count against the org's daily API-unit allowance
 - never touches any other view in the workspace, and never deletes the workspace itself
+
+Imports are the most expensive thing the suite does, so the tests are grouped by whether they need
+a known starting point:
+
+| group | resets the baseline | holds |
+| --- | --- | --- |
+| `writes` | before each test | the tests asserting an exact row count after a write |
+| `no-op writes` | no | writes expected to affect zero rows |
+| `failures` | no | writes expected to be rejected, which land nothing |
+| `errors` | no | read-only not-found and bad-criteria calls |
+
+Adding a test that only needs a failure or a zero-row result belongs in one of the latter three,
+which cost no import.
 
 If the table's schema ever drifts (a stray column, a changed type), delete the
 `DbxComponentsLiveTest` table in the Analytics UI — the next run recreates it from the baseline rows.
