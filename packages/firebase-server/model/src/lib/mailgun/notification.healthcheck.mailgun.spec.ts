@@ -7,7 +7,7 @@ import { type MailgunNotificationEmailSendServiceHealthCheckServiceConfig, type 
 // This service only ever touches mailgunService.mailgunApi and mailgunService.sendTemplateEmail, so its
 // classification logic is exercised here with a hand-rolled stub and no Mailgun key. The paths that need
 // real documents (the orchestration around this service) are covered in
-// demo-api/.../notificationuser.healthcheck.spec.ts instead.
+// demo-api/.../notification.scenario.healthcheck.spec.ts instead.
 
 const TEST_DOMAIN = 'mail.example.com';
 const TEST_TARGET: EmailAddress = 'user@example.com';

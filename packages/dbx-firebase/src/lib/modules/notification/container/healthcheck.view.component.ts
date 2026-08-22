@@ -201,7 +201,14 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
    */
   private probeNoticeForMethod(input: DbxFirebaseNotificationHealthCheckProbeNoticeInput): Maybe<string> {
     const { noun, secondsRemaining, justSent, pending } = input;
-    const sent = justSent ? `A ${noun} was just sent.` : secondsRemaining > 0 ? `A ${noun} was sent recently.` : undefined;
+    let sent: Maybe<string>;
+
+    if (justSent) {
+      sent = `A ${noun} was just sent.`;
+    } else if (secondsRemaining > 0) {
+      sent = `A ${noun} was sent recently.`;
+    }
+
     const waiting = pending ? ' The result will appear here on its own as soon as we hear whether it arrived.' : '';
     const nextAllowed = secondsRemaining > 0 ? ` Another can be sent in ${formatSecondsRemaining(secondsRemaining)}.` : '';
 
