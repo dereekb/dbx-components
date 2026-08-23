@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
 import { readJsonFile, removeFile } from '@dereekb/nestjs';
 import { writeFile, mkdirSync } from 'node:fs';
@@ -254,9 +254,32 @@ export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
 }
 
 /**
+ * Shallow-merges an update block over the existing one, ignoring keys whose update value is `undefined`.
+ *
+ * A caller assembles its update positionally rather than key-by-key — `auth setup --product analytics`
+ * always emits an `orgId` key, for instance, whether or not `--org-id` was passed — so a plain spread
+ * lets an omitted flag clobber a stored value. Losing an org id that way silently breaks every
+ * org-scoped call for that product, and the same hazard applies to every other optional field.
+ *
+ * No path clears a credential/product field by writing `undefined`: `auth clear` removes the whole
+ * file and output config clears through {@link dbxMergeOutputConfig} (which is intentionally
+ * `undefined`-sensitive and is NOT routed through here), so ignoring undefined is safe.
+ *
+ * @param existing - Block currently on disk, when any.
+ * @param updates - Patch to apply; `undefined` values are treated as "not provided".
+ * @returns The merged block, or `existing` untouched when `updates` is absent.
+ */
+function mergeConfigBlock<T extends object>(existing: Maybe<T>, updates: Maybe<T>): T | undefined {
+  return updates == null ? (existing ?? undefined) : { ...existing, ...filterUndefinedValues(updates) };
+}
+
+/**
  * Merges new values into the existing config, preserving unmodified fields.
  *
- * Per-product blocks are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
+ * Per-product blocks are shallow-merged via {@link mergeConfigBlock} when provided, so a key the
+ * update carries as `undefined` leaves the stored value alone; output config is deep-merged via
+ * dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear
+ * existing values.
  *
  * Every product in {@link ZOHO_CLI_PRODUCTS} MUST appear below. A product missing from this literal
  * is not merely left unmerged — it is absent from `merged` and therefore erased from the config file
@@ -268,12 +291,12 @@ export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
 export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<ZohoCliConfig> {
   const existing = await loadCliConfig();
   const merged: ZohoCliConfig = {
-    shared: { ...existing?.shared, ...updates.shared } as ZohoCliConfig['shared'],
-    recruit: updates.recruit === undefined ? existing?.recruit : { ...existing?.recruit, ...updates.recruit },
-    crm: updates.crm === undefined ? existing?.crm : { ...existing?.crm, ...updates.crm },
-    desk: updates.desk === undefined ? existing?.desk : { ...existing?.desk, ...updates.desk },
-    sign: updates.sign === undefined ? existing?.sign : { ...existing?.sign, ...updates.sign },
-    analytics: updates.analytics === undefined ? existing?.analytics : { ...existing?.analytics, ...updates.analytics },
+    shared: mergeConfigBlock(existing?.shared, updates.shared) as ZohoCliConfig['shared'],
+    recruit: mergeConfigBlock(existing?.recruit, updates.recruit),
+    crm: mergeConfigBlock(existing?.crm, updates.crm),
+    desk: mergeConfigBlock(existing?.desk, updates.desk),
+    sign: mergeConfigBlock(existing?.sign, updates.sign),
+    analytics: mergeConfigBlock(existing?.analytics, updates.analytics),
     output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 
@@ -314,7 +337,14 @@ export async function clearCliConfig(): Promise<void> {
 /**
  * Returns the list of products that have resolvable credentials.
  *
- * A product is considered configured when {@link resolveProductCredentials} returns a value; Desk additionally requires `orgId` to be present.
+ * A product is considered configured when {@link resolveProductCredentials} returns a value; Desk
+ * additionally requires `orgId` to be present.
+ *
+ * The org-id requirement is deliberately desk-only rather than generalized over
+ * {@link ZOHO_CLI_ORG_ID_PRODUCTS}: every Desk endpoint is org-scoped, so Desk without an org id can
+ * do nothing at all, whereas Analytics still serves `GET /orgs` — the call that discovers the org id
+ * in the first place — so gating it here would make the id undiscoverable through the CLI. `doctor`
+ * is what reports an org-scoped product that is configured but has no org id.
  *
  * @param config - Loaded CLI configuration to inspect.
  * @returns Subset of {@link ZOHO_CLI_PRODUCTS} for which the CLI can construct an authenticated API client.

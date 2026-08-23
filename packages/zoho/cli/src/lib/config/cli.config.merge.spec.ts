@@ -86,4 +86,39 @@ describe('mergeCliConfig()', () => {
     expect(config?.analytics?.apiUrl).toBe('production');
     expect(config?.analytics?.orgId).toBe('1234567');
   });
+
+  // callers assemble their update positionally, so `auth setup --product analytics` emits an orgId
+  // key whether or not --org-id was passed — a plain spread let the omitted flag wipe a working org id
+  it('should not let an undefined update value clobber a stored product value', async () => {
+    await mergeCliConfig({ analytics: { ...creds, orgId: '1234567' } });
+    await mergeCliConfig({ analytics: { clientId: 'id2', clientSecret: 'secret2', apiUrl: undefined, orgId: undefined } });
+
+    const config = await loadCliConfig();
+
+    expect(config?.analytics?.clientId).toBe('id2');
+    expect(config?.analytics?.orgId).toBe('1234567');
+    expect(config?.analytics?.refreshToken).toBe('token');
+  });
+
+  it('should not let an undefined update value clobber a stored shared value', async () => {
+    await mergeCliConfig({ shared: { ...creds, region: 'eu', apiMode: 'sandbox' } });
+    await mergeCliConfig({ shared: { ...creds, region: undefined, apiMode: undefined } });
+
+    const config = await loadCliConfig();
+
+    expect(config?.shared?.region).toBe('eu');
+    expect(config?.shared?.apiMode).toBe('sandbox');
+  });
+
+  // clearOutputConfig relies on explicit undefined keys reaching dbxMergeOutputConfig, so the
+  // undefined-tolerant product/shared merge must NOT be applied to the output block
+  it('should still clear output config through an explicit undefined', async () => {
+    await mergeCliConfig({ output: { dumpDir: '/tmp/dump', pick: 'id' } });
+    await mergeCliConfig({ output: { dumpDir: undefined, pick: undefined, commands: undefined } });
+
+    const config = await loadCliConfig();
+
+    expect(config?.output?.dumpDir).toBeUndefined();
+    expect(config?.output?.pick).toBeUndefined();
+  });
 });
