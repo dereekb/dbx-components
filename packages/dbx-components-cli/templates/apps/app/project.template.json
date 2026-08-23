@@ -26,7 +26,12 @@
         "assets": [
           "ANGULAR_APP_FOLDER/src/favicon.ico",
           "ANGULAR_APP_FOLDER/src/assets",
-          "ANGULAR_APP_FOLDER/src/lib"
+          "ANGULAR_APP_FOLDER/src/lib",
+          {
+            "input": "node_modules/mapbox-gl/dist",
+            "glob": "mapbox-gl-csp-worker.js",
+            "output": "assets/mapbox-gl"
+          }
         ],
         "allowedCommonJsDependencies": ["core-js", "make-error", "validator"],
         "stylePreprocessorOptions": {

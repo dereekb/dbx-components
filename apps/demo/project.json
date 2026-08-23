@@ -25,6 +25,11 @@
             "input": "packages/dbx-firebase/src/assets",
             "glob": "**/*",
             "output": "assets/dbx-firebase"
+          },
+          {
+            "input": "node_modules/mapbox-gl/dist",
+            "glob": "mapbox-gl-csp-worker.js",
+            "output": "assets/mapbox-gl"
           }
         ],
         "allowedCommonJsDependencies": ["make-error", "date-fns", "date-fns-tz", "mapbox-gl"],
