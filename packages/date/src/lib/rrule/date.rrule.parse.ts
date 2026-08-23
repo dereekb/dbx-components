@@ -1,5 +1,5 @@
-import { type TimezoneString, type CommaSeparatedString, flattenArray, type Maybe, splitJoinRemainder } from '@dereekb/util';
-import { format } from 'date-fns-tz';
+import { type TimezoneString, type CommaSeparatedString, flattenArray, type Maybe, splitJoinRemainder, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { formatInTimeZone } from 'date-fns-tz';
 import { DateSet } from '../date';
 import { type DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 
@@ -304,6 +304,8 @@ export class DateRRuleParseUtility {
   /**
    * Formats a Date as an RFC 5545 UTC date-time string (e.g., `"20210611T110000Z"`).
    *
+   * The rendered wall clock is always UTC, regardless of the system timezone, so the trailing `Z` is truthful.
+   *
    * @param date - Moment to render.
    * @returns RFC 5545 UTC date-time representation of the moment.
    *
@@ -314,7 +316,7 @@ export class DateRRuleParseUtility {
    * ```
    */
   static formatDateTimeString(date: Date): RFC5545DateTimeString {
-    return format(date, `yyyyMMdd'T'HHmmss'Z'`);
+    return formatInTimeZone(date, UTC_TIMEZONE_STRING, `yyyyMMdd'T'HHmmss'Z'`);
   }
 
   /**
