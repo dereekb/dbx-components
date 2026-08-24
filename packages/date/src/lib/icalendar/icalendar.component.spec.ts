@@ -1,6 +1,6 @@
 import { wrapDateTests } from '../../test.spec';
 import { DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
-import { type ICalendarComponent, type ICalendarContentLine, DEFAULT_ICALENDAR_ALARM_DESCRIPTION, iCalendarAlarmToComponent, iCalendarAttendeeContentLine, iCalendarDateTimeContentLine, iCalendarEventToComponent, iCalendarTimezoneToComponent, iCalendarToComponent } from './icalendar.component';
+import { type ICalendarComponent, type ICalendarContentLine, DEFAULT_ICALENDAR_ALARM_DESCRIPTION, iCalendarAlarmToComponent, iCalendarAttendeeContentLine, iCalendarDateTimeContentLine, iCalendarEventToComponent, iCalendarExtraPropertyContentLine, iCalendarTimezoneToComponent, iCalendarToComponent } from './icalendar.component';
 import { type ICalendar, type ICalendarEvent } from './icalendar.model';
 
 const TEST_NOW = new Date('2026-03-01T00:00:00Z');
@@ -41,6 +41,18 @@ wrapDateTests(() => {
 
       expect(line.value).toBe('20260315');
       expect(line.parameters).toEqual([{ name: 'VALUE', value: 'DATE' }]);
+    });
+  });
+
+  describe('iCalendarExtraPropertyContentLine()', () => {
+    it('should escape the value as TEXT.', () => {
+      expect(iCalendarExtraPropertyContentLine({ name: 'X-THING', value: 'a,b' }).value).toBe(String.raw`a\,b`);
+    });
+
+    it('should throw for a property name carrying an illegal character.', () => {
+      expect(() => iCalendarExtraPropertyContentLine({ name: 'X_THING', value: 'a' })).toThrow();
+      expect(() => iCalendarExtraPropertyContentLine({ name: 'X THING', value: 'a' })).toThrow();
+      expect(() => iCalendarExtraPropertyContentLine({ name: '', value: 'a' })).toThrow();
     });
   });
 
@@ -236,6 +248,26 @@ wrapDateTests(() => {
       expect(component.components?.length).toBe(1);
       expect(component.components?.[0].name).toBe('VALARM');
     });
+
+    it('should emit event extra properties after every standard property.', () => {
+      const component = iCalendarEventToComponent({ ...TEST_EVENT, summary: 'S', attendees: [{ address: 'a@example.com' }], extraProperties: [{ name: 'X-THING', value: 'v' }] }, TEST_NOW);
+      const names = component.lines.map((x) => x.name);
+
+      expect(lineNamed(component, 'X-THING')?.value).toBe('v');
+      expect(names.indexOf('X-THING')).toBeGreaterThan(names.indexOf('ATTENDEE'));
+      expect(names[names.length - 1]).toBe('X-THING');
+    });
+
+    it('should leave the standard event property order unchanged when extras are present.', () => {
+      const without = iCalendarEventToComponent({ ...TEST_EVENT, summary: 'S' }, TEST_NOW);
+      const withExtras = iCalendarEventToComponent({ ...TEST_EVENT, summary: 'S', extraProperties: [{ name: 'X-THING', value: 'v' }] }, TEST_NOW);
+
+      expect(withExtras.lines.slice(0, without.lines.length)).toEqual(without.lines);
+    });
+
+    it('should throw when an event extra property name is invalid.', () => {
+      expect(() => iCalendarEventToComponent({ ...TEST_EVENT, extraProperties: [{ name: 'X.THING', value: 'v' }] }, TEST_NOW)).toThrow();
+    });
   });
 
   describe('iCalendarToComponent()', () => {
@@ -315,6 +347,41 @@ wrapDateTests(() => {
       const b = iCalendarToComponent({ events: [{ end: TEST_EVENT.end, start: TEST_EVENT.start, summary: 'S', uid: 'a@example.com' }], description: 'D', name: 'Feed' }, { now: TEST_NOW });
 
       expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    });
+
+    it('should emit calendar extra properties after the standard properties.', () => {
+      const component = iCalendarToComponent({ ...calendar, timezone: 'America/Denver', extraProperties: [{ name: 'X-WR-CALCOLOR', value: 'blue' }] }, { now: TEST_NOW });
+      const names = component.lines.map((x) => x.name);
+
+      expect(lineNamed(component, 'X-WR-CALCOLOR')?.value).toBe('blue');
+      expect(names.indexOf('X-WR-CALCOLOR')).toBeGreaterThan(names.indexOf('X-WR-TIMEZONE'));
+      expect(names[names.length - 1]).toBe('X-WR-CALCOLOR');
+    });
+
+    it('should emit calendar extra properties in the order they were given.', () => {
+      const component = iCalendarToComponent(
+        {
+          ...calendar,
+          extraProperties: [
+            { name: 'X-B', value: 'b' },
+            { name: 'X-A', value: 'a' }
+          ]
+        },
+        { now: TEST_NOW }
+      );
+
+      expect(component.lines.filter((x) => x.name.startsWith('X-')).map((x) => x.name)).toEqual(['X-B', 'X-A']);
+    });
+
+    it('should leave the standard property order unchanged when extras are present.', () => {
+      const without = iCalendarToComponent({ ...calendar, timezone: 'America/Denver' }, { now: TEST_NOW });
+      const withExtras = iCalendarToComponent({ ...calendar, timezone: 'America/Denver', extraProperties: [{ name: 'X-THING', value: 'v' }] }, { now: TEST_NOW });
+
+      expect(withExtras.lines.slice(0, without.lines.length)).toEqual(without.lines);
+    });
+
+    it('should throw when a calendar extra property name is invalid.', () => {
+      expect(() => iCalendarToComponent({ ...calendar, extraProperties: [{ name: 'X THING', value: 'v' }] }, { now: TEST_NOW })).toThrow();
     });
   });
 });

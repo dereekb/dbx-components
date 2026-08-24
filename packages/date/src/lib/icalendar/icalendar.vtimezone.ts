@@ -1,4 +1,4 @@
-import { type Maybe, type Milliseconds, type Minutes, MS_IN_DAY, MS_IN_MINUTE, type TimezoneString, unique } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type Minutes, MINUTES_IN_YEAR, MS_IN_DAY, MS_IN_MINUTE, type TimezoneString, unique } from '@dereekb/util';
 import { addMinutes } from 'date-fns';
 import { calculateTimezoneOffset } from '../date/date.timezone';
 import { getTimezoneAbbreviation } from '../timezone/timezone';
@@ -220,7 +220,7 @@ export interface ICalendarWithDerivedTimezonesConfig {
 /**
  * Default padding applied on each side of the derived VTIMEZONE window: one year.
  */
-export const ICALENDAR_DERIVED_TIMEZONE_PADDING: Minutes = 365 * 24 * 60;
+export const ICALENDAR_DERIVED_TIMEZONE_PADDING: Minutes = MINUTES_IN_YEAR;
 
 /**
  * Returns a copy of the calendar carrying a derived VTIMEZONE for every zone its events reference.

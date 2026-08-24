@@ -1,6 +1,6 @@
 import { isNotBlankString, type Maybe, utcOffsetString } from '@dereekb/util';
 import { type ICalendarComponentName, type ICalendarParameterName, type ICalendarParameterValue, type ICalendarPropertyName, type ICalendarValue, DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
-import { type ICalendar, type ICalendarAlarm, type ICalendarAttendee, type ICalendarDateTimeValue, type ICalendarEvent, type ICalendarOrganizer, type ICalendarSerializeConfig, type ICalendarTimezone, type ICalendarTimezoneTransition } from './icalendar.model';
+import { type ICalendar, type ICalendarAlarm, type ICalendarAttendee, type ICalendarDateTimeValue, type ICalendarEvent, type ICalendarExtraProperty, type ICalendarOrganizer, type ICalendarSerializeConfig, type ICalendarTimezone, type ICalendarTimezoneTransition } from './icalendar.model';
 import { iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
 
 /**
@@ -112,6 +112,28 @@ export function iCalendarAttendeeContentLine(name: ICalendarPropertyName, attend
   }
 
   return iCalendarContentLine(name, iCalendarCalAddressValue(attendee.address), parameters);
+}
+
+/**
+ * The shape a {@link ICalendarExtraProperty} name must have to be a legal RFC 5545 property name.
+ */
+export const ICALENDAR_PROPERTY_NAME_REGEX = /^[A-Za-z0-9-]+$/;
+
+/**
+ * Converts an extra property into a content line, escaping its value as TEXT.
+ *
+ * @param property - The extra property to encode.
+ * @returns The content line.
+ * @throws {Error} If the property name is not a legal RFC 5545 property name.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function iCalendarExtraPropertyContentLine(property: ICalendarExtraProperty): ICalendarContentLine {
+  if (!ICALENDAR_PROPERTY_NAME_REGEX.test(property.name)) {
+    throw new Error(`The ICalendarExtraProperty name "${property.name}" is not a valid iCalendar property name. Only letters, digits and dashes are allowed.`);
+  }
+
+  return iCalendarContentLine(property.name, iCalendarTextValue(property.value));
 }
 
 /**
@@ -285,6 +307,9 @@ export function iCalendarEventToComponent(event: ICalendarEvent, timestamp: Date
 
   event.attendees?.forEach((attendee) => lines.push(iCalendarAttendeeContentLine('ATTENDEE', attendee)));
 
+  // extras land last so the canonical order of the standard properties above is never disturbed
+  event.extraProperties?.forEach((property) => lines.push(iCalendarExtraPropertyContentLine(property)));
+
   const components = event.alarms?.length ? event.alarms.map(iCalendarAlarmToComponent) : undefined;
 
   return components ? { name: 'VEVENT', lines, components } : { name: 'VEVENT', lines };
@@ -348,6 +373,9 @@ export function iCalendarToComponent(calendar: ICalendar, config?: Maybe<ICalend
   if (isNotBlankString(calendar.timezone)) {
     lines.push(iCalendarContentLine('X-WR-TIMEZONE', calendar.timezone));
   }
+
+  // extras land last so the canonical order of the standard properties above is never disturbed
+  calendar.extraProperties?.forEach((property) => lines.push(iCalendarExtraPropertyContentLine(property)));
 
   const timezoneComponents = (calendar.timezones ?? []).map(iCalendarTimezoneToComponent);
   const eventComponents = calendar.events.map((event) => iCalendarEventToComponent(event, timestamp));

@@ -1,6 +1,6 @@
 import { type EmailAddress, type ISO8601DayString, type LatLngPoint, type Maybe, type Minutes, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
 import { type RRuleLineString } from '../rrule/date.rrule.parse';
-import { type ICalendarAlarmAction, type ICalendarAttendeeRole, type ICalendarCalAddress, type ICalendarClassification, type ICalendarEventStatus, type ICalendarMethod, type ICalendarParticipationStatus, type ICalendarProductId, type ICalendarTransparency, type ICalendarUid } from './icalendar';
+import { type ICalendarAlarmAction, type ICalendarAttendeeRole, type ICalendarCalAddress, type ICalendarClassification, type ICalendarEventStatus, type ICalendarMethod, type ICalendarParticipationStatus, type ICalendarProductId, type ICalendarPropertyName, type ICalendarTransparency, type ICalendarUid } from './icalendar';
 
 /**
  * A moment in an iCalendar model, discriminated by how it should be serialized.
@@ -77,6 +77,23 @@ export interface ICalendarRecurrence {
    * RDATE values, added to the recurrence set.
    */
   readonly additionalDates?: Maybe<readonly ICalendarDateTimeValue[]>;
+}
+
+/**
+ * A non-standard property emitted verbatim on a VCALENDAR or VEVENT. I.E. "X-APPLE-CALENDAR-COLOR".
+ *
+ * This is the extension escape hatch of the model: RFC 5545 3.8.8.2 reserves the "X-" namespace for exactly
+ * this, and a client that does not understand the property ignores it rather than rejecting the document.
+ */
+export interface ICalendarExtraProperty {
+  /**
+   * The property name. Must match /^[A-Za-z0-9-]+$/, and by convention starts with "X-".
+   */
+  readonly name: ICalendarPropertyName;
+  /**
+   * The RAW, unescaped text value. The serializer escapes it as a TEXT value.
+   */
+  readonly value: string;
 }
 
 /**
@@ -239,6 +256,13 @@ export interface ICalendarEvent {
    */
   readonly recurrenceId?: Maybe<ICalendarDateTimeValue>;
   readonly alarms?: Maybe<readonly ICalendarAlarm[]>;
+  /**
+   * Non-standard properties emitted after every standard property of the VEVENT.
+   *
+   * An ARRAY rather than a record because emission order is part of this library's byte-identical-output
+   * guarantee, and object key order is not something a caller can rely on controlling.
+   */
+  readonly extraProperties?: Maybe<readonly ICalendarExtraProperty[]>;
 }
 
 /**
@@ -293,6 +317,13 @@ export interface ICalendar {
    * VTIMEZONE components. Required when any event carries a zoned date-time.
    */
   readonly timezones?: Maybe<readonly ICalendarTimezone[]>;
+  /**
+   * Non-standard properties emitted after every standard property of the VCALENDAR, before its sub-components.
+   *
+   * An ARRAY rather than a record because emission order is part of this library's byte-identical-output
+   * guarantee, and object key order is not something a caller can rely on controlling.
+   */
+  readonly extraProperties?: Maybe<readonly ICalendarExtraProperty[]>;
 }
 
 /**

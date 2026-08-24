@@ -198,5 +198,19 @@ wrapDateTests(() => {
 
       expect(unfoldIcsString(ics)).toContain(`DESCRIPTION:${description}`);
     });
+
+    it('should fold an extra property value that exceeds the max line length.', () => {
+      const value = 'x'.repeat(300);
+      const ics = iCalendarToIcsString({ events: [], extraProperties: [{ name: 'X-LONG', value }] }, { now: new Date('2026-03-01T00:00:00Z') });
+
+      expect(ics.split(ICALENDAR_LINE_BREAK).every((x) => x.length <= ICALENDAR_MAX_LINE_OCTETS)).toBe(true);
+      expect(unfoldIcsString(ics)).toContain(`X-LONG:${value}`);
+    });
+
+    it('should escape the TEXT specials in an extra property value.', () => {
+      const ics = iCalendarToIcsString({ events: [], extraProperties: [{ name: 'X-ESCAPED', value: 'a;b,c\nd' }] }, { now: new Date('2026-03-01T00:00:00Z') });
+
+      expect(unfoldIcsString(ics)).toContain(String.raw`X-ESCAPED:a\;b\,c\nd`);
+    });
   });
 });

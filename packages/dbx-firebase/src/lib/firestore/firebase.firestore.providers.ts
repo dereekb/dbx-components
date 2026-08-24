@@ -1,5 +1,5 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { CalendarFirestoreCollections, clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { type Maybe, type ClassLikeType } from '@dereekb/util';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { type Firestore } from 'firebase/firestore';
@@ -51,6 +51,21 @@ export function provideStorageFileFirestoreCollections(appCollection: StorageFil
 }
 
 /**
+ * Provider factory for the CalendarFirestoreCollections.
+ *
+ * @param appCollection - The app collection class to use.
+ * @returns Provider factory for the CalendarFirestoreCollections.
+ * @throws {Error} When `appCollection` does not expose a `calendarCollection`.
+ */
+export function provideCalendarFirestoreCollections(appCollection: CalendarFirestoreCollections): CalendarFirestoreCollections {
+  if (!appCollection.calendarCollection) {
+    throw new Error(`CalendarFirestoreCollections could not be provided using the app's app collection. Set provideCalendarFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement CalendarFirestoreCollections.`);
+  }
+
+  return appCollection;
+}
+
+/**
  * Configuration for provideDbxFirestoreCollection().
  */
 export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
@@ -80,6 +95,12 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
    * False by default.
    */
   readonly provideStorageFileFirestoreCollections?: boolean;
+  /**
+   * Whether or not to provide the CalendarFirestoreCollections.
+   *
+   * False by default.
+   */
+  readonly provideCalendarFirestoreCollections?: boolean;
   /**
    * Optional cache factory to enable collection-level caching.
    *
@@ -145,6 +166,14 @@ export function provideDbxFirestoreCollection<T>(config: ProvideDbxFirebaseFires
     providers.push({
       provide: StorageFileFirestoreCollections,
       useFactory: provideStorageFileFirestoreCollections,
+      deps: [config.appCollectionClass]
+    });
+  }
+
+  if (config.provideCalendarFirestoreCollections) {
+    providers.push({
+      provide: CalendarFirestoreCollections,
+      useFactory: provideCalendarFirestoreCollections,
       deps: [config.appCollectionClass]
     });
   }

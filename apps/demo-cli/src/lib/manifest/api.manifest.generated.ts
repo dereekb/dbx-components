@@ -43,6 +43,7 @@ import {
   guestbookEntryParamsType,
   insertGuestbookEntryParamsType,
   likeGuestbookEntryParamsType,
+  profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
   publishGuestbookParamsType,
   resetProfilePasswordParamsType,
@@ -364,6 +365,23 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
     model: 'profile',
     verb: 'update',
+    specifier: 'createTestCalendarEvent',
+    paramsTypeName: 'ProfileCreateTestCalendarEventParams',
+    paramsValidator: profileCreateTestCalendarEventParamsType,
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: 'Adds a test event to the current user\'s profile calendar, creating the\ncalendar (`cal/pr_<uid>`) on the first call.\n\nEvery write flags the calendar for sync, so the hourly sweep republishes\nits ".ics" without any further action from the caller.',
+    paramsTypeDescription: "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: there is no Calendar CRUD api, so the profile's\nown action loads `cal/pr_<uid>` inside its own transaction and merges the library's templates.",
+    paramsFields: [
+      { name: 'name', typeText: 'Maybe<string>', description: 'Display name of the event. Defaults to a generated name.' },
+      { name: 'startsAt', typeText: 'Maybe<Date>', description: 'Instant the event starts at. Defaults to now.' },
+      { name: 'durationMinutes', typeText: 'Maybe<number>', description: 'Duration of the event in minutes. Defaults to 60.' },
+      { name: 'recurrenceRule', typeText: 'Maybe<string>', description: 'When set, the event recurs on this rule instead of being a one-off. I.E. "RRULE:FREQ=WEEKLY;BYDAY=MO".' }
+    ]
+  },
+  {
+    model: 'profile',
+    verb: 'update',
     specifier: 'createTestNotification',
     paramsTypeName: 'ProfileCreateTestNotificationParams',
     paramsValidator: profileCreateTestNotificationParamsType,
@@ -654,6 +672,46 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
 ];
 
 export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
+  {
+    modelType: 'calendar',
+    modelName: 'Calendar',
+    identityConst: 'calendarIdentity',
+    collectionPrefix: 'cal',
+    description: 'A calendar and all of its events, stored in one document and published as an ".ics" file.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.ts',
+    fields: [
+      { name: 't', longName: 'calendarType', tsType: 'CalendarType', optional: false, description: 'The kind of calendar this is, resolving its retention policy and ICS emission config.' },
+      { name: 'n', longName: 'name', tsType: 'string', optional: false, description: 'Display name of the calendar. Emitted as NAME/X-WR-CALNAME.' },
+      { name: 'd', longName: 'description', tsType: 'Maybe<string>', optional: true, description: 'Description of the calendar. Emitted as DESCRIPTION/X-WR-CALDESC.' },
+      { name: 'tz', longName: 'timezone', tsType: 'TimezoneString', optional: false, description: 'Default timezone of the calendar. Emitted as X-WR-TIMEZONE, and the fallback for an event with no `tz`.' },
+      { name: 'c', longName: 'color', tsType: 'Maybe<string>', optional: true, description: 'CSS3 color name for the calendar. Emitted as COLOR.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable. Drives read access in the security rules.' },
+      { name: 'e', longName: 'events', tsType: 'CalendarEventItem[]', optional: false, description: "The calendar's one-off events, ascending by start instant and unique by id." },
+      {
+        name: 'r',
+        longName: 'recurringEvents',
+        tsType: 'CalendarRecurringEventItem[]',
+        optional: false,
+        description: "The calendar's recurring events, ascending by anchor instant and unique by id.",
+        nestedFields: [
+          { name: 'rr', longName: 'recurrenceRule', tsType: 'RRuleLines', optional: false, description: "The recurrence rule, in the workspace's compact newline-joined storage form." },
+          { name: 'rea', longName: 'recurrenceEndsAt', tsType: 'Maybe<Date>', optional: true, description: 'Instant the final occurrence of the series ends at, when the series ends.' },
+          { name: 'rfe', longName: 'recurrenceForever', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if the series never ends. A forever recurrence is never pruned.' },
+          { name: 'rex', longName: 'recurrenceExceptionDates', tsType: 'Maybe<UnixDateTimeSecondsNumber[]>', optional: true, description: 'Occurrences excluded from the series, as unix seconds.' }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'x', longName: 'extensionData', tsType: 'Maybe<CalendarExtensionData>', optional: true, description: 'Extension data emitted as "X-" properties on the calendar\'s VCALENDAR.' },
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
+      { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'True if this Calendar should be swept and its published ICS regenerated.' },
+      { name: 'sat', longName: 'syncedAt', tsType: 'Maybe<Date>', optional: true, description: 'The last date the published ICS was successfully uploaded.' },
+      { name: 'isf', longName: 'icsStorageFileId', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that holds the published ICS for this calendar.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'calendarFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
   {
     modelType: 'guestbook',
     modelName: 'Guestbook',

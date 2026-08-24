@@ -2,6 +2,7 @@ import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerCo
 import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
+import { demoCalendarIcsFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.calendar';
 import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
 import {
   ALL_NOTIFICATION_TASK_TYPES,
@@ -199,7 +200,15 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
   // so the resume check is one more entry here rather than a task type of its own.
   const resumeFileProcessorConfig = demoUserResumeFileProcessingSubtaskProcessor({ openRouterRunTaskService, profileCollection: demoFirebaseServerActionsContext.profileCollection });
 
-  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig];
+  // The Calendar's published ".ics" rides the same `SFP` storage-file processing task — the whole point of
+  // modelling publishing as a StorageFile purpose is that it inherits the retry / stuck-detection / cleanup
+  // behaviour instead of growing a pipeline of its own.
+  const calendarIcsProcessorConfig = demoCalendarIcsFileProcessingSubtaskProcessor({
+    calendarFirestoreCollections: demoFirebaseServerActionsContext,
+    storageAccessor: demoFirebaseServerActionsContext.storageService
+  });
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig, calendarIcsProcessorConfig];
 
   return storageFileProcessingNotificationTaskHandler({
     processors,
