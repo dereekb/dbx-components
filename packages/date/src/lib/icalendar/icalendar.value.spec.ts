@@ -1,5 +1,5 @@
 import { wrapDateTests } from '../../test.spec';
-import { escapeICalendarText, hasICalendarValue, iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarUtcOffsetString, iCalendarZonedDateTimeString } from './icalendar.value';
+import { escapeICalendarText, iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
 
 wrapDateTests(() => {
   describe('iCalendarTextValue()', () => {
@@ -145,24 +145,6 @@ wrapDateTests(() => {
     });
   });
 
-  describe('iCalendarUtcOffsetString()', () => {
-    it('should render a negative whole-hour offset.', () => {
-      expect(iCalendarUtcOffsetString(-360)).toBe('-0600');
-    });
-
-    it('should render a positive half-hour offset.', () => {
-      expect(iCalendarUtcOffsetString(330)).toBe('+0530');
-    });
-
-    it('should render zero as +0000.', () => {
-      expect(iCalendarUtcOffsetString(0)).toBe('+0000');
-    });
-
-    it('should render a large positive offset.', () => {
-      expect(iCalendarUtcOffsetString(840)).toBe('+1400');
-    });
-  });
-
   describe('iCalendarParameterValue()', () => {
     it('should pass a plain value through unquoted.', () => {
       expect(iCalendarParameterValue('America/Denver')).toBe('America/Denver');
@@ -217,22 +199,6 @@ wrapDateTests(() => {
     it('should truncate a fractional value toward zero.', () => {
       expect(iCalendarIntegerValue(5.9)).toBe('5');
       expect(iCalendarIntegerValue(-5.9)).toBe('-5');
-    });
-  });
-
-  describe('hasICalendarValue()', () => {
-    it('should be true for a non-empty string.', () => {
-      expect(hasICalendarValue('a')).toBe(true);
-    });
-
-    it('should be false for an empty or whitespace-only string.', () => {
-      expect(hasICalendarValue('')).toBe(false);
-      expect(hasICalendarValue('   ')).toBe(false);
-    });
-
-    it('should be false for null/undefined.', () => {
-      expect(hasICalendarValue(undefined)).toBe(false);
-      expect(hasICalendarValue(null)).toBe(false);
     });
   });
 });

@@ -1,7 +1,7 @@
-import { type Maybe } from '@dereekb/util';
+import { isNotBlankString, type Maybe, utcOffsetString } from '@dereekb/util';
 import { type ICalendarComponentName, type ICalendarParameterName, type ICalendarParameterValue, type ICalendarPropertyName, type ICalendarValue, DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
 import { type ICalendar, type ICalendarAlarm, type ICalendarAttendee, type ICalendarDateTimeValue, type ICalendarEvent, type ICalendarOrganizer, type ICalendarSerializeConfig, type ICalendarTimezone, type ICalendarTimezoneTransition } from './icalendar.model';
-import { hasICalendarValue, iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarUtcOffsetString, iCalendarZonedDateTimeString } from './icalendar.value';
+import { iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
 
 /**
  * A single already-encoded parameter on a content line.
@@ -95,15 +95,15 @@ export function iCalendarAttendeeContentLine(name: ICalendarPropertyName, attend
   const full = attendee as ICalendarAttendee;
   const parameters: ICalendarContentLineParameter[] = [];
 
-  if (hasICalendarValue(attendee.name)) {
+  if (isNotBlankString(attendee.name)) {
     parameters.push({ name: 'CN', value: iCalendarParameterValue(attendee.name) });
   }
 
-  if (hasICalendarValue(full.role)) {
+  if (isNotBlankString(full.role)) {
     parameters.push({ name: 'ROLE', value: iCalendarParameterValue(full.role) });
   }
 
-  if (hasICalendarValue(full.participationStatus)) {
+  if (isNotBlankString(full.participationStatus)) {
     parameters.push({ name: 'PARTSTAT', value: iCalendarParameterValue(full.participationStatus) });
   }
 
@@ -136,9 +136,9 @@ export function iCalendarAlarmToComponent(alarm: ICalendarAlarm): ICalendarCompo
     lines.push(iCalendarContentLine('TRIGGER', iCalendarUtcDateTimeString(alarm.triggerAt), [{ name: 'VALUE', value: 'DATE-TIME' }]));
   }
 
-  lines.push(iCalendarContentLine('DESCRIPTION', iCalendarTextValue(hasICalendarValue(alarm.description) ? alarm.description : DEFAULT_ICALENDAR_ALARM_DESCRIPTION)));
+  lines.push(iCalendarContentLine('DESCRIPTION', iCalendarTextValue(isNotBlankString(alarm.description) ? alarm.description : DEFAULT_ICALENDAR_ALARM_DESCRIPTION)));
 
-  if (hasICalendarValue(alarm.summary)) {
+  if (isNotBlankString(alarm.summary)) {
     lines.push(iCalendarContentLine('SUMMARY', iCalendarTextValue(alarm.summary)));
   }
 
@@ -157,11 +157,11 @@ export function iCalendarTimezoneTransitionToComponent(transition: ICalendarTime
   const lines: ICalendarContentLine[] = [
     // within a VTIMEZONE, DTSTART is defined to be the transition's local wall clock, so it carries no TZID and no Z
     iCalendarContentLine('DTSTART', iCalendarFloatingDateTimeString(transition.startsAt)),
-    iCalendarContentLine('TZOFFSETFROM', iCalendarUtcOffsetString(transition.offsetFrom)),
-    iCalendarContentLine('TZOFFSETTO', iCalendarUtcOffsetString(transition.offsetTo))
+    iCalendarContentLine('TZOFFSETFROM', utcOffsetString(transition.offsetFrom)),
+    iCalendarContentLine('TZOFFSETTO', utcOffsetString(transition.offsetTo))
   ];
 
-  if (hasICalendarValue(transition.name)) {
+  if (isNotBlankString(transition.name)) {
     lines.push(iCalendarContentLine('TZNAME', iCalendarTextValue(transition.name)));
   }
 
@@ -197,7 +197,7 @@ export function iCalendarTimezoneToComponent(timezone: ICalendarTimezone): ICale
  * @__NO_SIDE_EFFECTS__
  */
 export function iCalendarEventToComponent(event: ICalendarEvent, timestamp: Date): ICalendarComponent {
-  if (!hasICalendarValue(event.uid)) {
+  if (!isNotBlankString(event.uid)) {
     throw new Error('An ICalendarEvent requires a non-empty uid. A UID-less VEVENT is silently dropped by calendar clients.');
   }
 
@@ -214,15 +214,15 @@ export function iCalendarEventToComponent(event: ICalendarEvent, timestamp: Date
     lines.push(iCalendarContentLine('DURATION', iCalendarDurationString(event.duration)));
   }
 
-  if (hasICalendarValue(event.summary)) {
+  if (isNotBlankString(event.summary)) {
     lines.push(iCalendarContentLine('SUMMARY', iCalendarTextValue(event.summary)));
   }
 
-  if (hasICalendarValue(event.description)) {
+  if (isNotBlankString(event.description)) {
     lines.push(iCalendarContentLine('DESCRIPTION', iCalendarTextValue(event.description)));
   }
 
-  if (hasICalendarValue(event.location)) {
+  if (isNotBlankString(event.location)) {
     lines.push(iCalendarContentLine('LOCATION', iCalendarTextValue(event.location)));
   }
 
@@ -230,19 +230,19 @@ export function iCalendarEventToComponent(event: ICalendarEvent, timestamp: Date
     lines.push(iCalendarContentLine('GEO', iCalendarGeoValue(event.geo)));
   }
 
-  if (hasICalendarValue(event.url)) {
+  if (isNotBlankString(event.url)) {
     lines.push(iCalendarContentLine('URL', event.url));
   }
 
-  if (hasICalendarValue(event.status)) {
+  if (isNotBlankString(event.status)) {
     lines.push(iCalendarContentLine('STATUS', event.status));
   }
 
-  if (hasICalendarValue(event.transparency)) {
+  if (isNotBlankString(event.transparency)) {
     lines.push(iCalendarContentLine('TRANSP', event.transparency));
   }
 
-  if (hasICalendarValue(event.classification)) {
+  if (isNotBlankString(event.classification)) {
     lines.push(iCalendarContentLine('CLASS', event.classification));
   }
 
@@ -312,23 +312,23 @@ export function iCalendarToComponent(calendar: ICalendar, config?: Maybe<ICalend
 
   const lines: ICalendarContentLine[] = [iCalendarContentLine('PRODID', iCalendarTextValue(productId)), iCalendarContentLine('VERSION', ICALENDAR_VERSION_2_0), iCalendarContentLine('CALSCALE', 'GREGORIAN')];
 
-  if (hasICalendarValue(calendar.method)) {
+  if (isNotBlankString(calendar.method)) {
     lines.push(iCalendarContentLine('METHOD', calendar.method));
   }
 
   // RFC 7986 properties are the future-proof names; the X-WR-* twins are what actually set the display
   // name/description of a subscribed calendar in current Google and Apple clients. Both are emitted.
-  if (hasICalendarValue(calendar.name)) {
+  if (isNotBlankString(calendar.name)) {
     const name = iCalendarTextValue(calendar.name);
     lines.push(iCalendarContentLine('NAME', name), iCalendarContentLine('X-WR-CALNAME', name));
   }
 
-  if (hasICalendarValue(calendar.description)) {
+  if (isNotBlankString(calendar.description)) {
     const description = iCalendarTextValue(calendar.description);
     lines.push(iCalendarContentLine('DESCRIPTION', description), iCalendarContentLine('X-WR-CALDESC', description));
   }
 
-  if (hasICalendarValue(calendar.color)) {
+  if (isNotBlankString(calendar.color)) {
     lines.push(iCalendarContentLine('COLOR', calendar.color));
   }
 
@@ -337,15 +337,15 @@ export function iCalendarToComponent(calendar: ICalendar, config?: Maybe<ICalend
     lines.push(iCalendarContentLine('REFRESH-INTERVAL', refreshInterval, [{ name: 'VALUE', value: 'DURATION' }]), iCalendarContentLine('X-PUBLISHED-TTL', refreshInterval));
   }
 
-  if (hasICalendarValue(calendar.source)) {
+  if (isNotBlankString(calendar.source)) {
     lines.push(iCalendarContentLine('SOURCE', calendar.source, [{ name: 'VALUE', value: 'URI' }]));
   }
 
-  if (hasICalendarValue(calendar.url)) {
+  if (isNotBlankString(calendar.url)) {
     lines.push(iCalendarContentLine('URL', calendar.url));
   }
 
-  if (hasICalendarValue(calendar.timezone)) {
+  if (isNotBlankString(calendar.timezone)) {
     lines.push(iCalendarContentLine('X-WR-TIMEZONE', calendar.timezone));
   }
 

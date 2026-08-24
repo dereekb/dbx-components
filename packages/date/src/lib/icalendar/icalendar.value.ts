@@ -1,4 +1,4 @@
-import { type EmailAddress, type EscapeStringCharactersFunction, escapeStringCharactersFunction, type LatLngPoint, type Maybe, type Minutes, type ISO8601DayString, MINUTES_IN_DAY, MINUTES_IN_HOUR, padStartFunction, type TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { type EmailAddress, type EscapeStringCharactersFunction, escapeStringCharactersFunction, hasUriScheme, type LatLngPoint, mailToUrlString, type Minutes, type ISO8601DayString, MINUTES_IN_DAY, MINUTES_IN_HOUR, normalizeLineBreaks, type TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { formatInTimeZone } from 'date-fns-tz';
 import { type RFC5545DateString, type RFC5545DateTimeString } from '../rrule/date.rrule.parse';
 import { type ICalendarCalAddress, type ICalendarParameterValue, type ICalendarTextValue, type ICalendarValue, ICALENDAR_VALUE_LIST_SEPARATOR } from './icalendar';
@@ -33,11 +33,6 @@ export const escapeICalendarText: EscapeStringCharactersFunction = escapeStringC
 });
 
 /**
- * Matches CRLF and bare CR line breaks so they can be normalized to LF before escaping.
- */
-const ICALENDAR_LINE_BREAK_NORMALIZATION_REGEX = /\r\n|\r/g;
-
-/**
  * Encodes the input as an RFC 5545 TEXT value.
  *
  * Line breaks are normalized to LF before escaping, since {@link escapeICalendarText} operates one character
@@ -54,7 +49,7 @@ const ICALENDAR_LINE_BREAK_NORMALIZATION_REGEX = /\r\n|\r/g;
  * @__NO_SIDE_EFFECTS__
  */
 export function iCalendarTextValue(input: string): ICalendarTextValue {
-  return escapeICalendarText(input.replaceAll(ICALENDAR_LINE_BREAK_NORMALIZATION_REGEX, '\n'));
+  return escapeICalendarText(normalizeLineBreaks(input));
 }
 
 /**
@@ -163,30 +158,6 @@ export function iCalendarDurationString(minutes: Minutes): ICalendarValue {
 }
 
 /**
- * Pads an hour or minute component of a UTC-OFFSET value to the two digits RFC 5545 3.3.14 requires.
- */
-const padUtcOffsetPart = padStartFunction(2, '0');
-
-/**
- * Formats a UTC offset in minutes as an RFC 5545 UTC-OFFSET value. I.E. "-0600", "+0530".
- *
- * Only used within a VTIMEZONE sub-component.
- *
- * @param minutes - The offset from UTC in minutes. Negative is west of UTC.
- * @returns The UTC-OFFSET value.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function iCalendarUtcOffsetString(minutes: Minutes): ICalendarValue {
-  const totalMinutes = Math.trunc(Math.abs(minutes));
-  const sign = minutes < 0 ? '-' : '+';
-  const hours = padUtcOffsetPart(String(Math.floor(totalMinutes / MINUTES_IN_HOUR)));
-  const remainderMinutes = padUtcOffsetPart(String(totalMinutes % MINUTES_IN_HOUR));
-
-  return `${sign}${hours}${remainderMinutes}`;
-}
-
-/**
  * Matches the double-quote character, which cannot be represented inside a quoted parameter value.
  */
 const ICALENDAR_PARAMETER_QUOTE_REGEX = /"/g;
@@ -221,11 +192,6 @@ export function iCalendarParameterValue(value: string): ICalendarParameterValue 
 }
 
 /**
- * Matches any URI scheme prefix. I.E. "mailto:", "https:".
- */
-const ICALENDAR_URI_SCHEME_REGEX = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
-
-/**
  * Encodes an email address or existing URI as an RFC 5545 CAL-ADDRESS value.
  *
  * A bare email address is given the "mailto:" scheme; an input that already carries a URI scheme passes through.
@@ -236,7 +202,7 @@ const ICALENDAR_URI_SCHEME_REGEX = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
  * @__NO_SIDE_EFFECTS__
  */
 export function iCalendarCalAddressValue(input: EmailAddress | ICalendarCalAddress): ICalendarCalAddress {
-  return ICALENDAR_URI_SCHEME_REGEX.test(input) ? input : `mailto:${input}`;
+  return hasUriScheme(input) ? input : mailToUrlString(input);
 }
 
 /**
@@ -275,16 +241,4 @@ export function iCalendarBooleanValue(value: boolean): ICalendarValue {
  */
 export function iCalendarIntegerValue(value: number): ICalendarValue {
   return `${Math.trunc(value)}`;
-}
-
-/**
- * Returns whether the input is a non-empty string, used to decide whether an optional property is emitted.
- *
- * @param input - The value to test.
- * @returns True when the value is a string with at least one non-whitespace character.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function hasICalendarValue(input: Maybe<string>): input is string {
-  return typeof input === 'string' && input.trim().length > 0;
 }

@@ -1,7 +1,7 @@
-import { type TimezoneString, type CommaSeparatedString, flattenArray, type Maybe, splitJoinRemainder, UTC_TIMEZONE_STRING } from '@dereekb/util';
-import { formatInTimeZone } from 'date-fns-tz';
+import { type TimezoneString, type CommaSeparatedString, flattenArray, type Maybe, splitJoinRemainder } from '@dereekb/util';
 import { DateSet } from '../date';
 import { type DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
+import { iCalendarUtcDateTimeString } from '../icalendar/icalendar.value';
 
 /**
  * Denotes a single RRule rules string.
@@ -316,7 +316,7 @@ export class DateRRuleParseUtility {
    * ```
    */
   static formatDateTimeString(date: Date): RFC5545DateTimeString {
-    return formatInTimeZone(date, UTC_TIMEZONE_STRING, `yyyyMMdd'T'HHmmss'Z'`);
+    return iCalendarUtcDateTimeString(date);
   }
 
   /**

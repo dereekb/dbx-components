@@ -1,4 +1,4 @@
-import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, joinStrings, joinStringsInstance, joinStringsWithSpaces, nameToInitials, nameToInitialsFactory, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
+import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, isNotBlankString, joinStrings, joinStringsInstance, joinStringsWithSpaces, nameToInitials, nameToInitialsFactory, normalizeLineBreaks, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
 
 describe('nameToInitials()', () => {
   it('should use the first letter of the first two words for a multi-word name', () => {
@@ -233,6 +233,42 @@ describe('simplifyWhitespace()', () => {
 
     const result = simplifyWhitespace(testString);
     expect(result).toBe(expected);
+  });
+});
+
+describe('normalizeLineBreaks()', () => {
+  it('should convert a CRLF line break to a single LF', () => {
+    expect(normalizeLineBreaks('a\r\nb')).toBe('a\nb');
+  });
+
+  it('should convert a bare CR line break to an LF', () => {
+    expect(normalizeLineBreaks('a\rb')).toBe('a\nb');
+  });
+
+  it('should leave an LF line break alone', () => {
+    expect(normalizeLineBreaks('a\nb')).toBe('a\nb');
+  });
+
+  it('should normalize every line break in the input', () => {
+    expect(normalizeLineBreaks('a\r\nb\rc\nd')).toBe('a\nb\nc\nd');
+  });
+});
+
+describe('isNotBlankString()', () => {
+  it('should be true for a string with a non-whitespace character', () => {
+    expect(isNotBlankString('a')).toBe(true);
+    expect(isNotBlankString('  a  ')).toBe(true);
+  });
+
+  it('should be false for an empty or whitespace-only string', () => {
+    expect(isNotBlankString('')).toBe(false);
+    expect(isNotBlankString('   ')).toBe(false);
+    expect(isNotBlankString('\n\t')).toBe(false);
+  });
+
+  it('should be false for null/undefined', () => {
+    expect(isNotBlankString(undefined)).toBe(false);
+    expect(isNotBlankString(null)).toBe(false);
   });
 });
 
