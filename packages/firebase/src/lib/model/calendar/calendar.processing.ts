@@ -1,5 +1,5 @@
-import { type Maybe, type SlashPath, type SlashPathFile, type SlashPathFolder, mergeSlashPaths } from '@dereekb/util';
-import { type StorageFileMetadata, type StorageFilePurpose } from '../storagefile/storagefile.id';
+import { type SlashPath, type SlashPathFolder, mergeSlashPaths } from '@dereekb/util';
+import { type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from '../storagefile/storagefile.id';
 import { type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata } from '../storagefile/storagefile.task';
 import { type CalendarId } from './calendar.id';
 
@@ -12,6 +12,14 @@ import { type CalendarId } from './calendar.id';
  * {@link StorageFileCreationType.FOR_STORAGE_FILE_GROUP}, which derives a DETERMINISTIC document id from its
  * parent group. A Calendar is not a StorageFileGroup, so its ICS StorageFile is `DIRECTLY_CREATED` and its id
  * is carried on `Calendar.isf`. That is the `zsf` half of the pattern without the deterministic-key half.
+ *
+ * BECAUSE the id is non-deterministic, the ICS path is keyed by the STORAGE FILE's id, not the calendar's.
+ * A calendar-keyed path would let two StorageFiles resolve to the same object: when the previous ICS
+ * StorageFile is QUEUED_FOR_DELETE but not yet swept, the sync creates a replacement, and the sweep's
+ * `storageService.file(oldStorageFile).delete()` would then delete the REPLACEMENT's content while its own
+ * document still read SUCCESS — a hole `flagStaleCalendarsForSync()` cannot heal, since it compares `sat`
+ * against `uat` and `sat` is newer. A StorageFile-keyed path makes that collision unrepresentable, and has
+ * the side benefit that the published object is not guessable from the owner's uid.
  */
 
 /**
@@ -50,42 +58,31 @@ export interface CalendarIcsStorageFileMetadata extends StorageFileMetadata {
 /**
  * Root folder in Firebase Storage where all Calendar-generated files are stored.
  *
- * Each calendar gets a subfolder: `/cal/{calendarId}/`.
+ * Flat by design: a Calendar has exactly one derived artifact, so there is nothing for a per-calendar
+ * subfolder to group. Contrast `storageFileGroupFolderPath()`, whose variadic sub-path earns its keep
+ * because a group holds many derived files.
  */
 export const CALENDAR_ROOT_FOLDER_PATH: SlashPathFolder = '/cal/';
 
 /**
- * Builds the storage folder path for a specific Calendar, optionally with sub-paths.
- *
- * @param calendarId - The calendar's document id.
- * @param subPath - Optional sub-paths to append.
- * @returns The folder path.
- *
- * @example
- * ```ts
- * const folder = calendarFolderPath('pr_abc123'); // '/cal/pr_abc123/'
- * ```
+ * File extension of a Calendar's published ICS.
  */
-export function calendarFolderPath(calendarId: CalendarId, ...subPath: Maybe<SlashPath>[]): SlashPathFolder {
-  return mergeSlashPaths([CALENDAR_ROOT_FOLDER_PATH, calendarId, '/', ...subPath]) as SlashPathFolder;
-}
+export const CALENDAR_ICS_FILE_EXTENSION = '.ics';
 
 /**
- * File name of a Calendar's published ICS within its folder.
- */
-export const CALENDAR_ICS_FILE_PATH: SlashPathFile = 'c.ics';
-
-/**
- * Returns the full storage path for a Calendar's published ICS file.
+ * Returns the storage path for a Calendar's published ICS file.
  *
- * @param calendarId - The calendar's document id.
+ * Keyed by the ICS StorageFile's OWN id rather than the calendar's, so two StorageFiles can never resolve
+ * to the same object — see this module's header for the deletion collision that would otherwise exist.
+ *
+ * @param storageFileId - The id of the StorageFile that holds the published ICS.
  * @returns The full path to the calendar's ICS file.
  *
  * @example
  * ```ts
- * const icsPath = calendarIcsFileStoragePath('pr_abc123'); // '/cal/pr_abc123/c.ics'
+ * const icsPath = calendarIcsFileStoragePath('0mfR2xk8SqVe1Nb7'); // '/cal/0mfR2xk8SqVe1Nb7.ics'
  * ```
  */
-export function calendarIcsFileStoragePath(calendarId: CalendarId): SlashPath {
-  return calendarFolderPath(calendarId, CALENDAR_ICS_FILE_PATH);
+export function calendarIcsFileStoragePath(storageFileId: StorageFileId): SlashPath {
+  return mergeSlashPaths([CALENDAR_ROOT_FOLDER_PATH, `${storageFileId}${CALENDAR_ICS_FILE_EXTENSION}`]);
 }

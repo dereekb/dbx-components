@@ -3,8 +3,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
+import { DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig } from '@dereekb/dbx-firebase';
+import { TEXT_CALENDAR_UTF8_CONTENT_TYPE } from '@dereekb/util';
 import { type CalendarEventOccurrence, expandCalendarEvents } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
+import { TimeDistancePipe } from '@dereekb/dbx-core';
 import { randomNumber } from '@dereekb/util';
 import { CalendarDocumentStore, ProfileDocumentStore } from 'demo-components';
 import { type CalendarEvent } from 'angular-calendar';
@@ -19,7 +22,7 @@ import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup
 @Component({
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
-  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule],
+  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -55,6 +58,21 @@ export class DemoCalendarViewComponent {
 
   readonly visibleDateRangeSignal = toSignal(this.dbxCalendarStore.visibleDateRange$);
   readonly existsSignal = toSignal(this.calendarDocumentStore.exists$, { initialValue: false });
+
+  /**
+   * Keyed off `isf`, which the ICS processor re-asserts on every successful publish — so the button is only
+   * enabled once a StorageFile whose bytes actually landed exists.
+   */
+  readonly icsStorageFileKeySignal = toSignal(this.calendarDocumentStore.icsStorageFileKey$);
+  readonly syncedAtSignal = toSignal(this.calendarDocumentStore.syncedAt$);
+
+  readonly icsDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
+    text: 'Start .ics Download',
+    downloadReadyText: 'Save .ics',
+    icon: 'event_note'
+  };
+
+  readonly icsEmbedMimeType = TEXT_CALENDAR_UTF8_CONTENT_TYPE;
 
   constructor() {
     this.dbxCalendarStore.setEvents(this.calendarEvents$);

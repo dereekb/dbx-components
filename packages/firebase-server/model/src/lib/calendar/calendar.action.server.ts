@@ -146,10 +146,10 @@ export function syncCalendarFactory(context: CalendarServerActionsContext) {
         if (existingIcsStorageFileIsLive) {
           reflagKey = existingIcsStorageFilePair?.document.key;
         } else {
-          const icsFile = storageService.file(calendarIcsFileStoragePath(calendarDocument.id));
-
           const { storageFileDocument } = await createStorageFileDocumentPair<CalendarIcsStorageFileMetadata>({
-            storagePathRef: icsFile,
+            // keyed by the StorageFile's own id, so a replacement created while the previous ICS is still
+            // QUEUED_FOR_DELETE cannot be clobbered by that file's delete sweep
+            storagePathFactory: (storageFileId) => storageService.file(calendarIcsFileStoragePath(storageFileId)).storagePath,
             accessor: storageFileDocumentAccessor,
             purpose: CALENDAR_ICS_STORAGE_FILE_PURPOSE,
             shouldBeProcessed: true,

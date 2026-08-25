@@ -90,7 +90,12 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
 
               // sat is set ONLY here, on the success path. That is what makes "s === false && sat < uat"
               // mean "queued, not yet published".
-              await calendarDocument.update({ sat: new Date() });
+              //
+              // isf is re-asserted alongside it so the calendar's pointer always names the StorageFile whose
+              // bytes actually landed. syncCalendar() sets it optimistically when it creates the file (it has
+              // to, so the next sweep can find and re-flag it rather than creating a duplicate); this write
+              // is what makes it TRUE, and self-heals a pointer left behind by a run that died mid-flight.
+              await calendarDocument.update({ isf: storageFileDocument.id, sat: new Date() });
 
               result = notificationSubtaskComplete({
                 canRunNextCheckpoint: true
