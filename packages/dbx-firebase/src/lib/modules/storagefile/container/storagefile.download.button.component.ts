@@ -126,9 +126,9 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   /**
    * Whether or not to show a preview button.
    *
-   * Defaults to true.
+   * Takes precedence over the config. Defaults to true when neither is set.
    */
-  readonly showPreviewButton = input<Maybe<boolean>>(true);
+  readonly showPreviewButton = input<Maybe<boolean>>();
 
   /**
    * Whether or not to pre-load the download URL from the source.
@@ -156,7 +156,9 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
       downloadReadyIcon: config?.downloadReadyIcon ?? 'download',
       downloadReadyText: config?.downloadReadyText ?? 'Save File',
       previewIcon: config?.previewIcon ?? 'preview',
-      previewText: config?.previewText ?? 'View File'
+      previewText: config?.previewText ?? 'View File',
+      showPreviewButton: config?.showPreviewButton,
+      openCustomPreview: config?.openCustomPreview
     };
 
     return result;
@@ -261,9 +263,10 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
 
   // Preview
   readonly showPreviewButtonSignal = computed(() => {
+    const showPreviewButton = this.showPreviewButton();
     const config = this.configSignal();
     const hasDownloadUrl = this.hasDownloadUrlSignal();
-    return hasDownloadUrl && (config.showPreviewButton ?? true);
+    return hasDownloadUrl && (showPreviewButton ?? config.showPreviewButton ?? true);
   });
 
   readonly openCustomPreviewSignal = computed(() => {
