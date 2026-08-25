@@ -1,0 +1,10 @@
+<div class="dbx-flex-bar">
+  <ng-container dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleCreateTestEvent">
+    <dbx-button dbxActionButton text="New Test Event"></dbx-button>
+  </ng-container>
+  <dbx-button (buttonClick)="openCreateRecurringEventPopup()" text="New Recurring Event"></dbx-button>
+</div>
+@if (!existsSignal()) {
+  <p class="dbx-hint">This calendar has no events yet. Create one and it will be published to an ICS file by the next calendar sync.</p>
+}
+<dbx-calendar></dbx-calendar>
