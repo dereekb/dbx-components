@@ -3,13 +3,21 @@ import { DateRRuleParseUtility, type RRuleLineString, type RRuleLines, RRULE_STR
 import { type ICalendarDateTimeValue, type ICalendarRecurrence } from './icalendar.model';
 
 /**
- * The RRule property types this bridge understands. Anything else in the input is dropped.
+ * The RRule property type this bridge reads out of the basic lines. Anything else there is dropped.
  *
  * DTSTART in particular is dropped on purpose: an {@link ICalendarEvent} carries its start as a typed
  * {@link ICalendarDateTimeValue}, so a DTSTART smuggled in through the recurrence would be a second,
  * conflicting source of truth for the same fact.
+ *
+ * EXDATE and RDATE never reach here: `separateRRuleStringSetValues()` routes them into its own `exdates` /
+ * `rdates` sets, because an RDATE left among the basic lines makes rrule's own parser throw.
  */
 export const ICALENDAR_RECURRENCE_RRULE_PROPERTY_TYPE = 'RRULE';
+
+/**
+ * @deprecated RDATE is separated upstream by `separateRRuleStringSetValues()`; this is no longer used to
+ * match a line here. Use `RRULE_RDATE_PROPERTY_TYPE` from the rrule parse module instead.
+ */
 export const ICALENDAR_RECURRENCE_RDATE_PROPERTY_TYPE = 'RDATE';
 
 /**
@@ -39,22 +47,16 @@ export function iCalendarRecurrenceForRRuleLines(lines: RRuleLines): ICalendarRe
     .map((x) => x.trim())
     .filter((x) => x.length > 0);
 
-  const { basic, exdates } = DateRRuleParseUtility.separateRRuleStringSetValues(lineSet);
+  const { basic, exdates, rdates } = DateRRuleParseUtility.separateRRuleStringSetValues(lineSet);
 
   const rules: RRuleLineString[] = [];
-  const additionalDates: ICalendarDateTimeValue[] = [];
 
   basic.forEach((line) => {
     if (line.includes(RRULE_STRING_SPLITTER)) {
       const property = DateRRuleParseUtility.parseProperty(line);
 
-      switch (property.type) {
-        case ICALENDAR_RECURRENCE_RRULE_PROPERTY_TYPE:
-          rules.push(property.values);
-          break;
-        case ICALENDAR_RECURRENCE_RDATE_PROPERTY_TYPE:
-          DateRRuleParseUtility.parseExdateAttributeFromProperty(property).dates.forEach((at) => additionalDates.push({ type: 'utc', at }));
-          break;
+      if (property.type === ICALENDAR_RECURRENCE_RRULE_PROPERTY_TYPE) {
+        rules.push(property.values);
       }
     } else {
       // already a bare value part. I.E. "FREQ=WEEKLY;BYDAY=MO"
@@ -63,10 +65,10 @@ export function iCalendarRecurrenceForRRuleLines(lines: RRuleLines): ICalendarRe
   });
 
   // sorted so identical input yields byte-identical output, which a Set's iteration order does not promise
-  const exceptionDates: ICalendarDateTimeValue[] = exdates
-    .valuesArray()
-    .sort(sortByNumberFunction<Date>((x) => x.getTime()))
-    .map((at) => ({ type: 'utc' as const, at }));
+  const sortDatesAscending = (dates: Date[]): ICalendarDateTimeValue[] => dates.sort(sortByNumberFunction<Date>((x) => x.getTime())).map((at) => ({ type: 'utc' as const, at }));
+
+  const exceptionDates: ICalendarDateTimeValue[] = sortDatesAscending(exdates.valuesArray());
+  const additionalDates: ICalendarDateTimeValue[] = sortDatesAscending(rdates.valuesArray());
 
   const result: ICalendarRecurrence = {
     rules,

@@ -7,6 +7,7 @@ import {
   type FirestoreCollection,
   type FirestoreContext,
   type FirebaseAuthOwnershipKey,
+  type FirestoreModelKey,
   type SavedToFirestoreIfTrue,
   firestoreDate,
   firestoreModelIdString,
@@ -73,6 +74,21 @@ export interface CalendarEventItem {
    * @dbxModelVariable eventId
    */
   id: CalendarEventId;
+  /**
+   * Key of the model this event was generated from, when it was generated from one.
+   *
+   * A TARGETING HANDLE, not an identity: it is what lets a producer find and replace exactly the events it
+   * owns (see `replaceCalendarEventItemsForModelKey()`) without tracking their generated ids. Several events
+   * may share one key -- a schedule that emits a recurrence plus a few one-offs is one model, many events.
+   *
+   * Deliberately NOT the UID source. `calendarToICalendar()` feeds {@link id} to the UID factory, so this
+   * field can be added to, or changed on, an already-published event without destabilising its UID. It is
+   * also never emitted to the ICS, which is why it is exempt from the SEQUENCE bump -- see
+   * `CALENDAR_EVENT_ITEM_CHANGE_IGNORED_FIELDS`.
+   *
+   * @dbxModelVariable modelKey
+   */
+  m?: Maybe<FirestoreModelKey>;
   /**
    * Instant the event starts at.
    *
@@ -252,6 +268,7 @@ export function calendarEventItemsFilterUniqueFunction<T extends CalendarEventIt
  */
 export const calendarEventItemFields = {
   id: firestoreModelIdString,
+  m: optionalFirestoreString<FirestoreModelKey>(),
   sa: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true }),
   dur: firestoreNumber<Minutes>({ default: 0 }),
   ad: optionalFirestoreBoolean({ dontStoreIf: false }),

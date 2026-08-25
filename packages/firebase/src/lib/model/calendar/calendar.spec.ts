@@ -137,3 +137,38 @@ describe('calendarIdForModel()', () => {
     expect(inferCalendarRelatedModelKey(calendarId)).toBe('pr/abc123');
   });
 });
+
+describe('calendarEventItem model key field', () => {
+  it('should round trip a model key on both event kinds', () => {
+    const model: Calendar = {
+      t: 'demo_profile',
+      n: 'My Calendar',
+      tz: UTC_TIMEZONE_STRING,
+      e: [eventItem('a', new Date('2026-03-15T14:00:00.000Z'), { m: 'jl/loc/job/abc' })],
+      r: [recurringEventItem('b', new Date('2026-03-16T14:00:00.000Z'), { m: 'jl/loc/job/xyz' })],
+      cat: createdAt,
+      uat: updatedAt
+    };
+
+    const data = calendarConverter.mapFunctions.to(model);
+    const back = calendarConverter.mapFunctions.from(data);
+
+    expect(back.e[0].m).toBe('jl/loc/job/abc');
+    expect(back.r[0].m).toBe('jl/loc/job/xyz');
+  });
+
+  it('should cost nothing in the stored document when absent', () => {
+    const model: Calendar = {
+      t: 'demo_profile',
+      n: 'My Calendar',
+      tz: UTC_TIMEZONE_STRING,
+      e: [eventItem('a', new Date('2026-03-15T14:00:00.000Z'))],
+      r: [],
+      cat: createdAt,
+      uat: updatedAt
+    };
+
+    const data = calendarConverter.mapFunctions.to(model) as unknown as { readonly e: Record<string, unknown>[] };
+    expect('m' in data.e[0]).toBe(false);
+  });
+});

@@ -4,7 +4,7 @@ import { ModelRecurrenceInfoUtility } from '@dereekb/date';
 import { type CalendarEventItem, type CalendarRecurringEventItem } from './calendar';
 import { CalendarEventStatus } from './calendar.id';
 import { type CalendarTypeConfig } from './calendar.type';
-import { calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
+import { calendarEventItemsForModelKey, calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, replaceCalendarEventItemsForModelKey, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
 
 const NOW = new Date('2026-03-01T00:00:00.000Z');
 
@@ -231,5 +231,112 @@ describe('calendarRecurringEventItemModelRecurrenceInfo()', () => {
     expect(roundTripped.rrule).toBe(expanded.rrule);
     expect(roundTripped.start).toEqual(expanded.start);
     expect(roundTripped.forever).toBe(false);
+  });
+});
+
+describe('model key targeting', () => {
+  const JOB_KEY = 'jl/loc/job/abc';
+  const OTHER_KEY = 'jl/loc/job/xyz';
+  const day = (n: number) => addDays(NOW, n);
+
+  describe('calendarEventItemsForModelKey()', () => {
+    it('should return only the events carrying the key', () => {
+      const items = [eventItem('a', day(1), { m: JOB_KEY }), eventItem('b', day(2), { m: OTHER_KEY }), eventItem('c', day(3))];
+
+      expect(calendarEventItemsForModelKey(items, JOB_KEY).map((x) => x.id)).toEqual(['a']);
+    });
+  });
+
+  describe('replaceCalendarEventItemsForModelKey()', () => {
+    it('should stamp the key onto every replacement so the next replace can find them', () => {
+      const result = replaceCalendarEventItemsForModelKey([], { modelKey: JOB_KEY, items: [eventItem('a', day(1))], now: NOW });
+
+      expect(result.length).toBe(1);
+      expect(result[0].m).toBe(JOB_KEY);
+    });
+
+    it('should leave events belonging to another key untouched', () => {
+      const other = eventItem('b', day(2), { m: OTHER_KEY });
+      const untagged = eventItem('c', day(3));
+      const result = replaceCalendarEventItemsForModelKey([other, untagged], { modelKey: JOB_KEY, items: [eventItem('a', day(1))], now: NOW });
+
+      expect(result.find((x) => x.id === 'b')).toEqual(other);
+      expect(result.find((x) => x.id === 'c')).toEqual(untagged);
+    });
+
+    it('should tombstone an event the replacement dropped rather than splicing it out', () => {
+      const stale = eventItem('a', day(1), { m: JOB_KEY });
+      const result = replaceCalendarEventItemsForModelKey([stale], { modelKey: JOB_KEY, items: [eventItem('b', day(2))], now: NOW });
+
+      const dropped = result.find((x) => x.id === 'a');
+      expect(dropped).not.toBeUndefined();
+      expect(dropped?.st).toBe(CalendarEventStatus.CANCELLED);
+      expect(dropped?.q).toBe(1);
+    });
+
+    it('should splice a dropped event out when hard is set', () => {
+      const stale = eventItem('a', day(1), { m: JOB_KEY });
+      const result = replaceCalendarEventItemsForModelKey([stale], { modelKey: JOB_KEY, items: [eventItem('b', day(2))], hard: true, now: NOW });
+
+      expect(result.map((x) => x.id)).toEqual(['b']);
+    });
+
+    it('should keep a surviving event byte-identical when nothing observable changed', () => {
+      const existing = eventItem('a', day(1), { m: JOB_KEY });
+      const result = replaceCalendarEventItemsForModelKey([existing], { modelKey: JOB_KEY, items: [existing], now: addDays(NOW, 10) });
+
+      expect(result).toEqual([existing]);
+    });
+
+    it('should not bump the sequence merely for gaining a model key', () => {
+      // `m` is never emitted to the ICS, so back-filling it must not make every client re-fetch.
+      const existing = eventItem('a', day(1));
+      const result = replaceCalendarEventItemsForModelKey([existing], { modelKey: JOB_KEY, items: [existing], now: addDays(NOW, 10) });
+
+      expect(result[0].q).toBeUndefined();
+      expect(result[0].uat).toEqual(NOW);
+    });
+
+    it('should bump the sequence when an observable field changed', () => {
+      const existing = eventItem('a', day(1), { m: JOB_KEY });
+      const result = replaceCalendarEventItemsForModelKey([existing], { modelKey: JOB_KEY, items: [{ ...existing, n: 'Renamed' }], now: NOW });
+
+      expect(result[0].n).toBe('Renamed');
+      expect(result[0].q).toBe(1);
+    });
+  });
+
+  describe('updateCalendarEventsTemplate() with replaceForModelKey', () => {
+    it('should replace both arrays and still flag the calendar for sync', () => {
+      const calendar = {
+        e: [eventItem('old', day(1), { m: JOB_KEY }), eventItem('keep', day(2), { m: OTHER_KEY })],
+        r: [recurringEventItem('oldR', day(1), { m: JOB_KEY })]
+      };
+
+      const template = updateCalendarEventsTemplate({
+        calendar,
+        replaceForModelKey: { modelKey: JOB_KEY, events: [eventItem('new', day(3))], recurringEvents: [recurringEventItem('newR', day(3))] },
+        hardRemove: true,
+        now: NOW
+      });
+
+      expect(template.s).toBe(true);
+      expect(template.uat).toEqual(NOW);
+      expect(template.e.map((x) => x.id).sort()).toEqual(['keep', 'new']);
+      expect(template.r.map((x) => x.id)).toEqual(['newR']);
+    });
+
+    it('should remove every event for the key when the replacement set is empty', () => {
+      const calendar = { e: [eventItem('old', day(1), { m: JOB_KEY })], r: [] };
+
+      const template = updateCalendarEventsTemplate({
+        calendar,
+        replaceForModelKey: { modelKey: JOB_KEY },
+        hardRemove: true,
+        now: NOW
+      });
+
+      expect(template.e).toEqual([]);
+    });
   });
 });

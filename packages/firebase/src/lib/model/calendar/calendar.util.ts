@@ -1,7 +1,7 @@
 import { type ArrayOrValue, type Maybe, type TimezoneString, UTC_TIMEZONE_STRING, areEqualPOJOValues, asArray, unixDateTimeSecondsNumberFromDate, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
 import { type CalendarDate, CalendarDateType, DateSet, type ModelRecurrenceInfo, dateDurationSpanEndDate } from '@dereekb/date';
 import { addMinutes, subDays } from 'date-fns';
-import { type FirebaseAuthOwnershipKey } from '../../common';
+import { type FirebaseAuthOwnershipKey, type FirestoreModelKey } from '../../common';
 import { type Calendar, type CalendarEventItem, type CalendarRecurringEventItem, calendarEventItemsFilterUniqueFunction, calendarEventItemsSortFunction } from './calendar';
 import { type CalendarEventId, CalendarEventStatus, type CalendarExtensionData, type CalendarType } from './calendar.id';
 import { type CalendarTypeConfig, DEFAULT_CALENDAR_MAX_EVENTS, DEFAULT_CALENDAR_RETAIN_PAST_EVENT_DAYS } from './calendar.type';
@@ -210,8 +210,12 @@ export type CalendarEventItemUpdate<T extends CalendarEventItem = CalendarEventI
  * The fields excluded when deciding whether an upsert actually changed an event.
  *
  * `uat` and `q` are the RESULT of a change, so including them would make every upsert look like a change.
+ *
+ * `m` is a private targeting handle that is never emitted to the ICS, so a change to it alone is invisible
+ * to a subscriber. Counting it would mean that back-filling an owner key onto existing events bumped every
+ * SEQUENCE and made every client re-fetch a feed whose content had not moved.
  */
-const CALENDAR_EVENT_ITEM_CHANGE_IGNORED_FIELDS: readonly string[] = ['uat', 'q'];
+const CALENDAR_EVENT_ITEM_CHANGE_IGNORED_FIELDS: readonly string[] = ['uat', 'q', 'm'];
 
 /**
  * @returns True when the two items differ in any field that carries meaning to a subscriber.
@@ -331,6 +335,86 @@ export function removeCalendarEventItems<T extends CalendarEventItem>(items: T[]
   return result;
 }
 
+// MARK: Model Key Targeting
+/**
+ * Returns the events that were generated from the given model key.
+ *
+ * @param items - The current items.
+ * @param modelKey - The key to match on.
+ * @returns The matching events, in their original order.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calendarEventItemsForModelKey<T extends CalendarEventItem>(items: T[], modelKey: FirestoreModelKey): T[] {
+  return items.filter((x) => x.m === modelKey);
+}
+
+/**
+ * Configuration for {@link replaceCalendarEventItemsForModelKey}.
+ */
+export interface ReplaceCalendarEventItemsForModelKeyConfig<T extends CalendarEventItem = CalendarEventItem> {
+  /**
+   * The key whose events are being replaced. Every item in {@link items} is stamped with it, so a caller
+   * cannot accidentally write events that the next replace would fail to find.
+   */
+  readonly modelKey: FirestoreModelKey;
+  /**
+   * The COMPLETE desired set of events for this key. Anything previously carrying the key and absent here is
+   * removed.
+   */
+  readonly items: CalendarEventItemUpdate<T>[];
+  /**
+   * If true, events dropped by the replacement are SPLICED OUT rather than tombstoned.
+   *
+   * Only correct when they were never published: a subscriber holding an event has no way to learn it is
+   * gone once its VEVENT simply stops appearing.
+   */
+  readonly hard?: Maybe<boolean>;
+  /**
+   * The update instant. Defaults to the current time.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Replaces the whole set of events belonging to one model key, leaving every other event untouched.
+ *
+ * This is the primitive a producer needs when it regenerates its events from source: it cannot know which
+ * generated ids it wrote last time, only which model they came from. Matching on {@link CalendarEventItem.m}
+ * rather than on `id` is what makes "publish the current state of this model" a single idempotent call.
+ *
+ * An event that survives the replacement is UPSERTED, so it keeps its `cat` and only bumps `q` / `uat` if
+ * something a subscriber can observe actually changed. An event that disappears is tombstoned by default.
+ *
+ * @param items - The current items.
+ * @param config - The model key, the complete desired set, and the removal mode.
+ * @returns A new array, sorted ascending by start instant and unique by id.
+ *
+ * @example
+ * ```ts
+ * const events = replaceCalendarEventItemsForModelKey(calendar.e, { modelKey: job.key, items: generated });
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function replaceCalendarEventItemsForModelKey<T extends CalendarEventItem>(items: T[], config: ReplaceCalendarEventItemsForModelKeyConfig<T>): T[] {
+  const { modelKey, items: inputUpdates, hard, now: inputNow } = config;
+  const now = inputNow ?? new Date();
+
+  // stamped rather than trusted, so the set written is always the set the next replace will find
+  const updates = inputUpdates.map((x) => ({ ...x, m: modelKey }));
+  const retainedIds = new Set(updates.map((x) => x.id));
+  const staleIds = items.filter((x) => x.m === modelKey && !retainedIds.has(x.id)).map((x) => x.id);
+
+  let result = upsertCalendarEventItems(items, updates, { now });
+
+  if (staleIds.length) {
+    result = removeCalendarEventItems(result, staleIds, { hard, now });
+  }
+
+  return result;
+}
+
 /**
  * Configuration for {@link updateCalendarEventsTemplate}.
  */
@@ -342,8 +426,25 @@ export interface UpdateCalendarEventsTemplateConfig {
   readonly upsertEvents?: Maybe<CalendarEventItemUpdate<CalendarEventItem>[]>;
   readonly upsertRecurringEvents?: Maybe<CalendarEventItemUpdate<CalendarRecurringEventItem>[]>;
   readonly removeEventIds?: Maybe<ArrayOrValue<CalendarEventId>>;
+  /**
+   * Replaces the COMPLETE set of events belonging to one model key, in both arrays.
+   *
+   * This is the "republish this model" path: the caller supplies what the model produces now and anything
+   * else previously carrying the key is removed. Applied BEFORE {@link removeEventIds}, so an explicit
+   * removal still wins.
+   */
+  readonly replaceForModelKey?: Maybe<ReplaceCalendarEventsForModelKey>;
   readonly hardRemove?: Maybe<boolean>;
   readonly now?: Maybe<Date>;
+}
+
+/**
+ * The complete desired event set for one model key, as consumed by {@link updateCalendarEventsTemplate}.
+ */
+export interface ReplaceCalendarEventsForModelKey {
+  readonly modelKey: FirestoreModelKey;
+  readonly events?: Maybe<CalendarEventItemUpdate<CalendarEventItem>[]>;
+  readonly recurringEvents?: Maybe<CalendarEventItemUpdate<CalendarRecurringEventItem>[]>;
 }
 
 /**
@@ -357,7 +458,7 @@ export type UpdateCalendarEventsTemplate = Pick<Calendar, 'e' | 'r' | 's' | 'uat
  * ALWAYS includes `s: true` and `uat`, so a caller cannot mutate events and forget to flag the calendar for
  * sync — the invariant the whole publish pipeline rests on.
  *
- * @param config - The calendar's current events plus the upserts and removals to apply.
+ * @param config - The calendar's current events plus the upserts, replacements and removals to apply.
  * @returns The update fields.
  *
  * @example
@@ -368,7 +469,7 @@ export type UpdateCalendarEventsTemplate = Pick<Calendar, 'e' | 'r' | 's' | 'uat
  * @__NO_SIDE_EFFECTS__
  */
 export function updateCalendarEventsTemplate(config: UpdateCalendarEventsTemplateConfig): UpdateCalendarEventsTemplate {
-  const { calendar, upsertEvents, upsertRecurringEvents, removeEventIds, hardRemove, now: inputNow } = config;
+  const { calendar, upsertEvents, upsertRecurringEvents, removeEventIds, replaceForModelKey, hardRemove, now: inputNow } = config;
   const now = inputNow ?? new Date();
 
   let e = calendar.e ?? [];
@@ -380,6 +481,14 @@ export function updateCalendarEventsTemplate(config: UpdateCalendarEventsTemplat
 
   if (upsertRecurringEvents?.length) {
     r = upsertCalendarEventItems(r, upsertRecurringEvents, { now });
+  }
+
+  if (replaceForModelKey != null) {
+    const { modelKey, events, recurringEvents } = replaceForModelKey;
+    const replaceConfig = { modelKey, hard: hardRemove, now };
+
+    e = replaceCalendarEventItemsForModelKey(e, { ...replaceConfig, items: events ?? [] });
+    r = replaceCalendarEventItemsForModelKey(r, { ...replaceConfig, items: recurringEvents ?? [] });
   }
 
   if (removeEventIds != null) {
