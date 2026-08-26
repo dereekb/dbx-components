@@ -1,6 +1,25 @@
 {
   "indexes": [
     {
+      "collectionGroup": "cal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "t",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sat",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
       "collectionGroup": "orrt",
       "queryScope": "COLLECTION",
       "fields": [

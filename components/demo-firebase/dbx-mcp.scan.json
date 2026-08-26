@@ -1,7 +1,7 @@
 {
   "version": 1,
   "modelFirebaseIndex": {
-    "include": ["src/lib/**/*.ts"],
+    "include": ["src/lib/**/*.ts", "../../packages/firebase/src/lib/model/calendar/calendar.ts"],
     "exclude": ["**/*.spec.ts", "**/*.test.ts"]
   }
 }

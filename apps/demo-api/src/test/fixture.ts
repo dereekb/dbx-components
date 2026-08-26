@@ -77,6 +77,7 @@ import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter,
 import {
   markStorageFileForDeleteTemplate,
   NotificationExpediteService,
+  CalendarServerActions,
   NotificationInitServerActions,
   NotificationSendService,
   NotificationServerActions,
@@ -149,6 +150,7 @@ export interface DemoApiContext {
   get mailgunService(): MailgunService;
   get storageContext(): FirebaseStorageContext;
   get envService(): FirebaseServerEnvService;
+  get calendarServerActions(): CalendarServerActions;
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
@@ -183,6 +185,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get authService() {
     return this.instance.authService;
+  }
+
+  get calendarServerActions() {
+    return this.instance.calendarServerActions;
   }
 
   get notificationServerActions() {
@@ -285,6 +291,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get authService() {
     return this.get(DemoApiAuthService);
+  }
+
+  get calendarServerActions() {
+    return this.get(CalendarServerActions);
   }
 
   get notificationServerActions() {
@@ -410,6 +420,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.authService;
   }
 
+  get calendarServerActions() {
+    return this.instance.calendarServerActions;
+  }
+
   get notificationServerActions() {
     return this.instance.notificationServerActions;
   }
@@ -502,6 +516,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get authService() {
     return this.get(DemoApiAuthService);
+  }
+
+  get calendarServerActions() {
+    return this.get(CalendarServerActions);
   }
 
   get notificationServerActions() {

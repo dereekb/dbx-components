@@ -48,8 +48,16 @@ export interface DemoCalendarsDueForResyncQueryParams {
 /**
  * Query for the Calendars of a type whose last successful publish predates the given instant.
  *
- * The `@dbxModelFirebaseIndex` tag has to live HERE rather than upstream: the index generator runs with
- * `--component components/demo-firebase`, and this package's scan config only includes `src/lib/**`.
+ * DECLARATION-ONLY, and the reason the `cal` composite index exists at all. The real caller is
+ * `flagStaleCalendarsForSync()` in `@dereekb/firebase-server/model`, which runs the identical upstream
+ * `calendarsDueForResyncQuery()` — but the generator reads constraints out of a tagged body and cannot
+ * follow a call into an upstream package, so the tag has to live on a local copy. `@dbxModelFirebaseIndexManual`
+ * marks this wrapper as the index's owner rather than letting a caller-less export read as dead code.
+ *
+ * Resolving `Calendar` needs the upstream identity in scope, which is why `dbx-mcp.scan.json` includes
+ * `packages/firebase`'s calendar model alongside `src/lib/**`. Without it the tag silently resolves to
+ * nothing and the index is dropped — leaving the backstop query to fail on FAILED_PRECONDITION in any
+ * deployed environment.
  *
  * @param params - The type to sweep and the staleness cutoff.
  * @returns Firestore query constraints for Calendars due for a resync.
@@ -58,6 +66,7 @@ export interface DemoCalendarsDueForResyncQueryParams {
  * @dbxModelFirebaseIndexModel Calendar
  * @dbxModelFirebaseIndexScope COLLECTION
  * @dbxModelFirebaseIndexCategory maintenance
+ * @dbxModelFirebaseIndexManual
  */
 export function demoCalendarsDueForResyncQuery(params: DemoCalendarsDueForResyncQueryParams): FirestoreQueryConstraint[] {
   // spelled out rather than delegating to calendarsDueForResyncQuery(): the index generator reads the
