@@ -52,6 +52,13 @@ import {
   type CreateNotificationTemplate,
   createNotificationDocument,
   type UpdateNotificationUserParams,
+  type Calendar,
+  type CalendarDocument,
+  type CalendarFirestoreCollection,
+  calendarIdForModel,
+  calendarSyncState,
+  inferCalendarRelatedModelKey,
+  type CalendarSyncState,
   type StorageFile,
   type StorageFileDocument,
   type StoragePath,
@@ -78,6 +85,8 @@ import {
   markStorageFileForDeleteTemplate,
   NotificationExpediteService,
   CalendarServerActions,
+  type SyncCalendarResult,
+  type SyncAllFlaggedCalendarsResult,
   NotificationInitServerActions,
   NotificationSendService,
   NotificationServerActions,
@@ -669,6 +678,112 @@ export const demoProfileContextFactory = () =>
   });
 
 export const demoProfileContext = demoProfileContextFactory();
+
+// MARK: With Calendar
+export interface DemoApiCalendarTestContextParams {
+  /**
+   * The Profile that owns the Calendar. The Calendar's document id IS the Profile's two-way flat key,
+   * so no lookup field and no query is involved — the id is derived from this fixture.
+   */
+  readonly profile: DemoApiProfileTestContextFixture;
+  /**
+   * When true, seeds the Calendar by adding a test event to the Profile, which is what creates the
+   * Calendar document and flags it for the next sweep.
+   *
+   * Defaults to false, so a test can assert the "no calendar yet" state.
+   */
+  readonly createTestCalendarEvent?: Maybe<boolean | string>;
+}
+
+export class DemoApiCalendarTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Calendar, CalendarDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiCalendarTestContextInstance<F>> {
+  async createTestCalendarEvent(name?: Maybe<string>): Promise<void> {
+    return this.instance.createTestCalendarEvent(name);
+  }
+
+  async syncCalendar(): Promise<SyncCalendarResult> {
+    return this.instance.syncCalendar();
+  }
+
+  async syncAllFlaggedCalendars(): Promise<SyncAllFlaggedCalendarsResult> {
+    return this.instance.syncAllFlaggedCalendars();
+  }
+
+  async loadIcsStorageFileDocument(): Promise<StorageFileDocument> {
+    return this.instance.loadIcsStorageFileDocument();
+  }
+
+  async syncState(): Promise<CalendarSyncState> {
+    return this.instance.syncState();
+  }
+}
+
+export class DemoApiCalendarTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Calendar, CalendarDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Adds an event to the owning Profile's calendar, which creates/updates the Calendar and flags it for
+   * the next sweep. The event action lives on the Profile, since that is the model the demo exposes.
+   */
+  async createTestCalendarEvent(name?: Maybe<string>): Promise<void> {
+    const profileDocument = this.testContext.demoFirestoreCollections.profileCollection.documentAccessor().loadDocumentForKey(inferCalendarRelatedModelKey(this.documentId));
+    const createTestCalendarEvent = await this.testContext.profileServerActions.createTestCalendarEvent({ name });
+    await createTestCalendarEvent(profileDocument);
+  }
+
+  /**
+   * Syncs THIS calendar directly.
+   */
+  async syncCalendar(): Promise<SyncCalendarResult> {
+    const syncCalendar = await this.testContext.calendarServerActions.syncCalendar({ key: this.documentKey });
+    return syncCalendar(this.document);
+  }
+
+  /**
+   * One pass of the calendar half of `calendarHourlyUpdateSchedule`.
+   */
+  async syncAllFlaggedCalendars(): Promise<SyncAllFlaggedCalendarsResult> {
+    const syncAllFlaggedCalendars = await this.testContext.calendarServerActions.syncAllFlaggedCalendars({});
+    return syncAllFlaggedCalendars();
+  }
+
+  /**
+   * The ICS StorageFile this calendar publishes to. Throws if the calendar has not created one yet.
+   */
+  async loadIcsStorageFileDocument(): Promise<StorageFileDocument> {
+    const calendar = await this.document.snapshotData();
+
+    if (!calendar?.isf) {
+      throw new Error('Calendar not found or does not have an ICS StorageFile associated.');
+    }
+
+    return this.testContext.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(calendar.isf);
+  }
+
+  async syncState(): Promise<CalendarSyncState> {
+    const calendar = await this.document.snapshotData();
+
+    if (!calendar) {
+      throw new Error('Calendar does not exist.');
+    }
+
+    return calendarSyncState(calendar);
+  }
+}
+
+export const demoCalendarContextFactory = () =>
+  modelTestContextFactory<Calendar, CalendarDocument, DemoApiCalendarTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiCalendarTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiCalendarTestContextFixture<FirebaseAdminFunctionTestContextInstance>, CalendarFirestoreCollection>({
+    makeFixture: (f) => new DemoApiCalendarTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.calendarCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiCalendarTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection: FirestoreCollection<Calendar, CalendarDocument>, params, _p) => {
+      return collection.documentAccessor().documentRefForId(calendarIdForModel(params.profile.document.key));
+    },
+    initDocument: async (instance, params) => {
+      if (params.createTestCalendarEvent) {
+        await instance.createTestCalendarEvent(typeof params.createTestCalendarEvent === 'string' ? params.createTestCalendarEvent : undefined);
+      }
+    }
+  });
+
+export const demoCalendarContext = demoCalendarContextFactory();
 
 // MARK: With Guestbook
 export type DemoApiGuestbookTestContextParams = Partial<Guestbook>;
