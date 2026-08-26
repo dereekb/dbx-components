@@ -300,7 +300,7 @@ export default [
       'unicorn/prefer-string-starts-ends-with': 'warn',
       'unicorn/no-lonely-if': 'warn',
       'unicorn/no-useless-spread': 'warn',
-      'unicorn/prefer-spread': 'off', // disabled: bundler transpiles [...Set] to [].concat(Set) which breaks non-array iterables
+      'unicorn/prefer-spread': 'off', // disabled: bundler transpiles [...Set] to [].concat(Set) which breaks non-array iterables. Do NOT re-enable — its autofix rewrites `Array.from(x)` back to `[...x]`, i.e. straight back into the bug that `dereekb-util/no-non-array-iterable-spread` (below) exists to catch
       'unicorn/no-for-loop': 'warn',
       'unicorn/prefer-includes': 'warn',
       'unicorn/prefer-optional-catch-binding': 'warn',
