@@ -264,6 +264,93 @@
       ]
     },
     {
+      "slug": "is-nth-hour-of-day",
+      "name": "isNthHourOfDay",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "isNthHourOfDay(everyNHours: Hours, date?: Maybe<Date>): boolean",
+      "description": "Whether the date's hour-of-day is an Nth hour, in the ambient timezone.\n\nThis is a modulo against the hour-of-day, NOT an interval since some epoch — so at hour 12 it is\ntrue for N = 1, 2, 3, 4, 6, and 12, and false for N = 5. Only divisors of 24 divide the day\nevenly; a non-divisor (5, 7, 9, …) will still fire, just with a short window across midnight.\n\nAn `everyNHours` of zero or less has no meaningful Nth hour and returns false rather than\ndividing by zero.",
+      "params": [
+        {
+          "name": "everyNHours",
+          "type": "Hours",
+          "description": "- Run every Nth hour of the day.",
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": "Maybe<Date>",
+          "description": "- Moment to test; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "True when the date's hour-of-day is an Nth hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "modulo",
+        "date",
+        "is",
+        "nth",
+        "of",
+        "day",
+        "isnthhourofday"
+      ],
+      "example": "isNthHourOfDay(3, new Date('2024-01-01T12:30:00')); // true (12 % 3 === 0)\nisNthHourOfDay(5, new Date('2024-01-01T12:30:00')); // false (12 % 5 === 2)",
+      "relatedSlugs": [
+        "has-run-in-current-hour"
+      ]
+    },
+    {
+      "slug": "has-run-in-current-hour",
+      "name": "hasRunInCurrentHour",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "hasRunInCurrentHour(lastRunAt: Maybe<Date>, now?: Maybe<Date>): boolean",
+      "description": "Whether the last run falls inside the same hour as now.\n\nThis is a same-hour-bucket compare, not an elapsed-time compare: a run at 12:59 and a `now` of\n13:01 are two minutes apart but in different hours, so this returns false. That is what makes the\ngate track the hourly cron rather than drift with it.\n\nA null `lastRunAt` means nothing has run, so it returns false.",
+      "params": [
+        {
+          "name": "lastRunAt",
+          "type": "Maybe<Date>",
+          "description": "- Moment the work last ran.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- Moment to compare against; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "True when both moments fall in the same hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "window",
+        "date",
+        "has",
+        "run",
+        "in",
+        "current",
+        "hasrunincurrenthour"
+      ],
+      "example": "hasRunInCurrentHour(new Date('2024-01-01T12:05:00'), new Date('2024-01-01T12:55:00')); // true\nhasRunInCurrentHour(new Date('2024-01-01T12:59:00'), new Date('2024-01-01T13:01:00')); // false",
+      "relatedSlugs": [
+        "is-nth-hour-of-day",
+        "round-down-to-hour"
+      ]
+    },
+    {
       "slug": "new-documents",
       "name": "newDocuments",
       "kind": "function",

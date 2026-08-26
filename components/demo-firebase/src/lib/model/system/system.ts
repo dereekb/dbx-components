@@ -1,4 +1,4 @@
-import { firestoreSubObject, firestoreDate, type SystemStateStoredData, type SystemStateStoredDataFieldConverterConfig, type SystemStateStoredDataConverterMap } from '@dereekb/firebase';
+import { SCHEDULER_SYSTEM_STATE_TYPE, firestoreSubObject, firestoreDate, schedulerSystemDataConverter, type SystemStateStoredData, type SystemStateStoredDataFieldConverterConfig, type SystemStateStoredDataConverterMap } from '@dereekb/firebase';
 
 export const EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE = 'example';
 
@@ -15,5 +15,8 @@ export const exampleSystemDataConverter: SystemStateStoredDataFieldConverterConf
 });
 
 export const demoSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
-  [EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE]: exampleSystemDataConverter
+  [EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE]: exampleSystemDataConverter,
+  // Framework-declared. Registering it is what makes `lat` read back as a Date instead of a raw
+  // Timestamp, which the scheduler gate in @dereekb/firebase-server/model requires.
+  [SCHEDULER_SYSTEM_STATE_TYPE]: schedulerSystemDataConverter
 };
