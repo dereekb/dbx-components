@@ -14,6 +14,11 @@ import { type CalendarType } from './calendar.id';
  * ```ts
  * const constraints = calendarsFlaggedForSyncQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Calendar
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function calendarsFlaggedForSyncQuery(): FirestoreQueryConstraint[] {
   return [where<Calendar>('s', '==', true)];
@@ -52,6 +57,11 @@ export interface CalendarsDueForResyncQueryInput {
  * ```ts
  * const constraints = calendarsDueForResyncQuery({ calendarType: 'demo_profile', before: subDays(new Date(), 7) });
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Calendar
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory maintenance
  */
 export function calendarsDueForResyncQuery(input: CalendarsDueForResyncQueryInput): FirestoreQueryConstraint[] {
   return [where<Calendar>('t', '==', input.calendarType), whereDateIsBefore<Calendar>('sat', input.before)];
@@ -67,6 +77,11 @@ export function calendarsDueForResyncQuery(input: CalendarsDueForResyncQueryInpu
  * ```ts
  * const constraints = calendarsForTypeQuery('demo_profile');
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Calendar
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
  */
 export function calendarsForTypeQuery(calendarType: CalendarType): FirestoreQueryConstraint[] {
   return [where<Calendar>('t', '==', calendarType)];

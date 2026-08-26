@@ -18,6 +18,11 @@ import { type FirebaseAuthUserId } from '../../common/auth/auth';
  * const constraints = storageFilesQueuedForProcessingQuery();
  * const results = await collection.query(constraints);
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function storageFilesQueuedForProcessingQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFile>('ps', '==', StorageFileProcessingState.QUEUED_FOR_PROCESSING)];
@@ -35,6 +40,11 @@ export function storageFilesQueuedForProcessingQuery(): FirestoreQueryConstraint
  * ```ts
  * const constraints = storageFilesQueuedForDeleteQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
  */
 export function storageFilesQueuedForDeleteQuery(now?: Maybe<Date>): FirestoreQueryConstraint[] {
   return [whereDateIsBefore<StorageFile>('sdat', now ?? new Date())];
@@ -67,6 +77,12 @@ export interface StorageFilePurposeAndUserQueryInput {
  *   purpose: 'avatar'
  * });
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ * @dbxModelFirebaseIndexSkip true
  */
 export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQueryInput): FirestoreQueryConstraint[] {
   const constraints: FirestoreQueryConstraint[] = [where<StorageFile>('p', '==', input.purpose), where<StorageFile>('u', '==', input.user)];
@@ -90,6 +106,11 @@ export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQ
  * ```ts
  * const constraints = storageFileFlaggedForSyncWithGroupsQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFile>('gs', '==', true)];
@@ -108,6 +129,11 @@ export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstr
  * ```ts
  * const constraints = storageFileGroupsFlaggedForNeedsInitializationQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory init
  */
 export function storageFileGroupsFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('s', '==', true)];
@@ -123,6 +149,11 @@ export function storageFileGroupsFlaggedForNeedsInitializationQuery(): Firestore
  * ```ts
  * const constraints = storageFileGroupsFlaggedForContentRegenerationQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function storageFileGroupsFlaggedForContentRegenerationQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('re', '==', true)];
@@ -140,6 +171,11 @@ export function storageFileGroupsFlaggedForContentRegenerationQuery(): Firestore
  * ```ts
  * const constraints = storageFileGroupsFlaggedInvalidQuery();
  * ```
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
  */
 export function storageFileGroupsFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<StorageFileGroup>('fi', '==', true)];

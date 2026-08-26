@@ -1,4 +1,4 @@
-import { type Calendar, type CalendarId, type CalendarType, type CalendarTypeConfig, calendarIdForModel, type FirebaseAuthUserId, type FirestoreQueryConstraint, firestoreModelKey, where, whereDateIsBefore } from '@dereekb/firebase';
+import { type Calendar, type CalendarId, type CalendarType, type CalendarTypeConfig, calendarIdForModel, type FirebaseAuthUserId, firestoreModelKey } from '@dereekb/firebase';
 import { MS_IN_DAY } from '@dereekb/util';
 import { profileIdentity } from '../profile';
 
@@ -35,43 +35,6 @@ export const DEMO_CALENDAR_TYPE_CONFIGS: CalendarTypeConfig[] = [
  */
 export function demoProfileCalendarId(userId: FirebaseAuthUserId): CalendarId {
   return calendarIdForModel(firestoreModelKey(profileIdentity, userId));
-}
-
-/**
- * Params for {@link demoCalendarsDueForResyncQuery}.
- */
-export interface DemoCalendarsDueForResyncQueryParams {
-  readonly calendarType: CalendarType;
-  readonly before: Date;
-}
-
-/**
- * Query for the Calendars of a type whose last successful publish predates the given instant.
- *
- * DECLARATION-ONLY, and the reason the `cal` composite index exists at all. The real caller is
- * `flagStaleCalendarsForSync()` in `@dereekb/firebase-server/model`, which runs the identical upstream
- * `calendarsDueForResyncQuery()` — but the generator reads constraints out of a tagged body and cannot
- * follow a call into an upstream package, so the tag has to live on a local copy. `@dbxModelFirebaseIndexManual`
- * marks this wrapper as the index's owner rather than letting a caller-less export read as dead code.
- *
- * Resolving `Calendar` needs the upstream identity in scope, which is why `dbx-mcp.scan.json` includes
- * `packages/firebase`'s calendar model alongside `src/lib/**`. Without it the tag silently resolves to
- * nothing and the index is dropped — leaving the backstop query to fail on FAILED_PRECONDITION in any
- * deployed environment.
- *
- * @param params - The type to sweep and the staleness cutoff.
- * @returns Firestore query constraints for Calendars due for a resync.
- *
- * @dbxModelFirebaseIndex
- * @dbxModelFirebaseIndexModel Calendar
- * @dbxModelFirebaseIndexScope COLLECTION
- * @dbxModelFirebaseIndexCategory maintenance
- * @dbxModelFirebaseIndexManual
- */
-export function demoCalendarsDueForResyncQuery(params: DemoCalendarsDueForResyncQueryParams): FirestoreQueryConstraint[] {
-  // spelled out rather than delegating to calendarsDueForResyncQuery(): the index generator reads the
-  // constraint calls out of THIS body, and cannot follow a call into an upstream package it does not scan
-  return [where<Calendar>('t', '==', params.calendarType), whereDateIsBefore<Calendar>('sat', params.before)];
 }
 
 /**
