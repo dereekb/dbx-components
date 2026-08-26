@@ -39,6 +39,10 @@ function buildEntry(input: BuildEntryInput): ExtractedModelFirebaseIndexEntry {
     scope: input.scope,
     manual: input.manual ?? false,
     skip: input.skip ?? false,
+    specOnly: false,
+    excluded: false,
+    dispatcher: false,
+    dispatcherDelegates: [],
     allowArrayContainsAny: input.allowArrayContainsAny ?? false,
     category: '',
     signature: 'fakeQuery(): FirestoreQueryConstraint[]',
@@ -96,6 +100,100 @@ describe('analyzeEntry — COLLECTION scope', () => {
     expect(composite.fields[2].order).toBe('DESCENDING');
     expect(composite.fields[3].order).toBe('ASCENDING');
     expect(result.derivedFieldOverrides).toEqual([]);
+  });
+});
+
+describe('analyzeEntry — equality-only COLLECTION sequences', () => {
+  it('emits no composite for an all-equality COLLECTION query (Firestore merges single-field indexes)', () => {
+    // the `oidc_e` shape: verified in production to run with no composite deployed
+    const entry = buildEntry({
+      name: 'oidcEntriesByUidQuery',
+      collection: 'oidc_e',
+      scope: 'COLLECTION',
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 'type', operator: '==' },
+            { kind: 'where', fieldPath: 'uid', operator: '==' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    expect(result.derivedComposites).toEqual([]);
+    expect(result.derivedFieldOverrides).toEqual([]);
+    expect(result.warnings).toEqual([{ kind: 'equality-only-composite-skipped', factoryName: 'oidcEntriesByUidQuery', fields: ['type', 'uid'] }]);
+  });
+
+  it('still emits a composite when a range joins the equality', () => {
+    // the `nbn` shape: equality + range is the one case merging cannot serve
+    const entry = buildEntry({
+      collection: 'nbn',
+      scope: 'COLLECTION',
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 'd', operator: '==' },
+            { kind: 'where', fieldPath: 'sat', operator: '<=' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    expect(result.derivedComposites.length).toBe(1);
+    expect(result.derivedComposites[0].fields.map((f) => f.fieldPath)).toEqual(['d', 'sat']);
+  });
+
+  it('still emits a composite when array-contains joins the equality', () => {
+    const entry = buildEntry({
+      collection: 'fake',
+      scope: 'COLLECTION',
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 'a', operator: '==' },
+            { kind: 'where', fieldPath: 'tags', operator: 'array-contains' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    expect(result.derivedComposites.length).toBe(1);
+  });
+
+  it('still emits a composite for `in`, which the merging guarantee does not cover', () => {
+    const entry = buildEntry({
+      collection: 'orrt',
+      scope: 'COLLECTION',
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 's', operator: 'in' },
+            { kind: 'where', fieldPath: 'o', operator: '==' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    expect(result.derivedComposites.length).toBe(1);
+  });
+
+  it('still emits a composite for an all-equality COLLECTION_GROUP query', () => {
+    const entry = buildEntry({
+      collection: 'nbn',
+      scope: 'COLLECTION_GROUP',
+      isNested: true,
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 'a', operator: '==' },
+            { kind: 'where', fieldPath: 'b', operator: '==' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    expect(result.derivedComposites.length).toBe(1);
   });
 });
 

@@ -336,6 +336,9 @@ export function formatModelFirebaseIndexBuildWarning(warning: ModelFirebaseIndex
       case 'unsupported-array-contains-any':
         result = `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
         break;
+      case 'equality-only-composite-skipped':
+        result = `${w.factoryName} is equality-only on [${w.fields.join(', ')}] — no composite emitted, Firestore serves this by merging the automatic single-field indexes`;
+        break;
     }
   }
   return result;

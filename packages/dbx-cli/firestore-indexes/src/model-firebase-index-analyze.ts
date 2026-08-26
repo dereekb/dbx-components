@@ -5,8 +5,14 @@
  * extractor and decides, per `(collection, scope, constraintSequence)`,
  * whether the query requires a composite index, a `fieldOverrides[]`
  * variant, or neither (because Firestore's automatic single-field
- * `COLLECTION`-scope index already covers the query). Encodes Firestore's
- * field-order rule for composites:
+ * `COLLECTION`-scope index already covers the query).
+ *
+ * "Neither" also covers a multi-field `COLLECTION`-scope sequence made up
+ * purely of `==` filters: Firestore merges the automatic single-field
+ * indexes to serve those, so emitting a composite would only add write
+ * latency and storage. See {@link isEqualityOnlySequence}.
+ *
+ * Encodes Firestore's field-order rule for composites:
  *
  *   1. Equality (`==`, `in`) fields first, in source order.
  *   2. A single range/inequality field next (direction taken from any
@@ -42,7 +48,11 @@ export interface AnalyzedEntry {
 /**
  * Discriminated union of non-fatal events emitted during analysis.
  */
-export type AnalyzerWarning = { readonly kind: 'multiple-range-fields'; readonly factoryName: string; readonly fields: readonly string[] } | { readonly kind: 'orderby-conflict'; readonly factoryName: string; readonly field: string; readonly directions: readonly string[] } | { readonly kind: 'unsupported-array-contains-any'; readonly factoryName: string; readonly field: string };
+export type AnalyzerWarning =
+  | { readonly kind: 'multiple-range-fields'; readonly factoryName: string; readonly fields: readonly string[] }
+  | { readonly kind: 'orderby-conflict'; readonly factoryName: string; readonly field: string; readonly directions: readonly string[] }
+  | { readonly kind: 'unsupported-array-contains-any'; readonly factoryName: string; readonly field: string }
+  | { readonly kind: 'equality-only-composite-skipped'; readonly factoryName: string; readonly fields: readonly string[] };
 
 const EQUALITY_OPERATORS: ReadonlySet<FirestoreWhereOperator> = new Set(['==', 'in']);
 const RANGE_OPERATORS: ReadonlySet<FirestoreWhereOperator> = new Set(['<', '<=', '>', '>=', '!=', 'not-in']);
@@ -198,11 +208,29 @@ function analyzeSequence(input: AnalyzeSequenceInput): AnalyzeSequenceResult {
     return analyzeSingleField({ buckets, collection, scope, warnings });
   }
 
+  // Firestore serves a COLLECTION-scope query made up purely of `==` filters by merging the automatic
+  // single-field indexes, so a composite here is pure write-time cost for no query benefit. Confirmed
+  // against production: the all-equality `oidc_e` queries run with no composite deployed at all.
+  // Deliberately narrow — `in`, array operators, orderBy, and COLLECTION_GROUP scope all still emit,
+  // since the documented merging guarantee only covers plain `==` on an ordinary collection.
+  if (scope === 'COLLECTION' && isEqualityOnlySequence(buckets)) {
+    warnings.push({ kind: 'equality-only-composite-skipped', factoryName, fields: buckets.equalities.map((e) => e.fieldPath) });
+    return { kind: 'auto', warnings };
+  }
+
   return analyzeMultiField({ buckets, sequenceEntries: sequence.entries, collection, scope, factoryName, warnings });
 }
 
 function isSingleFieldQuery(buckets: BucketedConstraints): boolean {
   return buckets.distinctFieldCount === 1;
+}
+
+/**
+ * True when every constraint in the sequence is a plain `==` filter — no range, no array operator, no
+ * ordering, and no `in` (which the merging guarantee does not explicitly cover).
+ */
+function isEqualityOnlySequence(buckets: BucketedConstraints): boolean {
+  return buckets.ranges.length === 0 && buckets.arrays.length === 0 && buckets.orderBys.length === 0 && buckets.equalities.length > 0 && buckets.equalities.every((e) => (e.operator ?? '==') === '==');
 }
 
 // MARK: Single-field path
