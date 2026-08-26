@@ -22,6 +22,7 @@ export { UTIL_REQUIRE_CONSTANT_NAMING_RULE, type UtilRequireConstantNamingRuleOp
 export { UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE, type UtilRequireDefaultPrefixNamingRuleOptions, type UtilRequireDefaultPrefixNamingRuleDefinition } from './require-default-prefix-naming.rule';
 export { UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
 export { UTIL_NO_ENUM_LITERAL_CAST_RULE, type UtilNoEnumLiteralCastRuleDefinition } from './no-enum-literal-cast.rule';
+export { UTIL_NO_NON_ARRAY_ITERABLE_SPREAD_RULE, type UtilNoNonArrayIterableSpreadRuleDefinition } from './no-non-array-iterable-spread.rule';
 export { UTIL_ESLINT_PLUGIN, utilESLintPlugin, type UtilEslintPlugin } from './plugin';
 export { getStatementAnchor, leadingJsdocFor } from './comments';
 export { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag, type ParsedJsdocLine } from './jsdoc-parser';
