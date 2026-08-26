@@ -184,11 +184,11 @@ export class DbxFirebaseAuthLoginService {
 
   // MARK: Get
   getRegisteredTypes(): FirebaseLoginMethodType[] {
-    return [...this._providers.keys()];
+    return Array.from(this._providers.keys());
   }
 
   getEnabledTypes(): FirebaseLoginMethodType[] {
-    return this._enableAll ? this.getRegisteredTypes() : [...this._enabled];
+    return this._enableAll ? this.getRegisteredTypes() : Array.from(this._enabled);
   }
 
   getLoginProvider(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProvider> {

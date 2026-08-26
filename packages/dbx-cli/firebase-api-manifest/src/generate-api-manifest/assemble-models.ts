@@ -108,7 +108,7 @@ export function collectModelEnums(input: CollectModelEnumsInput): CliEnumManifes
   const registry = buildEnumRegistry(input.extractions);
   const referenced = collectReferencedEnumNames(input.models);
   const out: Record<string, CliModelEnum> = {};
-  for (const name of [...referenced].sort((a, b) => a.localeCompare(b))) {
+  for (const name of Array.from(referenced).sort((a, b) => a.localeCompare(b))) {
     const extracted = registry.get(name);
     if (extracted) {
       out[name] = buildModelEnumEntry(extracted);

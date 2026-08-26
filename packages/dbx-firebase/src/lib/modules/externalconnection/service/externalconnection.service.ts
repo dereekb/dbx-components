@@ -172,11 +172,11 @@ export class DbxFirebaseExternalConnectionService {
 
   // MARK: Get
   getRegisteredTypes(): UserExternalConnectionProviderType[] {
-    return [...this._providers.keys()];
+    return Array.from(this._providers.keys());
   }
 
   getEnabledTypes(): UserExternalConnectionProviderType[] {
-    return this._enableAll ? this.getRegisteredTypes() : [...this._enabled];
+    return this._enableAll ? this.getRegisteredTypes() : Array.from(this._enabled);
   }
 
   getProvider(providerType: UserExternalConnectionProviderType): Maybe<DbxFirebaseExternalConnectionProvider> {

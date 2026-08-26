@@ -10,15 +10,15 @@ import { type CalendarType } from './calendar.id';
  *
  * @returns Firestore query constraints for Calendars flagged for sync.
  *
- * @example
- * ```ts
- * const constraints = calendarsFlaggedForSyncQuery();
- * ```
- *
  * @dbxModelFirebaseIndex
  * @dbxModelFirebaseIndexModel Calendar
  * @dbxModelFirebaseIndexScope COLLECTION
  * @dbxModelFirebaseIndexCategory sweep
+ *
+ * @example
+ * ```ts
+ * const constraints = calendarsFlaggedForSyncQuery();
+ * ```
  */
 export function calendarsFlaggedForSyncQuery(): FirestoreQueryConstraint[] {
   return [where<Calendar>('s', '==', true)];
@@ -53,15 +53,15 @@ export interface CalendarsDueForResyncQueryInput {
  * @param input - The type to sweep and the staleness cutoff.
  * @returns Firestore query constraints for Calendars due for a resync.
  *
- * @example
- * ```ts
- * const constraints = calendarsDueForResyncQuery({ calendarType: 'demo_profile', before: subDays(new Date(), 7) });
- * ```
- *
  * @dbxModelFirebaseIndex
  * @dbxModelFirebaseIndexModel Calendar
  * @dbxModelFirebaseIndexScope COLLECTION
  * @dbxModelFirebaseIndexCategory maintenance
+ *
+ * @example
+ * ```ts
+ * const constraints = calendarsDueForResyncQuery({ calendarType: 'demo_profile', before: subDays(new Date(), 7) });
+ * ```
  */
 export function calendarsDueForResyncQuery(input: CalendarsDueForResyncQueryInput): FirestoreQueryConstraint[] {
   return [where<Calendar>('t', '==', input.calendarType), whereDateIsBefore<Calendar>('sat', input.before)];
@@ -73,15 +73,15 @@ export function calendarsDueForResyncQuery(input: CalendarsDueForResyncQueryInpu
  * @param calendarType - The type to filter by.
  * @returns Firestore query constraints for Calendars of the given type.
  *
- * @example
- * ```ts
- * const constraints = calendarsForTypeQuery('demo_profile');
- * ```
- *
  * @dbxModelFirebaseIndex
  * @dbxModelFirebaseIndexModel Calendar
  * @dbxModelFirebaseIndexScope COLLECTION
  * @dbxModelFirebaseIndexCategory lookup
+ *
+ * @example
+ * ```ts
+ * const constraints = calendarsForTypeQuery('demo_profile');
+ * ```
  */
 export function calendarsForTypeQuery(calendarType: CalendarType): FirestoreQueryConstraint[] {
   return [where<Calendar>('t', '==', calendarType)];

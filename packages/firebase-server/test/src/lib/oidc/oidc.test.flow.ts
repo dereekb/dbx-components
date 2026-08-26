@@ -116,7 +116,7 @@ function createCookieJar() {
   }
 
   function cookieHeader(): string {
-    return [...cookieJar.values()].join('; ');
+    return Array.from(cookieJar.values()).join('; ');
   }
 
   return { collectCookies, cookieHeader };

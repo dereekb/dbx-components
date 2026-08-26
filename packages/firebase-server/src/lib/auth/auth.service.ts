@@ -373,7 +373,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   async setRoles<T extends AuthClaimsObject = AuthClaimsObject>(roles: AuthRole[] | AuthRoleSet, claimsToRetain?: Partial<T>): Promise<void> {
     const claims = {
       ...claimsToRetain,
-      ...this._claimsForRolesChange([...roles])
+      ...this._claimsForRolesChange(Array.from(roles))
     };
 
     return this.setClaims(claims);
