@@ -286,7 +286,7 @@ export class ModelRelationUtility {
     const inputMap = makeValuesGroupMap(input, readType);
     const modsMap = makeValuesGroupMap(mods, readType);
 
-    const typesModified = new Set<Maybe<string>>([...inputMap.keys(), ...modsMap.keys()]);
+    const typesModified = new Set<Maybe<string>>([...Array.from(inputMap.keys()), ...Array.from(modsMap.keys())]);
 
     // Break the collections up into their individual types and process separately.
     const modifiedSubcollections = [...typesModified].map((type) => {

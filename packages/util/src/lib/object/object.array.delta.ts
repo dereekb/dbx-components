@@ -69,7 +69,7 @@ export interface ObjectDeltaArrayCompressor<T extends object> {
  */
 export function objectDeltaArrayCompressor<T extends object>(config: ObjectDeltaArrayCompressorConfig<T>): ObjectDeltaArrayCompressor<T> {
   const { equalityChecker: _equalityChecker } = config;
-  const assignKnownValuesToCopy = assignValuesToPOJOFunction<T, keyof T>({ keysFilter: [..._equalityChecker._fields.keys()], valueFilter: KeyValueTypleValueFilter.NULL });
+  const assignKnownValuesToCopy = assignValuesToPOJOFunction<T, keyof T>({ keysFilter: Array.from(_equalityChecker._fields.keys()), valueFilter: KeyValueTypleValueFilter.NULL });
 
   function compress(uncompressed: T[]) {
     // return an empty array if there is nothing to compress
@@ -114,7 +114,7 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
     return result;
   }
 
-  const allKeys = [..._equalityChecker._fields.keys()];
+  const allKeys = Array.from(_equalityChecker._fields.keys());
 
   function expand(compressed: CompressedObjectDeltaArray<T>): T[] {
     let result: T[];

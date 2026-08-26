@@ -2124,7 +2124,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       async function cleanupSentNotifications() {
         const query = notificationCollectionGroup.queryDocument(notificationsReadyForCleanupQuery());
         const notificationDocuments = await query.getDocs();
-        const notificationDocumentsGroupedByNotificationBox = [...makeValuesGroupMap(notificationDocuments, (x) => x.parent.id).values()];
+        const notificationDocumentsGroupedByNotificationBox = Array.from(makeValuesGroupMap(notificationDocuments, (x) => x.parent.id).values());
 
         return performAsyncTasks(
           notificationDocumentsGroupedByNotificationBox,
@@ -2152,7 +2152,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
               }
             }
 
-            const pairsGroupedByWeek = [...makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries()];
+            const pairsGroupedByWeek = Array.from(makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries());
 
             // batch incase there are a lot of new notifications to move to week
             const pairsGroupedByWeekInBatches = pairsGroupedByWeek.flatMap((x) => {
@@ -2161,7 +2161,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
             });
 
             // group logged events by ISO day string (derived from sat) for archival into NotificationLoggedEventDay.
-            const pairsGroupedByLoggedEventDay = [...makeValuesGroupMap(loggedEventPairsWithDataAndMarkedDeleted, (x) => notificationLoggedEventDayId((x.data as Notification).sat)).entries()];
+            const pairsGroupedByLoggedEventDay = Array.from(makeValuesGroupMap(loggedEventPairsWithDataAndMarkedDeleted, (x) => notificationLoggedEventDayId((x.data as Notification).sat)).entries());
 
             // batch incase there are a lot of new logged events to move to a single day
             const pairsGroupedByLoggedEventDayInBatches = pairsGroupedByLoggedEventDay.flatMap((x) => {

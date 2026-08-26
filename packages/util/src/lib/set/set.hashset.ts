@@ -154,10 +154,22 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   /**
    * Returns all values in the set as an array.
    *
+   * NOT a spread. `@nx/webpack` hardcodes `jsc.loose: true` for swc-loader with no `jsc.target`, and loose
+   * mode compiles `[...iterable]` to `[].concat(iterable)` — correct only for arrays, because
+   * `Array.concat` does not consume an iterator. A MapIterator is appended as a SINGLE ELEMENT, so
+   * `[...new Map().values()]` evaluates to `[MapIterator {}]` in a bundled app instead of `[]`.
+   *
+   * An EMPTY set reporting one bogus value is the shape that bites: it published a calendar ICS carrying an
+   * RDATE built from a MapIterator, which threw `RangeError: Invalid time value` out of date-fns on every
+   * attempt. Source-mode tests cannot see it — the library builds emit the correct helper, so only a bundled
+   * app reproduces it.
+   *
+   * `Array.from()` is a plain call that no downlevel transform rewrites, so it is correct in both.
+   *
    * @returns The all stored values.
    */
   valuesArray(): T[] {
-    return [...this._map.values()];
+    return Array.from(this._map.values());
   }
 
   get [Symbol.toStringTag](): string {
