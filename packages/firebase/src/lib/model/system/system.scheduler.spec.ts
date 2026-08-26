@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { snapshotConverterFunctions } from '../../common/firestore/snapshot/snapshot';
 import { type SystemState } from './system';
-import { SCHEDULER_SYSTEM_STATE_TYPE, type SchedulerSystemData, hasRunInCurrentHour, isNthHourOfDay, schedulerSystemDataConverter } from './system.scheduler';
+import { SCHEDULER_SYSTEM_STATE_TYPE, type SchedulerSystemData, hasRunInCurrentHour, isNthHourOfDay, nthHourOfDayIndex, schedulerSystemDataConverter, schedulerSystemStateRead } from './system.scheduler';
 
 /**
- * Local-time constructor, deliberately. Both predicates read the hour in the ambient timezone
+ * Local-time constructor, deliberately. Every predicate here reads the hour in the ambient timezone
  * (`getHours()` / `roundDownToHour()`), so a `Z`-suffixed literal would make every expectation here
  * depend on the machine's timezone.
  */
@@ -135,5 +135,121 @@ describe('schedulerSystemDataConverter', () => {
 
   it('should use the type identifier as its document id', () => {
     expect(SCHEDULER_SYSTEM_STATE_TYPE).toBe('scheduler');
+  });
+});
+
+describe('nthHourOfDayIndex()', () => {
+  it('should return the zero-based window index for a matching hour', () => {
+    // The day's every-3-hours windows are 0, 3, 6, 9, 12, ... so hour 12 is the 5th window, index 4.
+    expect(nthHourOfDayIndex(3, dateAtHour(12))).toBe(4);
+    expect(nthHourOfDayIndex(3, dateAtHour(0))).toBe(0);
+    expect(nthHourOfDayIndex(3, dateAtHour(21))).toBe(7);
+  });
+
+  it('should return the hour itself for N=1', () => {
+    expect(nthHourOfDayIndex(1, dateAtHour(13))).toBe(13);
+  });
+
+  it('should return null for a non-matching hour', () => {
+    expect(nthHourOfDayIndex(3, dateAtHour(13))).toBeNull();
+    expect(nthHourOfDayIndex(5, dateAtHour(12))).toBeNull();
+  });
+
+  it('should return null rather than NaN for N=0', () => {
+    expect(nthHourOfDayIndex(0, dateAtHour(12))).toBeNull();
+    expect(nthHourOfDayIndex(0, dateAtHour(0))).toBeNull();
+  });
+
+  it('should distinguish index 0 from no window', () => {
+    // Both are falsy, which is exactly why the miss case is null and not a number - a caller
+    // checking `if (index != null)` must still see the first window of the day.
+    expect(nthHourOfDayIndex(6, dateAtHour(0))).toBe(0);
+    expect(nthHourOfDayIndex(6, dateAtHour(1))).toBeNull();
+  });
+
+  it('should ignore minutes within the hour', () => {
+    expect(nthHourOfDayIndex(3, dateAtHour(15, 59))).toBe(5);
+  });
+
+  it('should default to the current date when no date is given', () => {
+    // N=1 matches every hour, so the index is just the current hour - deterministic without a clock.
+    expect(nthHourOfDayIndex(1)).toBe(new Date().getHours());
+  });
+});
+
+describe('schedulerSystemStateRead()', () => {
+  it('should expose the moment it was built from', () => {
+    const now = dateAtHour(12, 30);
+    const read = schedulerSystemStateRead({ now, lastRunAt: null });
+
+    expect(read.now).toBe(now);
+    expect(read.hourOfDay).toBe(12);
+  });
+
+  it('should normalize an undefined lastRunAt to null', () => {
+    // optionalFirestoreDate() reads an absent `lat` as undefined; the read normalizes it so callers
+    // have one absent value to test against.
+    expect(schedulerSystemStateRead({ now: dateAtHour(12), lastRunAt: undefined }).lastRunAt).toBeNull();
+  });
+
+  it('should default now to the current date', () => {
+    const read = schedulerSystemStateRead({ lastRunAt: null });
+    expect(read.hourOfDay).toBe(new Date().getHours());
+  });
+
+  describe('with no previous run', () => {
+    const read = schedulerSystemStateRead({ now: dateAtHour(12, 30), lastRunAt: null });
+
+    it('should report hasRunInCurrentHour as false', () => {
+      expect(read.hasRunInCurrentHour).toBe(false);
+    });
+
+    it('should answer several intervals off one read', () => {
+      expect(read.isOpen(1)).toBe(true);
+      expect(read.isOpen(3)).toBe(true);
+      expect(read.isOpen(5)).toBe(false); // 12 % 5 === 2
+      expect(read.isOpen(12)).toBe(true);
+    });
+
+    it('should bind isNthHourOfDay to its own now', () => {
+      expect(read.isNthHourOfDay(3)).toBe(true);
+      expect(read.isNthHourOfDay(5)).toBe(false);
+    });
+
+    it('should bind nthHourOfDayIndex to its own now', () => {
+      expect(read.nthHourOfDayIndex(3)).toBe(4);
+      expect(read.nthHourOfDayIndex(5)).toBeNull();
+    });
+  });
+
+  describe('with a previous run in the same hour', () => {
+    const read = schedulerSystemStateRead({ now: dateAtHour(12, 55), lastRunAt: dateAtHour(12, 5) });
+
+    it('should report hasRunInCurrentHour as true', () => {
+      expect(read.hasRunInCurrentHour).toBe(true);
+    });
+
+    it('should close isOpen for every interval', () => {
+      expect(read.isOpen(1)).toBe(false);
+      expect(read.isOpen(3)).toBe(false);
+      expect(read.isOpen(12)).toBe(false);
+    });
+
+    it('should still answer isNthHourOfDay, which ignores lastRunAt', () => {
+      // This is the sub-gate for work running INSIDE an already-claimed hour: the hour is spent
+      // either way, so the task only asks whether this is its hour.
+      expect(read.isNthHourOfDay(3)).toBe(true);
+      expect(read.nthHourOfDayIndex(3)).toBe(4);
+    });
+  });
+
+  it('should not drift across an hour boundary between questions', () => {
+    // The whole point of holding `now`: asking about 2 and then 3 is answered against one moment,
+    // even if the wall clock rolls over mid-evaluation.
+    const read = schedulerSystemStateRead({ now: dateAtHour(12), lastRunAt: null });
+
+    expect(read.isOpen(2)).toBe(true);
+    expect(read.isOpen(3)).toBe(true);
+    expect(read.now.getHours()).toBe(12);
   });
 });
