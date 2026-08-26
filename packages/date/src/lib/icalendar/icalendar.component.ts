@@ -1,4 +1,4 @@
-import { isNotBlankString, type Maybe, utcOffsetString } from '@dereekb/util';
+import { isDate, isNotBlankString, type Maybe, utcOffsetString } from '@dereekb/util';
 import { type ICalendarComponentName, type ICalendarParameterName, type ICalendarParameterValue, type ICalendarPropertyName, type ICalendarValue, DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
 import { type ICalendar, type ICalendarAlarm, type ICalendarAttendee, type ICalendarDateTimeValue, type ICalendarEvent, type ICalendarExtraProperty, type ICalendarOrganizer, type ICalendarSerializeConfig, type ICalendarTimezone, type ICalendarTimezoneTransition } from './icalendar.model';
 import { iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
@@ -66,6 +66,13 @@ export function iCalendarContentLine(name: ICalendarPropertyName, value: ICalend
  */
 export function iCalendarDateTimeContentLine(name: ICalendarPropertyName, value: ICalendarDateTimeValue): ICalendarContentLine {
   let result: ICalendarContentLine;
+
+  // date-fns throws a bare "RangeError: Invalid time value" here, which names neither the property nor the
+  // value and leaves a caller staring at a stack with no way to tell WHICH date of WHICH event is bad.
+  // Fail with the property and the offending value instead.
+  if ((value.type === 'utc' || value.type === 'zoned') && !(isDate(value.at) && !Number.isNaN(value.at.getTime()))) {
+    throw new Error(`iCalendarDateTimeContentLine(): "${name}" received an invalid date value (${JSON.stringify(value.at)}). A VEVENT cannot be serialized with an unrepresentable ${name}.`);
+  }
 
   switch (value.type) {
     case 'utc':

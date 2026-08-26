@@ -105,7 +105,12 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
                 // The task-level catch records only "this task threw", which leaves a stuck calendar with no
                 // way to tell a render failure from an upload failure. Name the calendar, the StorageFile and
                 // the object path before rethrowing, so the retry loop is diagnosable from the logs alone.
-                console.error(`calendarIcsStorageFileProcessingPurposeSubtaskProcessor(): failed publishing the ICS for calendar "${calendarId}" (type "${calendar.t}", ${calendar.e?.length ?? 0} events, ${calendar.r?.length ?? 0} recurring) to StorageFile "${storageFileDocument.id}" at "${fileDetailsAccessor.input.bucketId}${fileDetailsAccessor.input.pathString}": `, e);
+                // The recurrence lines are dumped verbatim because they are the one part of a Calendar the
+                // model read normalizes on the way out: a stray RDATE/EXDATE line inside `rr` is invisible in
+                // a converted view of the document, and is exactly what turns into an unserializable date.
+                const recurrences = JSON.stringify((calendar.r ?? []).map((x) => ({ id: x.id, rr: x.rr, rex: x.rex, rea: x.rea, rfe: x.rfe })));
+
+                console.error(`calendarIcsStorageFileProcessingPurposeSubtaskProcessor(): failed publishing the ICS for calendar "${calendarId}" (type "${calendar.t}", ${calendar.e?.length ?? 0} events, ${calendar.r?.length ?? 0} recurring, recurrences=${recurrences}) to StorageFile "${storageFileDocument.id}" at "${fileDetailsAccessor.input.bucketId}${fileDetailsAccessor.input.pathString}": `, e);
                 throw e;
               }
             } else {
