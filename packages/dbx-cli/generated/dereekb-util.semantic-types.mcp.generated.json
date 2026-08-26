@@ -490,6 +490,19 @@
       "notes": "The minute of the day.\n\nNumber from 0-1439."
     },
     {
+      "name": "UtcOffsetString",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/offset",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "timezone",
+        "string"
+      ],
+      "notes": "A UTC offset rendered in the ISO 8601 basic format, as a sign followed by two-digit hours and minutes.\n\nExamples:\n- -0600\n- +0530\n- +0000"
+    },
+    {
       "name": "EncryptedString",
       "package": "@dereekb/util",
       "module": "src/lib/encryption/encryption.object",
@@ -1339,6 +1352,19 @@
         "string"
       ],
       "notes": "A website's domain and path combined, without the BaseWebsiteUrl\n\nExamples:\n- dereekb.com\n- components.dereekb.com/\n- components.dereekb.com/doc/home"
+    },
+    {
+      "name": "UriScheme",
+      "package": "@dereekb/util",
+      "module": "src/lib/string/url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "url",
+        "string"
+      ],
+      "notes": "A URI scheme, without the trailing colon.\n\nExamples:\n- https\n- mailto\n- tel"
     },
     {
       "name": "CityString",

@@ -75,31 +75,39 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
             const calendar = await calendarDocument.snapshotData();
 
             if (calendar) {
-              const typeConfig = appCalendarTypeConfigService.configForCalendarType(calendar.t);
+              try {
+                const typeConfig = appCalendarTypeConfigService.configForCalendarType(calendar.t);
 
-              const ics = calendarToIcsString(calendar, {
-                ...calendarTypeConfigIcsConfig(typeConfig),
-                calendarId,
-                domain: icsDomain,
-                expansionRange: calendarTypeConfigIcsExpansionRange(typeConfig, new Date()),
-                // the CONTENT's instant, not the wall clock: DTSTAMP then moves only when the calendar moves
-                now: calendar.uat
-              });
+                const ics = calendarToIcsString(calendar, {
+                  ...calendarTypeConfigIcsConfig(typeConfig),
+                  calendarId,
+                  domain: icsDomain,
+                  expansionRange: calendarTypeConfigIcsExpansionRange(typeConfig, new Date()),
+                  // the CONTENT's instant, not the wall clock: DTSTAMP then moves only when the calendar moves
+                  now: calendar.uat
+                });
 
-              await storageAccessor.file(fileDetailsAccessor.input).upload(Buffer.from(ics, 'utf8'), { contentType: TEXT_CALENDAR_UTF8_CONTENT_TYPE });
+                await storageAccessor.file(fileDetailsAccessor.input).upload(Buffer.from(ics, 'utf8'), { contentType: TEXT_CALENDAR_UTF8_CONTENT_TYPE });
 
-              // sat is set ONLY here, on the success path. That is what makes "s === false && sat < uat"
-              // mean "queued, not yet published".
-              //
-              // isf is re-asserted alongside it so the calendar's pointer always names the StorageFile whose
-              // bytes actually landed. syncCalendar() sets it optimistically when it creates the file (it has
-              // to, so the next sweep can find and re-flag it rather than creating a duplicate); this write
-              // is what makes it TRUE, and self-heals a pointer left behind by a run that died mid-flight.
-              await calendarDocument.update({ isf: storageFileDocument.id, sat: new Date() });
+                // sat is set ONLY here, on the success path. That is what makes "s === false && sat < uat"
+                // mean "queued, not yet published".
+                //
+                // isf is re-asserted alongside it so the calendar's pointer always names the StorageFile whose
+                // bytes actually landed. syncCalendar() sets it optimistically when it creates the file (it has
+                // to, so the next sweep can find and re-flag it rather than creating a duplicate); this write
+                // is what makes it TRUE, and self-heals a pointer left behind by a run that died mid-flight.
+                await calendarDocument.update({ isf: storageFileDocument.id, sat: new Date() });
 
-              result = notificationSubtaskComplete({
-                canRunNextCheckpoint: true
-              });
+                result = notificationSubtaskComplete({
+                  canRunNextCheckpoint: true
+                });
+              } catch (e) {
+                // The task-level catch records only "this task threw", which leaves a stuck calendar with no
+                // way to tell a render failure from an upload failure. Name the calendar, the StorageFile and
+                // the object path before rethrowing, so the retry loop is diagnosable from the logs alone.
+                console.error(`calendarIcsStorageFileProcessingPurposeSubtaskProcessor(): failed publishing the ICS for calendar "${calendarId}" (type "${calendar.t}", ${calendar.e?.length ?? 0} events, ${calendar.r?.length ?? 0} recurring) to StorageFile "${storageFileDocument.id}" at "${fileDetailsAccessor.input.bucketId}${fileDetailsAccessor.input.pathString}": `, e);
+                throw e;
+              }
             } else {
               // the Calendar no longer exists. Flag the StorageFile for deletion.
               result = await flagStorageFileForDeletion();

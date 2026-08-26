@@ -178,6 +178,59 @@ demoApiFunctionContextFactory((f) => {
               expect(ics).toContain('First');
               expect(ics).toContain('Second');
             });
+
+            /**
+             * Recurring events had no end-to-end coverage at all: every publish test above adds one-off
+             * events, which take the `e` array and a discrete VEVENT. A recurring event takes `r` and the
+             * RRULE branch of `calendarToICalendar()` instead, so nothing here reached that branch.
+             */
+            it('should publish a recurring event as an RRULE', async () => {
+              await cal.createTestRecurringCalendarEvent('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=8', 'Recurring Me');
+
+              await runScheduledTick();
+
+              const calendar = await assertSnapshotData(cal.document);
+              expect(calendar.sat).toBeDefined();
+              expect(calendarSyncState(calendar)).toBe(CalendarSyncState.SYNCED);
+
+              const storageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+              const ics = (await f.storageContext.file(storageFile).getBytes()).toString();
+
+              expect(ics).toContain('Recurring Me');
+              // the rule has to reach the file as ONE prefix, not the "RRULE:RRULE:" doubling the stored
+              // form invites, which every client silently drops
+              expect(ics).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=8');
+              expect(ics).not.toContain('RRULE:RRULE:');
+            });
+
+            // The dev-project sequence that left a calendar stuck in PROCESSING: publish once, THEN add a
+            // recurring event. The one-off version of this passes, so the recurring item is the variable.
+            it('should re-publish when a recurring event is added after a successful publish', async () => {
+              await cal.createTestCalendarEvent('One Off');
+              await runScheduledTick();
+
+              const published = await assertSnapshotData(cal.document);
+              const firstSyncedAt = published.sat as Date;
+              expect(firstSyncedAt).toBeDefined();
+
+              await cal.createTestRecurringCalendarEvent('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=8', 'Added Recurring');
+
+              await runScheduledTick();
+
+              const storageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+              const republished = await assertSnapshotData(cal.document);
+              expect(calendarSyncState(republished)).toBe(CalendarSyncState.SYNCED);
+              expect((republished.sat as Date).getTime()).toBeGreaterThan(firstSyncedAt.getTime());
+
+              const ics = (await f.storageContext.file(storageFile).getBytes()).toString();
+
+              expect(ics).toContain('One Off');
+              expect(ics).toContain('Added Recurring');
+            });
           });
         });
       });

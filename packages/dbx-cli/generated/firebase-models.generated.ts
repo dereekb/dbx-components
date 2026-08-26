@@ -5,6 +5,134 @@ import type { FirebaseModel, FirebaseModelGroup } from '../src/lib/mcp-scan/regi
 
 export const FIREBASE_MODELS: readonly FirebaseModel[] = [
   {
+    name: 'Calendar',
+    identityConst: 'calendarIdentity',
+    modelType: 'calendar',
+    collectionPrefix: 'cal',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.ts',
+    fields: [
+      {
+        name: 't',
+        longName: 'calendarType',
+        converter: 'firestoreString<CalendarType>()',
+        tsType: 'CalendarType',
+        optional: false,
+        description: 'The kind of calendar this is, resolving its retention policy and ICS emission config.'
+      },
+      {
+        name: 'n',
+        longName: 'name',
+        converter: "firestoreString<string>({ default: '' })",
+        tsType: 'string',
+        optional: false,
+        description: 'Display name of the calendar. Emitted as NAME/X-WR-CALNAME.'
+      },
+      {
+        name: 'd',
+        longName: 'description',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<string>',
+        optional: true,
+        description: 'Description of the calendar. Emitted as DESCRIPTION/X-WR-CALDESC.'
+      },
+      {
+        name: 'tz',
+        longName: 'timezone',
+        converter: 'firestoreTimezoneString({ default: UTC_TIMEZONE_STRING })',
+        tsType: 'TimezoneString',
+        optional: false,
+        description: 'Default timezone of the calendar. Emitted as X-WR-TIMEZONE, and the fallback for an event with no `tz`.'
+      },
+      {
+        name: 'c',
+        longName: 'color',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<string>',
+        optional: true,
+        description: 'CSS3 color name for the calendar. Emitted as COLOR.'
+      },
+      {
+        name: 'o',
+        longName: 'ownerKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirebaseAuthOwnershipKey>',
+        optional: true,
+        description: 'Ownership key, if applicable. Drives read access in the security rules.'
+      },
+      {
+        name: 'e',
+        longName: 'events',
+        converter: 'firestoreObjectArray({ objectField: calendarEventItem, sortWith: calendarEventItemsSortFunction<CalendarEventItem>(), filterUnique: calendarEventItemsFilterUniqueFunction<CalendarEventItem>() })',
+        tsType: 'CalendarEventItem[]',
+        optional: false,
+        description: "The calendar's one-off events, ascending by start instant and unique by id."
+      },
+      {
+        name: 'r',
+        longName: 'recurringEvents',
+        converter: 'firestoreObjectArray({ objectField: calendarRecurringEventItem, sortWith: calendarEventItemsSortFunction<CalendarRecurringEventItem>(), filterUnique: calendarEventItemsFilterUniqueFunction<CalendarRecurringEventItem>() })',
+        tsType: 'CalendarRecurringEventItem[]',
+        optional: false,
+        description: "The calendar's recurring events, ascending by anchor instant and unique by id."
+      },
+      {
+        name: 'x',
+        longName: 'extensionData',
+        converter: 'optionalFirestorePassthroughJsonField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true })',
+        tsType: 'Maybe<CalendarExtensionData>',
+        optional: true,
+        description: 'Extension data emitted as "X-" properties on the calendar\'s VCALENDAR.'
+      },
+      {
+        name: 'cat',
+        longName: 'createdAt',
+        converter: 'firestoreDate({ saveDefaultAsNow: true })',
+        tsType: 'Date',
+        optional: false,
+        description: 'Created at date.'
+      },
+      {
+        name: 'uat',
+        longName: 'updatedAt',
+        converter: 'firestoreDate({ saveDefaultAsNow: true })',
+        tsType: 'Date',
+        optional: false,
+        description: 'Updated at date. Moves on every content change.'
+      },
+      {
+        name: 's',
+        longName: 'needsSync',
+        converter: 'optionalFirestoreBoolean({ dontStoreIf: false })',
+        tsType: 'Maybe<NeedsSyncBoolean>',
+        optional: true,
+        description: 'True if this Calendar should be swept and its published ICS regenerated.'
+      },
+      {
+        name: 'sat',
+        longName: 'syncedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The last date the published ICS was successfully uploaded.'
+      },
+      {
+        name: 'isf',
+        longName: 'icsStorageFileId',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<StorageFileId>',
+        optional: true,
+        description: 'StorageFile that holds the published ICS for this calendar.'
+      }
+    ],
+    enums: [],
+    detectionHints: ['t', 'n', 'tz', 'c', 'e', 'r', 'x', 'uat', 'sat', 'isf'],
+    description: 'A calendar and all of its events, stored in one document and published as an ".ics" file.',
+    modelGroup: 'Calendar',
+    collectionKind: 'root',
+    archetypes: ['root-entity']
+  },
+  {
     name: 'NotificationBox',
     identityConst: 'notificationBoxIdentity',
     modelType: 'notificationBox',
@@ -1117,6 +1245,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
 ];
 
 export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
+  {
+    name: 'Calendar',
+    containerName: 'CalendarFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.ts',
+    description: 'Abstract base providing access to the Calendar Firestore collection.',
+    modelNames: ['Calendar']
+  },
   {
     name: 'Notification',
     containerName: 'NotificationFirestoreCollections',

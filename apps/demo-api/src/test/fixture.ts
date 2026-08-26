@@ -700,6 +700,10 @@ export class DemoApiCalendarTestContextFixture<F extends FirebaseAdminFunctionTe
     return this.instance.createTestCalendarEvent(name);
   }
 
+  async createTestRecurringCalendarEvent(recurrenceRule: string, name?: Maybe<string>): Promise<void> {
+    return this.instance.createTestRecurringCalendarEvent(recurrenceRule, name);
+  }
+
   async syncCalendar(): Promise<SyncCalendarResult> {
     return this.instance.syncCalendar();
   }
@@ -723,8 +727,23 @@ export class DemoApiCalendarTestContextInstance<F extends FirebaseAdminFunctionT
    * the next sweep. The event action lives on the Profile, since that is the model the demo exposes.
    */
   async createTestCalendarEvent(name?: Maybe<string>): Promise<void> {
+    return this._createTestCalendarEvent({ name });
+  }
+
+  /**
+   * Adds a RECURRING event to the owning Profile's calendar.
+   *
+   * Worth its own helper because a recurring item lands in the calendar's `r` array rather than `e`, and the
+   * publish path renders it as an RRULE on one VEVENT instead of a discrete VEVENT per occurrence — a
+   * different branch of `calendarToICalendar()` than every one-off event exercises.
+   */
+  async createTestRecurringCalendarEvent(recurrenceRule: string, name?: Maybe<string>): Promise<void> {
+    return this._createTestCalendarEvent({ name, recurrenceRule });
+  }
+
+  private async _createTestCalendarEvent(params: { readonly name?: Maybe<string>; readonly recurrenceRule?: Maybe<string> }): Promise<void> {
     const profileDocument = this.testContext.demoFirestoreCollections.profileCollection.documentAccessor().loadDocumentForKey(inferCalendarRelatedModelKey(this.documentId));
-    const createTestCalendarEvent = await this.testContext.profileServerActions.createTestCalendarEvent({ name });
+    const createTestCalendarEvent = await this.testContext.profileServerActions.createTestCalendarEvent(params);
     await createTestCalendarEvent(profileDocument);
   }
 
