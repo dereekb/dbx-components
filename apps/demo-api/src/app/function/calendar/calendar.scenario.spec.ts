@@ -231,6 +231,32 @@ demoApiFunctionContextFactory((f) => {
               expect(ics).toContain('One Off');
               expect(ics).toContain('Added Recurring');
             });
+
+            /**
+             * The stored `rr` is RRuleLines — a newline-joined blob that may carry RDATE/EXDATE lines
+             * alongside the RRULE, not just the rule itself. Those lines are what populate the recurrence's
+             * additionalDates/exceptionDates, and emitting them is the ONE path in iCalendarEventToComponent()
+             * that reaches iCalendarDateTimeContentLine() through a forEach.
+             *
+             * That is the path the stuck dev calendar died on, so it gets a publish test of its own.
+             */
+            it('should publish a recurring event whose rule carries RDATE and EXDATE lines', async () => {
+              await cal.createTestRecurringCalendarEvent('RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=8\nRDATE:20260810T140000Z\nEXDATE:20260812T140000Z', 'Dated Recurring');
+
+              await runScheduledTick();
+
+              const storageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+              const calendar = await assertSnapshotData(cal.document);
+              expect(calendarSyncState(calendar)).toBe(CalendarSyncState.SYNCED);
+
+              const ics = (await f.storageContext.file(storageFile).getBytes()).toString();
+
+              expect(ics).toContain('Dated Recurring');
+              expect(ics).toContain('RDATE:20260810T140000Z');
+              expect(ics).toContain('EXDATE:20260812T140000Z');
+            });
           });
         });
       });

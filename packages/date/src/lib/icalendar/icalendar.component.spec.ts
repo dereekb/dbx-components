@@ -42,6 +42,19 @@ wrapDateTests(() => {
       expect(line.value).toBe('20260315');
       expect(line.parameters).toEqual([{ name: 'VALUE', value: 'DATE' }]);
     });
+
+    /**
+     * date-fns throws a bare "RangeError: Invalid time value" from deep inside formatInTimeZone(), which
+     * names neither the property nor the value. A published calendar that failed this way stayed stuck for
+     * a day with a stack that could not say which date of which event was bad.
+     */
+    it('should name the property and the value for an invalid utc date.', () => {
+      expect(() => iCalendarDateTimeContentLine('RDATE', { type: 'utc', at: new Date(NaN) })).toThrow(/RDATE/);
+    });
+
+    it('should name the property and the value for an invalid zoned date.', () => {
+      expect(() => iCalendarDateTimeContentLine('EXDATE', { type: 'zoned', at: new Date(NaN), timezone: 'America/Denver' })).toThrow(/EXDATE/);
+    });
   });
 
   describe('iCalendarExtraPropertyContentLine()', () => {
