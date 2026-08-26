@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore } from '@dereekb/dbx-firebase';
-import { type Calendar, type CalendarDocument, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { type Calendar, type CalendarDocument, type CalendarSyncState, calendarSyncState, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DemoFirestoreCollections } from 'demo-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
@@ -35,6 +35,18 @@ export class CalendarDocumentStore extends AbstractDbxFirebaseDocumentStore<Cale
    */
   readonly syncedAt$ = this.currentData$.pipe(
     map((x) => x?.sat),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Where the calendar sits in the publish pipeline, or undefined before the document exists.
+   *
+   * Read alongside {@link syncedAt$} rather than instead of it: `sat` is the last successful upload, so on
+   * its own it cannot tell a current feed from one that went stale the moment an event was added.
+   */
+  readonly syncState$ = this.currentData$.pipe(
+    map((x): Maybe<CalendarSyncState> => (x ? calendarSyncState(x) : undefined)),
     distinctUntilChanged(),
     shareReplay(1)
   );

@@ -200,6 +200,72 @@ export function markCalendarForSyncTemplate(now?: Maybe<Date>): MarkCalendarForS
   };
 }
 
+// MARK: Sync State
+/**
+ * Where a Calendar sits in the publish pipeline, as derived from the calendar itself.
+ *
+ * The read-side counterpart of {@link markCalendarForSyncTemplate}: it decodes the `s` / `sat` / `uat`
+ * invariant the sweep and the ICS processor maintain, so a reader never has to re-derive it (and never
+ * mistakes a stale `sat` for "the published feed is current").
+ */
+export enum CalendarSyncState {
+  /**
+   * The calendar's content has moved and no sweep has claimed it yet.
+   *
+   * `s` is set by {@link calendarTemplate}, {@link updateCalendarEventsTemplate} and
+   * {@link markCalendarForSyncTemplate}, so this is the state every content change lands in.
+   */
+  QUEUED = 'queued',
+  /**
+   * A sweep cleared `s` but the ICS upload that writes `sat` has not landed yet.
+   *
+   * This is the `s === false && sat < uat` window the resync backstop self-heals, and it also covers a
+   * calendar whose first ICS has never published.
+   */
+  PUBLISHING = 'publishing',
+  /**
+   * The published ICS reflects the calendar's current content.
+   */
+  SYNCED = 'synced'
+}
+
+/**
+ * The fields {@link calendarSyncState} reads.
+ */
+export type CalendarSyncStateInput = Pick<Calendar, 's' | 'sat' | 'uat'>;
+
+/**
+ * Returns where a Calendar sits in the publish pipeline.
+ *
+ * `sat` ALONE is not "synced": it is the instant of the last successful upload, which says nothing about
+ * whether the content has moved since. Only `sat > uat` with the sync flag clear means the published feed
+ * matches the model.
+ *
+ * @param calendar - The calendar's sync flag, last publish instant and update instant.
+ * @returns The calendar's sync state.
+ *
+ * @example
+ * ```ts
+ * const isPublished = calendarSyncState(calendar) === CalendarSyncState.SYNCED;
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calendarSyncState(calendar: CalendarSyncStateInput): CalendarSyncState {
+  const { s, sat, uat } = calendar;
+  let result: CalendarSyncState;
+
+  if (s === true) {
+    result = CalendarSyncState.QUEUED;
+  } else if (sat == null || sat < uat) {
+    result = CalendarSyncState.PUBLISHING;
+  } else {
+    result = CalendarSyncState.SYNCED;
+  }
+
+  return result;
+}
+
 // MARK: Array Operations
 /**
  * A partial event item update. The id is required, since it is what an upsert matches on.

@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
 import { type ContentDispositionString, randomNumber } from '@dereekb/util';
-import { type CalendarEventOccurrence, expandCalendarEvents } from '@dereekb/firebase';
+import { type CalendarEventOccurrence, CalendarSyncState, expandCalendarEvents } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
 import { CalendarDocumentStore, ProfileDocumentStore } from 'demo-components';
@@ -68,6 +68,15 @@ export class DemoCalendarViewComponent {
   readonly existsSignal = toSignal(this.calendarDocumentStore.exists$, { initialValue: false });
 
   readonly syncedAtSignal = toSignal(this.calendarDocumentStore.syncedAt$);
+  readonly syncStateSignal = toSignal(this.calendarDocumentStore.syncState$);
+
+  /**
+   * True only while the published ICS matches the calendar's current content.
+   *
+   * `syncedAt` alone cannot answer this: it is the last successful upload, so it keeps reading "Sync'd 6
+   * hours ago" the instant a new event makes that upload stale.
+   */
+  readonly isSyncedSignal = computed(() => this.syncStateSignal() === CalendarSyncState.SYNCED);
 
   readonly icsDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
     text: 'Download .ics',

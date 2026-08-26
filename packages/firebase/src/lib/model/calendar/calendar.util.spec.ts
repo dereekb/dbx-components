@@ -4,7 +4,7 @@ import { ModelRecurrenceInfoUtility } from '@dereekb/date';
 import { type CalendarEventItem, type CalendarRecurringEventItem } from './calendar';
 import { CalendarEventStatus } from './calendar.id';
 import { type CalendarTypeConfig } from './calendar.type';
-import { calendarEventItemsForModelKey, calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, replaceCalendarEventItemsForModelKey, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
+import { CalendarSyncState, calendarEventItemsForModelKey, calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarSyncState, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, replaceCalendarEventItemsForModelKey, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
 
 const NOW = new Date('2026-03-01T00:00:00.000Z');
 
@@ -47,6 +47,38 @@ describe('calendarTemplate()', () => {
 describe('markCalendarForSyncTemplate()', () => {
   it('should flag for sync and move the updated instant', () => {
     expect(markCalendarForSyncTemplate(NOW)).toEqual({ s: true, uat: NOW });
+  });
+});
+
+describe('calendarSyncState()', () => {
+  const publishedAt = addDays(NOW, 1);
+
+  it('should be QUEUED while the sync flag is set', () => {
+    expect(calendarSyncState({ s: true, sat: publishedAt, uat: NOW })).toBe(CalendarSyncState.QUEUED);
+  });
+
+  it('should be QUEUED for a freshly created calendar', () => {
+    expect(calendarSyncState(calendarTemplate({ calendarType: 'demo', name: 'A', now: NOW }))).toBe(CalendarSyncState.QUEUED);
+  });
+
+  it('should be PUBLISHING when the flag is clear but nothing has ever published', () => {
+    expect(calendarSyncState({ s: false, sat: null, uat: NOW })).toBe(CalendarSyncState.PUBLISHING);
+  });
+
+  it('should be PUBLISHING when the sweep cleared the flag but the upload has not landed', () => {
+    expect(calendarSyncState({ s: false, sat: subDays(NOW, 1), uat: NOW })).toBe(CalendarSyncState.PUBLISHING);
+  });
+
+  it('should be SYNCED once the upload postdates the content', () => {
+    expect(calendarSyncState({ s: false, sat: publishedAt, uat: NOW })).toBe(CalendarSyncState.SYNCED);
+  });
+
+  it('should leave SYNCED the moment an event is added, rather than reporting the stale publish', () => {
+    const synced = { s: false, sat: publishedAt, uat: NOW };
+    expect(calendarSyncState(synced)).toBe(CalendarSyncState.SYNCED);
+
+    const afterEdit = { ...synced, ...updateCalendarEventsTemplate({ calendar: { e: [], r: [] }, upsertEvents: [eventItem('a', NOW)], now: addDays(publishedAt, 1) }) };
+    expect(calendarSyncState(afterEdit)).toBe(CalendarSyncState.QUEUED);
   });
 });
 
