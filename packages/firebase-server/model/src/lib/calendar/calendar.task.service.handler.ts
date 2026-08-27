@@ -31,10 +31,15 @@ export const CALENDAR_ICS_PUBLISHED_CACHE_CONTROL = 'public, max-age=300, stale-
 /**
  * Content-Disposition set on the published ICS object.
  *
- * `inline` is deliberate: the feed URL is what a calendar client subscribes to, so it must not prompt a save.
- * The demo's download button overrides the disposition per-request through its signed url instead.
+ * `attachment` because the STORED disposition is now the only one a downloader gets: the download button
+ * derives the public url client-side, and a public url — unlike a signed one, whose `responseDisposition`
+ * the button used to set per-request — carries no override. Without this a browser hands `text/calendar`
+ * straight to the OS calendar app rather than saving it.
+ *
+ * Harmless for the subscribe channel, which was the reason this was `inline`: a calendar client fetches the
+ * feed programmatically and ignores `Content-Disposition` entirely.
  */
-export const CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION = 'inline';
+export const CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION = 'attachment; filename="calendar.ics"';
 
 /**
  * Configuration for {@link calendarIcsStorageFileProcessingPurposeSubtaskProcessor}.
@@ -121,7 +126,10 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
                 });
 
                 // the feed is only useful if it can be fetched anonymously: a calendar client sends no
-                // credentials, so a private object is unsubscribable rather than merely awkward.
+                // credentials, so a private object is unsubscribable rather than merely awkward. The UI's
+                // download button now rests on this too — it derives the same public url client-side rather
+                // than paying a callable for a signed one — so this grant gates the download, not just the
+                // subscription.
                 //
                 // NOTE: this is an object ACL add, which FAILS on a bucket with uniform bucket-level access
                 // enabled. Such a bucket needs an `allUsers:objectViewer` IAM binding instead. It is also

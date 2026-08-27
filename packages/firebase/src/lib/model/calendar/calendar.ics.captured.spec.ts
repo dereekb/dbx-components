@@ -1,4 +1,5 @@
 import { MS_IN_DAY } from '@dereekb/util';
+import { GOOGLE_CLOUD_STORAGE_PUBLIC_URL_API_ENDPOINT, storagePublicDownloadUrl } from '../../common/storage/storage.url';
 import { iCalendarRecurrenceForRRuleLines } from '@dereekb/date';
 import { type Calendar, type CalendarRecurringEventItem } from './calendar';
 import { calendarToIcsString, calendarTypeConfigIcsConfig, calendarTypeConfigIcsExpansionRange } from './calendar.ics';
@@ -128,6 +129,18 @@ describe('captured stuck profile calendar', () => {
   describe('the ICS StorageFile', () => {
     it('should derive its object path from the StorageFile id.', () => {
       expect(calendarIcsFileStoragePath(CAPTURED_STORAGE_FILE.id)).toBe(CAPTURED_STORAGE_FILE.pathString);
+    });
+
+    it('should derive the same public url a client would, from its stored bucket and path.', () => {
+      // the UI's download button derives this client-side instead of paying the download callable for a
+      // signed url, so pin it against a REAL stored row: the leading slash is what makes the encoded segment
+      // `%2Fcal%2F` rather than `cal/`, and getting that wrong addresses a different object.
+      const url = storagePublicDownloadUrl({
+        apiEndpoint: GOOGLE_CLOUD_STORAGE_PUBLIC_URL_API_ENDPOINT,
+        storagePath: { bucketId: CAPTURED_STORAGE_FILE.bucketId, pathString: CAPTURED_STORAGE_FILE.pathString }
+      });
+
+      expect(url).toBe('https://storage.googleapis.com/dereekb-components.appspot.com/%2Fcal%2FcDoQAQSM9OyBnZi23duw.ics');
     });
 
     it('should point back at the calendar it publishes.', () => {

@@ -3,9 +3,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
-import { CalendarDocumentStore, DbxFirebaseCalendarSubscribeDialogComponent, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
-import { type ContentDispositionString, randomNumber } from '@dereekb/util';
-import { type CalendarEventOccurrence, CalendarSyncState, expandCalendarEvents } from '@dereekb/firebase';
+import { CalendarDocumentStore, DbxFirebaseCalendarSubscribeDialogComponent, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource } from '@dereekb/dbx-firebase';
+import { randomNumber } from '@dereekb/util';
+import { type CalendarEventOccurrence, calendarIcsFileStoragePath, CalendarSyncState, expandCalendarEvents } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
 import { ProfileDocumentStore } from 'demo-components';
@@ -13,14 +13,6 @@ import { type CalendarEvent } from 'angular-calendar';
 import { addDays, setHours, startOfDay } from 'date-fns';
 import { combineLatest, map, shareReplay } from 'rxjs';
 import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup.component';
-
-/**
- * Content disposition requested for the ICS download.
- *
- * An "attachment" disposition is what makes the browser SAVE the file. Without it the signed url serves
- * `text/calendar` inline, which browsers hand straight off to the OS calendar app instead.
- */
-const DEMO_CALENDAR_ICS_CONTENT_DISPOSITION: ContentDispositionString = 'attachment; filename="calendar.ics"';
 
 /**
  * The user's profile calendar, rendered from the Calendar model itself rather than from the ".ics" it
@@ -35,7 +27,6 @@ const DEMO_CALENDAR_ICS_CONTENT_DISPOSITION: ContentDispositionString = 'attachm
 })
 export class DemoCalendarViewComponent {
   readonly matDialog = inject(MatDialog);
-  readonly dbxFirebaseStorageFileDownloadService = inject(DbxFirebaseStorageFileDownloadService);
   readonly profileDocumentStore = inject(ProfileDocumentStore);
   readonly calendarDocumentStore = inject(CalendarDocumentStore);
   readonly dbxCalendarStore = inject(DbxCalendarStore<CalendarEventOccurrence>);
@@ -87,14 +78,14 @@ export class DemoCalendarViewComponent {
     showPreviewButton: false
   };
 
+  /**
+   * The ICS is published as a PUBLIC object, so its url is a pure function of the app's storage origin and
+   * the file's path — which is itself derivable from the StorageFile's id. So the button derives the url
+   * itself: no download callable, no signed url to expire, and the link is live on first render.
+   */
   readonly icsDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
     storageFileKey: this.calendarDocumentStore.icsStorageFileKey$,
-    // resolve the signed url up front so the button lands ready-to-save and the click is a single step
-    // rather than the default "fetch url, then save" pair
-    preload: true,
-    handleGetDownloadUrl: (key, context) => {
-      context.startWorkingWithPromise(this.dbxFirebaseStorageFileDownloadService.createDownloadPairForStorageFile(key, { responseDisposition: DEMO_CALENDAR_ICS_CONTENT_DISPOSITION }));
-    }
+    publicStoragePath: (storageFileId) => calendarIcsFileStoragePath(storageFileId)
   };
 
   constructor() {
