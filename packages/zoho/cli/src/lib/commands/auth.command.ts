@@ -31,7 +31,7 @@ export const DEFAULT_AUTH_SETUP_REDIRECT_URI = 'http://localhost/oauth';
  * `--org-id` help text, listing the org-scoped products from {@link ZOHO_CLI_ORG_ID_PRODUCTS} so the
  * documented set cannot drift from the set the code actually persists for.
  */
-const ORG_ID_OPTION_DESCRIBE = `Organization ID, for the products scoped by one (${[...ZOHO_CLI_ORG_ID_PRODUCTS].join(', ')})`;
+const ORG_ID_OPTION_DESCRIBE = `Organization ID, for the products scoped by one (${Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).join(', ')})`;
 
 /**
  * Extracts the authorization code from a full redirect URL or returns the input as-is if it's already a code.

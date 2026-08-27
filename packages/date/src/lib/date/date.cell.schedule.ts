@@ -413,7 +413,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
       dayCodes = [input];
       break;
     default:
-      dayCodes = [...input];
+      dayCodes = Array.from(input);
       break;
   }
 

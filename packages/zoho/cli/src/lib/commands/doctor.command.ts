@@ -124,7 +124,7 @@ async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCl
  * @returns One check per org-scoped product.
  */
 export function checkOrgIdProducts(config: ZohoCliConfig, products: readonly ZohoCliProduct[]): DoctorCheck[] {
-  return [...ZOHO_CLI_ORG_ID_PRODUCTS].map((product) => {
+  return Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).map((product) => {
     const orgId = config[product]?.orgId;
     const name = `${product}-org-id`;
     let result: DoctorCheck;

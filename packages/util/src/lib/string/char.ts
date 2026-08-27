@@ -36,7 +36,7 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
     throw new Error('firstAndLastCharacterOccurrence() expects a single character as find input.');
   }
 
-  for (const [i, char] of [...input].entries()) {
+  for (const [i, char] of Array.from(input).entries()) {
     if (char === find) {
       if (first === -1) {
         first = i;
@@ -177,7 +177,7 @@ export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';
 export function stringCharactersToIndexRecord(chars: string): Record<string, number> {
   const record: Record<string, number> = {};
 
-  for (const [i, char] of [...chars].entries()) {
+  for (const [i, char] of Array.from(chars).entries()) {
     record[char] = i;
   }
 

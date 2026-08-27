@@ -12,7 +12,7 @@ import { asObservable } from './getter';
 export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<unknown, T>) => Observable<O[]> {
   const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
   return (latestMap: Map<unknown, T>) => {
-    const mapValues = [...latestMap].map((y) => y[1]);
+    const mapValues = Array.from(latestMap).map((y) => y[1]);
     return combineArrayFn(mapValues);
   };
 }

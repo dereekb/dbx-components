@@ -289,7 +289,7 @@ export class ModelRelationUtility {
     const typesModified = new Set<Maybe<string>>([...Array.from(inputMap.keys()), ...Array.from(modsMap.keys())]);
 
     // Break the collections up into their individual types and process separately.
-    const modifiedSubcollections = [...typesModified].map((type) => {
+    const modifiedSubcollections = Array.from(typesModified).map((type) => {
       const values = inputMap.get(type) ?? [];
       const mods = modsMap.get(type) ?? [];
 

@@ -153,7 +153,7 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
     const accountService = nestApp.get(OidcAccountService);
     const providerConfig = accountService.providerConfig;
     const providerProfiles = providerConfig.providerProfiles ?? [];
-    const adminOnlyScopes = new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...adminOnlyScopesForOidcProviderProfiles(providerProfiles)]);
+    const adminOnlyScopes = new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...Array.from(adminOnlyScopesForOidcProviderProfiles(providerProfiles))]);
     const profileGatedScopes = assignmentOnlyScopesForOidcProviderProfiles(providerProfiles);
     result = Object.keys(providerConfig.claims)
       .filter((scope) => !adminOnlyScopes.has(scope) && !profileGatedScopes.has(scope))

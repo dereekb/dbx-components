@@ -50,7 +50,7 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
   if (treatStringAsIterable && typeof values === 'string') {
     iterable = [values];
   } else if (isIterable(values)) {
-    iterable = [...values]; // copy the array
+    iterable = Array.from(values); // copy the array
   } else {
     iterable = [values];
   }
