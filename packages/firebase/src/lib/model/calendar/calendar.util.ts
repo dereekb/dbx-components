@@ -1,6 +1,6 @@
-import { type ArrayOrValue, type Maybe, type TimezoneString, UTC_TIMEZONE_STRING, areEqualPOJOValues, asArray, unixDateTimeSecondsNumberFromDate, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
+import { type ArrayOrValue, type Hours, MS_IN_HOUR, type Maybe, type TimezoneString, UTC_TIMEZONE_STRING, areEqualPOJOValues, asArray, isThrottled, unixDateTimeSecondsNumberFromDate, unixDateTimeSecondsNumberToDate } from '@dereekb/util';
 import { type CalendarDate, CalendarDateType, DateSet, type ModelRecurrenceInfo, dateDurationSpanEndDate } from '@dereekb/date';
-import { addMinutes, subDays } from 'date-fns';
+import { addHours, addMinutes, subDays } from 'date-fns';
 import { type FirebaseAuthOwnershipKey, type FirestoreModelKey } from '../../common';
 import { type Calendar, type CalendarEventItem, type CalendarRecurringEventItem, calendarEventItemsFilterUniqueFunction, calendarEventItemsSortFunction } from './calendar';
 import { type CalendarEventId, CalendarEventStatus, type CalendarExtensionData, type CalendarType } from './calendar.id';
@@ -264,6 +264,90 @@ export function calendarSyncState(calendar: CalendarSyncStateInput): CalendarSyn
   }
 
   return result;
+}
+
+// MARK: Ics Link Rotation
+/**
+ * How long a caller must wait between rotations of a Calendar's published ICS link.
+ *
+ * Rotation is rate-limited rather than free because it is DESTRUCTIVE to subscribers: the old url stops
+ * working, and every calendar client already holding it breaks until its owner re-subscribes. A run of
+ * rotations would also leave a trail of orphaned ICS objects while each replacement uploads.
+ *
+ * Twelve hours is chosen against the subscriber refresh cadence rather than against server cost — Google
+ * re-reads a subscribed feed only every 8-24 hours, so rotating faster than that guarantees a window where
+ * the feed a subscriber holds is already dead and its replacement has not been fetched yet.
+ *
+ * Only the default. An app wanting a different cadence passes its own value to both the server (which
+ * enforces the window) and the client (which counts down to it); both sides must use the same value, or the
+ * UI will offer a rotation the server rejects.
+ */
+export const DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS: Hours = 12;
+
+/**
+ * The fields {@link calendarNextIcsRotateAt} reads.
+ */
+export type CalendarNextIcsRotateAtInput = Pick<Calendar, 'rat'>;
+
+/**
+ * Input for {@link calendarNextIcsRotateAt}.
+ */
+export interface CalendarNextIcsRotateAtConfig {
+  /**
+   * The calendar's last rotation instant, if any.
+   */
+  readonly calendar?: Maybe<CalendarNextIcsRotateAtInput>;
+  /**
+   * Overrides {@link DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS}.
+   */
+  readonly throttleHours?: Maybe<Hours>;
+}
+
+/**
+ * The earliest time a Calendar's published ICS link may be rotated again.
+ *
+ * Both the server (which enforces the throttle) and the client (which disables the action until then) derive
+ * the window from the same stored instant, so the UI cannot offer a rotation the server would reject.
+ *
+ * @param config - The calendar, and optionally a throttle window to use instead of the default.
+ * @returns The time the next rotation is allowed, or undefined when the link has never been rotated.
+ *
+ * @example
+ * ```ts
+ * const nextRotateAt = calendarNextIcsRotateAt({ calendar });
+ * const isThrottled = nextRotateAt != null && isAfter(nextRotateAt, new Date());
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calendarNextIcsRotateAt(config: CalendarNextIcsRotateAtConfig): Maybe<Date> {
+  const { calendar, throttleHours } = config;
+  return calendar?.rat == null ? undefined : addHours(calendar.rat, throttleHours ?? DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS);
+}
+
+/**
+ * Whether a Calendar's published ICS link is still inside its rotation throttle window.
+ *
+ * The predicate half of {@link calendarNextIcsRotateAt}, and the one the server rejects on. A calendar that
+ * has never been rotated is never throttled, which `isThrottled()` already encodes by treating an absent
+ * `lastRunAt` as expired.
+ *
+ * @param config - The calendar, and optionally a throttle window to use instead of the default.
+ * @param now - Overrides the current time.
+ * @returns True while another rotation would be rejected.
+ *
+ * @example
+ * ```ts
+ * if (isCalendarIcsRotateThrottled({ calendar })) {
+ *   // the link was rotated too recently
+ * }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isCalendarIcsRotateThrottled(config: CalendarNextIcsRotateAtConfig, now?: Maybe<Date>): boolean {
+  const { calendar, throttleHours } = config;
+  return isThrottled((throttleHours ?? DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS) * MS_IN_HOUR, calendar?.rat, now);
 }
 
 // MARK: Array Operations

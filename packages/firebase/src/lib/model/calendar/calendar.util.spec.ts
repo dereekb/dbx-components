@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, subDays } from 'date-fns';
+import { addDays, addHours, subDays, subHours } from 'date-fns';
 import { ModelRecurrenceInfoUtility } from '@dereekb/date';
 import { type CalendarEventItem, type CalendarRecurringEventItem } from './calendar';
 import { CalendarEventStatus } from './calendar.id';
 import { type CalendarTypeConfig } from './calendar.type';
-import { CalendarSyncState, calendarEventItemsForModelKey, calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarSyncState, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, replaceCalendarEventItemsForModelKey, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
+import { CalendarSyncState, DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS, calendarEventItemsForModelKey, calendarNextIcsRotateAt, isCalendarIcsRotateThrottled, calendarRecurringEventItemModelRecurrenceInfo, calendarRecurringEventItemRecurrenceFields, calendarSyncState, calendarTemplate, markCalendarForSyncTemplate, pruneCalendarEvents, removeCalendarEventItems, replaceCalendarEventItemsForModelKey, updateCalendarEventsTemplate, upsertCalendarEventItems } from './calendar.util';
 
 const NOW = new Date('2026-03-01T00:00:00.000Z');
 
@@ -369,6 +369,54 @@ describe('model key targeting', () => {
       });
 
       expect(template.e).toEqual([]);
+    });
+  });
+
+  describe('ics link rotation throttle', () => {
+    describe('calendarNextIcsRotateAt()', () => {
+      it('should be undefined when the link has never been rotated', () => {
+        expect(calendarNextIcsRotateAt({ calendar: { rat: undefined } })).toBeUndefined();
+        expect(calendarNextIcsRotateAt({ calendar: undefined })).toBeUndefined();
+      });
+
+      it('should be the default window past the last rotation', () => {
+        expect(calendarNextIcsRotateAt({ calendar: { rat: NOW } })).toEqual(addHours(NOW, DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS));
+      });
+
+      it('should honour a throttle window override', () => {
+        expect(calendarNextIcsRotateAt({ calendar: { rat: NOW }, throttleHours: 1 })).toEqual(addHours(NOW, 1));
+      });
+    });
+
+    describe('isCalendarIcsRotateThrottled()', () => {
+      it('should not throttle a calendar that has never been rotated', () => {
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat: undefined } }, NOW)).toBe(false);
+        expect(isCalendarIcsRotateThrottled({ calendar: undefined }, NOW)).toBe(false);
+      });
+
+      it('should throttle a rotation inside the window', () => {
+        const rat = subHours(NOW, DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS - 1);
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat } }, NOW)).toBe(true);
+      });
+
+      it('should allow a rotation once the window has passed', () => {
+        const rat = subHours(NOW, DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS + 1);
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat } }, NOW)).toBe(false);
+      });
+
+      it('should agree with calendarNextIcsRotateAt() at the boundary', () => {
+        const rat = subHours(NOW, DEFAULT_CALENDAR_ICS_ROTATE_THROTTLE_HOURS);
+        const nextRotateAt = calendarNextIcsRotateAt({ calendar: { rat } }) as Date;
+
+        expect(nextRotateAt).toEqual(NOW);
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat } }, NOW)).toBe(false);
+      });
+
+      it('should honour a throttle window override', () => {
+        const rat = subHours(NOW, 2);
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat } }, NOW)).toBe(true);
+        expect(isCalendarIcsRotateThrottled({ calendar: { rat }, throttleHours: 1 }, NOW)).toBe(false);
+      });
     });
   });
 });

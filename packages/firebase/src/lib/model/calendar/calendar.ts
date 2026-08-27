@@ -413,6 +413,22 @@ export interface Calendar {
    */
   sat?: Maybe<Date>;
   /**
+   * The last date this calendar's published ICS link was rotated.
+   *
+   * The sole input to the rotation throttle: rotation revokes a url that subscribers have already stored, so
+   * it is rate-limited rather than free. Both the server (which rejects an early rotation) and the client
+   * (which disables the action until the window passes) read the window from this one field via
+   * `calendarNextIcsRotateAt()`.
+   *
+   * Distinct from {@link Calendar.sat}, which moves on every successful publish — including the publish a
+   * rotation triggers, and every hourly sweep after it.
+   *
+   * Absent means the link has never been rotated, which never throttles.
+   *
+   * @dbxModelVariable icsRotatedAt
+   */
+  rat?: Maybe<Date>;
+  /**
    * StorageFile that holds the published ICS for this calendar.
    *
    * @dbxModelVariable icsStorageFileId
@@ -489,6 +505,7 @@ export const calendarConverter = snapshotConverterFunctions<Calendar>({
     uat: firestoreDate({ saveDefaultAsNow: true }),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),
     sat: optionalFirestoreDate(),
+    rat: optionalFirestoreDate(),
     isf: optionalFirestoreString(),
     iu: optionalFirestoreString<StorageFilePublicDownloadUrl>()
   }

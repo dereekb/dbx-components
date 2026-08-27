@@ -58,7 +58,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         converter: 'optionalFirestoreString()',
         tsType: 'Maybe<FirebaseAuthOwnershipKey>',
         optional: true,
-        description: 'Ownership key, if applicable. Drives read access in the security rules.'
+        description: 'Ownership key, if applicable.'
       },
       {
         name: 'e',
@@ -117,6 +117,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'The last date the published ICS was successfully uploaded.'
       },
       {
+        name: 'rat',
+        longName: 'icsRotatedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: "The last date this calendar's published ICS link was rotated."
+      },
+      {
         name: 'isf',
         longName: 'icsStorageFileId',
         converter: 'optionalFirestoreString()',
@@ -134,7 +142,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     enums: [],
-    detectionHints: ['t', 'n', 'tz', 'c', 'e', 'r', 'x', 'uat', 'sat', 'isf', 'iu'],
+    detectionHints: ['t', 'n', 'tz', 'c', 'e', 'r', 'x', 'uat', 'sat', 'rat', 'isf', 'iu'],
     description: 'A calendar and all of its events, stored in one document and published as an ".ics" file.',
     modelGroup: 'Calendar',
     collectionKind: 'root',

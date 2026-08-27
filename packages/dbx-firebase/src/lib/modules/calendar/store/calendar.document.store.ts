@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { type Calendar, type CalendarDocument, CalendarFirestoreCollections, CalendarFunctions, type CalendarSyncState, calendarSyncState, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { type Calendar, type CalendarDocument, CalendarFirestoreCollections, CalendarFunctions, calendarNextIcsRotateAt, type CalendarSyncState, calendarSyncState, firestoreModelKey, isCalendarIcsRotateThrottled, storageFileIdentity } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
@@ -60,6 +60,42 @@ export class CalendarDocumentStore extends AbstractDbxFirebaseDocumentStore<Cale
    */
   readonly syncedAt$ = this.currentData$.pipe(
     map((x) => x?.sat),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * The last date this calendar's ICS link was rotated, or undefined if it never has been.
+   */
+  readonly icsRotatedAt$ = this.currentData$.pipe(
+    map((x) => x?.rat),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * The earliest time the ICS link may be rotated again, or undefined when nothing is holding it off.
+   *
+   * Derived with the same `calendarNextIcsRotateAt()` the server enforces the throttle with, so the UI
+   * cannot offer a rotation the server would reject.
+   */
+  readonly nextIcsRotateAt$ = this.currentData$.pipe(
+    map((x) => calendarNextIcsRotateAt({ calendar: x })),
+    distinctUntilChanged((a, b) => a?.getTime() === b?.getTime()),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether the server would reject a rotation right now.
+   *
+   * Uses the same `isCalendarIcsRotateThrottled()` predicate the server rejects on, so the UI disables the
+   * action instead of letting the user trigger a call that comes back as an error.
+   *
+   * Evaluated per document emission rather than on a timer: the window is twelve hours by default, so there
+   * is nothing worth ticking for, and the rotation that opens the next window writes `rat` — which emits.
+   */
+  readonly isIcsRotateThrottled$ = this.currentData$.pipe(
+    map((x) => isCalendarIcsRotateThrottled({ calendar: x })),
     distinctUntilChanged(),
     shareReplay(1)
   );

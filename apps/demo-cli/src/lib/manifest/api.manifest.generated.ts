@@ -726,6 +726,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'True if this Calendar should be swept and its published ICS regenerated.' },
       { name: 'sat', longName: 'syncedAt', tsType: 'Maybe<Date>', optional: true, description: 'The last date the published ICS was successfully uploaded.' },
+      { name: 'rat', longName: 'icsRotatedAt', tsType: 'Maybe<Date>', optional: true, description: "The last date this calendar's published ICS link was rotated." },
       { name: 'isf', longName: 'icsStorageFileId', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that holds the published ICS for this calendar.' },
       { name: 'iu', longName: 'icsUrl', tsType: 'Maybe<StorageFilePublicDownloadUrl>', optional: true, description: 'The permanent, anonymously-readable URL the published ICS is served from.' }
     ],

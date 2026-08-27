@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
-import { CalendarDocumentStore, DbxFirebaseCalendarSubscribePopupComponent, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
+import { CalendarDocumentStore, DbxFirebaseCalendarSubscribeDialogComponent, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
 import { type ContentDispositionString, randomNumber } from '@dereekb/util';
 import { type CalendarEventOccurrence, CalendarSyncState, expandCalendarEvents } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -112,8 +112,8 @@ export class DemoCalendarViewComponent {
    * zero-auth credential, the per-client subscribe steps differ, and Google's 8-24h refresh has to be stated
    * or the lag reads as a bug.
    */
-  readonly openSubscribePopup = () => {
-    DbxFirebaseCalendarSubscribePopupComponent.openPopup(this.matDialog, {
+  readonly openSubscribeDialog = () => {
+    DbxFirebaseCalendarSubscribeDialogComponent.openDialog(this.matDialog, {
       calendarDocumentStore: this.calendarDocumentStore
     });
   };

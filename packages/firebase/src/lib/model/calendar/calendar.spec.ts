@@ -41,6 +41,7 @@ describe('calendarConverter', () => {
     uat: updatedAt,
     s: true,
     sat: updatedAt,
+    rat: createdAt,
     isf: 'sf123'
   };
 
@@ -85,6 +86,7 @@ describe('calendarConverter', () => {
     expect(typeof data.cat).toBe('string');
     expect(typeof data.uat).toBe('string');
     expect(typeof data.sat).toBe('string');
+    expect(typeof data.rat).toBe('string');
   });
 
   it('should not store the boolean flags when they are false', () => {

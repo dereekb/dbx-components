@@ -6,6 +6,8 @@ import {
   type CalendarIcsStorageFileMetadata,
   CALENDAR_ICS_STORAGE_FILE_PURPOSE,
   calendarIcsFileStoragePath,
+  calendarNextIcsRotateAt,
+  isCalendarIcsRotateThrottled,
   calendarsDueForResyncQuery,
   calendarsFlaggedForSyncQuery,
   createStorageFileDocumentPairFactory,
@@ -39,6 +41,7 @@ import { type InjectionToken } from '@nestjs/common';
 import { subMilliseconds } from 'date-fns';
 import { type StorageFileServerActions } from '../storagefile/storagefile.action.server';
 import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
+import { calendarIcsRotateThrottledError } from './calendar.error';
 
 /**
  * NestJS injection token for the {@link BaseCalendarServerActionsContext}.
@@ -224,10 +227,22 @@ export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) 
 
   return firebaseServerActionTransformFunctionFactory(rotateCalendarIcsParamsType, async (_params) => {
     return async (calendarDocument: CalendarDocument) => {
+      const now = new Date();
+
       const revokedIcsStorageFile = await firestoreContext.runTransaction(async (transaction) => {
         const calendarDocumentInTransaction = calendarCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(calendarDocument);
         const calendar = await assertSnapshotData(calendarDocumentInTransaction);
         const storageFileDocumentAccessor = storageFileCollection.documentAccessorForTransaction(transaction);
+
+        // checked INSIDE the transaction, against the same document the write lands on: two rotations racing
+        // each other would both pass a pre-transaction check and both revoke, orphaning an ICS object.
+        // nextRotateAt is non-null exactly when the predicate is true — both read `rat` — so the null check
+        // is type narrowing rather than a second condition.
+        const nextRotateAt = calendarNextIcsRotateAt({ calendar });
+
+        if (nextRotateAt != null && isCalendarIcsRotateThrottled({ calendar }, now)) {
+          throw calendarIcsRotateThrottledError(nextRotateAt);
+        }
 
         const existingIcsStorageFileDocument = calendar.isf ? storageFileDocumentAccessor.loadDocumentForId(calendar.isf) : undefined;
         const existingIcsStorageFilePair = existingIcsStorageFileDocument ? await getDocumentSnapshotDataPair(existingIcsStorageFileDocument) : undefined;
@@ -239,7 +254,11 @@ export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) 
 
         // isf and iu are cleared TOGETHER: a pointer without a url, or a url whose object is queued for
         // delete, are both states the UI would render as a working feed.
-        await calendarDocumentInTransaction.update({ s: true, isf: null, iu: null });
+        //
+        // `rat` is the throttle's only input, and it is set even when there was no live ICS to revoke: a
+        // rotation against an unpublished calendar still queues a publish, so letting it run unthrottled
+        // would hand out a fresh url on every call.
+        await calendarDocumentInTransaction.update({ s: true, isf: null, iu: null, rat: now });
 
         return existingIcsStorageFileIsLive;
       });
