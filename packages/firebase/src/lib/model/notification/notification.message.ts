@@ -9,6 +9,7 @@
  * before dispatching them through the configured delivery channels.
  */
 import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue } from '@dereekb/util';
+import { type ICalendarIcsString, type ICalendarMethod } from '@dereekb/date';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
@@ -109,6 +110,37 @@ export interface NotificationMessageContent {
   readonly templateVariables?: Maybe<NotificationMessageTemplateVariables>;
 }
 
+/**
+ * A rendered iTIP calendar payload carried on a message, for the sending service to bundle as a calendar
+ * MIME part on the outgoing email.
+ *
+ * Lives on the MESSAGE and never on `NotificationItem.d`. The item is re-embedded verbatim into
+ * `NotificationSummary.n[]` (capped at 1000 items) and `NotificationWeek.n[]`, which each share a single
+ * 1 MiB document, so an ICS blob stored in `d` would consume the summary's whole budget. Store the
+ * IDENTIFIERS in `d` and render the ICS in the message factory, which is async and holds the notification
+ * document.
+ */
+export interface NotificationMessageCalendarAttachment {
+  /**
+   * The rendered ICS document.
+   */
+  readonly ics: ICalendarIcsString;
+  /**
+   * The iTIP method the document carries. Duplicated onto the part's Content-Type by the sending service,
+   * as RFC 6047 requires, and it MUST agree with the METHOD property inside {@link ics}.
+   */
+  readonly method: ICalendarMethod;
+  /**
+   * File name of the part. Defaults to "invite.ics" when the sending service is given none.
+   */
+  readonly filename?: Maybe<string>;
+}
+
+/**
+ * The file name given to a {@link NotificationMessageCalendarAttachment} that carries none.
+ */
+export const DEFAULT_NOTIFICATION_MESSAGE_CALENDAR_ATTACHMENT_FILENAME = 'invite.ics';
+
 export interface NotificationMessageEmailContent extends NotificationMessageContent {
   /**
    * Email subject. If not defined, defaults to the title.
@@ -140,6 +172,15 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
    * If the "replyTo" is present, this value acts as a fallback if the entity key returns no match.
    */
   readonly replyToEmail?: Maybe<NameEmailPair>;
+  /**
+   * An iTIP calendar payload to bundle onto the email as a calendar MIME part.
+   *
+   * Opt-in per sending service, like every other field here: a builder that does not read it simply sends
+   * the email without the invite. A builder that DOES read it must emit one request per message when the
+   * payload names a per-recipient ATTENDEE, since attachments live on the request rather than the
+   * recipient.
+   */
+  readonly calendarAttachment?: Maybe<NotificationMessageCalendarAttachment>;
 }
 
 export interface NotificationMessageNotificationSummaryContent {}

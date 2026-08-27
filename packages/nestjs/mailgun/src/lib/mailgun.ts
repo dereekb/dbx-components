@@ -78,6 +78,18 @@ export interface MailgunFileAttachment {
    * File data as a buffer or string.
    */
   readonly data: CustomFileData;
+  /**
+   * Content-Type applied to this MIME part, including any parameters.
+   *
+   * Defaulted by Mailgun (to an "attachment"-flavoured octet stream) when absent, which is right for an
+   * ordinary file. It is NOT right for a part whose type is what makes the receiving client act on it:
+   * an iTIP calendar invite is only auto-processed when its part is typed
+   * `text/calendar; method=REQUEST; charset=utf-8` — the same bytes typed as an octet stream render as a
+   * paperclip instead of an invitation.
+   *
+   * Passes through to mailgun.js's `CustomFile.contentType`, which is appended to the form-data part.
+   */
+  readonly contentType?: Maybe<string>;
 }
 
 export interface MailgunTemplateEmailRequestTestingParameters {

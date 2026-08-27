@@ -1,5 +1,5 @@
-import { type Maybe } from '@dereekb/util';
-import { type ICalendarIcsString, ICALENDAR_FOLD_PREFIX, ICALENDAR_LINE_BREAK, ICALENDAR_MAX_LINE_OCTETS, ICALENDAR_PARAMETER_SPLITTER, ICALENDAR_VALUE_SPLITTER } from './icalendar';
+import { type ContentTypeMimeType, type Maybe, TEXT_CALENDAR_MIME_TYPE } from '@dereekb/util';
+import { type ICalendarIcsString, type ICalendarMethod, ICALENDAR_FOLD_PREFIX, ICALENDAR_LINE_BREAK, ICALENDAR_MAX_LINE_OCTETS, ICALENDAR_PARAMETER_SPLITTER, ICALENDAR_VALUE_SPLITTER } from './icalendar';
 import { type ICalendarComponent, type ICalendarContentLine, iCalendarToComponent } from './icalendar.component';
 import { type ICalendar, type ICalendarSerializeConfig } from './icalendar.model';
 
@@ -213,4 +213,26 @@ export function unfoldIcsString(ics: ICalendarIcsString): readonly string[] {
   });
 
   return results;
+}
+
+/**
+ * Builds the Content-Type value an iTIP payload's MIME part must carry.
+ *
+ * The METHOD is duplicated here deliberately: RFC 6047 2.4 requires the `method` parameter to agree with
+ * the METHOD property in the body, and a receiving client decides whether to treat the part as an
+ * invitation from the PART TYPE, before it parses anything. The same bytes typed
+ * `application/octet-stream` are a paperclip.
+ *
+ * @param method - The iTIP method the payload carries.
+ * @returns The full Content-Type value, e.g. `text/calendar; method=REQUEST; charset=utf-8`.
+ *
+ * @example
+ * ```ts
+ * iCalendarITipContentType('REQUEST'); // 'text/calendar; method=REQUEST; charset=utf-8'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function iCalendarITipContentType(method: ICalendarMethod): ContentTypeMimeType {
+  return `${TEXT_CALENDAR_MIME_TYPE}; method=${method}; charset=utf-8`;
 }

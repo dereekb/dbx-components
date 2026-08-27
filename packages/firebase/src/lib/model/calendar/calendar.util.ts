@@ -403,6 +403,23 @@ export function removeCalendarEventItems<T extends CalendarEventItem>(items: T[]
 
 // MARK: Model Key Targeting
 /**
+ * Finds a single event in a calendar by its id, looking in BOTH the one-off and the recurring arrays.
+ *
+ * The two arrays share one id space -- an id is unique within its calendar, not merely within its array --
+ * so a caller holding only an id (an emailed invite, a targeted update) has no way to know which array to
+ * look in, and no reason to care.
+ *
+ * @param calendar - The calendar to search.
+ * @param eventId - The id to find.
+ * @returns The matching event, or undefined.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function calendarEventItemForId(calendar: Pick<Calendar, 'e' | 'r'>, eventId: CalendarEventId): Maybe<CalendarEventItem | CalendarRecurringEventItem> {
+  return (calendar.e ?? []).find((x) => x.id === eventId) ?? (calendar.r ?? []).find((x) => x.id === eventId);
+}
+
+/**
  * Returns the events that were generated from the given model key.
  *
  * @param items - The current items.

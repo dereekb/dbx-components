@@ -1,4 +1,4 @@
-import { type MailgunNotificationEmailSendService, type MailgunNotificationHealthCheckProbeBuilderInput, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService, mailgunNotificationEmailSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
+import { type MailgunNotificationEmailSendService, type MailgunNotificationHealthCheckProbeBuilderInput, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService, mailgunNotificationEmailSendServiceHealthCheckService, notificationMessageCalendarAttachmentToMailgunFileAttachment } from '@dereekb/firebase-server/model';
 import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
 import { type ArrayOrValue } from '@dereekb/util';
@@ -62,10 +62,20 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
       notificationTemplate: (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): ArrayOrValue<MailgunTemplateEmailRequest> => {
         const { messages } = input;
 
-        const to: MailgunRecipient[] = messages.map((x) => {
+        const requestBase = {
+          replyTo: DEMO_NOTIFICATION_REPLY_TO_RECIPIENT,
+          from: DEMO_NOTIFICATION_SENDER_RECIPIENT,
+          template: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
+          subject: `%recipient.subject%`
+        };
+
+        const requests: MailgunTemplateEmailRequest[] = [];
+        const batchedTo: MailgunRecipient[] = [];
+
+        messages.forEach((x) => {
           const { recipient: inputRecipient } = x.inputContext;
           const { title, openingMessage, action, actionUrl, from: contentFrom } = x.content;
-          const { subject = title, replyTo: _replyTo, replyToEmail: _replyToEmail, from: _from = contentFrom } = x.emailContent ?? {};
+          const { subject = title, replyTo: _replyTo, replyToEmail: _replyToEmail, from: _from = contentFrom, calendarAttachment } = x.emailContent ?? {};
 
           const userVariables: DemoMailgunBasicTemplateData = {
             ...x.content.templateVariables,
@@ -84,18 +94,22 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
             }
           };
 
-          return recipient;
+          if (calendarAttachment) {
+            // FAN OUT. Attachments live on the REQUEST and MailgunRecipient has no per-recipient attachment
+            // slot, so an invite whose ATTENDEE names one recipient cannot ride a batched to[] -- every
+            // other recipient of that request would receive an invite addressed to someone else, which no
+            // client renders inline. The cost is granularity: send success/failure is recorded per request.
+            requests.push({ ...requestBase, to: recipient, attachments: notificationMessageCalendarAttachmentToMailgunFileAttachment(calendarAttachment) });
+          } else {
+            batchedTo.push(recipient);
+          }
         });
 
-        const request: MailgunTemplateEmailRequest = {
-          to,
-          replyTo: DEMO_NOTIFICATION_REPLY_TO_RECIPIENT,
-          from: DEMO_NOTIFICATION_SENDER_RECIPIENT,
-          template: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
-          subject: `%recipient.subject%`
-        };
+        if (batchedTo.length) {
+          requests.push({ ...requestBase, to: batchedTo });
+        }
 
-        return request;
+        return requests;
       }
     }
   });
