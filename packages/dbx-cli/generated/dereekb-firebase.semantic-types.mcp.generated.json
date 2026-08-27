@@ -257,6 +257,34 @@
       "notes": "Arbitrary string describing the kind of calendar a document is, driving its retention policy and its ICS\nemission config through the app's {@link CalendarTypeConfig} registry.\n\nOpen by design, exactly like {@link StorageFilePurpose}: a downstream app registers its own types without\na library change."
     },
     {
+      "name": "FormSpaceType",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/formspace/formspace.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:form-space"
+      ],
+      "notes": "Arbitrary string describing the kind of form a FormSpace holds, driving its upload restrictions, its\nexpiration policy, and the server-side handler its submission is dispatched to through the app's\n{@link FormSpaceTypeConfig} registry.\n\nOpen by design, exactly like {@link StorageFilePurpose} and {@link CalendarType}: a downstream app\nregisters its own types without a library change."
+    },
+    {
+      "name": "FormSpaceFileSlot",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/formspace/formspace.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:form-space"
+      ],
+      "notes": "Names one upload \"slot\" within a FormSpace — the resume, the cover letter, the photo of the ID.\n\nA slot is stored on the uploaded {@link StorageFile} as its `pg` (purposeSubgroup), which is what makes\n\"replace the file in this slot\" the existing `flagPreviousForDelete` behaviour rather than new machinery."
+    },
+    {
       "name": "NotificationTemplateType",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/notification/notification.id",

@@ -12,6 +12,7 @@ import { CalendarDocumentStore, ProfileDocumentStore } from 'demo-components';
 import { type CalendarEvent } from 'angular-calendar';
 import { addDays, setHours, startOfDay } from 'date-fns';
 import { combineLatest, map, shareReplay } from 'rxjs';
+import { DemoCalendarSubscribePopupComponent } from './calendar.subscribe.popup.component';
 import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup.component';
 
 /**
@@ -103,6 +104,20 @@ export class DemoCalendarViewComponent {
 
   readonly handleCreateTestEvent: WorkUsingContext = (_, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.createTestCalendarEvent({ startsAt: this.randomStartsAtInView() }));
+  };
+
+  /**
+   * Opens the subscribe dialog, which is where the PUBLIC feed url lives.
+   *
+   * A separate dialog rather than a bare copy button because the url needs framing: it is a permanent
+   * zero-auth credential, the per-client subscribe steps differ, and Google's 8-24h refresh has to be stated
+   * or the lag reads as a bug.
+   */
+  readonly openSubscribePopup = () => {
+    DemoCalendarSubscribePopupComponent.openPopup(this.matDialog, {
+      calendarDocumentStore: this.calendarDocumentStore,
+      profileDocumentStore: this.profileDocumentStore
+    });
   };
 
   readonly openCreateRecurringEventPopup = () => {

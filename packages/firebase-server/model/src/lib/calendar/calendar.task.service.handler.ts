@@ -10,6 +10,7 @@ import {
   calendarTypeConfigIcsConfig,
   calendarTypeConfigIcsExpansionRange,
   type FirebaseStorageAccessor,
+  type StorageFilePublicDownloadUrl,
   notificationSubtaskComplete,
   notificationTaskComplete
 } from '@dereekb/firebase';
@@ -17,6 +18,23 @@ import { type Maybe, TEXT_CALENDAR_UTF8_CONTENT_TYPE } from '@dereekb/util';
 import { type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
 import { type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget } from '../storagefile/storagefile.task.service.handler';
 import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
+
+/**
+ * Cache-Control set on the published ICS object.
+ *
+ * A public GCS object otherwise defaults to `public, max-age=3600`, which lets a freshly regenerated feed be
+ * served stale from the edge for an hour on top of the subscriber's own polling lag. `Last-Modified` / `ETag`
+ * need no work here — GCS derives and serves them, and answers `304` to conditional GETs, automatically.
+ */
+export const CALENDAR_ICS_PUBLISHED_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
+
+/**
+ * Content-Disposition set on the published ICS object.
+ *
+ * `inline` is deliberate: the feed URL is what a calendar client subscribes to, so it must not prompt a save.
+ * The demo's download button overrides the disposition per-request through its signed url instead.
+ */
+export const CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION = 'inline';
 
 /**
  * Configuration for {@link calendarIcsStorageFileProcessingPurposeSubtaskProcessor}.
@@ -77,17 +95,38 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
             if (calendar) {
               try {
                 const typeConfig = appCalendarTypeConfigService.configForCalendarType(calendar.t);
+                const icsAccessorFile = storageAccessor.file(fileDetailsAccessor.input);
+
+                // resolved BEFORE the upload, so the url can be emitted as SOURCE inside the very document it
+                // names. Safe because the object path is derived from the StorageFile id, which already exists.
+                const publicUrl: Maybe<StorageFilePublicDownloadUrl> = icsAccessorFile.getPublicUrl?.();
 
                 const ics = calendarToIcsString(calendar, {
                   ...calendarTypeConfigIcsConfig(typeConfig),
                   calendarId,
                   domain: icsDomain,
                   expansionRange: calendarTypeConfigIcsExpansionRange(typeConfig, new Date()),
+                  // where a client re-fetches the feed from. Emitted as SOURCE;VALUE=URI.
+                  source: publicUrl,
                   // the CONTENT's instant, not the wall clock: DTSTAMP then moves only when the calendar moves
                   now: calendar.uat
                 });
 
-                await storageAccessor.file(fileDetailsAccessor.input).upload(Buffer.from(ics, 'utf8'), { contentType: TEXT_CALENDAR_UTF8_CONTENT_TYPE });
+                await icsAccessorFile.upload(Buffer.from(ics, 'utf8'), {
+                  contentType: TEXT_CALENDAR_UTF8_CONTENT_TYPE,
+                  metadata: {
+                    contentDisposition: CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION,
+                    cacheControl: CALENDAR_ICS_PUBLISHED_CACHE_CONTROL
+                  }
+                });
+
+                // the feed is only useful if it can be fetched anonymously: a calendar client sends no
+                // credentials, so a private object is unsubscribable rather than merely awkward.
+                //
+                // NOTE: this is an object ACL add, which FAILS on a bucket with uniform bucket-level access
+                // enabled. Such a bucket needs an `allUsers:objectViewer` IAM binding instead. It is also
+                // effectively a no-op in the storage emulator, where objects are served regardless.
+                await icsAccessorFile.makePublic?.();
 
                 // sat is set ONLY here, on the success path. That is what makes "s === false && sat < uat"
                 // mean "queued, not yet published".
@@ -96,7 +135,10 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
                 // bytes actually landed. syncCalendar() sets it optimistically when it creates the file (it has
                 // to, so the next sweep can find and re-flag it rather than creating a duplicate); this write
                 // is what makes it TRUE, and self-heals a pointer left behind by a run that died mid-flight.
-                await calendarDocument.update({ isf: storageFileDocument.id, sat: new Date() });
+                //
+                // iu is written here for the same reason: it names the object whose bytes actually landed, and
+                // its absence is what the UI reads as "not yet published" after a link rotation.
+                await calendarDocument.update({ isf: storageFileDocument.id, sat: new Date(), iu: publicUrl });
 
                 result = notificationSubtaskComplete({
                   canRunNextCheckpoint: true

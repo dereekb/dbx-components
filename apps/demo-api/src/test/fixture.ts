@@ -79,7 +79,8 @@ import {
   type UserExternalConnectionProviderType,
   CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   type SyncCalendarResult,
-  type SyncAllFlaggedCalendarsResult
+  type SyncAllFlaggedCalendarsResult,
+  type RotateCalendarIcsResult
 } from '@dereekb/firebase';
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
@@ -712,6 +713,10 @@ export class DemoApiCalendarTestContextFixture<F extends FirebaseAdminFunctionTe
     return this.instance.syncAllFlaggedCalendars();
   }
 
+  async rotateCalendarIcs(): Promise<RotateCalendarIcsResult> {
+    return this.instance.rotateCalendarIcs();
+  }
+
   async loadIcsStorageFileDocument(): Promise<StorageFileDocument> {
     return this.instance.loadIcsStorageFileDocument();
   }
@@ -761,6 +766,14 @@ export class DemoApiCalendarTestContextInstance<F extends FirebaseAdminFunctionT
   async syncAllFlaggedCalendars(): Promise<SyncAllFlaggedCalendarsResult> {
     const syncAllFlaggedCalendars = await this.testContext.calendarServerActions.syncAllFlaggedCalendars({});
     return syncAllFlaggedCalendars();
+  }
+
+  /**
+   * Rotates THIS calendar's published ICS link, revoking the previous one.
+   */
+  async rotateCalendarIcs(): Promise<RotateCalendarIcsResult> {
+    const rotateCalendarIcs = await this.testContext.calendarServerActions.rotateCalendarIcs({ key: this.documentKey });
+    return rotateCalendarIcs(this.document);
   }
 
   /**

@@ -13,7 +13,7 @@ import { type CalendarType } from './calendar.id';
  * There is deliberately no CRUD config map and no `CalendarFunctions` class here: the Calendar is driven
  * INTERNALLY, so nothing is registered in an app's callable function map. This file exists only because
  * `firebaseServerActionTransformFunctionFactory` needs an arktype per action, and the only actions are the
- * three publish-side sweeps.
+ * publish-side sweeps plus the ICS link rotation.
  *
  * Event mutation is not an action at all — a caller already holds a transaction and an accessor when it
  * decides to touch a calendar, so it merges the `calendar.util.ts` templates into its own write instead.
@@ -36,6 +36,30 @@ export interface SyncCalendarResult {
   readonly createdIcsStorageFile: boolean;
   readonly prunedEventCount: number;
   readonly prunedRecurringEventCount: number;
+}
+
+/**
+ * Parameters for rotating a Calendar's published ICS link.
+ */
+export interface RotateCalendarIcsParams extends TargetModelParams {}
+
+export const rotateCalendarIcsParamsType = targetModelParamsType as Type<RotateCalendarIcsParams>;
+
+/**
+ * Result of rotating a Calendar's published ICS link.
+ */
+export interface RotateCalendarIcsResult {
+  /**
+   * True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.
+   *
+   * False when the calendar had never published one, in which case the rotation is a no-op that still
+   * queues a first publish.
+   */
+  readonly revokedIcsStorageFile: boolean;
+  /**
+   * True if the immediate re-sync minted the replacement ICS StorageFile.
+   */
+  readonly createdIcsStorageFile: boolean;
 }
 
 /**

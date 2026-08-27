@@ -29,7 +29,7 @@ import {
   snapshotConverterFunctions
 } from '../../common';
 import { type CalendarEventId, type CalendarEventStatus, type CalendarExtensionData, type CalendarType, inferCalendarRelatedModelKey } from './calendar.id';
-import { type StorageFileId } from '../storagefile';
+import { type StorageFileId, type StorageFilePublicDownloadUrl } from '../storagefile';
 
 /**
  * @module calendar
@@ -412,6 +412,21 @@ export interface Calendar {
    * @dbxModelVariable icsStorageFileId
    */
   isf?: Maybe<StorageFileId>;
+  /**
+   * The permanent, anonymously-readable URL the published ICS is served from.
+   *
+   * Written ONLY by the processor's success path, alongside `isf` and `sat`, so it always names the object
+   * whose bytes actually landed. Absent means "not yet published" — which is also the state a link rotation
+   * leaves behind until the replacement ICS uploads.
+   *
+   * Stored rather than recomputed client-side because the host differs between the emulator and production,
+   * and the object path is keyed by the ICS StorageFile's own id.
+   *
+   * TREAT AS A BEARER CREDENTIAL: anyone holding it reads the calendar until the link is rotated.
+   *
+   * @dbxModelVariable icsUrl
+   */
+  iu?: Maybe<StorageFilePublicDownloadUrl>;
 }
 
 /**
@@ -462,7 +477,8 @@ export const calendarConverter = snapshotConverterFunctions<Calendar>({
     uat: firestoreDate({ saveDefaultAsNow: true }),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),
     sat: optionalFirestoreDate(),
-    isf: optionalFirestoreString()
+    isf: optionalFirestoreString(),
+    iu: optionalFirestoreString<StorageFilePublicDownloadUrl>()
   }
 });
 

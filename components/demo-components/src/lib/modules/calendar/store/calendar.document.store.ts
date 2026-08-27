@@ -31,6 +31,19 @@ export class CalendarDocumentStore extends AbstractDbxFirebaseDocumentStore<Cale
   );
 
   /**
+   * The permanent public url the published ICS is served from, or undefined before the first publish.
+   *
+   * Read off the stored `iu` rather than recomputed from the path, because the storage host differs between
+   * the emulator and production and the object is keyed by the ICS StorageFile's own id. Its absence is also
+   * the "not yet published" state a link rotation passes through.
+   */
+  readonly icsUrl$ = this.currentData$.pipe(
+    map((x) => x?.iu),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
    * The last date the published ICS was successfully uploaded, or undefined before the first publish.
    */
   readonly syncedAt$ = this.currentData$.pipe(

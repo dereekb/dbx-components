@@ -45,6 +45,7 @@ import {
   likeGuestbookEntryParamsType,
   profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
+  profileRotateCalendarIcsParamsType,
   publishGuestbookParamsType,
   resetProfilePasswordParamsType,
   setProfileUsernameParamsType,
@@ -415,6 +416,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
     model: 'profile',
     verb: 'update',
+    specifier: 'rotateCalendarIcs',
+    paramsTypeName: 'ProfileRotateCalendarIcsParams',
+    paramsValidator: profileRotateCalendarIcsParamsType,
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: "Rotates the public ICS link of the current user's profile calendar,\nrevoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's\npointer + url, then re-syncs so a fresh StorageFile — and therefore a\nfresh url — is minted. Existing subscribers to the old url break by\ndesign; that is the revocation.",
+    paramsTypeDescription: "Params for rotating the public ICS link of the current user's profile calendar.\n\nExposed on the PROFILE rather than the Calendar on purpose: the Calendar deliberately has no callable CRUD\nsurface, so the owning model's own action is the sanctioned way to reach it — exactly as\n`createTestCalendarEvent` does."
+  },
+  {
+    model: 'profile',
+    verb: 'update',
     specifier: 'username',
     paramsTypeName: 'SetProfileUsernameParams',
     paramsValidator: setProfileUsernameParamsType,
@@ -708,7 +720,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'True if this Calendar should be swept and its published ICS regenerated.' },
       { name: 'sat', longName: 'syncedAt', tsType: 'Maybe<Date>', optional: true, description: 'The last date the published ICS was successfully uploaded.' },
-      { name: 'isf', longName: 'icsStorageFileId', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that holds the published ICS for this calendar.' }
+      { name: 'isf', longName: 'icsStorageFileId', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that holds the published ICS for this calendar.' },
+      { name: 'iu', longName: 'icsUrl', tsType: 'Maybe<StorageFilePublicDownloadUrl>', optional: true, description: 'The permanent, anonymously-readable URL the published ICS is served from.' }
     ],
     read: 'owner',
     serviceFactory: { exportName: 'calendarFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

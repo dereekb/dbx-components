@@ -17,6 +17,9 @@ import {
   flagStaleCalendarsForSyncParamsType,
   type FlagStaleCalendarsForSyncResult,
   getDocumentSnapshotDataPair,
+  type RotateCalendarIcsParams,
+  rotateCalendarIcsParamsType,
+  type RotateCalendarIcsResult,
   iterateFirestoreDocumentSnapshotPairs,
   pruneCalendarEvents,
   type StorageFileFirestoreCollections,
@@ -35,6 +38,7 @@ import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { subMilliseconds } from 'date-fns';
 import { type StorageFileServerActions } from '../storagefile/storagefile.action.server';
+import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
 
 /**
  * NestJS injection token for the {@link BaseCalendarServerActionsContext}.
@@ -73,6 +77,7 @@ export interface CalendarServerActionsContext extends BaseCalendarServerActionsC
  */
 export abstract class CalendarServerActions {
   abstract syncCalendar(params: SyncCalendarParams): Promise<TransformAndValidateFunctionResult<SyncCalendarParams, (calendarDocument: CalendarDocument) => Promise<SyncCalendarResult>>>;
+  abstract rotateCalendarIcs(params: RotateCalendarIcsParams): Promise<TransformAndValidateFunctionResult<RotateCalendarIcsParams, (calendarDocument: CalendarDocument) => Promise<RotateCalendarIcsResult>>>;
   abstract syncAllFlaggedCalendars(params: SyncAllFlaggedCalendarsParams): Promise<TransformAndValidateFunctionResult<SyncAllFlaggedCalendarsParams, () => Promise<SyncAllFlaggedCalendarsResult>>>;
   abstract flagStaleCalendarsForSync(params: FlagStaleCalendarsForSyncParams): Promise<TransformAndValidateFunctionResult<FlagStaleCalendarsForSyncParams, () => Promise<FlagStaleCalendarsForSyncResult>>>;
 }
@@ -86,6 +91,7 @@ export abstract class CalendarServerActions {
 export function calendarServerActions(context: CalendarServerActionsContext): CalendarServerActions {
   return {
     syncCalendar: syncCalendarFactory(context),
+    rotateCalendarIcs: rotateCalendarIcsFactory(context),
     syncAllFlaggedCalendars: syncAllFlaggedCalendarsFactory(context),
     flagStaleCalendarsForSync: flagStaleCalendarsForSyncFactory(context)
   };
@@ -180,6 +186,67 @@ export function syncCalendarFactory(context: CalendarServerActionsContext) {
         const processStorageFileInstance = await storageFileServerActions.processStorageFile({ key: reflagStorageFileKey, processAgainIfSuccessful: true });
         await processStorageFileInstance(storageFileDocument);
       }
+
+      return result;
+    };
+  });
+}
+
+/**
+ * Factory for the `rotateCalendarIcs` action: the REVOCATION primitive for a published feed url.
+ *
+ * A published feed url is a bearer credential — unguessable, but permanent until rotated, and stored by a
+ * subscriber (Google keeps it in the subscriber's account). Rotation is the only revocation available for a
+ * zero-auth feed, which is why it is a first-class action rather than a manual cleanup.
+ *
+ * It invents no new mechanism. `calendarIcsFileStoragePath()` keys the published object by the ICS
+ * StorageFile's OWN id, and `syncCalendarFactory` already mints a fresh StorageFile — new id, new path, new
+ * url — whenever the existing one is absent or QUEUED_FOR_DELETE. So in ONE transaction this simply:
+ *
+ * - flags the current ICS StorageFile for delete (the existing StorageFile delete machinery is what actually
+ *   removes the old object, and therefore what actually revokes the old url)
+ * - clears `isf` and `iu`, and sets `s: true`
+ *
+ * `syncCalendar` is then called immediately after the transaction commits, so the replacement exists without
+ * waiting for the hourly sweep. The NEW url does not exist until that sync's ICS actually uploads, so `iu` is
+ * briefly absent — the same "queued, not yet published" state a first publish passes through.
+ *
+ * @param context - The calendar server actions context.
+ * @returns An async transform-and-validate function that rotates a single Calendar's ICS link.
+ */
+export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) {
+  const { firestoreContext, calendarCollection, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const syncCalendar = syncCalendarFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(rotateCalendarIcsParamsType, async (_params) => {
+    return async (calendarDocument: CalendarDocument) => {
+      const revokedIcsStorageFile = await firestoreContext.runTransaction(async (transaction) => {
+        const calendarDocumentInTransaction = calendarCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(calendarDocument);
+        const calendar = await assertSnapshotData(calendarDocumentInTransaction);
+        const storageFileDocumentAccessor = storageFileCollection.documentAccessorForTransaction(transaction);
+
+        const existingIcsStorageFileDocument = calendar.isf ? storageFileDocumentAccessor.loadDocumentForId(calendar.isf) : undefined;
+        const existingIcsStorageFilePair = existingIcsStorageFileDocument ? await getDocumentSnapshotDataPair(existingIcsStorageFileDocument) : undefined;
+        const existingIcsStorageFileIsLive = existingIcsStorageFilePair?.data != null && existingIcsStorageFilePair.data.fs !== StorageFileState.QUEUED_FOR_DELETE;
+
+        if (existingIcsStorageFileIsLive) {
+          await existingIcsStorageFilePair.document.update(markStorageFileForDeleteTemplate());
+        }
+
+        // isf and iu are cleared TOGETHER: a pointer without a url, or a url whose object is queued for
+        // delete, are both states the UI would render as a working feed.
+        await calendarDocumentInTransaction.update({ s: true, isf: null, iu: null });
+
+        return existingIcsStorageFileIsLive;
+      });
+
+      const syncCalendarInstance = await syncCalendar({ key: calendarDocument.key });
+      const syncResult = await syncCalendarInstance(calendarDocument);
+
+      const result: RotateCalendarIcsResult = {
+        revokedIcsStorageFile,
+        createdIcsStorageFile: syncResult.createdIcsStorageFile
+      };
 
       return result;
     };

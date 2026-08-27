@@ -10,6 +10,8 @@ import {
   type ProfileDocument,
   type ProfileFirestoreCollections,
   ProfileResumeState,
+  type ProfileRotateCalendarIcsParams,
+  profileRotateCalendarIcsParamsType,
   profileWithUsernameQuery,
   type SetProfileUsernameParams,
   setProfileUsernameParamsType,
@@ -19,12 +21,20 @@ import {
 import { type Maybe } from '@dereekb/util';
 import { type CalendarEventItem, type CalendarFirestoreCollections, type CalendarRecurringEventItem, type NotificationFirestoreCollections, type FirestoreContextReference, calendarIdForModel, calendarTemplate, createNotificationDocument, twoWayFlatFirestoreModelKey, updateCalendarEventsTemplate } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
-import { type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
+import { type CalendarServerActions, type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, CalendarFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {}
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, CalendarFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {
+  /**
+   * The library Calendar actions the profile's calendar-facing actions delegate to.
+   *
+   * The rotation logic belongs to the Calendar, not the Profile — the Profile only supplies the
+   * authorization boundary and the "which calendar" resolution.
+   */
+  readonly calendarServerActions: CalendarServerActions;
+}
 
 /**
  * Server-only profile actions.
@@ -35,6 +45,7 @@ export abstract class ProfileServerActions {
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
   abstract createTestNotification(params: ProfileCreateTestNotificationParams): AsyncProfileUpdateAction<ProfileCreateTestNotificationParams>;
   abstract createTestCalendarEvent(params: ProfileCreateTestCalendarEventParams): AsyncProfileUpdateAction<ProfileCreateTestCalendarEventParams>;
+  abstract rotateCalendarIcs(params: ProfileRotateCalendarIcsParams): AsyncProfileUpdateAction<ProfileRotateCalendarIcsParams>;
 }
 
 /**
@@ -49,7 +60,8 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
     updateProfile: updateProfileFactory(context),
     setProfileUsername: setProfileUsernameFactory(context),
     createTestNotification: createTestNotificationFactory(context),
-    createTestCalendarEvent: createTestCalendarEventFactory(context)
+    createTestCalendarEvent: createTestCalendarEventFactory(context),
+    rotateCalendarIcs: rotateCalendarIcsFactory(context)
   };
 }
 
@@ -289,6 +301,36 @@ export function createTestCalendarEventFactory(context: ProfileServerActionsCont
           );
         }
       });
+
+      return document;
+    };
+  });
+}
+
+/**
+ * Creates a factory that rotates the public ICS link of the profile's calendar.
+ *
+ * Delegates ENTIRELY to the library's `rotateCalendarIcs` action: the Calendar owns the revocation, and this
+ * action exists only so the operation has a callable surface, since the Calendar itself deliberately has
+ * none. The profile's `owner` role gate on the callable is the authorization.
+ *
+ * The calendar may not exist yet, in which case there is nothing to rotate and the action is a no-op.
+ *
+ * @param context - Server actions context providing the calendar collection and the library calendar actions.
+ * @returns An action transform function that rotates the profile calendar's ICS link.
+ */
+export function rotateCalendarIcsFactory(context: ProfileServerActionsContext) {
+  const { calendarCollection, calendarServerActions, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(profileRotateCalendarIcsParamsType, async (_params) => {
+    return async (document: ProfileDocument) => {
+      const calendarDocument = calendarCollection.documentAccessor().loadDocumentForId(calendarIdForModel(document.key));
+      const exists = await calendarDocument.accessor.exists();
+
+      if (exists) {
+        const rotateCalendarIcs = await calendarServerActions.rotateCalendarIcs({ key: calendarDocument.key });
+        await rotateCalendarIcs(calendarDocument);
+      }
 
       return document;
     };

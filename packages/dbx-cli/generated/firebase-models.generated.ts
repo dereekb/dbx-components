@@ -123,10 +123,18 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         tsType: 'Maybe<StorageFileId>',
         optional: true,
         description: 'StorageFile that holds the published ICS for this calendar.'
+      },
+      {
+        name: 'iu',
+        longName: 'icsUrl',
+        converter: 'optionalFirestoreString<StorageFilePublicDownloadUrl>()',
+        tsType: 'Maybe<StorageFilePublicDownloadUrl>',
+        optional: true,
+        description: 'The permanent, anonymously-readable URL the published ICS is served from.'
       }
     ],
     enums: [],
-    detectionHints: ['t', 'n', 'tz', 'c', 'e', 'r', 'x', 'uat', 'sat', 'isf'],
+    detectionHints: ['t', 'n', 'tz', 'c', 'e', 'r', 'x', 'uat', 'sat', 'isf', 'iu'],
     description: 'A calendar and all of its events, stored in one document and published as an ".ics" file.',
     modelGroup: 'Calendar',
     collectionKind: 'root',

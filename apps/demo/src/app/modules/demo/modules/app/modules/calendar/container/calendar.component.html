@@ -6,6 +6,8 @@
   <dbx-button (buttonClick)="openCreateRecurringEventPopup()" text="New Recurring Event"></dbx-button>
   <dbx-button-spacer></dbx-button-spacer>
   <dbx-firebase-storagefile-download-button [config]="icsDownloadButtonConfig" [source]="icsDownloadSource"></dbx-firebase-storagefile-download-button>
+  <dbx-button-spacer></dbx-button-spacer>
+  <dbx-button (buttonClick)="openSubscribePopup()" icon="link" text="Copy Link"></dbx-button>
 </div>
 @if (!existsSignal()) {
   <p class="dbx-hint">This calendar has no events yet. Create one and it will be published to an ICS file by the next calendar sync.</p>

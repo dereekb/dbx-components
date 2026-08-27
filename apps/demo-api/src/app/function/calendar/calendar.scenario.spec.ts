@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, StorageFileProcessingState, calendarSyncState } from '@dereekb/firebase';
+import { unfoldIcsString } from '@dereekb/date';
+import { TEXT_CALENDAR_UTF8_CONTENT_TYPE } from '@dereekb/util';
+import { CALENDAR_ICS_PUBLISHED_CACHE_CONTROL, CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION } from '@dereekb/firebase-server/model';
+import { CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, StorageFileProcessingState, StorageFileState, calendarSyncState } from '@dereekb/firebase';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoCalendarContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
@@ -177,6 +180,98 @@ demoApiFunctionContextFactory((f) => {
 
               expect(ics).toContain('First');
               expect(ics).toContain('Second');
+            });
+
+            /**
+             * The published feed has to name ITSELF, or a client that holds the file has no way back to the
+             * source. `iu` and the ICS's SOURCE line are written from the same value in the same pass, so
+             * this asserts they cannot drift.
+             */
+            it('should publish a public URL and emit it as the ICS SOURCE', async () => {
+              await cal.createTestCalendarEvent('Sourced');
+              await syncAndPublish();
+
+              const published = await assertSnapshotData(cal.document);
+              const icsUrl = published.iu as string;
+              expect(icsUrl).toBeDefined();
+
+              // keyed by the ICS StorageFile's own id, which is what makes replacing the file rotate the url
+              expect(icsUrl).toContain(published.isf as string);
+
+              const storageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              const ics = (await f.storageContext.file(storageFile).getBytes()).toString();
+
+              // unfolded, because a url this long is always split across physical lines by the 75-octet fold
+              const lines = unfoldIcsString(ics);
+              expect(lines).toContain(`SOURCE;VALUE=URI:${icsUrl}`);
+              // a METHOD would turn the feed into an iTIP message, which Google refuses to subscribe to
+              expect(ics).not.toContain('METHOD:');
+
+              // the headers a subscriber's fetcher actually depends on. text/plain is rejected outright, an
+              // "attachment" disposition breaks an inline feed fetch, and the default public max-age of one
+              // hour would serve a regenerated feed stale on top of the client's own polling lag.
+              const metadata = await f.storageContext.file(storageFile).getMetadata();
+              expect(metadata.contentType).toBe(TEXT_CALENDAR_UTF8_CONTENT_TYPE);
+              expect(metadata.contentDisposition).toBe(CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION);
+              expect(metadata.cacheControl).toBe(CALENDAR_ICS_PUBLISHED_CACHE_CONTROL);
+            });
+
+            // The exact inverse of the re-publish case above: there, isf must be PRESERVED; here it must change.
+            it('should mint a new ICS StorageFile and URL when the link is rotated', async () => {
+              await cal.createTestCalendarEvent('Rotate Me');
+              await syncAndPublish();
+
+              const published = await assertSnapshotData(cal.document);
+              const oldIcsStorageFileDocument = await cal.loadIcsStorageFileDocument();
+              const oldIcsStorageFile = await assertSnapshotData(oldIcsStorageFileDocument);
+
+              expect(published.isf).toBeDefined();
+              expect(published.iu).toBeDefined();
+
+              const rotateResult = await cal.rotateCalendarIcs();
+              expect(rotateResult.revokedIcsStorageFile).toBe(true);
+              expect(rotateResult.createdIcsStorageFile).toBe(true);
+
+              const rotated = await assertSnapshotData(cal.document);
+
+              expect(rotated.isf).toBeDefined();
+              expect(rotated.isf).not.toBe(published.isf);
+
+              // the url is only written by the processor's success path, so it is absent until the
+              // replacement actually uploads -- the state the dialog has to render rather than blank out
+              expect(rotated.iu).toBeFalsy();
+
+              const newIcsStorageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              expect(newIcsStorageFile.pathString).not.toBe(oldIcsStorageFile.pathString);
+
+              // the OLD file is what actually holds the revoked url. It is flagged for delete rather than
+              // deleted inline, so its object survives until the delete sweep runs.
+              const revokedIcsStorageFile = await assertSnapshotData(oldIcsStorageFileDocument);
+              expect(revokedIcsStorageFile.fs).toBe(StorageFileState.QUEUED_FOR_DELETE);
+              expect(revokedIcsStorageFile.sdat).toBeDefined();
+              expect(await f.storageContext.file(revokedIcsStorageFile).exists()).toBe(true);
+            });
+
+            it('should publish a fresh URL after a rotation', async () => {
+              await cal.createTestCalendarEvent('Rotate Then Publish');
+              await syncAndPublish();
+
+              const published = await assertSnapshotData(cal.document);
+
+              await cal.rotateCalendarIcs();
+              await syncAndPublish();
+
+              const republished = await assertSnapshotData(cal.document);
+
+              expect(calendarSyncState(republished)).toBe(CalendarSyncState.SYNCED);
+              expect(republished.iu).toBeDefined();
+              expect(republished.iu).not.toBe(published.iu);
+
+              const storageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
+              const ics = (await f.storageContext.file(storageFile).getBytes()).toString();
+
+              expect(unfoldIcsString(ics)).toContain(`SOURCE;VALUE=URI:${republished.iu as string}`);
+              expect(ics).toContain('Rotate Then Publish');
             });
 
             /**

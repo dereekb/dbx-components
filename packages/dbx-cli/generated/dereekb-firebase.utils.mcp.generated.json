@@ -351,6 +351,49 @@
       ]
     },
     {
+      "slug": "nth-hour-of-day-index",
+      "name": "nthHourOfDayIndex",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "nthHourOfDayIndex(everyNHours: Hours, date?: Maybe<Date>): Maybe<number>",
+      "description": "The zero-based index of the date's hour within the day's every-N-hours schedule, or null when the\nhour is not an Nth hour.\n\nAt hour 12 with N=3 the day's matching hours are 0, 3, 6, 9, 12 — so the index is 4. Use it to\nrotate work across a day's windows (\"do the expensive pass only on index 0\") without each caller\nre-deriving the arithmetic from the hour-of-day.\n\nReturns null rather than a number for a non-matching hour, so a falsy check cannot confuse\n\"index 0\" — the first window of the day — with \"no window\".",
+      "params": [
+        {
+          "name": "everyNHours",
+          "type": "Hours",
+          "description": "- Run every Nth hour of the day.",
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": "Maybe<Date>",
+          "description": "- Moment to test; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "The zero-based window index, or null when the hour is not an Nth hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "index",
+        "window",
+        "date",
+        "nth",
+        "of",
+        "day",
+        "nthhourofdayindex"
+      ],
+      "example": "nthHourOfDayIndex(3, new Date('2024-01-01T12:30:00')); // 4 (0, 3, 6, 9, 12)\nnthHourOfDayIndex(3, new Date('2024-01-01T13:30:00')); // null (13 % 3 !== 0)",
+      "relatedSlugs": [
+        "is-nth-hour-of-day"
+      ]
+    },
+    {
       "slug": "new-documents",
       "name": "newDocuments",
       "kind": "function",
