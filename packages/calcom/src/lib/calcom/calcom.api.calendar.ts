@@ -44,7 +44,10 @@ export interface CalcomCalendarIntegrationApp {
   readonly publisher: string;
   readonly url: WebsiteUrl;
   readonly email: EmailAddress;
-  readonly installed: boolean;
+  /**
+   * Whether the app is installed. Omitted by the API for some apps rather than returned as false.
+   */
+  readonly installed: Maybe<boolean>;
   readonly isOAuth: boolean;
   readonly dirName: Maybe<string>;
   readonly locationOption: Maybe<unknown>;
