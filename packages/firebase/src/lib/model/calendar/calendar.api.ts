@@ -65,6 +65,14 @@ export interface RotateCalendarIcsResult {
    * True if the immediate re-sync minted the replacement ICS StorageFile.
    */
   readonly createdIcsStorageFile: boolean;
+  /**
+   * True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.
+   *
+   * False means only that the publish did not complete INLINE — the replacement is still queued and the
+   * regular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this
+   * as "is the new link ready to show yet", never as a failure.
+   */
+  readonly publishedIcs: boolean;
 }
 
 /**

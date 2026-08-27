@@ -391,6 +391,18 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
             read: true,
             download: true
           };
+        },
+        // A server-derived file has no `u` — nothing uploaded it — and carries only the `o` of the model it
+        // was derived from, so the `u` branch above grants nothing and the owner cannot download their own
+        // artifact. `firestore.rules` already grants `get` on such a file through
+        // `resourceIsOwnedByAuthOwnershipKey()`, so without this the direct document read succeeds while the
+        // download callable returns FORBIDDEN. The calendar's published ICS is the case in point.
+        rolesForStorageFileOwnershipKey: async (ownershipKey) => {
+          const uid = context.auth?.uid;
+          const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
+          const isOwner = ownerKey != null && ownershipKey === ownerKey;
+
+          return isOwner ? { read: true, download: true } : undefined;
         }
       })
     ); // system admin only

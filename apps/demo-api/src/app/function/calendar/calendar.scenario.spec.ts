@@ -5,7 +5,7 @@ import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode }
 import { unfoldIcsString } from '@dereekb/date';
 import { TEXT_CALENDAR_UTF8_CONTENT_TYPE } from '@dereekb/util';
 import { CALENDAR_ICS_PUBLISHED_CACHE_CONTROL, CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION } from '@dereekb/firebase-server/model';
-import { CALENDAR_ICS_ROTATE_THROTTLED_ERROR_CODE, CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, FORBIDDEN_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, type RotateCalendarIcsResult, StorageFileProcessingState, StorageFileState, calendarIdentity, calendarSyncState, firestoreModelKey, onCallUpdateModelParams } from '@dereekb/firebase';
+import { CALENDAR_ICS_ROTATE_THROTTLED_ERROR_CODE, CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, type DownloadStorageFileParams, type DownloadStorageFileResult, FORBIDDEN_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, type RotateCalendarIcsResult, StorageFileProcessingState, StorageFileState, calendarIdentity, calendarSyncState, firestoreModelKey, onCallReadModelParams, onCallUpdateModelParams, storageFileIdentity } from '@dereekb/firebase';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoCalendarContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
@@ -238,9 +238,11 @@ demoApiFunctionContextFactory((f) => {
               expect(rotated.isf).toBeDefined();
               expect(rotated.isf).not.toBe(published.isf);
 
-              // the url is only written by the processor's success path, so it is absent until the
-              // replacement actually uploads -- the state the dialog has to render rather than blank out
-              expect(rotated.iu).toBeFalsy();
+              // the replacement's publish is EXPEDITED rather than left for the sweep: a rotation has already
+              // revoked the old url, so a queued publish would leave the user with no link at all in between
+              expect(rotateResult.publishedIcs).toBe(true);
+              expect(rotated.iu).toBeDefined();
+              expect(rotated.iu).not.toBe(published.iu);
 
               const newIcsStorageFile = await assertSnapshotData(await cal.loadIcsStorageFileDocument());
               expect(newIcsStorageFile.pathString).not.toBe(oldIcsStorageFile.pathString);
@@ -371,13 +373,33 @@ demoApiFunctionContextFactory((f) => {
             it('should let the calendar owner rotate the link', async () => {
               const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(calendarIdentity, { key: cal.documentKey }, 'rotateIcs'))) as RotateCalendarIcsResult;
 
-              // nothing was ever published, so there is no url to revoke -- but the rotation still queues
+              // nothing was ever published, so there is no url to revoke -- but the rotation still drives
               // the first publish, which is what mints the replacement StorageFile
               expect(result.revokedIcsStorageFile).toBe(false);
               expect(result.createdIcsStorageFile).toBe(true);
+              expect(result.publishedIcs).toBe(true);
 
               const rotated = await assertSnapshotData(cal.document);
               expect(rotated.isf).toBeDefined();
+              expect(rotated.iu).toBeDefined();
+            });
+
+            /**
+             * The ICS StorageFile is SERVER-derived: nothing uploaded it, so it has no `u` and carries only
+             * the `o` of the calendar it belongs to. That combination is what the demo's StorageFile role map
+             * originally had no branch for, so the owner's own feed file came back FORBIDDEN from `download`
+             * while `firestore.rules` happily granted the direct document read.
+             */
+            it('should let the calendar owner download the published ICS StorageFile', async () => {
+              await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(calendarIdentity, { key: cal.documentKey }, 'rotateIcs'));
+
+              const rotated = await assertSnapshotData(cal.document);
+              const icsStorageFileKey = firestoreModelKey(storageFileIdentity, rotated.isf as string);
+
+              const downloadParams: DownloadStorageFileParams = { key: icsStorageFileKey };
+              const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, downloadParams, 'download'))) as DownloadStorageFileResult;
+
+              expect(result.url).toBeDefined();
             });
 
             itShouldFail('with CALENDAR_ICS_ROTATE_THROTTLED when rotated twice inside the throttle window', async () => {

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionValueDirective, TimeDistanceCountdownPipe } from '@dereekb/dbx-core';
+import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { type DbxActionConfirmConfig, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { switchMap } from 'rxjs';
@@ -15,9 +15,10 @@ import { type CalendarDocumentStore } from '../store/calendar.document.store';
  * breaks. A caller that wants the affordance somewhere else — an admin screen, a settings page — drops in
  * the same component.
  *
- * Renders the button unconditionally and disables it instead of substituting an explanation, so a host's
- * layout does not shift with the calendar's state. The countdown line is the one piece of text it adds, and
- * only while the throttle is actually holding a rotation off.
+ * Renders nothing but the button, unconditionally, and disables it instead of substituting an explanation —
+ * so a host's layout does not shift with the calendar's state and the control stays exactly where the caller
+ * put it. The disabled reason is deliberately unstated: the confirm prompt is where the consequences belong,
+ * and the server rejects an early rotation regardless.
  */
 @Component({
   selector: 'dbx-firebase-calendar-ics-rotate-button',
@@ -28,12 +29,9 @@ import { type CalendarDocumentStore } from '../store/calendar.document.store';
       <dbx-button dbxActionButton color="warn" icon="autorenew" text="Rotate Link"></dbx-button>
       <dbx-error dbxActionError></dbx-error>
     </div>
-    @if (throttledUntilSignal(); as throttledUntil) {
-      <div class="dbx-small dbx-hint dbx-pt2">This link was rotated recently. It can be rotated again {{ throttledUntil | timeCountdownDistance }}.</div>
-    }
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate-button' },
-  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent, TimeDistanceCountdownPipe],
+  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -58,8 +56,6 @@ export class DbxFirebaseCalendarIcsRotateButtonComponent {
 
   readonly isThrottledSignal = toSignal(this.calendarDocumentStore$.pipe(switchMap((x) => x.isIcsRotateThrottled$)), { initialValue: false });
 
-  readonly nextIcsRotateAtSignal = toSignal(this.calendarDocumentStore$.pipe(switchMap((x) => x.nextIcsRotateAt$)));
-
   /**
    * Whether rotation is unavailable, for either of its two reasons.
    *
@@ -72,20 +68,6 @@ export class DbxFirebaseCalendarIcsRotateButtonComponent {
     const isThrottled = this.isThrottledSignal();
 
     return !exists || isThrottled;
-  });
-
-  /**
-   * The time the throttle lifts, or undefined when a rotation is allowed right now.
-   *
-   * Gated on the throttle rather than rendered from the date alone: `nextIcsRotateAt` stays populated once
-   * the window has passed, and a hint counting down to a time already gone reads as a bug.
-   */
-  readonly throttledUntilSignal = computed(() => {
-    // both read unconditionally, so the computed tracks them on every run
-    const isThrottled = this.isThrottledSignal();
-    const nextIcsRotateAt = this.nextIcsRotateAtSignal();
-
-    return isThrottled ? nextIcsRotateAt : undefined;
   });
 
   readonly rotateConfirmConfig: DbxActionConfirmConfig = {

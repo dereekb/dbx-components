@@ -69,7 +69,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeDescription: "Result of rotating a Calendar's published ICS link.",
     resultFields: [
       { name: 'revokedIcsStorageFile', typeText: 'boolean', description: 'True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.\n\nFalse when the calendar had never published one, in which case the rotation is a no-op that still\nqueues a first publish.' },
-      { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' }
+      { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' },
+      { name: 'publishedIcs', typeText: 'boolean', description: 'True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.\n\nFalse means only that the publish did not complete INLINE — the replacement is still queued and the\nregular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this\nas "is the new link ready to show yet", never as a failure.' }
     ]
   },
   {

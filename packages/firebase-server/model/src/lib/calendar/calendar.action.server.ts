@@ -215,14 +215,20 @@ export function syncCalendarFactory(context: CalendarServerActionsContext) {
  * - clears `isf` and `iu`, and sets `s: true`
  *
  * `syncCalendar` is then called immediately after the transaction commits, so the replacement exists without
- * waiting for the hourly sweep. The NEW url does not exist until that sync's ICS actually uploads, so `iu` is
- * briefly absent — the same "queued, not yet published" state a first publish passes through.
+ * waiting for the hourly sweep — and its publish is EXPEDITED (`runImmediately`) rather than left queued, so
+ * `iu` normally holds the new url by the time this returns.
+ *
+ * That expedite is the difference between a rotation and any other sync. Every other path can afford to let
+ * the sweep publish, because the calendar still has a working url in the meantime. A rotation does not: it
+ * has already revoked the old one, so until the replacement uploads the user has NO link at all. Result
+ * field `publishedIcs` reports whether the inline publish landed; the sweep remains the backstop when it
+ * did not.
  *
  * @param context - The calendar server actions context.
  * @returns An async transform-and-validate function that rotates a single Calendar's ICS link.
  */
 export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) {
-  const { firestoreContext, calendarCollection, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, calendarCollection, storageFileCollection, storageFileServerActions, firebaseServerActionTransformFunctionFactory } = context;
   const syncCalendar = syncCalendarFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(rotateCalendarIcsParamsType, async (_params) => {
@@ -266,9 +272,33 @@ export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) 
       const syncCalendarInstance = await syncCalendar({ key: calendarDocument.key });
       const syncResult = await syncCalendarInstance(calendarDocument);
 
+      // The sync only QUEUES the replacement's publish, and `iu` is written by the publish itself -- so
+      // without this the calendar sits with no url at all until the next sweep, which is the one window
+      // where the user has neither the old link (revoked) nor the new one. Expedite it instead.
+      //
+      // Best-effort by construction: the revocation has already committed, so a failed expedite must not
+      // fail the rotation. `shouldBeProcessed` is already set on the replacement, so the regular sweep
+      // remains the backstop and the only cost of failing here is latency.
+      const icsStorageFileId = (await assertSnapshotData(calendarDocument)).isf;
+      let publishedIcs = false;
+
+      if (icsStorageFileId) {
+        const icsStorageFileDocument = storageFileCollection.documentAccessor().loadDocumentForId(icsStorageFileId);
+
+        try {
+          const processStorageFileInstance = await storageFileServerActions.processStorageFile({ key: icsStorageFileDocument.key, processAgainIfSuccessful: true, runImmediately: true });
+          const processResult = await processStorageFileInstance(icsStorageFileDocument);
+
+          publishedIcs = processResult.expediteResult?.notificationTaskCompletionType === true;
+        } catch (e) {
+          console.error('rotateCalendarIcs(): the expedited ICS publish failed. The calendar remains flagged, so the next sweep will publish it.', e);
+        }
+      }
+
       const result: RotateCalendarIcsResult = {
         revokedIcsStorageFile,
-        createdIcsStorageFile: syncResult.createdIcsStorageFile
+        createdIcsStorageFile: syncResult.createdIcsStorageFile,
+        publishedIcs
       };
 
       return result;

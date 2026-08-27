@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxDialogModule } from '@dereekb/dbx-web';
 import { type CalendarDocumentStore } from '../store/calendar.document.store';
-import { DbxFirebaseCalendarIcsRotateButtonComponent } from './calendar.ics.rotate.button.component';
+import { DbxFirebaseCalendarIcsRotateComponent } from './calendar.ics.rotate.component';
 
 export interface DbxFirebaseCalendarSubscribeDialogComponentConfig {
   readonly calendarDocumentStore: CalendarDocumentStore;
@@ -38,11 +38,11 @@ export interface DbxFirebaseCalendarSubscribeDialogComponentConfig {
           }
         </dbx-detail-block>
       </dbx-content-pit>
-      <dbx-firebase-calendar-ics-rotate-button class="dbx-block dbx-mt3" [calendarDocumentStore]="data.calendarDocumentStore"></dbx-firebase-calendar-ics-rotate-button>
+      <dbx-firebase-calendar-ics-rotate class="dbx-block dbx-mt3" [calendarDocumentStore]="data.calendarDocumentStore"></dbx-firebase-calendar-ics-rotate>
       <dbx-dialog-content-footer (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateButtonComponent],
+  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -53,8 +53,9 @@ export class DbxFirebaseCalendarSubscribeDialogComponent extends AbstractDialogD
   /**
    * Why there is no url yet, distinguishing a first publish from the gap a rotation leaves behind.
    *
-   * `iu` is written only by the ICS processor's success path, so it is absent both before the first publish
-   * and for as long as it takes a rotation's replacement to upload. `sat` is what tells them apart.
+   * `iu` is written only by the ICS processor's success path. A rotation expedites that publish, so this is
+   * normally a first-publish message; it still covers the rotation case for as long as an expedite that did
+   * not land leaves the replacement queued. `sat` is what tells the two apart.
    */
   readonly notPublishedHintSignal = computed(() => (this.syncedAtSignal() ? 'The link is being regenerated. It will appear here once the next calendar sync publishes the replacement.' : 'This calendar has not been published yet. The link appears once the hourly calendar sync generates its ICS.'));
 
