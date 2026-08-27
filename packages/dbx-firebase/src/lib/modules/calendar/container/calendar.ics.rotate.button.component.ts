@@ -9,27 +9,27 @@ import { type CalendarDocumentStore } from '../store/calendar.document.store';
 /**
  * Button that rotates a calendar's published ICS link, revoking the url subscribers currently hold.
  *
- * Its own component rather than markup inside the subscribe dialog because the three states it has to
- * express are all about the action and none are about the dialog: there is nothing to revoke before the
- * calendar exists, the server enforces a rotation throttle, and the confirm prompt has to spell out that
- * every existing subscription breaks. A caller that wants the affordance somewhere else — an admin screen,
- * a settings page — drops in the same component.
+ * Its own component rather than markup inside the subscribe dialog because everything it has to express is
+ * about the action and none of it is about the dialog: rotation needs a calendar that exists, the server
+ * enforces a rotation throttle, and the confirm prompt has to spell out that every existing subscription
+ * breaks. A caller that wants the affordance somewhere else — an admin screen, a settings page — drops in
+ * the same component.
+ *
+ * Renders the button unconditionally and disables it instead of substituting an explanation, so a host's
+ * layout does not shift with the calendar's state. The countdown line is the one piece of text it adds, and
+ * only while the throttle is actually holding a rotation off.
  */
 @Component({
   selector: 'dbx-firebase-calendar-ics-rotate-button',
   template: `
-    @if (existsSignal()) {
-      <!-- dbxActionDisabled rather than the button's own disabled input, since dbxActionButton drives that from the action's state -->
-      <!-- the action takes no input, so the bare dbxActionValue marks it value-ready on trigger -->
-      <div dbxAction dbxActionValue dbxActionSnackbarError [dbxActionDisabled]="isThrottledSignal()" [dbxActionHandler]="handleRotateLink" [dbxActionConfirm]="rotateConfirmConfig">
-        <dbx-button dbxActionButton icon="autorenew" text="Rotate Link"></dbx-button>
-        <dbx-error dbxActionError></dbx-error>
-      </div>
-      @if (throttledUntilSignal(); as throttledUntil) {
-        <div class="dbx-small dbx-hint dbx-pt2">This link was rotated recently. It can be rotated again {{ throttledUntil | timeCountdownDistance }}.</div>
-      }
-    } @else {
-      <p class="dbx-hint">This calendar does not exist yet, so there is no link to revoke.</p>
+    <!-- dbxActionDisabled rather than the button's own disabled input, since dbxActionButton drives that from the action's state -->
+    <!-- the action takes no input, so the bare dbxActionValue marks it value-ready on trigger -->
+    <div dbxAction dbxActionValue dbxActionSnackbarError [dbxActionDisabled]="isDisabledSignal()" [dbxActionHandler]="handleRotateLink" [dbxActionConfirm]="rotateConfirmConfig">
+      <dbx-button dbxActionButton color="warn" icon="autorenew" text="Rotate Link"></dbx-button>
+      <dbx-error dbxActionError></dbx-error>
+    </div>
+    @if (throttledUntilSignal(); as throttledUntil) {
+      <div class="dbx-small dbx-hint dbx-pt2">This link was rotated recently. It can be rotated again {{ throttledUntil | timeCountdownDistance }}.</div>
     }
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate-button' },
@@ -59,6 +59,20 @@ export class DbxFirebaseCalendarIcsRotateButtonComponent {
   readonly isThrottledSignal = toSignal(this.calendarDocumentStore$.pipe(switchMap((x) => x.isIcsRotateThrottled$)), { initialValue: false });
 
   readonly nextIcsRotateAtSignal = toSignal(this.calendarDocumentStore$.pipe(switchMap((x) => x.nextIcsRotateAt$)));
+
+  /**
+   * Whether rotation is unavailable, for either of its two reasons.
+   *
+   * The button stays rendered and goes disabled rather than being swapped for an explanation, so the control
+   * a caller lays out is in the same place whatever the calendar's state.
+   */
+  readonly isDisabledSignal = computed(() => {
+    // both read unconditionally, so the computed tracks them on every run
+    const exists = this.existsSignal();
+    const isThrottled = this.isThrottledSignal();
+
+    return !exists || isThrottled;
+  });
 
   /**
    * The time the throttle lifts, or undefined when a rotation is allowed right now.
