@@ -5,16 +5,15 @@ import { AbstractDialogDirective, type CopyToClipboardFunctionWithSnackbarMessag
 import { clickableUrlInNewTab, type ClickableAnchor } from '@dereekb/dbx-core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { type CalendarDocumentStore, type ProfileDocumentStore } from 'demo-components';
+import { type CalendarDocumentStore } from '../store/calendar.document.store';
 
 /**
  * Google's "Other calendars -> From URL" subscription endpoint, which prefills its dialog with `cid`.
  */
 const GOOGLE_CALENDAR_SUBSCRIBE_URL = 'https://calendar.google.com/calendar/r?cid=';
 
-export interface DemoCalendarSubscribePopupComponentConfig {
+export interface DbxFirebaseCalendarSubscribePopupComponentConfig {
   readonly calendarDocumentStore: CalendarDocumentStore;
-  readonly profileDocumentStore: ProfileDocumentStore;
 }
 
 /**
@@ -28,6 +27,9 @@ export interface DemoCalendarSubscribePopupComponentConfig {
  * The refresh-cadence hint is not decoration. Google re-reads a subscribed feed every 8-24 hours and honours
  * no header that asks it to hurry, so an unexplained lag between adding an event and seeing it get filed as a
  * bug. Say it up front instead.
+ *
+ * Rotation is offered only once the calendar document exists: the callable authorizes against the Calendar
+ * itself, so a key that names nothing is rejected rather than reported as a no-op revocation.
  */
 @Component({
   template: `
@@ -62,10 +64,14 @@ export interface DemoCalendarSubscribePopupComponentConfig {
         <p class="dbx-hint">Add calendar &rarr; Subscribe from web &rarr; paste the link.</p>
       </dbx-step-block>
       <p class="dbx-hint">Google re-checks a subscribed feed every 8&ndash;24 hours and offers no way to ask it to check sooner, so a new event can take that long to appear there. Apple and Outlook refresh considerably faster.</p>
-      <div class="dbx-mt3" dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleRotateLink" [dbxActionConfirm]="rotateConfirmConfig">
-        <dbx-button dbxActionButton icon="autorenew" text="Rotate Link"></dbx-button>
-        <dbx-error dbxActionError></dbx-error>
-      </div>
+      @if (syncStateSignal()) {
+        <div class="dbx-mt3" dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleRotateLink" [dbxActionConfirm]="rotateConfirmConfig">
+          <dbx-button dbxActionButton icon="autorenew" text="Rotate Link"></dbx-button>
+          <dbx-error dbxActionError></dbx-error>
+        </div>
+      } @else {
+        <p class="dbx-hint dbx-mt3">This calendar does not exist yet, so there is no link to revoke.</p>
+      }
       <dbx-dialog-content-footer (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
@@ -73,9 +79,17 @@ export interface DemoCalendarSubscribePopupComponentConfig {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DemoCalendarSubscribePopupComponent extends AbstractDialogDirective<unknown, DemoCalendarSubscribePopupComponentConfig> {
+export class DbxFirebaseCalendarSubscribePopupComponent extends AbstractDialogDirective<unknown, DbxFirebaseCalendarSubscribePopupComponentConfig> {
   readonly icsUrlSignal = toSignal(this.data.calendarDocumentStore.icsUrl$);
   readonly syncedAtSignal = toSignal(this.data.calendarDocumentStore.syncedAt$);
+
+  /**
+   * Whether the calendar document exists, which is the precondition for rotating its link.
+   *
+   * `syncState$` is undefined until the document exists, so it doubles as the existence check without a
+   * second subscription.
+   */
+  readonly syncStateSignal = toSignal(this.data.calendarDocumentStore.syncState$);
 
   /**
    * Why there is no url yet, distinguishing a first publish from the gap a rotation leaves behind.
@@ -100,13 +114,13 @@ export class DemoCalendarSubscribePopupComponent extends AbstractDialogDirective
     confirmText: 'Rotate Link'
   };
 
-  static openPopup(matDialog: MatDialog, config: DemoCalendarSubscribePopupComponentConfig) {
-    return matDialog.open(DemoCalendarSubscribePopupComponent, {
+  static openPopup(matDialog: MatDialog, config: DbxFirebaseCalendarSubscribePopupComponentConfig) {
+    return matDialog.open(DbxFirebaseCalendarSubscribePopupComponent, {
       data: config
     });
   }
 
   readonly handleRotateLink: WorkUsingContext = (_, context) => {
-    context.startWorkingWithLoadingStateObservable(this.data.profileDocumentStore.rotateCalendarIcs({}));
+    context.startWorkingWithLoadingStateObservable(this.data.calendarDocumentStore.rotateIcs({}));
   };
 }

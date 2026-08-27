@@ -416,12 +416,17 @@ export const calendarFirebaseModelServiceFactory = firebaseModelServiceFactory<D
   roleMapForModel: function (output: FirebasePermissionServiceModel<Calendar, CalendarDocument>, context: DemoFirebaseContext, _model: CalendarDocument): PromiseOrValue<GrantedRoleMap<CalendarRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap(), () => {
       // a calendar is readable by whoever owns it, mirroring `resourceIsOwnedByAuthOwnershipKey()` in
-      // firestore.rules. Writes stay server-only: the sweep's correctness rests on every write carrying `s`.
+      // firestore.rules, and rotatable by them too: the published .ics url is a bearer credential this
+      // calendar minted, so its own `o` is the authoritative answer to who may revoke it.
+      //
+      // Generic `update` is granted to nobody. Arbitrary client writes would bypass the `s: true` invariant
+      // the publish sweep's correctness rests on, which is also why firestore.rules denies them by omission.
+      // A calendar with no `o` has no owner to grant to, leaving it sys-admin only.
       const uid = context.auth?.uid;
       const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
       const isOwner = ownerKey != null && output.data?.o === ownerKey;
 
-      return grantedRoleKeysMapFromArray<CalendarRoles>(isOwner ? ['read'] : []);
+      return grantedRoleKeysMapFromArray<CalendarRoles>(isOwner ? ['read', 'rotate'] : []);
     });
   },
   getFirestoreCollection: (c) => c.app.calendarCollection

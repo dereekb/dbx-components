@@ -354,7 +354,13 @@ export interface Calendar {
    */
   c?: Maybe<string>;
   /**
-   * Ownership key, if applicable. Drives read access in the security rules.
+   * Ownership key, if applicable.
+   *
+   * Drives read access in the security rules, and the `read` + `rotate` grants in the app's Calendar model
+   * service — so this field, not the owning model's own role map, is the authoritative answer to "who may
+   * revoke this calendar's published feed url".
+   *
+   * Absent means there is no owner to grant to, leaving the calendar reachable by a sys-admin only.
    *
    * @dbxModelVariable ownerKey
    */
@@ -432,9 +438,15 @@ export interface Calendar {
 /**
  * Permission roles for Calendar operations.
  *
- * `sync` is the publish-side role held by the scheduled sweep.
+ * - `read` is the owner's grant to render the model directly instead of the published .ics.
+ * - `rotate` is the owner's capability to revoke the published feed url. A capability rather than a verb,
+ *   exactly as {@link StorageFileGroupRoles} models `regenerate`.
+ * - `sync` is the publish-side role held by the scheduled sweep.
+ *
+ * `update` is representable and deliberately granted to nobody: every Calendar write has to carry `s` or the
+ * publish sweep silently strands the feed, so generic writes stay server-only.
  */
-export type CalendarRoles = GrantedReadRole | GrantedUpdateRole | 'sync';
+export type CalendarRoles = GrantedReadRole | GrantedUpdateRole | 'rotate' | 'sync';
 
 /**
  * Firestore document wrapper for a {@link Calendar}.

@@ -35,8 +35,9 @@ export const profileCreateTestNotificationParamsType = inferredTargetModelParams
 /**
  * Params for adding a test event to the current user's profile calendar.
  *
- * The worked example of the caller-owned Calendar write: there is no Calendar CRUD api, so the profile's
- * own action loads `cal/pr_<uid>` inside its own transaction and merges the library's templates.
+ * The worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and
+ * there is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its
+ * own transaction and merges the library's templates.
  */
 export interface ProfileCreateTestCalendarEventParams extends InferredTargetModelParams {
   /**
@@ -63,17 +64,6 @@ export const profileCreateTestCalendarEventParamsType = inferredTargetModelParam
   'durationMinutes?': clearable('number'),
   'recurrenceRule?': clearable('string')
 }) as Type<ProfileCreateTestCalendarEventParams>;
-
-/**
- * Params for rotating the public ICS link of the current user's profile calendar.
- *
- * Exposed on the PROFILE rather than the Calendar on purpose: the Calendar deliberately has no callable CRUD
- * surface, so the owning model's own action is the sanctioned way to reach it — exactly as
- * `createTestCalendarEvent` does.
- */
-export interface ProfileRotateCalendarIcsParams extends InferredTargetModelParams {}
-
-export const profileRotateCalendarIcsParamsType = inferredTargetModelParamsType as Type<ProfileRotateCalendarIcsParams>;
 
 /**
  * Params for changing the current user's profile username.
@@ -231,16 +221,6 @@ export type ProfileModelCrudFunctionsConfig = {
        */
       createTestCalendarEvent: ProfileCreateTestCalendarEventParams;
       /**
-       * Rotates the public ICS link of the current user's profile calendar,
-       * revoking the previous one.
-       *
-       * Flags the current ICS StorageFile for delete and clears the calendar's
-       * pointer + url, then re-syncs so a fresh StorageFile — and therefore a
-       * fresh url — is minted. Existing subscribers to the old url break by
-       * design; that is the revocation.
-       */
-      rotateCalendarIcs: ProfileRotateCalendarIcsParams;
-      /**
        * Initiates or completes a password reset for the current user.
        *
        * Set `requestReset: true` to start a new reset (generates a temporary
@@ -263,7 +243,7 @@ export type ProfileModelCrudFunctionsConfig = {
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
     'read:downloadArchive',
-    'update:_,username,onboard,createTestNotification,createTestCalendarEvent,rotateCalendarIcs,resetPassword' as any, // use "any" once typescript complains about combinations
+    'update:_,username,onboard,createTestNotification,createTestCalendarEvent,resetPassword' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
 };
@@ -289,7 +269,6 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
       createTestNotification: ModelFirebaseCrudFunction<ProfileCreateTestNotificationParams>;
       createTestCalendarEvent: ModelFirebaseCrudFunction<ProfileCreateTestCalendarEventParams>;
-      rotateCalendarIcs: ModelFirebaseCrudFunction<ProfileRotateCalendarIcsParams>;
       updateProfileResetPassword: ModelFirebaseCrudFunction<ResetProfilePasswordParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;

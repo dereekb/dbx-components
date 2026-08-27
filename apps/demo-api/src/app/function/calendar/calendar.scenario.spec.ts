@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { unfoldIcsString } from '@dereekb/date';
 import { TEXT_CALENDAR_UTF8_CONTENT_TYPE } from '@dereekb/util';
 import { CALENDAR_ICS_PUBLISHED_CACHE_CONTROL, CALENDAR_ICS_PUBLISHED_CONTENT_DISPOSITION } from '@dereekb/firebase-server/model';
-import { CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, StorageFileProcessingState, StorageFileState, calendarSyncState } from '@dereekb/firebase';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoCalendarContext, demoProfileContext } from '../../../test/fixture';
+import { CALENDAR_ICS_STORAGE_FILE_PURPOSE, CalendarSyncState, FORBIDDEN_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, type RotateCalendarIcsResult, StorageFileProcessingState, StorageFileState, calendarIdentity, calendarSyncState, firestoreModelKey, onCallUpdateModelParams } from '@dereekb/firebase';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoCalendarContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
 import { storageFileHourlyUpdateSchedule } from '../storagefile/storagefile.schedule';
@@ -22,7 +23,7 @@ import { calendarHourlyUpdateSchedule } from './calendar.schedule';
  *       -> the SFP notification task  (renders + uploads the ICS, writes sat)
  */
 demoApiFunctionContextFactory((f) => {
-  describeCallableRequestTest('calendar.scenario', { f, fns: { demoCallModel } }, () => {
+  describeCallableRequestTest('calendar.scenario', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserAdminContext({ f }, (au) => {
       demoProfileContext({ f, u: au }, (p) => {
         demoCalendarContext({ f, profile: p }, (cal) => {
@@ -353,6 +354,47 @@ demoApiFunctionContextFactory((f) => {
               expect(ics).toContain('EXDATE:20260812T140000Z');
             });
           });
+        });
+      });
+    });
+
+    /**
+     * The rotate CALLABLE, as opposed to the server action the publish cases above drive directly.
+     *
+     * The action itself enforces nothing, so these are the only tests of the authorization: rotation is
+     * gated on the Calendar's own `rotate` role, which the model service grants off `Calendar.o`.
+     */
+    describe('calendar.update.rotateIcs', () => {
+      demoAuthorizedUserContext({ f }, (u) => {
+        demoProfileContext({ f, u }, (p) => {
+          demoCalendarContext({ f, profile: p, createTestCalendarEvent: 'Owner Rotate' }, (cal) => {
+            it('should let the calendar owner rotate the link', async () => {
+              const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(calendarIdentity, { key: cal.documentKey }, 'rotateIcs'))) as RotateCalendarIcsResult;
+
+              // nothing was ever published, so there is no url to revoke -- but the rotation still queues
+              // the first publish, which is what mints the replacement StorageFile
+              expect(result.revokedIcsStorageFile).toBe(false);
+              expect(result.createdIcsStorageFile).toBe(true);
+
+              const rotated = await assertSnapshotData(cal.document);
+              expect(rotated.isf).toBeDefined();
+            });
+
+            demoAuthorizedUserContext({ f }, (u2) => {
+              itShouldFail('with FORBIDDEN for a user who does not own the calendar', async () => {
+                // the ownership key is the whole authorization: another signed-in user gets an empty role map
+                await expectFail(() => u2.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(calendarIdentity, { key: cal.documentKey }, 'rotateIcs')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              });
+            });
+          });
+        });
+      });
+
+      demoAuthorizedUserAdminContext({ f }, (au) => {
+        itShouldFail('with MODEL_NOT_AVAILABLE for a calendar that does not exist', async () => {
+          // deliberate: the profile-scoped predecessor no-oped here, which reported a revocation that
+          // never happened. There is nothing to revoke and no owner to authorize against.
+          await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(calendarIdentity, { key: firestoreModelKey(calendarIdentity, 'no-such-calendar') }, 'rotateIcs')), expectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
         });
       });
     });

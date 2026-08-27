@@ -73,6 +73,10 @@ export interface CalendarServerActionsContext extends BaseCalendarServerActionsC
  * `calendar.util.ts` templates into their own write instead, and those templates carry the `s: true`
  * invariant that makes this sweep correct.
  *
+ * {@link CalendarServerActions.rotateCalendarIcs} is the one action with a callable surface
+ * (`calendar/update/rotateIcs`), since revoking a published feed url has to be reachable by its owner. It
+ * enforces no permission of its own — the callable's role gate is the authorization.
+ *
  * @see {@link calendarServerActions} for the concrete implementation factory.
  */
 export abstract class CalendarServerActions {

@@ -22,6 +22,7 @@ import {
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   resyncNotificationUserParamsType,
+  rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
   sendNotificationParamsType,
   syncStorageFileWithGroupsParamsType,
@@ -45,7 +46,6 @@ import {
   likeGuestbookEntryParamsType,
   profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
-  profileRotateCalendarIcsParamsType,
   publishGuestbookParamsType,
   resetProfilePasswordParamsType,
   setProfileUsernameParamsType,
@@ -55,6 +55,23 @@ import {
 import { type CliApiManifest, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
+  {
+    model: 'calendar',
+    verb: 'update',
+    specifier: 'rotateIcs',
+    paramsTypeName: 'RotateCalendarIcsParams',
+    paramsValidator: rotateCalendarIcsParamsType,
+    resultTypeName: 'RotateCalendarIcsResult',
+    groupName: 'Calendar',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.api.ts',
+    description: "Rotates the calendar's public ICS link, revoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's pointer + url, then re-syncs\nso a fresh StorageFile — and therefore a fresh url — is minted. Existing subscribers to the old url\nbreak by design; that is the revocation.",
+    paramsTypeDescription: "Parameters for rotating a Calendar's published ICS link.",
+    resultTypeDescription: "Result of rotating a Calendar's published ICS link.",
+    resultFields: [
+      { name: 'revokedIcsStorageFile', typeText: 'boolean', description: 'True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.\n\nFalse when the calendar had never published one, in which case the rotation is a no-op that still\nqueues a first publish.' },
+      { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' }
+    ]
+  },
   {
     model: 'guestbook',
     verb: 'create',
@@ -372,7 +389,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
     description: 'Adds a test event to the current user\'s profile calendar, creating the\ncalendar (`cal/pr_<uid>`) on the first call.\n\nEvery write flags the calendar for sync, so the hourly sweep republishes\nits ".ics" without any further action from the caller.',
-    paramsTypeDescription: "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: there is no Calendar CRUD api, so the profile's\nown action loads `cal/pr_<uid>` inside its own transaction and merges the library's templates.",
+    paramsTypeDescription: "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and\nthere is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its\nown transaction and merges the library's templates.",
     paramsFields: [
       { name: 'name', typeText: 'Maybe<string>', description: 'Display name of the event. Defaults to a generated name.' },
       { name: 'startsAt', typeText: 'Maybe<Date>', description: 'Instant the event starts at. Defaults to now.' },
@@ -412,17 +429,6 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'oobCode', typeText: 'Maybe<string>', description: 'The full oob token from the recovery email — includes the embedded uid; do not split or mutate.\nThe server decodes the token to resolve the target user, so this single value is sufficient\neven for a logged-out forgot-password flow.' },
       { name: 'newPassword', typeText: 'Maybe<string>', description: 'The new password to set. Required to complete the reset.' }
     ]
-  },
-  {
-    model: 'profile',
-    verb: 'update',
-    specifier: 'rotateCalendarIcs',
-    paramsTypeName: 'ProfileRotateCalendarIcsParams',
-    paramsValidator: profileRotateCalendarIcsParamsType,
-    groupName: 'Profile',
-    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
-    description: "Rotates the public ICS link of the current user's profile calendar,\nrevoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's\npointer + url, then re-syncs so a fresh StorageFile — and therefore a\nfresh url — is minted. Existing subscribers to the old url break by\ndesign; that is the revocation.",
-    paramsTypeDescription: "Params for rotating the public ICS link of the current user's profile calendar.\n\nExposed on the PROFILE rather than the Calendar on purpose: the Calendar deliberately has no callable CRUD\nsurface, so the owning model's own action is the sanctioned way to reach it — exactly as\n`createTestCalendarEvent` does."
   },
   {
     model: 'profile',
@@ -699,7 +705,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'd', longName: 'description', tsType: 'Maybe<string>', optional: true, description: 'Description of the calendar. Emitted as DESCRIPTION/X-WR-CALDESC.' },
       { name: 'tz', longName: 'timezone', tsType: 'TimezoneString', optional: false, description: 'Default timezone of the calendar. Emitted as X-WR-TIMEZONE, and the fallback for an event with no `tz`.' },
       { name: 'c', longName: 'color', tsType: 'Maybe<string>', optional: true, description: 'CSS3 color name for the calendar. Emitted as COLOR.' },
-      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable. Drives read access in the security rules.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable.' },
       { name: 'e', longName: 'events', tsType: 'CalendarEventItem[]', optional: false, description: "The calendar's one-off events, ascending by start instant and unique by id." },
       {
         name: 'r',

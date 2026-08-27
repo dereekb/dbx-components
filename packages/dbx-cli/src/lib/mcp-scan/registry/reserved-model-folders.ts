@@ -46,7 +46,7 @@ export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
   },
   {
     name: 'calendar',
-    reason: 'Calendar is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (type, expand, ics, processing, etc.) and no callable CRUD api, so the base check would flag its missing `calendar.api.ts` config as a hard error; downstream projects extend rather than redeclare it.',
+    reason: 'Calendar is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (type, expand, ics, processing, etc.); downstream projects extend rather than redeclare it.',
     recommendedTool: 'dbx_model_validate_folder'
   }
 ];

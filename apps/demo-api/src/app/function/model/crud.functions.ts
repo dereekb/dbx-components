@@ -1,6 +1,6 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
 import { guestbookCreate } from '../guestbook/guestbook.create';
-import { profileUpdate, profileUpdateCreateTestCalendarEvent, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateRotateCalendarIcs, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
+import { profileUpdate, profileUpdateCreateTestCalendarEvent, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
 import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
 import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallInvokeModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
@@ -33,6 +33,7 @@ import { openRouterPromptVersionCreate } from '../openrouter/openrouterpromptver
 import { openRouterPromptVersionUpdate } from '../openrouter/openrouterpromptversion.update';
 import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
+import { calendarUpdateRotateIcs } from '../calendar/calendar.update';
 
 // MARK: Create
 export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
@@ -94,8 +95,10 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
     onboard: profileUpdateOnboard,
     createTestNotification: profileUpdateCreateTestNotification,
     createTestCalendarEvent: profileUpdateCreateTestCalendarEvent,
-    rotateCalendarIcs: profileUpdateRotateCalendarIcs,
     resetPassword: profileUpdateResetPassword
+  }),
+  calendar: onCallSpecifierHandler({
+    rotateIcs: calendarUpdateRotateIcs
   }),
   notificationUser: onCallSpecifierHandler({
     _: notificationUserUpdate,

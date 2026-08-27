@@ -1,21 +1,4 @@
-import {
-  type FinishOnboardingProfileParams,
-  type ProfileCreateTestCalendarEventParams,
-  type ProfileCreateTestNotificationParams,
-  type ProfileDocument,
-  type ProfileRotateCalendarIcsParams,
-  type ResetProfilePasswordParams,
-  type SetProfileUsernameParams,
-  type UpdateProfileParams,
-  finishOnboardingProfileParamsType,
-  profileCreateTestCalendarEventParamsType,
-  profileCreateTestNotificationParamsType,
-  profileIdentity,
-  profileRotateCalendarIcsParamsType,
-  resetProfilePasswordParamsType,
-  setProfileUsernameParamsType,
-  updateProfileParamsType
-} from 'demo-firebase';
+import { type FinishOnboardingProfileParams, type ProfileCreateTestCalendarEventParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, finishOnboardingProfileParamsType, profileCreateTestCalendarEventParamsType, profileCreateTestNotificationParamsType, profileIdentity, resetProfilePasswordParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
@@ -147,30 +130,5 @@ export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<Profi
 
     const createTestCalendarEvent = await nest.profileActions.createTestCalendarEvent(data);
     await createTestCalendarEvent(profileDocument);
-  }
-});
-
-/**
- * Rotates the public ICS link of the caller's profile calendar.
- *
- * Gated on the profile `owner` role: the feed url is a bearer credential, so revoking it is an owner-only
- * operation. Callables run through firebase-admin and bypass Firestore rules entirely, which is why this gate
- * — and not `firestore.rules` — is the authorization.
- */
-export const profileUpdateRotateCalendarIcs: DemoUpdateModelFunction<ProfileRotateCalendarIcsParams> = withApiDetails({
-  inputType: profileRotateCalendarIcsParamsType,
-  fn: async (request) => {
-    const { nest, auth, data } = request;
-    const uid = auth.uid;
-
-    const profileDocument = await nest.useModel('profile', {
-      request,
-      key: firestoreModelKey(profileIdentity, uid),
-      roles: 'owner',
-      use: (x) => x.document
-    });
-
-    const rotateCalendarIcs = await nest.profileActions.rotateCalendarIcs(data);
-    await rotateCalendarIcs(profileDocument);
   }
 });

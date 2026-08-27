@@ -3,16 +3,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
-import { DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
+import { CalendarDocumentStore, DbxFirebaseCalendarSubscribePopupComponent, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, DbxFirebaseStorageFileDownloadService } from '@dereekb/dbx-firebase';
 import { type ContentDispositionString, randomNumber } from '@dereekb/util';
 import { type CalendarEventOccurrence, CalendarSyncState, expandCalendarEvents } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
-import { CalendarDocumentStore, ProfileDocumentStore } from 'demo-components';
+import { ProfileDocumentStore } from 'demo-components';
 import { type CalendarEvent } from 'angular-calendar';
 import { addDays, setHours, startOfDay } from 'date-fns';
 import { combineLatest, map, shareReplay } from 'rxjs';
-import { DemoCalendarSubscribePopupComponent } from './calendar.subscribe.popup.component';
 import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup.component';
 
 /**
@@ -114,9 +113,8 @@ export class DemoCalendarViewComponent {
    * or the lag reads as a bug.
    */
   readonly openSubscribePopup = () => {
-    DemoCalendarSubscribePopupComponent.openPopup(this.matDialog, {
-      calendarDocumentStore: this.calendarDocumentStore,
-      profileDocumentStore: this.profileDocumentStore
+    DbxFirebaseCalendarSubscribePopupComponent.openPopup(this.matDialog, {
+      calendarDocumentStore: this.calendarDocumentStore
     });
   };
 

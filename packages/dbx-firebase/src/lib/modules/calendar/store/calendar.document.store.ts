@@ -1,28 +1,40 @@
 import { Injectable, inject } from '@angular/core';
-import { AbstractDbxFirebaseDocumentStore } from '@dereekb/dbx-firebase';
-import { type Calendar, type CalendarDocument, type CalendarSyncState, calendarSyncState, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
+import { type Calendar, type CalendarDocument, CalendarFirestoreCollections, CalendarFunctions, type CalendarSyncState, calendarSyncState, firestoreModelKey, storageFileIdentity } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { DemoFirestoreCollections } from 'demo-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 /**
  * Document store for a single {@link Calendar}.
  *
- * There is no update function here on purpose: the Calendar has no CRUD api, as event mutation is
- * caller-owned on the server. A client reads the model and renders it; writes arrive through the owning
- * model's own action (see `ProfileDocumentStore.createTestCalendarEvent`).
+ * Exposes exactly one write, {@link CalendarDocumentStore.rotateIcs}: a published .ics url is a permanent
+ * zero-auth bearer credential, and rotation is the only revocation such a url has, so it has to be reachable
+ * from the client that shows the url.
+ *
+ * Event mutation is absent on purpose — it is caller-owned on the server. A caller already holds a
+ * transaction and an accessor when it decides to touch a calendar, so writes arrive through the owning
+ * model's own action rather than through a Calendar callable.
  */
 @Injectable()
 export class CalendarDocumentStore extends AbstractDbxFirebaseDocumentStore<Calendar, CalendarDocument> {
+  readonly calendarFunctions = inject(CalendarFunctions);
+
   constructor() {
-    super({ firestoreCollection: inject(DemoFirestoreCollections).calendarCollection });
+    super({ firestoreCollection: inject(CalendarFirestoreCollections).calendarCollection });
   }
+
+  /**
+   * Rotates this calendar's public ICS link, revoking the previous one.
+   *
+   * The store's current key is injected into the params, so callers pass `{}`.
+   */
+  readonly rotateIcs = firebaseDocumentStoreUpdateFunction(this, this.calendarFunctions.calendar.updateCalendar.rotateIcs);
 
   /**
    * Key of the StorageFile holding the published ICS, or undefined before the first publish.
    *
-   * Mirrors `ProfileDocumentStore.zipArchiveStorageFileKey$`. Read off `isf` rather than recomputed from a
-   * path, since the ICS object is keyed by the StorageFile's own id.
+   * Read off `isf` rather than recomputed from a path, since the ICS object is keyed by the StorageFile's own
+   * id.
    */
   readonly icsStorageFileKey$ = this.currentData$.pipe(
     map((x): Maybe<string> => (x?.isf ? firestoreModelKey(storageFileIdentity, x.isf) : undefined)),
