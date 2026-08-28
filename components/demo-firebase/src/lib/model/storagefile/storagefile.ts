@@ -1,4 +1,4 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileMetadata, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { FORM_SPACE_UPLOAD_POLICY, ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileMetadata, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { type OpenRouterRunTaskKey } from '@dereekb/openrouter';
 import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 import { profileIdentity } from '../profile';
@@ -433,4 +433,4 @@ export const USER_RESUME_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
  * purpose means appending an entry here AND updating `storage.rules` so the
  * corresponding path is writable.
  */
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY, USER_RESUME_FILE_UPLOAD_POLICY];
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY, USER_RESUME_FILE_UPLOAD_POLICY, FORM_SPACE_UPLOAD_POLICY];

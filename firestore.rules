@@ -142,6 +142,17 @@ service cloud.firestore {
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 
+    // MARK: FormSpace
+    match /fsp/{formSpace} {
+      // owners read and list their own in-progress forms. "list" is granted here — unlike /cal, which has
+      // no list use case — because "my outstanding forms" is the screen the model exists for; it is scoped
+      // by the SAME ownership predicate, so an unscoped list still fails.
+      // Writes stay server-only via the default deny: every state transition carries invariants (the
+      // submit lock, the "eat" clear, the monotonic upload counter) that a client write would bypass.
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+      allow list: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+    }
+
     // NOTE: there is deliberately NO match block for /orp (OpenRouterPrompt), /orpv
     // (OpenRouterPromptVersion) or /orrt (OpenRouterRunTask). They are server-only models: prompts are
     // authored through the admin-gated callable model API, and a run task carries the model's raw input

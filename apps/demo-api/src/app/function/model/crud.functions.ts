@@ -16,6 +16,9 @@ import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
+import { formSpaceCreate } from '../formspace/formspace.create';
+import { formSpaceUpdate, formSpaceSubmit } from '../formspace/formspace.update';
+import { formSpaceDelete } from '../formspace/formspace.delete';
 import { storageFileDownload, storageFileDownloadMultiple, storageFileReadMetadata, storageFileReadMetadataMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { guestbookEntryAllPublishedEntries, guestbookEntryEntryDetails } from '../guestbook/guestbookentry.invoke';
@@ -50,6 +53,9 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
     fromUpload: storageFileFromUpload,
     allFromUpload: storageFileAllFromUpload,
     signedUploadUrl: storageFileCreateSignedUploadUrl
+  }),
+  formSpace: onCallSpecifierHandler({
+    _: formSpaceCreate
   }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryCreateClient
@@ -123,6 +129,10 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
     _: storageFileGroupUpdate,
     regenerateContent: storageFileGroupRegenerateContent
   }),
+  formSpace: onCallSpecifierHandler({
+    _: formSpaceUpdate,
+    submit: formSpaceSubmit
+  }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryUpdateClient,
     rotateClientSecret: oidcEntryRotateClientSecret
@@ -141,6 +151,9 @@ export const DEMO_DELETE_MODEL_MAP: DemoOnCallDeleteModelMap = {
   profile: profileDelete,
   storageFile: onCallSpecifierHandler({
     _: storageFileDelete
+  }),
+  formSpace: onCallSpecifierHandler({
+    _: formSpaceDelete
   }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryDeleteClient,

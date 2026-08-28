@@ -90,6 +90,14 @@ import {
   type UserExternalConnectionRoles,
   type UserExternalConnectionTypes,
   userExternalConnectionFirestoreCollection,
+  type FormSpace,
+  type FormSpaceDocument,
+  type FormSpaceFirestoreCollection,
+  type FormSpaceFirestoreCollections,
+  type FormSpaceRoles,
+  type FormSpaceTypes,
+  formSpaceFirestoreCollection,
+  grantFormSpaceRolesForUserAuthFunction,
   type Calendar,
   type CalendarDocument,
   type CalendarFirestoreCollection,
@@ -123,7 +131,7 @@ import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, CalendarFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, CalendarFirestoreCollections, FormSpaceFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -146,6 +154,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
   abstract readonly calendarCollection: CalendarFirestoreCollection;
+  abstract readonly formSpaceCollection: FormSpaceFirestoreCollection;
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
   abstract readonly userExternalConnectionCollection: UserExternalConnectionFirestoreCollection;
   abstract readonly openRouterPromptCollection: OpenRouterPromptFirestoreCollection;
@@ -187,6 +196,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
     calendarCollection: calendarFirestoreCollection(firestoreContext),
+    formSpaceCollection: formSpaceFirestoreCollection(firestoreContext),
     oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext }),
     userExternalConnectionCollection: userExternalConnectionFirestoreCollection(firestoreContext),
     openRouterPromptCollection: openRouterPromptFirestoreCollection(firestoreContext),
@@ -444,6 +454,26 @@ export const calendarFirebaseModelServiceFactory = firebaseModelServiceFactory<D
   getFirestoreCollection: (c) => c.app.calendarCollection
 });
 
+// MARK: FormSpace
+/**
+ * @dbxModelServiceFactory formSpace
+ */
+export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, FormSpace, FormSpaceDocument, FormSpaceRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<FormSpace, FormSpaceDocument>, context: DemoFirebaseContext, model: FormSpaceDocument): PromiseOrValue<GrantedRoleMap<FormSpaceRoles>> {
+    const grantFormSpaceRolesForUser = grantFormSpaceRolesForUserAuthFunction({ output, context, model });
+    return grantModelRolesIfAdmin(
+      context,
+      fullAccessRoleMap(),
+      grantFormSpaceRolesForUser({
+        // the owner drives their own form end to end: read it, edit the draft, upload into it, submit it,
+        // and abandon it. Nothing here grants access to anyone else's space.
+        rolesForFormSpaceUser: async () => ({ read: true, update: true, upload: true, submit: true, delete: true })
+      })
+    );
+  },
+  getFirestoreCollection: (c) => c.app.formSpaceCollection
+});
+
 /**
  * @dbxModelServiceFactory oidcEntry
  */
@@ -518,7 +548,7 @@ export const userExternalConnectionFirebaseModelServiceFactory = firebaseModelSe
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | CalendarTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | CalendarTypes | FormSpaceTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -540,6 +570,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
   calendar: calendarFirebaseModelServiceFactory,
+  formSpace: formSpaceFirebaseModelServiceFactory,
   oidcEntry: oidcEntryFirebaseModelServiceFactory,
   userExternalConnection: userExternalConnectionFirebaseModelServiceFactory,
   openRouterPrompt: openRouterPromptFirebaseModelServiceFactory,

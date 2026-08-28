@@ -3,10 +3,12 @@
 // Run `pnpm nx run demo-cli:generate-api-manifest` to refresh.
 
 import {
+  createFormSpaceParamsType,
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
   createUserExternalConnectionParamsType,
+  deleteFormSpaceParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
@@ -25,7 +27,9 @@ import {
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
   sendNotificationParamsType,
+  submitFormSpaceParamsType,
   syncStorageFileWithGroupsParamsType,
+  updateFormSpaceParamsType,
   updateNotificationBoxParamsType,
   updateNotificationBoxRecipientParamsType,
   updateNotificationSummaryParamsType,
@@ -71,6 +75,54 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'revokedIcsStorageFile', typeText: 'boolean', description: 'True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.\n\nFalse when the calendar had never published one, in which case the rotation is a no-op that still\nqueues a first publish.' },
       { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' },
       { name: 'publishedIcs', typeText: 'boolean', description: 'True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.\n\nFalse means only that the publish did not complete INLINE — the replacement is still queued and the\nregular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this\nas "is the new link ready to show yet", never as a failure.' }
+    ]
+  },
+  {
+    model: 'formSpace',
+    verb: 'create',
+    specifier: '_',
+    paramsTypeName: 'CreateFormSpaceParams',
+    paramsValidator: createFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: 'Parameters for creating a FormSpace.',
+    paramsFields: [
+      { name: 'formSpaceType', typeText: 'FormSpaceType', description: 'The registered {@link FormSpaceType} to create. Creation of an unregistered type is rejected.' },
+      { name: 'displayName', typeText: 'Maybe<string>', description: 'Display name for the space.' },
+      { name: 'targetModelKey', typeText: 'Maybe<FirestoreModelKey>', description: 'The model this space is being opened against, if any.' },
+      { name: 'data', typeText: 'Maybe<T>', description: 'Initial form data.' }
+    ]
+  },
+  { model: 'formSpace', verb: 'delete', specifier: '_', paramsTypeName: 'DeleteFormSpaceParams', paramsValidator: deleteFormSpaceParamsType, groupName: 'FormSpace', sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts', paramsTypeDescription: 'Parameters for deleting a FormSpace and flagging its uploaded files for deletion.' },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: '_',
+    paramsTypeName: 'UpdateFormSpaceParams',
+    paramsValidator: updateFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: "Parameters for updating a draft FormSpace's content.\n\n`data` REPLACES the stored JSON rather than merging into it. The client owns the whole form; a merge\nwould make clearing a field impossible to express.",
+    paramsFields: [
+      { name: 'displayName', typeText: 'Maybe<string>' },
+      { name: 'data', typeText: 'Maybe<T>' }
+    ]
+  },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: 'submit',
+    paramsTypeName: 'SubmitFormSpaceParams',
+    paramsValidator: submitFormSpaceParamsType,
+    resultTypeName: 'SubmitFormSpaceResult',
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: 'Parameters for submitting a FormSpace.',
+    paramsFields: [{ name: 'runImmediately', typeText: 'Maybe<boolean>', description: "Whether to run the submission's processing task immediately rather than waiting for the queue." }],
+    resultTypeDescription: 'Result of submitting a FormSpace.',
+    resultFields: [
+      { name: 'processingNotificationKey', typeText: 'string', description: 'The key of the NotificationTask processing the submission.' },
+      { name: 'processingTaskCreated', typeText: 'boolean', description: 'True if the processing task was newly created by this call.' }
     ]
   },
   {
@@ -496,7 +548,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'contentType', typeText: 'ContentTypeMimeType', description: "The MIME type the client intends to PUT. Validated against the policy's\n`allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a\ndifferent `Content-Type`." },
       { name: 'filename', typeText: 'Maybe<SlashPathFile>', description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars." },
       { name: 'fileSizeBytes', typeText: 'number', description: "Client-declared size in bytes for the upload. Validated against the\npolicy's `maxFileSizeBytes` cap. The storage rules independently enforce\nthe same cap via `request.resource.size`." },
-      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}\nwhen omitted.' }
+      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}\nwhen omitted.' },
+      { name: 'scope', typeText: 'Maybe<StorageFileUploadScope>', description: 'The model, and optionally the slot within it, this upload belongs to. Required when the resolved\npolicy sets `requiresScopeInput: true` (e.g. a FormSpace upload, which is keyed by space and slot\nrather than by the uid alone).' }
     ],
     resultTypeDescription: 'Result of creating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.\n\n`modelKeys` is intentionally empty — minting the URL does not create a\nStorageFile document; the document is created later by the upload-complete\npipeline.',
     resultFields: [
@@ -734,6 +787,36 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     ],
     read: 'owner',
     serviceFactory: { exportName: 'calendarFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'formSpace',
+    modelName: 'FormSpace',
+    identityConst: 'formSpaceIdentity',
+    collectionPrefix: 'fsp',
+    exampleKey: 'fsp/<formSpaceId>',
+    description: 'A type-registered container for a client-side form: its in-progress JSON, its uploads, and its submission state.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.ts',
+    fields: [
+      { name: 't', longName: 'formSpaceType', tsType: 'FormSpaceType', optional: false, description: 'The kind of form this space holds, resolving its upload restrictions, expiration policy, and the server-side handler its submission is dispatched to.' },
+      { name: 'n', longName: 'displayName', tsType: 'Maybe<string>', optional: true, description: "Display name of the space, for the owner's own list of in-progress forms." },
+      { name: 's', longName: 'state', tsType: 'FormSpaceState', optional: false, description: 'Lifecycle state. Only DRAFT is editable.', enumRef: 'FormSpaceState' },
+      { name: 'ps', longName: 'processingState', tsType: 'FormSpaceProcessingState', optional: false, description: 'Processing state of the submission.', enumRef: 'FormSpaceProcessingState' },
+      { name: 'd', longName: 'data', tsType: 'Maybe<T>', optional: true, description: "The form's own values, stored as pass-through JSON." },
+      { name: 'u', longName: 'userId', tsType: 'FirebaseAuthUserId', optional: false, description: 'The user the space belongs to. Set at creation and never changed.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable. Drives read access in the security rules.' },
+      { name: 'm', longName: 'targetModelKey', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Key of the model this space was opened against, when it was opened against one.' },
+      { name: 'uc', longName: 'uploadCount', tsType: 'number', optional: false, description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.' },
+      { name: 'pn', longName: 'processingNotificationKey', tsType: 'Maybe<NotificationKey>', optional: true, description: "The NotificationTask key processing this space's submission." },
+      { name: 'pat', longName: 'processingAt', tsType: 'Maybe<Date>', optional: true, description: 'The date `ps` was last moved to PROCESSING. Used to detect a stuck task.' },
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
+      { name: 'sat', longName: 'submittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was submitted, if it was. Its presence IS the lock.' },
+      { name: 'cpat', longName: 'completedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date processing of the submission concluded, if it has.' },
+      { name: 'eat', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'formSpaceFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'guestbook',
@@ -1193,6 +1276,28 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
 ];
 
 export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
+  FormSpaceProcessingState: {
+    name: 'FormSpaceProcessingState',
+    values: [
+      { name: 'INIT_OR_NONE', value: 0 },
+      { name: 'QUEUED_FOR_PROCESSING', value: 1 },
+      { name: 'PROCESSING', value: 2 },
+      { name: 'FAILED', value: 3 },
+      { name: 'SUCCESS', value: 4 },
+      { name: 'DO_NOT_PROCESS', value: 5 }
+    ],
+    description: 'Processing state of a submitted {@link FormSpace}.'
+  },
+  FormSpaceState: {
+    name: 'FormSpaceState',
+    values: [
+      { name: 'DRAFT', value: 0 },
+      { name: 'SUBMITTED', value: 1 },
+      { name: 'EXPIRED', value: 2 },
+      { name: 'ARCHIVED', value: 3 }
+    ],
+    description: 'Lifecycle state of a {@link FormSpace}.'
+  },
   NotificationBoxRecipientFlag: {
     name: 'NotificationBoxRecipientFlag',
     values: [

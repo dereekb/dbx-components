@@ -106,6 +106,7 @@ import {
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH,
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS,
   type StorageFilePurposeUploadPolicy,
+  type StorageFileUploadScope,
   type FirebaseAuthUserId,
   type AsyncFirebaseFunctionCreateAction
 } from '@dereekb/firebase';
@@ -305,6 +306,20 @@ function _assertSignedUploadUrlFileSizeAllowed(policy: StorageFilePurposeUploadP
   }
 }
 
+function _resolveSignedUploadUrlScopeOrThrow(policy: StorageFilePurposeUploadPolicy, scope: Maybe<StorageFileUploadScope>): StorageFileUploadScope | undefined {
+  let resolved: StorageFileUploadScope | undefined;
+
+  if (policy.requiresScopeInput) {
+    if (!scope?.id) {
+      throw badRequestError({ message: `scope is required for purpose "${policy.purpose}"`, code: 'MISSING_SCOPE' });
+    }
+
+    resolved = scope;
+  }
+
+  return resolved;
+}
+
 function _resolveSignedUploadUrlFilenameOrThrow(policy: StorageFilePurposeUploadPolicy, filename: Maybe<string>): SlashPathFile | undefined {
   let resolved: SlashPathFile | undefined;
 
@@ -348,11 +363,12 @@ export function createStorageFileSignedUploadUrlFactory(context: StorageFileServ
     _assertSignedUploadUrlFileSizeAllowed(policy, params.fileSizeBytes);
 
     const filename = _resolveSignedUploadUrlFilenameOrThrow(policy, params.filename);
+    const scope = _resolveSignedUploadUrlScopeOrThrow(policy, params.scope);
     const expiresInMs = _clampSignedUploadUrlExpiresInMs(params.expiresInMs);
     const contentType = params.contentType;
 
     return async ({ uid }: { readonly uid: FirebaseAuthUserId }): Promise<CreateStorageFileSignedUploadUrlResult> => {
-      const pathString = policy.buildUploadPath({ uid, filename });
+      const pathString = policy.buildUploadPath({ uid, filename, scope });
       const expiresAtDate = addMilliseconds(new Date(), expiresInMs);
 
       const file = storageService.file({ pathString });

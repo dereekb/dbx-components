@@ -77,6 +77,54 @@ describe('firestore.rules', () => {
       });
     });
 
+    describe('fsp (FormSpace)', () => {
+      const OWNER_FORM_SPACE = 'ownerformspace';
+      const OTHER_FORM_SPACE = 'otherformspace';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'fsp', OWNER_FORM_SPACE), { t: 'demo_example', s: 0, ps: 0, u: OWNER_UID, o: `pr/${OWNER_UID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+          await setDoc(doc(firestore, 'fsp', OTHER_FORM_SPACE), { t: 'demo_example', s: 0, ps: 0, u: OTHER_UID, o: `pr/${OTHER_UID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+        });
+      });
+
+      it('should allow the owner to read their own FormSpace', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      it("should deny reading another user's FormSpace", async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OTHER_UID), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      // "my outstanding forms" is the screen the model exists for, so list IS granted — but only when the
+      // query is scoped by the same ownership predicate the get rule uses.
+      it('should allow an owner-scoped list', async () => {
+        await assertSucceeds(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'fsp'), where('o', '==', `pr/${OWNER_UID}`))));
+      });
+
+      it('should deny an unscoped list', async () => {
+        await assertFails(getDocs(collection(f.firestoreForUser(OWNER_UID), 'fsp')));
+      });
+
+      it("should deny a list scoped to another user's ownership key", async () => {
+        await assertFails(getDocs(query(collection(f.firestoreForUser(OTHER_UID), 'fsp'), where('o', '==', `pr/${OWNER_UID}`))));
+      });
+
+      // Every state transition carries invariants (the submit lock, the eat clear, the monotonic upload
+      // counter) that a client write would bypass, so all writes stay server-only.
+      it('should deny the owner writing their own FormSpace', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', OWNER_FORM_SPACE), { s: 1 }));
+      });
+
+      it('should deny an unauthenticated write', async () => {
+        await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'fsp', OWNER_FORM_SPACE), { s: 1 }));
+      });
+    });
+
     describe('sys (SystemState)', () => {
       const SYSTEM_STATE_TYPE = 'examplestate';
 

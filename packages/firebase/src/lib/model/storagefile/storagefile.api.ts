@@ -4,6 +4,7 @@ import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
+import { type StorageFileUploadScope } from './storagefile.upload';
 import { type StorageFileKey, type StorageFileId, type StorageFilePurpose } from './storagefile.id';
 import { type StorageBucketId, type StorageMetadata, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type SlashPath, type SlashPathFile, type UnixDateTimeMillisecondsNumber, type UnixDateTimeSecondsNumber } from '@dereekb/util';
@@ -433,14 +434,29 @@ export interface CreateStorageFileSignedUploadUrlParams {
    * when omitted.
    */
   readonly expiresInMs?: Maybe<Milliseconds>;
+  /**
+   * The model, and optionally the slot within it, this upload belongs to. Required when the resolved
+   * policy sets `requiresScopeInput: true` (e.g. a FormSpace upload, which is keyed by space and slot
+   * rather than by the uid alone).
+   */
+  readonly scope?: Maybe<StorageFileUploadScope>;
 }
+
+/**
+ * Arktype for a {@link StorageFileUploadScope}.
+ */
+export const storageFileUploadScopeType = /* @__PURE__ */ type({
+  id: 'string > 0',
+  'subgroup?': clearable('string > 0')
+}) as Type<StorageFileUploadScope>;
 
 export const createStorageFileSignedUploadUrlParamsType = /* @__PURE__ */ type({
   purpose: 'string > 0',
   contentType: 'string > 0',
   'filename?': clearable(`string > 0 & string <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH}`),
   fileSizeBytes: 'number > 0',
-  'expiresInMs?': clearable(`number >= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS} & number <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}`)
+  'expiresInMs?': clearable(`number >= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS} & number <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}`),
+  'scope?': clearable(storageFileUploadScopeType)
 }) as Type<CreateStorageFileSignedUploadUrlParams>;
 
 /**
