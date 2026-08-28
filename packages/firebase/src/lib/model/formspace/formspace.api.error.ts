@@ -24,6 +24,27 @@ export const FORM_SPACE_NOT_EDITABLE_ERROR_CODE = 'FORM_SPACE_NOT_EDITABLE';
 export const FORM_SPACE_REQUIRED_SLOT_MISSING_ERROR_CODE = 'FORM_SPACE_REQUIRED_SLOT_MISSING';
 
 /**
+ * Thrown when a FormSpace is submitted while one of its slots holds a file validation judged invalid.
+ *
+ * Separate from {@link FORM_SPACE_REQUIRED_SLOT_MISSING_ERROR_CODE}: the slot IS filled, so telling the owner
+ * to upload something would be wrong — they need to remove or replace what is already there.
+ */
+export const FORM_SPACE_HAS_INVALID_FILES_ERROR_CODE = 'FORM_SPACE_HAS_INVALID_FILES';
+
+/**
+ * Thrown when a FormSpace is submitted while a slot that requires validation is still awaiting a verdict.
+ *
+ * Transient by nature — the same submission succeeds once validation concludes — which is why it is not
+ * folded into {@link FORM_SPACE_HAS_INVALID_FILES_ERROR_CODE}.
+ */
+export const FORM_SPACE_VALIDATION_PENDING_ERROR_CODE = 'FORM_SPACE_VALIDATION_PENDING';
+
+/**
+ * Thrown when a file is removed from a FormSpace slot that does not hold it.
+ */
+export const FORM_SPACE_FILE_NOT_FOUND_ERROR_CODE = 'FORM_SPACE_FILE_NOT_FOUND';
+
+/**
  * Thrown when an upload is rejected by {@link assertFormSpaceUploadAllowed}.
  */
 export const FORM_SPACE_UPLOAD_NOT_ALLOWED_ERROR_CODE = 'FORM_SPACE_UPLOAD_NOT_ALLOWED';

@@ -1,8 +1,32 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type SlashPathFile } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole, type GrantedDeleteRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, type FirebaseAuthOwnershipKey, type FirebaseAuthUserId, type FirestoreModelKey, firestoreDate, firestoreEnum, firestoreModelIdentity, firestoreNumber, firestoreString, firestoreUID, optionalFirestoreDate, optionalFirestorePassthroughJsonField, optionalFirestoreString, snapshotConverterFunctions } from '../../common';
+import {
+  AbstractFirestoreDocument,
+  type CollectionReference,
+  type FirestoreCollection,
+  type FirestoreContext,
+  type FirebaseAuthOwnershipKey,
+  type FirebaseAuthUserId,
+  type FirestoreModelKey,
+  firestoreDate,
+  firestoreEnum,
+  firestoreModelIdString,
+  firestoreModelIdentity,
+  firestoreNumber,
+  firestoreObjectArray,
+  firestoreString,
+  firestoreSubObject,
+  firestoreUID,
+  firestoreUnixDateTimeSecondsNumber,
+  optionalFirestoreDate,
+  optionalFirestorePassthroughJsonField,
+  optionalFirestoreString,
+  optionalFirestoreUnixDateTimeSecondsNumber,
+  snapshotConverterFunctions
+} from '../../common';
 import { type NotificationKey } from '../notification/notification.id';
-import { type FormSpaceType } from './formspace.id';
+import { type StorageFileId } from '../storagefile/storagefile.id';
+import { type FormSpaceFileSlot, type FormSpaceType } from './formspace.id';
 
 /**
  * @module formspace
@@ -59,6 +83,112 @@ export enum FormSpaceProcessingState {
   SUCCESS = 4,
   DO_NOT_PROCESS = 5
 }
+
+/**
+ * Validation state of one {@link FormSpaceFile}.
+ *
+ * A slot that declares no validator leaves every file at NONE — "nothing to check" and "checked and fine"
+ * are deliberately distinct, so a type that gains a validator later does not silently inherit a pass.
+ */
+export enum FormSpaceFileValidationState {
+  NONE = 0,
+  PENDING = 1,
+  VALID = 2,
+  INVALID = 3
+}
+
+/**
+ * Why validation could not reach a verdict about a file's CONTENT.
+ *
+ * Closed, unlike {@link FormSpaceFile.r}, because every member here is infrastructural: the object was gone,
+ * the file was superseded mid-check, no validator was registered, the validator threw. A content rejection's
+ * reason is written by the validator for a human to read and so cannot be enumerated.
+ */
+export type FormSpaceFileValidationFailureReason = 'replaced' | 'file_unavailable' | 'no_validator' | 'error';
+
+/**
+ * One file currently held in a {@link FormSpace} slot.
+ *
+ * The FormSpace's `f` array is the ONLY authority on what a space currently holds. The StorageFiles
+ * themselves are not queryable by the owner (`firestore.rules` grants `get` but not `list` on `/sf`) and the
+ * StorageFileGroup's own `f[]` is populated lazily by the group-sync sweep, so neither can answer "what is in
+ * this folder" at the moment an upload is accepted. This array is written in the same transaction that
+ * accepts the upload, so it always can.
+ *
+ * @dbxModelSubObject
+ */
+export interface FormSpaceFile {
+  /**
+   * The slot this file fills.
+   *
+   * @dbxModelVariable slot
+   */
+  sl: FormSpaceFileSlot;
+  /**
+   * The id of the StorageFile holding the bytes.
+   *
+   * @dbxModelVariable storageFileId
+   */
+  sf: StorageFileId;
+  /**
+   * The file's name, as it was uploaded.
+   *
+   * @dbxModelVariable fileName
+   */
+  n: SlashPathFile;
+  /**
+   * Validation state.
+   *
+   * @dbxModelVariable validationState
+   */
+  v: FormSpaceFileValidationState;
+  /**
+   * Free-text reason the file was judged INVALID, written for the owner to act on.
+   *
+   * @dbxModelVariable invalidReason
+   */
+  r?: Maybe<string>;
+  /**
+   * Reason validation never reached a content verdict, if it did not.
+   *
+   * @dbxModelVariable failureReason
+   */
+  fr?: Maybe<FormSpaceFileValidationFailureReason>;
+  /**
+   * The date the upload was accepted.
+   *
+   * @dbxModelVariable uploadedAt
+   */
+  at: Date;
+  /**
+   * The date validation concluded, if it has.
+   *
+   * @dbxModelVariable validatedAt
+   */
+  vat?: Maybe<Date>;
+}
+
+/**
+ * Firestore sub-object converter for {@link FormSpaceFile}.
+ *
+ * Dates are stored as Unix seconds rather than timestamps, matching {@link storageFileGroupEmbeddedFile}:
+ * these are embedded in an array that is rewritten on every upload, and the compact form keeps the document
+ * small enough that the array is never the reason a space approaches Firestore's ceiling.
+ */
+export const formSpaceFileSubObject = firestoreSubObject<FormSpaceFile>({
+  objectField: {
+    fields: {
+      sl: firestoreString<FormSpaceFileSlot>(),
+      sf: firestoreModelIdString,
+      n: firestoreString<SlashPathFile>(),
+      v: firestoreEnum<FormSpaceFileValidationState>({ default: FormSpaceFileValidationState.NONE }),
+      r: optionalFirestoreString(),
+      fr: optionalFirestoreString<FormSpaceFileValidationFailureReason>(),
+      at: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true }),
+      vat: optionalFirestoreUnixDateTimeSecondsNumber()
+    }
+  }
+});
 
 /**
  * The arbitrary JSON a FormSpace parks while the user fills the form out.
@@ -145,6 +275,22 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
    */
   uc: number;
   /**
+   * Every file the space currently holds, across every slot.
+   *
+   * THE authority on the space's files. It is written in the same transaction that increments `uc`, so it is
+   * correct the instant an upload is accepted — which neither a StorageFile query (the owner cannot `list`
+   * `/sf`) nor the StorageFileGroup's lazily-synced `f[]` is.
+   *
+   * Flat rather than a map of slot to files: one array converts with one {@link firestoreObjectArray}, and
+   * the per-slot views callers actually want are a filter away. Bounded by the type's `maxUploads`.
+   *
+   * Distinct from `uc`: superseding a slot drops the old entry and appends a new one, leaving the length
+   * unchanged while `uc` still advances.
+   *
+   * @dbxModelVariable files
+   */
+  f: FormSpaceFile[];
+  /**
    * The NotificationTask key processing this space's submission.
    *
    * Set when the submission is queued; cleared once processing is no longer PROCESSING.
@@ -229,6 +375,7 @@ export const formSpaceConverter = snapshotConverterFunctions<FormSpace>({
     o: optionalFirestoreString(),
     m: optionalFirestoreString(),
     uc: firestoreNumber({ default: 0 }),
+    f: firestoreObjectArray({ objectField: formSpaceFileSubObject }),
     pn: optionalFirestoreString(),
     pat: optionalFirestoreDate(),
     cat: firestoreDate({ saveDefaultAsNow: true }),

@@ -63,7 +63,10 @@ import {
   formSpaceUploadsFilePath,
   storageFilesForFormSpaceQuery,
   firestoreModelKey,
+  type InitializeAllStorageFilesFromUploadsParams,
   type InitializeAllStorageFilesFromUploadsResult,
+  type ProcessAllQueuedStorageFilesResult,
+  type RemoveFormSpaceFileParams,
   type ProcessAllQueuedFormSpacesResult,
   type SubmitFormSpaceParams,
   type SubmitFormSpaceResult,
@@ -1352,12 +1355,20 @@ export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionT
     return this.instance.uploadFileToSlot(input);
   }
 
-  async initializeUploads(): Promise<InitializeAllStorageFilesFromUploadsResult> {
-    return this.instance.initializeUploads();
+  async initializeUploads(params?: Maybe<InitializeAllStorageFilesFromUploadsParams>): Promise<InitializeAllStorageFilesFromUploadsResult> {
+    return this.instance.initializeUploads(params);
   }
 
   async submit(params?: Maybe<Omit<SubmitFormSpaceParams, 'key'>>): Promise<SubmitFormSpaceResult> {
     return this.instance.submit(params);
+  }
+
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>): Promise<void> {
+    return this.instance.removeFile(params);
+  }
+
+  async processStorageFiles(): Promise<ProcessAllQueuedStorageFilesResult> {
+    return this.instance.processStorageFiles();
   }
 
   async loadProcessingTaskDocument(): Promise<NotificationDocument> {
@@ -1407,15 +1418,35 @@ export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunction
 
   /**
    * One pass of the uploads half of `storageFileHourlyUpdateSchedule`.
+   *
+   * Pass `{ expediteProcessing: true }` to also run each accepted file's processing task inline, which is
+   * what a client gets from `storageFile.create:fromUpload` with the same flag.
    */
-  async initializeUploads(): Promise<InitializeAllStorageFilesFromUploadsResult> {
-    const instance = await this.testContext.storageFileServerActions.initializeAllStorageFilesFromUploads({});
+  async initializeUploads(params?: Maybe<InitializeAllStorageFilesFromUploadsParams>): Promise<InitializeAllStorageFilesFromUploadsResult> {
+    const instance = await this.testContext.storageFileServerActions.initializeAllStorageFilesFromUploads(params ?? {});
     return instance();
   }
 
   async submit(params?: Maybe<Omit<SubmitFormSpaceParams, 'key'>>): Promise<SubmitFormSpaceResult> {
     const instance = await this.testContext.formSpaceServerActions.submitFormSpace({ ...params, key: this.documentKey });
     return instance(this.document);
+  }
+
+  /**
+   * Removes one file from a slot, flagging its StorageFile for deletion.
+   */
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>): Promise<void> {
+    const instance = await this.testContext.formSpaceServerActions.removeFormSpaceFile({ ...params, key: this.documentKey });
+    await instance(this.document);
+  }
+
+  /**
+   * One pass of the processing half of `storageFileHourlyUpdateSchedule`, which is what creates the `SFP`
+   * task that runs a slot's validator.
+   */
+  async processStorageFiles(): Promise<ProcessAllQueuedStorageFilesResult> {
+    const instance = await this.testContext.storageFileServerActions.processAllQueuedStorageFiles({});
+    return instance();
   }
 
   async loadProcessingTaskDocument(): Promise<NotificationDocument> {

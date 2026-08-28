@@ -40,6 +40,29 @@ export interface FormSpaceFileSlotConfig {
    * Size cap for a file in this slot. Defaults to the type's {@link FormSpaceTypeConfig.maxFileSizeBytes}.
    */
   readonly maxFileSizeBytes?: Maybe<number>;
+  /**
+   * How many files this slot may hold at once. Defaults to {@link DEFAULT_FORM_SPACE_SLOT_MAX_FILES}.
+   *
+   * At 1 the slot is a POSITION: a new upload supersedes whatever was there, which is the original "one
+   * current resume" behaviour. Above 1 it is a FOLDER: uploads accumulate, and one is refused once the
+   * folder is full rather than quietly evicting the oldest file the user put there.
+   */
+  readonly maxFiles?: Maybe<number>;
+  /**
+   * How many files this slot must hold before the space may be submitted.
+   *
+   * Defaults to 1 when {@link required} is true, and 0 otherwise, so `required` keeps meaning exactly what it
+   * meant before folders existed.
+   */
+  readonly minFiles?: Maybe<number>;
+  /**
+   * Whether a file here must pass validation before the space may be submitted. Defaults to false.
+   *
+   * Setting it does two things: an accepted upload enters the StorageFile processing pipeline instead of
+   * being stored as-is, and a file left PENDING or judged INVALID blocks submission. A type that sets this
+   * MUST register a validator for the slot server-side; the wiring asserts that at boot.
+   */
+  readonly validationRequired?: Maybe<boolean>;
 }
 
 /**
@@ -107,6 +130,13 @@ export interface FormSpaceTypeConfig {
  * Default for {@link FormSpaceTypeConfig.maxUploads}.
  */
 export const DEFAULT_FORM_SPACE_MAX_UPLOADS = 20;
+
+/**
+ * Default for {@link FormSpaceFileSlotConfig.maxFiles}.
+ *
+ * One, so a slot declared before folders existed keeps superseding rather than silently accumulating.
+ */
+export const DEFAULT_FORM_SPACE_SLOT_MAX_FILES = 1;
 
 /**
  * Default for {@link FormSpaceTypeConfig.maxFileSizeBytes}: 10 MiB.

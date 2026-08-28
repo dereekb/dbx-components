@@ -1,10 +1,10 @@
-import { type ContentTypeMimeType, type Maybe } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe, type SlashPathFile } from '@dereekb/util';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
 import { type FirestoreModelKey } from '../../common/firestore/collection/collection';
 import { type StorageFileGroupId, storageFileGroupIdForModel } from '../storagefile/storagefile.id';
-import { type FormSpace, type FormSpaceData, FormSpaceProcessingState, FormSpaceState } from './formspace';
+import { type FormSpace, type FormSpaceData, type FormSpaceFile, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState } from './formspace';
 import { type FormSpaceFileSlot, type FormSpaceKey, type FormSpaceType } from './formspace.id';
-import { DEFAULT_FORM_SPACE_ALLOWED_MIME_TYPES, DEFAULT_FORM_SPACE_MAX_FILE_SIZE_BYTES, DEFAULT_FORM_SPACE_MAX_UPLOADS, type FormSpaceFileSlotConfig, type FormSpaceTypeConfig } from './formspace.type';
+import { DEFAULT_FORM_SPACE_ALLOWED_MIME_TYPES, DEFAULT_FORM_SPACE_MAX_FILE_SIZE_BYTES, DEFAULT_FORM_SPACE_MAX_UPLOADS, DEFAULT_FORM_SPACE_SLOT_MAX_FILES, type FormSpaceFileSlotConfig, type FormSpaceTypeConfig } from './formspace.type';
 
 /**
  * @module formspace.util
@@ -108,6 +108,7 @@ export function formSpaceTemplate<T extends FormSpaceData = FormSpaceData>(input
     o: input.ownerKey,
     m: input.targetModelKey,
     uc: 0,
+    f: [],
     cat: now,
     uat: now,
     eat: input.expiresAt
@@ -198,7 +199,49 @@ export function formSpaceFileSlotConfig(config: FormSpaceTypeConfig, slot: FormS
 }
 
 /**
+ * Returns how many files a slot may hold at once.
+ *
+ * @param slotConfig - The slot config, or null for an undeclared slot.
+ * @returns The slot's file capacity.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceSlotMaxFiles(slotConfig: Maybe<FormSpaceFileSlotConfig>): number {
+  return slotConfig?.maxFiles ?? DEFAULT_FORM_SPACE_SLOT_MAX_FILES;
+}
+
+/**
+ * Returns how many files a slot must hold before the space may be submitted.
+ *
+ * `required` is the older, coarser spelling of the same idea, so it resolves to 1 when `minFiles` is absent.
+ *
+ * @param slotConfig - The slot config, or null for an undeclared slot.
+ * @returns The slot's minimum file count.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceSlotMinFiles(slotConfig: Maybe<FormSpaceFileSlotConfig>): number {
+  return slotConfig?.minFiles ?? (slotConfig?.required === true ? 1 : 0);
+}
+
+/**
+ * Returns the files a FormSpace currently holds in one slot.
+ *
+ * @param formSpace - The space to read.
+ * @param slot - The slot to filter by.
+ * @returns The slot's files, in the order the space stores them.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceFilesInSlot(formSpace: Pick<FormSpace, 'f'>, slot: FormSpaceFileSlot): FormSpaceFile[] {
+  return formSpace.f.filter((x) => x.sl === slot);
+}
+
+/**
  * Every slot a type requires be filled before its spaces may be submitted.
+ *
+ * A CLIENT-side convenience for labelling a form's required slots. The submit gate itself uses
+ * {@link formSpaceSubmitBlockers}, which also understands `minFiles` and validation state.
  *
  * @param config - The type config.
  * @returns The required slots.
@@ -215,7 +258,7 @@ export function requiredFormSpaceFileSlots(config: FormSpaceTypeConfig): FormSpa
  * A discriminated reason rather than a bare false: the caller turns it into an error code, and a client
  * pre-check turns it into a message the user can act on.
  */
-export type FormSpaceUploadRejectionReason = 'not_editable' | 'unknown_slot' | 'max_uploads_reached' | 'invalid_mime_type' | 'file_too_large';
+export type FormSpaceUploadRejectionReason = 'not_editable' | 'unknown_slot' | 'max_uploads_reached' | 'slot_full' | 'duplicate_filename' | 'invalid_mime_type' | 'file_too_large';
 
 /**
  * Result of {@link assertFormSpaceUploadAllowed}.
@@ -229,11 +272,18 @@ export interface FormSpaceUploadAllowedResult {
  * Input for {@link assertFormSpaceUploadAllowed}.
  */
 export interface AssertFormSpaceUploadAllowedInput {
-  readonly formSpace: Pick<FormSpace, 's' | 'sat' | 'eat' | 'uc'>;
+  readonly formSpace: Pick<FormSpace, 's' | 'sat' | 'eat' | 'uc' | 'f'>;
   readonly config: FormSpaceTypeConfig;
   readonly slot: FormSpaceFileSlot;
   readonly mimeType: ContentTypeMimeType;
   readonly sizeBytes: number;
+  /**
+   * The name the file will be uploaded under.
+   *
+   * Checked against the slot's existing files: two files of the same name in one slot resolve to the same
+   * storage path and would overwrite each other before the server ever saw the second one.
+   */
+  readonly filename?: Maybe<SlashPathFile>;
   /**
    * The instant to judge editability against. Defaults to now.
    */
@@ -258,13 +308,15 @@ export interface AssertFormSpaceUploadAllowedInput {
  * @__NO_SIDE_EFFECTS__
  */
 export function assertFormSpaceUploadAllowed(input: AssertFormSpaceUploadAllowedInput): FormSpaceUploadAllowedResult {
-  const { formSpace, config, slot, mimeType, sizeBytes, now } = input;
+  const { formSpace, config, slot, mimeType, sizeBytes, filename, now } = input;
   let reason: Maybe<FormSpaceUploadRejectionReason>;
 
   const slotConfig = formSpaceFileSlotConfig(config, slot);
   const allowedMimeTypes: readonly ContentTypeMimeType[] = slotConfig?.allowedMimeTypes ?? config.allowedMimeTypes ?? DEFAULT_FORM_SPACE_ALLOWED_MIME_TYPES;
   const maxFileSizeBytes = slotConfig?.maxFileSizeBytes ?? config.maxFileSizeBytes ?? DEFAULT_FORM_SPACE_MAX_FILE_SIZE_BYTES;
   const maxUploads = config.maxUploads ?? DEFAULT_FORM_SPACE_MAX_UPLOADS;
+  const maxFiles = formSpaceSlotMaxFiles(slotConfig);
+  const filesInSlot = formSpaceFilesInSlot(formSpace, slot);
 
   if (!isFormSpaceEditable({ formSpace, now })) {
     reason = 'not_editable';
@@ -272,6 +324,14 @@ export function assertFormSpaceUploadAllowed(input: AssertFormSpaceUploadAllowed
     reason = 'unknown_slot';
   } else if (formSpace.uc >= maxUploads) {
     reason = 'max_uploads_reached';
+    // a full folder is refused rather than evicting its oldest file. Only a POSITION slot (maxFiles === 1)
+    // supersedes, and that case is excluded here so re-uploading a resume keeps working.
+  } else if (maxFiles > 1 && filesInSlot.length >= maxFiles) {
+    reason = 'slot_full';
+    // two files of the same name in one slot build the same upload path, so the second overwrites the first
+    // in storage before any server code runs. Refused early, where the client can still rename it.
+  } else if (filename != null && filesInSlot.some((x) => x.n === filename)) {
+    reason = 'duplicate_filename';
   } else if (!allowedMimeTypes.includes(mimeType)) {
     reason = 'invalid_mime_type';
   } else if (sizeBytes > maxFileSizeBytes) {
@@ -279,4 +339,72 @@ export function assertFormSpaceUploadAllowed(input: AssertFormSpaceUploadAllowed
   }
 
   return { allowed: reason == null, reason };
+}
+
+/**
+ * Why a FormSpace cannot be submitted yet.
+ *
+ * Per-slot rather than a bare list of slot names, because "you have not uploaded a second document" and "the
+ * document you uploaded was rejected" want different words in front of the user.
+ */
+export interface FormSpaceSubmitBlocker {
+  readonly slot: FormSpaceFileSlot;
+  /**
+   * `missing_files` — the slot holds fewer than its `minFiles`.
+   * `invalid_file` — the slot holds a file validation judged INVALID.
+   * `pending_validation` — the slot holds a file whose validation has not concluded.
+   */
+  readonly reason: 'missing_files' | 'invalid_file' | 'pending_validation';
+  /**
+   * The offending files, for `invalid_file` and `pending_validation`.
+   */
+  readonly files?: Maybe<FormSpaceFile[]>;
+}
+
+/**
+ * Returns every reason a FormSpace may not be submitted yet, or an empty array when it may.
+ *
+ * Reads the space's own `f` array rather than querying its StorageFiles. That array is written in the
+ * accept transaction, so unlike a query it is correct immediately after an upload — and unlike a query it
+ * can be read inside the transaction that takes the submit lock.
+ *
+ * @param formSpace - The space to check.
+ * @param config - Its type config.
+ * @returns The blockers, empty when the space may be submitted.
+ *
+ * @example
+ * ```ts
+ * const blockers = formSpaceSubmitBlockers(formSpace, config);
+ *
+ * if (blockers.length > 0) {
+ *   throw formSpaceRequiredSlotMissingError(blockers.map((x) => x.slot));
+ * }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceSubmitBlockers(formSpace: Pick<FormSpace, 'f'>, config: FormSpaceTypeConfig): FormSpaceSubmitBlocker[] {
+  const blockers: FormSpaceSubmitBlocker[] = [];
+
+  (config.slots ?? []).forEach((slotConfig) => {
+    const { slot } = slotConfig;
+    const files = formSpaceFilesInSlot(formSpace, slot);
+
+    if (files.length < formSpaceSlotMinFiles(slotConfig)) {
+      blockers.push({ slot, reason: 'missing_files' });
+    } else if (slotConfig.validationRequired === true) {
+      const invalid = files.filter((x) => x.v === FormSpaceFileValidationState.INVALID);
+      const pending = files.filter((x) => x.v === FormSpaceFileValidationState.PENDING);
+
+      // invalid outranks pending: a slot holding one rejected and one still-checking file needs the rejected
+      // one dealt with either way, and reporting "still checking" would invite a pointless wait.
+      if (invalid.length > 0) {
+        blockers.push({ slot, reason: 'invalid_file', files: invalid });
+      } else if (pending.length > 0) {
+        blockers.push({ slot, reason: 'pending_validation', files: pending });
+      }
+    }
+  });
+
+  return blockers;
 }

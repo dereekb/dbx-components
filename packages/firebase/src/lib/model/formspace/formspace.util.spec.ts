@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { MS_IN_DAY } from '@dereekb/util';
-import { type FormSpace, FormSpaceProcessingState, FormSpaceState } from './formspace';
+import { type FormSpace, type FormSpaceFile, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState } from './formspace';
 import { type FormSpaceTypeConfig } from './formspace.type';
-import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceStorageFileGroupId, formSpaceTemplate, isFormSpaceEditable, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, submitFormSpaceTemplate } from './formspace.util';
+import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceFilesInSlot, formSpaceSlotMaxFiles, formSpaceSlotMinFiles, formSpaceStorageFileGroupId, formSpaceSubmitBlockers, formSpaceTemplate, isFormSpaceEditable, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, submitFormSpaceTemplate } from './formspace.util';
 
 const now = new Date('2026-01-02T03:04:05.000Z');
 
@@ -16,6 +16,29 @@ const config: FormSpaceTypeConfig = {
   expiresIn: 7 * MS_IN_DAY
 };
 
+/**
+ * A type with a folder slot that validates what it accepts, for the cases `config` cannot express.
+ */
+const folderConfig: FormSpaceTypeConfig = {
+  formSpaceType: 'demo_folder',
+  slots: [
+    { slot: 'resume', required: true, allowedMimeTypes: ['application/pdf'] },
+    { slot: 'documents', maxFiles: 3, minFiles: 2, validationRequired: true, allowedMimeTypes: ['application/pdf'] }
+  ],
+  maxUploads: 20
+};
+
+function file(overrides?: Partial<FormSpaceFile>): FormSpaceFile {
+  return {
+    sl: 'documents',
+    sf: 'sf1',
+    n: 'a.pdf',
+    v: FormSpaceFileValidationState.VALID,
+    at: now,
+    ...overrides
+  };
+}
+
 function draft(overrides?: Partial<FormSpace>): FormSpace {
   return {
     t: 'demo_example',
@@ -23,6 +46,7 @@ function draft(overrides?: Partial<FormSpace>): FormSpace {
     ps: FormSpaceProcessingState.INIT_OR_NONE,
     u: 'user123',
     uc: 0,
+    f: [],
     cat: now,
     uat: now,
     ...overrides
@@ -113,6 +137,35 @@ describe('requiredFormSpaceFileSlots()', () => {
   });
 });
 
+describe('formSpaceSlotMaxFiles()', () => {
+  it('should default an undeclared or unset slot to one file', () => {
+    expect(formSpaceSlotMaxFiles(null)).toBe(1);
+    expect(formSpaceSlotMaxFiles({ slot: 'resume' })).toBe(1);
+  });
+
+  it("should return the slot's own capacity", () => {
+    expect(formSpaceSlotMaxFiles({ slot: 'documents', maxFiles: 3 })).toBe(3);
+  });
+});
+
+describe('formSpaceSlotMinFiles()', () => {
+  it('should default to zero, and to one when the slot is required', () => {
+    expect(formSpaceSlotMinFiles({ slot: 'attachment' })).toBe(0);
+    expect(formSpaceSlotMinFiles({ slot: 'resume', required: true })).toBe(1);
+  });
+
+  it('should let minFiles override required', () => {
+    expect(formSpaceSlotMinFiles({ slot: 'documents', required: true, minFiles: 2 })).toBe(2);
+  });
+});
+
+describe('formSpaceFilesInSlot()', () => {
+  it('should return only the files in the named slot', () => {
+    const formSpace = draft({ f: [file({ sf: 'a' }), file({ sf: 'b', sl: 'resume' }), file({ sf: 'c' })] });
+    expect(formSpaceFilesInSlot(formSpace, 'documents').map((x) => x.sf)).toEqual(['a', 'c']);
+  });
+});
+
 describe('assertFormSpaceUploadAllowed()', () => {
   const base = { config, slot: 'resume', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
 
@@ -136,6 +189,32 @@ describe('assertFormSpaceUploadAllowed()', () => {
     expect(assertFormSpaceUploadAllowed({ ...base, formSpace: draft({ uc: 2 }) }).reason).toBe('max_uploads_reached');
   });
 
+  it('should reject once a folder slot is full', () => {
+    const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
+    const full = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' }), file({ sf: 'b', n: 'b.pdf' }), file({ sf: 'c', n: 'c.pdf' })] });
+
+    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'd.pdf', formSpace: full }).reason).toBe('slot_full');
+  });
+
+  it('should accept into a folder slot that still has room', () => {
+    const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
+    const partial = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' })] });
+
+    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'b.pdf', formSpace: partial }).allowed).toBe(true);
+  });
+
+  it('should reject a filename the slot already holds', () => {
+    const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
+    const partial = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' })] });
+
+    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'a.pdf', formSpace: partial }).reason).toBe('duplicate_filename');
+  });
+
+  it('should still allow a one-file slot to be re-uploaded into, since it supersedes rather than fills', () => {
+    const occupied = draft({ f: [file({ sl: 'resume', sf: 'a', n: 'old.pdf' })] });
+    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'new.pdf', formSpace: occupied }).allowed).toBe(true);
+  });
+
   it('should reject a mime type the slot does not allow', () => {
     expect(assertFormSpaceUploadAllowed({ ...base, mimeType: 'image/png', formSpace: draft() }).reason).toBe('invalid_mime_type');
   });
@@ -152,5 +231,59 @@ describe('assertFormSpaceUploadAllowed()', () => {
 
   it('should fall back to the type rules for a slot that does not narrow them', () => {
     expect(assertFormSpaceUploadAllowed({ ...base, slot: 'attachment', mimeType: 'image/png', sizeBytes: 1024 * 1024, formSpace: draft() }).allowed).toBe(true);
+  });
+});
+
+describe('formSpaceSubmitBlockers()', () => {
+  const twoValid = [file({ sf: 'a', n: 'a.pdf' }), file({ sf: 'b', n: 'b.pdf' })];
+  const resume = file({ sl: 'resume', sf: 'r', n: 'r.pdf', v: FormSpaceFileValidationState.NONE });
+
+  it('should report nothing when every slot is satisfied', () => {
+    const formSpace = draft({ t: 'demo_folder', f: [resume, ...twoValid] });
+    expect(formSpaceSubmitBlockers(formSpace, folderConfig)).toEqual([]);
+  });
+
+  it('should report a required slot with no file', () => {
+    const formSpace = draft({ t: 'demo_folder', f: twoValid });
+    expect(formSpaceSubmitBlockers(formSpace, folderConfig)).toEqual([{ slot: 'resume', reason: 'missing_files' }]);
+  });
+
+  it('should report a folder slot below its minFiles', () => {
+    const formSpace = draft({ t: 'demo_folder', f: [resume, file({ sf: 'a', n: 'a.pdf' })] });
+    expect(formSpaceSubmitBlockers(formSpace, folderConfig)).toEqual([{ slot: 'documents', reason: 'missing_files' }]);
+  });
+
+  it('should report an invalid file in a slot that requires validation', () => {
+    const invalid = file({ sf: 'b', n: 'b.pdf', v: FormSpaceFileValidationState.INVALID, r: 'not a pdf' });
+    const formSpace = draft({ t: 'demo_folder', f: [resume, file({ sf: 'a', n: 'a.pdf' }), invalid] });
+
+    const blockers = formSpaceSubmitBlockers(formSpace, folderConfig);
+    expect(blockers).toHaveLength(1);
+    expect(blockers[0].reason).toBe('invalid_file');
+    expect(blockers[0].files?.map((x) => x.sf)).toEqual(['b']);
+  });
+
+  it('should report a pending file in a slot that requires validation', () => {
+    const pending = file({ sf: 'b', n: 'b.pdf', v: FormSpaceFileValidationState.PENDING });
+    const formSpace = draft({ t: 'demo_folder', f: [resume, file({ sf: 'a', n: 'a.pdf' }), pending] });
+
+    const blockers = formSpaceSubmitBlockers(formSpace, folderConfig);
+    expect(blockers).toHaveLength(1);
+    expect(blockers[0].reason).toBe('pending_validation');
+  });
+
+  it('should report the invalid file rather than the pending one when a slot holds both', () => {
+    const invalid = file({ sf: 'b', n: 'b.pdf', v: FormSpaceFileValidationState.INVALID, r: 'not a pdf' });
+    const pending = file({ sf: 'c', n: 'c.pdf', v: FormSpaceFileValidationState.PENDING });
+    const formSpace = draft({ t: 'demo_folder', f: [resume, invalid, pending] });
+
+    expect(formSpaceSubmitBlockers(formSpace, folderConfig).map((x) => x.reason)).toEqual(['invalid_file']);
+  });
+
+  it('should ignore validation state in a slot that does not require it', () => {
+    const invalidResume = file({ sl: 'resume', sf: 'r', n: 'r.pdf', v: FormSpaceFileValidationState.INVALID });
+    const formSpace = draft({ t: 'demo_folder', f: [invalidResume, ...twoValid] });
+
+    expect(formSpaceSubmitBlockers(formSpace, folderConfig)).toEqual([]);
   });
 });

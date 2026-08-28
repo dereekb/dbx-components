@@ -1,8 +1,9 @@
-import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, type StorageFileProcessingPurposeSubtaskProcessorConfig, formSpaceSubmissionNotificationTaskHandler, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
+import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerConfig, type StorageFileProcessingPurposeSubtaskProcessorConfig, formSpaceFileValidationStorageFileProcessor, formSpaceSubmissionNotificationTaskHandler, notificationTaskService, storageFileProcessingNotificationTaskHandler } from '@dereekb/firebase-server/model';
 import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
 import { DEMO_EXAMPLE_FORM_SPACE_PROCESSOR } from '../formspace/handlers/handler.formspace.example';
+import { DEMO_FORM_SPACE_FILE_VALIDATORS } from '../formspace/handlers/validator.formspace.example';
 import { demoCalendarIcsFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.calendar';
 import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
 import {
@@ -24,7 +25,7 @@ import {
 } from 'demo-firebase';
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
-import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, appFormSpaceTypeConfigService, formSpaceTypeConfigRecord, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
 /**
  * Builds the NotificationTaskService for the demo API, registering all task handlers
@@ -218,7 +219,21 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
     storageAccessor: demoFirebaseServerActionsContext.storageService
   });
 
-  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig, calendarIcsProcessorConfig];
+  // A FormSpace attachment rides the same `SFP` task as everything else here. ONE processor covers every
+  // form type: it resolves each file's slot from the space it belongs to and runs the validator registered
+  // for that (type, slot), which is why a new form type needs no entry in this array.
+  //
+  // The registry is built here rather than injected for the same reason the upload service builds its own —
+  // it is a memoized lookup over a static constant, and injecting it would mean importing FormSpaceModule
+  // into the notification module for something that is not a service.
+  const formSpaceFileValidationProcessorConfig = formSpaceFileValidationStorageFileProcessor({
+    formSpaceFirestoreCollections: demoFirebaseServerActionsContext,
+    storageFileFirestoreCollections: demoFirebaseServerActionsContext,
+    appFormSpaceTypeConfigService: appFormSpaceTypeConfigService(formSpaceTypeConfigRecord(DEMO_FORM_SPACE_TYPE_CONFIGS)),
+    validators: DEMO_FORM_SPACE_FILE_VALIDATORS
+  });
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig, calendarIcsProcessorConfig, formSpaceFileValidationProcessorConfig];
 
   return storageFileProcessingNotificationTaskHandler({
     processors,

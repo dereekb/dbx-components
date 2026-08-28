@@ -10,9 +10,10 @@ import {
   type FormSpace,
   type FormSpaceDocument,
   type FormSpaceFirestoreCollections,
-  type FormSpaceFileSlot,
+  formSpaceFilesInSlot,
   FormSpaceProcessingState,
   formSpaceSubmissionNotificationTaskTemplate,
+  formSpaceSubmitBlockers,
   formSpaceTemplate,
   formSpacesDueForExpirationQuery,
   formSpacesQueuedForProcessingQuery,
@@ -22,7 +23,8 @@ import {
   type ProcessAllQueuedFormSpacesParams,
   processAllQueuedFormSpacesParamsType,
   type ProcessAllQueuedFormSpacesResult,
-  requiredFormSpaceFileSlots,
+  type RemoveFormSpaceFileParams,
+  removeFormSpaceFileParamsType,
   resolveFormSpaceExpiresAt,
   type StorageFileFirestoreCollections,
   storageFilesForFormSpaceQuery,
@@ -41,8 +43,8 @@ import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification/notification.expedite.service';
 import { createOrRunUniqueNotificationDocument } from '../notification/notification.create.run';
-import { queryAndFlagStorageFilesForDelete } from '../storagefile/storagefile.util';
-import { formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeNotRegisteredError } from './formspace.error';
+import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from '../storagefile/storagefile.util';
+import { formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
 
 /**
  * NestJS injection token for the {@link BaseFormSpaceServerActionsContext}.
@@ -93,6 +95,7 @@ export abstract class FormSpaceServerActions {
   abstract createFormSpace(params: CreateFormSpaceParams): Promise<TransformAndValidateFunctionResult<CreateFormSpaceParams, (input: CreateFormSpaceActionInput) => Promise<FormSpaceDocument>>>;
   abstract updateFormSpace(params: UpdateFormSpaceParams): Promise<TransformAndValidateFunctionResult<UpdateFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<FormSpaceDocument>>>;
   abstract submitFormSpace(params: SubmitFormSpaceParams): Promise<TransformAndValidateFunctionResult<SubmitFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<SubmitFormSpaceResult>>>;
+  abstract removeFormSpaceFile(params: RemoveFormSpaceFileParams): Promise<TransformAndValidateFunctionResult<RemoveFormSpaceFileParams, (formSpaceDocument: FormSpaceDocument) => Promise<FormSpaceDocument>>>;
   abstract deleteFormSpace(params: DeleteFormSpaceParams): Promise<TransformAndValidateFunctionResult<DeleteFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<void>>>;
   abstract processAllQueuedFormSpaces(params: ProcessAllQueuedFormSpacesParams): Promise<TransformAndValidateFunctionResult<ProcessAllQueuedFormSpacesParams, () => Promise<ProcessAllQueuedFormSpacesResult>>>;
   abstract expireAllExpiredFormSpaces(params: ExpireAllExpiredFormSpacesParams): Promise<TransformAndValidateFunctionResult<ExpireAllExpiredFormSpacesParams, () => Promise<ExpireAllExpiredFormSpacesResult>>>;
@@ -109,6 +112,7 @@ export function formSpaceServerActions(context: FormSpaceServerActionsContext): 
     createFormSpace: createFormSpaceFactory(context),
     updateFormSpace: updateFormSpaceFactory(context),
     submitFormSpace: submitFormSpaceFactory(context),
+    removeFormSpaceFile: removeFormSpaceFileFactory(context),
     deleteFormSpace: deleteFormSpaceFactory(context),
     processAllQueuedFormSpaces: processAllQueuedFormSpacesFactory(context),
     expireAllExpiredFormSpaces: expireAllExpiredFormSpacesFactory(context)
@@ -220,28 +224,6 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
     const { runImmediately } = params;
 
     return async (formSpaceDocument: FormSpaceDocument) => {
-      // The required-slot check runs BEFORE the transaction because it is a QUERY, and a query cannot be
-      // interleaved with the transaction's writes. It is safe there: a slot cannot become empty on its own
-      // — only an upload fills one, and uploads are already refused once the space stops being editable,
-      // which the transaction below re-asserts under the lock.
-      const formSpace = await assertSnapshotData(formSpaceDocument);
-
-      if (!isFormSpaceEditable({ formSpace })) {
-        throw formSpaceNotEditableError();
-      }
-
-      const config = appFormSpaceTypeConfigService.configForFormSpaceType(formSpace.t);
-      const requiredSlots = requiredFormSpaceFileSlots(config);
-
-      if (requiredSlots.length > 0) {
-        const filledSlots = await _filledFormSpaceFileSlots(context, formSpaceDocument);
-        const missingSlots = requiredSlots.filter((x) => !filledSlots.has(x));
-
-        if (missingSlots.length > 0) {
-          throw formSpaceRequiredSlotMissingError(missingSlots);
-        }
-      }
-
       await firestoreContext.runTransaction(async (transaction) => {
         const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
         const current = await assertSnapshotData(documentInTransaction);
@@ -249,6 +231,27 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
         // re-asserted under the lock: this is what makes a concurrent double-submit resolve to one winner
         if (!isFormSpaceEditable({ formSpace: current })) {
           throw formSpaceNotEditableError();
+        }
+
+        // Reading the space's own `f` array, so the whole check happens INSIDE the lock. It used to be a
+        // StorageFile query, which a transaction cannot interleave with its writes — `f` is written in the
+        // same transaction that accepts an upload, so it is both correct and readable here.
+        const config = appFormSpaceTypeConfigService.configForFormSpaceType(current.t);
+        const blockers = formSpaceSubmitBlockers(current, config);
+
+        if (blockers.length > 0) {
+          const missing = blockers.filter((x) => x.reason === 'missing_files');
+          const invalid = blockers.filter((x) => x.reason === 'invalid_file');
+
+          // missing first: an empty required slot is the owner's next action regardless of what else is
+          // wrong, and a rejected file in another slot is noise until they have uploaded the missing one.
+          if (missing.length > 0) {
+            throw formSpaceRequiredSlotMissingError(missing.map((x) => x.slot));
+          } else if (invalid.length > 0) {
+            throw formSpaceHasInvalidFilesError(invalid);
+          } else {
+            throw formSpaceValidationPendingError(blockers.map((x) => x.slot));
+          }
         }
 
         await documentInTransaction.update(submitFormSpaceTemplate());
@@ -260,33 +263,55 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
 }
 
 /**
- * Reads back which slots this FormSpace's StorageFiles actually occupy.
+ * Factory for the `removeFormSpaceFile` action.
  *
- * Queries the StorageFiles DIRECTLY rather than reading the StorageFileGroup's embedded `f[]`: the group is
- * created and populated lazily by the group-sync sweep, so immediately after an upload its `f[]` is still
- * empty and a required slot would look unsatisfied. The StorageFile itself carries `g` and `pg` the moment
- * the upload is accepted, which makes it the only source that is correct at submit time.
+ * Drops one file from a slot. The StorageFile is FLAGGED, never deleted inline — the StorageFile delete
+ * sweep owns removing the object from GCS, and a second code path that removed it here is how an orphaned
+ * object gets left behind.
  *
- * A file already flagged for deletion does not count: that is a superseded slot, and its replacement — if
- * there is one — carries the same `pg` and fills the slot on its own.
+ * `uc` is deliberately NOT decremented: it counts uploads ACCEPTED over the space's lifetime, and letting a
+ * remove refund it would turn `maxUploads` from a bound on work done into a bound on files retained, which
+ * an upload/remove loop could then evade entirely.
  *
  * @param context - The FormSpace server actions context.
- * @param formSpaceDocument - The FormSpace whose files to inspect.
- * @returns The set of slots that currently hold a live file.
+ * @returns An async transform-and-validate function that removes one file from a draft FormSpace.
  */
-async function _filledFormSpaceFileSlots(context: FormSpaceServerActionsContext, formSpaceDocument: FormSpaceDocument): Promise<Set<FormSpaceFileSlot>> {
-  const { storageFileCollection } = context;
-  const storageFiles = await storageFileCollection.queryDocument(storageFilesForFormSpaceQuery(formSpaceDocument.key)).getDocs();
-  const snapshots = await Promise.all(storageFiles.map((x) => x.snapshotData()));
-  const filled = new Set<FormSpaceFileSlot>();
+export function removeFormSpaceFileFactory(context: FormSpaceServerActionsContext) {
+  const { firestoreContext, formSpaceCollection, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
 
-  snapshots.forEach((x) => {
-    if (x?.pg && !x.sdat) {
-      filled.add(x.pg);
-    }
+  return firebaseServerActionTransformFunctionFactory(removeFormSpaceFileParamsType, async (params) => {
+    const { slot, storageFileId } = params;
+
+    return async (formSpaceDocument: FormSpaceDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
+        const current = await assertSnapshotData(documentInTransaction);
+
+        if (!isFormSpaceEditable({ formSpace: current })) {
+          throw formSpaceNotEditableError();
+        }
+
+        const filesInSlot = formSpaceFilesInSlot(current, slot);
+        // omitting the id is only unambiguous when the slot holds exactly one file. A folder slot has no
+        // "the" file, so resolving it to the first one would silently remove something else.
+        const soleFileInSlot = filesInSlot.length === 1 ? filesInSlot[0] : undefined;
+        const target = storageFileId == null ? soleFileInSlot : filesInSlot.find((x) => x.sf === storageFileId);
+
+        if (target == null) {
+          throw formSpaceFileNotFoundError(slot);
+        }
+
+        await documentInTransaction.update({
+          f: current.f.filter((x) => x.sf !== target.sf),
+          uat: new Date()
+        });
+
+        await storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentForId(target.sf).update(markStorageFileForDeleteTemplate());
+      });
+
+      return formSpaceDocument;
+    };
   });
-
-  return filled;
 }
 
 /**

@@ -231,6 +231,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.'
       },
       {
+        name: 'f',
+        longName: 'files',
+        converter: 'firestoreObjectArray({ objectField: formSpaceFileSubObject })',
+        tsType: 'FormSpaceFile[]',
+        optional: false,
+        description: 'Every file the space currently holds, across every slot.'
+      },
+      {
         name: 'pn',
         longName: 'processingNotificationKey',
         converter: 'optionalFirestoreString()',
@@ -341,7 +349,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Processing state of a submitted {@link FormSpace}.'
       }
     ],
-    detectionHints: ['t', 'n', 'ps', 'm', 'uc', 'pn', 'pat', 'uat', 'sat', 'cpat', 'eat'],
+    detectionHints: ['t', 'n', 'ps', 'm', 'uc', 'f', 'pn', 'pat', 'uat', 'sat', 'cpat', 'eat'],
     description: 'A type-registered container for a client-side form: its in-progress JSON, its uploads, and its submission state.',
     modelGroup: 'FormSpace',
     collectionKind: 'root',

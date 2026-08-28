@@ -17,6 +17,19 @@ export const DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT: FormSpaceFileSlot = 'resume';
 export const DEMO_EXAMPLE_FORM_SPACE_ATTACHMENT_SLOT: FormSpaceFileSlot = 'attachment';
 
 /**
+ * The FOLDER slot of {@link DEMO_EXAMPLE_FORM_SPACE_TYPE}.
+ *
+ * Holds several files rather than one, and every file it accepts is validated. It is the demo's coverage of
+ * both features the single-file `resume` / `attachment` slots cannot exercise.
+ */
+export const DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT: FormSpaceFileSlot = 'documents';
+
+/**
+ * How many files {@link DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT} holds.
+ */
+export const DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_MAX_FILES = 3;
+
+/**
  * The shape of the JSON a {@link DEMO_EXAMPLE_FORM_SPACE_TYPE} space parks in its `d` field.
  *
  * The framework never interprets `d` — this interface is the DEMO's contract with its own handler, which
@@ -52,9 +65,19 @@ export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
         required: false,
         allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'],
         maxFileSizeBytes: 2 * 1024 * 1024
+      },
+      {
+        slot: DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT,
+        name: 'Supporting Documents',
+        required: false,
+        maxFiles: DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_MAX_FILES,
+        // the mime type is what the CLIENT declared; validation is what checks the bytes actually agree
+        validationRequired: true,
+        allowedMimeTypes: ['application/pdf'],
+        maxFileSizeBytes: 2 * 1024 * 1024
       }
     ],
-    maxUploads: 10,
+    maxUploads: 16,
     expiresIn: 7 * MS_IN_DAY
   }
 ];

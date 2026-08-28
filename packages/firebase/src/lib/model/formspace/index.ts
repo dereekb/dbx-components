@@ -3,6 +3,7 @@ export * from './formspace.api.error';
 export * from './formspace.api';
 export * from './formspace.id';
 export * from './formspace.permission';
+export * from './formspace.processing';
 export * from './formspace.query';
 export * from './formspace.task';
 export * from './formspace.type';

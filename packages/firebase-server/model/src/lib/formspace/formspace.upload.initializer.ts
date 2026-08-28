@@ -11,15 +11,21 @@ import {
   FORM_SPACE_UPLOADS_FOLDER_NAME,
   type FirebaseStorageAccessorFile,
   type FormSpace,
+  type FormSpaceFile,
+  formSpaceFileSlotConfig,
   formSpaceFileStoragePath,
   type FormSpaceFileSlot,
+  FormSpaceFileValidationState,
+  formSpaceFilesInSlot,
+  formSpaceSlotMaxFiles,
   formSpaceStorageFileGroupId,
   isFormSpaceEditable,
   parseFormSpaceUploadPath,
   StorageFileCreationType
 } from '@dereekb/firebase';
-import { type ContentTypeMimeType, type Maybe, type SlashPathPathMatcherPath } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe, type SlashPathFile, type SlashPathPathMatcherPath } from '@dereekb/util';
 import { type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '../storagefile/storagefile.upload.service.initializer';
+import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
 import { type FormSpaceServerActionsContext } from './formspace.action.server';
 import { formSpaceNotEditableError, formSpaceNotFoundError, formSpaceUploadNotAllowedError, formSpaceUploadUserMismatchError } from './formspace.error';
 
@@ -94,22 +100,29 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
           // PRE-CHECK before copying. The authoritative check is the one inside the transaction below, but
           // running it first means the overwhelming majority of rejections never copy any bytes at all.
           const formSpace = await formSpaceDocument.snapshotData();
-          _assertFormSpaceAcceptsUpload({ formSpace, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService });
+          _assertFormSpaceAcceptsUpload({ formSpace, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService });
 
           // move the accepted file out of the transient uploads folder: the uploads sweep deletes the
           // source once initialization succeeds, so the StorageFile must point somewhere durable
           createdFile = await fileDetailsAccessor.copy(formSpaceFileStoragePath(formSpaceId, slot, filename));
 
-          // ONE transaction so the accept decision and the counter increment cannot interleave with a
-          // second concurrent upload: reading `uc`, deciding, then writing `uc + 1` separately is exactly
-          // how a maxUploads cap gets exceeded under load.
-          const { createStorageFileResult, user } = await firestoreContext.runTransaction(async (transaction) => {
+          // ONE transaction so the accept decision, the counter increment, the `f` rewrite and the
+          // supersede flag cannot interleave with a second concurrent upload: reading `uc`, deciding, then
+          // writing `uc + 1` separately is exactly how a maxUploads cap gets exceeded under load.
+          const { createStorageFileResult } = await firestoreContext.runTransaction(async (transaction) => {
             const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
             const formSpaceInTransaction = await documentInTransaction.snapshotData();
 
-            _assertFormSpaceAcceptsUpload({ formSpace: formSpaceInTransaction, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService });
+            _assertFormSpaceAcceptsUpload({ formSpace: formSpaceInTransaction, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService });
 
             const current = formSpaceInTransaction as FormSpace;
+            const config = appFormSpaceTypeConfigService.configForFormSpaceType(current.t);
+            const slotConfig = formSpaceFileSlotConfig(config, slot);
+            const validationRequired = slotConfig?.validationRequired === true;
+
+            // a POSITION slot (the default) supersedes what it held; a FOLDER accumulates. The full-folder
+            // case never reaches here — assertFormSpaceUploadAllowed refuses it above.
+            const superseded = formSpaceSlotMaxFiles(slotConfig) === 1 ? formSpaceFilesInSlot(current, slot) : [];
 
             const pairResult = await createStorageFileDocumentPair({
               transaction,
@@ -121,28 +134,42 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
               purpose: FORM_SPACE_PURPOSE,
               purposeSubgroup: slot,
               storageFileGroupIds: [formSpaceStorageFileGroupId(formSpaceDocument.key)],
-              shouldBeProcessed: false // a form attachment is stored, not transformed; a type that needs work does it in its submission handler
+              // EVERY accepted file is processed, not only a validated one: the processing task's first
+              // step reconciles the file onto its FormSpace, which is what makes `f` self-healing for a
+              // file that reached storage by any path other than this initializer. A slot with no validator
+              // simply finds nothing to run after that and completes.
+              shouldBeProcessed: true
             });
+
+            const supersededIds = new Set(superseded.map((x) => x.sf));
+
+            const newFile: FormSpaceFile = {
+              sl: slot,
+              sf: pairResult.storageFileDocument.id,
+              n: filename,
+              v: validationRequired ? FormSpaceFileValidationState.PENDING : FormSpaceFileValidationState.NONE,
+              at: new Date()
+            };
 
             const uploadCountUpdate: Partial<FormSpace> = {
               uc: current.uc + 1,
+              f: [...current.f.filter((x) => !supersededIds.has(x.sf)), newFile],
               uat: new Date()
             };
 
             await documentInTransaction.update(uploadCountUpdate);
 
-            return { createStorageFileResult: pairResult, user: current.u };
+            // flag the EXACT files this slot just superseded. The framework's `flagPreviousForDelete` would
+            // query by (purpose, user, purposeSubgroup) instead, which carries no FormSpace constraint — a
+            // user holding two drafts that both declare this slot would have the other space's file flagged.
+            const storageFileAccessorInTransaction = storageFileCollection.documentAccessorForTransaction(transaction);
+
+            await Promise.all(superseded.map((x) => storageFileAccessorInTransaction.loadDocumentForId(x.sf).update(markStorageFileForDeleteTemplate())));
+
+            return { createStorageFileResult: pairResult };
           });
 
-          result = {
-            createStorageFileResult,
-            // supersede whatever was in this slot before: a slot is a logical position, not a file
-            flagPreviousForDelete: {
-              user,
-              purpose: FORM_SPACE_PURPOSE,
-              purposeSubgroup: slot
-            }
-          };
+          result = { createStorageFileResult };
         } catch (e) {
           // a rejected upload is PERMANENTLY rejected — neither the space's state nor the type's rules will
           // change in the uploader's favour on a retry, so retrying only leaves the stray file in place
@@ -164,6 +191,7 @@ interface AssertFormSpaceAcceptsUploadInput {
   readonly formSpace: Maybe<FormSpace>;
   readonly uploaderId: FirebaseAuthUserId;
   readonly slot: FormSpaceFileSlot;
+  readonly filename: SlashPathFile;
   readonly mimeType: ContentTypeMimeType;
   readonly sizeBytes: number;
   readonly appFormSpaceTypeConfigService: AppFormSpaceTypeConfigService;
@@ -180,7 +208,7 @@ interface AssertFormSpaceAcceptsUploadInput {
  *   violates the type's rules.
  */
 function _assertFormSpaceAcceptsUpload(input: AssertFormSpaceAcceptsUploadInput): void {
-  const { formSpace, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService } = input;
+  const { formSpace, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService } = input;
 
   if (formSpace == null) {
     throw formSpaceNotFoundError();
@@ -195,7 +223,7 @@ function _assertFormSpaceAcceptsUpload(input: AssertFormSpaceAcceptsUploadInput)
   }
 
   const config = appFormSpaceTypeConfigService.configForFormSpaceType(formSpace.t);
-  const allowed = assertFormSpaceUploadAllowed({ formSpace, config, slot, mimeType, sizeBytes });
+  const allowed = assertFormSpaceUploadAllowed({ formSpace, config, slot, filename, mimeType, sizeBytes });
 
   if (!allowed.allowed) {
     throw formSpaceUploadNotAllowedError(allowed.reason as NonNullable<typeof allowed.reason>);

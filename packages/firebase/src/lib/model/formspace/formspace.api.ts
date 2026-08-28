@@ -5,8 +5,9 @@ import { type FirestoreModelKey, type OnCallCreateModelResult, type TargetModelP
 import { firestoreModelKeyType } from '../../common/model/model/model.validator';
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { type StorageFileId } from '../storagefile/storagefile.id';
 import { type FormSpaceData, type FormSpaceTypes } from './formspace';
-import { type FormSpaceType } from './formspace.id';
+import { type FormSpaceFileSlot, type FormSpaceType } from './formspace.id';
 
 /**
  * @module formspace.api
@@ -97,6 +98,35 @@ export interface SubmitFormSpaceResult {
    */
   readonly processingTaskCreated: boolean;
 }
+
+// MARK: Remove File
+/**
+ * Parameters for removing one uploaded file from a FormSpace slot.
+ *
+ * The file is dropped from the space's `f` array and its StorageFile is FLAGGED for deletion, never deleted
+ * inline — the StorageFile delete sweep owns removing the object, and a second code path that removed it
+ * here is how an orphaned object gets left behind.
+ *
+ * @dbxModelApiParams
+ */
+export interface RemoveFormSpaceFileParams extends TargetModelParams {
+  /**
+   * The slot holding the file.
+   */
+  readonly slot: FormSpaceFileSlot;
+  /**
+   * The StorageFile to remove.
+   *
+   * Optional only when the slot holds exactly one file: a folder slot with several files has no unambiguous
+   * "the" file, so omitting it there is an error rather than a guess.
+   */
+  readonly storageFileId?: Maybe<StorageFileId>;
+}
+
+export const removeFormSpaceFileParamsType = targetModelParamsType.merge({
+  slot: 'string > 0',
+  'storageFileId?': clearable('string > 0')
+}) as Type<RemoveFormSpaceFileParams>;
 
 // MARK: Delete
 /**
@@ -194,6 +224,7 @@ export type FormSpaceModelCrudFunctionsConfig = {
     update: {
       _: UpdateFormSpaceParams;
       submit: [SubmitFormSpaceParams, SubmitFormSpaceResult];
+      removeFile: RemoveFormSpaceFileParams;
     };
     delete: {
       _: DeleteFormSpaceParams;
@@ -202,7 +233,7 @@ export type FormSpaceModelCrudFunctionsConfig = {
 };
 
 export const FORM_SPACE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<FormSpaceModelCrudFunctionsConfig, FormSpaceTypes> = {
-  formSpace: ['create:_', 'update:_,submit' as any, 'delete:_']
+  formSpace: ['create:_', 'update:_,submit,removeFile' as any, 'delete:_']
 };
 
 /**
@@ -219,6 +250,7 @@ export abstract class FormSpaceFunctions implements ModelFirebaseFunctionMap<For
     updateFormSpace: {
       update: ModelFirebaseCrudFunction<UpdateFormSpaceParams>;
       submit: ModelFirebaseCrudFunction<SubmitFormSpaceParams, SubmitFormSpaceResult>;
+      removeFile: ModelFirebaseCrudFunction<RemoveFormSpaceFileParams>;
     };
     deleteFormSpace: {
       delete: ModelFirebaseCrudFunction<DeleteFormSpaceParams>;

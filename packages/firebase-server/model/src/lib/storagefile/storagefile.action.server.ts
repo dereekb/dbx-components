@@ -411,7 +411,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
   const _initializeStorageFileFromUploadFile = _initializeStorageFileFromUploadFileFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(initializeAllStorageFilesFromUploadsParamsType, async (params) => {
-    const { folderPath, maxFilesToInitialize, overrideUploadsFolderPath } = params;
+    const { folderPath, maxFilesToInitialize, overrideUploadsFolderPath, expediteProcessing } = params;
     const fullPath = mergeSlashPaths([overrideUploadsFolderPath ?? UPLOADS_FOLDER_PATH, folderPath]); // only targets the uploads folder
 
     return async () => {
@@ -429,7 +429,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
         readItemsFromPageResult: (results) => results.result.files(),
         iterateEachPageItem: async (file) => {
           const fileInstance = file.file();
-          const initializeResult = await _initializeStorageFileFromUploadFile({ file: fileInstance }).catch(() => null);
+          const initializeResult = await _initializeStorageFileFromUploadFile({ file: fileInstance, expediteProcessing }).catch(() => null);
 
           filesVisited++;
 

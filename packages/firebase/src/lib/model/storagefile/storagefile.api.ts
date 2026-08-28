@@ -33,12 +33,21 @@ export interface InitializeAllStorageFilesFromUploadsParams {
   readonly maxFilesToInitialize?: Maybe<number>;
   readonly folderPath?: Maybe<StorageSlashPath>;
   readonly overrideUploadsFolderPath?: Maybe<StorageSlashPath>;
+  /**
+   * Whether to expedite processing of each initialized file that ends up queued for it.
+   *
+   * The same option {@link InitializeStorageFileFromUploadParams} already offers for a single file. Without
+   * it a file initialized by this sweep waits for the next `processAllQueuedStorageFiles` pass, which is a
+   * whole scheduling tick of latency for a purpose whose processing the uploader is waiting on.
+   */
+  readonly expediteProcessing?: Maybe<boolean>;
 }
 
 export const initializeAllStorageFilesFromUploadsParamsType = /* @__PURE__ */ type({
   'maxFilesToInitialize?': clearable('number'),
   'folderPath?': clearable('string'),
-  'overrideUploadsFolderPath?': clearable('string')
+  'overrideUploadsFolderPath?': clearable('string'),
+  'expediteProcessing?': clearable('boolean')
 }) as Type<InitializeAllStorageFilesFromUploadsParams>;
 
 /**

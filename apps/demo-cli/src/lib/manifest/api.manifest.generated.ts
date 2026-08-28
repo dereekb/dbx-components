@@ -23,6 +23,7 @@ import {
   readStorageFileMetadataParamsType,
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
+  removeFormSpaceFileParamsType,
   resyncNotificationUserParamsType,
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
@@ -106,6 +107,20 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'displayName', typeText: 'Maybe<string>' },
       { name: 'data', typeText: 'Maybe<T>' }
+    ]
+  },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: 'removeFile',
+    paramsTypeName: 'RemoveFormSpaceFileParams',
+    paramsValidator: removeFormSpaceFileParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: "Parameters for removing one uploaded file from a FormSpace slot.\n\nThe file is dropped from the space's `f` array and its StorageFile is FLAGGED for deletion, never deleted\ninline — the StorageFile delete sweep owns removing the object, and a second code path that removed it\nhere is how an orphaned object gets left behind.",
+    paramsFields: [
+      { name: 'slot', typeText: 'FormSpaceFileSlot', description: 'The slot holding the file.' },
+      { name: 'storageFileId', typeText: 'Maybe<StorageFileId>', description: 'The StorageFile to remove.\n\nOptional only when the slot holds exactly one file: a folder slot with several files has no unambiguous\n"the" file, so omitting it there is an error rather than a guess.' }
     ]
   },
   {
@@ -509,7 +524,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'maxFilesToInitialize', typeText: 'Maybe<number>' },
       { name: 'folderPath', typeText: 'Maybe<StorageSlashPath>' },
-      { name: 'overrideUploadsFolderPath', typeText: 'Maybe<StorageSlashPath>' }
+      { name: 'overrideUploadsFolderPath', typeText: 'Maybe<StorageSlashPath>' },
+      { name: 'expediteProcessing', typeText: 'Maybe<boolean>', description: 'Whether to expedite processing of each initialized file that ends up queued for it.\n\nThe same option {@link InitializeStorageFileFromUploadParams} already offers for a single file. Without\nit a file initialized by this sweep waits for the next `processAllQueuedStorageFiles` pass, which is a\nwhole scheduling tick of latency for a purpose whose processing the uploader is waiting on.' }
     ],
     resultTypeDescription: 'Result of batch upload initialization, reporting visit and success/failure counts.',
     resultFields: [
@@ -807,6 +823,24 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable. Drives read access in the security rules.' },
       { name: 'm', longName: 'targetModelKey', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Key of the model this space was opened against, when it was opened against one.' },
       { name: 'uc', longName: 'uploadCount', tsType: 'number', optional: false, description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.' },
+      {
+        name: 'f',
+        longName: 'files',
+        tsType: 'FormSpaceFile[]',
+        optional: false,
+        description: 'Every file the space currently holds, across every slot.',
+        nestedFields: [
+          { name: 'sl', longName: 'slot', tsType: 'FormSpaceFileSlot', optional: false, description: 'The slot this file fills.' },
+          { name: 'sf', longName: 'storageFileId', tsType: 'StorageFileId', optional: false, description: 'The id of the StorageFile holding the bytes.' },
+          { name: 'n', longName: 'fileName', tsType: 'SlashPathFile', optional: false, description: "The file's name, as it was uploaded." },
+          { name: 'v', longName: 'validationState', tsType: 'FormSpaceFileValidationState', optional: false, description: 'Validation state.', enumRef: 'FormSpaceFileValidationState' },
+          { name: 'r', longName: 'invalidReason', tsType: 'Maybe<string>', optional: true, description: 'Free-text reason the file was judged INVALID, written for the owner to act on.' },
+          { name: 'fr', longName: 'failureReason', tsType: 'Maybe<FormSpaceFileValidationFailureReason>', optional: true, description: 'Reason validation never reached a content verdict, if it did not.' },
+          { name: 'at', longName: 'uploadedAt', tsType: 'Date', optional: false, description: 'The date the upload was accepted.' },
+          { name: 'vat', longName: 'validatedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date validation concluded, if it has.' }
+        ],
+        nestedIsArray: true
+      },
       { name: 'pn', longName: 'processingNotificationKey', tsType: 'Maybe<NotificationKey>', optional: true, description: "The NotificationTask key processing this space's submission." },
       { name: 'pat', longName: 'processingAt', tsType: 'Maybe<Date>', optional: true, description: 'The date `ps` was last moved to PROCESSING. Used to detect a stuck task.' },
       { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
@@ -1276,6 +1310,16 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
 ];
 
 export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
+  FormSpaceFileValidationState: {
+    name: 'FormSpaceFileValidationState',
+    values: [
+      { name: 'NONE', value: 0 },
+      { name: 'PENDING', value: 1 },
+      { name: 'VALID', value: 2 },
+      { name: 'INVALID', value: 3 }
+    ],
+    description: 'Validation state of one {@link FormSpaceFile}.'
+  },
   FormSpaceProcessingState: {
     name: 'FormSpaceProcessingState',
     values: [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type FormSpace, formSpaceConverter, FormSpaceProcessingState, FormSpaceState } from './formspace';
+import { type FormSpace, formSpaceConverter, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState } from './formspace';
 
 const createdAt = new Date('2026-01-02T03:04:05.000Z');
 const updatedAt = new Date('2026-01-02T05:04:05.000Z');
@@ -18,6 +18,10 @@ describe('formSpaceConverter', () => {
     o: 'pr/user123',
     m: 'gb/abc123',
     uc: 3,
+    f: [
+      { sl: 'resume', sf: 'sf1', n: 'resume.pdf', v: FormSpaceFileValidationState.NONE, at: createdAt },
+      { sl: 'documents', sf: 'sf2', n: 'proof.pdf', v: FormSpaceFileValidationState.INVALID, r: 'not a readable pdf', fr: null, at: createdAt, vat: updatedAt }
+    ],
     pn: 'nb/abc/n/def',
     pat: updatedAt,
     cat: createdAt,
@@ -41,6 +45,16 @@ describe('formSpaceConverter', () => {
     expect(result.m).toBe('gb/abc123');
     expect(result.uc).toBe(3);
     expect(result.pn).toBe('nb/abc/n/def');
+
+    expect(result.f).toHaveLength(2);
+    expect(result.f[0]).toEqual({ sl: 'resume', sf: 'sf1', n: 'resume.pdf', v: FormSpaceFileValidationState.NONE, at: expect.any(Date) });
+    expect(result.f[0].at).toBeSameSecondAs(createdAt);
+    expect(result.f[1].sf).toBe('sf2');
+    expect(result.f[1].v).toBe(FormSpaceFileValidationState.INVALID);
+    expect(result.f[1].r).toBe('not a readable pdf');
+    expect(result.f[1].vat).toBeSameSecondAs(updatedAt);
+    // a null optional reads back as absent, not as an explicit null
+    expect(result.f[1].fr).toBeUndefined();
     expect(result.pat).toBeSameSecondAs(updatedAt);
     expect(result.cat).toBeSameSecondAs(createdAt);
     expect(result.uat).toBeSameSecondAs(updatedAt);
@@ -58,6 +72,8 @@ describe('formSpaceConverter', () => {
     expect(result.s).toBe(FormSpaceState.DRAFT);
     expect(result.ps).toBe(FormSpaceProcessingState.INIT_OR_NONE);
     expect(result.uc).toBe(0);
+    // a document written before `f` existed reads back as an empty folder, not as undefined
+    expect(result.f).toEqual([]);
   });
 
   it('should clear rather than persist empty form data', () => {
