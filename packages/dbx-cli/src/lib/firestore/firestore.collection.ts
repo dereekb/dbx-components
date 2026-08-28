@@ -2,6 +2,7 @@ import { type FirestoreCollectionGroup, type FirestoreCollectionLike, type Fires
 import { type CliFirestoreQueryScope } from '../manifest/types';
 import { CliError } from '../util/output';
 import { type CliFirestoreModels } from './firestore.models';
+import { cliFirestoreWiringError } from './firestore.sdk-identity';
 
 /**
  * Input for {@link cliFirestoreCollectionForQuery}.
@@ -73,14 +74,28 @@ export function cliFirestoreCollectionForQuery(input: CliFirestoreCollectionForQ
     assertCliFirestoreQueryParentKey({ modelType, parentKey, ...(parentPaths === undefined ? {} : { parentPaths }) });
   }
 
-  const override = models.binding.collectionForModel?.({ collections: models.collections, modelType, parentKey });
   let result: FirestoreCollectionLike<unknown>;
 
-  if (override == null) {
-    const registered = models.serviceFor(modelType).getFirestoreCollection();
-    result = parentKey == null ? registered : scopeCollectionToParent({ registered, modelType, parentKey });
-  } else {
-    result = override;
+  // the SDK rejects a bad handle or path with a message naming none of `modelType` / `parentKey` /
+  // the collection — all of which are known right here. `cliFirestoreWiringError` passes an
+  // already-named `CliError` (unknown model type, malformed `--parent`) through untouched.
+  try {
+    const override = models.binding.collectionForModel?.({ collections: models.collections, modelType, parentKey });
+
+    if (override == null) {
+      const registered = models.serviceFor(modelType).getFirestoreCollection();
+      result = parentKey == null ? registered : scopeCollectionToParent({ registered, modelType, parentKey });
+    } else {
+      result = override;
+    }
+  } catch (e) {
+    throw cliFirestoreWiringError({
+      error: e,
+      operation: 'resolve the Firestore collection for this query',
+      modelType,
+      ...(parentKey === undefined ? {} : { parentKey }),
+      firestoreContext: models.session.firestoreContext
+    });
   }
 
   return result;
@@ -176,17 +191,36 @@ function scopeCollectionToParent(input: ScopeCollectionToParentInput): Firestore
  * @param group - The registered collection group.
  * @param parentKey - The parent document key.
  * @returns A group scoped to that parent.
+ * @throws {CliError} When the SDK refuses the parent reference or the scoped subcollection.
  */
 function scopeCollectionGroupToParent(group: FirestoreCollectionGroup<unknown, FirestoreDocument<unknown>>, parentKey: FirestoreModelKey): FirestoreCollectionLike<unknown> {
   const registered = group;
   const collectionName = registered.modelIdentity.collectionName;
   const firestoreContext = registered.firestoreContext;
-  const parentRef = firestoreContext.drivers.firestoreAccessorDriver.docAtPath(firestoreContext.firestore, parentKey);
+  let result: FirestoreCollectionLike<unknown>;
 
-  // The spread is REQUIRED, not stylistic: `makeFirestoreCollectionGroup` mutates `config.cache`, so
-  // reusing the object would rewrite the registered group's cache in place.
-  return makeFirestoreCollectionGroup({
-    ...group.config,
-    queryLike: firestoreContext.subcollection(parentRef, collectionName) as never
-  }) as FirestoreCollectionLike<unknown>;
+  // `docAtPath` and `subcollection` are the two calls in the direct-Firestore path that hand a raw
+  // Firestore handle / parent ref to the SDK, so they are where a bad handle first surfaces — and
+  // this is the only frame that knows the collection name it was building.
+  try {
+    const parentRef = firestoreContext.drivers.firestoreAccessorDriver.docAtPath(firestoreContext.firestore, parentKey);
+
+    // The spread is REQUIRED, not stylistic: `makeFirestoreCollectionGroup` mutates `config.cache`, so
+    // reusing the object would rewrite the registered group's cache in place.
+    result = makeFirestoreCollectionGroup({
+      ...group.config,
+      queryLike: firestoreContext.subcollection(parentRef, collectionName) as never
+    }) as FirestoreCollectionLike<unknown>;
+  } catch (e) {
+    throw cliFirestoreWiringError({
+      error: e,
+      operation: 'scope the collection group to one parent document',
+      modelType: registered.modelIdentity.modelType,
+      collectionName,
+      parentKey,
+      firestoreContext
+    });
+  }
+
+  return result;
 }

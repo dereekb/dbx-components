@@ -23,17 +23,21 @@ export interface RenderQueryManifestInput {
    * Identifier of the emitted constant, e.g. `DEMO_CLI_FIRESTORE_QUERY_MANIFEST`.
    */
   readonly namespace: string;
+  /**
+   * This generator's version, emitted as `<namespace>_STAMP.generatorVersion`.
+   */
+  readonly generatorVersion: string;
 }
 
 /**
  * Renders the query-manifest TS source, prettier-formatted against the workspace config so the
  * output matches a `prettier --write` of the committed file.
  *
- * @param input - The output path, bound entries, project name, and constant identifier.
+ * @param input - The output path, bound entries, project name, constant identifier, and generator version.
  * @returns The formatted module source.
  */
 export async function renderQueryManifest(input: RenderQueryManifestInput): Promise<string> {
-  const { outputFile, entries, projectName, namespace } = input;
+  const { outputFile, entries, projectName, namespace, generatorVersion } = input;
 
   const factoryImports: GeneratedTsImport[] = entries.filter((x) => x.bound).map((x) => ({ packageName: x.entry.module, identifier: x.entry.name }));
   const importLines = renderGroupedImportLines(factoryImports);
@@ -44,7 +48,9 @@ export async function renderQueryManifest(input: RenderQueryManifestInput): Prom
 // Run \`npx nx run ${projectName}:generate-firestore-query-manifest\` to refresh.
 
 ${importLines.join('\n')}
-import { type CliFirestoreQueryManifest } from '@dereekb/dbx-cli';
+import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
+
+export const ${namespace}_STAMP: CliGeneratedManifestStamp = { generatorVersion: ${JSON.stringify(generatorVersion)} };
 
 export const ${namespace}: CliFirestoreQueryManifest = [
 ${sorted.map((x) => renderEntry(x)).join(',\n')}

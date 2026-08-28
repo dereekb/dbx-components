@@ -8,6 +8,7 @@ export * from './firestore.models';
 export * from './firestore.query';
 export * from './firestore.query-params';
 export * from './firestore.read';
+export * from './firestore.sdk-identity';
 export * from './firestore.session';
 export * from './query-info-utils';
 export * from './query-mode';

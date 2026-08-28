@@ -2,6 +2,7 @@ import { type FirebaseAppModelContext, type FirebaseModelServiceGetter, type Fir
 import { type Maybe } from '@dereekb/util';
 import { type CliContext } from '../context/cli.context';
 import { CliError } from '../util/output';
+import { cliFirestoreWiringError } from './firestore.sdk-identity';
 import { type CliFirestoreSessionContext } from './firestore.session';
 
 // MARK: Binding
@@ -253,7 +254,7 @@ export interface CreateCliFirestoreModelsInput<C extends object = object> {
  */
 export function createCliFirestoreModels<C extends object = object, Y extends FirebaseModelsService<any, any> = CliErasedFirebaseModelsService>(input: CreateCliFirestoreModelsInput<C>): CliFirestoreModels<C, Y> {
   const { binding, session } = input;
-  const collections = binding.collections(session.firestoreContext);
+  const collections = buildCliFirestoreCollections(input);
   const collectionNameCache = new Map<FirestoreModelType, FirestoreModelType>();
 
   // the one cast this generic buys: TypeScript cannot check an implementation against
@@ -282,6 +283,33 @@ export function createCliFirestoreModels<C extends object = object, Y extends Fi
     },
     modelTypeForCollection: (collectionName: string) => resolveModelTypeForCollection({ binding, collections, collectionName, cache: collectionNameCache })
   } as unknown as CliFirestoreModels<C, Y>;
+}
+
+/**
+ * Builds the app's collections object against the session's `FirestoreContext`.
+ *
+ * The FIRST place a broken session handle is used, and — before this — the place it failed most
+ * opaquely: `make<App>FirestoreCollections` builds every collection eagerly, so a `firestoreContext`
+ * whose `firestore` is not a client-SDK `Firestore` fails here with the SDK's own
+ * `Expected first argument to collection() to be …` and no indication that a CLI wiring/version
+ * problem, rather than the app's collections, is at fault. Every direct-Firestore command routes
+ * through here, so naming it once covers `firestore-get`, `firestore-query`, and every action.
+ *
+ * @param input - The binding and the open session.
+ * @returns The app's collections object.
+ * @throws {CliError} When the collections cannot be built against the session's context.
+ */
+function buildCliFirestoreCollections<C extends object>(input: CreateCliFirestoreModelsInput<C>): C {
+  const { binding, session } = input;
+  let result: C;
+
+  try {
+    result = binding.collections(session.firestoreContext);
+  } catch (e) {
+    throw cliFirestoreWiringError({ error: e, operation: "build the app's Firestore collections from the session context", firestoreContext: session.firestoreContext });
+  }
+
+  return result;
 }
 
 /**

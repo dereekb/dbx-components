@@ -853,3 +853,26 @@ export interface CliFirestoreQueryManifestEntry {
  * The generated per-model Firestore query catalog.
  */
 export type CliFirestoreQueryManifest = readonly CliFirestoreQueryManifestEntry[];
+
+// MARK: Generated manifest stamp
+/**
+ * The generator provenance a generated manifest module carries alongside its catalog.
+ *
+ * Emitted as `<NAMESPACE>_STAMP` by the manifest generators and wired into `runCli` as
+ * `manifestGeneratorVersion`. Exists because a generated manifest is the one build output that can go
+ * stale WITHOUT breaking the build: it is committed TypeScript, so a manifest emitted by an older
+ * generator still compiles and still type-checks against a newer runtime — it just quietly lacks the
+ * fields that runtime reads. `queryMode` / `rules` were exactly that, and the resulting
+ * `queryModesScanned: false` sat in `doctor` output unread while the direct-Firestore path was being
+ * debugged from the wrong end.
+ *
+ * Version only, deliberately no timestamp: the generators skip a write when the bytes are unchanged
+ * so incremental builds preserve mtimes, and a timestamp would rewrite the file — and its git
+ * history — on every build.
+ */
+export interface CliGeneratedManifestStamp {
+  /**
+   * The `@dereekb/dbx-cli` version of the generator that emitted the module.
+   */
+  readonly generatorVersion: string;
+}

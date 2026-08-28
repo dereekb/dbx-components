@@ -10,6 +10,7 @@ import { CALL_MODEL_API_PATH } from '../api/call-model.client';
 import { outputResult, tracedFetch } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { withEnv } from '../util/args';
+import { createCliBuildDriftDoctorCheck } from './build-drift.check';
 
 export interface DoctorCheckInput {
   readonly cliName: string;
@@ -28,12 +29,27 @@ export interface DoctorCheckResult {
 export type DoctorCheck = (input: DoctorCheckInput) => Promise<DoctorCheckResult>;
 
 /**
- * Built-in checks: config file present, active env resolved, OIDC discovery, token refresh, API reachability.
+ * Input for {@link defaultDoctorChecks}.
+ */
+export interface DefaultDoctorChecksInput {
+  /**
+   * The `@dereekb/dbx-cli` version that emitted the app's generated manifests
+   * (`<NAMESPACE>_STAMP.generatorVersion`). Forwarded to the build-drift check so a manifest produced
+   * by a different generator than the one running it is flagged.
+   */
+  readonly manifestGeneratorVersion?: Maybe<string>;
+}
+
+/**
+ * Built-in checks: build not stale, config file present, active env resolved, OIDC discovery, token
+ * refresh, API reachability.
  *
+ * @param input - Optional configuration for the built-in checks.
  * @returns The default {@link DoctorCheck} list, in execution order.
  */
-export function defaultDoctorChecks(): DoctorCheck[] {
+export function defaultDoctorChecks(input: DefaultDoctorChecksInput = {}): DoctorCheck[] {
   return [
+    createCliBuildDriftDoctorCheck({ ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }),
     async ({ config }) => ({ name: 'config-file-present', ok: !!config, ...(config ? {} : { suggestion: 'Run `<cli> auth setup --env <name>`.' }) }),
     async ({ envName, env }) => ({ name: 'active-env-resolved', ok: !!envName && !!env, detail: { envName }, ...(envName && env ? {} : { suggestion: 'Run `<cli> env add <name>` and `<cli> env use <name>`, or pass `--env <name>`.' }) }),
     async ({ env }) => {
@@ -134,6 +150,11 @@ export interface CreateDoctorCommandInput {
    * doctor can run against an env that only stores overrides on top of a registered default.
    */
   readonly defaultEnvs?: readonly CliEnvDefault[];
+  /**
+   * The generator version stamped into the app's generated manifests, forwarded to the built-in
+   * build-drift check.
+   */
+  readonly manifestGeneratorVersion?: Maybe<string>;
 }
 
 /**
@@ -146,12 +167,13 @@ export interface CreateDoctorCommandInput {
  * @param input.cliName - The CLI's binary name.
  * @param input.checks - Additional checks to append after the default check list.
  * @param input.defaultEnvs - Built-in env presets merged underneath the user's stored env when names match.
+ * @param input.manifestGeneratorVersion - The generator version stamped into the app's generated manifests.
  * @returns A yargs `CommandModule` exposing the `doctor` command.
  * @__NO_SIDE_EFFECTS__
  */
 export function createDoctorCommand(input: CreateDoctorCommandInput): CommandModule {
   const cliName = input.cliName;
-  const checks: DoctorCheck[] = [...defaultDoctorChecks(), ...(input.checks ?? [])];
+  const checks: DoctorCheck[] = [...defaultDoctorChecks({ ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }), ...(input.checks ?? [])];
   const defaultEnvs = input.defaultEnvs;
 
   const paths = buildCliPaths({ cliName });

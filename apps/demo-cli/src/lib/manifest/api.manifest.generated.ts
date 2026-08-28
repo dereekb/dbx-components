@@ -52,7 +52,9 @@ import {
   subscribeToGuestbookNotificationsParamsType,
   updateProfileParamsType
 } from 'demo-firebase';
-import { type CliApiManifest, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
+import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
+
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.42.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {

@@ -7,6 +7,7 @@ import { type CliFirestoreBinding } from '../firestore/firestore.models';
 import { type CliReadSourceReason } from '../firestore/firestore.read';
 import { type CliFirestoreSessionContext, closeCliFirestoreSessionContext, createCliFirestoreSessionContext } from '../firestore/firestore.session';
 import { isCliFirestoreQueryInvocable } from '../firestore/query-mode';
+import { FIRESTORE_SDK_IDENTITY_STAGE, FIRESTORE_SDK_INSTANCE_MISMATCH_CODE, cliFirestoreSdkIdentitySuggestion, inspectCliFirestoreSdkIdentity } from '../firestore/firestore.sdk-identity';
 import { type CliFirestoreQueryManifest, type CliModelManifest } from '../manifest/types';
 import { type DoctorCheck, type DoctorCheckResult } from './doctor.command.factory';
 
@@ -153,7 +154,13 @@ export function buildFirestoreSessionDoctorReadRouting(input: { readonly firesto
  * 3. `GET /session/firestore` is reachable and mints a custom token (+ an App Check token when the
  *    API is configured with a web `appId`);
  * 4. `signInWithCustomToken` succeeds against the configured project;
- * 5. the app-supplied {@link FirestoreSessionDoctorProbe} performs one rules-protected read.
+ * 5. the session's Firestore handle is one the loaded client SDK accepts (`inspectCliFirestoreSdkIdentity`),
+ *    reported as `stage: 'firestore-sdk-identity'`. Sits between the sign-in and the read because it
+ *    is the hop whose failure otherwise MASQUERADES as the read's: the handshake returns a uid, and
+ *    the read then dies on the SDK's `Expected first argument to collection() to be …` — a message
+ *    that names neither the model nor the handle, and sends the operator to rules and App Check
+ *    instead of to a duplicated SDK or a stale artifact;
+ * 6. the app-supplied {@link FirestoreSessionDoctorProbe} performs one rules-protected read.
  *
  * Doctor checks run PRE-AUTH — `DoctorCheckInput` is only `{ cliName, envName, env, config }`, with no
  * token and no `CliContext` — so this loads credentials itself via `buildCliPaths` +
@@ -254,6 +261,12 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
 
   if (context) {
     const appCheckUsed = Boolean(context.session.appCheckToken) && !usingEmulators;
+    // Runs BEFORE the probe on purpose. The handshake can succeed — a uid and an expiry come back —
+    // and the read still fail at the point the session's Firestore handle becomes a collection
+    // reference, which is a wiring/version fault the read's own error cannot describe. Reported even
+    // when it passes, because the module provenance is what rules the duplicated-SDK hypothesis in or
+    // out without an investigation.
+    const sdkIdentity = inspectCliFirestoreSdkIdentity({ firestoreContext: context.firestoreContext });
     const baseDetail = {
       uid: context.session.uid,
       expiresAt: context.session.expiresAt,
@@ -262,10 +275,20 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
       usingEmulators,
       // the on-disk session cache is invisible from the outside — a cache hit means this run paid no
       // `GET /session/firestore`, which is the difference between a fast read and a slow one
-      sessionFromCache: context.fromCache
+      sessionFromCache: context.fromCache,
+      sdkIdentity
     };
 
-    if (probe) {
+    if (!sdkIdentity.ok) {
+      result = {
+        name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
+        ok: false,
+        detail: { ...baseDetail, stage: FIRESTORE_SDK_IDENTITY_STAGE, code: FIRESTORE_SDK_INSTANCE_MISMATCH_CODE, probe: 'not-attempted' },
+        // non-null: `cliFirestoreSdkIdentitySuggestion` returns a string for every `problem`, and
+        // `ok: false` guarantees one is set
+        suggestion: cliFirestoreSdkIdentitySuggestion(sdkIdentity) as string
+      };
+    } else if (probe) {
       try {
         const probeResult = await probe(context);
         result = { name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME, ok: true, detail: { ...baseDetail, probe: probeName ?? 'ok', probeResult } };

@@ -49,6 +49,10 @@ export interface RenderManifestInput {
    * `--emit-model-converters`.
    */
   readonly emitConverters?: boolean;
+  /**
+   * This generator's version, emitted as `<namespace>_STAMP.generatorVersion`.
+   */
+  readonly generatorVersion: string;
 }
 
 /**
@@ -61,7 +65,7 @@ export interface RenderManifestInput {
  * @returns Prettier-formatted TypeScript source.
  */
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
-  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, enumEntries, enumNamespace, emitConverters = false } = input;
+  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, enumEntries, enumNamespace, emitConverters = false, generatorVersion } = input;
 
   const validatorImports: GeneratedTsImport[] = [];
   for (const entry of entries) {
@@ -75,7 +79,7 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
   const emitModels = Boolean(modelEntries && modelEntries.length > 0 && modelNamespace);
   const emitEnums = Boolean(enumEntries && Object.keys(enumEntries).length > 0 && enumNamespace);
 
-  const dbxCliTypeNames = ['type CliApiManifest', ...(emitModels ? ['type CliModelManifest'] : []), ...(emitEnums ? ['type CliEnumManifest'] : [])];
+  const dbxCliTypeNames = ['type CliApiManifest', 'type CliGeneratedManifestStamp', ...(emitModels ? ['type CliModelManifest'] : []), ...(emitEnums ? ['type CliEnumManifest'] : [])];
   const dbxCliTypeImports = `import { ${dbxCliTypeNames.join(', ')} } from '@dereekb/dbx-cli';`;
 
   const modelSection = emitModels
@@ -100,6 +104,8 @@ export const ${enumNamespace}: CliEnumManifest = ${renderEnumManifest(enumEntrie
 
 ${importLines.join('\n')}
 ${dbxCliTypeImports}
+
+export const ${namespace}_STAMP: CliGeneratedManifestStamp = { generatorVersion: ${JSON.stringify(generatorVersion)} };
 
 export const ${namespace}: CliApiManifest = [
 ${entryLines.join(',\n')}

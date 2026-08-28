@@ -111,7 +111,7 @@ async function main(): Promise<void> {
     console.warn(warning);
   }
 
-  const formatted = await renderQueryManifest({ outputFile, entries: queryModes.entries, projectName, namespace });
+  const formatted = await renderQueryManifest({ outputFile, entries: queryModes.entries, projectName, namespace, generatorVersion: packageJson.version });
   const relOutput = relative(WORKSPACE_ROOT, outputFile);
 
   if (flags.check) {
