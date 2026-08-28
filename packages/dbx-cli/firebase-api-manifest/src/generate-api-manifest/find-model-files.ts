@@ -4,12 +4,16 @@
  * {@link @dereekb/dbx-cli/manifest-extract#extractModelsFromSource}.
  *
  * Sibling to `find-api-files.ts` — runs the same kind of bounded recursive
- * walk but excludes API/spec/test files and skips files that don't mention
- * `firestoreModelIdentity` or `@dbxModelGroup` (a cheap pre-filter that
- * keeps the walker off third-party files like `dist/`-shipped types).
+ * walk but excludes API/spec/test files and skips files that mention none of
+ * the model-declaring markers (a cheap pre-filter that keeps the walker off
+ * third-party files like `dist`-shipped types).
  *
  * Per-file extractions are aggregated into a global registry by the
- * orchestrator (`main.ts`) so cross-file converter consts can be resolved.
+ * orchestrator (`main.ts`) so cross-file converter consts, and cross-file enum
+ * references, can be resolved. That is why an ENUM-ONLY file qualifies: a model
+ * group routinely declares its enums in a sibling data/id file
+ * (`job.data.ts`, `worker.id.ts`) and its converters in the main one, and a
+ * converter field's `enumRef` only resolves if both files were scanned.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -26,12 +30,12 @@ export interface ModelFileMatch {
 }
 
 /**
- * Walks `packageRoot/src/lib/**\/*.ts` (excluding `.api.ts`, `.spec.ts`,
- * `.test.ts`, and `.id.ts`) and returns every file with at least one
- * extracted model artifact.
+ * Walks `packageRoot/src/lib/**\/*.ts` (excluding `.api.ts`, `.spec.ts`, and
+ * `.test.ts`) and returns every file with at least one extracted model
+ * artifact — an enum on its own counts.
  *
- * Files that do not mention `firestoreModelIdentity(` or `@dbxModelGroup`
- * are pre-filtered without paying the ts-morph parse cost.
+ * Files mentioning none of the {@link textHasModelMarker} markers are
+ * pre-filtered without paying the ts-morph parse cost.
  *
  * @param packageRoot - Absolute path to the source package's root directory.
  * @returns One {@link ModelFileMatch} per qualifying file.
@@ -45,7 +49,7 @@ export function findModelFiles(packageRoot: string): ModelFileMatch[] {
       const text = readFileSync(filePath, 'utf8');
       if (!textHasModelMarker(text)) continue;
       const extraction = extractModelsFromSource({ name: filePath, text });
-      if (extraction.identities.length === 0 && extraction.modelGroups.length === 0 && extraction.converters.length === 0 && extraction.serviceFactories.length === 0) continue;
+      if (!hasExtractedArtifact(extraction)) continue;
       out.push({ filePath, extraction });
     }
   }
@@ -54,10 +58,23 @@ export function findModelFiles(packageRoot: string): ModelFileMatch[] {
 }
 
 function textHasModelMarker(text: string): boolean {
-  // Source files that hold model definitions, converters, model-group containers, or
-  // `@dbxModelServiceFactory`-tagged factories we care about. Files like helpers/utility files
-  // that import none of these are skipped to keep the ts-morph parse off the hot path.
-  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('@dbxModelServiceFactory');
+  // Source files that hold model definitions, converters, model-group containers,
+  // `@dbxModelServiceFactory`-tagged factories, single-item collection factories (which pin a
+  // model's fixed document id), or exported enums (a converter one file over may reference them)
+  // are the ones we care about. Helper/utility files mentioning none of these are skipped to keep
+  // the ts-morph parse off the hot path.
+  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('@dbxModelServiceFactory') || text.includes('singleItemFirestoreCollection') || text.includes('rootSingleItemFirestoreCollection') || text.includes('export enum ');
+}
+
+/**
+ * Whether an extraction carried anything the orchestrator can use. Enums count on their own — an
+ * enum-only file is the whole reason a data/id file is scanned.
+ *
+ * @param extraction - The per-file extraction.
+ * @returns `true` when at least one artifact was found.
+ */
+function hasExtractedArtifact(extraction: ModelExtraction): boolean {
+  return extraction.identities.length > 0 || extraction.modelGroups.length > 0 || extraction.converters.length > 0 || extraction.serviceFactories.length > 0 || extraction.singleItemCollections.length > 0 || extraction.enums.length > 0;
 }
 
 function* walkSourceFiles(dir: string): Generator<string> {
@@ -74,7 +91,7 @@ function* walkSourceFiles(dir: string): Generator<string> {
 }
 
 function isCandidateSourceFile(name: string): boolean {
-  return name.endsWith('.ts') && !name.endsWith('.api.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.test.ts') && !name.endsWith('.id.ts') && !name.endsWith('.d.ts');
+  return name.endsWith('.ts') && !name.endsWith('.api.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.test.ts') && !name.endsWith('.d.ts');
 }
 
 function safeIsDirectory(p: string): boolean {

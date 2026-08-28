@@ -132,6 +132,20 @@
       "notes": "Storage bucket identifier for Firebase Cloud Storage.\n\nShould contain no slashes — just the bucket name (e.g., `\"my-app.appspot.com\"`)."
     },
     {
+      "name": "StoragePublicUrlApiEndpoint",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/common/storage/storage.url",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "url",
+        "string",
+        "dereekb-firebase:storage"
+      ],
+      "notes": "Origin (protocol and host, with no trailing slash) that serves GCS-native public object urls."
+    },
+    {
       "name": "StorageDownloadUrl",
       "package": "@dereekb/firebase",
       "module": "src/lib/common/storage/types",
@@ -213,6 +227,48 @@
         "dereekb-firebase:storage"
       ],
       "notes": "Example:\n'data:text/plain;base64,5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB'"
+    },
+    {
+      "name": "CalendarEventId",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/calendar/calendar.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:calendar"
+      ],
+      "notes": "Identifier for a single event embedded in a Calendar. Unique within its own calendar only."
+    },
+    {
+      "name": "CalendarOccurrenceKey",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/calendar/calendar.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:calendar"
+      ],
+      "notes": "Identifier for a single expanded OCCURRENCE of a calendar event.\n\nA one-off event's occurrence key is its {@link CalendarEventId}. A recurring event's occurrence key is\nits id plus the occurrence's unix seconds, which is what keeps a published VEVENT's UID stable across\nrepublishes of the same series."
+    },
+    {
+      "name": "CalendarType",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/calendar/calendar.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:calendar"
+      ],
+      "notes": "Arbitrary string describing the kind of calendar a document is, driving its retention policy and its ICS\nemission config through the app's {@link CalendarTypeConfig} registry.\n\nOpen by design, exactly like {@link StorageFilePurpose}: a downstream app registers its own types without\na library change."
     },
     {
       "name": "NotificationTemplateType",

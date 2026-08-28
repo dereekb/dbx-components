@@ -1,7 +1,7 @@
 import { type TimezoneString, type CommaSeparatedString, flattenArray, type Maybe, splitJoinRemainder } from '@dereekb/util';
-import { format } from 'date-fns-tz';
 import { DateSet } from '../date';
 import { type DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
+import { iCalendarUtcDateTimeString } from '../icalendar/icalendar.value';
 
 /**
  * Denotes a single RRule rules string.
@@ -128,7 +128,7 @@ export interface RRuleStringSetSeparation {
   input: RRuleStringLineSet;
 
   /**
-   * Non-exdate rules that are separated out.
+   * Rules that are neither EXDATE nor RDATE, and are therefore safe to hand to RRule.parseString().
    */
   basic: RRuleStringLineSet;
 
@@ -136,6 +136,17 @@ export interface RRuleStringSetSeparation {
    * Exdate values. Relative to UTC.
    */
   exdates: DateSet;
+
+  /**
+   * Rdate values. Relative to UTC.
+   *
+   * These MUST be separated out rather than left in {@link basic}: rrule's parseLine() throws
+   * "Unsupported RFC prop RDATE" for any property other than RRULE/EXRULE/DTSTART, so an RDATE left in
+   * place does not degrade gracefully, it breaks every expansion of the rule. Separating it also preserves
+   * the invariant that makes parseString() usable at all, since parseString() merges only its first two
+   * parsed lines and silently discards the rest.
+   */
+  rdates: DateSet;
 }
 
 /**
@@ -158,63 +169,94 @@ export interface RRuleExdateAttribute {
 export const RRULE_STRING_SPLITTER = ':';
 
 /**
+ * The EXDATE property name. Values listed here are SUBTRACTED from the recurrence set.
+ */
+export const RRULE_EXDATE_PROPERTY_TYPE = 'EXDATE';
+
+/**
+ * The RDATE property name. Values listed here are ADDED to the recurrence set.
+ */
+export const RRULE_RDATE_PROPERTY_TYPE = 'RDATE';
+
+/**
  * Utility class for parsing and manipulating RFC 5545 RRule strings.
  *
- * Provides static methods for separating EXDATE rules, parsing RFC 5545 date-time strings,
+ * Provides static methods for separating EXDATE/RDATE rules, parsing RFC 5545 date-time strings,
  * and converting between raw line formats and structured property representations.
  *
  * @example
  * ```ts
  * const lines = DateRRuleParseUtility.toRRuleStringSet(rruleString);
- * const { basic, exdates } = DateRRuleParseUtility.separateRRuleStringSetValues(lines);
+ * const { basic, exdates, rdates } = DateRRuleParseUtility.separateRRuleStringSetValues(lines);
  * ```
  */
 export class DateRRuleParseUtility {
   /**
-   * Splits an RRule line set into basic rules and parsed EXDATE exclusion dates.
+   * Splits an RRule line set into basic rules plus the parsed EXDATE exclusions and RDATE additions.
    *
    * @param input - The RRule string line set to separate.
-   * @returns The separated basic rules and parsed EXDATE exclusion dates.
+   * @returns The separated basic rules, EXDATE exclusion dates, and RDATE additional dates.
    *
    * @example
    * ```ts
    * const result = DateRRuleParseUtility.separateRRuleStringSetValues([
    *   'RRULE:FREQ=DAILY',
-   *   'EXDATE:20210611T110000Z'
+   *   'EXDATE:20210611T110000Z',
+   *   'RDATE:20210612T110000Z'
    * ]);
    * // result.basic = ['RRULE:FREQ=DAILY']
-   * // result.exdates contains the parsed exclusion dates
+   * // result.exdates contains 2021-06-11T11:00:00Z
+   * // result.rdates contains 2021-06-12T11:00:00Z
    * ```
    */
   static separateRRuleStringSetValues(input: RRuleStringLineSet): RRuleStringSetSeparation {
     const basic: RRuleStringLineSet = [];
     const exdateRules: RRuleStringLineSet = [];
+    const rdateRules: RRuleStringLineSet = [];
 
     input.forEach((rule) => {
-      if (rule.startsWith('EXDATE')) {
+      if (rule.startsWith(RRULE_EXDATE_PROPERTY_TYPE)) {
         exdateRules.push(rule);
+      } else if (rule.startsWith(RRULE_RDATE_PROPERTY_TYPE)) {
+        rdateRules.push(rule);
       } else {
         basic.push(rule);
       }
     });
 
-    let exdates = new DateSet();
+    return {
+      basic,
+      exdates: DateRRuleParseUtility.parseDateSetFromLines(exdateRules),
+      rdates: DateRRuleParseUtility.parseDateSetFromLines(rdateRules),
+      input
+    };
+  }
 
-    if (exdateRules.length) {
-      exdates = new DateSet(
+  /**
+   * Parses the date values out of a set of date-list property lines (EXDATE or RDATE) into a single
+   * {@link DateSet}.
+   *
+   * @param lines - The date-list property lines. May be empty.
+   * @returns The parsed dates, relative to UTC. Empty when no lines are given.
+   */
+  static parseDateSetFromLines(lines: RRuleStringLineSet): DateSet {
+    let result: DateSet;
+
+    if (lines.length) {
+      result = new DateSet(
         flattenArray(
-          exdateRules.map((date) => {
-            return DateRRuleParseUtility.parseExdateAttributeFromLine(date).dates;
+          lines.map((line) => {
+            // parseExdateAttributeFromProperty() is property-name-agnostic: it reads the TZID param and a
+            // comma-separated value list, which is exactly the shape RDATE shares with EXDATE.
+            return DateRRuleParseUtility.parseExdateAttributeFromProperty(DateRRuleParseUtility.parseProperty(line)).dates;
           })
         )
       );
+    } else {
+      result = new DateSet();
     }
 
-    return {
-      basic,
-      exdates,
-      input
-    };
+    return result;
   }
 
   // MARK: Rules Parsing
@@ -227,7 +269,7 @@ export class DateRRuleParseUtility {
    */
   static parseExdateAttributeFromLine(line: RRuleLineString): RRuleExdateAttribute {
     const property = this.parseProperty(line);
-    DateRRuleParseUtility.assertPropertyType('EXDATE', property);
+    DateRRuleParseUtility.assertPropertyType(RRULE_EXDATE_PROPERTY_TYPE, property);
     return DateRRuleParseUtility.parseExdateAttributeFromProperty(property);
   }
 
@@ -304,6 +346,8 @@ export class DateRRuleParseUtility {
   /**
    * Formats a Date as an RFC 5545 UTC date-time string (e.g., `"20210611T110000Z"`).
    *
+   * The rendered wall clock is always UTC, regardless of the system timezone, so the trailing `Z` is truthful.
+   *
    * @param date - Moment to render.
    * @returns RFC 5545 UTC date-time representation of the moment.
    *
@@ -314,7 +358,7 @@ export class DateRRuleParseUtility {
    * ```
    */
   static formatDateTimeString(date: Date): RFC5545DateTimeString {
-    return format(date, `yyyyMMdd'T'HHmmss'Z'`);
+    return iCalendarUtcDateTimeString(date);
   }
 
   /**

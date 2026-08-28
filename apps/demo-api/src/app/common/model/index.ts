@@ -1,3 +1,4 @@
+export * from './calendar';
 export * from './guestbook';
 export * from './notification';
 export * from './oidc';

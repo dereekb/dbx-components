@@ -47,7 +47,29 @@
           }
         ],
         "parallel": false
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/packages/firebase-server/calcom/**/*",
+        "!{workspaceRoot}/packages/firebase-server/calcom/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/discord/**/*",
+        "!{workspaceRoot}/packages/firebase-server/discord/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/mailgun/**/*",
+        "!{workspaceRoot}/packages/firebase-server/mailgun/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/mcp/**/*",
+        "!{workspaceRoot}/packages/firebase-server/mcp/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/model/**/*",
+        "!{workspaceRoot}/packages/firebase-server/model/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/oidc/**/*",
+        "!{workspaceRoot}/packages/firebase-server/oidc/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/test/**/*",
+        "!{workspaceRoot}/packages/firebase-server/test/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/twilio/**/*",
+        "!{workspaceRoot}/packages/firebase-server/twilio/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/firebase-server/zoho/**/*",
+        "!{workspaceRoot}/packages/firebase-server/zoho/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+      ]
     },
     "build-base": {
       "dependsOn": []

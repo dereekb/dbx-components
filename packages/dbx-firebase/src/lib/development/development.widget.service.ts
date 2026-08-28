@@ -49,7 +49,7 @@ export class DbxFirebaseDevelopmentWidgetService {
   }
 
   getEntryWidgetIdentifiers(): DbxWidgetType[] {
-    return [...this._entries.keys()];
+    return Array.from(this._entries.keys());
   }
 
   getEntries(): DbxFirebaseDevelopmentWidgetEntry[] {

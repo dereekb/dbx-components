@@ -2,8 +2,10 @@
  * Per-source-file walker that pulls Firestore-model metadata out of a `.ts`
  * file: identities, `@dbxModel`-tagged interfaces with their property JSDocs,
  * snapshot converters (top-level `snapshotConverterFunctions`,
- * `firestoreSubObject`, and `firestoreObjectArray` consts), enums, and
- * `@dbxModelGroup`-tagged collection containers.
+ * `firestoreSubObject`, and `firestoreObjectArray` consts), enums,
+ * `@dbxModelGroup`-tagged collection containers, single-item collection
+ * declarations (with the fixed document id they pin), and the exported
+ * string constants such an id may be declared as.
  *
  * Mirrors the per-file outputs of `dbx-components-mcp`'s `extractModels()`
  * but lives inside `@dereekb/dbx-cli/manifest-extract` so the `dbx-cli`
@@ -14,8 +16,8 @@
  */
 
 import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/dbx-cli';
-import { Node, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
-import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory } from './types';
+import { Node, SyntaxKind, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
+import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory, ModelExtractionSingleItemCollection, ModelExtractionStringConstant } from './types';
 
 const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
 const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';
@@ -24,6 +26,11 @@ const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
 
 const IDENTITY_FN = 'firestoreModelIdentity';
+const SINGLE_ITEM_COLLECTION_FN = 'singleItemFirestoreCollection';
+const ROOT_SINGLE_ITEM_COLLECTION_FN = 'rootSingleItemFirestoreCollection';
+const SINGLE_ITEM_COLLECTION_FN_NAMES = [SINGLE_ITEM_COLLECTION_FN, ROOT_SINGLE_ITEM_COLLECTION_FN] as const;
+const MODEL_IDENTITY_KEY = 'modelIdentity';
+const SINGLE_ITEM_IDENTIFIER_KEY = 'singleItemIdentifier';
 const CONVERTER_FN_NAMES = ['snapshotConverterFunctions', 'firestoreSubObject', 'firestoreObjectArray'] as const;
 const SUB_OBJECT_FN = 'firestoreSubObject';
 const OBJECT_ARRAY_FN = 'firestoreObjectArray';
@@ -59,7 +66,9 @@ export function extractModelsFromSource(input: ExtractModelsFromSourceInput): Mo
   const enums = readEnums(sourceFile);
   const modelGroups = readModelGroups(sourceFile);
   const serviceFactories = readServiceFactories(sourceFile);
-  return { identities, interfaces, converters, enums, modelGroups, serviceFactories };
+  const singleItemCollections = readSingleItemCollections(sourceFile);
+  const stringConstants = readStringConstants(sourceFile);
+  return { identities, interfaces, converters, enums, modelGroups, serviceFactories, singleItemCollections, stringConstants };
 }
 
 function readIdentities(sourceFile: SourceFile): readonly ModelExtractionIdentity[] {
@@ -185,6 +194,92 @@ function readServiceFactoryModelType(jsDocs: readonly JSDoc[]): string | undefin
     }
   }
   return result;
+}
+
+/**
+ * Finds every `singleItemFirestoreCollection` / `rootSingleItemFirestoreCollection` call in the
+ * file. Unlike the other artifacts these are not top-level declarations — they sit inside the
+ * `<model>FirestoreCollectionFactory` function bodies — so this needs a full descendant walk,
+ * guarded on the raw text so files declaring no single-item collection skip it entirely.
+ *
+ * @param sourceFile - The parsed source file.
+ * @returns One entry per resolvable call, in source order.
+ */
+function readSingleItemCollections(sourceFile: SourceFile): readonly ModelExtractionSingleItemCollection[] {
+  const out: ModelExtractionSingleItemCollection[] = [];
+  const text = sourceFile.getFullText();
+  if (SINGLE_ITEM_COLLECTION_FN_NAMES.some((name) => text.includes(name))) {
+    for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const fnName = readCalleeName(call);
+      if (fnName !== SINGLE_ITEM_COLLECTION_FN && fnName !== ROOT_SINGLE_ITEM_COLLECTION_FN) continue;
+      const entry = buildSingleItemCollection(call, fnName === ROOT_SINGLE_ITEM_COLLECTION_FN);
+      if (entry) out.push(entry);
+    }
+  }
+  return out;
+}
+
+/**
+ * Resolves a call's function name for both the bare (`singleItemFirestoreCollection(...)`) and the
+ * method (`firestoreContext.singleItemFirestoreCollection(...)`) forms.
+ *
+ * @param call - The call expression.
+ * @returns The called function's name, or the verbatim callee text when it is neither shape.
+ */
+function readCalleeName(call: CallExpression): string {
+  const expression = call.getExpression();
+  return Node.isPropertyAccessExpression(expression) ? expression.getName() : expression.getText();
+}
+
+function buildSingleItemCollection(call: CallExpression, root: boolean): ModelExtractionSingleItemCollection | undefined {
+  let result: ModelExtractionSingleItemCollection | undefined;
+  const args = call.getArguments();
+  if (args.length > 0) {
+    const config = args[0];
+    if (Node.isObjectLiteralExpression(config)) {
+      const identityNode = readPropertyValue(config, MODEL_IDENTITY_KEY);
+      if (identityNode && Node.isIdentifier(identityNode)) {
+        const identifierNode = readPropertyValue(config, SINGLE_ITEM_IDENTIFIER_KEY);
+        result = {
+          identityConst: identityNode.getText(),
+          root,
+          documentId: readStringLiteralText(identifierNode),
+          documentIdConstRef: identifierNode && Node.isIdentifier(identifierNode) ? identifierNode.getText() : undefined,
+          explicitIdentifier: config.getProperty(SINGLE_ITEM_IDENTIFIER_KEY) !== undefined,
+          line: call.getStartLineNumber()
+        };
+      }
+    }
+  }
+  return result;
+}
+
+function readStringConstants(sourceFile: SourceFile): readonly ModelExtractionStringConstant[] {
+  const out: ModelExtractionStringConstant[] = [];
+  for (const statement of sourceFile.getVariableStatements()) {
+    if (!statement.isExported()) continue;
+    for (const decl of statement.getDeclarations()) {
+      const value = readStringLiteralText(decl.getInitializer());
+      if (value !== undefined) {
+        out.push({ name: decl.getName(), value });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Reads a node's string-literal text, peeling any `as const` / `as Foo` assertion.
+ *
+ * @param node - The candidate node, or `undefined`.
+ * @returns The literal text, or `undefined` when the node is not a string literal.
+ */
+function readStringLiteralText(node: Node | undefined): string | undefined {
+  let current = node;
+  while (current !== undefined && Node.isAsExpression(current)) {
+    current = current.getExpression();
+  }
+  return current !== undefined && (Node.isStringLiteral(current) || Node.isNoSubstitutionTemplateLiteral(current)) ? current.getLiteralText() : undefined;
 }
 
 function readConverters(sourceFile: SourceFile): readonly ModelExtractionConverter[] {

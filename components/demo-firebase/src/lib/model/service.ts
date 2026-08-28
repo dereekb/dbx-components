@@ -89,7 +89,14 @@ import {
   type UserExternalConnectionFirestoreCollections,
   type UserExternalConnectionRoles,
   type UserExternalConnectionTypes,
-  userExternalConnectionFirestoreCollection
+  userExternalConnectionFirestoreCollection,
+  type Calendar,
+  type CalendarDocument,
+  type CalendarFirestoreCollection,
+  type CalendarFirestoreCollections,
+  type CalendarRoles,
+  type CalendarTypes,
+  calendarFirestoreCollection
 } from '@dereekb/firebase';
 import {
   type OpenRouterPrompt,
@@ -116,7 +123,7 @@ import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, CalendarFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -138,6 +145,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
+  abstract readonly calendarCollection: CalendarFirestoreCollection;
   abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;
   abstract readonly userExternalConnectionCollection: UserExternalConnectionFirestoreCollection;
   abstract readonly openRouterPromptCollection: OpenRouterPromptFirestoreCollection;
@@ -178,6 +186,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext),
+    calendarCollection: calendarFirestoreCollection(firestoreContext),
     oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext }),
     userExternalConnectionCollection: userExternalConnectionFirestoreCollection(firestoreContext),
     openRouterPromptCollection: openRouterPromptFirestoreCollection(firestoreContext),
@@ -382,6 +391,18 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
             read: true,
             download: true
           };
+        },
+        // A server-derived file has no `u` — nothing uploaded it — and carries only the `o` of the model it
+        // was derived from, so the `u` branch above grants nothing and the owner cannot download their own
+        // artifact. `firestore.rules` already grants `get` on such a file through
+        // `resourceIsOwnedByAuthOwnershipKey()`, so without this the direct document read succeeds while the
+        // download callable returns FORBIDDEN. The calendar's published ICS is the case in point.
+        rolesForStorageFileOwnershipKey: async (ownershipKey) => {
+          const uid = context.auth?.uid;
+          const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
+          const isOwner = ownerKey != null && ownershipKey === ownerKey;
+
+          return isOwner ? { read: true, download: true } : undefined;
         }
       })
     ); // system admin only
@@ -397,6 +418,30 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
   getFirestoreCollection: (c) => c.app.storageFileGroupCollection
+});
+
+// MARK: Calendar
+/**
+ * @dbxModelServiceFactory calendar
+ */
+export const calendarFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Calendar, CalendarDocument, CalendarRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<Calendar, CalendarDocument>, context: DemoFirebaseContext, _model: CalendarDocument): PromiseOrValue<GrantedRoleMap<CalendarRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap(), () => {
+      // a calendar is readable by whoever owns it, mirroring `resourceIsOwnedByAuthOwnershipKey()` in
+      // firestore.rules, and rotatable by them too: the published .ics url is a bearer credential this
+      // calendar minted, so its own `o` is the authoritative answer to who may revoke it.
+      //
+      // Generic `update` is granted to nobody. Arbitrary client writes would bypass the `s: true` invariant
+      // the publish sweep's correctness rests on, which is also why firestore.rules denies them by omission.
+      // A calendar with no `o` has no owner to grant to, leaving it sys-admin only.
+      const uid = context.auth?.uid;
+      const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
+      const isOwner = ownerKey != null && output.data?.o === ownerKey;
+
+      return grantedRoleKeysMapFromArray<CalendarRoles>(isOwner ? ['read', 'rotate'] : []);
+    });
+  },
+  getFirestoreCollection: (c) => c.app.calendarCollection
 });
 
 /**
@@ -473,7 +518,7 @@ export const userExternalConnectionFirebaseModelServiceFactory = firebaseModelSe
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | CalendarTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -494,6 +539,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory,
+  calendar: calendarFirebaseModelServiceFactory,
   oidcEntry: oidcEntryFirebaseModelServiceFactory,
   userExternalConnection: userExternalConnectionFirebaseModelServiceFactory,
   openRouterPrompt: openRouterPromptFirebaseModelServiceFactory,

@@ -14,6 +14,14 @@ import { type FirebaseStorage } from './types';
 export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStorage> extends FirebaseStorageAccessor {
   readonly storage: F;
   readonly drivers: FirebaseStorageDrivers;
+  /**
+   * Normalizes a {@link StoragePathInput} into the full {@link StoragePath} this context would use for it,
+   * applying the context's default bucket.
+   *
+   * Exposed so a caller that needs the resolved bucket and path — rather than an accessor — does not have to
+   * build a file accessor just to read its `storagePath` back off.
+   */
+  readonly storagePath: StoragePathFactory;
 }
 
 /**
@@ -74,6 +82,7 @@ export function firebaseStorageContextFactory<F extends FirebaseStorage = Fireba
       storage: firebaseStorage,
       drivers,
       defaultBucket: () => defaultBucketId,
+      storagePath: storagePathBuilder,
       file: (path: StoragePathInput) => drivers.storageAccessorDriver.file(firebaseStorage, storagePathBuilder(path)),
       folder: (path: StoragePathInput) => drivers.storageAccessorDriver.folder(firebaseStorage, storagePathBuilder(path))
     };

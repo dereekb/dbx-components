@@ -454,7 +454,8 @@ describe.runIf(hasCalcomCredentials)('calcom.api', () => {
               expect(typeof connection.integration).toBe('object');
               expect(typeof connection.integration.slug).toBe('string');
               expect(typeof connection.integration.type).toBe('string');
-              expect(typeof connection.integration.installed).toBe('boolean');
+              // installed is omitted for some apps rather than returned as false
+              expect(['boolean', 'undefined']).toContain(typeof connection.integration.installed);
               expect(typeof connection.credentialId).toBe('number');
             });
           },

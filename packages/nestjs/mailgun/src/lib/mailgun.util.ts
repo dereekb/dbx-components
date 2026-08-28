@@ -1,5 +1,5 @@
 import { type Maybe, type NameEmailPair, asArray, filterMaybeArrayValues, makeValuesGroupMap, type ArrayOrValue, type Configurable } from '@dereekb/util';
-import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
+import { type MailgunTemplateEmailRequestRecipientVariablesConfig, type MailgunFileAttachment, type MailgunRecipient, type MailgunTemplateEmailRequest } from './mailgun';
 
 /**
  * The default template subject to use when batch sending emails.
@@ -68,6 +68,18 @@ export interface MailgunRecipientBatchSendTarget extends MailgunRecipient {
    * Are merged with bcc when building the request.
    */
   readonly bccKeys?: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>;
+  /**
+   * Attachment(s) to send to only this recipient.
+   *
+   * Attachments live on the REQUEST rather than the recipient, so a target that carries any is expanded into its own
+   * request with batch sending disabled, which is the same treatment cc/bcc receive. That is what lets a per-recipient
+   * payload -- an iTIP invite whose ATTENDEE names one address, for instance -- ride the same expansion as the
+   * recipients that still batch.
+   *
+   * Are merged with the base request's attachments when building the request, unless
+   * "overrideAttachmentsWithRecipientAttachments" is set.
+   */
+  readonly attachments?: Maybe<ArrayOrValue<MailgunFileAttachment>>;
 }
 
 /**
@@ -128,10 +140,36 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
    * Defaults to false.
    */
   readonly overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients?: Maybe<boolean>;
+  /**
+   * Whether or not to override the base request's attachments with the recipient's attachments.
+   *
+   * If true, a recipient that carries its own attachments sends ONLY those. By default the two are merged, with the
+   * base request's attachments first.
+   *
+   * Only affects the individual requests that a recipient with attachments is expanded into. A batched request's
+   * recipients carry no attachments of their own by definition, so it always sends exactly the base request's.
+   *
+   * Defaults to false.
+   */
+  readonly overrideAttachmentsWithRecipientAttachments?: Maybe<boolean>;
+  /**
+   * Whether or not to throw when an entity key cannot be resolved, either because no lookup is configured or because
+   * the key is absent from the configured lookup's map.
+   *
+   * An unresolved key is invisible downstream: from/replyTo fall back to the base request, and from there to the
+   * Mailgun service's default sender, which produces a perfectly VALID message sent from the WRONG address.
+   * convertMailgunTemplateEmailRequestToMailgunMessageData() validates only batch sending against cc/bcc, the batch
+   * recipient ceiling, and doubly-specified attachments, so it cannot catch this.
+   *
+   * Defaults to false, in which case the unresolved keys are reported once via console.warn and the fallback behavior
+   * is kept.
+   */
+  readonly throwOnUnresolvedEntityKeys?: Maybe<boolean>;
 }
 
 /**
- * Expands each of the input MailgunRecipientTargetWithCarbonCopyData recipients into individual (or grouped, if no cc/bcc is present on the input recipient) MailgunTemplateEmailRequest objects, based on the input configuration.
+ * Expands each of the input MailgunRecipientBatchSendTarget recipients into individual (or grouped, if no cc/bcc or
+ * attachments are present on the input recipient) MailgunTemplateEmailRequest objects, based on the input configuration.
  */
 export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: MailgunRecipientBatchSendTarget[]) => MailgunTemplateEmailRequest[];
 
@@ -140,15 +178,83 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
  *
  * @param config - Factory configuration providing the base request, recipient lookup, and per-recipient variable handling.
  * @returns A factory that expands `MailgunRecipientBatchSendTarget` lists into individual `MailgunTemplateEmailRequest` objects.
- * @throws {Error} When no subject is configured and `useSubjectFromRecipientUserVariables` is false.
+ * @throws {Error} When no subject is configured and `useSubjectFromRecipientUserVariables` is false, or when `throwOnUnresolvedEntityKeys` is set and the base request or a recipient carries an entity key that no configured lookup can resolve.
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
-  const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients } = config;
+  const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients, overrideAttachmentsWithRecipientAttachments, throwOnUnresolvedEntityKeys } = config;
   const defaultSubject = inputBaseRequest.subject;
 
   if (!defaultSubject && !useSubjectFromRecipientUserVariables) {
     throw new Error('defaultSubject must be set when "useSubjectFromRecipientUserVariables" is false');
   }
+
+  const recipientsMap = mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.recipientsMap;
+
+  type MailgunRecipientBatchSendTargetEntityKeyField = 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys';
+
+  interface UnresolvedMailgunRecipientBatchSendTargetEntityKey {
+    readonly field: MailgunRecipientBatchSendTargetEntityKeyField;
+    readonly key: MailgunRecipientBatchSendTargetEntityKey;
+  }
+
+  type EntityKeyCarrier = Pick<MailgunRecipientBatchSendTarget, 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys'>;
+
+  /**
+   * Returns every entity key on the input that no configured lookup can resolve.
+   *
+   * The map is consulted directly because neither getRecipientOrDefaultForKey() nor getRecipientsForKeys() reports a
+   * miss; both fall back silently. A partially resolved ccKeys/bccKeys counts too, since a single mistyped key there
+   * drops a carbon copy recipient just as quietly.
+   *
+   * @param carrier - The base request or recipient whose keys are checked.
+   * @returns The unresolved keys, paired with the field each was found on.
+   */
+  function unresolvedEntityKeysFor(carrier: EntityKeyCarrier): UnresolvedMailgunRecipientBatchSendTargetEntityKey[] {
+    const unresolved: UnresolvedMailgunRecipientBatchSendTargetEntityKey[] = [];
+
+    function collectUnresolvedKeys(field: MailgunRecipientBatchSendTargetEntityKeyField, keys: Maybe<ArrayOrValue<MailgunRecipientBatchSendTargetEntityKey>>) {
+      if (keys != null) {
+        asArray(keys).forEach((key) => {
+          if (!recipientsMap?.has(key)) {
+            unresolved.push({ field, key });
+          }
+        });
+      }
+    }
+
+    collectUnresolvedKeys('fromKey', carrier.fromKey);
+    collectUnresolvedKeys('replyToKey', carrier.replyToKey);
+    collectUnresolvedKeys('ccKeys', carrier.ccKeys);
+    collectUnresolvedKeys('bccKeys', carrier.bccKeys);
+
+    return unresolved;
+  }
+
+  /**
+   * Throws or warns about unresolved entity keys, depending on throwOnUnresolvedEntityKeys.
+   *
+   * Reports once for the whole set rather than once per key, so a large batch that shares one bad key does not emit a
+   * line per recipient.
+   *
+   * @param source - Description of what carried the keys, used in the message.
+   * @param unresolved - The unresolved keys to report. Nothing is reported when empty.
+   * @throws {Error} When throwOnUnresolvedEntityKeys is set and at least one unresolved key was given.
+   */
+  function reportUnresolvedEntityKeys(source: string, unresolved: UnresolvedMailgunRecipientBatchSendTargetEntityKey[]) {
+    if (unresolved.length > 0) {
+      const describedKeys = Array.from(new Set(unresolved.map(({ field, key }) => `${field}: "${key}"`))).join(', ');
+      const reason = recipientsMap ? 'they are absent from the configured mailgunRecipientBatchSendTargetEntityKeyRecipientLookup' : 'no mailgunRecipientBatchSendTargetEntityKeyRecipientLookup was configured';
+      const message = `expandMailgunRecipientBatchSendTargetRequestFactory(): ${source} specified entity keys that cannot be resolved [${describedKeys}] because ${reason}. Unresolved keys are ignored in favor of the base request's values, which sends a valid email from the wrong address.`;
+
+      if (throwOnUnresolvedEntityKeys) {
+        throw new Error(message);
+      } else {
+        console.warn(message);
+      }
+    }
+  }
+
+  reportUnresolvedEntityKeys('the base request', unresolvedEntityKeysFor(inputBaseRequest));
 
   interface DetermineCarbonCopyRecipientsInput {
     readonly baseRequestCarbonCopyRecipients?: Maybe<NameEmailPair[]>;
@@ -194,12 +300,40 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   const baseRequestFrom: Maybe<NameEmailPair> = inputBaseRequest.from ?? mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.fromKey);
   const baseRequestReplyTo: Maybe<NameEmailPair> = inputBaseRequest.replyTo ?? mailgunRecipientBatchSendTargetEntityKeyRecipientLookup?.getRecipientOrDefaultForKey(inputBaseRequest.replyToKey);
 
+  /**
+   * The attachments every request built by this factory carries, batched or individual.
+   *
+   * Normalized once here so the merge in determineAttachments() has a single array to work from.
+   */
+  const baseRequestAttachments: Maybe<MailgunFileAttachment[]> = inputBaseRequest.attachments ? asArray(inputBaseRequest.attachments) : undefined;
+
+  /**
+   * Returns the attachments for an individual request, merging the base request's attachments with the recipient's.
+   *
+   * Will return undefined if the array would be empty.
+   *
+   * @param recipientAttachments - The recipient's own attachments, if any.
+   * @returns The attachments for the request, or undefined when there are none.
+   */
+  function determineAttachments(recipientAttachments: Maybe<MailgunFileAttachment[]>): Maybe<MailgunFileAttachment[]> {
+    let attachments: Maybe<MailgunFileAttachment[]>;
+
+    if (recipientAttachments?.length) {
+      attachments = overrideAttachmentsWithRecipientAttachments ? recipientAttachments : [...(baseRequestAttachments ?? []), ...recipientAttachments];
+    } else {
+      attachments = baseRequestAttachments;
+    }
+
+    return attachments?.length ? attachments : undefined;
+  }
+
   const baseRequest: Omit<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request'], 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys'> = {
     ...inputBaseRequest,
     from: baseRequestFrom,
     replyTo: baseRequestReplyTo,
     cc: baseRequestCc,
-    bcc: baseRequestBcc
+    bcc: baseRequestBcc,
+    attachments: baseRequestAttachments
   };
 
   delete (baseRequest as Configurable<ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig['request']>).fromKey;
@@ -210,10 +344,13 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
   const configAllowBatchSend = baseRequest.batchSend !== false;
 
   return (inputRecipients: MailgunRecipientBatchSendTarget[]) => {
-    interface ResolvedMailgunRecipientBatchSendTarget extends Omit<MailgunRecipientBatchSendTarget, 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys' | 'cc' | 'bcc'> {
+    interface ResolvedMailgunRecipientBatchSendTarget extends Omit<MailgunRecipientBatchSendTarget, 'fromKey' | 'replyToKey' | 'ccKeys' | 'bccKeys' | 'cc' | 'bcc' | 'attachments'> {
       readonly cc: Maybe<NameEmailPair[]>;
       readonly bcc: Maybe<NameEmailPair[]>;
+      readonly attachments: Maybe<MailgunFileAttachment[]>;
     }
+
+    reportUnresolvedEntityKeys('a recipient', inputRecipients.flatMap(unresolvedEntityKeysFor));
 
     // Process recipients to resolve keys
     const recipients: ResolvedMailgunRecipientBatchSendTarget[] = inputRecipients.map((recipient) => {
@@ -249,7 +386,8 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
         from,
         replyTo,
         cc,
-        bcc
+        bcc,
+        attachments: recipient.attachments ? asArray(recipient.attachments) : undefined
       };
 
       return result;
@@ -261,9 +399,11 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
     const batchSendRequestRecipients: MailgunRecipientBatchSendTarget[] = [];
 
     recipients.forEach((recipient) => {
-      const recipientHasCarbonCopy = Boolean(recipient.cc?.length || recipient.bcc?.length);
+      // attachments live on the REQUEST and a MailgunRecipient has no attachment slot, so a recipient carrying its own
+      // cannot ride a shared to[] -- every other recipient of that request would receive it too.
+      const recipientRequiresOwnRequest = Boolean(recipient.cc?.length || recipient.bcc?.length || recipient.attachments?.length);
 
-      if (allowBatchSend && !recipientHasCarbonCopy) {
+      if (allowBatchSend && !recipientRequiresOwnRequest) {
         // add to batch send recipients
         batchSendRequestRecipients.push(recipient);
       } else {
@@ -282,6 +422,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
           to: recipient,
           cc,
           bcc,
+          attachments: determineAttachments(recipient.attachments),
           subject,
           batchSend: false // explicitly disable batch send for non-batch requests
         };
@@ -308,6 +449,7 @@ export function expandMailgunRecipientBatchSendTargetRequestFactory(config: Expa
           replyTo: firstRecipient.replyTo,
           recipientVariablesConfig: baseRequest.recipientVariablesConfig ?? recipientVariablesConfig,
           to: groupRecipients,
+          attachments: baseRequestAttachments,
           subject,
           batchSend: true
         };

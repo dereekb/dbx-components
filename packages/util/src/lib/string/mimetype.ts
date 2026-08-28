@@ -274,11 +274,64 @@ export function applicationFileExtensionForMimeType(mimeType: Maybe<MimeTypeWith
 }
 
 /**
+ * Non-exhaustive list of common calendar file extensions.
+ */
+export type CalendarFileExtension = 'ics';
+
+/**
+ * MIME type for iCalendar (RFC 5545) files.
+ */
+export const TEXT_CALENDAR_MIME_TYPE = 'text/calendar';
+
+/**
+ * Full Content-Type value for a published iCalendar feed.
+ *
+ * Calendar clients that subscribe to an .ics feed expect the charset parameter, so this
+ * value (rather than the bare {@link TEXT_CALENDAR_MIME_TYPE}) is what belongs on the response header.
+ */
+export const TEXT_CALENDAR_UTF8_CONTENT_TYPE: ContentTypeMimeType = 'text/calendar; charset=utf-8';
+
+/**
+ * Maps calendar file extensions to their corresponding MIME types.
+ */
+export const CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD: Record<CalendarFileExtension, MimeTypeWithoutParameters> = {
+  ics: TEXT_CALENDAR_MIME_TYPE
+};
+
+/**
+ * Maps calendar MIME types back to their corresponding file extensions.
+ */
+export const CALENDAR_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD: Record<MimeTypeWithoutParameters, CalendarFileExtension> = invertStringRecord(CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD);
+
+/**
+ * Returns the mimetype for the given calendar file extension, or undefined if the extension is not known/recognized.
+ *
+ * @param extension The calendar file extension to get the mimetype for.
+ * @returns The mimetype for the given calendar file extension, or undefined if the extension is not known.
+ */
+export function mimeTypeForCalendarFileExtension(extension: CalendarFileExtension): MimeTypeWithoutParameters;
+export function mimeTypeForCalendarFileExtension(extension: SlashPathTypedFileExtension): Maybe<MimeTypeWithoutParameters>;
+export function mimeTypeForCalendarFileExtension(extension: Maybe<CalendarFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters>;
+export function mimeTypeForCalendarFileExtension(extension: Maybe<CalendarFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters> {
+  return extension ? CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD[extension as CalendarFileExtension] : undefined;
+}
+
+/**
+ * Returns the calendar file extension for the given MIME type, or undefined if the MIME type is not a known calendar type.
+ *
+ * @param mimeType - The MIME type to look up.
+ * @returns The corresponding calendar file extension, or undefined if not recognized.
+ */
+export function calendarFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<CalendarFileExtension> {
+  return mimeType ? CALENDAR_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
+}
+
+/**
  * List of known file extensions supported by dbx-components.
  *
  * These types are known to work with most dbx-components features related to files.
  */
-export type DbxComponentsKnownFileExtension = ImageFileExtension | DocumentFileExtension | ApplicationFileExtension;
+export type DbxComponentsKnownFileExtension = ImageFileExtension | DocumentFileExtension | ApplicationFileExtension | CalendarFileExtension;
 
 /**
  * Returns the mimetype for the given file extension, or undefined if the extension is not known/recognized.
@@ -290,18 +343,18 @@ export function mimeTypeForFileExtension(extension: DbxComponentsKnownFileExtens
 export function mimeTypeForFileExtension(extension: SlashPathTypedFileExtension): Maybe<MimeTypeWithoutParameters>;
 export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters>;
 export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFileExtension | SlashPathTypedFileExtension>): Maybe<MimeTypeWithoutParameters> {
-  const result: Maybe<MimeTypeWithoutParameters> = mimeTypeForImageFileExtension(extension) ?? mimeTypeForDocumentFileExtension(extension);
+  const result: Maybe<MimeTypeWithoutParameters> = mimeTypeForImageFileExtension(extension) ?? mimeTypeForDocumentFileExtension(extension) ?? mimeTypeForApplicationFileExtension(extension) ?? mimeTypeForCalendarFileExtension(extension);
   return result;
 }
 
 /**
- * Returns the file extension for the given MIME type by checking image, document, and application types in order.
+ * Returns the file extension for the given MIME type by checking image, document, application, and calendar types in order.
  *
  * @param mimeType - The MIME type to look up.
  * @returns The corresponding file extension, or undefined if the MIME type is not recognized.
  */
 export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<DbxComponentsKnownFileExtension> {
-  const result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType);
+  const result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType) ?? calendarFileExtensionForMimeType(mimeType);
   return result;
 }
 

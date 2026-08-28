@@ -118,7 +118,7 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): Sp
 
   if (cssClasses) {
     const allClasses = cssClassesSet(cssClasses);
-    result = joinStringsWithSpaces([...allClasses]);
+    result = joinStringsWithSpaces(Array.from(allClasses));
   }
 
   return result;

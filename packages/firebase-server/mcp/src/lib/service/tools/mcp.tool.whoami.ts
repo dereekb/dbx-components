@@ -148,7 +148,7 @@ function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHand
     .map(([key]) => key);
 
   const roleSet: AuthRoleSet = deps.roleReader == null ? new Set<string>() : deps.roleReader(token);
-  const roles = [...roleSet].sort((a, b) => a.localeCompare(b));
+  const roles = Array.from(roleSet).sort((a, b) => a.localeCompare(b));
 
   const claimsByKey = new Map<string, McpManifestAuthClaim>();
   for (const claim of deps.auth.claims) {

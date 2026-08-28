@@ -1,3 +1,4 @@
+import { calendarHourlyUpdateSchedule } from '../calendar/calendar.schedule';
 import { exampleUsageOfSchedule, hourlySchedule } from '../example/example.schedule';
 import { onScheduleWithDemoNestContext } from '../function.context';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
@@ -13,6 +14,7 @@ export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
   async (x) => {
     await exampleUsageOfSchedule(x);
     await hourlySchedule(x);
+    await calendarHourlyUpdateSchedule(x); // queues the ICS StorageFile that the storagefile sweep then processes
     await storageFileHourlyUpdateSchedule(x);
     await notificationHourlyUpdateSchedule(x);
     await openRouterRunTaskSweepSchedule(x);

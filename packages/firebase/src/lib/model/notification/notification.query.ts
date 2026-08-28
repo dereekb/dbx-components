@@ -18,6 +18,11 @@ import { type ArrayOrValue } from '@dereekb/util';
  * Used by the server to discover users whose configs need to be synced to their NotificationBox recipients.
  *
  * @returns Array of Firestore query constraints filtering for users needing sync.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationUser
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('ns', '==', true)];
@@ -28,6 +33,12 @@ export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConst
  *
  * @param exclusionId - One or more box IDs or collection name prefixes to match against.
  * @returns Array of Firestore query constraints filtering for users with matching exclusions.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationUser
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ * @dbxModelFirebaseIndexAllowArrayContainsAny
  */
 export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<NotificationBoxSendExclusion>): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('x', 'array-contains-any', exclusionId)];
@@ -38,6 +49,11 @@ export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<Noti
  * Query constraints for finding {@link NotificationSummary} documents that need server-side initialization (`s == true`).
  *
  * @returns Array of Firestore query constraints filtering for summaries needing initialization.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationSummary
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory init
  */
 export function notificationSummariesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationSummary>('s', '==', true)];
@@ -50,6 +66,11 @@ export function notificationSummariesFlaggedForNeedsInitializationQuery(): Fires
  * Query constraints for finding {@link NotificationBox} documents that need server-side initialization (`s == true`).
  *
  * @returns Array of Firestore query constraints filtering for boxes needing initialization.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationBox
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory init
  */
 export function notificationBoxesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('s', '==', true)];
@@ -61,6 +82,11 @@ export function notificationBoxesFlaggedForNeedsInitializationQuery(): Firestore
  * Used by the server to clean up boxes that could not be initialized.
  *
  * @returns Array of Firestore query constraints filtering for boxes flagged as invalid.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationBox
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
  */
 export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('fi', '==', true)];
@@ -75,6 +101,11 @@ export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint
  *
  * @param now - Reference time for the `sat` comparison (defaults to current time)
  * @returns Array of Firestore query constraints filtering for notifications past their scheduled send time.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Notification
+ * @dbxModelFirebaseIndexScope COLLECTION_GROUP
+ * @dbxModelFirebaseIndexCategory sweep
  */
 export function notificationsPastSendAtTimeQuery(now = new Date()): FirestoreQueryConstraint[] {
   return [where<Notification>('d', '==', false), where<Notification>('sat', '<=', toISODateString(now))];
@@ -85,6 +116,11 @@ export function notificationsPastSendAtTimeQuery(now = new Date()): FirestoreQue
  * and ready to be archived to {@link NotificationWeek} and then deleted.
  *
  * @returns Array of Firestore query constraints filtering for completed notifications ready to archive.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Notification
+ * @dbxModelFirebaseIndexScope COLLECTION_GROUP
+ * @dbxModelFirebaseIndexCategory cleanup
  */
 export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] {
   return [
@@ -109,6 +145,11 @@ export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] 
  * @param retentionDays - Number of days of history to retain; days strictly older than `now - retentionDays` match.
  * @param now - Reference time for the cutoff (defaults to current time)
  * @returns Array of Firestore query constraints filtering by the day string.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationLoggedEventDay
+ * @dbxModelFirebaseIndexScope COLLECTION_GROUP
+ * @dbxModelFirebaseIndexCategory cleanup
  */
 export function notificationLoggedEventDaysOlderThanQuery(retentionDays: number, now: Date = new Date()): FirestoreQueryConstraint[] {
   const cutoff = toISO8601DayStringForUTC(addDays(now, -retentionDays));

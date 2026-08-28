@@ -1,8 +1,10 @@
-import { type UpdateStorageFileParams, type ProcessStorageFileParams } from '@dereekb/firebase';
+import { type UpdateStorageFileParams, type ProcessStorageFileParams, type ProcessStorageFileResult, processStorageFileParamsType, updateStorageFileParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
+import { storageFileProcessToolDetailsFactory } from '@dereekb/firebase-server/model';
 import { type APP_CODE_PREFIXUpdateModelFunction } from '../function';
 
 export const storageFileUpdate: APP_CODE_PREFIXUpdateModelFunction<UpdateStorageFileParams> = withApiDetails({
+  inputType: updateStorageFileParamsType,
   fn: async (request) => {
     const { nest, data } = request;
 
@@ -18,7 +20,11 @@ export const storageFileUpdate: APP_CODE_PREFIXUpdateModelFunction<UpdateStorage
   }
 });
 
-export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStorageFileParams> = withApiDetails({
+export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStorageFileParams, ProcessStorageFileResult> = withApiDetails({
+  inputType: processStorageFileParamsType,
+  mcp: {
+    toolDetails: storageFileProcessToolDetailsFactory()
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
@@ -30,6 +36,6 @@ export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStora
       use: (x) => x.document
     });
 
-    await processStorageFile(storageFileDocument);
+    return processStorageFile(storageFileDocument);
   }
 });

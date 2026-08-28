@@ -70,13 +70,34 @@ export const initializeStorageFileFromUploadParamsType = /* @__PURE__ */ type({
 /**
  * Parameters for triggering processing of a specific StorageFile.
  *
- * Supports various modes: immediate processing, retry checking, force restart,
- * and reprocessing already-successful files. Validated with {@link processStorageFileParamsType}.
+ * Which flag is required depends on the file's current processing state. A `FAILED` file
+ * restarts with no flag, while a `SUCCESS` file needs `processAgainIfSuccessful` (or
+ * `forceRestartProcessing`) — note that a file whose processor ran to completion is `SUCCESS`
+ * even when the outcome was a rejection, so re-validating a rejected file normally needs one of
+ * those flags. `ARCHIVED` and `DO_NOT_PROCESS` files cannot be processed at all.
+ *
+ * Validated with {@link processStorageFileParamsType}.
  */
 export interface ProcessStorageFileParams extends TargetModelParams {
+  /**
+   * Runs the first step of the processing task inline instead of waiting for the scheduled task runner.
+   */
   readonly runImmediately?: Maybe<boolean>;
+  /**
+   * Checks an in-flight `PROCESSING` task immediately, instead of waiting for it to age past the
+   * stuck-check throttle.
+   */
   readonly checkRetryProcessing?: Maybe<boolean>;
+  /**
+   * Abandons the file's existing processing task and begins a new one, clearing the completed
+   * checkpoints so the flow runs again from the start. For a `PROCESSING` file this is only applied
+   * once the retry check runs, so pair it with `checkRetryProcessing` to force a restart while the
+   * existing task is still within the stuck-check throttle.
+   */
   readonly forceRestartProcessing?: Maybe<boolean>;
+  /**
+   * Allows processing a file that has already finished processing and is in the `SUCCESS` state.
+   */
   readonly processAgainIfSuccessful?: Maybe<boolean>;
 }
 

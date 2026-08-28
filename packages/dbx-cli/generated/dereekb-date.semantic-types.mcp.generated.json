@@ -73,6 +73,136 @@
       "notes": "The week in the year. Starts from 1."
     },
     {
+      "name": "ICalendarComponentName",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "SuggestedString<'VCALENDAR' | 'VEVENT' | 'VALARM' | 'VTIMEZONE' | 'STANDARD' | 'DAYLIGHT'>",
+      "baseType": "other",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "The name of an iCalendar component. I.E. VCALENDAR, VEVENT, VALARM, VTIMEZONE, STANDARD, DAYLIGHT.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.6"
+    },
+    {
+      "name": "ICalendarPropertyName",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "The name of an iCalendar property. I.E. DTSTART, SUMMARY, X-WR-CALNAME.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.7"
+    },
+    {
+      "name": "ICalendarParameterName",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "SuggestedString<'TZID' | 'VALUE' | 'CN' | 'ROLE' | 'PARTSTAT' | 'RSVP' | 'RELATED'>",
+      "baseType": "other",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "The name of an iCalendar property parameter. I.E. TZID, VALUE, CN.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.2"
+    },
+    {
+      "name": "ICalendarParameterValue",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "An already-encoded iCalendar property parameter value."
+    },
+    {
+      "name": "ICalendarValue",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "An already-encoded iCalendar property value. Escaping (where the value type calls for it) has already been applied."
+    },
+    {
+      "name": "ICalendarTextValue",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "An escaped iCalendar TEXT value.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.11"
+    },
+    {
+      "name": "ICalendarIcsString",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "A complete iCalendar (RFC 5545) document, folded and CRLF-terminated."
+    },
+    {
+      "name": "ICalendarUid",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "A globally-unique, stable identifier for an event.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.7\n\nStability across publishes is what lets a subscribing client correlate an update or a deletion with the\nevent it already has. A UID that changes between publishes produces a duplicate event instead of an update."
+    },
+    {
+      "name": "ICalendarProductId",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "The PRODID of the product that generated the calendar.\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3"
+    },
+    {
+      "name": "ICalendarCalAddress",
+      "package": "@dereekb/date",
+      "module": "src/lib/icalendar/icalendar",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-date:icalendar"
+      ],
+      "notes": "A CAL-ADDRESS URI value. I.E. \"mailto:person@example.com\".\n\nhttps://datatracker.ietf.org/doc/html/rfc5545#section-3.3.3"
+    },
+    {
       "name": "RRuleLineString",
       "package": "@dereekb/date",
       "module": "src/lib/rrule/date.rrule.parse",

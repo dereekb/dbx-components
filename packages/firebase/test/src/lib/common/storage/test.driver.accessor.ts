@@ -1,7 +1,7 @@
 import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, type StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
+import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, type StorageListFileResult, storagePublicDownloadUrl, uploadFileWithStream } from '@dereekb/firebase';
 import { Readable } from 'node:stream';
 import { createReadStream } from 'node:fs';
 
@@ -510,6 +510,26 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           const result = await existsFile.getDownloadUrl();
           expect(result).toBeDefined();
           expect(typeof result).toBe('string');
+        });
+      });
+
+      describe('getPublicUrl()', () => {
+        it('should be reproducible by storagePublicDownloadUrl() from the bucket and path alone.', () => {
+          // The point of this case: the CLIENT derives a public url with storagePublicDownloadUrl() rather
+          // than calling anything, and that derivation is only useful if it matches what the SERVER actually
+          // produces. Only the server driver implements getPublicUrl(), so this pins the shared function
+          // against the real `@google-cloud/storage` output instead of against a reading of its source.
+          if (existsFile.getPublicUrl) {
+            const publicUrl = existsFile.getPublicUrl();
+            const { bucketId, pathString } = existsFile.storagePath;
+
+            // split off the origin the server resolved (localhost in the emulator, GCS in production) and
+            // hand it back, so what is under test is the bucket + path half of the url
+            const apiEndpoint = publicUrl.slice(0, publicUrl.indexOf(`/${bucketId}/`));
+            expect(apiEndpoint).toBeTruthy();
+
+            expect(storagePublicDownloadUrl({ apiEndpoint, storagePath: { bucketId, pathString } })).toBe(publicUrl);
+          }
         });
       });
 

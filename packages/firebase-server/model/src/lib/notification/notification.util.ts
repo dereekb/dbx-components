@@ -357,7 +357,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   // load user details from auth service
   const allUserDetails = await Promise.all(
-    [...recipientUids].map((uid) =>
+    Array.from(recipientUids).map((uid) =>
       authService
         .userContext(uid)
         .loadDetails()

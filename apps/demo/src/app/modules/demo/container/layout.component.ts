@@ -85,6 +85,11 @@ export class DemoLayoutComponent {
       icon: 'history'
     },
     {
+      title: 'Calendar',
+      ref: 'demo.app.calendar',
+      icon: 'calendar_month'
+    },
+    {
       title: 'Notifications',
       ref: 'demo.app.notification',
       icon: 'notifications'

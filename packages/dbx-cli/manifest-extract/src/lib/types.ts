@@ -292,6 +292,20 @@ export interface ModelExtraction {
    * manifest can surface the implementing factory alongside each model.
    */
   readonly serviceFactories: readonly ModelExtractionServiceFactory[];
+  /**
+   * `singleItemFirestoreCollection(...)` / `rootSingleItemFirestoreCollection(...)` calls found
+   * anywhere in this file (they live inside collection-factory function bodies, not at the top
+   * level). The orchestrator joins these onto matching model entries by `identityConst` so the
+   * runtime manifest can publish each singleton model's fixed document id.
+   */
+  readonly singleItemCollections: readonly ModelExtractionSingleItemCollection[];
+  /**
+   * Exported `const <NAME> = '<literal>'` string constants declared in this file. Aggregated by
+   * the orchestrator into a cross-file registry so a
+   * {@link ModelExtractionSingleItemCollection.documentIdConstRef} declared in a sibling file
+   * still resolves.
+   */
+  readonly stringConstants: readonly ModelExtractionStringConstant[];
 }
 
 /**
@@ -307,4 +321,57 @@ export interface ModelExtractionServiceFactory {
    * Name of the exported binding (e.g. `guestbookFirebaseModelServiceFactory`).
    */
   readonly exportName: string;
+}
+
+/**
+ * One `firestoreContext.singleItemFirestoreCollection({ ... })` or
+ * `firestoreContext.rootSingleItemFirestoreCollection({ ... })` call — the declaration that a
+ * model's collection holds exactly one document, at a fixed id.
+ *
+ * The id is what a caller needs to build a document key and what the manifest could not express
+ * before: it defaults to `DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER` (`'0'`)
+ * but is frequently overridden, so `'/0'` cannot be inferred.
+ */
+export interface ModelExtractionSingleItemCollection {
+  /**
+   * Identity const named by the call's `modelIdentity` property (e.g.
+   * `billingGroupInvoiceSummaryIdentity`) — the join key back to the model entry.
+   */
+  readonly identityConst: string;
+  /**
+   * `true` for the `rootSingleItemFirestoreCollection` variant (a root collection holding one
+   * document), `false` for the `singleItemFirestoreCollection` subcollection variant.
+   */
+  readonly root: boolean;
+  /**
+   * Document id when `singleItemIdentifier` is a string literal. `undefined` when the property is
+   * absent, names a const (see {@link documentIdConstRef}), or is an unresolvable expression.
+   */
+  readonly documentId: string | undefined;
+  /**
+   * Const name when `singleItemIdentifier` is an identifier reference (e.g.
+   * `BILLING_GROUP_SUMMARY_BILLING_SINGLE_IDENTIFIER`), resolved by the orchestrator against the
+   * cross-file string-constant registry.
+   */
+  readonly documentIdConstRef: string | undefined;
+  /**
+   * `true` when the config object declares a `singleItemIdentifier` property at all. `false` means
+   * the runtime default applies; `true` with neither {@link documentId} nor
+   * {@link documentIdConstRef} means the value is an expression the walker could not read, and the
+   * id is genuinely unknown rather than defaulted.
+   */
+  readonly explicitIdentifier: boolean;
+  /**
+   * Source-line number of the call (1-based) for diagnostics.
+   */
+  readonly line: number;
+}
+
+/**
+ * One exported `const <NAME> = '<literal>'` string constant, captured so cross-file
+ * `singleItemIdentifier: SOME_CONST` references resolve without type-checker access.
+ */
+export interface ModelExtractionStringConstant {
+  readonly name: string;
+  readonly value: string;
 }

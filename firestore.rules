@@ -134,6 +134,14 @@ service cloud.firestore {
       allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 
+    // MARK: Calendar
+    match /cal/{calendar} {
+      // owners can read their own calendar directly, so a client renders the model rather than the
+      // published .ics. "list" is denied by omission; writes stay server-only via the default deny, since
+      // the publish sweep's correctness rests on every write carrying the "s" flag.
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+    }
+
     // NOTE: there is deliberately NO match block for /orp (OpenRouterPrompt), /orpv
     // (OpenRouterPromptVersion) or /orrt (OpenRouterRunTask). They are server-only models: prompts are
     // authored through the admin-gated callable model API, and a run task carries the model's raw input

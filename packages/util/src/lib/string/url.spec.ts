@@ -18,7 +18,9 @@ import {
   readWebsiteProtocol,
   hasWebsiteTopLevelDomain,
   isStandardInternetAccessibleWebsiteUrl,
-  websiteUrlDetails
+  websiteUrlDetails,
+  hasUriScheme,
+  readUriScheme
 } from './url';
 
 const domain = 'dereekb.com';
@@ -489,6 +491,37 @@ describe('websitePathFromWebsiteDomainAndPath()', () => {
   });
 });
 
+describe('hasUriScheme()', () => {
+  it('should return true for a scheme with no authority', () => {
+    expect(hasUriScheme('mailto:hello@dereekb.com')).toBe(true);
+    expect(hasUriScheme('tel:+15550100')).toBe(true);
+  });
+
+  it('should return true for a scheme with an authority', () => {
+    expect(hasUriScheme('https://dereekb.com')).toBe(true);
+  });
+
+  it('should return false for a bare email address or domain', () => {
+    expect(hasUriScheme('hello@dereekb.com')).toBe(false);
+    expect(hasUriScheme('dereekb.com/doc/home')).toBe(false);
+  });
+
+  it('should return false for a scheme that does not start with a letter', () => {
+    expect(hasUriScheme('1https://dereekb.com')).toBe(false);
+  });
+});
+
+describe('readUriScheme()', () => {
+  it('should read the scheme without the trailing colon', () => {
+    expect(readUriScheme('mailto:hello@dereekb.com')).toBe('mailto');
+    expect(readUriScheme('https://dereekb.com')).toBe('https');
+  });
+
+  it('should return undefined when the input carries no scheme', () => {
+    expect(readUriScheme('hello@dereekb.com')).toBeUndefined();
+  });
+});
+
 describe('readWebProtocol()', () => {
   const domain = 'dereekb.com';
 
@@ -500,6 +533,14 @@ describe('readWebProtocol()', () => {
 
     const protocol = readWebsiteProtocol(input);
     expect(protocol).toBe(expectedProtocol);
+  });
+
+  it('should not read a "://" later in the path as part of the protocol', () => {
+    expect(readWebsiteProtocol(`https://${domain}/redirect?to=ftp://other.com`)).toBe('https');
+  });
+
+  it('should return undefined when the input carries no protocol', () => {
+    expect(readWebsiteProtocol(domain)).toBeUndefined();
   });
 });
 

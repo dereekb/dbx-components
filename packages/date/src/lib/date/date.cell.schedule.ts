@@ -413,7 +413,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
       dayCodes = [input];
       break;
     default:
-      dayCodes = [...input];
+      dayCodes = Array.from(input);
       break;
   }
 
@@ -901,6 +901,13 @@ export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellSchedu
  * The filter checks: (1) allowed days of the week from the encoded week, (2) explicit include/exclude lists,
  * and (3) optional min/max date boundaries. The filter accounts for timezone normalization.
  *
+ * PRECEDENCE: an index is in the schedule when it matches the weekly pattern (within the min/max bounds) OR
+ * appears in `d`, and is then NOT in `ex`. So:
+ * - `ex` BEATS `d`. This mirrors RFC 5545 3.8.5.1, where the recurrence set is the union of RRULE and RDATE
+ *   and the EXDATE values are subtracted from that union. It is what lets this filter and a generated
+ *   RRULE/RDATE/EXDATE triple agree on the same occurrences.
+ * - `d` still escapes the min/max bounds, which is also RFC behavior: UNTIL/COUNT bound the rule, not RDATE.
+ *
  * @param config - Schedule, timing, and boundary configuration.
  * @returns A decision function that returns true when the input date/index is within the schedule.
  *
@@ -993,7 +1000,8 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
     }
 
     const day = dayForIndex(i);
-    return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    const inWeeklyPattern = i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day);
+    return (inWeeklyPattern || includedIndexes.has(i)) && !excludedIndexes.has(i);
   }) as Building<DateCellScheduleDateFilter>;
 
   fn._dateCellTimingRelativeIndexFactory = _dateCellTimingRelativeIndexFactory;

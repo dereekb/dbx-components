@@ -1,4 +1,4 @@
-import { UpdateStorageFileParams, ProcessStorageFileParams } from '@dereekb/firebase';
+import { UpdateStorageFileParams, ProcessStorageFileParams, ProcessStorageFileResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXUpdateModelFunction } from '../function';
 
 export const storageFileUpdate: APP_CODE_PREFIXUpdateModelFunction<UpdateStorageFileParams> = async (request) => {
@@ -15,7 +15,7 @@ export const storageFileUpdate: APP_CODE_PREFIXUpdateModelFunction<UpdateStorage
   await updateStorageFile(storageFileDocument);
 };
 
-export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStorageFileParams> = async (request) => {
+export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStorageFileParams, ProcessStorageFileResult> = async (request) => {
   const { nest, data } = request;
 
   const processStorageFile = await nest.storageFileServerActions.processStorageFile(data);
@@ -26,5 +26,5 @@ export const storageFileProcess: APP_CODE_PREFIXUpdateModelFunction<ProcessStora
     use: (x) => x.document
   });
 
-  await processStorageFile(storageFileDocument);
+  return processStorageFile(storageFileDocument);
 };

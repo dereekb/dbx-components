@@ -1,7 +1,7 @@
 import { type DownloadStorageFileParams, downloadStorageFileParamsType, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { clearable } from '@dereekb/model';
+import { ARKTYPE_DATE_DTO_TYPE, clearable } from '@dereekb/model';
 import { type ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
@@ -31,6 +31,39 @@ export const profileCreateTestNotificationParamsType = inferredTargetModelParams
   'skipSend?': clearable('boolean'),
   'expediteSend?': clearable('boolean')
 }) as Type<ProfileCreateTestNotificationParams>;
+
+/**
+ * Params for adding a test event to the current user's profile calendar.
+ *
+ * The worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and
+ * there is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its
+ * own transaction and merges the library's templates.
+ */
+export interface ProfileCreateTestCalendarEventParams extends InferredTargetModelParams {
+  /**
+   * Display name of the event. Defaults to a generated name.
+   */
+  readonly name?: Maybe<string>;
+  /**
+   * Instant the event starts at. Defaults to now.
+   */
+  readonly startsAt?: Maybe<Date>;
+  /**
+   * Duration of the event in minutes. Defaults to 60.
+   */
+  readonly durationMinutes?: Maybe<number>;
+  /**
+   * When set, the event recurs on this rule instead of being a one-off. I.E. "RRULE:FREQ=WEEKLY;BYDAY=MO".
+   */
+  readonly recurrenceRule?: Maybe<string>;
+}
+
+export const profileCreateTestCalendarEventParamsType = inferredTargetModelParamsType.merge({
+  'name?': clearable('string'),
+  'startsAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'durationMinutes?': clearable('number'),
+  'recurrenceRule?': clearable('string')
+}) as Type<ProfileCreateTestCalendarEventParams>;
 
 /**
  * Params for changing the current user's profile username.
@@ -180,6 +213,14 @@ export type ProfileModelCrudFunctionsConfig = {
        */
       createTestNotification: ProfileCreateTestNotificationParams;
       /**
+       * Adds a test event to the current user's profile calendar, creating the
+       * calendar (`cal/pr_<uid>`) on the first call.
+       *
+       * Every write flags the calendar for sync, so the hourly sweep republishes
+       * its ".ics" without any further action from the caller.
+       */
+      createTestCalendarEvent: ProfileCreateTestCalendarEventParams;
+      /**
        * Initiates or completes a password reset for the current user.
        *
        * Set `requestReset: true` to start a new reset (generates a temporary
@@ -202,7 +243,7 @@ export type ProfileModelCrudFunctionsConfig = {
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
     'read:downloadArchive',
-    'update:_,username,onboard,createTestNotification,resetPassword' as any, // use "any" once typescript complains about combinations
+    'update:_,username,onboard,createTestNotification,createTestCalendarEvent,resetPassword' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
 };
@@ -227,6 +268,7 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
       updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
       createTestNotification: ModelFirebaseCrudFunction<ProfileCreateTestNotificationParams>;
+      createTestCalendarEvent: ModelFirebaseCrudFunction<ProfileCreateTestCalendarEventParams>;
       updateProfileResetPassword: ModelFirebaseCrudFunction<ResetProfilePasswordParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;

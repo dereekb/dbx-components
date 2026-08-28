@@ -1,4 +1,4 @@
-import { type FinishOnboardingProfileParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, finishOnboardingProfileParamsType, profileCreateTestNotificationParamsType, profileIdentity, resetProfilePasswordParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
+import { type FinishOnboardingProfileParams, type ProfileCreateTestCalendarEventParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, finishOnboardingProfileParamsType, profileCreateTestCalendarEventParamsType, profileCreateTestNotificationParamsType, profileIdentity, resetProfilePasswordParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
@@ -112,5 +112,23 @@ export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<Profil
 
     const createTestNotification = await nest.profileActions.createTestNotification(data);
     await createTestNotification(profileDocument);
+  }
+});
+
+export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<ProfileCreateTestCalendarEventParams> = withApiDetails({
+  inputType: profileCreateTestCalendarEventParamsType,
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const uid = auth.uid;
+
+    const profileDocument = await nest.useModel('profile', {
+      request,
+      key: firestoreModelKey(profileIdentity, uid),
+      roles: 'owner',
+      use: (x) => x.document
+    });
+
+    const createTestCalendarEvent = await nest.profileActions.createTestCalendarEvent(data);
+    await createTestCalendarEvent(profileDocument);
   }
 });

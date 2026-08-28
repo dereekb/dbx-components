@@ -623,6 +623,65 @@ export function websiteDomainAndPathPair(input: WebsiteDomainAndPath): WebsiteDo
   };
 }
 
+// MARK: Uri Scheme
+/**
+ * A URI scheme, without the trailing colon.
+ *
+ * Examples:
+ * - https
+ * - mailto
+ * - tel
+ *
+ * @semanticType
+ * @semanticTopic url
+ * @semanticTopic string
+ */
+export type UriScheme = string;
+
+/**
+ * Regex that captures the scheme prefix of any URI, per RFC 3986 3.1.
+ *
+ * Unlike {@link WEB_PROTOCOL_PREFIX_REGEX} this does not require the `//` authority separator, so it also matches
+ * schemes that address no authority, such as `mailto:` and `tel:`.
+ */
+export const URI_SCHEME_REGEX: RegExp = /^([a-zA-Z][a-zA-Z0-9+.-]*):/;
+
+/**
+ * Returns true if the input carries a URI scheme prefix.
+ *
+ * Examples where it will return true:
+ * - mailto:hello@dereekb.com
+ * - tel:+15550100
+ * - https://dereekb.com
+ *
+ * @param input - The string to check.
+ * @returns Whether the input starts with a URI scheme.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, url, uri, scheme, protocol, predicate
+ * @dbxUtilRelated read-uri-scheme, read-website-protocol
+ */
+export function hasUriScheme(input: string): boolean {
+  return URI_SCHEME_REGEX.test(input);
+}
+
+/**
+ * Reads the URI scheme from the input string, if one exists. Does not include the trailing colon.
+ *
+ * @param input - The URI string to extract the scheme from.
+ * @returns The scheme (e.g. `"mailto"`), or `undefined` if the input carries no scheme.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, url, uri, scheme, protocol, read
+ * @dbxUtilRelated has-uri-scheme, read-website-protocol
+ */
+export function readUriScheme(input: string): Maybe<UriScheme> {
+  const result = URI_SCHEME_REGEX.exec(input);
+  return result ? result[1] : undefined;
+}
+
 /**
  * Regex that matches `http://` or `https://` at the start of a string.
  */
@@ -630,8 +689,11 @@ export const HTTP_OR_HTTPS_REGEX: RegExp = /^https:\/\/|http:\/\//;
 
 /**
  * Regex that captures any protocol prefix (e.g., `http`, `https`, `ftp`) before `://`.
+ *
+ * The scheme is matched with the RFC 3986 character set rather than a greedy `.+`, so a `://` appearing later in
+ * the path cannot be swallowed into the protocol.
  */
-export const WEB_PROTOCOL_PREFIX_REGEX: RegExp = /^(.+):\/\//;
+export const WEB_PROTOCOL_PREFIX_REGEX: RegExp = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 
 /**
  * Reads the website protocol from the input string, if it exists.

@@ -1,6 +1,44 @@
 {
   "indexes": [
     {
+      "collectionGroup": "cal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "t",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sat",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "nbn",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "d",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sat",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
       "collectionGroup": "orrt",
       "queryScope": "COLLECTION",
       "fields": [
@@ -43,6 +81,52 @@
     {
       "collectionGroup": "gbe",
       "fieldPath": "published",
+      "ttl": false,
+      "indexes": [
+        {
+          "queryScope": "COLLECTION",
+          "order": "ASCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "order": "DESCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "queryScope": "COLLECTION_GROUP",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nbn",
+      "fieldPath": "d",
+      "ttl": false,
+      "indexes": [
+        {
+          "queryScope": "COLLECTION",
+          "order": "ASCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "order": "DESCENDING"
+        },
+        {
+          "queryScope": "COLLECTION",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "queryScope": "COLLECTION_GROUP",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nbnle",
+      "fieldPath": "d",
       "ttl": false,
       "indexes": [
         {

@@ -220,7 +220,8 @@ export default [
       'dereekb-util/require-exported-jsdoc-example': 'off', // dbx__note__typescript-jsdocs → "Function JSDocs Must Include Examples". Staged off — surfaces ~700+ warnings workspace-wide because the convention itself has a soft escape ("when the description and signature already communicate clearly"); flip to 'warn' as part of a future JSDoc-enrichment sweep. Opt-out tag is `@dbxAllowSkipExample`.
       'dereekb-util/no-inline-string-empty-object-intersection': 'error', // forbid inline `(string & {})` — the autocomplete-preserving trick must be expressed via `SuggestedString<T>` from `@dereekb/util` so the intent is named at the call site
       'dereekb-util/prefer-suggested-string': 'warn', // flag `'a' | 'b' | string` unions — TypeScript collapses them and erases literal autocomplete; switch to `SuggestedString<T>` or drop the literals
-      'dereekb-util/no-enum-literal-cast': 'warn' // forbid `0 as SomeEnum` literal casts (use the named member, e.g. `PromptLayer.REPLY_PROTOCOL`); type-aware, so branded number aliases like `30 as EntityId` are not flagged. No-ops where type info is absent; this block skips *.spec.ts (matching the other dereekb-util rules)
+      'dereekb-util/no-enum-literal-cast': 'warn', // forbid `0 as SomeEnum` literal casts (use the named member, e.g. `PromptLayer.REPLY_PROTOCOL`); type-aware, so branded number aliases like `30 as EntityId` are not flagged. No-ops where type info is absent; this block skips *.spec.ts (matching the other dereekb-util rules)
+      'dereekb-util/no-non-array-iterable-spread': 'warn' // forbid `[...someNonArrayIterable]` (e.g. `[...map.values()]`, `[...set]`) — @nx/webpack hardcodes swc `jsc.loose: true`, and loose mode compiles it to `[].concat(iterable)`, which appends the iterator as ONE element instead of spreading it, so an EMPTY collection yields `[MapIterator {}]` in a bundled app. Invisible to source-mode tests (rollup libs emit the correct helper, vitest runs source). Use `Array.from()`; autofixes a sole-spread literal. Type-aware, arrays/tuples/any are never flagged
     }
   },
   {
@@ -299,7 +300,7 @@ export default [
       'unicorn/prefer-string-starts-ends-with': 'warn',
       'unicorn/no-lonely-if': 'warn',
       'unicorn/no-useless-spread': 'warn',
-      'unicorn/prefer-spread': 'off', // disabled: bundler transpiles [...Set] to [].concat(Set) which breaks non-array iterables
+      'unicorn/prefer-spread': 'off', // disabled: bundler transpiles [...Set] to [].concat(Set) which breaks non-array iterables. Do NOT re-enable — its autofix rewrites `Array.from(x)` back to `[...x]`, i.e. straight back into the bug that `dereekb-util/no-non-array-iterable-spread` (below) exists to catch
       'unicorn/no-for-loop': 'warn',
       'unicorn/prefer-includes': 'warn',
       'unicorn/prefer-optional-catch-binding': 'warn',

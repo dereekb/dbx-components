@@ -52,7 +52,7 @@ export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudSto
 /**
  * Server-side file accessor type that guarantees stream operations are available.
  */
-export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile> & Required<Pick<FirebaseStorageAccessorFile<GoogleCloudFile>, 'uploadStream' | 'getStream'>>;
+export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile> & Required<Pick<FirebaseStorageAccessorFile<GoogleCloudFile>, 'uploadStream' | 'getStream' | 'getPublicUrl'>>;
 
 /**
  * Converts Google Cloud Storage {@link FileMetadata} into the normalized {@link StorageMetadata} format.
@@ -200,6 +200,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     storagePath,
     exists: () => file.exists().then((x) => x[0]),
     getDownloadUrl: () => file.getMetadata().then(() => file.publicUrl()),
+    getPublicUrl: () => file.publicUrl(),
     getSignedUrl: async (input) => {
       const expires =
         input?.expiresAt ??
