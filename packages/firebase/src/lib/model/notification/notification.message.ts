@@ -111,15 +111,21 @@ export interface NotificationMessageContent {
 }
 
 /**
- * The subset of {@link ICalendarMethod} a {@link NotificationMessageCalendarAttachment} may carry.
+ * The iTIP method a {@link NotificationMessageCalendarAttachment} may carry.
  *
- * These are the three methods an ORGANIZER sends to an attendee, which is the only role a notification
- * ever plays: PUBLISH for an informational copy, REQUEST for an invitation or an update to one, and
- * CANCEL to withdraw one. The rest of the iTIP set is either attendee-to-organizer (REPLY, REFRESH,
- * COUNTER) or a negotiation step this system has no state for (ADD, DECLINECOUNTER), and putting one on
- * an outgoing part produces an iTIP message the recipient's client cannot act on.
+ * Deliberately the whole of {@link ICalendarMethod}, including its open string branch. A notification
+ * USUALLY speaks as the organizer -- PUBLISH for an informational copy, REQUEST for an invitation or an
+ * update to one, ADD for extra instances of a recurring event, CANCEL to withdraw one, and DECLINECOUNTER
+ * to reject a proposed change -- but an app that sends ON BEHALF of an attendee has an equally real use
+ * for the attendee-to-organizer methods: REPLY to RSVP, REFRESH to ask for the latest copy, and COUNTER
+ * to propose one. Narrowing to the organizer set would put that behind a library change, and closing the
+ * union would also drop the `X-` extension methods {@link ICalendarMethod} intentionally leaves room for.
+ *
+ * The invariant worth enforcing is not WHICH method but that it agrees with the METHOD property inside
+ * the payload, which no type can express -- so this alias exists to document the choice rather than to
+ * constrain it.
  */
-export type NotificationMessageCalendarAttachmentMethod = Extract<ICalendarMethod, 'PUBLISH' | 'REQUEST' | 'CANCEL'>;
+export type NotificationMessageCalendarAttachmentMethod = ICalendarMethod;
 
 /**
  * A rendered iTIP calendar payload for a single recipient, for the sending service to bundle as a calendar
