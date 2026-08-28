@@ -84,8 +84,20 @@ describe('DbxFirebaseStorageFileDownloadButtonComponent public storage path', ()
     expect(testComponent.downloadButton().downloadUrlExpiresAtSignal()).toBeUndefined();
   });
 
-  it('should never call the download service', () => {
+  it('should render an enabled button, since the url is ready to save', () => {
+    const button: HTMLButtonElement = fixture.debugElement.query(By.css('a.dbx-anchor-href button')).nativeElement;
+    expect(button.disabled).toBe(false);
+  });
+
+  it('should never call the download service, even when the action is triggered', async () => {
+    const button: HTMLButtonElement = fixture.debugElement.query(By.css('a.dbx-anchor-href button')).nativeElement;
+    button.click();
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
     expect(downloadPairForStorageFileUsingSource).not.toHaveBeenCalled();
+    expect(testComponent.downloadButton().downloadUrlSignal()).toBe(EXPECTED_PUBLIC_URL);
   });
 
   it('should accept a path value instead of a factory', async () => {

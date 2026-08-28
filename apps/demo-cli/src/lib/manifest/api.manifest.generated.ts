@@ -596,12 +596,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ProcessStorageFileResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: 'Parameters for triggering processing of a specific StorageFile.\n\nSupports various modes: immediate processing, retry checking, force restart,\nand reprocessing already-successful files. Validated with {@link processStorageFileParamsType}.',
+    paramsTypeDescription:
+      "Parameters for triggering processing of a specific StorageFile.\n\nWhich flag is required depends on the file's current processing state. A `FAILED` file\nrestarts with no flag, while a `SUCCESS` file needs `processAgainIfSuccessful` (or\n`forceRestartProcessing`) — note that a file whose processor ran to completion is `SUCCESS`\neven when the outcome was a rejection, so re-validating a rejected file normally needs one of\nthose flags. `ARCHIVED` and `DO_NOT_PROCESS` files cannot be processed at all.\n\nValidated with {@link processStorageFileParamsType}.",
     paramsFields: [
-      { name: 'runImmediately', typeText: 'Maybe<boolean>' },
-      { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>' },
-      { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>' },
-      { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>' }
+      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Runs the first step of the processing task inline instead of waiting for the scheduled task runner.' },
+      { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>', description: 'Checks an in-flight `PROCESSING` task immediately, instead of waiting for it to age past the\nstuck-check throttle.' },
+      { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>', description: "Abandons the file's existing processing task and begins a new one, clearing the completed\ncheckpoints so the flow runs again from the start. For a `PROCESSING` file this is only applied\nonce the retry check runs, so pair it with `checkRetryProcessing` to force a restart while the\nexisting task is still within the stuck-check throttle." },
+      { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>', description: 'Allows processing a file that has already finished processing and is in the `SUCCESS` state.' }
     ],
     resultFields: [
       { name: 'runImmediately', typeText: 'boolean' },
