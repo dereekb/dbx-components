@@ -1,3 +1,27 @@
+# [13.42.0](https://github.com/dereekb/dbx-components/compare/v13.41.0-dev...v13.42.0) (2026-08-28)
+
+
+### ai
+
+- drop block-pnpm hook superseded by block-package-manager ([717a520a](https://github.com/dereekb/dbx-components/commit/717a520aef30b80f706146654d19077a987baafa))
+
+
+### Bug Fixes
+
+- **dbx-web:** load mapbox-gl worker from a self-hosted asset ([ec04e750](https://github.com/dereekb/dbx-components/commit/ec04e7504473337986ec428ef76fbd7d73f722fe))
+- **release:** fix duplicated message, wire downstream to release.mjs ([77026d73](https://github.com/dereekb/dbx-components/commit/77026d731e3c2b7db33ab34569d01b3ad30dcd80))
+- **zoho-cli:** stop dropping the analytics org id ([cc00b5e8](https://github.com/dereekb/dbx-components/commit/cc00b5e87c3205ef11e1dd3229bcf65c0e3be6ef))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([408eaae2](https://github.com/dereekb/dbx-components/commit/408eaae293a6a0baef3192ac92bee35bb3e1045a))
+
+
+### Features
+
+- calendar model ([#55](https://github.com/dereekb/dbx-components/issues/55)) ([08e03162](https://github.com/dereekb/dbx-components/commit/08e031620b9ce260a8f73889180bb9ffb98492b4)), closes [#55](https://github.com/dereekb/dbx-components/issues/55)
+
 # [13.41.0](https://github.com/dereekb/dbx-components/compare/v13.40.0-dev...v13.41.0) (2026-08-22)
 
 
