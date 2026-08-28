@@ -50,7 +50,7 @@ export function buildActionCommands(specs: readonly ActionCommandSpec[], options
       }
     }
 
-    const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const sortedModels = Array.from(byModel.entries()).sort(([a], [b]) => a.localeCompare(b));
 
     result = [
       {

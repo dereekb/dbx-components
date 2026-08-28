@@ -16,7 +16,7 @@ export interface MapKeysIntersectionObject<T> {
  * @returns Flattened values drawn from entries whose key was requested.
  */
 export function mapKeysIntersectionObjectToArray<T>(object: MapKeysIntersectionObject<T>, keys: Iterable<string>): T[] {
-  const keysToApply = [...keys];
+  const keysToApply = Array.from(keys);
   const applyArray: T[] = [];
 
   keysToApply.forEach((key: string) => {

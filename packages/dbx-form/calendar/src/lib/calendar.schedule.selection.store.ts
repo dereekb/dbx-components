@@ -1242,7 +1242,7 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
     const minIndex = indexFactory(inputStart);
     const maxIndex = indexFactory(inputEnd) + 1;
 
-    const currentIndexes: DateCellIndex[] = [...state.toggledIndexes];
+    const currentIndexes: DateCellIndex[] = Array.from(state.toggledIndexes);
     const isInCurrentRange = isIndexNumberInIndexRangeFunction({ minIndex, maxIndex });
     const excludedIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
     const toggledIndexes = new Set(excludedIndexesInNewRange);
@@ -1443,7 +1443,7 @@ export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSel
  */
 export function computeCalendarScheduleSelectionDateCellRange(state: CalendarScheduleSelectionState): Maybe<DateCellRangeWithRange> {
   const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek, isEnabledDay, isEnabledFilterDay } = state;
-  const enabledExclusionIndexes = [...state.toggledIndexes].filter((i) => allowedDaysOfWeek.has(indexDayOfWeek(i)));
+  const enabledExclusionIndexes = Array.from(state.toggledIndexes).filter((i) => allowedDaysOfWeek.has(indexDayOfWeek(i)));
   const minAndMaxSelectedValues = minAndMaxNumber(enabledExclusionIndexes);
 
   let startRange: Maybe<DateCellIndex>;

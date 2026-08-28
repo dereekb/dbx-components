@@ -1,6 +1,7 @@
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { baseDateToTargetDate } from '../date/date.timezone';
 import { DateRRuleParseUtility, type RRuleExdateAttribute } from './date.rrule.parse';
+import { wrapDateTests } from '../../test.spec';
 
 describe('DateRRuleParseUtility', () => {
   /**
@@ -130,6 +131,32 @@ describe('DateRRuleParseUtility', () => {
         expect(stringSet[0]).toBe(rruleStringLineSet[0]);
         expect(stringSet[1]).toBe(rruleStringLineSet[1]);
       });
+    });
+  });
+});
+
+wrapDateTests(() => {
+  describe('DateRRuleParseUtility.formatDateTimeString()', () => {
+    it('should format a date as an RFC 5545 UTC date-time string.', () => {
+      expect(DateRRuleParseUtility.formatDateTimeString(new Date('2021-06-11T11:00:00Z'))).toBe('20210611T110000Z');
+    });
+
+    it('should format the UTC wall clock, not the system timezone wall clock.', () => {
+      // this value only renders as "20210611T110000Z" when the formatter targets UTC explicitly
+      expect(DateRRuleParseUtility.formatDateTimeString(new Date(Date.UTC(2021, 6 - 1, 11, 11, 0, 0)))).toBe('20210611T110000Z');
+    });
+
+    it('should format a date that falls on a different calendar day in most system timezones.', () => {
+      expect(DateRRuleParseUtility.formatDateTimeString(new Date('2021-01-01T00:00:00Z'))).toBe('20210101T000000Z');
+      expect(DateRRuleParseUtility.formatDateTimeString(new Date('2021-12-31T23:59:59Z'))).toBe('20211231T235959Z');
+    });
+
+    it('should round-trip through parseDateTimeString().', () => {
+      const date = new Date('2021-06-11T11:00:00Z');
+      const formatted = DateRRuleParseUtility.formatDateTimeString(date);
+      const parsed = DateRRuleParseUtility.parseDateTimeString(formatted, undefined);
+
+      expect(parsed).toBeSameSecondAs(date);
     });
   });
 });

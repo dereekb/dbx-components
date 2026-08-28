@@ -1,5 +1,6 @@
-import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, type NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, firestoreModelId, firestoreModelKeyParentKey, readFirestoreModelKey, type ReadFirestoreModelKeyInput } from '@dereekb/firebase';
+import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, type NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, firestoreModelId, firestoreModelKey, firestoreModelKeyParentKey, readFirestoreModelKey, type ReadFirestoreModelKeyInput, type CalendarEventId, calendarIdentity } from '@dereekb/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
+import { demoProfileCalendarId } from '../calendar';
 import { type Guestbook, type GuestbookEntry, type GuestbookEntryKey, type GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
 import { type Maybe, type Minutes, type Seconds } from '@dereekb/util';
 
@@ -180,7 +181,74 @@ export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLik
   });
 }
 
+// MARK: Calendar Event Invite
+/**
+ * An iTIP calendar invite for a single event on a profile's calendar.
+ *
+ * Exercises the invite path end to end: the message factory renders a `METHOD:REQUEST` (or `METHOD:CANCEL`)
+ * VEVENT under the SAME UID the profile's published ICS feed uses, and the app's Mailgun builder bundles it
+ * as a `text/calendar` MIME part on the outgoing email.
+ */
+export const CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'CAL_INV';
+
+export const CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
+  type: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE,
+  name: 'Calendar Event Invite',
+  description: 'An invitation to an event on a profile calendar, delivered as an iTIP calendar attachment.',
+  notificationModelIdentity: profileIdentity, // delivered to the profile's notification box
+  targetModelIdentity: calendarIdentity // targets the profile's calendar
+};
+
+/**
+ * Stored invite data.
+ *
+ * IDENTIFIERS ONLY, and deliberately so: a NotificationItem's `d` is re-embedded verbatim into
+ * `NotificationSummary.n[]` (capped at 1000) and `NotificationWeek.n[]`, which each share a single 1 MiB
+ * document. The ICS is rendered at send time by the message factory, which holds the notification document
+ * and can read the calendar.
+ */
+export interface CalendarEventInviteNotificationData {
+  /**
+   * Id of the event within the target calendar.
+   */
+  readonly eventId: CalendarEventId;
+  /**
+   * When true, the invite is a `METHOD:CANCEL` withdrawing the event rather than a `METHOD:REQUEST`.
+   *
+   * Sent alongside creation rather than bolted on later: without a cancel path a dropped event lingers on
+   * the recipient's calendar, which is worse than never having added it.
+   */
+  readonly cancel?: Maybe<boolean>;
+}
+
+export interface CalendarEventInviteNotificationInput extends CalendarEventInviteNotificationData {
+  /**
+   * The profile whose calendar holds the event. Also the notification model.
+   */
+  readonly profileDocument: ProfileDocument;
+}
+
+/**
+ * Creates a notification template for a calendar event invite.
+ *
+ * @param input - The profile, the event id, and whether this is a cancellation.
+ * @returns A CreateNotificationTemplate for the calendar event invite.
+ */
+export function calendarEventInviteNotificationTemplate(input: CalendarEventInviteNotificationInput): CreateNotificationTemplate {
+  const { profileDocument, eventId, cancel } = input;
+
+  return createNotificationTemplate({
+    type: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE,
+    notificationModel: profileDocument,
+    targetModel: firestoreModelKey(calendarIdentity, demoProfileCalendarId(profileDocument.id)),
+    data: {
+      eventId,
+      cancel
+    }
+  });
+}
+
 // MARK: All Notifications
-export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO]);
+export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO, CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO]);
 
 export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

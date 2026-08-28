@@ -4,6 +4,7 @@ export * from './expires';
 export * from './week';
 export * from './hour';
 export * from './minute';
+export * from './offset';
 export * from './time';
 export * from './date.time';
 export * from './duration';

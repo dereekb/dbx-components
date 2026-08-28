@@ -56,7 +56,7 @@ export class DbxFormStyleDemoSectionsComponent extends AbstractDbxFormStyleDemoC
   } as FormConfig;
 
   protected readControlsValue(controls: DbxStyleDemoControls): DbxFormStyleDemoSectionsFormValue {
-    return { sections: [...controls.enabledIdsSignal()] };
+    return { sections: Array.from(controls.enabledIdsSignal()) };
   }
 
   protected applyValueToControls(controls: DbxStyleDemoControls, value: DbxFormStyleDemoSectionsFormValue): void {

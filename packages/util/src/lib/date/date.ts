@@ -579,6 +579,17 @@ export const MINUTES_IN_DAY: Minutes = 1440;
 export const MINUTES_IN_HOUR: Minutes = 60;
 
 /**
+ * Number of minutes in a year (ignoring leap years).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, minute, year, duration, constant
+ * @dbxUtilRelated minutes-in-day, days-in-year
+ */
+export const MINUTES_IN_YEAR: Minutes = DAYS_IN_YEAR * MINUTES_IN_DAY;
+
+/**
  * Number of seconds in an hour.
  *
  * @dbxUtil

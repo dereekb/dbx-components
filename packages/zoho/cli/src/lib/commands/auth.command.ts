@@ -1,5 +1,5 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials } from '../config/cli.config';
+import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials, type ZohoCliProductConfig } from '../config/cli.config';
 import { noop, type Maybe } from '@dereekb/util';
 import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
@@ -21,6 +21,17 @@ const ZOHO_SCOPES: Record<string, string[]> = {
   sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL'],
   analytics: ['ZohoAnalytics.data.all', 'ZohoAnalytics.metadata.all', 'ZohoAnalytics.modeling.all']
 };
+
+/**
+ * Redirect URI used when `--redirect-uri` is not given. Must match what the API console has registered.
+ */
+export const DEFAULT_AUTH_SETUP_REDIRECT_URI = 'http://localhost/oauth';
+
+/**
+ * `--org-id` help text, listing the org-scoped products from {@link ZOHO_CLI_ORG_ID_PRODUCTS} so the
+ * documented set cannot drift from the set the code actually persists for.
+ */
+const ORG_ID_OPTION_DESCRIBE = `Organization ID, for the products scoped by one (${Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).join(', ')})`;
 
 /**
  * Extracts the authorization code from a full redirect URL or returns the input as-is if it's already a code.
@@ -69,13 +80,13 @@ const authSetupCommand: CommandModule = {
     yargs
       .option('client-id', { type: 'string', describe: 'OAuth client ID (from https://api-console.zoho.com/)' })
       .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
-      .option('redirect-uri', { type: 'string', default: 'http://localhost/oauth', describe: 'Redirect URI (must match API console config)' })
+      .option('redirect-uri', { type: 'string', default: DEFAULT_AUTH_SETUP_REDIRECT_URI, describe: 'Redirect URI (must match API console config)' })
       .option('region', { type: 'string', default: 'us', choices: ['us', 'eu', 'in', 'au', 'jp'] as const, describe: 'Zoho region' })
       .option('scopes', { type: 'string', defaultDescription: '--product when given, otherwise recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign,analytics)' })
       .option('code', { type: 'string', describe: 'Authorization code or the full redirect URL (code is extracted automatically)' })
       .option('token', { type: 'string', describe: 'Set a refresh token directly (skips OAuth code exchange)' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store credentials for a specific product instead of shared' })
-      .option('org-id', { type: 'string', describe: 'Organization ID, for the products scoped by one (desk, analytics)' })
+      .option('org-id', { type: 'string', describe: ORG_ID_OPTION_DESCRIBE })
       .option('api-mode', { type: 'string', default: 'production', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
       .example([
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz', 'Step 1: Get OAuth URL (saves shared credentials)'],
@@ -109,7 +120,23 @@ const authSetupCommand: CommandModule = {
   }
 };
 
-interface AuthSetupContext {
+/**
+ * The subset of `auth setup`'s parsed argv that {@link buildAuthSetupContext} reads.
+ */
+export interface AuthSetupArgv {
+  readonly product?: ZohoCliProduct;
+  readonly clientId?: string;
+  readonly clientSecret?: string;
+  readonly redirectUri?: string;
+  readonly region?: string;
+  readonly scopes?: string;
+  readonly code?: string;
+  readonly token?: string;
+  readonly apiMode?: string;
+  readonly orgId?: string;
+}
+
+export interface AuthSetupContext {
   readonly product: ZohoCliProduct | undefined;
   readonly clientId: string | undefined;
   readonly clientSecret: string | undefined;
@@ -144,32 +171,72 @@ export function authSetupScopes(scopes: Maybe<string>, product: Maybe<ZohoCliPro
   return (scopes ?? product ?? DEFAULT_AUTH_SETUP_SCOPES).split(',').map((p: string) => p.trim());
 }
 
-function buildAuthSetupContext(argv: any, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
-  const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
+/**
+ * Resolves the parsed `auth setup` argv against the stored config into the context every step handler reads.
+ *
+ * @param argv - Parsed options for the run.
+ * @param existingConfig - Config currently on disk, when any.
+ * @returns The resolved {@link AuthSetupContext}.
+ */
+export function buildAuthSetupContext(argv: AuthSetupArgv, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
+  const region = argv.region ?? existingConfig?.shared?.region ?? 'us';
   // When a product is targeted, prefer its own stored client credentials before falling back to shared.
   // Products with a dedicated OAuth client (e.g. sign) rely on this so their client is not sourced from shared.
-  const product = argv.product as ZohoCliProduct | undefined;
+  const product = argv.product;
   const productConfig = product ? existingConfig?.[product] : undefined;
   return {
     product,
-    clientId: (argv.clientId as string | undefined) ?? productConfig?.clientId ?? existingConfig?.shared?.clientId,
-    clientSecret: (argv.clientSecret as string | undefined) ?? productConfig?.clientSecret ?? existingConfig?.shared?.clientSecret,
-    redirectUri: argv.redirectUri as string,
+    clientId: argv.clientId ?? productConfig?.clientId ?? existingConfig?.shared?.clientId,
+    clientSecret: argv.clientSecret ?? productConfig?.clientSecret ?? existingConfig?.shared?.clientSecret,
+    redirectUri: argv.redirectUri ?? DEFAULT_AUTH_SETUP_REDIRECT_URI,
     region,
-    scopes: authSetupScopes(argv.scopes as Maybe<string>, product),
-    code: parseCodeFromInput(argv.code as string | undefined),
-    token: argv.token as string | undefined,
+    scopes: authSetupScopes(argv.scopes, product),
+    code: parseCodeFromInput(argv.code),
+    token: argv.token,
     accountsUrl: ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'],
-    apiMode: argv.apiMode as string | undefined,
-    orgId: argv.orgId as string | undefined
+    apiMode: argv.apiMode,
+    orgId: argv.orgId
   };
+}
+
+/**
+ * Inputs to {@link authProductConfigUpdate}.
+ */
+export interface AuthProductConfigUpdateInput {
+  readonly product: ZohoCliProduct;
+  readonly credentials?: Partial<ZohoCliCredentials>;
+  readonly apiMode?: Maybe<string>;
+  readonly orgId?: Maybe<string>;
+}
+
+/**
+ * Builds the per-product block that a `--product`-targeted `auth setup` / `auth set` persists.
+ *
+ * `orgId` is carried only for {@link ZOHO_CLI_ORG_ID_PRODUCTS} — for any other product the flag is
+ * meaningless, and storing it would advertise a scope the product does not have. Every caller goes
+ * through here so the gate is defined once by the set instead of per-product at each call site; a
+ * hardcoded `=== 'desk'` here is what silently dropped `--org-id` for analytics.
+ *
+ * A key with nothing to write is emitted as `undefined`, which `mergeCliConfig` treats as
+ * "not provided" rather than as a clear — re-running setup without `--org-id` must not wipe a
+ * stored one.
+ *
+ * @param input - Targeted product plus the values the run supplied.
+ * @param input.product - Product the run targeted with `--product`.
+ * @param input.credentials - Credentials the run supplied, when any.
+ * @param input.apiMode - `--api-mode` for the run, when given.
+ * @param input.orgId - `--org-id` for the run, when given; kept only for an org-scoped product.
+ * @returns The product config patch to hand to `mergeCliConfig`.
+ */
+export function authProductConfigUpdate({ product, credentials, apiMode, orgId }: AuthProductConfigUpdateInput): ZohoCliProductConfig {
+  return { ...credentials, apiUrl: apiMode ?? undefined, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? (orgId ?? undefined) : undefined };
 }
 
 async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials, existingShared: ZohoCliCredentials | undefined): Promise<ZohoCliConfig> {
   if (ctx.product) {
     return mergeCliConfig({
       shared: existingShared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-      [ctx.product]: { ...creds, apiUrl: ctx.apiMode, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(ctx.product) ? ctx.orgId : undefined }
+      [ctx.product]: authProductConfigUpdate({ product: ctx.product, credentials: creds, apiMode: ctx.apiMode, orgId: ctx.orgId })
     });
   }
   return mergeCliConfig({
@@ -229,19 +296,24 @@ async function handleAuthSetupCode(ctx: AuthSetupContext, existingConfig: Maybe<
   });
 }
 
-async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
-  // A product-targeted setup authorizes that product's own OAuth client, so the URL requests only
-  // that product's scopes; the shared setup requests the combined scopes from --scopes.
-  const scopeStrings = ctx.product ? (ZOHO_SCOPES[ctx.product] ?? []) : ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
-  if (scopeStrings.length === 0) {
-    throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
-  }
-  const authUrl = `${ctx.accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(ctx.clientId as string)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(ctx.redirectUri)}`;
+/**
+ * Persists the credentials a step-1 (`auth setup` without `--code`/`--token`) run supplied.
+ *
+ * Split out from {@link handleAuthSetupStep1} so the persistence is testable without the printed
+ * authorization URL; step 1 is the run that must both store `--org-id` and leave an already stored
+ * one alone when the flag is omitted.
+ *
+ * @param ctx - Resolved setup context for the run.
+ * @param existingConfig - Config currently on disk, when any.
+ * @returns The merged config that was written.
+ */
+export async function saveAuthSetupStep1Config(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<ZohoCliConfig> {
+  let result: ZohoCliConfig;
 
   if (ctx.product) {
     // Store the client under the product (preserving the shared client) so a dedicated-client product
     // like sign does not clobber the shared recruit/crm/desk client. Region/apiMode stay on shared.
-    await mergeCliConfig({
+    result = await mergeCliConfig({
       shared: {
         clientId: existingConfig?.shared?.clientId ?? '',
         clientSecret: existingConfig?.shared?.clientSecret ?? '',
@@ -249,15 +321,17 @@ async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe
         region: ctx.region,
         apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
       },
-      [ctx.product]: {
-        clientId: ctx.clientId as string,
-        clientSecret: ctx.clientSecret as string,
-        apiUrl: ctx.apiMode,
-        orgId: ctx.product === 'desk' ? ctx.orgId : undefined
-      }
+      [ctx.product]: authProductConfigUpdate({
+        product: ctx.product,
+        credentials: { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string },
+        apiMode: ctx.apiMode,
+        orgId: ctx.orgId
+      })
     });
   } else {
-    await mergeCliConfig({
+    // A shared setup authorizes the shared client, and desk is the only org-scoped product that uses
+    // it — the others in ZOHO_CLI_ORG_ID_PRODUCTS have a dedicated client and are set up with --product.
+    result = await mergeCliConfig({
       shared: {
         clientId: ctx.clientId as string,
         clientSecret: ctx.clientSecret as string,
@@ -268,6 +342,20 @@ async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe
       desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
     });
   }
+
+  return result;
+}
+
+async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+  // A product-targeted setup authorizes that product's own OAuth client, so the URL requests only
+  // that product's scopes; the shared setup requests the combined scopes from --scopes.
+  const scopeStrings = ctx.product ? (ZOHO_SCOPES[ctx.product] ?? []) : ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
+  if (scopeStrings.length === 0) {
+    throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
+  }
+  const authUrl = `${ctx.accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(ctx.clientId as string)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(ctx.redirectUri)}`;
+
+  await saveAuthSetupStep1Config(ctx, existingConfig);
 
   const productFlag = ctx.product ? `--product ${ctx.product} ` : '';
 
@@ -294,7 +382,7 @@ const authSetCommand: CommandModule = {
       .option('refresh-token', { type: 'string', demandOption: true, describe: 'OAuth refresh token' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store for a specific product instead of shared' })
       .option('region', { type: 'string', default: 'us', describe: 'Zoho region (us, eu, in, au, jp)' })
-      .option('org-id', { type: 'string', describe: 'Organization ID, for the products scoped by one (desk, analytics)' })
+      .option('org-id', { type: 'string', describe: ORG_ID_OPTION_DESCRIBE })
       .option('api-mode', { type: 'string', default: 'production', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
       .example([
         ['$0 auth set --client-id abc --client-secret xyz --refresh-token 1000.abc.xyz', 'Set shared credentials'],
@@ -314,7 +402,7 @@ const authSetCommand: CommandModule = {
       if (product) {
         merged = await mergeCliConfig({
           shared: (await loadCliConfig())?.shared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-          [product]: { ...creds, apiUrl: argv.apiMode, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? argv.orgId : undefined }
+          [product]: authProductConfigUpdate({ product, credentials: creds, apiMode: argv.apiMode, orgId: argv.orgId })
         });
       } else {
         merged = await mergeCliConfig({
@@ -332,6 +420,46 @@ const authSetCommand: CommandModule = {
 };
 
 // MARK: Show
+function maskCredentials(creds: Maybe<Partial<ZohoCliCredentials>>) {
+  return creds
+    ? {
+        clientId: creds.clientId ? maskSecret(creds.clientId) : undefined,
+        clientSecret: creds.clientSecret ? maskSecret(creds.clientSecret) : undefined,
+        refreshToken: creds.refreshToken ? maskSecret(creds.refreshToken) : undefined
+      }
+    : undefined;
+}
+
+function maskProductConfig(product: ZohoCliProduct, productConfig: Maybe<ZohoCliProductConfig>) {
+  return productConfig ? { ...maskCredentials(productConfig), apiUrl: productConfig.apiUrl, ...(ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? { orgId: productConfig.orgId } : {}) } : null;
+}
+
+/**
+ * Builds the masked view of the stored config that `auth show` prints.
+ *
+ * Product blocks are derived from {@link ZOHO_CLI_PRODUCTS} rather than written out one by one: a
+ * product missing from a hand-maintained literal is reported as absent no matter what is on disk,
+ * which is exactly how a fully configured analytics install showed nothing here. `orgId` is
+ * surfaced for {@link ZOHO_CLI_ORG_ID_PRODUCTS}, whose calls cannot work without it.
+ *
+ * @param config - Loaded CLI configuration.
+ * @returns Result object with every secret masked, and `null` for each product with no stored block.
+ */
+export function buildAuthShowResult(config: ZohoCliConfig): Record<string, unknown> {
+  const productResults = Object.fromEntries(ZOHO_CLI_PRODUCTS.map((product) => [product, maskProductConfig(product, config[product])]));
+
+  return {
+    configured: true,
+    shared: {
+      ...maskCredentials(config.shared),
+      region: config.shared?.region ?? 'us',
+      apiMode: config.shared?.apiMode ?? 'production'
+    },
+    ...productResults,
+    configuredProducts: configuredProducts(config)
+  };
+}
+
 const authShowCommand: CommandModule = {
   command: 'show',
   describe: 'Show current configuration (secrets masked)',
@@ -339,35 +467,7 @@ const authShowCommand: CommandModule = {
   handler: async () => {
     try {
       const config = await loadCliConfig();
-
-      if (!config) {
-        outputResult({ configured: false });
-        return;
-      }
-
-      function maskCreds(creds: Partial<ZohoCliCredentials> | undefined) {
-        return creds
-          ? {
-              clientId: creds.clientId ? maskSecret(creds.clientId) : undefined,
-              clientSecret: creds.clientSecret ? maskSecret(creds.clientSecret) : undefined,
-              refreshToken: creds.refreshToken ? maskSecret(creds.refreshToken) : undefined
-            }
-          : undefined;
-      }
-
-      outputResult({
-        configured: true,
-        shared: {
-          ...maskCreds(config.shared),
-          region: config.shared?.region ?? 'us',
-          apiMode: config.shared?.apiMode ?? 'production'
-        },
-        recruit: config.recruit ? { ...maskCreds(config.recruit), apiUrl: config.recruit.apiUrl } : null,
-        crm: config.crm ? { ...maskCreds(config.crm), apiUrl: config.crm.apiUrl } : null,
-        desk: config.desk ? { ...maskCreds(config.desk), apiUrl: config.desk.apiUrl, orgId: config.desk.orgId } : null,
-        sign: config.sign ? { ...maskCreds(config.sign), apiUrl: config.sign.apiUrl } : null,
-        configuredProducts: configuredProducts(config)
-      });
+      outputResult(config ? buildAuthShowResult(config) : { configured: false });
     } catch (e) {
       outputError(e);
       process.exit(1);

@@ -209,7 +209,7 @@ export class OidcInteractionController {
       //
       // Force-grants the client's required profile scopes (in addition to `openid`) so they cannot be
       // dropped at consent — the required gate above already guarantees they were requested.
-      const effectiveOIDCScopes = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...clientRequiredScopes], alreadyEncountered: encounteredOIDCScopes });
+      const effectiveOIDCScopes = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...Array.from(clientRequiredScopes)], alreadyEncountered: encounteredOIDCScopes });
 
       // Scopes the existing Grant already holds (granted, minus any it rejected). Nothing here revokes
       // them, so they stay in force through this consent and the gate below has to count them too.

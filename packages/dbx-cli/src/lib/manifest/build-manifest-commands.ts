@@ -170,7 +170,7 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
     const focusHelp = (options?.focusHelpOnDataHelp ?? true) && hasDataHelpFlag(argv) && !hasAllHelpFlag(argv);
     const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
     const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
-    const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const sortedModels = Array.from(byModel.entries()).sort(([a], [b]) => a.localeCompare(b));
     const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest };
 
     result = [

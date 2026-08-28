@@ -5,7 +5,7 @@ import { type FirestoreDocumentAccessor } from '../../common/firestore/accessor/
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 import { type StoragePathRef, type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
-import { EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
+import { EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP, type StorageFilePurposeSubgroup, type StorageFileGroupId, type StorageFileGroupRelatedStorageFilePurpose, type StorageFileId, type StorageFileMetadata, type StorageFilePurpose } from './storagefile.id';
 import { firestoreModelId, type ReadFirestoreModelKeyInput } from '../../common';
 
 // MARK: Create Document
@@ -15,8 +15,8 @@ import { firestoreModelId, type ReadFirestoreModelKeyInput } from '../../common'
  * Provides all the fields needed to create a fully-configured {@link StorageFile} Firestore document,
  * including ownership, purpose, group membership, and processing state.
  *
- * Either a `file`, `storagePathRef`, or `storagePath` must be provided to identify the storage location.
- * Either an `accessor` or `context` must be provided for Firestore document creation.
+ * Either a `file`, `storagePathRef`, `storagePath`, or `storagePathFactory` must be provided to identify the
+ * storage location. Either an `accessor` or `context` must be provided for Firestore document creation.
  *
  * @template M - type of arbitrary metadata stored in the `d` field
  */
@@ -45,6 +45,17 @@ export interface CreateStorageFileDocumentPairInput<M extends StorageFileMetadat
    * File to use when creating the StorageFile.
    */
   readonly file?: FirebaseStorageAccessorFile;
+  /**
+   * Builds the storage path from the id of the StorageFile document being created.
+   *
+   * Use this when the path should be keyed by the StorageFile itself rather than by the model it belongs
+   * to. Two StorageFiles then can never resolve to the same path, so replacing one cannot delete the
+   * other's content, and the path is not guessable from the owning model's id.
+   *
+   * Only consulted when no `file`, `storagePathRef`, or `storagePath` is provided, and only for a
+   * DIRECTLY_CREATED StorageFile — a FOR_STORAGE_FILE_GROUP file has a deterministic id by design.
+   */
+  readonly storagePathFactory?: Maybe<(storageFileId: StorageFileId) => StoragePath>;
   /**
    * The display name of the StorageFile.
    *
@@ -204,7 +215,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
   const defaultPurposeSubgroup = inputDefaultPurposeSubgroup == null ? undefined : inputDefaultPurposeSubgroup === true ? EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP : inputDefaultPurposeSubgroup;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
-    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, displayName, uploadedBy, user, ownershipKey, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
+    const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, displayName, uploadedBy, user, ownershipKey, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync, storagePathFactory } = input;
     const now = inputNow ?? new Date();
 
     let accessor = inputAccessor;
@@ -216,12 +227,6 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
 
     if (!accessor) {
       throw new Error('createStorageFileDocumentPair() failed as neither an accessor nor a context was provided.');
-    }
-
-    const storagePath: Maybe<StoragePath> = input.file?.storagePath ?? input.storagePathRef?.storagePath ?? input.storagePath;
-
-    if (!storagePath) {
-      throw new Error('createStorageFileDocumentPair() failed as neither a file, storagePathRef, or storagePath was provided.');
     }
 
     let storageFileDocument;
@@ -241,6 +246,13 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
       storageFileDocument = accessor.loadDocumentForKey(storageFileKey);
     } else {
       storageFileDocument = accessor.newDocument();
+    }
+
+    // resolved AFTER the document exists, so storagePathFactory can key the path by the new id
+    const storagePath: Maybe<StoragePath> = input.file?.storagePath ?? input.storagePathRef?.storagePath ?? input.storagePath ?? storagePathFactory?.(storageFileDocument.id);
+
+    if (!storagePath) {
+      throw new Error('createStorageFileDocumentPair() failed as neither a file, storagePathRef, storagePath, or storagePathFactory was provided.');
     }
 
     const g = storageFileGroupIds ?? [];

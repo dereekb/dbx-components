@@ -1,10 +1,18 @@
 /**
  * `generate-firestore-indexes` subcommand entry point.
  *
- * Walks a downstream `-firebase` component for `@dbxModelFirebaseIndex`-
- * tagged factories (the same pipeline `scan-model-firebase-indexes` uses),
- * runs the analyzer, and emits a canonical `firestore.indexes.json`
- * payload via {@link generateFirestoreIndexesJson}.
+ * Walks one or more `-firebase` components/packages for
+ * `@dbxModelFirebaseIndex`-tagged factories (the same pipeline
+ * `scan-model-firebase-indexes` uses), runs the analyzer, and emits a
+ * canonical `firestore.indexes.json` payload via
+ * {@link generateFirestoreIndexesJson}.
+ *
+ * `--component` is repeatable, and that is the supported way to derive a
+ * single deployed indexes file from several packages. Firebase deploys one
+ * indexes file per database, and nothing merges per-package files — a
+ * package's composites otherwise survive in a downstream file only by the
+ * "collections no factory touches" preservation rule, which silently drops
+ * them the moment a local factory touches the same collection.
  *
  * Two modes:
  *
@@ -22,8 +30,8 @@
 
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
-import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
+import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
+import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo, type ModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, serializeFirestoreIndexesJson, type FirestoreIndexesJson } from './firestore-indexes-generate.js';
 
 // MARK: Public types
@@ -100,12 +108,13 @@ const DEFAULT_BIN_NAME = 'dbx-cli-generate-firestore-indexes';
 
 function buildUsage(binName: string): string {
   return [
-    `Usage: ${binName} --component <dir> [--output <path>] [--check] [--json] [--help]`,
+    `Usage: ${binName} --component <dir> [--component <dir> ...] [--output <path>] [--check] [--json] [--help]`,
     '',
     'Generates `firestore.indexes.json` from `@dbxModelFirebaseIndex`-tagged factories.',
     '',
     'Options:',
-    '  --component <dir>  Required. Relative path to the `-firebase` component package.',
+    '  --component <dir>  Required, repeatable. Relative path to a `-firebase` component or package.',
+    '                     Repeat to derive one indexes file from several packages at once.',
     '  --output <path>    Output path. Defaults to `firestore.indexes.json` at the cwd.',
     '  --check            Compare against the on-disk file; exit 1 on drift, do not write.',
     '  --json             Print the diff summary as JSON instead of human-readable text.',
@@ -114,7 +123,7 @@ function buildUsage(binName: string): string {
 }
 
 interface ParsedArgs {
-  readonly component?: string;
+  readonly components: readonly string[];
   readonly output: string;
   readonly check: boolean;
   readonly json: boolean;
@@ -145,27 +154,53 @@ export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestore
     stderr(usage);
     return { exitCode: 2 };
   }
-  if (parsed.component === undefined) {
+  if (parsed.components.length === 0) {
     stderr('generate-firestore-indexes: --component is required');
     stderr(usage);
     return { exitCode: 2 };
   }
 
-  const componentAbs = resolve(cwd, parsed.component);
   const outputAbs = resolve(cwd, parsed.output);
 
-  const buildOutcome = await buildModelFirebaseIndexManifest({
-    projectRoot: componentAbs,
-    generator
-  });
+  // One manifest per component, concatenated into a single registry. Building per component (rather than
+  // widening one component's scan globs to reach into another package) keeps each entry's `module` and
+  // `source` attributed to the package that actually declares it.
+  const entries: ModelFirebaseIndexEntryInfo[] = [];
+  const loadedSources: string[] = [];
+  let sawUnresolvedModel = false;
 
-  if (buildOutcome.kind !== 'success') {
-    stderr(formatBuildFailure(buildOutcome));
+  for (const component of parsed.components) {
+    const buildOutcome = await buildModelFirebaseIndexManifest({
+      projectRoot: resolve(cwd, component),
+      generator
+    });
+
+    if (buildOutcome.kind !== 'success') {
+      stderr(formatBuildFailure(buildOutcome));
+      return { exitCode: 1 };
+    }
+
+    // An `unresolved-model` tag produces no index at all. Left silent (as it was), that reads exactly like
+    // a query with no index requirement — which is how the `cal` composite went missing.
+    for (const warning of buildOutcome.extractWarnings) {
+      stderr(`${warning.stage}-warning: ${formatModelFirebaseIndexBuildWarning(warning)}`);
+      if (warning.stage === 'extract' && warning.warning.kind === 'unresolved-model') {
+        sawUnresolvedModel = true;
+      }
+    }
+
+    for (const entry of buildOutcome.manifest.entries) {
+      entries.push(toModelFirebaseIndexEntryInfo(entry));
+    }
+    loadedSources.push(buildOutcome.manifest.source);
+  }
+
+  if (sawUnresolvedModel) {
+    stderr('generate-firestore-indexes: one or more @dbxModelFirebaseIndexModel tags could not be resolved, so their indexes were dropped. Add the missing identity file to the component’s `dbx-mcp.scan.json` include globs.');
     return { exitCode: 1 };
   }
 
-  const entries = buildOutcome.manifest.entries.map(toModelFirebaseIndexEntryInfo);
-  const registry = createModelFirebaseIndexRegistryFromEntries({ entries, loadedSources: [buildOutcome.manifest.source] });
+  const registry = createModelFirebaseIndexRegistryFromEntries({ entries, loadedSources });
 
   const existingJson = await readExistingIndexes({ outputAbs, readFile, stderr });
 
@@ -194,7 +229,7 @@ export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestore
 
 // MARK: Argv parsing
 function parseArgv(argv: readonly string[]): ParsedArgs {
-  let component: string | undefined;
+  const components: string[] = [];
   let output = 'firestore.indexes.json';
   let check = false;
   let json = false;
@@ -209,7 +244,7 @@ function parseArgv(argv: readonly string[]): ParsedArgs {
         if (i >= argv.length) {
           error = 'generate-firestore-indexes: --component requires a value';
         } else {
-          component = argv[i];
+          components.push(argv[i]);
         }
         break;
       case '--output':
@@ -236,7 +271,7 @@ function parseArgv(argv: readonly string[]): ParsedArgs {
     }
     i += 1;
   }
-  return { component, output, check, json, help, error };
+  return { components, output, check, json, help, error };
 }
 
 // MARK: Existing JSON read

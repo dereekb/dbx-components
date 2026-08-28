@@ -295,7 +295,7 @@ function restartQuizToFirstQuestionOnState(state: QuizStoreState): QuizStoreStat
 
 function setQuizOnState(state: QuizStoreState, quiz?: Maybe<Quiz>): QuizStoreState {
   let questionMap: Maybe<ReadonlyMap<QuizQuestionId, QuizQuestion>> = undefined;
-  const currentAnswers = [...state.answers.values()];
+  const currentAnswers = Array.from(state.answers.values());
 
   if (quiz?.questions) {
     questionMap = new Map(quiz.questions.map((question) => [question.id, question]));

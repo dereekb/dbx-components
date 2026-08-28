@@ -46,6 +46,18 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
   /**
+   * Returns the permanent, anonymously-readable url for the file WITHOUT checking that it exists.
+   *
+   * Unlike {@link getDownloadUrl}, this is a pure derivation of the file's bucket and path, so it can be
+   * called BEFORE the bytes are uploaded — which is what lets a publisher embed the url in the very content
+   * it is about to write.
+   *
+   * The url only actually resolves once the object exists AND has been made public (see {@link makePublic}).
+   *
+   * Generally a server-only implementation.
+   */
+  getPublicUrl?(): StorageDownloadUrl;
+  /**
    * Returns a signed/temporary url
    */
   getSignedUrl?(options?: StorageSignedDownloadUrlConfig): Promise<StorageSignedDownloadUrl>;

@@ -1,4 +1,5 @@
 export * from './external';
+export * from './calendar';
 export * from './user';
 export * from './notification';
 export * from './oidcmodel';

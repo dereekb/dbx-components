@@ -913,7 +913,7 @@ export function readDaysOfWeek<T>(values: T[], readDate: ReadDateFunction<T>): S
  * ```
  */
 export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T>, nameFunction: DayOfWeekNameFunction): string[] {
-  return [...readDaysOfWeek(values, readDate)].sort(sortNumbersAscendingFunction).map(nameFunction);
+  return Array.from(readDaysOfWeek(values, readDate)).sort(sortNumbersAscendingFunction).map(nameFunction);
 }
 
 /**

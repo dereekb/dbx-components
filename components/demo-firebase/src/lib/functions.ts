@@ -1,4 +1,7 @@
 import {
+  type CalendarFunctionTypeMap,
+  calendarFunctionMap,
+  CalendarFunctions,
   type FirebaseFunctionGetter,
   type FirebaseFunctionsConfigMap,
   type FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY,
@@ -29,6 +32,7 @@ export type DemoFirebaseFunctionsMap = {
   readonly notificationFunctions: NotificationFunctionTypeMap;
   readonly storageFileFunctions: StorageFileFunctionTypeMap;
   readonly systemStateFunctions: SystemStateFunctionTypeMap;
+  readonly calendarFunctions: CalendarFunctionTypeMap;
   readonly oidcModelFunctions: OidcModelFunctionTypeMap;
   readonly userExternalConnectionFunctions: UserExternalConnectionFunctionTypeMap;
   readonly [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
@@ -47,6 +51,7 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
   developmentFunctions: [DemoDevelopmentFunctions, demoDevelopmentFunctionMap],
   notificationFunctions: [NotificationFunctions, notificationFunctionMap],
   storageFileFunctions: [StorageFileFunctions, storageFileFunctionMap],
+  calendarFunctions: [CalendarFunctions, calendarFunctionMap],
   oidcModelFunctions: [OidcModelFunctions, oidcModelFunctionMap],
   userExternalConnectionFunctions: [UserExternalConnectionFunctions, userExternalConnectionFunctionMap],
   systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
@@ -63,6 +68,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly developmentFunctions: FirebaseFunctionGetter<DemoDevelopmentFunctions>;
   abstract readonly notificationFunctions: FirebaseFunctionGetter<NotificationFunctions>;
   abstract readonly storageFileFunctions: FirebaseFunctionGetter<StorageFileFunctions>;
+  abstract readonly calendarFunctions: FirebaseFunctionGetter<CalendarFunctions>;
   abstract readonly oidcModelFunctions: FirebaseFunctionGetter<OidcModelFunctions>;
   abstract readonly userExternalConnectionFunctions: FirebaseFunctionGetter<UserExternalConnectionFunctions>;
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;

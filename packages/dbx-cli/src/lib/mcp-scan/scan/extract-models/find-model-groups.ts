@@ -78,5 +78,5 @@ function extractGroupModelNames(text: string): readonly string[] {
   while ((match = MODEL_NAME_RE.exec(text)) !== null) {
     seen.add(match[1]);
   }
-  return [...seen].sort((a, b) => a.localeCompare(b));
+  return Array.from(seen).sort((a, b) => a.localeCompare(b));
 }

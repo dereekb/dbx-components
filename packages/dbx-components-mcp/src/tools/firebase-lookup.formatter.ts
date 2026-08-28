@@ -473,7 +473,7 @@ function formatDownstreamSection(downstream: readonly FirebaseModel[]): readonly
     bucket.push(model);
     byPackage.set(model.sourcePackage, bucket);
   }
-  const packageNames = [...byPackage.keys()].sort((a, b) => a.localeCompare(b));
+  const packageNames = Array.from(byPackage.keys()).sort((a, b) => a.localeCompare(b));
   for (const pkg of packageNames) {
     lines.push(`### \`${pkg}\``, '');
     const bucket = byPackage.get(pkg) ?? [];

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.41.0",
+  "version": "13.42.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",
@@ -187,6 +187,7 @@
     "pretty-quick": "4.2.2",
     "resize-observer-polyfill": "1.5.1",
     "rollup-plugin-visualizer": "^7.0.1",
+    "semver": "^7.7.4",
     "supertest": "^7.2.2",
     "swc-loader": "^0.2.7",
     "ts-node": "10.9.2",

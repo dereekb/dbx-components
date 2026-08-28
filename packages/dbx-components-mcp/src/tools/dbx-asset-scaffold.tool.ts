@@ -189,7 +189,7 @@ function buildRemoteBase(args: ParsedScaffoldArgs): ScaffoldOutput {
 }
 
 function buildImportLines(symbols: ReadonlySet<string>): readonly string[] {
-  const sorted = [...symbols].sort((a, b) => a.localeCompare(b));
+  const sorted = Array.from(symbols).sort((a, b) => a.localeCompare(b));
   const result: string[] = [`import { ${sorted.join(', ')} } from '@dereekb/rxjs';`];
   return result;
 }

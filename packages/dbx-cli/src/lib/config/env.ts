@@ -67,7 +67,7 @@ export function withServiceTokenScopes(scopes: Maybe<string>): string {
     result.add(scope);
   }
 
-  return [...result].join(' ');
+  return Array.from(result).join(' ');
 }
 
 /**

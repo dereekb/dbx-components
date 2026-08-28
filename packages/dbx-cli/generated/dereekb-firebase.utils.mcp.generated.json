@@ -264,6 +264,136 @@
       ]
     },
     {
+      "slug": "is-nth-hour-of-day",
+      "name": "isNthHourOfDay",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "isNthHourOfDay(everyNHours: Hours, date?: Maybe<Date>): boolean",
+      "description": "Whether the date's hour-of-day is an Nth hour, in the ambient timezone.\n\nThis is a modulo against the hour-of-day, NOT an interval since some epoch — so at hour 12 it is\ntrue for N = 1, 2, 3, 4, 6, and 12, and false for N = 5. Only divisors of 24 divide the day\nevenly; a non-divisor (5, 7, 9, …) will still fire, just with a short window across midnight.\n\nAn `everyNHours` of zero or less has no meaningful Nth hour and returns false rather than\ndividing by zero.",
+      "params": [
+        {
+          "name": "everyNHours",
+          "type": "Hours",
+          "description": "- Run every Nth hour of the day.",
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": "Maybe<Date>",
+          "description": "- Moment to test; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "True when the date's hour-of-day is an Nth hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "modulo",
+        "date",
+        "is",
+        "nth",
+        "of",
+        "day",
+        "isnthhourofday"
+      ],
+      "example": "isNthHourOfDay(3, new Date('2024-01-01T12:30:00')); // true (12 % 3 === 0)\nisNthHourOfDay(5, new Date('2024-01-01T12:30:00')); // false (12 % 5 === 2)",
+      "relatedSlugs": [
+        "has-run-in-current-hour"
+      ]
+    },
+    {
+      "slug": "has-run-in-current-hour",
+      "name": "hasRunInCurrentHour",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "hasRunInCurrentHour(lastRunAt: Maybe<Date>, now?: Maybe<Date>): boolean",
+      "description": "Whether the last run falls inside the same hour as now.\n\nThis is a same-hour-bucket compare, not an elapsed-time compare: a run at 12:59 and a `now` of\n13:01 are two minutes apart but in different hours, so this returns false. That is what makes the\ngate track the hourly cron rather than drift with it.\n\nA null `lastRunAt` means nothing has run, so it returns false.",
+      "params": [
+        {
+          "name": "lastRunAt",
+          "type": "Maybe<Date>",
+          "description": "- Moment the work last ran.",
+          "optional": false
+        },
+        {
+          "name": "now",
+          "type": "Maybe<Date>",
+          "description": "- Moment to compare against; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "True when both moments fall in the same hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "window",
+        "date",
+        "has",
+        "run",
+        "in",
+        "current",
+        "hasrunincurrenthour"
+      ],
+      "example": "hasRunInCurrentHour(new Date('2024-01-01T12:05:00'), new Date('2024-01-01T12:55:00')); // true\nhasRunInCurrentHour(new Date('2024-01-01T12:59:00'), new Date('2024-01-01T13:01:00')); // false",
+      "relatedSlugs": [
+        "is-nth-hour-of-day",
+        "round-down-to-hour"
+      ]
+    },
+    {
+      "slug": "nth-hour-of-day-index",
+      "name": "nthHourOfDayIndex",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/firebase",
+      "subpath": "model/system/system.scheduler",
+      "signature": "nthHourOfDayIndex(everyNHours: Hours, date?: Maybe<Date>): Maybe<number>",
+      "description": "The zero-based index of the date's hour within the day's every-N-hours schedule, or null when the\nhour is not an Nth hour.\n\nAt hour 12 with N=3 the day's matching hours are 0, 3, 6, 9, 12 — so the index is 4. Use it to\nrotate work across a day's windows (\"do the expensive pass only on index 0\") without each caller\nre-deriving the arithmetic from the hour-of-day.\n\nReturns null rather than a number for a non-matching hour, so a falsy check cannot confuse\n\"index 0\" — the first window of the day — with \"no window\".",
+      "params": [
+        {
+          "name": "everyNHours",
+          "type": "Hours",
+          "description": "- Run every Nth hour of the day.",
+          "optional": false
+        },
+        {
+          "name": "date",
+          "type": "Maybe<Date>",
+          "description": "- Moment to test; defaults to now.",
+          "optional": true
+        }
+      ],
+      "returns": "The zero-based window index, or null when the hour is not an Nth hour.",
+      "tags": [
+        "schedule",
+        "hour",
+        "throttle",
+        "cron",
+        "gate",
+        "index",
+        "window",
+        "date",
+        "nth",
+        "of",
+        "day",
+        "nthhourofdayindex"
+      ],
+      "example": "nthHourOfDayIndex(3, new Date('2024-01-01T12:30:00')); // 4 (0, 3, 6, 9, 12)\nnthHourOfDayIndex(3, new Date('2024-01-01T13:30:00')); // null (13 % 3 !== 0)",
+      "relatedSlugs": [
+        "is-nth-hour-of-day"
+      ]
+    },
+    {
       "slug": "new-documents",
       "name": "newDocuments",
       "kind": "function",
@@ -1423,7 +1553,7 @@
       "category": "firestore",
       "module": "@dereekb/firebase",
       "subpath": "common/firestore/accessor/document.utility",
-      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
+      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
       "description": "Fetches a document's snapshot data (via `snapshot.data()`) and passes it to a `use` callback.\n\nWraps {@link useDocumentSnapshot} with a mapping step that extracts raw data from the snapshot.\nIf the document doesn't exist (data is `undefined`), the `use` callback is not invoked\nand `defaultValue` is returned instead.",
       "params": [],
       "returns": "The result of `use`, or the default value",

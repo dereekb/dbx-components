@@ -1,6 +1,6 @@
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { RRule, type Options } from './rrule.interop';
-import { type CalendarDate, type DateSet, type DateRange, type DateRangeParams, dateRange, maxFutureDate, durationSpanToDateRange } from '../date';
+import { type CalendarDate, DateSet, type DateRange, type DateRangeParams, dateRange, maxFutureDate, durationSpanToDateRange, sortByDateFunction } from '../date';
 import { type BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, type RRuleLines, type RRuleStringLineSet, type RRuleStringSetSeparation } from './date.rrule.parse';
@@ -94,8 +94,20 @@ export interface DateRRuleInstanceOptions {
   timezone?: TimezoneString;
   /**
    * Dates to exclude.
+   *
+   * Applied AFTER {@link include}, per RFC 5545 3.8.5.1: the recurrence set is the union of the rule and the
+   * additional dates, and only then are the exception dates subtracted. So a date present in both is
+   * excluded.
    */
   exclude?: DateSet;
+  /**
+   * Additional dates to include, beyond those the rule itself produces. Merged with any RDATE values parsed
+   * out of the rule lines.
+   *
+   * These are real instants, matched and returned in the same space as {@link exclude} and as the expansion
+   * output.
+   */
+  include?: DateSet;
 }
 
 /**
@@ -161,10 +173,12 @@ export class DateRRuleInstance {
     const rruleStringLineSet = params.rruleStringLineSet ?? DateRRuleParseUtility.toRRuleStringSet(params.rruleLines as string);
     const rruleOptions = DateRRuleUtility.toRRuleOptions(rruleStringLineSet);
     const exclude = rruleOptions.exdates.addAll(params.options.exclude?.valuesArray());
+    const include = rruleOptions.rdates.addAll(params.options.include?.valuesArray());
     const rrule = new DateRRule(rruleOptions.options);
     return new DateRRuleInstance(rrule, {
       ...params.options,
-      exclude
+      exclude,
+      include
     });
   }
 
@@ -251,17 +265,22 @@ export class DateRRuleInstance {
    */
   expand(options: DateRRuleExpansionOptions): DateRRuleExpansion {
     let between: Maybe<DateRange>;
+    let betweenInstants: Maybe<DateRange>;
 
     if (options.range || options.rangeParams) {
       if (options.range) {
-        between = options.range;
+        betweenInstants = { start: options.range.start, end: options.range.end };
       } else {
         const rangeParams: DateRangeParams = options.rangeParams as DateRangeParams;
-        between = dateRange(rangeParams);
+        betweenInstants = dateRange(rangeParams);
       }
 
-      between.start = this.normalInstance.baseDateToTargetDate(between.start);
-      between.end = this.normalInstance.baseDateToTargetDate(between.end);
+      // A COPY, never the caller's object: this used to assign `between = options.range` and then convert in
+      // place, so expanding twice with the same range object double-converted and returned different dates.
+      between = {
+        start: this.normalInstance.baseDateToTargetDate(betweenInstants.start),
+        end: this.normalInstance.baseDateToTargetDate(betweenInstants.end)
+      };
     }
 
     let startsAtDates: Date[];
@@ -281,6 +300,27 @@ export class DateRRuleInstance {
     // Fix Dates w/ Timezones
     if (this.normalInstance.hasConversion) {
       dates = dates.map((x) => ({ ...x, startsAt: this.normalInstance.targetDateToBaseDate(x.startsAt) }));
+    }
+
+    // From here on every startsAt is a real instant, which is the space `include`/`exclude` are keyed in.
+
+    // Include additional dates (RDATE). RFC 5545 3.8.5.1 builds the recurrence set as the union of the rule
+    // and the additional dates, and only THEN subtracts the exceptions -- so this runs before the exclusion
+    // filter, and a date in both sets ends up excluded.
+    const include = this.options.include;
+
+    if (include?.size) {
+      const existing = new DateSet(dates.map((x) => x.startsAt));
+      const additional = include
+        .valuesArray()
+        .filter((x) => !existing.has(x))
+        // a forever rule bounded only by `between` would otherwise leak additional dates outside the window
+        .filter((x) => betweenInstants == null || (x >= betweenInstants.start && x <= betweenInstants.end))
+        .map((startsAt) => ({ ...referenceDate, startsAt }));
+
+      if (additional.length) {
+        dates = dates.concat(additional).sort(sortByDateFunction<CalendarDate>((x) => x.startsAt));
+      }
     }
 
     // Exclude dates
@@ -303,8 +343,12 @@ export class DateRRuleInstance {
    * @returns `true` if any occurrence exists within the range.
    */
   haveRecurrenceInDateRange(dateRange: DateRange): boolean {
-    const baseStart = this.normalInstance.targetDateToBaseDate(dateRange.start);
-    const baseEnd = this.normalInstance.targetDateToBaseDate(dateRange.end);
+    // The rule iterates in wall space (the constructor shifts dtstart there and clears tzid), so a
+    // caller-supplied real instant has to be converted INTO wall space -- the same direction expand() uses
+    // for its range. This previously used the opposite direction, which was invisible only because every
+    // spec for this method ran at offset 0.
+    const baseStart = this.normalInstance.baseDateToTargetDate(dateRange.start);
+    const baseEnd = this.normalInstance.baseDateToTargetDate(dateRange.end);
 
     return this.rrule.any({ minDate: baseStart, maxDate: baseEnd });
   }
@@ -320,35 +364,46 @@ export class DateRRuleInstance {
   getRecurrenceDateRange(): RecurrenceDateRange | ForeverRecurrenceDateRange {
     const options = this.rrule.options;
     const forever = this.hasForeverRange();
+    const include = this.options.include;
+    const hasConversion = this.normalInstance.hasConversion;
 
-    let start: Date = this.rrule.options.dtstart;
+    // dtstart and every rrule result are in wall space, so they convert with target->base. This used to use
+    // base->target, which returned values off by 2x the offset; it was invisible because no spec for this
+    // method ran outside UTC.
+    let start: Date = hasConversion ? this.normalInstance.targetDateToBaseDate(this.rrule.options.dtstart) : this.rrule.options.dtstart;
     let end: Date;
     let finalRecurrenceEndsAt: Date | undefined;
 
     if (forever) {
-      end = maxFutureDate();
-      finalRecurrenceEndsAt = undefined;
+      end = maxFutureDate(); // already a real instant, so it is deliberately NOT converted
     } else {
-      if (options.until) {
-        end = this.rrule.before(options.until, true);
-      } else {
-        end = this.rrule.last() as Date;
-      }
-
-      const referenceDate = this.options.date as CalendarDate;
-      const finalRecurrenceDateRange = durationSpanToDateRange({
-        ...referenceDate,
-        startsAt: end
-      });
-
-      finalRecurrenceEndsAt = finalRecurrenceDateRange.end;
+      const lastInWallSpace = options.until ? this.rrule.before(options.until, true) : (this.rrule.last() as Date);
+      end = hasConversion && lastInWallSpace ? this.normalInstance.targetDateToBaseDate(lastInWallSpace) : lastInWallSpace;
     }
 
-    // Fix Dates w/ timezone.
-    if (this.normalInstance.hasConversion) {
-      const [startF, endF] = [start, end].filter(Boolean).map((x) => this.normalInstance.baseDateToTargetDate(x));
-      start = startF;
-      end = endF;
+    // Additional dates (RDATE) are real instants and are NOT bounded by the rule's COUNT/UNTIL, so they can
+    // move either edge of the series. Applied after the conversion above so both sides are in instant space.
+    // Without this, an rdate past the rule's last occurrence leaves `end` -- and therefore
+    // CalendarRecurringEventItem.rea -- too early, and retention silently prunes the recurrence.
+    if (include?.size) {
+      include.valuesArray().forEach((x) => {
+        if (x < start) {
+          start = x;
+        }
+
+        if (!forever && x > end) {
+          end = x;
+        }
+      });
+    }
+
+    if (!forever) {
+      // computed from the CONVERTED end, so the duration is added in instant space
+      const referenceDate = this.options.date as CalendarDate;
+      finalRecurrenceEndsAt = durationSpanToDateRange({
+        ...referenceDate,
+        startsAt: end
+      }).end;
     }
 
     return {

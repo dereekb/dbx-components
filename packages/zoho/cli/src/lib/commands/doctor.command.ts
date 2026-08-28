@@ -1,15 +1,25 @@
 import type { CommandModule, Argv } from 'yargs';
 import type { Maybe } from '@dereekb/util';
-import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts, type ZohoCliProduct } from '../config/cli.config';
+import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct } from '../config/cli.config';
 import { createCliContext, toZohoCliProductApis, type ZohoCliProductApi, type ZohoCliProductApis } from '../context/cli.context';
 import { outputResult } from '../util/output';
 import { access, constants } from 'node:fs';
 import { dirname } from 'node:path';
 
-interface DoctorCheck {
+export interface DoctorCheck {
   readonly name: string;
   readonly status: 'pass' | 'warn' | 'fail';
   readonly message?: string;
+}
+
+/**
+ * Whether a `doctor` run reports the install as healthy.
+ *
+ * @param checks - Every check the run produced.
+ * @returns `true` only when every check passed — a `warn` is not healthy, it is merely not fatal.
+ */
+export function doctorChecksHealthy(checks: readonly DoctorCheck[]): boolean {
+  return checks.every((c) => c.status === 'pass');
 }
 
 export const DOCTOR_COMMAND: CommandModule = {
@@ -27,12 +37,10 @@ export const DOCTOR_COMMAND: CommandModule = {
 
     if (config) {
       const products = configuredProducts(config);
-      checks.push(checkConfiguredProducts(products), ...(await checkTokenExchanges(config, products)));
-      const deskCheck = checkDeskOrgId(config, products);
-      if (deskCheck) checks.push(deskCheck);
+      checks.push(checkConfiguredProducts(products), ...(await checkTokenExchanges(config, products)), ...checkOrgIdProducts(config, products));
     }
 
-    const allPassed = checks.every((c) => c.status === 'pass');
+    const allPassed = doctorChecksHealthy(checks);
     outputResult({ checks, healthy: allPassed });
 
     if (!allPassed) {
@@ -99,14 +107,38 @@ async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCl
   return result;
 }
 
-function checkDeskOrgId(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[]): DoctorCheck | undefined {
-  if (config.desk?.orgId) {
-    return { name: 'desk-org-id', status: 'pass', message: `Desk org ID configured: ${config.desk.orgId}` };
-  }
-  if (!products.includes('desk')) {
-    return { name: 'desk-org-id', status: 'warn', message: 'No Desk org ID. Desk commands unavailable.' };
-  }
-  return undefined;
+/**
+ * Org-id check for every product scoped by one ({@link ZOHO_CLI_ORG_ID_PRODUCTS}).
+ *
+ * Generalized over the set rather than written per product so a future org-scoped product is covered
+ * the moment it joins: an analytics install with no org id used to report `healthy: true` while every
+ * analytics command but `orgs list` failed, because only desk had a check.
+ *
+ * A product the CLI already reports as configured but that has no org id FAILS — its org-scoped calls
+ * cannot work, and nothing else in the run says so. A product with no org id that is not configured
+ * only warns: desk is dropped from {@link configuredProducts} without one, so this is the "desk is
+ * simply not set up" case rather than a broken install.
+ *
+ * @param config - Loaded CLI configuration.
+ * @param products - Products {@link configuredProducts} reports as usable.
+ * @returns One check per org-scoped product.
+ */
+export function checkOrgIdProducts(config: ZohoCliConfig, products: readonly ZohoCliProduct[]): DoctorCheck[] {
+  return Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).map((product) => {
+    const orgId = config[product]?.orgId;
+    const name = `${product}-org-id`;
+    let result: DoctorCheck;
+
+    if (orgId) {
+      result = { name, status: 'pass', message: `${product}: Org ID configured: ${orgId}` };
+    } else if (products.includes(product)) {
+      result = { name, status: 'fail', message: `${product}: No org ID configured, but ${product} is reported as configured — every org-scoped ${product} command will fail. Run: zoho-cli auth set --product ${product} --org-id <ORG_ID>` };
+    } else {
+      result = { name, status: 'warn', message: `${product}: No org ID. ${product} commands unavailable.` };
+    }
+
+    return result;
+  });
 }
 
 function checkWritable(dirPath: string): Promise<boolean> {

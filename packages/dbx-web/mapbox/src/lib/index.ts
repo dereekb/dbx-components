@@ -18,4 +18,5 @@ export * from './mapbox.store';
 export * from './mapbox.store.provide';
 export * from './mapbox';
 export * from './mapbox.util';
+export * from './mapbox.worker';
 export * from './mapbox.options';

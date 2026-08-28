@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DbxActionDialogDirective, type DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, type DbxButtonStyle, DbxWebFilePreviewService } from '@dereekb/dbx-web';
-import { type StorageFileDownloadUrl, type StorageFileKey } from '@dereekb/firebase';
+import { firestoreModelId, type StorageFileDownloadUrl, type StorageFileId, type StorageFileKey, type StorageFilePublicDownloadUrl, type StoragePathInput } from '@dereekb/firebase';
 import { type ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, type DateOrUnixDateTimeSecondsNumber, isPast, type Maybe, MS_IN_SECOND } from '@dereekb/util';
 import { DbxFirebaseStorageFileDownloadService, type DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
+import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type MaybeObservableOrValue, maybeValueFromObservableOrValue, type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -18,6 +19,19 @@ export interface DbxFirebaseStorageFileDownloadDetails {
 }
 
 /**
+ * Derives the object path of a PUBLIC StorageFile from the file's id.
+ *
+ * Exists so a caller that holds only an id can still name the object without a document read: the path
+ * shape for a given purpose is a pure function of the id (e.g. `calendarIcsFileStoragePath()`).
+ */
+export type DbxFirebaseStorageFilePublicStoragePathFactory = (storageFileId: StorageFileId) => StoragePathInput;
+
+/**
+ * Path of a PUBLIC StorageFile's object, or a factory that derives it from the file's id.
+ */
+export type DbxFirebaseStorageFilePublicStoragePathInput = StoragePathInput | DbxFirebaseStorageFilePublicStoragePathFactory;
+
+/**
  * Source configuration for the DbxFirebaseStorageFileDownloadButtonComponent.
  */
 export interface DbxFirebaseStorageFileDownloadButtonSource {
@@ -25,6 +39,20 @@ export interface DbxFirebaseStorageFileDownloadButtonSource {
    * A static StorageFileKey to use.
    */
   readonly storageFileKey?: MaybeObservableOrValue<StorageFileKey>;
+  /**
+   * Object path of a PUBLIC StorageFile.
+   *
+   * When set, the download url is DERIVED on the client from the app's storage origin and this path — no
+   * callable, no auth, and no expiration — so the button lands ready to save on first render and clicking it
+   * only follows the anchor, rather than fetching a url the component already has.
+   *
+   * Accepts either a path value or a factory from the file's id. A StorageFile document satisfies the value
+   * form directly, since it carries its own bucket and path; pass the factory form when only the id is on
+   * hand and the path shape is derivable from it.
+   *
+   * Only for a file whose bytes are actually public. A private path yields a url that resolves to a 403.
+   */
+  readonly publicStoragePath?: Maybe<MaybeObservableOrValue<DbxFirebaseStorageFilePublicStoragePathInput>>;
   /**
    * Whether or not to pre-load the download url from the source.
    *
@@ -88,8 +116,9 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
 @Component({
   selector: 'dbx-firebase-storagefile-download-button',
   template: `
-    <dbx-anchor dbxActionAnchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="!storageFileKeySignal()" [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
-      <dbx-button dbxActionButton [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
+    <dbx-anchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="actionDisabledSignal()" [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
+      <!-- allowClickPropagation lets a click on a resolved url reach the anchor, which is what performs the download -->
+      <dbx-button dbxActionButton [allowClickPropagation]="true" [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>
     @if (showPreviewButtonSignal()) {
       <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue>
@@ -107,6 +136,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
 
   readonly dbxWebFilePreviewService = inject(DbxWebFilePreviewService);
   readonly dbxFirebaseStorageFileDownloadService = inject(DbxFirebaseStorageFileDownloadService);
+  readonly dbxFirebaseStorageService = inject(DbxFirebaseStorageService);
 
   /**
    * The StorageFileKey to set up the download button for.
@@ -119,6 +149,13 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly storageFileDownloadUrl = input<Maybe<StorageFileDownloadUrl>>();
 
   /**
+   * Object path of a PUBLIC StorageFile, or a factory deriving it from the file's id.
+   *
+   * See {@link DbxFirebaseStorageFileDownloadButtonSource.publicStoragePath}.
+   */
+  readonly publicStoragePath = input<Maybe<DbxFirebaseStorageFilePublicStoragePathInput>>();
+
+  /**
    * The MIME type to use the embed component.
    */
   readonly embedMimeType = input<Maybe<ContentTypeMimeType | string>>();
@@ -126,9 +163,9 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   /**
    * Whether or not to show a preview button.
    *
-   * Defaults to true.
+   * Takes precedence over the config. Defaults to true when neither is set.
    */
-  readonly showPreviewButton = input<Maybe<boolean>>(true);
+  readonly showPreviewButton = input<Maybe<boolean>>();
 
   /**
    * Whether or not to pre-load the download URL from the source.
@@ -156,7 +193,9 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
       downloadReadyIcon: config?.downloadReadyIcon ?? 'download',
       downloadReadyText: config?.downloadReadyText ?? 'Save File',
       previewIcon: config?.previewIcon ?? 'preview',
-      previewText: config?.previewText ?? 'View File'
+      previewText: config?.previewText ?? 'View File',
+      showPreviewButton: config?.showPreviewButton,
+      openCustomPreview: config?.openCustomPreview
     };
 
     return result;
@@ -168,7 +207,11 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     return preload ?? source?.preload ?? false;
   });
 
-  readonly downloadUrlSignal = signal<Maybe<StorageFileDownloadUrl>>(undefined);
+  /**
+   * The url fetched by the download action, restored from the cache, or given by the {@link storageFileDownloadUrl}
+   * input. A derived public url takes precedence over it in {@link downloadUrlSignal}.
+   */
+  private readonly _downloadUrlSignal = signal<Maybe<StorageFileDownloadUrl>>(undefined);
   readonly downloadMimeTypeSignal = signal<Maybe<ContentTypeMimeType>>(undefined);
   readonly downloadUrlExpiresAtSignal = signal<Maybe<DateOrUnixDateTimeSecondsNumber>>(undefined);
 
@@ -192,6 +235,99 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly storageFileKeySignal = toSignal(this.storageFileKey$);
 
   readonly hasDownloadUrlSignal = computed(() => Boolean(this.downloadUrlSignal()));
+
+  // MARK: Public Url
+  readonly publicStoragePathFromInput$ = toObservable(this.publicStoragePath).pipe(distinctUntilChanged(), shareReplay(1));
+
+  readonly publicStoragePathFromSource$: Observable<Maybe<DbxFirebaseStorageFilePublicStoragePathInput>> = this.source$.pipe(
+    map((source) => source?.publicStoragePath),
+    maybeValueFromObservableOrValue(),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly publicStoragePathInput$: Observable<Maybe<DbxFirebaseStorageFilePublicStoragePathInput>> = combineLatest([this.publicStoragePathFromInput$, this.publicStoragePathFromSource$]).pipe(
+    map(([publicStoragePathFromInput, publicStoragePathFromSource]) => {
+      return publicStoragePathFromInput ?? publicStoragePathFromSource;
+    }),
+    shareReplay(1)
+  );
+
+  /**
+   * The resolved public object path, or undefined while a configured factory still has no key to work from.
+   */
+  readonly publicStoragePath$: Observable<Maybe<StoragePathInput>> = combineLatest([this.publicStoragePathInput$, this.storageFileKey$]).pipe(
+    map(([publicStoragePathInput, storageFileKey]) => {
+      let result: Maybe<StoragePathInput>;
+
+      if (typeof publicStoragePathInput === 'function') {
+        // none of StoragePathInput's members is callable, so this discriminates the union unambiguously
+        result = storageFileKey == null ? undefined : publicStoragePathInput(firestoreModelId(storageFileKey));
+      } else {
+        result = publicStoragePathInput;
+      }
+
+      return result;
+    }),
+    shareReplay(1)
+  );
+
+  readonly publicDownloadUrl$: Observable<Maybe<StorageFilePublicDownloadUrl>> = this.publicStoragePath$.pipe(
+    map((publicStoragePath) => (publicStoragePath == null ? undefined : this.dbxFirebaseStorageService.publicDownloadUrl(publicStoragePath))),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly publicDownloadUrlSignal = toSignal(this.publicDownloadUrl$);
+
+  readonly publicStoragePathInputSignal = toSignal(this.publicStoragePathInput$);
+
+  /**
+   * Whether the button is on the client-derived public url rather than the download action.
+   *
+   * An explicit `storageFileDownloadUrl` wins: it is a url the caller decided on, where a derived one is
+   * only what the component could work out for itself.
+   */
+  readonly usesPublicDownloadUrlSignal = computed(() => {
+    const storageFileDownloadUrl = this.storageFileDownloadUrl();
+    return Boolean(this.publicStoragePathInputSignal()) && storageFileDownloadUrl == null;
+  });
+
+  /**
+   * The public url this component derived itself, if it is the url the button is on.
+   */
+  readonly derivedPublicDownloadUrlSignal = computed(() => {
+    const usesPublicDownloadUrl = this.usesPublicDownloadUrlSignal();
+    const publicDownloadUrl = this.publicDownloadUrlSignal();
+
+    return usesPublicDownloadUrl ? publicDownloadUrl : undefined;
+  });
+
+  /**
+   * The url the button downloads from.
+   *
+   * A derived public url wins over a fetched one: it is available before first render and never expires, so
+   * there is nothing for the action to improve on.
+   */
+  readonly downloadUrlSignal = computed<Maybe<StorageFileDownloadUrl>>(() => {
+    const derivedPublicDownloadUrl = this.derivedPublicDownloadUrlSignal();
+    const downloadUrl = this._downloadUrlSignal();
+
+    return derivedPublicDownloadUrl ?? downloadUrl;
+  });
+
+  /**
+   * Whether the download action is disabled, which also disables the button.
+   *
+   * A url the component already has is enough on its own: the button is then a live link, and the derived
+   * public url arrives without a key ever being set.
+   */
+  readonly actionDisabledSignal = computed(() => {
+    const storageFileKey = this.storageFileKeySignal();
+    const hasDownloadUrl = this.hasDownloadUrlSignal();
+
+    return !storageFileKey && !hasDownloadUrl;
+  });
 
   readonly buttonStyleSignal = computed(() => {
     const config = this.configSignal();
@@ -255,15 +391,16 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const downloadUrl = this.storageFileDownloadUrl();
 
     if (downloadUrl || downloadUrl === null) {
-      this.downloadUrlSignal.set(downloadUrl);
+      this._downloadUrlSignal.set(downloadUrl);
     }
   });
 
   // Preview
   readonly showPreviewButtonSignal = computed(() => {
+    const showPreviewButton = this.showPreviewButton();
     const config = this.configSignal();
     const hasDownloadUrl = this.hasDownloadUrlSignal();
-    return hasDownloadUrl && (config.showPreviewButton ?? true);
+    return hasDownloadUrl && (showPreviewButton ?? config.showPreviewButton ?? true);
   });
 
   readonly openCustomPreviewSignal = computed(() => {
@@ -301,7 +438,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const cachedPair = this.cachedUrlForStorageFileKeySignal();
 
     if (cachedPair) {
-      this.downloadUrlSignal.set(cachedPair.downloadUrl);
+      this._downloadUrlSignal.set(cachedPair.downloadUrl);
       this.downloadMimeTypeSignal.set(cachedPair.mimeType);
       this.downloadUrlExpiresAtSignal.set(cachedPair.expiresAt);
     }
@@ -336,7 +473,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const expired = this.downloadUrlHasExpiredSignal();
 
     if (expired) {
-      this.downloadUrlSignal.set(undefined);
+      this._downloadUrlSignal.set(undefined);
       this.downloadMimeTypeSignal.set(undefined);
       this.downloadUrlExpiresAtSignal.set(undefined);
     }
@@ -379,23 +516,30 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const source = this.source();
     const { customSource, handleGetDownloadUrl } = source ?? {};
 
-    if (handleGetDownloadUrl) {
+    if (this.derivedPublicDownloadUrlSignal()) {
+      // the url is derived on the client and already on the button, so the action has nothing to fetch. It
+      // completes with no pair, since a public url has neither a mime type nor an expiration.
+      context.success();
+    } else if (handleGetDownloadUrl) {
       handleGetDownloadUrl(value, context);
     } else {
       context.startWorkingWithObservable(this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource));
     }
   };
 
-  readonly handleGetDownloadUrlSuccess = (value: DbxFirebaseStorageFileDownloadUrlPair) => {
+  readonly handleGetDownloadUrlSuccess = (value: Maybe<DbxFirebaseStorageFileDownloadUrlPair>) => {
     const source = this.source();
     const { handleGetDownloadUrlSuccess } = source ?? {};
 
-    this.downloadUrlSignal.set(value.downloadUrl);
-    this.downloadMimeTypeSignal.set(value.mimeType);
-    this.downloadUrlExpiresAtSignal.set(value.expiresAt);
+    // no pair means the derived public url completed the action, and there is nothing to record
+    if (value) {
+      this._downloadUrlSignal.set(value.downloadUrl);
+      this.downloadMimeTypeSignal.set(value.mimeType);
+      this.downloadUrlExpiresAtSignal.set(value.expiresAt);
 
-    if (handleGetDownloadUrlSuccess) {
-      handleGetDownloadUrlSuccess(value);
+      if (handleGetDownloadUrlSuccess) {
+        handleGetDownloadUrlSuccess(value);
+      }
     }
   };
 
@@ -403,7 +547,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const source = this.source();
     const { handleGetDownloadUrlError } = source ?? {};
 
-    this.downloadUrlSignal.set(undefined);
+    this._downloadUrlSignal.set(undefined);
     this.downloadMimeTypeSignal.set(undefined);
     this.downloadUrlExpiresAtSignal.set(undefined);
 

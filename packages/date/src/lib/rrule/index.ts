@@ -1,3 +1,4 @@
+export * from './date.cell.schedule.rrule';
 export * from './date.recurrence';
 export * from './date.rrule.extension';
 export * from './date.rrule.parse';

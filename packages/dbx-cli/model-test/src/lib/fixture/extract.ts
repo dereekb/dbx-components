@@ -667,7 +667,7 @@ function collectAllModels(fixtures: Map<string, ClassDeclaration>, instances: Ma
   const all = new Set<string>();
   for (const k of fixtures.keys()) all.add(k);
   for (const k of instances.keys()) all.add(k);
-  const list = [...all];
+  const list = Array.from(all);
   list.sort((a, b) => {
     const aLine = (fixtures.get(a) ?? instances.get(a))?.getStartLineNumber() ?? 0;
     const bLine = (fixtures.get(b) ?? instances.get(b))?.getStartLineNumber() ?? 0;
@@ -772,7 +772,7 @@ function collectIdentityImports(sourceFile: SourceFile): readonly string[] {
       }
     }
   }
-  const list = [...out];
+  const list = Array.from(out);
   list.sort((a, b) => a.localeCompare(b));
   return list;
 }

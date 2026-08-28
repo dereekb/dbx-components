@@ -350,7 +350,8 @@ export const APP_CONFIG: ApplicationConfig = {
         collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
         provideSystemStateFirestoreCollections: true,
         provideNotificationFirestoreCollections: true,
-        provideStorageFileFirestoreCollections: true
+        provideStorageFileFirestoreCollections: true,
+        provideCalendarFirestoreCollections: true
       },
       modelContextService: {
         dbxFirebaseModelContextServiceClass: DemoFirebaseContextService

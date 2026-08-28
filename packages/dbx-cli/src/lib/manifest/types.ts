@@ -47,8 +47,9 @@ export interface CliModelField {
   readonly description?: string;
   /**
    * Enum name referenced by either the interface property's TS type or the
-   * converter's `firestoreEnum<Enum>()` generic argument, when an enum is
-   * present in the same source file.
+   * converter's `firestoreEnum<Enum>()` generic argument, resolved against
+   * every enum in the scan — the declaring file does not have to be the
+   * converter's own.
    */
   readonly enumRef?: string;
   /**
@@ -109,6 +110,38 @@ export interface CliModelManifestEntry {
    * Parent identity const name when the model is a subcollection.
    */
   readonly parentIdentityConst?: string;
+  /**
+   * `true` when the model's collection holds exactly one document — built by
+   * `singleItemFirestoreCollection` (one per parent) or
+   * `rootSingleItemFirestoreCollection` (one, full stop). Absent for ordinary
+   * multi-document collections.
+   */
+  readonly singleton?: boolean;
+  /**
+   * Fixed document id of a {@link singleton} model's one document: the value passed as
+   * `singleItemIdentifier`, or `'0'`
+   * (`DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER`) when the collection
+   * factory omits it.
+   *
+   * This cannot be inferred from the rest of the entry — plenty of single-item collections
+   * override the default (`bgbs`, `bgsu`, …) — so a caller building a document key must read
+   * it here rather than assume `/0`. Absent when {@link singleton} is `true` but the id was
+   * declared as an expression the generator could not resolve (a build-time warning is
+   * printed for that case).
+   */
+  readonly singleItemIdentifier?: string;
+  /**
+   * A ready-to-use example document key for this model, with the parent chain resolved from
+   * the identity graph and `<…Id>` placeholders standing in for the ids a caller supplies
+   * (e.g. `p/<profileId>`, `bg/<billingGroupId>/bgi/<billingGroupInvoiceId>`). A
+   * {@link singleton} model's own segment is its literal {@link singleItemIdentifier}, so the
+   * key is exact past the last placeholder (e.g. `bg/<billingGroupId>/bgis/bgbs`).
+   *
+   * Key *shape* — parent chain plus fixed document id — is what consumers of the manifest
+   * actually get wrong, so it is published pre-assembled. Absent only when some ancestor
+   * identity could not be resolved.
+   */
+  readonly exampleKey?: string;
   /**
    * First paragraph of the source interface's JSDoc, when present.
    */
@@ -340,6 +373,23 @@ export interface McpManifestModelEntry {
   readonly identityConst: string;
   readonly collectionPrefix: string;
   readonly parentIdentityConst?: string;
+  /**
+   * `true` when the model's collection holds exactly one document, at the fixed
+   * {@link singleItemIdentifier} (mirror of {@link CliModelManifestEntry.singleton}).
+   */
+  readonly singleton?: boolean;
+  /**
+   * Fixed document id of a {@link singleton} model's one document — `'0'` by default but
+   * frequently overridden, so it cannot be inferred (mirror of
+   * {@link CliModelManifestEntry.singleItemIdentifier}).
+   */
+  readonly singleItemIdentifier?: string;
+  /**
+   * Example document key with the parent chain resolved and `<…Id>` placeholders for the ids a
+   * caller supplies (mirror of {@link CliModelManifestEntry.exampleKey}). Surfaced by
+   * `model-info` so a `model-get` caller can build a valid key without reading source.
+   */
+  readonly exampleKey?: string;
   readonly description?: string;
   readonly sourcePackage: string;
   readonly sourceFile: string;

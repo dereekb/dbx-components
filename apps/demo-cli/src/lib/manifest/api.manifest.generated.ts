@@ -22,6 +22,7 @@ import {
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   resyncNotificationUserParamsType,
+  rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
   sendNotificationParamsType,
   syncStorageFileWithGroupsParamsType,
@@ -43,6 +44,7 @@ import {
   guestbookEntryParamsType,
   insertGuestbookEntryParamsType,
   likeGuestbookEntryParamsType,
+  profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
   publishGuestbookParamsType,
   resetProfilePasswordParamsType,
@@ -53,6 +55,24 @@ import {
 import { type CliApiManifest, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
+  {
+    model: 'calendar',
+    verb: 'update',
+    specifier: 'rotateIcs',
+    paramsTypeName: 'RotateCalendarIcsParams',
+    paramsValidator: rotateCalendarIcsParamsType,
+    resultTypeName: 'RotateCalendarIcsResult',
+    groupName: 'Calendar',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.api.ts',
+    description: "Rotates the calendar's public ICS link, revoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's pointer + url, then re-syncs\nso a fresh StorageFile — and therefore a fresh url — is minted. Existing subscribers to the old url\nbreak by design; that is the revocation.",
+    paramsTypeDescription: "Parameters for rotating a Calendar's published ICS link.",
+    resultTypeDescription: "Result of rotating a Calendar's published ICS link.",
+    resultFields: [
+      { name: 'revokedIcsStorageFile', typeText: 'boolean', description: 'True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.\n\nFalse when the calendar had never published one, in which case the rotation is a no-op that still\nqueues a first publish.' },
+      { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' },
+      { name: 'publishedIcs', typeText: 'boolean', description: 'True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.\n\nFalse means only that the publish did not complete INLINE — the replacement is still queued and the\nregular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this\nas "is the new link ready to show yet", never as a failure.' }
+    ]
+  },
   {
     model: 'guestbook',
     verb: 'create',
@@ -364,6 +384,23 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
     model: 'profile',
     verb: 'update',
+    specifier: 'createTestCalendarEvent',
+    paramsTypeName: 'ProfileCreateTestCalendarEventParams',
+    paramsValidator: profileCreateTestCalendarEventParamsType,
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: 'Adds a test event to the current user\'s profile calendar, creating the\ncalendar (`cal/pr_<uid>`) on the first call.\n\nEvery write flags the calendar for sync, so the hourly sweep republishes\nits ".ics" without any further action from the caller.',
+    paramsTypeDescription: "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and\nthere is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its\nown transaction and merges the library's templates.",
+    paramsFields: [
+      { name: 'name', typeText: 'Maybe<string>', description: 'Display name of the event. Defaults to a generated name.' },
+      { name: 'startsAt', typeText: 'Maybe<Date>', description: 'Instant the event starts at. Defaults to now.' },
+      { name: 'durationMinutes', typeText: 'Maybe<number>', description: 'Duration of the event in minutes. Defaults to 60.' },
+      { name: 'recurrenceRule', typeText: 'Maybe<string>', description: 'When set, the event recurs on this rule instead of being a one-off. I.E. "RRULE:FREQ=WEEKLY;BYDAY=MO".' }
+    ]
+  },
+  {
+    model: 'profile',
+    verb: 'update',
     specifier: 'createTestNotification',
     paramsTypeName: 'ProfileCreateTestNotificationParams',
     paramsValidator: profileCreateTestNotificationParamsType,
@@ -559,12 +596,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ProcessStorageFileResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: 'Parameters for triggering processing of a specific StorageFile.\n\nSupports various modes: immediate processing, retry checking, force restart,\nand reprocessing already-successful files. Validated with {@link processStorageFileParamsType}.',
+    paramsTypeDescription:
+      "Parameters for triggering processing of a specific StorageFile.\n\nWhich flag is required depends on the file's current processing state. A `FAILED` file\nrestarts with no flag, while a `SUCCESS` file needs `processAgainIfSuccessful` (or\n`forceRestartProcessing`) — note that a file whose processor ran to completion is `SUCCESS`\neven when the outcome was a rejection, so re-validating a rejected file normally needs one of\nthose flags. `ARCHIVED` and `DO_NOT_PROCESS` files cannot be processed at all.\n\nValidated with {@link processStorageFileParamsType}.",
     paramsFields: [
-      { name: 'runImmediately', typeText: 'Maybe<boolean>' },
-      { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>' },
-      { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>' },
-      { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>' }
+      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Runs the first step of the processing task inline instead of waiting for the scheduled task runner.' },
+      { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>', description: 'Checks an in-flight `PROCESSING` task immediately, instead of waiting for it to age past the\nstuck-check throttle.' },
+      { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>', description: "Abandons the file's existing processing task and begins a new one, clearing the completed\ncheckpoints so the flow runs again from the start. For a `PROCESSING` file this is only applied\nonce the retry check runs, so pair it with `checkRetryProcessing` to force a restart while the\nexisting task is still within the stuck-check throttle." },
+      { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>', description: 'Allows processing a file that has already finished processing and is in the `SUCCESS` state.' }
     ],
     resultFields: [
       { name: 'runImmediately', typeText: 'boolean' },
@@ -655,11 +693,55 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
 
 export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
   {
+    modelType: 'calendar',
+    modelName: 'Calendar',
+    identityConst: 'calendarIdentity',
+    collectionPrefix: 'cal',
+    exampleKey: 'cal/<calendarId>',
+    description: 'A calendar and all of its events, stored in one document and published as an ".ics" file.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.ts',
+    fields: [
+      { name: 't', longName: 'calendarType', tsType: 'CalendarType', optional: false, description: 'The kind of calendar this is, resolving its retention policy and ICS emission config.' },
+      { name: 'n', longName: 'name', tsType: 'string', optional: false, description: 'Display name of the calendar. Emitted as NAME/X-WR-CALNAME.' },
+      { name: 'd', longName: 'description', tsType: 'Maybe<string>', optional: true, description: 'Description of the calendar. Emitted as DESCRIPTION/X-WR-CALDESC.' },
+      { name: 'tz', longName: 'timezone', tsType: 'TimezoneString', optional: false, description: 'Default timezone of the calendar. Emitted as X-WR-TIMEZONE, and the fallback for an event with no `tz`.' },
+      { name: 'c', longName: 'color', tsType: 'Maybe<string>', optional: true, description: 'CSS3 color name for the calendar. Emitted as COLOR.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable.' },
+      { name: 'e', longName: 'events', tsType: 'CalendarEventItem[]', optional: false, description: "The calendar's one-off events, ascending by start instant and unique by id." },
+      {
+        name: 'r',
+        longName: 'recurringEvents',
+        tsType: 'CalendarRecurringEventItem[]',
+        optional: false,
+        description: "The calendar's recurring events, ascending by anchor instant and unique by id.",
+        nestedFields: [
+          { name: 'rr', longName: 'recurrenceRule', tsType: 'RRuleLines', optional: false, description: "The recurrence rule, in the workspace's compact newline-joined storage form." },
+          { name: 'rea', longName: 'recurrenceEndsAt', tsType: 'Maybe<Date>', optional: true, description: 'Instant the final occurrence of the series ends at, when the series ends.' },
+          { name: 'rfe', longName: 'recurrenceForever', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if the series never ends. A forever recurrence is never pruned.' },
+          { name: 'rex', longName: 'recurrenceExceptionDates', tsType: 'Maybe<UnixDateTimeSecondsNumber[]>', optional: true, description: 'Occurrences excluded from the series, as unix seconds.' }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'x', longName: 'extensionData', tsType: 'Maybe<CalendarExtensionData>', optional: true, description: 'Extension data emitted as "X-" properties on the calendar\'s VCALENDAR.' },
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
+      { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'True if this Calendar should be swept and its published ICS regenerated.' },
+      { name: 'sat', longName: 'syncedAt', tsType: 'Maybe<Date>', optional: true, description: 'The last date the published ICS was successfully uploaded.' },
+      { name: 'rat', longName: 'icsRotatedAt', tsType: 'Maybe<Date>', optional: true, description: "The last date this calendar's published ICS link was rotated." },
+      { name: 'isf', longName: 'icsStorageFileId', tsType: 'Maybe<StorageFileId>', optional: true, description: 'StorageFile that holds the published ICS for this calendar.' },
+      { name: 'iu', longName: 'icsUrl', tsType: 'Maybe<StorageFilePublicDownloadUrl>', optional: true, description: 'The permanent, anonymously-readable URL the published ICS is served from.' }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'calendarFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
     modelType: 'guestbook',
     modelName: 'Guestbook',
     modelGroup: 'Guestbook',
     identityConst: 'guestbookIdentity',
     collectionPrefix: 'gb',
+    exampleKey: 'gb/<guestbookId>',
     description: 'A guestbook record that owns a list of {@link GuestbookEntry} signatures.',
     sourcePackage: 'demo-firebase',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
@@ -680,6 +762,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     identityConst: 'guestbookEntryIdentity',
     collectionPrefix: 'gbe',
     parentIdentityConst: 'guestbookIdentity',
+    exampleKey: 'gb/<guestbookId>/gbe/<guestbookEntryId>',
     description: 'A signed entry in a {@link Guestbook}.',
     sourcePackage: 'demo-firebase',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
@@ -701,6 +784,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     identityConst: 'notificationIdentity',
     collectionPrefix: 'nbn',
     parentIdentityConst: 'notificationBoxIdentity',
+    exampleKey: 'nb/<notificationBoxId>/nbn/<notificationId>',
     description: 'Individual notification document, stored as a subcollection of {@link NotificationBox}.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -753,6 +837,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'NotificationBox',
     identityConst: 'notificationBoxIdentity',
     collectionPrefix: 'nb',
+    exampleKey: 'nb/<notificationBoxId>',
     description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -773,7 +858,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 't', longName: 't', tsType: 'Maybe<E164PhoneNumber>', optional: true, description: "Phone number override (E.164 format). Takes precedence over the user's profile phone." },
           { name: 'e', longName: 'e', tsType: 'Maybe<EmailAddress>', optional: true, description: "Email address override. Takes precedence over the user's profile email." },
           { name: 's', longName: 's', tsType: 'Maybe<NotificationSummaryId>', optional: true, description: 'Notification summary ID for in-app delivery. Automatically cleared when `uid` is set.' },
-          { name: 'f', longName: 'f', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.' },
+          { name: 'f', longName: 'f', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.', enumRef: 'NotificationBoxRecipientFlag' },
           { name: 'c', longName: 'c', tsType: 'NotificationBoxRecipientTemplateConfigRecord', optional: false, description: 'Per-template channel configuration. Keys are {@link NotificationTemplateType} values.' },
           { name: 'lk', longName: 'lk', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Locked flag. When true, the box cannot modify this recipient's config — only the user can update via their {@link NotificationUser}." },
           { name: 'x', longName: 'x', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: "Excluded flag. Set when the recipient is excluded via a {@link NotificationBoxSendExclusion} on their {@link NotificationUser}. Can only be cleared by removing the exclusion from the user's exclusion list." }
@@ -793,6 +878,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     identityConst: 'notificationLoggedEventDayIdentity',
     collectionPrefix: 'nbnle',
     parentIdentityConst: 'notificationBoxIdentity',
+    exampleKey: 'nb/<notificationBoxId>/nbnle/<notificationLoggedEventDayId>',
     description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -806,6 +892,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'NotificationSummary',
     identityConst: 'notificationSummaryIdentity',
     collectionPrefix: 'ns',
+    exampleKey: 'ns/<notificationSummaryId>',
     description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -845,6 +932,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'NotificationUser',
     identityConst: 'notificationUserIdentity',
     collectionPrefix: 'nu',
+    exampleKey: 'nu/<notificationUserId>',
     description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -872,7 +960,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 't', longName: 't', tsType: 'Maybe<E164PhoneNumber>', optional: true, description: "Phone number override (E.164 format). Takes precedence over the user's profile phone." },
           { name: 'e', longName: 'e', tsType: 'Maybe<EmailAddress>', optional: true, description: "Email address override. Takes precedence over the user's profile email." },
           { name: 's', longName: 's', tsType: 'Maybe<NotificationSummaryId>', optional: true, description: 'Notification summary ID for in-app delivery. Automatically cleared when `uid` is set.' },
-          { name: 'f', longName: 'f', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.' },
+          { name: 'f', longName: 'f', tsType: 'Maybe<NotificationBoxRecipientFlag>', optional: true, description: 'Opt-in/opt-out flag. Non-zero values prevent notification delivery to this recipient.', enumRef: 'NotificationBoxRecipientFlag' },
           { name: 'c', longName: 'c', tsType: 'NotificationBoxRecipientTemplateConfigRecord', optional: false, description: 'Per-template channel configuration. Keys are {@link NotificationTemplateType} values.' }
         ],
         nestedIsArray: true
@@ -889,6 +977,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     identityConst: 'notificationWeekIdentity',
     collectionPrefix: 'nbnw',
     parentIdentityConst: 'notificationBoxIdentity',
+    exampleKey: 'nb/<notificationBoxId>/nbnw/<notificationWeekId>',
     description: 'Weekly archive of delivered notification items within a {@link NotificationBox}.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
@@ -923,6 +1012,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'OidcEntry',
     identityConst: 'oidcEntryIdentity',
     collectionPrefix: 'oidc_e',
+    exampleKey: 'oidc_e/<oidcEntryId>',
     description: 'oidc-provider adapter entry stored in Firestore.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.ts',
@@ -946,6 +1036,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'Profile',
     identityConst: 'profileIdentity',
     collectionPrefix: 'pr',
+    exampleKey: 'pr/<profileId>',
     description: "A user's public-facing profile, keyed by their uid.",
     sourcePackage: 'demo-firebase',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.ts',
@@ -983,6 +1074,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     identityConst: 'profilePrivateIdentity',
     collectionPrefix: 'prp',
     parentIdentityConst: 'profileIdentity',
+    singleton: true,
+    singleItemIdentifier: '0',
+    exampleKey: 'pr/<profileId>/prp/0',
     description: 'Private, server-managed half of a {@link Profile}.',
     sourcePackage: 'demo-firebase',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.ts',
@@ -998,6 +1092,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'StorageFile',
     identityConst: 'storageFileIdentity',
     collectionPrefix: 'sf',
+    exampleKey: 'sf/<storageFileId>',
     description: 'A StorageFile Firestore document that references a file in Google Cloud Storage.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
@@ -1030,6 +1125,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'StorageFileGroup',
     identityConst: 'storageFileGroupIdentity',
     collectionPrefix: 'sfg',
+    exampleKey: 'sfg/<storageFileGroupId>',
     description: 'A group of {@link StorageFile}s aggregated around a related model or common identifier.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.ts',
@@ -1066,6 +1162,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelName: 'SystemState',
     identityConst: 'systemStateIdentity',
     collectionPrefix: 'sys',
+    exampleKey: 'sys/<systemStateId>',
     description: 'A singleton Firestore document storing the current state of a system subcomponent.',
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
@@ -1080,6 +1177,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     modelGroup: 'UserExternalConnection',
     identityConst: 'userExternalConnectionIdentity',
     collectionPrefix: 'uec',
+    exampleKey: 'uec/<userExternalConnectionId>',
     description: "The client-readable half of a user's third-party OAuth connection state.",
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.ts',
@@ -1095,6 +1193,15 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
 ];
 
 export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
+  NotificationBoxRecipientFlag: {
+    name: 'NotificationBoxRecipientFlag',
+    values: [
+      { name: 'ENABLED', value: 0, description: 'Recipient is active and will receive notifications. This is the default; not stored in Firestore.' },
+      { name: 'DISABLED', value: 1, description: 'Recipient is administratively disabled (e.g., by the box owner).' },
+      { name: 'OPT_OUT', value: 2, description: 'Recipient opted themselves out from receiving notifications.' }
+    ],
+    description: 'Recipient-level opt-in/opt-out flag on a {@link NotificationBoxRecipient}.'
+  },
   NotificationRecipientSendFlag: {
     name: 'NotificationRecipientSendFlag',
     values: [

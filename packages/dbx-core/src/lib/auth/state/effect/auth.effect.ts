@@ -68,7 +68,7 @@ export class DbxAppAuthEffects {
   /**
    * Syncs the user's auth roles from the auth service into the NgRx store.
    */
-  readonly setUserRoles = createEffect(() => this.dbxAuthService.authRoles$.pipe(map((roles) => onDbxAppAuth.DbxAppAuthUserActions.setUserRoles({ roles: [...(roles ?? [])] }))));
+  readonly setUserRoles = createEffect(() => this.dbxAuthService.authRoles$.pipe(map((roles) => onDbxAppAuth.DbxAppAuthUserActions.setUserRoles({ roles: Array.from(roles ?? []) }))));
 
   /**
    * Syncs the user's onboarding status from the auth service into the NgRx store.

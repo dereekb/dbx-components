@@ -65,7 +65,7 @@ function extractAllowDirectives(body: string): string[] {
     }
     match = ALLOW_RE.exec(body);
   }
-  return [...seen];
+  return Array.from(seen);
 }
 
 /**

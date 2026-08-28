@@ -137,7 +137,7 @@ async function scanModelFacts(input: { readonly cwd: string; readonly dirs: read
     }
   }
 
-  return { interfaces: [...interfaces.values()], identities: [...identities.values()] };
+  return { interfaces: Array.from(interfaces.values()), identities: Array.from(identities.values()) };
 }
 
 async function walkTypeScriptFiles(dir: string): Promise<readonly string[]> {
@@ -175,7 +175,7 @@ async function walkTypeScriptFiles(dir: string): Promise<readonly string[]> {
  * @returns The model types the manifest declares.
  */
 function readManifestModelTypes(source: string): readonly string[] {
-  return [...source.matchAll(/modelType:\s*'([^']+)'/g)].map((m) => m[1] as string);
+  return Array.from(source.matchAll(/modelType:\s*'([^']+)'/g)).map((m) => m[1] as string);
 }
 
 async function readOptionalFile(path: string): Promise<string | undefined> {

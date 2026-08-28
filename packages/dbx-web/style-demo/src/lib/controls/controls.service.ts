@@ -80,14 +80,14 @@ export class DbxStyleDemoControlsService implements DbxStyleDemoControls {
     return override ?? new Set(_defaultActiveTemplateKeys);
   });
 
-  readonly activeTemplateKeysArraySignal = computed<DbxStyleDemoStyleTemplateKey[]>(() => [...this.activeTemplateKeysSignal()]);
+  readonly activeTemplateKeysArraySignal = computed<DbxStyleDemoStyleTemplateKey[]>(() => Array.from(this.activeTemplateKeysSignal()));
 
   constructor() {
     const styleService = this._styleService;
 
     if (styleService != null && this._config?.applyStylesToApp !== false) {
       const supplementSignal = computed<DbxStyleSupplement>(() => {
-        const { style, classes } = this._loaderService.mergeTemplates([...this.activeTemplateKeysSignal()]);
+        const { style, classes } = this._loaderService.mergeTemplates(Array.from(this.activeTemplateKeysSignal()));
         return { style, classes };
       });
 

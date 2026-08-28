@@ -606,7 +606,7 @@ interface ResolveConstraintSequencesResult {
 
 function resolveConstraintSequences(input: ResolveConstraintSequencesInput): ResolveConstraintSequencesResult {
   const { candidate, tags, name, line, filePath, warnings } = input;
-  const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath, dispatcher: tags.dispatcher });
+  const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath, dispatcher: tags.dispatcher, suppressed: tags.skip || tags.specOnly });
   for (const warning of bodyResult.warnings) {
     warnings.push(warning);
   }
@@ -742,6 +742,14 @@ interface ExtractConstraintsFromBodyInput {
   readonly factoryName: string;
   readonly filePath: string;
   readonly dispatcher: boolean;
+  /**
+   * True when `@dbxModelFirebaseIndexSkip` / `@dbxModelFirebaseIndexSpecFilesOnly` already opted the
+   * factory out of emission, so structural complaints about its body are moot.
+   *
+   * Note this deliberately excludes `@dbxModelFirebaseIndexExclude`, which suppresses emission but still
+   * wants the constraint shape parsed so the lookup tools can display it.
+   */
+  readonly suppressed: boolean;
 }
 
 interface ExtractConstraintsFromBodyResult {
@@ -769,11 +777,17 @@ interface ExtractConstraintsFromBodyResult {
 }
 
 function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): ExtractConstraintsFromBodyResult {
-  const { decl, factoryName, filePath, dispatcher } = input;
+  const { decl, factoryName, filePath, dispatcher, suppressed } = input;
   const entries: ConstraintSequenceEntry[] = [];
   const conditionalFieldSet = new Set<string>();
   const warnings: ModelFirebaseIndexExtractWarning[] = [];
   const body = decl.getBody();
+
+  // An explicitly opted-out factory emits nothing regardless of body shape, so running the structural
+  // checks here would only produce advice that contradicts the tag the author already wrote.
+  if (suppressed) {
+    return { entries, conditionalFields: [], warnings, skipped: true, dispatcherDelegates: [] };
+  }
 
   if (dispatcher) {
     const violation = body === undefined ? undefined : findFirstConstraintCall(body);

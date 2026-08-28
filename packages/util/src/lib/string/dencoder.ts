@@ -216,7 +216,7 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
 
   const joiner = splitter ?? '';
 
-  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => [...encodedValues];
+  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => Array.from(encodedValues);
 
   return (input: string | (E | D)[]) => {
     if (typeof input === 'string') {

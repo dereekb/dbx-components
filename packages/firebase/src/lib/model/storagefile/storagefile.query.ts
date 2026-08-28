@@ -13,6 +13,11 @@ import { type FirebaseAuthUserId } from '../../common/auth/auth';
  *
  * @returns Firestore query constraints for StorageFiles queued for processing.
  *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
+ *
  * @example
  * ```ts
  * const constraints = storageFilesQueuedForProcessingQuery();
@@ -30,6 +35,11 @@ export function storageFilesQueuedForProcessingQuery(): FirestoreQueryConstraint
  *
  * @param now - Reference time for comparison; defaults to current time.
  * @returns Firestore query constraints for StorageFiles whose scheduled delete date has passed.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
  *
  * @example
  * ```ts
@@ -59,6 +69,12 @@ export interface StorageFilePurposeAndUserQueryInput {
  * @param input - The user, purpose, and optional subgroup to filter by.
  * @returns Firestore query constraints for the given purpose and user.
  *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ * @dbxModelFirebaseIndexSkip true
+ *
  * @example
  * @example
  * ```ts
@@ -85,6 +101,11 @@ export function storageFilePurposeAndUserQuery(input: StorageFilePurposeAndUserQ
  *
  * @returns Firestore query constraints for StorageFiles flagged for group synchronization.
  *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFile
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
+ *
  * @example
  * @example
  * ```ts
@@ -103,6 +124,11 @@ export function storageFileFlaggedForSyncWithGroupsQuery(): FirestoreQueryConstr
  *
  * @returns Firestore query constraints for StorageFileGroups needing initialization.
  *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory init
+ *
  * @example
  * @example
  * ```ts
@@ -117,6 +143,11 @@ export function storageFileGroupsFlaggedForNeedsInitializationQuery(): Firestore
  * Returns query constraints for StorageFileGroups flagged for content regeneration (`re == true`).
  *
  * @returns Firestore query constraints for StorageFileGroups flagged for content regeneration.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory sweep
  *
  * @example
  * @example
@@ -134,6 +165,11 @@ export function storageFileGroupsFlaggedForContentRegenerationQuery(): Firestore
  * Invalid groups are typically cleaned up (deleted along with their associated files).
  *
  * @returns Firestore query constraints for StorageFileGroups flagged as invalid.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel StorageFileGroup
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory cleanup
  *
  * @example
  * @example

@@ -121,7 +121,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
       return result;
     }, new Set<T>()),
     distinctUntilChanged(),
-    map((x) => [...x]),
+    map((x) => Array.from(x)),
     shareReplay(1)
   );
 

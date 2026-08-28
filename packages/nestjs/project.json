@@ -44,7 +44,27 @@
           }
         ],
         "parallel": false
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/packages/nestjs/eslint/**/*",
+        "!{workspaceRoot}/packages/nestjs/eslint/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/mailgun/**/*",
+        "!{workspaceRoot}/packages/nestjs/mailgun/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/openai/**/*",
+        "!{workspaceRoot}/packages/nestjs/openai/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/openrouter/**/*",
+        "!{workspaceRoot}/packages/nestjs/openrouter/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/stripe/**/*",
+        "!{workspaceRoot}/packages/nestjs/stripe/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/twilio/**/*",
+        "!{workspaceRoot}/packages/nestjs/twilio/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/typeform/**/*",
+        "!{workspaceRoot}/packages/nestjs/typeform/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/nestjs/vapiai/**/*",
+        "!{workspaceRoot}/packages/nestjs/vapiai/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+      ]
     },
     "build-base": {
       "dependsOn": []

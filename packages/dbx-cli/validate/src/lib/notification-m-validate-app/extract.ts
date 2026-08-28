@@ -363,7 +363,7 @@ function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index
     symbolName: decl.getName(),
     directInfoIdentifiers: direct,
     spreadAggregateIdentifiers: spreads,
-    resolvedInfoIdentifiers: [...resolved],
+    resolvedInfoIdentifiers: Array.from(resolved),
     unresolvedSpreadIdentifiers: unresolved,
     sourceFile: rel
   };

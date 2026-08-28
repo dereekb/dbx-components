@@ -1,14 +1,30 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type AsyncProfileUpdateAction, exampleNotificationTemplate, type ProfileCreateTestNotificationParams, profileCreateTestNotificationParamsType, type ProfileDocument, type ProfileFirestoreCollections, ProfileResumeState, profileWithUsernameQuery, type SetProfileUsernameParams, setProfileUsernameParamsType, type UpdateProfileParams, updateProfileParamsType } from 'demo-firebase';
+import {
+  type AsyncProfileUpdateAction,
+  DEMO_PROFILE_CALENDAR_TYPE,
+  exampleNotificationTemplate,
+  type ProfileCreateTestCalendarEventParams,
+  profileCreateTestCalendarEventParamsType,
+  type ProfileCreateTestNotificationParams,
+  profileCreateTestNotificationParamsType,
+  type ProfileDocument,
+  type ProfileFirestoreCollections,
+  ProfileResumeState,
+  profileWithUsernameQuery,
+  type SetProfileUsernameParams,
+  setProfileUsernameParamsType,
+  type UpdateProfileParams,
+  updateProfileParamsType
+} from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
-import { type NotificationFirestoreCollections, type FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { type CalendarEventItem, type CalendarFirestoreCollections, type CalendarRecurringEventItem, type NotificationFirestoreCollections, type FirestoreContextReference, calendarIdForModel, calendarTemplate, createNotificationDocument, twoWayFlatFirestoreModelKey, updateCalendarEventsTemplate } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
 import { type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {}
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, CalendarFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {}
 
 /**
  * Server-only profile actions.
@@ -18,6 +34,7 @@ export abstract class ProfileServerActions {
   abstract updateProfile(params: UpdateProfileParams): AsyncProfileUpdateAction<UpdateProfileParams>;
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
   abstract createTestNotification(params: ProfileCreateTestNotificationParams): AsyncProfileUpdateAction<ProfileCreateTestNotificationParams>;
+  abstract createTestCalendarEvent(params: ProfileCreateTestCalendarEventParams): AsyncProfileUpdateAction<ProfileCreateTestCalendarEventParams>;
 }
 
 /**
@@ -31,7 +48,8 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
     initProfileForUid: initProfileForUidFactory(context),
     updateProfile: updateProfileFactory(context),
     setProfileUsername: setProfileUsernameFactory(context),
-    createTestNotification: createTestNotificationFactory(context)
+    createTestNotification: createTestNotificationFactory(context),
+    createTestCalendarEvent: createTestCalendarEventFactory(context)
   };
 }
 
@@ -206,6 +224,71 @@ export function createTestNotificationFactory(context: ProfileServerActionsConte
         expediteInstance.enqueueCreateResult(createResult);
         await expediteInstance.send();
       }
+
+      return document;
+    };
+  });
+}
+
+/**
+ * Creates a factory that adds a test event to the profile's calendar.
+ *
+ * THE WORKED EXAMPLE of the caller-owned Calendar write. There is no Calendar EVENT api, so this action
+ * opens its OWN transaction, loads `cal/pr_<uid>` directly by its deterministic id, and either creates the
+ * calendar from `calendarTemplate()` or merges `updateCalendarEventsTemplate()` into its own update. Both
+ * templates carry `s: true`, so the event cannot be written without flagging the calendar for its next
+ * publish.
+ *
+ * @param context - Server actions context providing the Firestore context and the calendar collection.
+ * @returns An action transform function that adds an event to the profile's calendar.
+ */
+export function createTestCalendarEventFactory(context: ProfileServerActionsContext) {
+  const { firestoreContext, calendarCollection, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(profileCreateTestCalendarEventParamsType, async (params) => {
+    const { name, startsAt, durationMinutes, recurrenceRule } = params;
+
+    return async (document: ProfileDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const now = new Date();
+        const calendarDocument = calendarCollection.documentAccessorForTransaction(transaction).loadDocumentForId(calendarIdForModel(document.key));
+        const calendar = await calendarDocument.snapshotData();
+
+        const eventId = `e${now.getTime()}`;
+
+        const item: CalendarEventItem = {
+          id: eventId,
+          sa: startsAt ?? now,
+          dur: durationMinutes ?? 60,
+          n: name ?? `Test Event ${eventId}`,
+          cat: now,
+          uat: now
+        };
+
+        const recurringItem: Maybe<CalendarRecurringEventItem> = recurrenceRule ? { ...item, rr: recurrenceRule, rfe: true } : undefined;
+
+        if (calendar) {
+          await calendarDocument.update(
+            updateCalendarEventsTemplate({
+              calendar,
+              upsertEvents: recurringItem ? undefined : [item],
+              upsertRecurringEvents: recurringItem ? [recurringItem] : undefined,
+              now
+            })
+          );
+        } else {
+          await calendarDocument.create(
+            calendarTemplate({
+              calendarType: DEMO_PROFILE_CALENDAR_TYPE,
+              name: 'Profile Calendar',
+              ownerKey: document.key,
+              events: recurringItem ? [] : [item],
+              recurringEvents: recurringItem ? [recurringItem] : [],
+              now
+            })
+          );
+        }
+      });
 
       return document;
     };

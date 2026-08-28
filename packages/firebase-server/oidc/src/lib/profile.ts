@@ -66,5 +66,5 @@ export interface OidcAdminOnlyScopesInput<S extends OidcScope = OidcScope> {
  * @returns The union of config-level and profile-level admin-only scopes.
  */
 export function adminOnlyScopesForOidcProviderConfig<S extends OidcScope = OidcScope>(providerConfig: OidcAdminOnlyScopesInput<S>): Set<string> {
-  return new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...adminOnlyScopesForOidcProviderProfiles(providerConfig.providerProfiles ?? [])]);
+  return new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...Array.from(adminOnlyScopesForOidcProviderProfiles(providerConfig.providerProfiles ?? []))]);
 }

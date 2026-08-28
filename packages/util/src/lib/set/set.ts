@@ -170,7 +170,7 @@ export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iter
  * @returns The values present in only one of the sets.
  */
 export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
-  return [...symmetricDifference(a, b)];
+  return Array.from(symmetricDifference(a, b));
 }
 
 /**

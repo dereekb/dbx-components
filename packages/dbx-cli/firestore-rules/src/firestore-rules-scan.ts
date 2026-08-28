@@ -107,10 +107,10 @@ export function scanFirestoreRules(source: string): FirestoreRulesScan {
     }
   });
 
-  const collections = [...accumulated.entries()]
+  const collections = Array.from(accumulated.entries())
     .map(([collection, value]) => ({
       collection,
-      paths: [...value.paths].sort(),
+      paths: Array.from(value.paths).sort(),
       get: value.get,
       list: value.list,
       collectionGroup: value.collectionGroup,

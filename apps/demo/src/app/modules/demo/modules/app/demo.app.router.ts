@@ -42,6 +42,12 @@ export const NOTIFICATION_STATE: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/notification/notification.module').then((m) => m.DemoNotificationModule)
 };
 
+export const DEMO_CALENDAR_FUTURE_STATE: Ng2StateDeclaration = {
+  name: 'demo.app.calendar.**',
+  url: '/calendar',
+  loadChildren: () => import('./modules/calendar/calendar.module').then((m) => m.DemoCalendarModule)
+};
+
 export const DEMO_GUESTBOOK_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.app.guestbook.**',
   url: '/guestbook',
@@ -67,6 +73,7 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   HISTORY_STATE,
   SETTINGS_STATE,
   NOTIFICATION_STATE,
+  DEMO_CALENDAR_FUTURE_STATE,
   DEMO_GUESTBOOK_FUTURE_STATE,
   DEMO_PROFILE_FUTURE_STATE,
   DEMO_OIDC_FUTURE_STATE

@@ -96,6 +96,9 @@ export const ROOT_MODULE: SetupModule = {
     await shell.run('npm', ['install', '-D', 'husky', dep('prettier'), dep('pretty-quick'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-config-prettier'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], { cwd: workspaceRoot, dryRun });
     await shell.run('npx', ['husky', 'init'], { cwd: workspaceRoot, dryRun });
 
+    // tools/scripts/release.mjs imports these directly, so they must be declared
+    await shell.run('npm', ['install', '-D', dep('conventional-changelog'), dep('conventional-recommended-bump'), dep('semver'), dep('yargs')], { cwd: workspaceRoot, dryRun });
+
     // vitest (script line 473)
     await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, `@nx/vite@${nx}`, dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
 

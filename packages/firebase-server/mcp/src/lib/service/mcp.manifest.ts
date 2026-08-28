@@ -61,6 +61,28 @@ export interface McpManifestModelEntry {
   readonly identityConst: string;
   readonly collectionPrefix: string;
   readonly parentIdentityConst?: string;
+  /**
+   * `true` when the model's collection holds exactly one document, at the fixed
+   * {@link singleItemIdentifier} — `singleItemFirestoreCollection` (one per parent) or
+   * `rootSingleItemFirestoreCollection` (one, full stop).
+   */
+  readonly singleton?: boolean;
+  /**
+   * Fixed document id of a {@link singleton} model's one document: the `singleItemIdentifier`
+   * the collection factory declared, or `'0'`
+   * ({@link DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER}) when it omits one.
+   *
+   * Published because it cannot be inferred — plenty of single-item collections override the
+   * default — so a `model-get` caller reading only the catalog can still build the one key that
+   * resolves. Absent when the id was declared as an expression the generator could not read.
+   */
+  readonly singleItemIdentifier?: string;
+  /**
+   * Example document key with the parent chain resolved and `<…Id>` placeholders for the ids a
+   * caller supplies (e.g. `bg/<billingGroupId>/bgis/bgbs`). Absent when some ancestor identity
+   * could not be resolved at generation time.
+   */
+  readonly exampleKey?: string;
   readonly description?: string;
   readonly sourcePackage: string;
   readonly sourceFile: string;

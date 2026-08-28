@@ -113,7 +113,7 @@ async function discoverConventionalDirs(workspaceRoot: string): Promise<readonly
     }
   }
 
-  return [...found];
+  return Array.from(found);
 }
 
 function normaliseExplicitDirs(dirs: readonly string[]): readonly string[] {
@@ -273,7 +273,7 @@ async function detectCandidateClusters(absDir: string): Promise<readonly Downstr
   // explicit `*.filter.ts` exists we still let `actions` carry the directive.
   // Semantic types are intentionally not heuristic-detected: the scan-config's
   // explicit `topicNamespace` is the only signal we trust.
-  return [...found];
+  return Array.from(found);
 }
 
 function mergeClusters(...lists: readonly (readonly DownstreamCluster[])[]): readonly DownstreamCluster[] {

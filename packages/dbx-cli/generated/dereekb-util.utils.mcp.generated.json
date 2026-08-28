@@ -2626,7 +2626,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null and non-undefined values.",
@@ -2653,7 +2653,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null, non-undefined, and non-empty values.",
@@ -3818,6 +3818,32 @@
       ]
     },
     {
+      "slug": "minutes-in-year",
+      "name": "MINUTES_IN_YEAR",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/date",
+      "signature": "const MINUTES_IN_YEAR: Minutes",
+      "description": "Number of minutes in a year (ignoring leap years).",
+      "params": [],
+      "returns": "Minutes",
+      "tags": [
+        "date",
+        "minute",
+        "year",
+        "duration",
+        "constant",
+        "minutes",
+        "in",
+        "minutes_in_year"
+      ],
+      "relatedSlugs": [
+        "minutes-in-day",
+        "days-in-year"
+      ]
+    },
+    {
       "slug": "seconds-in-hour",
       "name": "SECONDS_IN_HOUR",
       "kind": "const",
@@ -4710,6 +4736,38 @@
       "relatedSlugs": [
         "expiration-details",
         "check-atleast-one-not-expired"
+      ]
+    },
+    {
+      "slug": "utc-offset-string",
+      "name": "utcOffsetString",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/util",
+      "subpath": "date/offset",
+      "signature": "utcOffsetString(minutes: Minutes): UtcOffsetString",
+      "description": "Formats a UTC offset in minutes as a {@link UtcOffsetString}. I.E. \"-0600\", \"+0530\".\n\nThis is the ISO 8601 basic-format offset, which is also the format RFC 5545 3.3.14 defines for a UTC-OFFSET\nvalue. A zero offset renders as \"+0000\".",
+      "params": [
+        {
+          "name": "minutes",
+          "type": "Minutes",
+          "description": "- The offset from UTC in minutes. Negative is west of UTC.",
+          "optional": false
+        }
+      ],
+      "returns": "The UTC offset string.",
+      "tags": [
+        "date",
+        "timezone",
+        "utc",
+        "offset",
+        "string",
+        "format",
+        "utcoffsetstring"
+      ],
+      "relatedSlugs": [
+        "utc-timezone-string",
+        "has-same-timezone"
       ]
     },
     {
@@ -10875,7 +10933,7 @@
       "category": "string",
       "module": "@dereekb/util",
       "subpath": "string/replace",
-      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
+      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
       "description": "Escapes the input string so it can be safely used as a literal value in a regular expression.\n\nFor instance, `'hello.world'` will be escaped to `'hello\\\\.world'`.",
       "params": [],
       "returns": "The escaped string with all regex special characters prefixed with a backslash.",
@@ -11852,6 +11910,73 @@
       ]
     },
     {
+      "slug": "normalize-line-breaks",
+      "name": "normalizeLineBreaks",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "normalizeLineBreaks(input: string): string",
+      "description": "Normalizes every CRLF and bare CR line break in the input to a single LF.\n\nUseful ahead of any per-character transform, which would otherwise treat a single CRLF as two line breaks.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- String to normalize.",
+          "optional": false
+        }
+      ],
+      "returns": "The string with all line breaks rendered as LF.",
+      "tags": [
+        "string",
+        "whitespace",
+        "newline",
+        "line-break",
+        "normalize",
+        "crlf",
+        "line",
+        "breaks",
+        "normalizelinebreaks"
+      ],
+      "relatedSlugs": [
+        "simplify-whitespace",
+        "flatten-whitespace"
+      ]
+    },
+    {
+      "slug": "is-not-blank-string",
+      "name": "isNotBlankString",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "isNotBlankString(input: Maybe<string>): input is string",
+      "description": "Returns true if the input is a string with at least one non-whitespace character.\n\nUseful for deciding whether an optional string value is worth emitting.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<string>",
+          "description": "- The value to test.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the value is a non-blank string.",
+      "tags": [
+        "string",
+        "whitespace",
+        "blank",
+        "empty",
+        "predicate",
+        "type-guard",
+        "is",
+        "not",
+        "isnotblankstring"
+      ],
+      "relatedSlugs": [
+        "flatten-whitespace"
+      ]
+    },
+    {
       "slug": "string-trim-function",
       "name": "stringTrimFunction",
       "kind": "function",
@@ -12177,6 +12302,71 @@
         "website-path-from-website-url",
         "website-path-and-query-pair",
         "fix-extra-query-parameters"
+      ]
+    },
+    {
+      "slug": "has-uri-scheme",
+      "name": "hasUriScheme",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/url",
+      "signature": "hasUriScheme(input: string): boolean",
+      "description": "Returns true if the input carries a URI scheme prefix.\n\nExamples where it will return true:\n- mailto:hello@dereekb.com\n- tel:+15550100\n- https://dereekb.com",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The string to check.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the input starts with a URI scheme.",
+      "tags": [
+        "string",
+        "url",
+        "uri",
+        "scheme",
+        "protocol",
+        "predicate",
+        "has",
+        "hasurischeme"
+      ],
+      "relatedSlugs": [
+        "read-uri-scheme",
+        "read-website-protocol"
+      ]
+    },
+    {
+      "slug": "read-uri-scheme",
+      "name": "readUriScheme",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/url",
+      "signature": "readUriScheme(input: string): Maybe<UriScheme>",
+      "description": "Reads the URI scheme from the input string, if one exists. Does not include the trailing colon.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- The URI string to extract the scheme from.",
+          "optional": false
+        }
+      ],
+      "returns": "The scheme (e.g. `\"mailto\"`), or `undefined` if the input carries no scheme.",
+      "tags": [
+        "string",
+        "url",
+        "uri",
+        "scheme",
+        "protocol",
+        "read",
+        "readurischeme"
+      ],
+      "relatedSlugs": [
+        "has-uri-scheme",
+        "read-website-protocol"
       ]
     },
     {

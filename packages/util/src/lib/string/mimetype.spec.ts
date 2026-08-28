@@ -5,6 +5,8 @@ import {
   documentFileExtensionForMimeType,
   mimeTypeForApplicationFileExtension,
   applicationFileExtensionForMimeType,
+  mimeTypeForCalendarFileExtension,
+  calendarFileExtensionForMimeType,
   mimeTypeForFileExtension,
   fileExtensionForMimeType,
   JPEG_MIME_TYPE,
@@ -12,9 +14,12 @@ import {
   PDF_MIME_TYPE,
   JSON_MIME_TYPE,
   ZIP_FILE_MIME_TYPE,
+  TEXT_CALENDAR_MIME_TYPE,
+  TEXT_CALENDAR_UTF8_CONTENT_TYPE,
   IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
   DOCUMENT_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
-  APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD
+  APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
+  CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD
 } from './mimetype';
 
 describe('mimeTypeForImageFileExtension()', () => {
@@ -105,6 +110,41 @@ describe('applicationFileExtensionForMimeType()', () => {
   });
 });
 
+describe('mimeTypeForCalendarFileExtension()', () => {
+  it('should return the MIME type for a known calendar extension', () => {
+    expect(mimeTypeForCalendarFileExtension('ics')).toBe(TEXT_CALENDAR_MIME_TYPE);
+  });
+
+  it('should return undefined for an unknown extension', () => {
+    expect(mimeTypeForCalendarFileExtension('unknown' as any)).toBeUndefined();
+  });
+
+  it('should return undefined for null/undefined input', () => {
+    expect(mimeTypeForCalendarFileExtension(undefined)).toBeUndefined();
+  });
+});
+
+describe('calendarFileExtensionForMimeType()', () => {
+  it('should return the file extension for a known calendar MIME type', () => {
+    expect(calendarFileExtensionForMimeType(TEXT_CALENDAR_MIME_TYPE)).toBe('ics');
+  });
+
+  it('should return undefined for an unknown MIME type', () => {
+    expect(calendarFileExtensionForMimeType('text/plain')).toBeUndefined();
+  });
+
+  it('should return undefined for null/undefined input', () => {
+    expect(calendarFileExtensionForMimeType(undefined)).toBeUndefined();
+  });
+});
+
+describe('TEXT_CALENDAR_UTF8_CONTENT_TYPE', () => {
+  it('should carry the charset parameter that calendar clients expect', () => {
+    expect(TEXT_CALENDAR_UTF8_CONTENT_TYPE).toBe('text/calendar; charset=utf-8');
+    expect(TEXT_CALENDAR_UTF8_CONTENT_TYPE.startsWith(TEXT_CALENDAR_MIME_TYPE)).toBe(true);
+  });
+});
+
 describe('mimeTypeForFileExtension()', () => {
   it('should return the MIME type for a known image extension', () => {
     expect(mimeTypeForFileExtension('png')).toBe(PNG_MIME_TYPE);
@@ -112,6 +152,14 @@ describe('mimeTypeForFileExtension()', () => {
 
   it('should return the MIME type for a known document extension', () => {
     expect(mimeTypeForFileExtension('pdf')).toBe(PDF_MIME_TYPE);
+  });
+
+  it('should return the MIME type for a known application extension', () => {
+    expect(mimeTypeForFileExtension('zip')).toBe(ZIP_FILE_MIME_TYPE);
+  });
+
+  it('should return the MIME type for a known calendar extension', () => {
+    expect(mimeTypeForFileExtension('ics')).toBe(TEXT_CALENDAR_MIME_TYPE);
   });
 
   it('should return undefined for an unknown extension', () => {
@@ -136,6 +184,10 @@ describe('fileExtensionForMimeType()', () => {
     expect(fileExtensionForMimeType(ZIP_FILE_MIME_TYPE)).toBe('zip');
   });
 
+  it('should return the extension for a known calendar MIME type', () => {
+    expect(fileExtensionForMimeType(TEXT_CALENDAR_MIME_TYPE)).toBe('ics');
+  });
+
   it('should return undefined for an unknown MIME type', () => {
     expect(fileExtensionForMimeType('application/unknown')).toBeUndefined();
   });
@@ -158,5 +210,9 @@ describe('lookup records', () => {
 
   it('APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD should contain expected entries', () => {
     expect(APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD['zip']).toBe(ZIP_FILE_MIME_TYPE);
+  });
+
+  it('CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD should contain expected entries', () => {
+    expect(CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD['ics']).toBe(TEXT_CALENDAR_MIME_TYPE);
   });
 });

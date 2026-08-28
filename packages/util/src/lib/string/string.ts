@@ -624,6 +624,45 @@ export function simplifyWhitespace(input: string): string {
   return input.split(/\r?\n/).filter(Boolean).map(flattenWhitespace).join('\n');
 }
 
+/**
+ * Matches CRLF and bare CR line breaks so they can be normalized to LF.
+ */
+export const LINE_BREAK_NORMALIZATION_REGEX = /\r\n|\r/g;
+
+/**
+ * Normalizes every CRLF and bare CR line break in the input to a single LF.
+ *
+ * Useful ahead of any per-character transform, which would otherwise treat a single CRLF as two line breaks.
+ *
+ * @param input - String to normalize.
+ * @returns The string with all line breaks rendered as LF.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, whitespace, newline, line-break, normalize, crlf
+ * @dbxUtilRelated simplify-whitespace, flatten-whitespace
+ */
+export function normalizeLineBreaks(input: string): string {
+  return input.replaceAll(LINE_BREAK_NORMALIZATION_REGEX, '\n');
+}
+
+/**
+ * Returns true if the input is a string with at least one non-whitespace character.
+ *
+ * Useful for deciding whether an optional string value is worth emitting.
+ *
+ * @param input - The value to test.
+ * @returns Whether the value is a non-blank string.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, whitespace, blank, empty, predicate, type-guard
+ * @dbxUtilRelated flatten-whitespace
+ */
+export function isNotBlankString(input: Maybe<string>): input is string {
+  return typeof input === 'string' && input.trim().length > 0;
+}
+
 // MARK: Compat
 /**
  * Joins an array of strings into a single string using commas. Does not trim empty values by default.

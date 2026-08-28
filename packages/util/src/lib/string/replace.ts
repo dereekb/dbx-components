@@ -211,7 +211,7 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
     const max = maxToReturn ?? Number.MAX_SAFE_INTEGER;
     const occurrences: number[] = [];
 
-    for (const [i, char] of [...input].entries()) {
+    for (const [i, char] of Array.from(input).entries()) {
       if (characterSet.has(char)) {
         occurrences.push(i);
 
