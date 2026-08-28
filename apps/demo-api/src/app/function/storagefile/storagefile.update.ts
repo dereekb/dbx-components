@@ -1,6 +1,7 @@
-import { type SyncStorageFileWithGroupsParams, type SyncStorageFileWithGroupsResult, type ProcessStorageFileParams, type UpdateStorageFileParams, processStorageFileParamsType, syncStorageFileWithGroupsParamsType, updateStorageFileParamsType } from '@dereekb/firebase';
+import { type SyncStorageFileWithGroupsParams, type SyncStorageFileWithGroupsResult, type ProcessStorageFileParams, type ProcessStorageFileResult, type UpdateStorageFileParams, processStorageFileParamsType, syncStorageFileWithGroupsParamsType, updateStorageFileParamsType } from '@dereekb/firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { withApiDetails } from '@dereekb/firebase-server';
+import { storageFileProcessToolDetailsFactory } from '@dereekb/firebase-server/model';
 
 export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams> = withApiDetails({
   inputType: updateStorageFileParamsType,
@@ -19,8 +20,11 @@ export const storageFileUpdate: DemoUpdateModelFunction<UpdateStorageFileParams>
   }
 });
 
-export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParams> = withApiDetails({
+export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParams, ProcessStorageFileResult> = withApiDetails({
   inputType: processStorageFileParamsType,
+  mcp: {
+    toolDetails: storageFileProcessToolDetailsFactory()
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
@@ -32,7 +36,7 @@ export const storageFileProcess: DemoUpdateModelFunction<ProcessStorageFileParam
       use: (x) => x.document
     });
 
-    await processStorageFile(storageFileDocument);
+    return processStorageFile(storageFileDocument);
   }
 });
 
