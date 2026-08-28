@@ -224,9 +224,8 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
    * Renders an iTIP calendar payload to bundle onto the email as a calendar MIME part.
    *
    * Opt-in per sending service, like every other field here: a builder that does not call it simply sends
-   * the email without the invite. A builder that DOES call it must emit one request per message when the
-   * payload names a per-recipient ATTENDEE, since attachments live on the request rather than the
-   * recipient.
+   * the email without the invite. A builder that DOES call it must give each recipient the payload names a
+   * request of its own, since attachments live on the request rather than the recipient.
    */
   readonly calendarAttachmentFactory?: Maybe<NotificationMessageCalendarAttachmentFactory>;
 }

@@ -106,8 +106,11 @@ export interface MailgunTemplateEmailRequestTestingParameters {
 export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, MailgunTemplateEmailRequestTestingParameters {
   /**
    * Attachment(s) to send with the email.
+   *
+   * Every recipient of the request receives them, so a payload meant for one recipient belongs on that recipient's
+   * MailgunRecipientBatchSendTarget "attachments" instead, which expands into its own request.
    */
-  readonly attachments?: ArrayOrValue<MailgunFileAttachment>;
+  readonly attachments?: Maybe<ArrayOrValue<MailgunFileAttachment>>;
   /**
    * Apply/override output message data parameters directly.
    */

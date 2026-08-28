@@ -8,10 +8,12 @@ import { DEFAULT_NOTIFICATION_MESSAGE_CALENDAR_ATTACHMENT_FILENAME, type Notific
  *
  * Bridges a notification message's iTIP calendar payload onto a Mailgun request as a calendar MIME part.
  *
- * A builder that uses either of these MUST emit one request per message rather than folding its recipients
- * into a single batched `to[]`: attachments live on the REQUEST, a `MailgunRecipient` has no per-recipient
- * attachment slot, and a `METHOD:REQUEST` invite is only rendered inline by a client that finds its OWN
- * address in the payload's ATTENDEE.
+ * The payload cannot ride a batched `to[]`: attachments live on the REQUEST, a `MailgunRecipient` has no
+ * per-recipient attachment slot, and a `METHOD:REQUEST` invite is only rendered inline by a client that
+ * finds its OWN address in the payload's ATTENDEE. A builder must therefore give a recipient with a payload
+ * a request of its own -- either by emitting one directly, or by setting the result on that recipient's
+ * `MailgunRecipientBatchSendTarget.attachments` and letting
+ * `expandMailgunRecipientBatchSendTargetRequestFactory()` expand it while the rest still batch.
  */
 
 /**
@@ -41,7 +43,8 @@ export function notificationMessageCalendarAttachmentToMailgunFileAttachment(cal
  *
  * The single entry point a template builder needs: it reads the message's `calendarAttachmentFactory`,
  * invokes it for the recipient, and returns `undefined` when the message carries no factory or the factory
- * declines this recipient. That is the signal to batch the recipient normally instead of fanning out.
+ * declines this recipient. That is the signal to batch the recipient normally rather than give it a request
+ * of its own; a non-undefined return belongs on that recipient's `MailgunRecipientBatchSendTarget.attachments`.
  *
  * @param input - The message and the address the payload's ATTENDEE must name.
  * @returns The Mailgun attachment, or `undefined` when this recipient gets no calendar part.

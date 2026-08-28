@@ -1,4 +1,5 @@
-import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings, DEFAULT_RECIPIENT_VARIABLE_PREFIX } from './mailgun';
+import { vi } from 'vitest';
+import { convertMailgunTemplateEmailRequestToMailgunMessageData, convertMailgunRecipientsToStrings, DEFAULT_RECIPIENT_VARIABLE_PREFIX, type MailgunFileAttachment } from './mailgun';
 import { MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE, type MailgunRecipientBatchSendTargetEntityKeyRecipientLookup, expandMailgunRecipientBatchSendTargetRequestFactory, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, type MailgunRecipientBatchSendTarget } from './mailgun.util';
 
 const senderEmail = 'sender@dereekb.com';
@@ -2094,6 +2095,253 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
           expect((resolvedBatch!.to as MailgunRecipientBatchSendTarget[]).length).toBe(1);
         });
       });
+    });
+  });
+
+  describe('attachments', () => {
+    const TEST_SUBJECT = 'test subject';
+
+    const baseRequest = {
+      from: {
+        email: senderEmail
+      },
+      replyTo: {
+        email: replyToEmail
+      },
+      template: templateName
+    };
+
+    // the contentType is what makes this a calendar part rather than a paperclip, so it rides along verbatim
+    const inviteAttachment: MailgunFileAttachment = {
+      filename: 'invite.ics',
+      data: 'BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nEND:VCALENDAR',
+      contentType: 'text/calendar; method=REQUEST; charset=utf-8'
+    };
+
+    const termsAttachment: MailgunFileAttachment = {
+      filename: 'terms.pdf',
+      data: 'terms'
+    };
+
+    function targetForEmail(email: string, attachments?: MailgunRecipientBatchSendTarget['attachments']): MailgunRecipientBatchSendTarget {
+      return {
+        email,
+        name: 'Test',
+        userVariables: { subject: TEST_SUBJECT },
+        attachments
+      };
+    }
+
+    it('should expand a recipient with attachments into its own non-batch request', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const requests = factory([targetForEmail(testEmail, inviteAttachment), targetForEmail(testEmail2), targetForEmail(testEmail3)]);
+      expect(requests.length).toBe(2);
+
+      const [batchRequest, attachmentRequest] = requests; // batch requests come first
+
+      // the attachment recipient is fanned out, since attachments live on the request and would otherwise reach everyone
+      expect(attachmentRequest.batchSend).toBe(false);
+      expect(attachmentRequest.attachments).toEqual([inviteAttachment]);
+      expect((attachmentRequest.to as MailgunRecipientBatchSendTarget).email).toBe(testEmail);
+      expect(attachmentRequest.subject).toBe(TEST_SUBJECT); // a non-batch request resolves the subject instead of templating it
+
+      // everyone else still batches
+      expect(batchRequest.batchSend).toBe(true);
+      expect(batchRequest.attachments).toBeUndefined();
+      expect(batchRequest.subject).toBe(MAILGUN_BATCH_SEND_RECIPIENT_SUBJECT_TEMPLATE);
+      expect((batchRequest.to as MailgunRecipientBatchSendTarget[]).map((x) => x.email)).toEqual([testEmail2, testEmail3]);
+    });
+
+    it('should batch a recipient whose attachments array is empty', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const requests = factory([targetForEmail(testEmail, []), targetForEmail(testEmail2)]);
+      expect(requests.length).toBe(1);
+
+      const request = requests[0];
+      expect(request.batchSend).toBe(true);
+      expect(request.attachments).toBeUndefined();
+      expect((request.to as MailgunRecipientBatchSendTarget[]).length).toBe(2);
+    });
+
+    it('should send the base request attachments with a batched request', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: { ...baseRequest, attachments: termsAttachment },
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const requests = factory([targetForEmail(testEmail), targetForEmail(testEmail2)]);
+      expect(requests.length).toBe(1);
+
+      const request = requests[0];
+      expect(request.batchSend).toBe(true);
+      expect(request.attachments).toEqual([termsAttachment]);
+    });
+
+    it('should merge the base request attachments with the recipient attachments, base request first', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: { ...baseRequest, attachments: termsAttachment },
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const requests = factory([targetForEmail(testEmail, inviteAttachment), targetForEmail(testEmail2)]);
+      expect(requests.length).toBe(2);
+
+      const [batchRequest, attachmentRequest] = requests;
+
+      expect(attachmentRequest.attachments).toEqual([termsAttachment, inviteAttachment]);
+      expect(batchRequest.attachments).toEqual([termsAttachment]);
+    });
+
+    it('should drop the base request attachments on the fanned out request when overrideAttachmentsWithRecipientAttachments is true', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: { ...baseRequest, attachments: termsAttachment },
+        useSubjectFromRecipientUserVariables: true,
+        overrideAttachmentsWithRecipientAttachments: true
+      });
+
+      const requests = factory([targetForEmail(testEmail, inviteAttachment), targetForEmail(testEmail2)]);
+      expect(requests.length).toBe(2);
+
+      const [batchRequest, attachmentRequest] = requests;
+
+      expect(attachmentRequest.attachments).toEqual([inviteAttachment]);
+      expect(batchRequest.attachments).toEqual([termsAttachment]); // the batched request is unaffected
+    });
+
+    it('should carry the merged attachments through to the mailgun message data', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: { ...baseRequest, attachments: termsAttachment },
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const [, attachmentRequest] = factory([targetForEmail(testEmail, inviteAttachment), targetForEmail(testEmail2)]);
+      const result = convertMailgunTemplateEmailRequestToMailgunMessageData({ request: attachmentRequest });
+
+      expect(result.attachment).toEqual([termsAttachment, inviteAttachment]);
+    });
+  });
+
+  describe('unresolved entity keys', () => {
+    const TEST_SUBJECT = 'test subject';
+    const knownKey = 'SUPPORT';
+    const unknownKey = 'MISSING';
+    const knownRecipient = { name: 'Support', email: 'support@dereekb.com' };
+
+    const baseRequest = {
+      from: {
+        email: senderEmail
+      },
+      replyTo: {
+        email: replyToEmail
+      },
+      template: templateName
+    };
+
+    function lookupWithKnownKey(): MailgunRecipientBatchSendTargetEntityKeyRecipientLookup {
+      return mailgunRecipientBatchSendTargetEntityKeyRecipientLookup({ recipientsMap: new Map([[knownKey, knownRecipient]]) });
+    }
+
+    function targetForEmailWithFromKey(email: string, fromKey: string): MailgunRecipientBatchSendTarget {
+      return {
+        email,
+        name: 'Test',
+        fromKey,
+        userVariables: { subject: TEST_SUBJECT }
+      };
+    }
+
+    it('should throw when a recipient carries a key and no lookup is configured', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        useSubjectFromRecipientUserVariables: true,
+        throwOnUnresolvedEntityKeys: true
+      });
+
+      expect(() => factory([targetForEmailWithFromKey(testEmail, knownKey)])).toThrow(/fromKey: "SUPPORT"/);
+    });
+
+    it('should throw when the configured lookup has no entry for the key', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        mailgunRecipientBatchSendTargetEntityKeyRecipientLookup: lookupWithKnownKey(),
+        useSubjectFromRecipientUserVariables: true,
+        throwOnUnresolvedEntityKeys: true
+      });
+
+      expect(() => factory([targetForEmailWithFromKey(testEmail, unknownKey)])).toThrow(/fromKey: "MISSING"/);
+    });
+
+    it('should throw when only some of the carbon copy keys resolve', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        mailgunRecipientBatchSendTargetEntityKeyRecipientLookup: lookupWithKnownKey(),
+        useSubjectFromRecipientUserVariables: true,
+        throwOnUnresolvedEntityKeys: true
+      });
+
+      const target: MailgunRecipientBatchSendTarget = {
+        email: testEmail,
+        name: 'Test',
+        ccKeys: [knownKey, unknownKey],
+        userVariables: { subject: TEST_SUBJECT }
+      };
+
+      expect(() => factory([target])).toThrow(/ccKeys: "MISSING"/);
+    });
+
+    it('should not throw when every key resolves', () => {
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        mailgunRecipientBatchSendTargetEntityKeyRecipientLookup: lookupWithKnownKey(),
+        useSubjectFromRecipientUserVariables: true,
+        throwOnUnresolvedEntityKeys: true
+      });
+
+      const requests = factory([targetForEmailWithFromKey(testEmail, knownKey)]);
+      expect(requests.length).toBe(1);
+      expect(requests[0].from).toEqual(knownRecipient);
+    });
+
+    it('should throw at construction when the base request carries an unresolvable key', () => {
+      expect(() =>
+        expandMailgunRecipientBatchSendTargetRequestFactory({
+          request: {
+            replyTo: { email: replyToEmail },
+            template: templateName,
+            fromKey: unknownKey
+          },
+          mailgunRecipientBatchSendTargetEntityKeyRecipientLookup: lookupWithKnownKey(),
+          useSubjectFromRecipientUserVariables: true,
+          throwOnUnresolvedEntityKeys: true
+        })
+      ).toThrow(/the base request/);
+    });
+
+    it('should warn once per expansion and fall back to the base request when not configured to throw', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+      const factory = expandMailgunRecipientBatchSendTargetRequestFactory({
+        request: baseRequest,
+        useSubjectFromRecipientUserVariables: true
+      });
+
+      const requests = factory([targetForEmailWithFromKey(testEmail, knownKey), targetForEmailWithFromKey(testEmail2, knownKey)]);
+
+      expect(warn).toHaveBeenCalledTimes(1); // once for the whole set, not once per recipient
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('fromKey: "SUPPORT"'));
+
+      expect(requests.length).toBe(1);
+      expect(requests[0].from).toEqual(baseRequest.from); // the unresolved key is ignored in favor of the base request
+
+      warn.mockRestore();
     });
   });
 });

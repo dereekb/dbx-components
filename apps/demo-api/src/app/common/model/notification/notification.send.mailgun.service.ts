@@ -1,7 +1,6 @@
 import { type MailgunNotificationEmailSendService, type MailgunNotificationHealthCheckProbeBuilderInput, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService, mailgunNotificationEmailSendServiceHealthCheckService, mailgunCalendarFileAttachmentForNotificationMessage } from '@dereekb/firebase-server/model';
-import { type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
+import { expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipient, type MailgunRecipientBatchSendTarget, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
-import { type ArrayOrValue } from '@dereekb/util';
 
 export const DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY = 'notificationtemplate';
 
@@ -55,28 +54,36 @@ export function demoNotificationHealthCheckProbeRequest(input: MailgunNotificati
 export function demoNotificationMailgunSendService(mailgunService: MailgunService): MailgunNotificationEmailSendService {
   const DEFAULT_ACTION_URL = `${mailgunService.mailgunApi.clientUrl}/home`;
 
+  // Built once rather than per batch, since the configuration is constant.
+  //
+  // No subject on the base request: "useSubjectFromRecipientUserVariables" templates it for a batched
+  // request and resolves it from the recipient for an individual one. No recipientVariablesConfig either,
+  // because the demo template reads the conversion default's "recipient-" prefixed variables.
+  const requestFactory = expandMailgunRecipientBatchSendTargetRequestFactory({
+    request: {
+      replyTo: DEMO_NOTIFICATION_REPLY_TO_RECIPIENT,
+      from: DEMO_NOTIFICATION_SENDER_RECIPIENT,
+      template: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY
+    },
+    allowSingleRecipientBatchSendRequests: true,
+    useSubjectFromRecipientUserVariables: true
+  });
+
   const mailgunSendService: MailgunNotificationEmailSendService = mailgunNotificationEmailSendService({
     mailgunService,
     defaultSendTemplateName: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
     messageBuilders: {
-      notificationTemplate: async (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): Promise<ArrayOrValue<MailgunTemplateEmailRequest>> => {
+      notificationTemplate: async (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): Promise<MailgunTemplateEmailRequest[]> => {
         const { messages } = input;
 
-        const requestBase = {
-          replyTo: DEMO_NOTIFICATION_REPLY_TO_RECIPIENT,
-          from: DEMO_NOTIFICATION_SENDER_RECIPIENT,
-          template: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
-          subject: `%recipient.subject%`
-        };
-
         // The recipient is known before the calendar part: the payload's ATTENDEE must name the address we
-        // resolved here. Mapped rather than pushed from inside the loop, so the request order stays the
+        // resolved here. Mapped rather than pushed from inside the loop, so the target order stays the
         // message order regardless of which attachment factory settles first.
-        const builtMessages = await Promise.all(
+        const batchSendTargets: MailgunRecipientBatchSendTarget[] = await Promise.all(
           messages.map(async (x) => {
             const { recipient: inputRecipient } = x.inputContext;
-            const { title, openingMessage, action, actionUrl, from: contentFrom } = x.content;
-            const { subject = title, replyTo: _replyTo, replyToEmail: _replyToEmail, from: _from = contentFrom } = x.emailContent ?? {};
+            const { title, openingMessage, action, actionUrl } = x.content;
+            const { subject = title } = x.emailContent ?? {};
 
             const userVariables: DemoMailgunBasicTemplateData = {
               ...x.content.templateVariables,
@@ -86,7 +93,7 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
               url: actionUrl || DEFAULT_ACTION_URL
             };
 
-            const recipient: MailgunRecipient = {
+            const recipient: MailgunRecipientBatchSendTarget = {
               name: inputRecipient.n ?? undefined,
               email: inputRecipient.e as string,
               userVariables: {
@@ -95,32 +102,18 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
               }
             };
 
-            const calendarAttachment = await mailgunCalendarFileAttachmentForNotificationMessage({ message: x, recipient });
+            // An invite whose ATTENDEE names one recipient cannot ride a batched to[] -- every other
+            // recipient of that request would receive an invite addressed to someone else, which no client
+            // renders inline. Putting it on the target hands that constraint to the expansion factory, which
+            // gives this recipient a request of its own. The cost is granularity: send success/failure is
+            // recorded per request.
+            const attachments = await mailgunCalendarFileAttachmentForNotificationMessage({ message: x, recipient });
 
-            return { recipient, calendarAttachment };
+            return attachments ? { ...recipient, attachments } : recipient;
           })
         );
 
-        const requests: MailgunTemplateEmailRequest[] = [];
-        const batchedTo: MailgunRecipient[] = [];
-
-        builtMessages.forEach(({ recipient, calendarAttachment }) => {
-          if (calendarAttachment) {
-            // FAN OUT. Attachments live on the REQUEST and MailgunRecipient has no per-recipient attachment
-            // slot, so an invite whose ATTENDEE names one recipient cannot ride a batched to[] -- every
-            // other recipient of that request would receive an invite addressed to someone else, which no
-            // client renders inline. The cost is granularity: send success/failure is recorded per request.
-            requests.push({ ...requestBase, to: recipient, attachments: calendarAttachment });
-          } else {
-            batchedTo.push(recipient);
-          }
-        });
-
-        if (batchedTo.length) {
-          requests.push({ ...requestBase, to: batchedTo });
-        }
-
-        return requests;
+        return requestFactory(batchSendTargets);
       }
     }
   });
