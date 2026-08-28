@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { type Maybe } from '@dereekb/util';
 import { AppCalendarTypeConfigService, appCalendarTypeConfigService, type CalendarTypeConfig, calendarTypeConfigRecord } from '@dereekb/firebase';
 import { BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN, type BaseCalendarServerActionsContext, CALENDAR_SERVER_ACTION_CONTEXT_TOKEN, calendarServerActions, CalendarServerActions, type CalendarServerActionsContext } from './calendar.action.server';
-import { StorageFileServerActions } from '../storagefile/storagefile.action.server';
 
 /**
  * NestJS injection token for the app's `CalendarTypeConfig[]` registry.
@@ -33,11 +32,10 @@ export function appCalendarTypeConfigServiceFactory(calendarTypeConfigs: Calenda
  *
  * @param context - The base context providing Firebase infrastructure and collections.
  * @param appCalendarTypeConfigServiceInstance - The app's calendar type registry service.
- * @param storageFileServerActions - The StorageFile actions the sweep re-flags through.
  * @returns The fully assembled context.
  */
-export function calendarServerActionsContextFactory(context: BaseCalendarServerActionsContext, appCalendarTypeConfigServiceInstance: AppCalendarTypeConfigService, storageFileServerActions: StorageFileServerActions): CalendarServerActionsContext {
-  return { ...context, appCalendarTypeConfigService: appCalendarTypeConfigServiceInstance, storageFileServerActions };
+export function calendarServerActionsContextFactory(context: BaseCalendarServerActionsContext, appCalendarTypeConfigServiceInstance: AppCalendarTypeConfigService): CalendarServerActionsContext {
+  return { ...context, appCalendarTypeConfigService: appCalendarTypeConfigServiceInstance };
 }
 
 /**
@@ -55,7 +53,6 @@ export interface ProvideAppCalendarMetadataConfig extends Pick<ModuleMetadata, '
   /**
    * The AppCalendarModule requires the following dependencies in order to initialize properly:
    * - BaseCalendarServerActionsContext (BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN)
-   * - StorageFileServerActions
    *
    * This module declaration makes it easier to import a module that exports those dependencies.
    */
@@ -109,7 +106,7 @@ export function appCalendarModuleMetadata(config: ProvideAppCalendarMetadataConf
       {
         provide: CALENDAR_SERVER_ACTION_CONTEXT_TOKEN,
         useFactory: calendarServerActionsContextFactory,
-        inject: [BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN, AppCalendarTypeConfigService, StorageFileServerActions]
+        inject: [BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN, AppCalendarTypeConfigService]
       },
       {
         provide: CalendarServerActions,

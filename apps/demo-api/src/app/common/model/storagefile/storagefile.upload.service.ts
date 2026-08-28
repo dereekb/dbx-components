@@ -10,8 +10,8 @@ import {
   storageFileInitializeFromUploadServiceInitializerResultPermanentFailure
 } from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
-import { ALL_USER_UPLOADS_FOLDER_PATH, type AppFormSpaceTypeConfigService, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
+import { DEMO_FORM_SPACE_TYPE_CONFIGS, makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, appFormSpaceTypeConfigService, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, formSpaceTypeConfigRecord, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
 import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
@@ -30,16 +30,20 @@ const USER_AVATAR_TARGET_SIZE_BYTES = 500 * 1024;
  * including Sharp-based image resizing for avatars.
  *
  * @param demoFirebaseServerActionsContext - Server actions context providing storage, profile, and storage file collections.
- * @param appFormSpaceTypeConfigService - The app's FormSpace type registry, which the FormSpace initializer enforces against.
  * @returns A configured upload service with determiners and initializers for all supported file types.
  */
-export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext, appFormSpaceTypeConfigService: AppFormSpaceTypeConfigService): StorageFileInitializeFromUploadService {
+export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadService {
   const { storageService, profileCollection, storageFileCollection } = demoFirebaseServerActionsContext;
   const storageFileDocumentAccessor = storageFileCollection.documentAccessor();
 
   const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
     defaultCreationType: StorageFileCreationType.INIT_FROM_UPLOAD
   });
+
+  // Built here rather than injected: the registry is a memoized lookup over DEMO_FORM_SPACE_TYPE_CONFIGS,
+  // pure data this file already reaches for the same way it reaches for the avatar/test-file purposes.
+  // Injecting it would mean importing FormSpaceModule for something that is not a service.
+  const formSpaceTypeConfigService = appFormSpaceTypeConfigService(formSpaceTypeConfigRecord(DEMO_FORM_SPACE_TYPE_CONFIGS));
 
   // MARK: User Upload Files
   const matchUserUploadsFolderMatcherPath: SlashPathPathMatcherPath = [ALL_USER_UPLOADS_FOLDER_PATH, true]; // matches to /uploads/u/{userId}
@@ -189,7 +193,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
     storageService,
     // ONE initializer covers every form type: the per-type rules come from the FormSpace registry keyed
     // off the loaded space, not from the initializer's own registration.
-    initializer: [...userFileInitializers, ...systemFileInitializers, ...formSpaceStorageFileUploadInitializers({ ...demoFirebaseServerActionsContext, appFormSpaceTypeConfigService })],
+    initializer: [...userFileInitializers, ...systemFileInitializers, ...formSpaceStorageFileUploadInitializers({ ...demoFirebaseServerActionsContext, appFormSpaceTypeConfigService: formSpaceTypeConfigService })],
     storageFileCollection
   };
 

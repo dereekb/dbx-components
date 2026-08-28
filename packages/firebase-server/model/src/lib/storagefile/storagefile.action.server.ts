@@ -781,10 +781,14 @@ export interface ProcessStorageFileInTransactionInput {
  * Creates or restarts a notification task for the file based on its current processing state,
  * handling stuck-processing detection, forced restarts, and re-processing of already-successful files.
  *
- * @param context - The storage file server actions context.
+ * Takes the BASE context rather than the full one so a sibling model's actions (Calendar's ICS re-flag,
+ * for instance) can build this without standing up the upload service and signed-upload policy registry
+ * it has no use for.
+ *
+ * @param context - The base storage file server actions context.
  * @returns An async function that processes a storage file within a transaction.
  */
-export function _processStorageFileInTransactionFactory(context: StorageFileServerActionsContext) {
+export function _processStorageFileInTransactionFactory(context: BaseStorageFileServerActionsContext) {
   const { storageFileCollection, notificationCollectionGroup } = context;
 
   return async (input: ProcessStorageFileInTransactionInput, transaction: Transaction) => {
@@ -890,10 +894,13 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
  * Processes a single {@link StorageFile} by creating a notification task for it
  * and marking it as processing. Validates the file is in a valid state for processing.
  *
- * @param context - The storage file server actions context.
+ * Takes the BASE context, so a sibling model that needs to re-flag a StorageFile it owns can build this
+ * action directly instead of injecting the whole {@link StorageFileServerActions}.
+ *
+ * @param context - The base storage file server actions context.
  * @returns An async transform-and-validate function that processes a single StorageFile.
  */
-export function processStorageFileFactory(context: StorageFileServerActionsContext) {
+export function processStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
   const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 

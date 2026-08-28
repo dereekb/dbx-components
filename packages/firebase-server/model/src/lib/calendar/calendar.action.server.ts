@@ -12,7 +12,6 @@ import {
   calendarsFlaggedForSyncQuery,
   createStorageFileDocumentPairFactory,
   DEFAULT_CALENDAR_RESYNC_INTERVAL,
-  type FirestoreContextReference,
   type FirestoreDocumentSnapshotDataPairWithData,
   firestoreDummyKey,
   type FlagStaleCalendarsForSyncParams,
@@ -24,7 +23,6 @@ import {
   type RotateCalendarIcsResult,
   iterateFirestoreDocumentSnapshotPairs,
   pruneCalendarEvents,
-  type StorageFileFirestoreCollections,
   type StorageFileKey,
   StorageFileState,
   type SyncAllFlaggedCalendarsParams,
@@ -34,12 +32,12 @@ import {
   syncCalendarParamsType,
   type SyncCalendarResult
 } from '@dereekb/firebase';
-import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerStorageServiceRef } from '@dereekb/firebase-server';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { subMilliseconds } from 'date-fns';
-import { type StorageFileServerActions } from '../storagefile/storagefile.action.server';
+import { type BaseStorageFileServerActionsContext, processStorageFileFactory } from '../storagefile/storagefile.action.server';
 import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
 import { calendarIcsRotateThrottledError } from './calendar.error';
 
@@ -56,16 +54,18 @@ export const CALENDAR_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'CALENDAR_SE
 /**
  * Minimal context providing the Firebase infrastructure, storage and Firestore collections every Calendar
  * server action needs.
+ *
+ * Extends {@link BaseStorageFileServerActionsContext} because a Calendar's ICS feed IS a StorageFile: the
+ * sync and rotate paths re-flag it for processing, which builds a notification task. Taking the base
+ * context lets those paths build `processStorageFile` locally rather than injecting the whole
+ * StorageFileServerActions — and so keeps the Calendar module free of a StorageFileModule import.
  */
-export interface BaseCalendarServerActionsContext extends FirebaseServerActionsContext, CalendarFirestoreCollections, StorageFileFirestoreCollections, FirebaseServerStorageServiceRef, FirestoreContextReference {}
+export interface BaseCalendarServerActionsContext extends BaseStorageFileServerActionsContext, CalendarFirestoreCollections {}
 
 /**
- * Full context for the Calendar server actions, adding the type registry and the StorageFile actions the
- * sweep re-flags through.
+ * Full context for the Calendar server actions, adding the type registry.
  */
-export interface CalendarServerActionsContext extends BaseCalendarServerActionsContext, AppCalendarTypeConfigServiceRef {
-  readonly storageFileServerActions: StorageFileServerActions;
-}
+export interface CalendarServerActionsContext extends BaseCalendarServerActionsContext, AppCalendarTypeConfigServiceRef {}
 
 /**
  * The publish-side server actions for the Calendar model.
@@ -123,7 +123,8 @@ export function calendarServerActions(context: CalendarServerActionsContext): Ca
  * @returns An async transform-and-validate function that syncs a single Calendar.
  */
 export function syncCalendarFactory(context: CalendarServerActionsContext) {
-  const { firestoreContext, storageService, calendarCollection, storageFileCollection, appCalendarTypeConfigService, storageFileServerActions, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, storageService, calendarCollection, storageFileCollection, appCalendarTypeConfigService, firebaseServerActionTransformFunctionFactory } = context;
+  const processStorageFile = processStorageFileFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(syncCalendarParamsType, async (_params) => {
     // the ICS StorageFile is DIRECTLY_CREATED: a Calendar is not a StorageFileGroup, so there is no parent
@@ -190,7 +191,7 @@ export function syncCalendarFactory(context: CalendarServerActionsContext) {
 
       if (reflagStorageFileKey) {
         const storageFileDocument = storageFileCollection.documentAccessor().loadDocumentForKey(reflagStorageFileKey);
-        const processStorageFileInstance = await storageFileServerActions.processStorageFile({ key: reflagStorageFileKey, processAgainIfSuccessful: true });
+        const processStorageFileInstance = await processStorageFile({ key: reflagStorageFileKey, processAgainIfSuccessful: true });
         await processStorageFileInstance(storageFileDocument);
       }
 
@@ -228,8 +229,9 @@ export function syncCalendarFactory(context: CalendarServerActionsContext) {
  * @returns An async transform-and-validate function that rotates a single Calendar's ICS link.
  */
 export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) {
-  const { firestoreContext, calendarCollection, storageFileCollection, storageFileServerActions, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, calendarCollection, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
   const syncCalendar = syncCalendarFactory(context);
+  const processStorageFile = processStorageFileFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(rotateCalendarIcsParamsType, async (_params) => {
     return async (calendarDocument: CalendarDocument) => {
@@ -286,7 +288,7 @@ export function rotateCalendarIcsFactory(context: CalendarServerActionsContext) 
         const icsStorageFileDocument = storageFileCollection.documentAccessor().loadDocumentForId(icsStorageFileId);
 
         try {
-          const processStorageFileInstance = await storageFileServerActions.processStorageFile({ key: icsStorageFileDocument.key, processAgainIfSuccessful: true, runImmediately: true });
+          const processStorageFileInstance = await processStorageFile({ key: icsStorageFileDocument.key, processAgainIfSuccessful: true, runImmediately: true });
           const processResult = await processStorageFileInstance(icsStorageFileDocument);
 
           publishedIcs = processResult.expediteResult?.notificationTaskCompletionType === true;

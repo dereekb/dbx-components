@@ -3,23 +3,24 @@ import { appFormSpaceModuleMetadata, BASE_FORM_SPACE_SERVER_ACTION_CONTEXT_TOKEN
 import { DEMO_FORM_SPACE_TYPE_CONFIGS } from 'demo-firebase';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DemoApiActionModule } from '../../firebase/action.module';
-import { StorageFileModule } from '../storagefile/storagefile.module';
 
 /**
  * Dependencies for the FormSpaceModule.
  *
- * StorageFileModule is imported because a FormSpace's whole file story — the group, the supersede, the
- * delete sweep — is the StorageFile system's, not a parallel one.
+ * No StorageFileModule import. A FormSpace's whole file story IS the StorageFile system's — the group, the
+ * supersede, the delete sweep — but every one of those is reached through `storageFileCollection` on the
+ * shared actions context and the `queryAndFlagStorageFilesForDelete` helper, never through a StorageFile
+ * provider, so there is nothing here to inject.
  */
 @Module({
-  imports: [DemoApiActionModule, StorageFileModule],
+  imports: [DemoApiActionModule],
   providers: [
     {
       provide: BASE_FORM_SPACE_SERVER_ACTION_CONTEXT_TOKEN,
       useExisting: DemoFirebaseServerActionsContext
     }
   ],
-  exports: [DemoApiActionModule, StorageFileModule, BASE_FORM_SPACE_SERVER_ACTION_CONTEXT_TOKEN]
+  exports: [DemoApiActionModule, BASE_FORM_SPACE_SERVER_ACTION_CONTEXT_TOKEN]
 })
 export class FormSpaceDependencyModule {}
 
