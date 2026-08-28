@@ -1,27 +1,84 @@
-import { describe, expect, it } from 'vitest';
-import { type NotificationMessageCalendarAttachment } from '@dereekb/firebase';
-import { notificationMessageCalendarAttachmentToMailgunFileAttachment } from './notification.send.service.mailgun';
+import { describe, expect, it, vi } from 'vitest';
+import { type NotificationMessage } from '@dereekb/firebase';
+import { type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
+import { mailgunNotificationEmailSendService } from './notification.send.service.mailgun';
 
-// The contentType is the entire point of this bridge: the same bytes under Mailgun's default part type
-// arrive as a paperclip rather than an invitation, so it is pinned here explicitly.
-const ICS = 'BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nEND:VCALENDAR\r\n';
+const TEMPLATE_NAME = 'notificationtemplate';
 
-describe('notificationMessageCalendarAttachmentToMailgunFileAttachment()', () => {
-  it('should type the part with the payload method, so a client processes it as an invitation', () => {
-    const attachment: NotificationMessageCalendarAttachment = { ics: ICS, method: 'REQUEST', filename: 'invite.ics' };
+function messageForRecipient(email: string): NotificationMessage {
+  return {
+    inputContext: { recipient: { e: email } },
+    content: { title: 'Hello' }
+  };
+}
 
-    expect(notificationMessageCalendarAttachmentToMailgunFileAttachment(attachment)).toEqual({
-      filename: 'invite.ics',
-      data: ICS,
-      contentType: 'text/calendar; method=REQUEST; charset=utf-8'
+/**
+ * A MailgunService stub that records the requests it is asked to send. Only `sendTemplateEmail` is
+ * exercised by the send instance; the rest of the service is never reached.
+ */
+function stubMailgunService() {
+  const sent: MailgunTemplateEmailRequest[] = [];
+
+  const mailgunService = {
+    sendTemplateEmail: vi.fn(async (request: MailgunTemplateEmailRequest) => {
+      sent.push(request);
+      return undefined;
+    })
+  } as unknown as MailgunService;
+
+  return { mailgunService, sent };
+}
+
+describe('mailgunNotificationEmailSendService()', () => {
+  it('should await an async template builder, so a builder that renders a calendar part per recipient still dispatches', async () => {
+    const { mailgunService, sent } = stubMailgunService();
+
+    const sendService = mailgunNotificationEmailSendService({
+      mailgunService,
+      defaultSendTemplateName: TEMPLATE_NAME,
+      messageBuilders: {
+        // async is the shape a builder takes once it renders calendar attachments, since the attachment
+        // factory returns a PromiseOrValue -- an unawaited promise here would send nothing at all
+        [TEMPLATE_NAME]: async ({ messages }) => {
+          const requests: MailgunTemplateEmailRequest[] = messages.map((x) => ({
+            to: { email: x.inputContext.recipient.e as string },
+            template: TEMPLATE_NAME,
+            subject: x.content.title
+          }));
+
+          return requests;
+        }
+      }
     });
+
+    const sendInstance = await sendService.buildSendInstanceForEmailNotificationMessages([messageForRecipient('a@components.dereekb.com'), messageForRecipient('b@components.dereekb.com')]);
+    const result = await sendInstance();
+
+    expect(sent).toHaveLength(2);
+    expect(result.success).toEqual(['a@components.dereekb.com', 'b@components.dereekb.com']);
+    expect(result.failed).toEqual([]);
   });
 
-  it('should carry a CANCEL method through to the part type', () => {
-    expect(notificationMessageCalendarAttachmentToMailgunFileAttachment({ ics: ICS, method: 'CANCEL', filename: 'cancel.ics' }).contentType).toBe('text/calendar; method=CANCEL; charset=utf-8');
-  });
+  it('should record success per request, which is the granularity cost of fanning out', async () => {
+    const { mailgunService, sent } = stubMailgunService();
 
-  it('should default the filename when the payload carries none', () => {
-    expect(notificationMessageCalendarAttachmentToMailgunFileAttachment({ ics: ICS, method: 'REQUEST' }).filename).toBe('invite.ics');
+    const sendService = mailgunNotificationEmailSendService({
+      mailgunService,
+      defaultSendTemplateName: TEMPLATE_NAME,
+      messageBuilders: {
+        // one fanned-out request naming a single recipient, plus one batched request naming the rest
+        [TEMPLATE_NAME]: async ({ messages }) => [
+          { to: { email: messages[0].inputContext.recipient.e as string }, template: TEMPLATE_NAME, subject: 'invite' },
+          { to: messages.slice(1).map((x) => ({ email: x.inputContext.recipient.e as string })), template: TEMPLATE_NAME, subject: 'batched' }
+        ]
+      }
+    });
+
+    const sendInstance = await sendService.buildSendInstanceForEmailNotificationMessages([messageForRecipient('invited@components.dereekb.com'), messageForRecipient('b@components.dereekb.com'), messageForRecipient('c@components.dereekb.com')]);
+    const result = await sendInstance();
+
+    expect(sent).toHaveLength(2);
+    expect(result.success).toHaveLength(3);
+    expect(result.success).toContain('invited@components.dereekb.com');
   });
 });

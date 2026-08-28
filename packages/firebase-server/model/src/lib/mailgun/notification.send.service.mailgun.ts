@@ -1,36 +1,8 @@
 import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, type EmailAddress, asArray, pushArrayItemsIntoArray, type ArrayOrValue } from '@dereekb/util';
-import { type MailgunFileAttachment, type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
-import { iCalendarITipContentType } from '@dereekb/date';
-import { DEFAULT_NOTIFICATION_MESSAGE_CALENDAR_ATTACHMENT_FILENAME, type NotificationMessageCalendarAttachment, type NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
+import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
+import { type NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
 import { type NotificationSendMessagesInstance } from '../notification/notification.send';
-
-/**
- * Converts a message's iTIP calendar payload into the Mailgun attachment that carries it.
- *
- * The `contentType` is the whole point: a calendar part typed `text/calendar; method=REQUEST; charset=utf-8`
- * is auto-processed as an invitation by Gmail, Outlook and Apple Mail, while the same bytes under Mailgun's
- * default type render as an ordinary paperclip.
- *
- * A builder that uses this MUST emit one request per message rather than folding its recipients into a
- * single batched `to[]`: attachments live on the REQUEST, `MailgunRecipient` has no per-recipient
- * attachment slot, and a `METHOD:REQUEST` invite is only rendered inline by a client that finds its OWN
- * address in the payload's ATTENDEE.
- *
- * @param calendarAttachment - The rendered payload from the message's email content.
- * @returns The Mailgun attachment.
- *
- * @__NO_SIDE_EFFECTS__
- */
-export function notificationMessageCalendarAttachmentToMailgunFileAttachment(calendarAttachment: NotificationMessageCalendarAttachment): MailgunFileAttachment {
-  const { ics, method, filename } = calendarAttachment;
-
-  return {
-    filename: filename || DEFAULT_NOTIFICATION_MESSAGE_CALENDAR_ATTACHMENT_FILENAME,
-    data: ics,
-    contentType: iCalendarITipContentType(method)
-  };
-}
 
 /**
  * Input for a MailgunNotificationEmailSendServiceTemplateBuilder.

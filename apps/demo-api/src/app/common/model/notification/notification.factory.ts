@@ -1,6 +1,6 @@
 import { CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, type CalendarEventInviteNotificationData, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, type ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
-import { type NotificationMessageFunctionFactoryConfig, type NotificationMessageInputContext, type NotificationMessageContent, type NotificationMessageEmailContent, type NotificationMessage, calendarEventItemForId, calendarEventItemToInviteIcsString, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
-import { type ICalendarMethod } from '@dereekb/date';
+import { type NotificationMessageFunctionFactoryConfig, type NotificationMessageInputContext, type NotificationMessageContent, type NotificationMessageEmailContent, type NotificationMessage, type NotificationMessageCalendarAttachmentFactory, type NotificationMessageCalendarAttachmentMethod, calendarEventItemForId, calendarEventItemToInviteIcsString, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
 import { DEMO_CALENDAR_ICS_DOMAIN, DEMO_CALENDAR_INVITE_ORGANIZER } from '../calendar/calendar.module';
@@ -178,11 +178,31 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
       const calendarId = firestoreModelId(item.m as string);
       const calendar = await calendarCollection.documentAccessor().loadDocumentForId(calendarId).snapshotData();
       const event = calendar && eventId ? calendarEventItemForId(calendar, eventId) : undefined;
-      const method: ICalendarMethod = cancel ? 'CANCEL' : 'REQUEST';
+      const method: NotificationMessageCalendarAttachmentMethod = cancel ? 'CANCEL' : 'REQUEST';
+
+      // ONE factory per notification, closing over the loaded event. The sending service calls it with the
+      // address it resolved for each recipient, so the ICS is rendered only for the recipients actually
+      // receiving an email -- and each one names ITS OWN address as the ATTENDEE, which is what makes a
+      // client render the invite inline.
+      const calendarAttachmentFactory: Maybe<NotificationMessageCalendarAttachmentFactory> = event
+        ? ({ recipient }) => ({
+            method,
+            filename: cancel ? 'cancel.ics' : 'invite.ics',
+            ics: calendarEventItemToInviteIcsString({
+              item: event,
+              calendarId,
+              method,
+              domain: DEMO_CALENDAR_ICS_DOMAIN,
+              organizer: DEMO_CALENDAR_INVITE_ORGANIZER,
+              attendees: { address: recipient.email, name: recipient.name },
+              timezone: calendar?.tz,
+              // the CONTENT's instant, so DTSTAMP moves only when the event moves
+              now: event.uat
+            })
+          })
+        : undefined;
 
       return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
-        const email = inputContext.recipient.e;
-
         const content: NotificationMessageContent = {
           title: cancel ? `An event was removed from your calendar` : `You were added to a calendar event`,
           openingMessage: event?.n ?? '',
@@ -190,29 +210,9 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
           actionUrl: `${context.mailgunService.mailgunApi.clientUrl}/calendar`
         };
 
-        // an invite needs BOTH an event to describe and an address to name as its ATTENDEE. Without either
-        // the message still sends -- it simply carries no calendar part.
-        const emailContent: NotificationMessageEmailContent | undefined =
-          event && email
-            ? {
-                ...content,
-                calendarAttachment: {
-                  method,
-                  filename: cancel ? 'cancel.ics' : 'invite.ics',
-                  ics: calendarEventItemToInviteIcsString({
-                    item: event,
-                    calendarId,
-                    method,
-                    domain: DEMO_CALENDAR_ICS_DOMAIN,
-                    organizer: DEMO_CALENDAR_INVITE_ORGANIZER,
-                    attendees: { address: email, name: inputContext.recipient.n ?? undefined },
-                    timezone: calendar?.tz,
-                    // the CONTENT's instant, so DTSTAMP moves only when the event moves
-                    now: event.uat
-                  })
-                }
-              }
-            : undefined;
+        // without an event there is nothing to describe, so the message carries no calendar part -- it is
+        // flagged NO_CONTENT below rather than sent as a bare email.
+        const emailContent: NotificationMessageEmailContent | undefined = calendarAttachmentFactory ? { ...content, calendarAttachmentFactory } : undefined;
 
         const result: NotificationMessage = {
           inputContext,

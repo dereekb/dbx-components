@@ -111,14 +111,25 @@ export interface NotificationMessageContent {
 }
 
 /**
- * A rendered iTIP calendar payload carried on a message, for the sending service to bundle as a calendar
+ * The subset of {@link ICalendarMethod} a {@link NotificationMessageCalendarAttachment} may carry.
+ *
+ * These are the three methods an ORGANIZER sends to an attendee, which is the only role a notification
+ * ever plays: PUBLISH for an informational copy, REQUEST for an invitation or an update to one, and
+ * CANCEL to withdraw one. The rest of the iTIP set is either attendee-to-organizer (REPLY, REFRESH,
+ * COUNTER) or a negotiation step this system has no state for (ADD, DECLINECOUNTER), and putting one on
+ * an outgoing part produces an iTIP message the recipient's client cannot act on.
+ */
+export type NotificationMessageCalendarAttachmentMethod = Extract<ICalendarMethod, 'PUBLISH' | 'REQUEST' | 'CANCEL'>;
+
+/**
+ * A rendered iTIP calendar payload for a single recipient, for the sending service to bundle as a calendar
  * MIME part on the outgoing email.
  *
- * Lives on the MESSAGE and never on `NotificationItem.d`. The item is re-embedded verbatim into
- * `NotificationSummary.n[]` (capped at 1000 items) and `NotificationWeek.n[]`, which each share a single
- * 1 MiB document, so an ICS blob stored in `d` would consume the summary's whole budget. Store the
- * IDENTIFIERS in `d` and render the ICS in the message factory, which is async and holds the notification
- * document.
+ * Produced by a {@link NotificationMessageCalendarAttachmentFactory} at SEND time and never stored: it is
+ * not on `NotificationItem.d`, because the item is re-embedded verbatim into `NotificationSummary.n[]`
+ * (capped at 1000 items) and `NotificationWeek.n[]`, which each share a single 1 MiB document — an ICS
+ * blob in `d` would consume the summary's whole budget. Store the IDENTIFIERS in `d` and render the ICS
+ * from the message factory, which is async and holds the notification document.
  */
 export interface NotificationMessageCalendarAttachment {
   /**
@@ -129,7 +140,7 @@ export interface NotificationMessageCalendarAttachment {
    * The iTIP method the document carries. Duplicated onto the part's Content-Type by the sending service,
    * as RFC 6047 requires, and it MUST agree with the METHOD property inside {@link ics}.
    */
-  readonly method: ICalendarMethod;
+  readonly method: NotificationMessageCalendarAttachmentMethod;
   /**
    * File name of the part. Defaults to "invite.ics" when the sending service is given none.
    */
@@ -140,6 +151,37 @@ export interface NotificationMessageCalendarAttachment {
  * The file name given to a {@link NotificationMessageCalendarAttachment} that carries none.
  */
 export const DEFAULT_NOTIFICATION_MESSAGE_CALENDAR_ATTACHMENT_FILENAME = 'invite.ics';
+
+/**
+ * Input for a {@link NotificationMessageCalendarAttachmentFactory}.
+ */
+export interface NotificationMessageCalendarAttachmentFactoryInput {
+  /**
+   * The message the part is being built for.
+   */
+  readonly message: NotificationMessage;
+  /**
+   * The address the sending service has resolved for this recipient, and the address the payload's
+   * ATTENDEE must name.
+   *
+   * Load-bearing for a REQUEST: a client only renders an invitation inline when it finds ITS OWN address
+   * in the ATTENDEE, which is why the payload is built here rather than once per notification.
+   */
+  readonly recipient: NameEmailPair;
+}
+
+/**
+ * Renders the iTIP calendar payload for one recipient of a message.
+ *
+ * A factory rather than a value because the payload is per-recipient and transient: it is never
+ * serialized, it is only meaningful to a sending service that delivers email, and the ATTENDEE varies by
+ * recipient. Deferring the render to the sending service means one of these can be built once per
+ * notification, closing over the event, and the ICS is only produced for the recipients that actually
+ * receive an email.
+ *
+ * Return `undefined` to send the email without a calendar part.
+ */
+export type NotificationMessageCalendarAttachmentFactory = (input: NotificationMessageCalendarAttachmentFactoryInput) => PromiseOrValue<Maybe<NotificationMessageCalendarAttachment>>;
 
 export interface NotificationMessageEmailContent extends NotificationMessageContent {
   /**
@@ -173,14 +215,14 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
    */
   readonly replyToEmail?: Maybe<NameEmailPair>;
   /**
-   * An iTIP calendar payload to bundle onto the email as a calendar MIME part.
+   * Renders an iTIP calendar payload to bundle onto the email as a calendar MIME part.
    *
-   * Opt-in per sending service, like every other field here: a builder that does not read it simply sends
-   * the email without the invite. A builder that DOES read it must emit one request per message when the
+   * Opt-in per sending service, like every other field here: a builder that does not call it simply sends
+   * the email without the invite. A builder that DOES call it must emit one request per message when the
    * payload names a per-recipient ATTENDEE, since attachments live on the request rather than the
    * recipient.
    */
-  readonly calendarAttachment?: Maybe<NotificationMessageCalendarAttachment>;
+  readonly calendarAttachmentFactory?: Maybe<NotificationMessageCalendarAttachmentFactory>;
 }
 
 export interface NotificationMessageNotificationSummaryContent {}
