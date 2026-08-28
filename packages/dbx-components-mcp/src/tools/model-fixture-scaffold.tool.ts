@@ -243,7 +243,7 @@ function collectConflicts(extraction: ReturnType<typeof extractAppFixturesFromTe
     if (e.factoryName === rendered.factoryName) out.push(rendered.factoryName);
     if (e.singletonName === rendered.singletonName) out.push(rendered.singletonName);
   }
-  return [...new Set(out)];
+  return Array.from(new Set(out));
 }
 
 export const MODEL_FIXTURE_SCAFFOLD_TOOL: DbxTool = { definition: TOOL, run };

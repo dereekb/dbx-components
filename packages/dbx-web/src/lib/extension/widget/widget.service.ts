@@ -50,7 +50,7 @@ export class DbxWidgetService {
 
   // MARK: Get
   getWidgetIdentifiers(): DbxWidgetType[] {
-    return [...this._entries.keys()];
+    return Array.from(this._entries.keys());
   }
 
   getWidgetEntry(type: DbxWidgetType): Maybe<DbxWidgetEntry> {

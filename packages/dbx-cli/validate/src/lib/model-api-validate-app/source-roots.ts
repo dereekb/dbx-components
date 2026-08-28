@@ -130,7 +130,7 @@ async function readComponentDereekbDeps(componentAbs: string): Promise<readonly 
       addScopedDependencyNames(json[field], out);
     }
   }
-  return [...out];
+  return Array.from(out);
 }
 
 /**

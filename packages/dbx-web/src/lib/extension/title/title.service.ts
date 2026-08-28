@@ -71,7 +71,7 @@ export class DbxWebPageTitleService {
    */
   readonly leafReference$: Observable<Maybe<DbxWebPageTitleInfoReference>> = this._references.pipe(
     switchMap((set) => {
-      const refs = [...set];
+      const refs = Array.from(set);
       const obs: Observable<Maybe<DbxWebPageTitleInfoReference>> =
         refs.length === 0
           ? of<Maybe<DbxWebPageTitleInfoReference>>(undefined)

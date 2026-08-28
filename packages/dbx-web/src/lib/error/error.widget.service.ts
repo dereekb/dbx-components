@@ -104,7 +104,7 @@ export class DbxErrorWidgetService {
 
   // MARK: Get
   getErrorWidgetIdentifiers(): StringErrorCode[] {
-    return [...this._entries.keys()];
+    return Array.from(this._entries.keys());
   }
 
   getDefaultErrorWidgetEntry(): Maybe<DbxErrorWidgetEntry> {

@@ -51,7 +51,7 @@ export function expandIntentQuery(query: string): readonly string[] {
   if (trimmed.length === 0) {
     result = [];
   } else {
-    result = [...collectSynonyms(trimmed)];
+    result = Array.from(collectSynonyms(trimmed));
   }
   return result;
 }

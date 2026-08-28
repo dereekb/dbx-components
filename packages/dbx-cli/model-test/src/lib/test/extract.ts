@@ -182,7 +182,7 @@ function collectFixtureImports(sourceFile: SourceFile): string[] {
       seen.add(name);
     }
   }
-  return [...seen];
+  return Array.from(seen);
 }
 
 /**
@@ -248,7 +248,7 @@ function trimToCamelBoundary(s: string): string {
 }
 
 function dedupedSorted(names: readonly string[]): readonly string[] {
-  return [...new Set(names)].sort((a, b) => a.localeCompare(b));
+  return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
 }
 
 interface WalkContext {

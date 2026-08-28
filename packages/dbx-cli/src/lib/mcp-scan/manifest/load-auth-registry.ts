@@ -142,14 +142,14 @@ async function discoverClaimsFiles(cwd: string): Promise<readonly string[]> {
       // Glob root missing (e.g. running outside a workspace) — ignore.
     }
   }
-  return [...found].sort((a, b) => a.localeCompare(b));
+  return Array.from(found).sort((a, b) => a.localeCompare(b));
 }
 
 function mergeAndNormalisePaths(discovered: readonly string[], extra: readonly string[]): readonly string[] {
   const out = new Set<string>();
   for (const p of discovered) out.add(p);
   for (const p of extra) out.add(toPosix(p));
-  return [...out].sort((a, b) => a.localeCompare(b));
+  return Array.from(out).sort((a, b) => a.localeCompare(b));
 }
 
 function toPosix(value: string): string {

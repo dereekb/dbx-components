@@ -112,7 +112,7 @@ export function mergeDbxStyleDemoStyleTemplates(templates: DbxStyleDemoStyleTemp
     }
   });
 
-  return { style, classes: [...cssClassesSet(classInputs)] };
+  return { style, classes: Array.from(cssClassesSet(classInputs)) };
 }
 
 /**

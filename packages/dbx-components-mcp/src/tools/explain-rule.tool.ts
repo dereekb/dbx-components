@@ -166,7 +166,7 @@ function groupBySource(entries: readonly RuleEntry[]): readonly (readonly [RuleS
       bucket.push(entry);
     }
   }
-  return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
 export const EXPLAIN_RULE_TOOL: DbxTool = { definition: TOOL, run };

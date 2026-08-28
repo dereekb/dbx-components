@@ -111,5 +111,5 @@ function parentPathsForCollection(scan: FirestoreRulesScan, collection: string):
     }
   }
 
-  return [...parents];
+  return Array.from(parents);
 }

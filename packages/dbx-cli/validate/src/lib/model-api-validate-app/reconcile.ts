@@ -152,7 +152,7 @@ function buildSummaries(entries: readonly ReconciledEntry[], issues: readonly Va
     const summary = byModel.get(issue.model);
     if (summary) summary.errorCount += 1;
   }
-  return [...byModel.entries()].map(([model, s]) => ({ model, ...s })).sort((a, b) => a.model.localeCompare(b.model));
+  return Array.from(byModel.entries()).map(([model, s]) => ({ model, ...s })).sort((a, b) => a.model.localeCompare(b.model));
 }
 
 function compareEntries(a: ReconciledEntry, b: ReconciledEntry): number {

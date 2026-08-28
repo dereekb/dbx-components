@@ -161,7 +161,7 @@ export class DbxHelpWidgetService {
    * @returns Array of all registered help context keys.
    */
   getAllRegisteredHelpContextKeys(): DbxHelpContextKey[] {
-    return [...this._entries.keys()];
+    return Array.from(this._entries.keys());
   }
 
   /**

@@ -218,7 +218,7 @@ function warnDroppedFutureStates(tree: RouteTree, realNames: ReadonlySet<string>
       continue;
     }
     const prefix = node.data.name.slice(0, -3);
-    const hasRealSubtree = realNames.has(prefix) || [...realNames].some((name) => name.startsWith(`${prefix}.`));
+    const hasRealSubtree = realNames.has(prefix) || Array.from(realNames).some((name) => name.startsWith(`${prefix}.`));
     if (!hasRealSubtree) {
       warnings.push({ kind: 'dropped-future-state', severity: 'warning', message: `Future state \`${node.data.name}\` was dropped and has no real subtree under \`${prefix}\`; its page will not match any URL.`, stateName: node.data.name });
     }

@@ -88,7 +88,7 @@ wrapDateTests(() => {
               const result = generated();
 
               const event: ICalendarEvent = {
-                uid: `${name.replace(/\s/g, '-')}@dereekb.com`,
+                uid: `${name.replaceAll(/\s/g, '-')}@dereekb.com`,
                 summary: 'Generated',
                 start: { type: 'utc', at: result.start },
                 duration: result.duration,

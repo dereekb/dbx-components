@@ -172,7 +172,7 @@ function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelM
 
   if (decodedTypes.size > 1) {
     throw new CliError({
-      message: `get-many: all keys must belong to the same modelType. Got: ${[...decodedTypes].join(', ')}. Split into separate calls.`,
+      message: `get-many: all keys must belong to the same modelType. Got: ${Array.from(decodedTypes).join(', ')}. Split into separate calls.`,
       code: 'INVALID_ARGUMENT'
     });
   }

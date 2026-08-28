@@ -251,7 +251,7 @@ function flagUploadServiceWiring(extracted: ExtractedAppStorageFiles, violations
   if (!anyWired) {
     pushViolation(violations, {
       code: 'STORAGEFILE_UPLOAD_SERVICE_NOT_WIRED',
-      message: `No NestJS provider with \`provide: StorageFileInitializeFromUploadService, useFactory: ${factoryNames.size > 0 ? [...factoryNames].join(' | ') : '<storage-file-upload-factory>'}\` found. Bind the factory function in a NestJS module.`,
+      message: `No NestJS provider with \`provide: StorageFileInitializeFromUploadService, useFactory: ${factoryNames.size > 0 ? Array.from(factoryNames).join(' | ') : '<storage-file-upload-factory>'}\` found. Bind the factory function in a NestJS module.`,
       side: 'api',
       file: undefined
     });

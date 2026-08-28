@@ -49,11 +49,11 @@ wrapDateTests(() => {
      * a day with a stack that could not say which date of which event was bad.
      */
     it('should name the property and the value for an invalid utc date.', () => {
-      expect(() => iCalendarDateTimeContentLine('RDATE', { type: 'utc', at: new Date(NaN) })).toThrow(/RDATE/);
+      expect(() => iCalendarDateTimeContentLine('RDATE', { type: 'utc', at: new Date(Number.NaN) })).toThrow(/RDATE/);
     });
 
     it('should name the property and the value for an invalid zoned date.', () => {
-      expect(() => iCalendarDateTimeContentLine('EXDATE', { type: 'zoned', at: new Date(NaN), timezone: 'America/Denver' })).toThrow(/EXDATE/);
+      expect(() => iCalendarDateTimeContentLine('EXDATE', { type: 'zoned', at: new Date(Number.NaN), timezone: 'America/Denver' })).toThrow(/EXDATE/);
     });
   });
 

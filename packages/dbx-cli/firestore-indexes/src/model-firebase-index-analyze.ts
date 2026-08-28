@@ -372,7 +372,7 @@ function collectOrderByDirections(input: CollectOrderByDirectionsInput): Readonl
     }
   }
   for (const [field, dirs] of conflicts) {
-    warnings.push({ kind: 'orderby-conflict', factoryName, field, directions: [...dirs] });
+    warnings.push({ kind: 'orderby-conflict', factoryName, field, directions: Array.from(dirs) });
   }
   return out;
 }

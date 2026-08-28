@@ -740,7 +740,7 @@ function collectTokensReadFromBody(body: string): readonly string[] {
   while ((match = CSS_VAR_REFERENCE_RE.exec(body)) !== null) {
     set.add(match[1]);
   }
-  return [...set].sort((a, b) => a.localeCompare(b));
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -757,5 +757,5 @@ function collectTokensSet(declarations: readonly ExtractedCssDeclaration[]): rea
       set.add(decl.property);
     }
   }
-  return [...set].sort((a, b) => a.localeCompare(b));
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
 }

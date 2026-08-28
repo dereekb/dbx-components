@@ -321,7 +321,7 @@ function resolveModelTypeForCollection(input: { readonly binding: CliFirestoreBi
     throw new CliError({
       message: `No registered model uses the Firestore collection "${collectionName}".`,
       code: 'INVALID_ARGUMENT',
-      suggestion: `The query catalog records collection names, which must match a registered model's \`firestoreModelIdentity\` collection name. Known collections: ${[...cache.keys()].sort().join(', ')}.`
+      suggestion: `The query catalog records collection names, which must match a registered model's \`firestoreModelIdentity\` collection name. Known collections: ${Array.from(cache.keys()).sort().join(', ')}.`
     });
   }
 

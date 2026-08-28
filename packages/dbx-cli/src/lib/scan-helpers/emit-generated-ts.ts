@@ -72,10 +72,10 @@ export function renderGroupedImportLines(imports: readonly GeneratedTsImport[]):
     importsByPackage.set(packageName, set);
   }
 
-  return [...importsByPackage.entries()]
+  return Array.from(importsByPackage.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([pkg, names]) => {
-      const sortedNames = [...names].sort(compareStrings).join(', ');
+      const sortedNames = Array.from(names).sort(compareStrings).join(', ');
       return `import { ${sortedNames} } from '${pkg}';`;
     });
 }

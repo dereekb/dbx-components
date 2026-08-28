@@ -74,7 +74,7 @@ export class DbxFormStyleDemoPresetsComponent extends AbstractDbxFormStyleDemoCo
   } as FormConfig;
 
   protected readControlsValue(controls: DbxStyleDemoControls): DbxFormStyleDemoPresetsFormValue {
-    return { presets: [...controls.activeTemplateKeysSignal()] };
+    return { presets: Array.from(controls.activeTemplateKeysSignal()) };
   }
 
   protected applyValueToControls(controls: DbxStyleDemoControls, value: DbxFormStyleDemoPresetsFormValue): void {

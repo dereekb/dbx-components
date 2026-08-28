@@ -89,7 +89,7 @@ export class DbxColorService {
    * @returns Array of all registered template keys.
    */
   getAllRegisteredTemplateKeys(): DbxColorConfigTemplateKey[] {
-    return [...this._templates.keys()];
+    return Array.from(this._templates.keys());
   }
 
   /**
@@ -100,7 +100,7 @@ export class DbxColorService {
    * @returns The curated templates in insertion order.
    */
   getCuratedColorTemplates(): DbxColorConfigTemplate[] {
-    return [...this._templates.values()].filter((template) => template.curated === true);
+    return Array.from(this._templates.values()).filter((template) => template.curated === true);
   }
 
   /**
