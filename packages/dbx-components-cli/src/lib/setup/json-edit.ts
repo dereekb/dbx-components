@@ -5,7 +5,7 @@
  * CLI dependency.
  *
  * Covered edits:
- * - nx.json: `workspaceLayout`, `targetDefaults` (build-base / build / vitest), `tui`
+ * - nx.json: `workspaceLayout`, `targetDefaults` (build-base / build / vitest), `tui`, `release`
  * - firebase.json: `functions`, `firestore`, `emulators`
  * - tsconfig.base.json: `compilerOptions`
  * - api tsconfig.json: `compilerOptions.esModuleInterop = false`
@@ -34,9 +34,47 @@ function withoutKeys(obj: JsonObject, keys: readonly string[]): JsonObject {
 }
 
 /**
- * Applies the nx.json edits (script lines 244, 495-504). Also strips any
- * `nxCloudId` left by `create-nx-workspace` — the workspace is created with
- * `--nxCloud=skip`, so the project never connects to Nx Cloud.
+ * The nx `release` config `tools/scripts/release.mjs` runs against, mirroring the
+ * dbx-components workspace. `version.git.commit` / `tag` / `stageChanges` stay
+ * false because the script makes its own release commit and tag from the `-dev`
+ * tag anchor; letting nx do it too would produce a second commit and tag.
+ */
+export const SETUP_NX_RELEASE_CONFIG: JsonObject = {
+  projects: ['*'],
+  projectsRelationship: 'fixed',
+  version: {
+    conventionalCommits: true,
+    git: { commit: false, tag: false, stageChanges: false }
+  },
+  releaseTag: { requireSemver: true, pattern: 'v{version}' },
+  changelog: {
+    workspaceChangelog: {
+      createRelease: false,
+      file: '{workspaceRoot}/CHANGELOG.md',
+      renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true }
+    },
+    projectChangelogs: {
+      createRelease: false,
+      file: '{projectRoot}/CHANGELOG.md',
+      renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true }
+    },
+    automaticFromRef: true,
+    git: {
+      commit: true,
+      commitMessage: 'release($workspace): v{version} release',
+      commitArgs: '--no-verify',
+      tag: false,
+      tagMessage: 'v{version}',
+      stageChanges: true
+    }
+  }
+};
+
+/**
+ * Applies the nx.json edits (script lines 244, 495-504), including the `release`
+ * config `tools/scripts/release.mjs` needs. Also strips any `nxCloudId` left by
+ * `create-nx-workspace` — the workspace is created with `--nxCloud=skip`, so the
+ * project never connects to Nx Cloud.
  *
  * @param nxJson - The parsed nx.json.
  * @param naming - Derived naming (for the workspace layout dirs).
@@ -56,7 +94,8 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
     ...withoutKeys(nxJson, ['nxCloudId']),
     workspaceLayout: { appsDir: naming.appsFolder, libsDir: naming.componentsFolder },
     targetDefaults,
-    tui: { enabled: false }
+    tui: { enabled: false },
+    release: SETUP_NX_RELEASE_CONFIG
   };
 }
 

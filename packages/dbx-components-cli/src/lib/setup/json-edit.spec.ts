@@ -17,6 +17,10 @@ describe('applyNxJsonEdits', () => {
     expect(targetDefaults['build']).toEqual({ dependsOn: ['^build'], inputs: ['production', '^production'], cache: true });
     expect(targetDefaults['existing']).toEqual({ cache: false });
     expect((targetDefaults['@nx/vitest:test'] as JsonObject)['configurations']).toEqual({ ci: { ci: true, codeCoverage: true } });
+    const release = result['release'] as JsonObject;
+    expect(release['projects']).toEqual(['*']);
+    expect((release['version'] as JsonObject)['git']).toEqual({ commit: false, tag: false, stageChanges: false });
+    expect((release['releaseTag'] as JsonObject)['pattern']).toBe('v{version}');
   });
 
   it('strips any nxCloudId left by create-nx-workspace', () => {

@@ -444,9 +444,12 @@ echo "SECRETS=" > .env.local
 git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
-# add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
+# add husky for pre-commit hooks, and pretty-quick for running prettier
 npm install -D husky prettier@$DEP__PRETTIER_VERSION pretty-quick@$DEP__PRETTY_QUICK_VERSION @commitlint/cli @commitlint/config-angular eslint-plugin-import-x@$DEP__ESLINT_PLUGIN_IMPORT_X_VERSION eslint-plugin-unused-imports@$DEP__ESLINT_PLUGIN_UNUSED_IMPORTS_VERSION eslint-config-prettier@$DEP__ESLINT_CONFIG_PRETTIER_VERSION eslint-plugin-jsdoc@$DEP__ESLINT_PLUGIN_JSDOC_VERSION eslint-plugin-sonarjs@$DEP__ESLINT_PLUGIN_SONARJS_VERSION eslint-plugin-unicorn@$DEP__ESLINT_PLUGIN_UNICORN_VERSION
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
+
+# tools/scripts/release.mjs imports these directly, so they must be declared
+npm install -D conventional-changelog@^7.2.0 conventional-recommended-bump@^11.2.0 semver@^7.7.4 yargs@^18.0.0
 
 mkdir .husky
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/commit-msg -o .husky/commit-msg
@@ -496,6 +499,9 @@ npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^
 
 echo "nx.json: Add vitest configuration"
 npx --yes json -I -f nx.json -e "this.targetDefaults['@nx/vitest:test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'], configurations: { ci: { ci: true, codeCoverage: true } } }";
+
+echo "nx.json: Add release configuration used by tools/scripts/release.mjs"
+npx --yes json -I -f nx.json -e "this.release = { projects: ['*'], projectsRelationship: 'fixed', version: { conventionalCommits: true, git: { commit: false, tag: false, stageChanges: false } }, releaseTag: { requireSemver: true, pattern: 'v{version}' }, changelog: { workspaceChangelog: { createRelease: false, file: '{workspaceRoot}/CHANGELOG.md', renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true } }, projectChangelogs: { createRelease: false, file: '{projectRoot}/CHANGELOG.md', renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true } }, automaticFromRef: true, git: { commit: true, commitMessage: 'release(\$workspace): v{version} release', commitArgs: '--no-verify', tag: false, tagMessage: 'v{version}', stageChanges: true } } }";
 
 echo "nx.json: Disable TUI"
 npx --yes json -I -f nx.json -e "this.tui = { enabled: false }";

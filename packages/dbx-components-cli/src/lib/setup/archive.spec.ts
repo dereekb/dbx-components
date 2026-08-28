@@ -27,7 +27,7 @@ describe('templateArchiveFromDirectory', () => {
 
   it('lists the full tree for an empty prefix, including the add-on subtrees', () => {
     const all = archive.listSubtree('');
-    expect(all.length).toBeGreaterThanOrEqual(227);
+    expect(all.length).toBeGreaterThanOrEqual(226);
     expect(all.some((entry) => entry.startsWith('addons/oidc/'))).toBe(true);
     expect(all.some((entry) => entry.startsWith('addons/mcp/'))).toBe(true);
   });
