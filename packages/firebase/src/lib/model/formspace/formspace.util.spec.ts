@@ -46,6 +46,7 @@ function draft(overrides?: Partial<FormSpace>): FormSpace {
     ps: FormSpaceProcessingState.INIT_OR_NONE,
     u: 'user123',
     uc: 0,
+    fi: 0,
     f: [],
     cat: now,
     uat: now,
@@ -76,6 +77,7 @@ describe('formSpaceTemplate()', () => {
     expect(template.s).toBe(FormSpaceState.DRAFT);
     expect(template.ps).toBe(FormSpaceProcessingState.INIT_OR_NONE);
     expect(template.uc).toBe(0);
+    expect(template.fi).toBe(0);
     expect(template.u).toBe('user123');
     expect(template.o).toBe('pr/user123');
     expect(template.cat).toBe(now);
@@ -193,26 +195,26 @@ describe('assertFormSpaceUploadAllowed()', () => {
     const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
     const full = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' }), file({ sf: 'b', n: 'b.pdf' }), file({ sf: 'c', n: 'c.pdf' })] });
 
-    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'd.pdf', formSpace: full }).reason).toBe('slot_full');
+    expect(assertFormSpaceUploadAllowed({ ...base, formSpace: full }).reason).toBe('slot_full');
   });
 
   it('should accept into a folder slot that still has room', () => {
     const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
     const partial = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' })] });
 
-    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'b.pdf', formSpace: partial }).allowed).toBe(true);
+    expect(assertFormSpaceUploadAllowed({ ...base, formSpace: partial }).allowed).toBe(true);
   });
 
-  it('should reject a filename the slot already holds', () => {
+  it('should accept a filename the slot already holds, since the name no longer keys the path', () => {
     const base = { config: folderConfig, slot: 'documents', mimeType: 'application/pdf', sizeBytes: 512, now } as const;
     const partial = draft({ t: 'demo_folder', f: [file({ sf: 'a', n: 'a.pdf' })] });
 
-    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'a.pdf', formSpace: partial }).reason).toBe('duplicate_filename');
+    expect(assertFormSpaceUploadAllowed({ ...base, formSpace: partial }).allowed).toBe(true);
   });
 
-  it('should still allow a one-file slot to be re-uploaded into, since it supersedes rather than fills', () => {
+  it('should allow a one-file slot to be re-uploaded into, since it supersedes rather than fills', () => {
     const occupied = draft({ f: [file({ sl: 'resume', sf: 'a', n: 'old.pdf' })] });
-    expect(assertFormSpaceUploadAllowed({ ...base, filename: 'new.pdf', formSpace: occupied }).allowed).toBe(true);
+    expect(assertFormSpaceUploadAllowed({ ...base, formSpace: occupied }).allowed).toBe(true);
   });
 
   it('should reject a mime type the slot does not allow', () => {

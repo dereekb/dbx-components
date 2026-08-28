@@ -88,6 +88,7 @@ import {
   getDocumentSnapshotDataPair,
   createStorageFileDocumentPairFactory,
   StorageFileCreationType,
+  storageFileDisplayFileName,
   storageFileGroupZipFileStoragePath,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
@@ -130,7 +131,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -1145,7 +1146,10 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
         return {
           key: item.key,
           url: downloadUrl,
-          fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
+          // the StorageFile's own display name wins over the object's leaf, matching how the zip builder
+          // names its entries — a purpose whose destination is not name-keyed (a FormSpace file lives at
+          // `.../{index}.{ext}`) would otherwise download as its index
+          fileName: storageFileDisplayFileName({ displayName: storageFile.n, pathString: metadata.name, contentType: metadata.contentType }) ?? undefined,
           mimeType: itemResponseContentType ?? metadata.contentType,
           expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
         };

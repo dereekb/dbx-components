@@ -1,4 +1,4 @@
-import { type Maybe, type SlashPath, type SlashPathFile, type SlashPathFolder } from '@dereekb/util';
+import { type ContentTypeMimeType, fileExtensionForMimeType, type Maybe, replaceInvalidFilePathTypeSeparatorsInSlashPath, SLASH_PATH_FILE_TYPE_SEPARATOR, type SlashPath, slashPathDetails, type SlashPathFile, type SlashPathFolder, type SlashPathTypedFileExtension, type SlashPathUntypedFile } from '@dereekb/util';
 import { type FirebaseAuthUserId } from '../../common/auth/auth';
 import { type StorageFilePurpose } from '../storagefile/storagefile.id';
 import { ALL_USER_UPLOADS_FOLDER_PATH, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '../storagefile/storagefile.upload';
@@ -87,23 +87,116 @@ export function formSpaceUploadsFilePath(input: FormSpaceUploadsFilePathInput): 
 export const FORM_SPACE_FILES_ROOT_FOLDER_PATH: SlashPathFolder = '/fsp/';
 
 /**
+ * Input for {@link formSpaceFileStoragePath}.
+ */
+export interface FormSpaceFileStoragePathInput {
+  readonly formSpaceId: FormSpaceId;
+  readonly slot: FormSpaceFileSlot;
+  /**
+   * The index claimed from the space's `fi` counter.
+   */
+  readonly index: number;
+  /**
+   * The extension, without its leading separator. Absent when neither the uploaded name nor its mime type
+   * named one.
+   */
+  readonly extension?: Maybe<SlashPathTypedFileExtension>;
+}
+
+/**
  * Returns the permanent storage path an accepted FormSpace file is moved to.
  *
- * Keyed by the FormSpace and slot rather than by the uploading user: the file belongs to the SPACE, and a
- * space-keyed path is what lets the whole space's files be listed, zipped, or removed as one prefix.
+ * Keyed by the space, the slot, and a monotonic INDEX rather than by the uploaded name. A name-keyed
+ * destination is not unique: a file removed from the space's `f` keeps its object until the delete sweep
+ * runs, so re-uploading the same name overwrote it — leaving two StorageFiles on one object, where
+ * deleting the first destroyed the second's bytes.
  *
- * @param formSpaceId - The FormSpace the file belongs to.
- * @param slot - The slot it fills.
- * @param filename - The file's name.
+ * The leaf carries at most one separator, which is also the only shape {@link slashPathDetails} can read
+ * ({@link slashPathType} calls two or more `invalid`), so the destination always parses back into a name
+ * and an extension.
+ *
+ * @param input - The space, the slot, the claimed index, and the file's extension.
  * @returns The permanent storage path.
  *
  * @example
  * ```ts
- * formSpaceFileStoragePath('fsp1', 'resume', 'resume.pdf'); // '/fsp/fsp1/resume/resume.pdf'
+ * formSpaceFileStoragePath({ formSpaceId: 'fsp1', slot: 'resume', index: 0, extension: 'pdf' });
+ * // '/fsp/fsp1/resume/0.pdf'
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
-export function formSpaceFileStoragePath(formSpaceId: FormSpaceId, slot: FormSpaceFileSlot, filename: SlashPathFile): SlashPath {
-  return `${FORM_SPACE_FILES_ROOT_FOLDER_PATH}${formSpaceId}/${slot}/${filename}`;
+export function formSpaceFileStoragePath(input: FormSpaceFileStoragePathInput): SlashPath {
+  const { formSpaceId, slot, index, extension } = input;
+  const leaf = extension == null ? `${index}` : `${index}${SLASH_PATH_FILE_TYPE_SEPARATOR}${extension}`;
+  return `${FORM_SPACE_FILES_ROOT_FOLDER_PATH}${formSpaceId}/${slot}/${leaf}`;
+}
+
+/**
+ * Input for {@link formSpaceUploadFileNameDetails}.
+ */
+export interface FormSpaceUploadFileNameDetailsInput {
+  readonly filename: SlashPathFile;
+  /**
+   * The uploaded file's content type, used to name the extension when the filename does not.
+   */
+  readonly mimeType?: Maybe<ContentTypeMimeType>;
+}
+
+/**
+ * The uploaded name, split into the parts each layer stores.
+ */
+export interface FormSpaceUploadFileNameDetails {
+  /**
+   * The name without its extension, for the StorageFile's `n` — which is UNTYPED by contract (see
+   * {@link StorageFileDisplayName}) because the zip builder merges it with the path's extension.
+   *
+   * Absent for a name that is nothing but an extension, such as `.gitignore`.
+   */
+  readonly displayName?: Maybe<SlashPathUntypedFile>;
+  /**
+   * The extension for the destination leaf.
+   */
+  readonly extension?: Maybe<SlashPathTypedFileExtension>;
+  /**
+   * The two recomposed — what the FormSpace's `f` entry records as the file's name, and what a download
+   * of it is named.
+   */
+  readonly fileName: SlashPathFile;
+}
+
+/**
+ * Splits an uploaded filename into the display name and extension the rest of the pipeline stores.
+ *
+ * Normalizes first: an uploaded name may carry any number of separators, and {@link slashPathDetails}
+ * reads a path with two or more as `invalid` and yields neither a name nor an extension for it. The
+ * canonical {@link replaceInvalidFilePathTypeSeparatorsInSlashPath} collapses it to at most one, so
+ * `my.report.pdf` becomes `my_report.pdf` rather than losing its extension entirely.
+ *
+ * Falls back to the mime type for a name that has no extension, which keeps the stored object
+ * self-describing and keeps `fileName` in step with what a download or a zip entry is actually called.
+ *
+ * @param input - The uploaded filename and its content type.
+ * @returns The display name, the extension, and the two recomposed.
+ *
+ * @example
+ * ```ts
+ * formSpaceUploadFileNameDetails({ filename: 'resume.pdf' });
+ * // { displayName: 'resume', extension: 'pdf', fileName: 'resume.pdf' }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceUploadFileNameDetails(input: FormSpaceUploadFileNameDetailsInput): FormSpaceUploadFileNameDetails {
+  const { filename, mimeType } = input;
+  const normalized = replaceInvalidFilePathTypeSeparatorsInSlashPath(filename) as SlashPathFile;
+  const details = slashPathDetails(normalized);
+  // an empty fileName is a name that is only an extension ('.gitignore'), which is no display name at all
+  const displayName: Maybe<SlashPathUntypedFile> = details.fileName ? details.fileName : undefined;
+  const extension: Maybe<SlashPathTypedFileExtension> = details.typedFileExtension ?? fileExtensionForMimeType(mimeType);
+  const fileName = (extension == null ? (displayName ?? normalized) : `${displayName ?? ''}${SLASH_PATH_FILE_TYPE_SEPARATOR}${extension}`) as SlashPathFile;
+
+  return { displayName, extension, fileName };
 }
 
 /**

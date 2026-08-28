@@ -275,6 +275,20 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
    */
   uc: number;
   /**
+   * The next index a file's permanent storage path is keyed by.
+   *
+   * NOT an index into `f`, and not a count of anything. It advances when a path is CLAIMED — before the
+   * bytes are copied and before the upload is accepted — so a claim that never becomes a file leaves a
+   * gap, which is the point. A gap costs nothing; a reused index puts two StorageFiles on one object, and
+   * deleting either then destroys the other's bytes.
+   *
+   * Deliberately separate from `uc`. `uc` is the upload BUDGET and must not move for a refused upload;
+   * this must move for every path handed out, refused or not.
+   *
+   * @dbxModelVariable nextFileIndex
+   */
+  fi: number;
+  /**
    * Every file the space currently holds, across every slot.
    *
    * THE authority on the space's files. It is written in the same transaction that increments `uc`, so it is
@@ -375,6 +389,7 @@ export const formSpaceConverter = snapshotConverterFunctions<FormSpace>({
     o: optionalFirestoreString(),
     m: optionalFirestoreString(),
     uc: firestoreNumber({ default: 0 }),
+    fi: firestoreNumber({ default: 0 }),
     f: firestoreObjectArray({ objectField: formSpaceFileSubObject }),
     pn: optionalFirestoreString(),
     pat: optionalFirestoreDate(),

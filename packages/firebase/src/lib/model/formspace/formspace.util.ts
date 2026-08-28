@@ -1,4 +1,4 @@
-import { type ContentTypeMimeType, type Maybe, type SlashPathFile } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
 import { type FirestoreModelKey } from '../../common/firestore/collection/collection';
 import { type StorageFileGroupId, storageFileGroupIdForModel } from '../storagefile/storagefile.id';
@@ -16,6 +16,11 @@ import { DEFAULT_FORM_SPACE_ALLOWED_MIME_TYPES, DEFAULT_FORM_SPACE_MAX_FILE_SIZE
  * `firebase-server`: the client pre-checks a file with it before asking for a signed URL, and the server's
  * upload initializer enforces the very same function afterwards. One rule, two callers — a client-side copy
  * that drifted would show the user an accept for a file the server then silently discards.
+ *
+ * A file's NAME is not one of the rules. It used to be: two files of one name in a slot resolved to the
+ * same destination object, so the second silently overwrote the first. The destination is now keyed by the
+ * space's `fi` index instead, so two files of one name are two objects, and the name is free to be
+ * whatever the user uploaded.
  */
 
 /**
@@ -108,6 +113,7 @@ export function formSpaceTemplate<T extends FormSpaceData = FormSpaceData>(input
     o: input.ownerKey,
     m: input.targetModelKey,
     uc: 0,
+    fi: 0,
     f: [],
     cat: now,
     uat: now,
@@ -258,7 +264,7 @@ export function requiredFormSpaceFileSlots(config: FormSpaceTypeConfig): FormSpa
  * A discriminated reason rather than a bare false: the caller turns it into an error code, and a client
  * pre-check turns it into a message the user can act on.
  */
-export type FormSpaceUploadRejectionReason = 'not_editable' | 'unknown_slot' | 'max_uploads_reached' | 'slot_full' | 'duplicate_filename' | 'invalid_mime_type' | 'file_too_large';
+export type FormSpaceUploadRejectionReason = 'not_editable' | 'unknown_slot' | 'max_uploads_reached' | 'slot_full' | 'invalid_mime_type' | 'file_too_large';
 
 /**
  * Result of {@link assertFormSpaceUploadAllowed}.
@@ -277,13 +283,6 @@ export interface AssertFormSpaceUploadAllowedInput {
   readonly slot: FormSpaceFileSlot;
   readonly mimeType: ContentTypeMimeType;
   readonly sizeBytes: number;
-  /**
-   * The name the file will be uploaded under.
-   *
-   * Checked against the slot's existing files: two files of the same name in one slot resolve to the same
-   * storage path and would overwrite each other before the server ever saw the second one.
-   */
-  readonly filename?: Maybe<SlashPathFile>;
   /**
    * The instant to judge editability against. Defaults to now.
    */
@@ -308,7 +307,7 @@ export interface AssertFormSpaceUploadAllowedInput {
  * @__NO_SIDE_EFFECTS__
  */
 export function assertFormSpaceUploadAllowed(input: AssertFormSpaceUploadAllowedInput): FormSpaceUploadAllowedResult {
-  const { formSpace, config, slot, mimeType, sizeBytes, filename, now } = input;
+  const { formSpace, config, slot, mimeType, sizeBytes, now } = input;
   let reason: Maybe<FormSpaceUploadRejectionReason>;
 
   const slotConfig = formSpaceFileSlotConfig(config, slot);
@@ -324,14 +323,10 @@ export function assertFormSpaceUploadAllowed(input: AssertFormSpaceUploadAllowed
     reason = 'unknown_slot';
   } else if (formSpace.uc >= maxUploads) {
     reason = 'max_uploads_reached';
-    // a full folder is refused rather than evicting its oldest file. Only a POSITION slot (maxFiles === 1)
-    // supersedes, and that case is excluded here so re-uploading a resume keeps working.
+    // a full folder is refused rather than evicting its oldest file. A POSITION slot (maxFiles === 1) is
+    // excluded because it supersedes what it holds rather than filling up.
   } else if (maxFiles > 1 && filesInSlot.length >= maxFiles) {
     reason = 'slot_full';
-    // two files of the same name in one slot build the same upload path, so the second overwrites the first
-    // in storage before any server code runs. Refused early, where the client can still rename it.
-  } else if (filename != null && filesInSlot.some((x) => x.n === filename)) {
-    reason = 'duplicate_filename';
   } else if (!allowedMimeTypes.includes(mimeType)) {
     reason = 'invalid_mime_type';
   } else if (sizeBytes > maxFileSizeBytes) {

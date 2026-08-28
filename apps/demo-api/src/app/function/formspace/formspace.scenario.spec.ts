@@ -75,28 +75,60 @@ demoApiFunctionContextFactory((f) => {
             expect(storageFile.o).toBe(`pr/${u.uid}`);
             expect(storageFile.u).toBe(u.uid);
 
+            // the object is keyed by the claimed index, NOT by the uploaded name
+            expect(storageFile.pathString).toBe(`/fsp/${fsp.documentId}/${DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT}/0.pdf`);
+            // ...so the name rides on the StorageFile's display name instead, untyped by contract
+            expect(storageFile.n).toBe('resume');
+
             // the monotonic accepted-upload counter, not a live file count
             const formSpace = await assertSnapshotData(fsp.document);
             expect(formSpace.uc).toBe(1);
+            // the index counter advanced past the one it handed out
+            expect(formSpace.fi).toBe(1);
 
             // ...and the live file list, written in the same transaction as the counter
             expect(formSpace.f).toHaveLength(1);
             expect(formSpace.f[0].sl).toBe(DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT);
             expect(formSpace.f[0].sf).toBe(storageFiles[0].id);
+            // the entry still reads as the name the user uploaded, even though no object is called that
             expect(formSpace.f[0].n).toBe('resume.pdf');
             // the slot declares no validator, so there is nothing to check
             expect(formSpace.f[0].v).toBe(FormSpaceFileValidationState.NONE);
           });
 
+          it('should download an accepted file under the name it was uploaded with, not its index', async () => {
+            await fsp.uploadFileToSlot({ slot: DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT, filename: 'resume.pdf', content: 'a resume', contentType: 'application/pdf' });
+            await fsp.initializeUploads();
+
+            const [storageFileDocument] = await fsp.loadStorageFiles();
+            const storageFile = await assertSnapshotData(storageFileDocument);
+
+            const download = await f.storageFileServerActions.downloadStorageFile({ key: storageFileDocument.key });
+            const result = await download(storageFileDocument);
+
+            // the object really is called `0.pdf`...
+            expect(storageFile.pathString.endsWith('/0.pdf')).toBe(true);
+            // ...and the download still comes back as the user's own name
+            expect(result.fileName).toBe('resume.pdf');
+          });
+
           it('should reject a file the slot does not allow, leaving the counter untouched', async () => {
-            await fsp.uploadFileToSlot({ slot: DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT, filename: 'notes.txt', content: 'plain text', contentType: 'text/plain' });
+            const uploadPath = await fsp.uploadFileToSlot({ slot: DEMO_EXAMPLE_FORM_SPACE_RESUME_SLOT, filename: 'notes.txt', content: 'plain text', contentType: 'text/plain' });
 
             const initResult = await fsp.initializeUploads();
             expect(initResult.initializationsSuccessCount).toBe(0);
 
             const formSpace = await assertSnapshotData(fsp.document);
             expect(formSpace.uc).toBe(0);
+            // a refusal is caught in the claim transaction, which aborts before writing — so it burns
+            // neither the upload budget nor an index
+            expect(formSpace.fi).toBe(0);
             expect(await fsp.loadStorageFiles()).toHaveLength(0);
+
+            // the stray upload is DISCARDED, which is what separates a refusal from an infrastructure
+            // failure: only a permanent result deletes the source, and a misclassified refusal would leave
+            // this file to be retried forever
+            expect(await f.storageContext.file(uploadPath).exists()).toBe(false);
           });
 
           it('should reject an upload into a slot the type never declared', async () => {
@@ -237,14 +269,58 @@ demoApiFunctionContextFactory((f) => {
             expect(formSpace.uc).toBe(DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_MAX_FILES);
           });
 
-          it('should refuse a filename the folder already holds', async () => {
+          it('should accept a filename the folder already holds, keying the two objects apart by index', async () => {
             await uploadDocuments(1);
 
             await fsp.uploadFileToSlot({ slot: DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, filename: 'doc-0.pdf', content: VALID_PDF_CONTENT, contentType: 'application/pdf' });
 
             const initResult = await fsp.initializeUploads();
-            expect(initResult.initializationsSuccessCount).toBe(0);
-            expect((await assertSnapshotData(fsp.document)).f).toHaveLength(1);
+            expect(initResult.initializationsSuccessCount).toBe(1);
+
+            const formSpace = await assertSnapshotData(fsp.document);
+            expect(formSpace.f).toHaveLength(2);
+            // both entries read as the same name to the owner...
+            expect(formSpace.f.map((x) => x.n)).toEqual(['doc-0.pdf', 'doc-0.pdf']);
+
+            // ...but they are two distinct objects, which is what makes deleting either one safe
+            const storageFiles = await Promise.all((await fsp.loadStorageFiles()).map((x) => assertSnapshotData(x)));
+            const paths = storageFiles.map((x) => x.pathString);
+            expect(new Set(paths).size).toBe(2);
+          });
+
+          it('should not let a re-uploaded name destroy the file that replaced a removed one', async () => {
+            await uploadDocuments(1);
+
+            const [removedEntry] = (await assertSnapshotData(fsp.document)).f;
+            const removedDocument = (await fsp.loadStorageFiles()).find((x) => x.id === removedEntry.sf) as StorageFileDocument;
+            const removedFile = await assertSnapshotData(removedDocument);
+
+            // the entry leaves `f` and the StorageFile is flagged, but the OBJECT stays until the sweep runs
+            await fsp.removeFile({ slot: DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, storageFileId: removedEntry.sf });
+
+            // re-uploading the very same name is what used to overwrite that still-present object
+            await fsp.uploadFileToSlot({ slot: DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, filename: 'doc-0.pdf', content: VALID_PDF_CONTENT, contentType: 'application/pdf' });
+            await fsp.initializeUploads();
+
+            const after = await assertSnapshotData(fsp.document);
+            expect(after.f).toHaveLength(1);
+
+            const [keptEntry] = after.f;
+            expect(keptEntry.sf).not.toBe(removedEntry.sf);
+            expect(keptEntry.n).toBe('doc-0.pdf'); // same NAME...
+
+            const keptDocument = (await fsp.loadStorageFiles()).find((x) => x.id === keptEntry.sf) as StorageFileDocument;
+            const keptFile = await assertSnapshotData(keptDocument);
+            expect(keptFile.pathString).not.toBe(removedFile.pathString); // ...different OBJECT
+
+            // sweeping the removed file resolves the object from ITS OWN pathString, which is exactly how
+            // a shared path used to destroy the survivor's bytes
+            const deleteRemoved = await f.storageFileServerActions.deleteStorageFile({ key: removedDocument.key, force: true });
+            await deleteRemoved(removedDocument);
+
+            const survivor = f.storageContext.file(keptFile);
+            expect(await survivor.exists()).toBe(true);
+            expect(Buffer.from(await survivor.getBytes()).toString()).toBe(VALID_PDF_CONTENT);
           });
 
           it('should remove one file from the folder and flag only that file', async () => {

@@ -6,7 +6,11 @@ import {
   determineByFilePath,
   determineUserByUserUploadsFolderWrapperFunction,
   type FirebaseAuthUserId,
+  FORM_SPACE_NOT_EDITABLE_ERROR_CODE,
+  FORM_SPACE_NOT_FOUND_ERROR_CODE,
   FORM_SPACE_PURPOSE,
+  FORM_SPACE_UPLOAD_NOT_ALLOWED_ERROR_CODE,
+  FORM_SPACE_UPLOAD_USER_MISMATCH_ERROR_CODE,
   FORM_SPACE_UPLOADED_FILE_TYPE_IDENTIFIER,
   FORM_SPACE_UPLOADS_FOLDER_NAME,
   type FirebaseStorageAccessorFile,
@@ -19,12 +23,13 @@ import {
   formSpaceFilesInSlot,
   formSpaceSlotMaxFiles,
   formSpaceStorageFileGroupId,
+  formSpaceUploadFileNameDetails,
   isFormSpaceEditable,
   parseFormSpaceUploadPath,
   StorageFileCreationType
 } from '@dereekb/firebase';
-import { type ContentTypeMimeType, type Maybe, type SlashPathFile, type SlashPathPathMatcherPath } from '@dereekb/util';
-import { type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '../storagefile/storagefile.upload.service.initializer';
+import { type ContentTypeMimeType, type Maybe, type SlashPathPathMatcherPath } from '@dereekb/util';
+import { type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure, storageFileInitializeFromUploadServiceInitializerResultTransientFailure } from '../storagefile/storagefile.upload.service.initializer';
 import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
 import { type FormSpaceServerActionsContext } from './formspace.action.server';
 import { formSpaceNotEditableError, formSpaceNotFoundError, formSpaceUploadNotAllowedError, formSpaceUploadUserMismatchError } from './formspace.error';
@@ -94,26 +99,48 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
         const mimeType = (metadata.contentType ?? '') as ContentTypeMimeType;
         const sizeBytes = Number(metadata.size ?? 0);
 
+        const nameDetails = formSpaceUploadFileNameDetails({ filename, mimeType });
+
         let createdFile: Maybe<FirebaseStorageAccessorFile>;
 
         try {
-          // PRE-CHECK before copying. The authoritative check is the one inside the transaction below, but
-          // running it first means the overwhelming majority of rejections never copy any bytes at all.
-          const formSpace = await formSpaceDocument.snapshotData();
-          _assertFormSpaceAcceptsUpload({ formSpace, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService });
+          // PHASE 1 — CLAIM. A short transaction whose only write is the index bump.
+          //
+          // It must BE a transaction: read-then-write on `fi` is exactly the race that would hand two
+          // concurrent uploads one index, and one index means one object for two StorageFiles. A retry is
+          // harmless — it re-reads and re-writes, and only one commit wins, so exactly one index is issued.
+          //
+          // It deliberately does NOT touch `uc`. `uc` is the upload BUDGET, and a claim is not an accept.
+          const fileIndex = await firestoreContext.runTransaction(async (transaction) => {
+            const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
+            const formSpaceInTransaction = await documentInTransaction.snapshotData();
 
-          // move the accepted file out of the transient uploads folder: the uploads sweep deletes the
-          // source once initialization succeeds, so the StorageFile must point somewhere durable
-          createdFile = await fileDetailsAccessor.copy(formSpaceFileStoragePath(formSpaceId, slot, filename));
+            // refusing HERE is what keeps the overwhelming majority of rejections from burning an index or
+            // copying any bytes. It is an optimization; the control is the identical check in phase 3.
+            _assertFormSpaceAcceptsUpload({ formSpace: formSpaceInTransaction, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService });
 
-          // ONE transaction so the accept decision, the counter increment, the `f` rewrite and the
-          // supersede flag cannot interleave with a second concurrent upload: reading `uc`, deciding, then
-          // writing `uc + 1` separately is exactly how a maxUploads cap gets exceeded under load.
+            const claimed = (formSpaceInTransaction as FormSpace).fi;
+
+            await documentInTransaction.update({ fi: claimed + 1 });
+
+            return claimed;
+          });
+
+          // PHASE 2 — COPY, out of the transient uploads folder and OUTSIDE any transaction. The uploads
+          // sweep deletes the source once initialization succeeds, so the StorageFile must point somewhere
+          // durable; and `runTransaction` retries its callback on contention, so a copy inside one would
+          // leave an orphaned object at every abandoned attempt.
+          createdFile = await fileDetailsAccessor.copy(formSpaceFileStoragePath({ formSpaceId, slot, index: fileIndex, extension: nameDetails.extension }));
+
+          // PHASE 3 — REGISTER. ONE transaction so the accept decision, the counter increment, the `f`
+          // rewrite and the supersede flag cannot interleave with a second concurrent upload: reading `uc`,
+          // deciding, then writing `uc + 1` separately is exactly how a maxUploads cap gets exceeded under
+          // load. This is why `uc` moves here and not in phase 1.
           const { createStorageFileResult } = await firestoreContext.runTransaction(async (transaction) => {
             const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
             const formSpaceInTransaction = await documentInTransaction.snapshotData();
 
-            _assertFormSpaceAcceptsUpload({ formSpace: formSpaceInTransaction, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService });
+            _assertFormSpaceAcceptsUpload({ formSpace: formSpaceInTransaction, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService });
 
             const current = formSpaceInTransaction as FormSpace;
             const config = appFormSpaceTypeConfigService.configForFormSpaceType(current.t);
@@ -133,6 +160,10 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
               ownershipKey: current.o,
               purpose: FORM_SPACE_PURPOSE,
               purposeSubgroup: slot,
+              // UNTYPED by contract — the zip builder merges it with the object path's extension. The
+              // destination leaf is `{index}.{ext}`, so this is the only thing carrying the name the user
+              // actually uploaded; without it every download and zip entry would be called `0.pdf`.
+              displayName: nameDetails.displayName,
               storageFileGroupIds: [formSpaceStorageFileGroupId(formSpaceDocument.key)],
               // EVERY accepted file is processed, not only a validated one: the processing task's first
               // step reconciles the file onto its FormSpace, which is what makes `f` self-healing for a
@@ -146,7 +177,7 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
             const newFile: FormSpaceFile = {
               sl: slot,
               sf: pairResult.storageFileDocument.id,
-              n: filename,
+              n: nameDetails.fileName,
               v: validationRequired ? FormSpaceFileValidationState.PENDING : FormSpaceFileValidationState.NONE,
               at: new Date()
             };
@@ -171,9 +202,14 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
 
           result = { createStorageFileResult };
         } catch (e) {
-          // a rejected upload is PERMANENTLY rejected — neither the space's state nor the type's rules will
-          // change in the uploader's favour on a retry, so retrying only leaves the stray file in place
-          result = storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e, createdFile);
+          // A REFUSED upload is permanently refused — neither the space's state nor the type's rules will
+          // change in the uploader's favour on a retry, so retrying only leaves the stray file in place.
+          //
+          // Anything else reaching here is infrastructure, and now that the work is split across two
+          // transactions and a copy there is real surface for it. Discarding the source for a contended
+          // transaction would destroy an upload the very next sweep would have accepted, so it is reported
+          // as transient and the source is left alone. The copied object is deleted either way.
+          result = _isFormSpaceUploadRefusal(e) ? storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e, createdFile) : storageFileInitializeFromUploadServiceInitializerResultTransientFailure(e, createdFile);
         }
       }
 
@@ -185,13 +221,34 @@ export function formSpaceStorageFileUploadInitializers(context: FormSpaceServerA
 }
 
 /**
+ * Every error code {@link _assertFormSpaceAcceptsUpload} raises.
+ *
+ * Membership is what separates a decision from an outage: these are the answers no retry reverses, so the
+ * upload behind one is discarded. Everything else is treated as infrastructure and retried.
+ */
+const FORM_SPACE_UPLOAD_REFUSAL_ERROR_CODES: ReadonlySet<string> = new Set<string>([FORM_SPACE_NOT_FOUND_ERROR_CODE, FORM_SPACE_NOT_EDITABLE_ERROR_CODE, FORM_SPACE_UPLOAD_USER_MISMATCH_ERROR_CODE, FORM_SPACE_UPLOAD_NOT_ALLOWED_ERROR_CODE]);
+
+/**
+ * Returns true when the error is the upload being refused, rather than something failing.
+ *
+ * The code is readable off `details` because the error factories spread the caller's `{ code }` over their
+ * own default, so a FormSpace refusal carries its own code there.
+ *
+ * @param e - The thrown value.
+ * @returns True when the error is a refusal.
+ */
+function _isFormSpaceUploadRefusal(e: unknown): boolean {
+  const code = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details?.code;
+  return code != null && FORM_SPACE_UPLOAD_REFUSAL_ERROR_CODES.has(code);
+}
+
+/**
  * Input for {@link _assertFormSpaceAcceptsUpload}.
  */
 interface AssertFormSpaceAcceptsUploadInput {
   readonly formSpace: Maybe<FormSpace>;
   readonly uploaderId: FirebaseAuthUserId;
   readonly slot: FormSpaceFileSlot;
-  readonly filename: SlashPathFile;
   readonly mimeType: ContentTypeMimeType;
   readonly sizeBytes: number;
   readonly appFormSpaceTypeConfigService: AppFormSpaceTypeConfigService;
@@ -200,15 +257,15 @@ interface AssertFormSpaceAcceptsUploadInput {
 /**
  * Throws unless this uploader may put this file in this slot of this FormSpace.
  *
- * Run TWICE — once before copying bytes, once inside the transaction that increments `uc`. The first call
- * is an optimization; only the second is a control.
+ * Run TWICE — once in the transaction that claims the index, once in the transaction that increments
+ * `uc`. The first call is an optimization; only the second is a control.
  *
  * @param input - The loaded space, the uploader, and the candidate file.
  * @throws {HttpsError} When the space is missing, owned by someone else, no longer editable, or the file
  *   violates the type's rules.
  */
 function _assertFormSpaceAcceptsUpload(input: AssertFormSpaceAcceptsUploadInput): void {
-  const { formSpace, uploaderId, slot, filename, mimeType, sizeBytes, appFormSpaceTypeConfigService } = input;
+  const { formSpace, uploaderId, slot, mimeType, sizeBytes, appFormSpaceTypeConfigService } = input;
 
   if (formSpace == null) {
     throw formSpaceNotFoundError();
@@ -223,7 +280,7 @@ function _assertFormSpaceAcceptsUpload(input: AssertFormSpaceAcceptsUploadInput)
   }
 
   const config = appFormSpaceTypeConfigService.configForFormSpaceType(formSpace.t);
-  const allowed = assertFormSpaceUploadAllowed({ formSpace, config, slot, filename, mimeType, sizeBytes });
+  const allowed = assertFormSpaceUploadAllowed({ formSpace, config, slot, mimeType, sizeBytes });
 
   if (!allowed.allowed) {
     throw formSpaceUploadNotAllowedError(allowed.reason as NonNullable<typeof allowed.reason>);

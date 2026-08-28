@@ -19,6 +19,7 @@ import {
   type FormSpaceFirestoreCollections,
   type FormSpaceType,
   type StorageFileDocument,
+  storageFileDisplayFileName,
   type StorageFileFirestoreCollections,
   type StorageFileMetadata,
   type StoredFileReader,
@@ -294,7 +295,7 @@ export function formSpaceFileValidationStorageFileProcessor(config: FormSpaceFil
       {
         subtask: FORM_SPACE_PURPOSE_REGISTER_SUBTASK,
         fn: async (input) => {
-          const { storageFileDocument, fileDetailsAccessor } = input;
+          const { storageFileDocument } = input;
           const storageFile = await input.loadStorageFile();
           const slot = storageFile.pg as Maybe<FormSpaceFileSlot>;
 
@@ -326,7 +327,10 @@ export function formSpaceFileValidationStorageFileProcessor(config: FormSpaceFil
                 const entry: FormSpaceFile = {
                   sl: slot,
                   sf: storageFileDocument.id,
-                  n: (fileDetailsAccessor.getPathDetails().file ?? storageFileDocument.id) as SlashPathFile,
+                  // recomposed from the StorageFile's own display name, NOT the object's leaf: the
+                  // destination is keyed by index (`.../{index}.{ext}`), so the leaf would reconcile the
+                  // entry as `0.pdf` instead of the name its uploader gave it
+                  n: (storageFileDisplayFileName({ displayName: storageFile.n, pathString: storageFile.pathString }) ?? storageFileDocument.id) as SlashPathFile,
                   v: slotConfig?.validationRequired === true ? FormSpaceFileValidationState.PENDING : FormSpaceFileValidationState.NONE,
                   at: storageFile.cat
                 };
