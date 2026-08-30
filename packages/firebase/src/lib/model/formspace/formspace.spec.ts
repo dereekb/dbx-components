@@ -18,6 +18,7 @@ describe('formSpaceConverter', () => {
     o: 'pr/user123',
     m: 'gb/abc123',
     uc: 3,
+    fi: 5,
     f: [
       { sl: 'resume', sf: 'sf1', n: 'resume.pdf', v: FormSpaceFileValidationState.NONE, at: createdAt },
       { sl: 'documents', sf: 'sf2', n: 'proof.pdf', v: FormSpaceFileValidationState.INVALID, r: 'not a readable pdf', fr: null, at: createdAt, vat: updatedAt }
@@ -44,6 +45,7 @@ describe('formSpaceConverter', () => {
     expect(result.o).toBe('pr/user123');
     expect(result.m).toBe('gb/abc123');
     expect(result.uc).toBe(3);
+    expect(result.fi).toBe(5);
     expect(result.pn).toBe('nb/abc/n/def');
 
     expect(result.f).toHaveLength(2);
@@ -72,6 +74,7 @@ describe('formSpaceConverter', () => {
     expect(result.s).toBe(FormSpaceState.DRAFT);
     expect(result.ps).toBe(FormSpaceProcessingState.INIT_OR_NONE);
     expect(result.uc).toBe(0);
+    expect(result.fi).toBe(0); // a document written before `fi` existed reads back as 0
     // a document written before `f` existed reads back as an empty folder, not as undefined
     expect(result.f).toEqual([]);
   });

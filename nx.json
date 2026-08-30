@@ -176,5 +176,8 @@
         "buildTargetName": "build-base"
       }
     }
-  ]
+  ],
+  "migrate": {
+    "agentic": true
+  }
 }
