@@ -1,4 +1,4 @@
-import { filter, first, of, Subject, timeout } from 'rxjs';
+import { filter, first, of, ReplaySubject, Subject, timeout } from 'rxjs';
 import { FilterMap } from './filter.map';
 import { callbackTest } from '@dereekb/util/test';
 
@@ -106,6 +106,31 @@ describe('FilterMap', () => {
         subjectA.next({});
       })
     );
+
+    it('should stop merging values from a filter observable after that observable completes.', () => {
+      const testFilterA: TestFilter = { test: true };
+      const testFilterB: TestFilter = { test: false };
+
+      // ReplaySubject mimics the shareReplay(1) on a FilterSource's filter$, which replays its final value to any late subscriber.
+      const subjectA = new ReplaySubject<TestFilter>(1);
+      const subjectB = new ReplaySubject<TestFilter>(1);
+
+      const filtersSeen: TestFilter[] = [];
+      const sub = filterMap.filterForKey(testKey).subscribe((x) => filtersSeen.push(x));
+
+      filterMap.addFilterObs(testKey, subjectA);
+      subjectA.next(testFilterA);
+      subjectA.complete();
+
+      filterMap.addFilterObs(testKey, subjectB);
+      subjectB.next(testFilterB);
+      subjectB.complete();
+
+      // the completed subjectA must not be re-merged and replay its stale value again
+      expect(filtersSeen).toEqual([testFilterA, testFilterB]);
+
+      sub.unsubscribe();
+    });
 
     it(
       'should add to the existing filter observable for that key',
