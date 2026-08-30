@@ -5,6 +5,7 @@ import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
+import * as jsoncParser from 'jsonc-eslint-parser';
 import { NESTJS_ESLINT_PLUGIN } from './dist/packages/nestjs/eslint/index.esm.js';
 import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
 import { UTIL_ESLINT_PLUGIN } from './dist/packages/util/eslint/index.esm.js';
@@ -338,7 +339,11 @@ export default [
   },
   {
     files: ['{package,project}.json'],
-    parser: 'jsonc-eslint-parser',
+    // flat config takes the parser as a module under languageOptions; the eslintrc-style
+    // `parser: 'jsonc-eslint-parser'` string throws under ESLint v9+ whenever this block applies
+    languageOptions: {
+      parser: jsoncParser
+    },
     rules: {
       '@nx/dependency-checks': [
         'error',
