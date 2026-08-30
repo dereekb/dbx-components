@@ -129,6 +129,7 @@
     "@nx/vite": "23.1.2",
     "@nx/vitest": "23.1.2",
     "@nx/web": "23.1.2",
+    "@nx/webpack": "23.1.2",
     "@nx/workspace": "23.1.2",
     "@oxc-project/runtime": "^0.115.0",
     "@segment/analytics-node": "^2.3.0",
