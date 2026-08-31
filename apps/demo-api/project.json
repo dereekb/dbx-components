@@ -8,7 +8,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo-api"],
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/main.js", "{workspaceRoot}/dist/apps/demo-api/package.json", "{workspaceRoot}/dist/apps/demo-api/package-lock.json", "{workspaceRoot}/dist/apps/demo-api/assets"],
       "dependsOn": ["generate-mcp-manifest", "generate-route-manifest"],
       "options": {
         "commands": [
@@ -18,6 +18,16 @@
           }
         ],
         "color": true
+      },
+      "configurations": {
+        "production": {
+          "commands": [
+            {
+              "description": "build api (production)",
+              "command": "npx nx run demo-api:build-base:production"
+            }
+          ]
+        }
       }
     },
     "generate-mcp-manifest": {
@@ -44,31 +54,30 @@
       }
     },
     "build-base": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/esbuild:esbuild",
+      "dependsOn": ["^build"],
+      "outputs": ["{options.outputPath}/main.js", "{options.outputPath}/package.json", "{options.outputPath}/package-lock.json", "{options.outputPath}/assets"],
       "options": {
-        "excludeLibsInPackageJson": true,
-        "webpackConfig": "apps/demo-api/webpack.config.js",
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
         "tsConfig": "apps/demo-api/tsconfig.app.json",
-        "assets": ["apps/demo-api/src/assets"],
+        "assets": [{ "glob": "**/*", "input": "apps/demo-api/src/assets", "output": "assets" }],
         "generatePackageJson": true,
-        "compiler": "swc",
-        "target": "node"
+        "platform": "node",
+        "target": "node24",
+        "format": ["cjs"],
+        "bundle": true,
+        "thirdParty": false,
+        "declaration": false,
+        "skipTypeCheck": false,
+        "deleteOutputPath": false,
+        "minify": false,
+        "sourcemap": false,
+        "esbuildConfig": "apps/demo-api/esbuild.config.js"
       },
       "configurations": {
         "production": {
-          "optimization": true,
-          "extractLicenses": false,
-          "sourceMap": false,
-          "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "apps/demo-api/src/environments/environment.ts",
-              "with": "apps/demo-api/src/environments/environment.prod.ts"
-            }
-          ]
+          "esbuildConfig": "apps/demo-api/esbuild.prod.config.js"
         }
       }
     },
