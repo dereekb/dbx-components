@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxFirebaseAuthService, DbxFirebaseFormSpaceModule, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, FormSpaceCollectionStore, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
-import { DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { DbxFirebaseAuthService, DbxFirebaseFormSpaceModule, FormSpaceCollectionStore, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
+import { DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { TimeDistancePipe, cleanSubscription } from '@dereekb/dbx-core';
-import { type FormSpaceFile, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState, firestoreModelKey, formSpacesForOwnerQuery, storageFileIdentity } from '@dereekb/firebase';
+import { FormSpaceProcessingState, FormSpaceState, firestoreModelKey, formSpacesForOwnerQuery } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DEMO_TEST_FORM_SPACE_COVER_SLOT, DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES, DEMO_TEST_FORM_SPACE_FOLDER_SLOT, DEMO_TEST_FORM_SPACE_TYPE, type DemoTestFormSpaceData, profileIdentity } from 'demo-firebase';
 import { DemoTestFormSpaceFormComponent, type DemoTestFormSpaceFormValue } from 'demo-components';
@@ -28,13 +28,11 @@ import { first, map, shareReplay } from 'rxjs';
     DbxContentBoxDirective,
     DbxErrorComponent,
     DbxLabelBlockComponent,
-    DbxLoadingComponent,
     DbxSectionComponent,
     DbxSectionLayoutModule,
     DbxActionFormDirective,
     DbxFormSourceDirective,
     DbxFirebaseFormSpaceModule,
-    DbxFirebaseStorageFileDownloadButtonComponent,
     DemoTestFormSpaceFormComponent,
     TimeDistancePipe
   ],
@@ -46,18 +44,11 @@ export class DemoFormSpaceViewComponent {
   readonly formSpaceCollectionStore = inject(FormSpaceCollectionStore);
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);
 
-  readonly formSpaceState = FormSpaceState;
   readonly formSpaceProcessingState = FormSpaceProcessingState;
-  readonly formSpaceFileValidationState = FormSpaceFileValidationState;
 
   readonly coverSlot = DEMO_TEST_FORM_SPACE_COVER_SLOT;
   readonly folderSlot = DEMO_TEST_FORM_SPACE_FOLDER_SLOT;
   readonly folderMaxFiles = DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES;
-
-  readonly downloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
-    text: 'Start Download',
-    downloadReadyText: 'Save File'
-  };
 
   readonly ownerKey$ = this.auth.userIdentifier$.pipe(
     map((uid) => firestoreModelKey(profileIdentity, uid)),
@@ -83,9 +74,6 @@ export class DemoFormSpaceViewComponent {
   readonly hasFormSpaceSignal = toSignal(this.formSpaceDocumentStore.currentKey$.pipe(map((x) => x != null)), { initialValue: false });
   readonly formSpaceSignal = toSignal(this.formSpaceDocumentStore.currentData$);
   readonly isEditableSignal = toSignal(this.formSpaceDocumentStore.isEditable$, { initialValue: false });
-  readonly coverFilesSignal = toSignal(this.formSpaceDocumentStore.filesInSlot$(DEMO_TEST_FORM_SPACE_COVER_SLOT), { initialValue: [] as FormSpaceFile[] });
-  readonly folderFilesSignal = toSignal(this.formSpaceDocumentStore.filesInSlot$(DEMO_TEST_FORM_SPACE_FOLDER_SLOT), { initialValue: [] as FormSpaceFile[] });
-  readonly folderIsFullSignal = toSignal(this.formSpaceDocumentStore.filesInSlot$(DEMO_TEST_FORM_SPACE_FOLDER_SLOT).pipe(map((x) => x.length >= DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES)), { initialValue: false });
 
   readonly formData$ = this.formSpaceDocumentStore.formSpaceDataOfType$<DemoTestFormSpaceData>().pipe(
     map((x) => (x ?? {}) as DemoTestFormSpaceFormValue),
@@ -123,20 +111,4 @@ export class DemoFormSpaceViewComponent {
   readonly handleSubmitFormSpace: WorkUsingContext = (_, context) => {
     context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.submitFormSpace({ runImmediately: true }));
   };
-
-  readonly handleRemoveFileFactory = (slot: string, file: FormSpaceFile): WorkUsingContext => {
-    return (_, context) => {
-      context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.removeFormSpaceFile({ slot, storageFileId: file.sf }));
-    };
-  };
-
-  /**
-   * The StorageFile key a download button reads, built from the id the space's `f` entry carries.
-   *
-   * @param file - The FormSpace file entry.
-   * @returns The StorageFile's model key.
-   */
-  storageFileKeyForFile(file: FormSpaceFile): string {
-    return firestoreModelKey(storageFileIdentity, file.sf);
-  }
 }

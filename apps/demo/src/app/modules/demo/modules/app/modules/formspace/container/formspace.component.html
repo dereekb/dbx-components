@@ -1,127 +1,58 @@
-<div dbxFirebaseFormSpaceDocument>
-  @if (!hasFormSpaceSignal()) {
+@if (!hasFormSpaceSignal()) {
+  <dbx-content-box [wide]="true">
+    <dbx-section header="Start a Form Space" hint="Creates a draft you can come back to. Only one draft at a time." dbxAction dbxActionValue [dbxActionHandler]="handleCreateFormSpace">
+      <dbx-button dbxActionButton text="Start Test Form Space"></dbx-button>
+      <dbx-error dbxActionError></dbx-error>
+    </dbx-section>
+  </dbx-content-box>
+} @else {
+  @if (formSpaceSignal(); as formSpace) {
     <dbx-content-box [wide]="true">
-      <dbx-section header="Start a Form Space" hint="Creates a draft you can come back to. Only one draft at a time." dbxAction dbxActionValue [dbxActionHandler]="handleCreateFormSpace">
-        <dbx-button dbxActionButton text="Start Test Form Space"></dbx-button>
+      <dbx-section header="Test Information" hint="Saved onto the form space as its own JSON." dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateFormSpace">
+        <demo-test-formspace-form dbxActionForm [dbxFormSource]="formData$"></demo-test-formspace-form>
+        <dbx-button dbxActionButton text="Save"></dbx-button>
         <dbx-error dbxActionError></dbx-error>
+        <div *dbxActionHasSuccess="3000" class="dbx-success">Saved</div>
       </dbx-section>
     </dbx-content-box>
-  } @else {
-    @if (formSpaceSignal(); as formSpace) {
-      <dbx-content-box [wide]="true">
-        <dbx-section header="Test Information" hint="Saved onto the form space as its own JSON." dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateFormSpace">
-          <demo-test-formspace-form dbxActionForm [dbxFormSource]="formData$"></demo-test-formspace-form>
-          <dbx-button dbxActionButton text="Save"></dbx-button>
-          <dbx-error dbxActionError></dbx-error>
-          <div *dbxActionHasSuccess="3000" class="dbx-success">Saved</div>
-        </dbx-section>
-      </dbx-content-box>
 
-      <dbx-content-box [wide]="true">
-        <dbx-section header="Cover File" hint="One file. Uploading again replaces what is there.">
-          <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf,image/png,image/jpeg">
-            <div [dbxFirebaseFormSpaceSlotUpload]="coverSlot" #coverSlotUpload="dbxFirebaseFormSpaceSlotUpload">
-              <div dbxAction dbxActionSnackbarError dbxFirebaseFormSpaceUploadInitializeDocuments [initializeWithExpediteProcessing]="true">
-                <dbx-loading dbxActionLoadingContext>
-                  @if (coverFilesSignal()[0]; as coverFile) {
-                    <dbx-label-block header="Cover File">
-                      <div>{{ coverFile.n }}</div>
-                      <div class="dbx-hint">Uploaded {{ coverFile.at | timeDistance }}.</div>
-                    </dbx-label-block>
-                  } @else {
-                    <dbx-label-block header="No Cover File">
-                      <div class="dbx-hint">A cover file is required before this form space can be submitted.</div>
-                    </dbx-label-block>
-                  }
-                </dbx-loading>
-              </div>
-              <span class="dbx-spacer"></span>
-              <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="coverSlotUpload.uploadHandlerSignal()" [triggerOnFiles]="true">
-                <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Cover" [disabled]="!isEditableSignal()" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
-              </div>
-            </div>
-          </div>
-          @if (coverFilesSignal()[0]; as coverFile) {
-            <div dbxAction dbxActionValue [dbxActionHandler]="handleRemoveFileFactory(coverSlot, coverFile)">
-              <dbx-button dbxActionButton [buttonStyle]="{ type: 'basic' }" text="Remove Cover" [disabled]="!isEditableSignal()"></dbx-button>
-              <dbx-error dbxActionError></dbx-error>
-            </div>
-          }
-        </dbx-section>
-      </dbx-content-box>
+    <dbx-content-box [wide]="true">
+      <dbx-section header="Cover File" hint="One file. Uploading again replaces what is there.">
+        <dbx-firebase-formspace-slot-upload [slot]="coverSlot" label="Cover File" emptyText="A cover file is required before this form space can be submitted." uploadText="Upload Cover" removeText="Remove Cover" fileTypesAccepted="application/pdf,image/png,image/jpeg"></dbx-firebase-formspace-slot-upload>
+      </dbx-section>
+    </dbx-content-box>
 
-      <dbx-content-box [wide]="true">
-        <dbx-section header="Folder" hint="Up to {{ folderMaxFiles }} files. Uploads accumulate rather than replacing each other.">
-          <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="true" fileTypesAccepted="application/pdf,image/png,image/jpeg,text/plain">
-            <div [dbxFirebaseFormSpaceSlotUpload]="folderSlot" #folderSlotUpload="dbxFirebaseFormSpaceSlotUpload">
-              <div dbxAction dbxActionSnackbarError dbxFirebaseFormSpaceUploadInitializeDocuments [initializeWithExpediteProcessing]="true">
-                <dbx-loading dbxActionLoadingContext>
-                  <dbx-label-block header="Folder ({{ folderFilesSignal().length }} / {{ folderMaxFiles }})">
-                    @if (!folderFilesSignal().length) {
-                      <div class="dbx-hint">Nothing here yet.</div>
-                    }
-                  </dbx-label-block>
-                </dbx-loading>
-              </div>
-              <span class="dbx-spacer"></span>
-              <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="folderSlotUpload.uploadHandlerSignal()" [triggerOnFiles]="true">
-                <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Add Files" [disabled]="!isEditableSignal() || folderIsFullSignal()" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
-              </div>
-            </div>
-          </div>
-          <div class="dbx-button-column">
-            @for (file of folderFilesSignal(); track file.sf) {
-              <div class="dbx-flex-bar">
-                <dbx-label-block [header]="file.n ?? 'File'">
-                  @switch (file.v) {
-                    @case (formSpaceFileValidationState.PENDING) {
-                      <div class="dbx-hint">Checking...</div>
-                    }
-                    @case (formSpaceFileValidationState.INVALID) {
-                      <div class="dbx-warn">{{ file.r }}</div>
-                    }
-                    @default {
-                      <div class="dbx-hint">Uploaded {{ file.at | timeDistance }}.</div>
-                    }
-                  }
-                </dbx-label-block>
-                <span class="dbx-spacer"></span>
-                <dbx-firebase-storagefile-download-button [config]="downloadButtonConfig" [storageFileKey]="storageFileKeyForFile(file)"></dbx-firebase-storagefile-download-button>
-                <div dbxAction dbxActionSnackbarError dbxActionValue [dbxActionHandler]="handleRemoveFileFactory(folderSlot, file)">
-                  <dbx-button dbxActionButton [buttonStyle]="{ type: 'basic' }" text="Remove" [disabled]="!isEditableSignal()"></dbx-button>
-                </div>
-              </div>
-            }
-          </div>
-        </dbx-section>
-      </dbx-content-box>
+    <dbx-content-box [wide]="true">
+      <dbx-section header="Folder" hint="Up to {{ folderMaxFiles }} files. Uploads accumulate rather than replacing each other.">
+        <dbx-firebase-formspace-slot-upload [slot]="folderSlot" label="Folder" [maxFiles]="folderMaxFiles" uploadText="Add Files" fileTypesAccepted="application/pdf,image/png,image/jpeg,text/plain"></dbx-firebase-formspace-slot-upload>
+      </dbx-section>
+    </dbx-content-box>
 
-      <dbx-content-box [wide]="true">
-        <dbx-section header="Submit" hint="Locks the form space and hands it to its submission handler.">
-          @if (isEditableSignal()) {
-            <div dbxAction dbxActionValue [dbxActionHandler]="handleSubmitFormSpace">
-              <dbx-button dbxActionButton text="Submit Form Space"></dbx-button>
-              <dbx-error dbxActionError></dbx-error>
-            </div>
-          } @else {
-            <dbx-label-block header="Submitted">
-              <div class="dbx-hint">
-                @switch (formSpace.ps) {
-                  @case (formSpaceProcessingState.SUCCESS) {
-                    Processed{{ formSpace.cpat ? ' ' + (formSpace.cpat | timeDistance) : '' }}.
-                  }
-                  @case (formSpaceProcessingState.FAILED) {
-                    Processing failed.
-                  }
-                  @default {
-                    Queued for processing.
-                  }
+    <dbx-content-box [wide]="true">
+      <dbx-section header="Submit" hint="Locks the form space and hands it to its submission handler.">
+        @if (isEditableSignal()) {
+          <div dbxAction dbxActionValue [dbxActionHandler]="handleSubmitFormSpace">
+            <dbx-button dbxActionButton text="Submit Form Space"></dbx-button>
+            <dbx-error dbxActionError></dbx-error>
+          </div>
+        } @else {
+          <dbx-label-block header="Submitted">
+            <div class="dbx-hint">
+              @switch (formSpace.ps) {
+                @case (formSpaceProcessingState.SUCCESS) {
+                  Processed{{ formSpace.cpat ? ' ' + (formSpace.cpat | timeDistance) : '' }}.
                 }
-              </div>
-            </dbx-label-block>
-          }
-        </dbx-section>
-      </dbx-content-box>
-    }
+                @case (formSpaceProcessingState.FAILED) {
+                  Processing failed.
+                }
+                @default {
+                  Queued for processing.
+                }
+              }
+            </div>
+          </dbx-label-block>
+        }
+      </dbx-section>
+    </dbx-content-box>
   }
-</div>
+}

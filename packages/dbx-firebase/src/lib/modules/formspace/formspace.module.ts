@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { DbxFirebaseStorageFileUploadModule } from '../storagefile/storagefile.upload.module';
-import { DbxFirebaseFormSpaceSlotUploadDirective, DbxFirebaseFormSpaceUploadInitializeDocumentsDirective } from './container';
+import { DbxFirebaseFormSpaceSlotUploadComponent, DbxFirebaseFormSpaceSlotUploadDirective, DbxFirebaseFormSpaceUploadInitializeDocumentsDirective } from './container';
 import { DbxFirebaseFormSpaceCollectionStoreDirective, DbxFirebaseFormSpaceDocumentStoreDirective } from './store';
 
 const IMPORTS_AND_EXPORTS = [
@@ -8,6 +8,7 @@ const IMPORTS_AND_EXPORTS = [
   // importing this one should not have to remember to import both
   DbxFirebaseStorageFileUploadModule,
   // containers
+  DbxFirebaseFormSpaceSlotUploadComponent,
   DbxFirebaseFormSpaceSlotUploadDirective,
   DbxFirebaseFormSpaceUploadInitializeDocumentsDirective,
   // stores
