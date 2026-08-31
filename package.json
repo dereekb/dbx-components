@@ -122,7 +122,6 @@
     "@nx/eslint": "23.1.2",
     "@nx/eslint-plugin": "23.1.2",
     "@nx/js": "23.1.2",
-    "@nx/nest": "23.1.2",
     "@nx/node": "23.1.2",
     "@nx/plugin": "23.1.2",
     "@nx/rollup": "23.1.2",
