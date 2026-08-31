@@ -205,6 +205,22 @@ export function formSpaceFileSlotConfig(config: FormSpaceTypeConfig, slot: FormS
 }
 
 /**
+ * Returns the human-readable name of a slot, falling back to the slot key itself.
+ *
+ * The key is a reasonable fallback rather than a placeholder: a slot is named `resume` or `cover` precisely
+ * because that is what it holds, so a type that declared no `name` still reads as something.
+ *
+ * @param config - The type config.
+ * @param slot - The slot to name.
+ * @returns The slot's name.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceFileSlotName(config: FormSpaceTypeConfig, slot: FormSpaceFileSlot): string {
+  return formSpaceFileSlotConfig(config, slot)?.name ?? slot;
+}
+
+/**
  * Returns how many files a slot may hold at once.
  *
  * @param slotConfig - The slot config, or null for an undeclared slot.
@@ -402,4 +418,88 @@ export function formSpaceSubmitBlockers(formSpace: Pick<FormSpace, 'f'>, config:
   });
 
   return blockers;
+}
+
+/**
+ * What one slot of a FormSpace currently holds, and whether that satisfies the slot's own requirement.
+ *
+ * The per-slot view of {@link formSpaceSubmitBlockers}, for a UI that labels each slot individually rather
+ * than reporting one verdict for the whole space.
+ */
+export interface FormSpaceSlotStatus {
+  readonly slot: FormSpaceFileSlot;
+  /**
+   * The files the slot currently holds.
+   */
+  readonly files: FormSpaceFile[];
+  readonly minFiles: number;
+  readonly maxFiles: number;
+  /**
+   * Whether the space cannot be submitted while this slot is empty, i.e. {@link minFiles} is above zero.
+   */
+  readonly required: boolean;
+  /**
+   * Every reason this slot blocks submission. Empty when it does not.
+   */
+  readonly blockers: FormSpaceSubmitBlocker[];
+  /**
+   * Whether this slot blocks submission. An OPTIONAL EMPTY slot is satisfied — it is holding up nothing.
+   */
+  readonly satisfied: boolean;
+  /**
+   * Whether the slot is satisfied AND holds something.
+   *
+   * The distinction from {@link satisfied} is what an optional slot needs: an empty one blocks nothing, but
+   * marking it DONE claims the user dealt with it when they have not touched it. So this is the narrower
+   * predicate — "there is something here and it is fine" — and it is what a checkmark belongs next to.
+   */
+  readonly complete: boolean;
+}
+
+/**
+ * Input for {@link formSpaceSlotStatus}.
+ */
+export interface FormSpaceSlotStatusInput {
+  readonly formSpace: Pick<FormSpace, 'f'>;
+  readonly config: FormSpaceTypeConfig;
+  readonly slot: FormSpaceFileSlot;
+}
+
+/**
+ * Returns what one slot holds and whether that satisfies the slot's requirement.
+ *
+ * Derived from {@link formSpaceSubmitBlockers} rather than re-deriving the rule, so a slot a UI marks done is
+ * exactly a slot the server's submit gate would not object to.
+ *
+ * @param input - The space, its type config, and the slot to report on.
+ * @returns The slot's status.
+ *
+ * @example
+ * ```ts
+ * const status = formSpaceSlotStatus({ formSpace, config, slot: 'resume' });
+ * const showCheck = status.complete;
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceSlotStatus(input: FormSpaceSlotStatusInput): FormSpaceSlotStatus {
+  const { formSpace, config, slot } = input;
+
+  const slotConfig = formSpaceFileSlotConfig(config, slot);
+  const files = formSpaceFilesInSlot(formSpace, slot);
+  const minFiles = formSpaceSlotMinFiles(slotConfig);
+  const maxFiles = formSpaceSlotMaxFiles(slotConfig);
+  const blockers = formSpaceSubmitBlockers(formSpace, config).filter((x) => x.slot === slot);
+  const satisfied = blockers.length === 0;
+
+  return {
+    slot,
+    files,
+    minFiles,
+    maxFiles,
+    required: minFiles > 0,
+    blockers,
+    satisfied,
+    complete: satisfied && files.length > 0
+  };
 }

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreDeleteFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { type FormSpace, type FormSpaceData, type FormSpaceDocument, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFirestoreCollections, FormSpaceFunctions, formSpaceFilesInSlot, isFormSpaceEditable } from '@dereekb/firebase';
+import { AppFormSpaceTypeConfigService, type FormSpace, type FormSpaceData, type FormSpaceDocument, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFirestoreCollections, FormSpaceFunctions, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker, type FormSpaceTypeConfig, formSpaceFilesInSlot, formSpaceSlotStatus, formSpaceSubmitBlockers, isFormSpaceEditable } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { type Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { type Observable, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 /**
  * Document store for a single {@link FormSpace}.
@@ -18,6 +18,16 @@ import { type Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
 @Injectable()
 export class FormSpaceDocumentStore extends AbstractDbxFirebaseDocumentStore<FormSpace, FormSpaceDocument> {
   readonly formSpaceFunctions = inject(FormSpaceFunctions);
+
+  /**
+   * The app's FormSpace type registry, when it registered one via `provideDbxFirebaseFormSpaceTypeConfigService()`.
+   *
+   * OPTIONAL, so a page that only uploads and lists keeps working without it. Everything derived from it —
+   * the submit blockers, the per-slot status, the submittable predicate — reports "unknown" rather than
+   * guessing when it is absent, because guessing here means telling the user a space is ready to submit that
+   * the server will refuse.
+   */
+  readonly appFormSpaceTypeConfigService = inject(AppFormSpaceTypeConfigService, { optional: true });
 
   constructor() {
     super({ firestoreCollection: inject(FormSpaceFirestoreCollections).formSpaceCollection });
@@ -113,6 +123,65 @@ export class FormSpaceDocumentStore extends AbstractDbxFirebaseDocumentStore<For
   filesInSlot$(slot: FormSpaceFileSlot): Observable<FormSpaceFile[]> {
     return this.files$.pipe(
       map((f) => formSpaceFilesInSlot({ f }, slot)),
+      shareReplay(1)
+    );
+  }
+
+  // MARK: completion
+  /**
+   * The type config governing this space, or undefined when the app registered no type registry.
+   */
+  readonly formSpaceTypeConfig$: Observable<Maybe<FormSpaceTypeConfig>> = this.formSpaceType$.pipe(
+    map((formSpaceType) => (formSpaceType == null ? undefined : this.appFormSpaceTypeConfigService?.configForFormSpaceType(formSpaceType))),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Every reason the space may not be submitted yet — empty when it may — or undefined when the answer is
+   * unknown because no type registry was provided.
+   *
+   * Evaluated with the same `formSpaceSubmitBlockers()` the server's submit transaction rejects on, so the
+   * UI cannot offer a submit the server would refuse. Undefined is NOT "no blockers": a caller that treats
+   * it as such is promising the user something this store never checked.
+   */
+  readonly submitBlockers$: Observable<Maybe<FormSpaceSubmitBlocker[]>> = combineLatest([this.currentData$, this.formSpaceTypeConfig$]).pipe(
+    map(([formSpace, config]) => (formSpace != null && config != null ? formSpaceSubmitBlockers(formSpace, config) : undefined)),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether every slot the type requires is filled and valid.
+   *
+   * False while the answer is unknown, so an app that forgot the registry gets a disabled submit button
+   * rather than one that fails against the server.
+   */
+  readonly isComplete$: Observable<boolean> = this.submitBlockers$.pipe(
+    map((blockers) => blockers?.length === 0),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether the space is both still editable and complete — the single predicate a submit control hangs its
+   * enablement off.
+   */
+  readonly isSubmittable$: Observable<boolean> = combineLatest([this.isEditable$, this.isComplete$]).pipe(
+    map(([isEditable, isComplete]) => isEditable && isComplete),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * What one slot holds and whether that satisfies its requirement, or undefined when no type registry was
+   * provided.
+   *
+   * @param slot - The slot to report on.
+   * @returns The slot's status, or undefined when it cannot be determined.
+   */
+  slotStatus$(slot: FormSpaceFileSlot): Observable<Maybe<FormSpaceSlotStatus>> {
+    return combineLatest([this.currentData$, this.formSpaceTypeConfig$]).pipe(
+      map(([formSpace, config]) => (formSpace != null && config != null ? formSpaceSlotStatus({ formSpace, config, slot }) : undefined)),
       shareReplay(1)
     );
   }

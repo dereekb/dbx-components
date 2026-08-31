@@ -1,4 +1,4 @@
-import { type FirestoreModelKey, type FormSpaceData, type FormSpaceFileSlot, type FormSpaceId, formSpaceIdForModel, type FormSpaceType, type FormSpaceTypeConfig } from '@dereekb/firebase';
+import { type AppFormSpaceTypeConfigService, appFormSpaceTypeConfigService, type FirestoreModelKey, type FormSpaceData, type FormSpaceFileSlot, type FormSpaceId, formSpaceIdForModel, type FormSpaceType, type FormSpaceTypeConfig, formSpaceTypeConfigRecord } from '@dereekb/firebase';
 import { MS_IN_DAY } from '@dereekb/util';
 
 /**
@@ -194,6 +194,13 @@ export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
     formSpaceType: DEMO_GUESTBOOK_FORM_SPACE_TYPE,
     name: 'Guestbook Album',
     description: 'A shared form space every guestbook signer can upload into.',
+    // Declared on the TYPE rather than the one slot: an album is a pile of each signer's own photos, so
+    // "your files are yours" is a property of the whole space and a slot added later should inherit it.
+    //
+    // Signers contribute side by side here; they do not co-own one folder. So a signer reads and removes
+    // only what they uploaded, and that includes the album's `u` — the guestbook's creator, who is the
+    // party a space happens to be filed under rather than a moderator of everyone else's photos.
+    fileAccess: 'uploader',
     slots: [
       {
         slot: DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_SLOT,
@@ -213,3 +220,13 @@ export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
     // is ever written, which is what keeps it out of the expiration sweep's inequality query entirely.
   }
 ];
+
+/**
+ * The demo app's {@link FormSpaceTypeConfig} registry, resolved once.
+ *
+ * Derived pure data rather than a service with state, so it is built here from the const it indexes rather
+ * than injected: the API's upload service, its notification task service, and the model service's own
+ * permission checks all need the same answers, and three inline builds are three chances for one of them to
+ * be handed a different list.
+ */
+export const DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE: AppFormSpaceTypeConfigService = appFormSpaceTypeConfigService(formSpaceTypeConfigRecord(DEMO_FORM_SPACE_TYPE_CONFIGS));

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseAuthService, DbxFirebaseFormSpaceModule, FormSpaceCollectionStore, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
-import { DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { TimeDistancePipe, cleanSubscription } from '@dereekb/dbx-core';
 import { FormSpaceProcessingState, FormSpaceState, firestoreModelKey, formSpacesForOwnerQuery } from '@dereekb/firebase';
@@ -27,7 +27,6 @@ import { first, map, shareReplay } from 'rxjs';
     DbxButtonModule,
     DbxContentBoxDirective,
     DbxErrorComponent,
-    DbxLabelBlockComponent,
     DbxSectionComponent,
     DbxSectionLayoutModule,
     DbxActionFormDirective,
@@ -80,6 +79,19 @@ export class DemoFormSpaceViewComponent {
     shareReplay(1)
   );
 
+  /**
+   * Whether the JSON step is done.
+   *
+   * The PAGE's rule, not the model's: `d` is opaque to the framework, so no slot config and no submit
+   * blocker can speak for it, and the section takes the verdict as a plain `[complete]`. It is deliberately
+   * read off the SAVED data rather than the form's current value — a title typed but not saved is not on the
+   * space yet.
+   *
+   * Note this is not part of the submit gate: the server's rule is about slots, and the submit button
+   * mirrors the server rather than adding a requirement of its own.
+   */
+  readonly isTestInformationCompleteSignal = toSignal(this.formSpaceDocumentStore.formSpaceDataOfType$<DemoTestFormSpaceData>().pipe(map((data) => (data?.title ?? '').trim().length > 0 && data?.agreed === true)), { initialValue: false });
+
   constructor() {
     // an unscoped list fails the rules, so the constraint is not an optimization
     cleanSubscription(this.formSpaceCollectionStore.setConstraints(this.ownerKey$.pipe(map((ownerKey) => formSpacesForOwnerQuery(ownerKey)))));
@@ -106,9 +118,5 @@ export class DemoFormSpaceViewComponent {
     // the whole object, not a patch: `update:_` REPLACES `d`, which is what makes clearing a field
     // expressible at all
     context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.updateFormSpace({ data }));
-  };
-
-  readonly handleSubmitFormSpace: WorkUsingContext = (_, context) => {
-    context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.submitFormSpace({ runImmediately: true }));
   };
 }

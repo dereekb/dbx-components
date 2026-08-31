@@ -17,6 +17,7 @@ import {
   provideDbxFirebase,
   provideDbxFirebaseAuthImpersonation,
   provideDbxFirebaseExternalConnections,
+  provideDbxFirebaseFormSpaceTypeConfigService,
   provideDbxFirebaseLogin
 } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
@@ -41,6 +42,7 @@ import {
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   ProfileFunctions
 } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -389,6 +391,9 @@ export const APP_CONFIG: ApplicationConfig = {
     }),
     // Enables client-side impersonation ("view as another user"), consumed by dbxAuthImpersonationQuerySync (?imp=<uid>).
     provideDbxFirebaseAuthImpersonation(),
+    // The SAME registry demo-api's submit gate reads, so a step the UI checks off is a step the server
+    // would not object to. Passing the resolved service rather than the configs array keeps it one registry.
+    provideDbxFirebaseFormSpaceTypeConfigService({ service: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE }),
     // A sibling of provideDbxFirebase() because it needs an app-supplied provider catalog and depends
     // on provideDbxFirestoreCollection() having run.
     provideDbxFirebaseExternalConnections({

@@ -1,58 +1,46 @@
 @if (!hasFormSpaceSignal()) {
-  <dbx-content-box [wide]="true">
-    <dbx-section header="Start a Form Space" hint="Creates a draft you can come back to. Only one draft at a time." dbxAction dbxActionValue [dbxActionHandler]="handleCreateFormSpace">
-      <dbx-button dbxActionButton text="Start Test Form Space"></dbx-button>
-      <dbx-error dbxActionError></dbx-error>
-    </dbx-section>
-  </dbx-content-box>
+  <dbx-section header="Start a Form Space" hint="Creates a draft you can come back to. Only one draft at a time." dbxAction dbxActionValue [dbxActionHandler]="handleCreateFormSpace">
+    <dbx-button dbxActionButton text="Start Test Form Space"></dbx-button>
+    <dbx-error dbxActionError></dbx-error>
+  </dbx-section>
 } @else {
   @if (formSpaceSignal(); as formSpace) {
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Test Information" hint="Saved onto the form space as its own JSON." dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateFormSpace">
+    <!-- The JSON step has no slot behind it: the space stores `d` as opaque data, so nothing server-side
+         decides when it is "done" and the page supplies the verdict itself. -->
+    <dbx-firebase-formspace-section [step]="1" header="Test Information" hint="Saved onto the form space as its own JSON." [complete]="isTestInformationCompleteSignal()">
+      <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateFormSpace">
         <demo-test-formspace-form dbxActionForm [dbxFormSource]="formData$"></demo-test-formspace-form>
         <dbx-button dbxActionButton text="Save"></dbx-button>
         <dbx-error dbxActionError></dbx-error>
         <div *dbxActionHasSuccess="3000" class="dbx-success">Saved</div>
-      </dbx-section>
-    </dbx-content-box>
-
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Cover File" hint="One file. Uploading again replaces what is there.">
-        <dbx-firebase-formspace-slot-upload [slot]="coverSlot" label="Cover File" emptyText="A cover file is required before this form space can be submitted." uploadText="Upload Cover" removeText="Remove Cover" fileTypesAccepted="application/pdf,image/png,image/jpeg"></dbx-firebase-formspace-slot-upload>
-      </dbx-section>
-    </dbx-content-box>
-
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Folder" hint="Up to {{ folderMaxFiles }} files. Uploads accumulate rather than replacing each other.">
-        <dbx-firebase-formspace-slot-upload [slot]="folderSlot" label="Folder" [maxFiles]="folderMaxFiles" uploadText="Add Files" fileTypesAccepted="application/pdf,image/png,image/jpeg,text/plain"></dbx-firebase-formspace-slot-upload>
-      </dbx-section>
-    </dbx-content-box>
-
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Submit" hint="Locks the form space and hands it to its submission handler.">
-        @if (isEditableSignal()) {
-          <div dbxAction dbxActionValue [dbxActionHandler]="handleSubmitFormSpace">
-            <dbx-button dbxActionButton text="Submit Form Space"></dbx-button>
-            <dbx-error dbxActionError></dbx-error>
-          </div>
-        } @else {
-          <dbx-label-block header="Submitted">
-            <div class="dbx-hint">
-              @switch (formSpace.ps) {
-                @case (formSpaceProcessingState.SUCCESS) {
-                  Processed{{ formSpace.cpat ? ' ' + (formSpace.cpat | timeDistance) : '' }}.
-                }
-                @case (formSpaceProcessingState.FAILED) {
-                  Processing failed.
-                }
-                @default {
-                  Queued for processing.
-                }
-              }
-            </div>
-          </dbx-label-block>
-        }
-      </dbx-section>
-    </dbx-content-box>
+      </div>
+    </dbx-firebase-formspace-section>
+    <!-- These two DO have slots, so their checkmarks come from the same rule the server's submit
+         transaction rejects on, and the slot uploads drop their own labels in favor of the step headers. -->
+    <dbx-firebase-formspace-section [step]="2" [slot]="coverSlot" header="Cover File" hint="One file. Uploading again replaces what is there.">
+      <dbx-firebase-formspace-slot-upload [slot]="coverSlot" [showLabel]="false" emptyText="A cover file is required before this form space can be submitted." uploadText="Upload Cover" replaceText="Replace Cover" removeText="Remove Cover" fileTypesAccepted="application/pdf,image/png,image/jpeg"></dbx-firebase-formspace-slot-upload>
+    </dbx-firebase-formspace-section>
+    <dbx-firebase-formspace-section [step]="3" [slot]="folderSlot" header="Folder" hint="Uploads accumulate rather than replacing each other.">
+      <dbx-firebase-formspace-slot-upload [slot]="folderSlot" [showLabel]="false" [maxFiles]="folderMaxFiles" uploadText="Add Files" fileTypesAccepted="application/pdf,image/png,image/jpeg,text/plain"></dbx-firebase-formspace-slot-upload>
+    </dbx-firebase-formspace-section>
+    <dbx-firebase-formspace-section [step]="4" header="Submit" hint="Locks the form space and hands it to its submission handler." [complete]="!isEditableSignal()">
+      @if (isEditableSignal()) {
+        <dbx-firebase-formspace-submit-button text="Submit Form Space"></dbx-firebase-formspace-submit-button>
+      } @else {
+        <div class="dbx-hint">
+          @switch (formSpace.ps) {
+            @case (formSpaceProcessingState.SUCCESS) {
+              Processed{{ formSpace.cpat ? ' ' + (formSpace.cpat | timeDistance) : '' }}.
+            }
+            @case (formSpaceProcessingState.FAILED) {
+              Processing failed.
+            }
+            @default {
+              Queued for processing.
+            }
+          }
+        </div>
+      }
+    </dbx-firebase-formspace-section>
   }
 }

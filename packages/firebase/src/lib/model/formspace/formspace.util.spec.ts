@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MS_IN_DAY } from '@dereekb/util';
 import { type FormSpace, type FormSpaceFile, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState } from './formspace';
 import { type FormSpaceTypeConfig } from './formspace.type';
-import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceFilesInSlot, formSpaceSlotMaxFiles, formSpaceSlotMinFiles, formSpaceStorageFileGroupId, formSpaceSubmitBlockers, formSpaceTemplate, isFormSpaceEditable, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, submitFormSpaceTemplate } from './formspace.util';
+import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceFilesInSlot, formSpaceSlotMaxFiles, formSpaceSlotMinFiles, formSpaceSlotStatus, formSpaceStorageFileGroupId, formSpaceSubmitBlockers, formSpaceTemplate, isFormSpaceEditable, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, submitFormSpaceTemplate } from './formspace.util';
 
 const now = new Date('2026-01-02T03:04:05.000Z');
 
@@ -287,5 +287,83 @@ describe('formSpaceSubmitBlockers()', () => {
     const formSpace = draft({ t: 'demo_folder', f: [invalidResume, ...twoValid] });
 
     expect(formSpaceSubmitBlockers(formSpace, folderConfig)).toEqual([]);
+  });
+});
+
+describe('formSpaceSlotStatus()', () => {
+  const resume = file({ sl: 'resume', sf: 'r', n: 'r.pdf', v: FormSpaceFileValidationState.NONE });
+
+  it('should report a required slot with no file as neither satisfied nor complete', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ t: 'demo_folder' }), config: folderConfig, slot: 'resume' });
+
+    expect(status.required).toBe(true);
+    expect(status.minFiles).toBe(1);
+    expect(status.files).toHaveLength(0);
+    expect(status.blockers.map((x) => x.reason)).toEqual(['missing_files']);
+    expect(status.satisfied).toBe(false);
+    expect(status.complete).toBe(false);
+  });
+
+  it('should report a filled required slot as complete', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ t: 'demo_folder', f: [resume] }), config: folderConfig, slot: 'resume' });
+
+    expect(status.satisfied).toBe(true);
+    expect(status.complete).toBe(true);
+  });
+
+  // the distinction the checkmark hangs on: an untouched optional slot is holding up nothing, but the user
+  // has not dealt with it either, so it must not be marked done
+  it('should report an empty optional slot as satisfied but not complete', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ f: [] }), config, slot: 'attachment' });
+
+    expect(status.required).toBe(false);
+    expect(status.blockers).toEqual([]);
+    expect(status.satisfied).toBe(true);
+    expect(status.complete).toBe(false);
+  });
+
+  it('should report a filled optional slot as complete', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ f: [file({ sl: 'attachment', sf: 'a', n: 'a.png' })] }), config, slot: 'attachment' });
+
+    expect(status.satisfied).toBe(true);
+    expect(status.complete).toBe(true);
+  });
+
+  it('should report a folder slot below its minFiles as incomplete despite holding a file', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ t: 'demo_folder', f: [resume, file({ sf: 'a', n: 'a.pdf' })] }), config: folderConfig, slot: 'documents' });
+
+    expect(status.minFiles).toBe(2);
+    expect(status.maxFiles).toBe(3);
+    expect(status.files).toHaveLength(1);
+    expect(status.blockers.map((x) => x.reason)).toEqual(['missing_files']);
+    expect(status.complete).toBe(false);
+  });
+
+  it('should report a rejected file as incomplete even though the slot holds enough', () => {
+    const invalid = file({ sf: 'b', n: 'b.pdf', v: FormSpaceFileValidationState.INVALID, r: 'not a pdf' });
+    const status = formSpaceSlotStatus({ formSpace: draft({ t: 'demo_folder', f: [resume, file({ sf: 'a', n: 'a.pdf' }), invalid] }), config: folderConfig, slot: 'documents' });
+
+    expect(status.files).toHaveLength(2);
+    expect(status.blockers.map((x) => x.reason)).toEqual(['invalid_file']);
+    expect(status.satisfied).toBe(false);
+    expect(status.complete).toBe(false);
+  });
+
+  // one slot's problem is not another's — the section rendering `resume` must not inherit `documents`' blocker
+  it('should report only the blockers of the slot asked about', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ t: 'demo_folder', f: [resume] }), config: folderConfig, slot: 'resume' });
+
+    expect(status.blockers).toEqual([]);
+    expect(status.complete).toBe(true);
+  });
+
+  it('should fall back to the slot defaults for an undeclared slot', () => {
+    const status = formSpaceSlotStatus({ formSpace: draft({ f: [] }), config, slot: 'unknown' });
+
+    expect(status.minFiles).toBe(0);
+    expect(status.maxFiles).toBe(1);
+    expect(status.required).toBe(false);
+    expect(status.satisfied).toBe(true);
+    expect(status.complete).toBe(false);
   });
 });
