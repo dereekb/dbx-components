@@ -1,15 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { TimeDistancePipe } from '@dereekb/dbx-core';
-import { DbxActionLoadingContextDirective, DbxActionModule, DbxActionSnackbarErrorDirective, DbxButtonComponent, type DbxButtonStyle, DbxFileUploadActionSyncDirective, DbxFileUploadComponent, DbxLabelBlockComponent, DbxLoadingComponent, type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
-import { DEFAULT_FORM_SPACE_SLOT_MAX_FILES, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFileValidationState, firestoreModelKey, type StorageFileKey, storageFileIdentity } from '@dereekb/firebase';
+import { DbxActionLoadingContextDirective, DbxActionModule, DbxActionSnackbarErrorDirective, type DbxButtonStyle, type DbxFileListItemDetailsDateStyle, DbxFileUploadActionSyncDirective, DbxFileUploadComponent, DbxLabelBlockComponent, DbxLoadingComponent, type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
+import { DEFAULT_FORM_SPACE_FILE_ACCESS, DEFAULT_FORM_SPACE_SLOT_MAX_FILES, type FormSpaceFile, type FormSpaceFileAccess, type FormSpaceFileSlot, FormSpaceFileValidationState, firestoreModelKey, isFormSpaceFileAccessibleWithAccess, type StorageFileKey, storageFileIdentity } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { type Observable, of, shareReplay, switchMap } from 'rxjs';
-import { DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig } from '../../storagefile/container/storagefile.download.button.component';
+import { type DbxFirebaseStorageFileDownloadButtonConfig } from '../../storagefile/container/storagefile.download.button.component';
+import { DbxFirebaseStorageFileListComponent, type DbxFirebaseStorageFileListComponentConfig, type DbxFirebaseStorageFileListEntry } from '../../storagefile/container/storagefile.list.component';
 import { DbxFirebaseStorageFileUploadActionHandlerDirective } from '../../storagefile/container/storagefile.upload.action.handler.directive';
 import { DbxFirebaseStorageFileUploadStoreDirective } from '../../storagefile/container/storagefile.upload.store.directive';
 import { DbxFirebaseStorageFileUploadSyncDirective } from '../../storagefile/container/storagefile.upload.sync.directive';
+import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { FormSpaceDocumentStore } from '../store/formspace.document.store';
 import { DbxFirebaseFormSpaceSlotUploadDirective } from './formspace.slot.upload.directive';
 import { DbxFirebaseFormSpaceUploadInitializeDocumentsDirective } from './formspace.upload.initialize.documents.directive';
@@ -23,6 +24,14 @@ import { DbxFirebaseFormSpaceUploadInitializeDocumentsDirective } from './formsp
 export interface DbxFirebaseFormSpaceSlotUploadFileEntry {
   readonly file: FormSpaceFile;
   readonly storageFileKey: StorageFileKey;
+  /**
+   * Whether the signed-in user may read and remove this file, per the slot's {@link FormSpaceFileAccess}.
+   *
+   * A COURTESY, not a control — the server decides both verbs again. Rendering a download button that
+   * returns FORBIDDEN and a remove button that raises `FORM_SPACE_FILE_ACCESS_DENIED` is the thing this
+   * spares the user; it is not what stops them.
+   */
+  readonly accessible: boolean;
 }
 
 /**
@@ -76,6 +85,15 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
    */
   readonly disabled?: Maybe<boolean>;
   /**
+   * Who may read and remove an individual file here, mirroring the slot's server-side
+   * {@link FormSpaceFileAccess}. Defaults to {@link DEFAULT_FORM_SPACE_FILE_ACCESS}.
+   *
+   * Under `'uploader'` a file another member uploaded still LISTS — the space's `f` is the shared record of
+   * what the slot holds — but its download and remove controls are withheld, because the server would
+   * refuse both.
+   */
+  readonly fileAccess?: Maybe<FormSpaceFileAccess>;
+  /**
    * Whether each file gets a download button. Defaults to true.
    */
   readonly showDownloadButton?: Maybe<boolean>;
@@ -86,6 +104,10 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
    * another member's file back out of it.
    */
   readonly showRemoveButton?: Maybe<boolean>;
+  /**
+   * What is shown in place of a file's controls when {@link fileAccess} withholds them.
+   */
+  readonly inaccessibleText?: Maybe<string>;
   /**
    * Whether an accepted upload is processed immediately rather than waiting for the queue. Defaults to true.
    */
@@ -133,36 +155,7 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
             <dbx-file-upload dbxFileUploadActionSync dbxFirebaseStorageFileUploadSync mode="button" [buttonStyle]="uploadButtonStyleSignal()" [icon]="uploadIconSignal()" [text]="uploadTextSignal()" [disabled]="uploadDisabledSignal()"></dbx-file-upload>
           </div>
         </div>
-        @if (entriesSignal().length) {
-          <div class="dbx-button-column dbx-w100">
-            @for (entry of entriesSignal(); track entry.storageFileKey) {
-              <div class="dbx-flex-bar dbx-w100">
-                <dbx-label-block class="dbx-flex-fill-0" [header]="entry.file.n">
-                  @switch (entry.file.v) {
-                    @case (formSpaceFileValidationState.PENDING) {
-                      <div class="dbx-hint">Checking...</div>
-                    }
-                    @case (formSpaceFileValidationState.INVALID) {
-                      <div class="dbx-warn">{{ entry.file.r ?? 'This file was rejected.' }}</div>
-                    }
-                    @default {
-                      <div class="dbx-hint">Uploaded {{ entry.file.at | timeDistance }}.</div>
-                    }
-                  }
-                </dbx-label-block>
-                <span class="dbx-spacer"></span>
-                @if (showDownloadButtonSignal()) {
-                  <dbx-firebase-storagefile-download-button [config]="downloadButtonConfigSignal()" [storageFileKey]="entry.storageFileKey"></dbx-firebase-storagefile-download-button>
-                }
-                @if (showRemoveButtonSignal()) {
-                  <div dbxAction dbxActionSnackbarError [dbxActionValue]="entry.file" [dbxActionHandler]="handleRemoveFile">
-                    <dbx-button dbxActionButton [buttonStyle]="removeButtonStyleSignal()" [text]="removeTextSignal()" [disabled]="removeDisabledSignal()"></dbx-button>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        }
+        <dbx-firebase-storagefile-list [entries]="fileListEntriesSignal()" [config]="fileListConfigSignal()" [removeHandler]="handleRemoveFile"></dbx-firebase-storagefile-list>
       </div>
     }
   `,
@@ -171,26 +164,23 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
     DbxActionModule,
     DbxActionLoadingContextDirective,
     DbxActionSnackbarErrorDirective,
-    DbxButtonComponent,
     DbxFileUploadActionSyncDirective,
     DbxFileUploadComponent,
     DbxLabelBlockComponent,
     DbxLoadingComponent,
-    DbxFirebaseStorageFileDownloadButtonComponent,
+    DbxFirebaseStorageFileListComponent,
     DbxFirebaseStorageFileUploadActionHandlerDirective,
     DbxFirebaseStorageFileUploadStoreDirective,
     DbxFirebaseStorageFileUploadSyncDirective,
     DbxFirebaseFormSpaceSlotUploadDirective,
-    DbxFirebaseFormSpaceUploadInitializeDocumentsDirective,
-    TimeDistancePipe
+    DbxFirebaseFormSpaceUploadInitializeDocumentsDirective
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceSlotUploadComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);
-
-  readonly formSpaceFileValidationState = FormSpaceFileValidationState;
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
   readonly config = input<Maybe<DbxFirebaseFormSpaceSlotUploadComponentConfig>>();
 
@@ -203,6 +193,8 @@ export class DbxFirebaseFormSpaceSlotUploadComponent {
   readonly uploadText = input<Maybe<string>>();
   readonly uploadIcon = input<Maybe<string>>();
   readonly removeText = input<Maybe<string>>();
+  readonly fileAccess = input<Maybe<FormSpaceFileAccess>>();
+  readonly inaccessibleText = input<Maybe<string>>();
   readonly disabled = input<Maybe<boolean>>();
   readonly showDownloadButton = input<Maybe<boolean>>();
   readonly showRemoveButton = input<Maybe<boolean>>();
@@ -240,6 +232,14 @@ export class DbxFirebaseFormSpaceSlotUploadComponent {
     const config = this.config();
     return this.removeText() ?? config?.removeText ?? 'Remove';
   });
+  readonly fileAccessSignal = computed<FormSpaceFileAccess>(() => {
+    const config = this.config();
+    return this.fileAccess() ?? config?.fileAccess ?? DEFAULT_FORM_SPACE_FILE_ACCESS;
+  });
+  readonly inaccessibleTextSignal = computed(() => {
+    const config = this.config();
+    return this.inaccessibleText() ?? config?.inaccessibleText ?? 'Uploaded by someone else.';
+  });
   readonly showDownloadButtonSignal = computed(() => {
     const config = this.config();
     return this.showDownloadButton() ?? config?.showDownloadButton ?? true;
@@ -274,8 +274,80 @@ export class DbxFirebaseFormSpaceSlotUploadComponent {
 
   readonly filesSignal = toSignal(this.files$, { initialValue: [] as FormSpaceFile[] });
   readonly isEditableSignal = toSignal(this.formSpaceDocumentStore.isEditable$, { initialValue: false });
+  readonly formSpaceSignal = toSignal(this.formSpaceDocumentStore.currentData$);
+  readonly currentUidSignal = toSignal(this.dbxFirebaseAuthService.currentUid$);
 
-  readonly entriesSignal = computed<DbxFirebaseFormSpaceSlotUploadFileEntry[]>(() => this.filesSignal().map((file) => ({ file, storageFileKey: firestoreModelKey(storageFileIdentity, file.sf) })));
+  /**
+   * The slot's files, each already carrying the two things a row needs beyond the entry itself.
+   *
+   * Both are derived HERE rather than by a template method so a row is not handed a freshly built key — and
+   * a freshly computed verdict — on every change detection pass.
+   */
+  readonly entriesSignal = computed<DbxFirebaseFormSpaceSlotUploadFileEntry[]>(() => {
+    const fileAccess = this.fileAccessSignal();
+    const formSpace = this.formSpaceSignal();
+    const uid = this.currentUidSignal();
+
+    return this.filesSignal().map((file) => ({
+      file,
+      storageFileKey: firestoreModelKey(storageFileIdentity, file.sf),
+      // the space is needed for the `ub ?? u` fallback an older entry relies on, so an unloaded space
+      // withholds the controls rather than guessing — the state lasts one emission
+      accessible: formSpace != null && isFormSpaceFileAccessibleWithAccess({ fileAccess, formSpace, file, uid })
+    }));
+  });
+
+  /**
+   * The slot's files as the StorageFile list presents them.
+   *
+   * The validation state becomes the row's details line here rather than in the list, so the list stays a
+   * plain StorageFile listing that knows nothing about FormSpaces.
+   */
+  readonly fileListEntriesSignal = computed<DbxFirebaseStorageFileListEntry<FormSpaceFile>[]>(() =>
+    this.entriesSignal().map(({ file, storageFileKey, accessible }) => {
+      let details: Maybe<string>;
+      let detailsDate: Maybe<Date>;
+      let detailsDateStyle: Maybe<DbxFileListItemDetailsDateStyle>;
+      let detailsClass: Maybe<string>;
+
+      switch (file.v) {
+        case FormSpaceFileValidationState.PENDING:
+          details = 'Checking...';
+          break;
+        case FormSpaceFileValidationState.INVALID:
+          details = file.r ?? 'This file was rejected.';
+          detailsClass = 'dbx-warn';
+          break;
+        default:
+          // NONE and VALID both read as uploaded: the file is in the slot either way.
+          details = 'Uploaded';
+          detailsDate = file.at;
+          detailsDateStyle = 'distance';
+          break;
+      }
+
+      return {
+        storageFileKey,
+        name: file.n,
+        details,
+        detailsDate,
+        detailsDateStyle,
+        detailsClass,
+        accessible,
+        value: file
+      };
+    })
+  );
+
+  readonly fileListConfigSignal = computed<DbxFirebaseStorageFileListComponentConfig<FormSpaceFile>>(() => ({
+    showDownloadButton: this.showDownloadButtonSignal(),
+    showRemoveButton: this.showRemoveButtonSignal(),
+    removeText: this.removeTextSignal(),
+    removeButtonStyle: this.removeButtonStyleSignal(),
+    removeDisabled: this.removeDisabledSignal(),
+    inaccessibleText: this.inaccessibleTextSignal(),
+    downloadButtonConfig: this.downloadButtonConfigSignal()
+  }));
 
   readonly labelSignal = computed(() => {
     const config = this.config();

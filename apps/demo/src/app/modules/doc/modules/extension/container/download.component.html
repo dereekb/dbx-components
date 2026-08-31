@@ -11,6 +11,25 @@
       <p>Example with no content set. It is not clickable.</p>
       <dbx-download-blob-button></dbx-download-blob-button>
     </doc-feature-example>
+    <doc-feature-example header="dbx-file-list" hint="Lists files with an optional details line and a download button.">
+      <h3>Example</h3>
+      <p>Entries can carry a static details line, a date rendered relative to now, or a warning line for a file that was rejected.</p>
+      <dbx-file-list [entries]="fileListEntries"></dbx-file-list>
+      <h3>Empty Example</h3>
+      <p>An empty list shows its emptyText, if one is configured.</p>
+      <dbx-file-list [entries]="emptyFileListEntries" emptyText="No files yet."></dbx-file-list>
+      <h3>Custom Controls Example</h3>
+      <p>
+        A listing whose rows need controls of their own can use
+        <code>dbx-file-list-item</code>
+        directly and project those controls into each row.
+      </p>
+      @for (entry of fileListEntries; track entry.key) {
+        <dbx-file-list-item [config]="entry">
+          <dbx-download-blob-button [config]="blobDownloadConfig"></dbx-download-blob-button>
+        </dbx-file-list-item>
+      }
+    </doc-feature-example>
     <doc-feature-example header="dbx-download-text-view" hint="View that provides buttons for copying or downloading content to a file.">
       <h3>CSV Example</h3>
       <dbx-download-text-view [content]="csvContent"></dbx-download-text-view>

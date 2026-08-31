@@ -5,6 +5,7 @@
 @use './zip/zip';
 @use './help/help';
 @use './pdf/pdf';
+@use './download/download';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
@@ -36,6 +37,7 @@
   }
 
   @include pdf.core();
+  @include download.core();
 }
 
 @mixin all-extension-typography($theme-config-or-typography-config) {
@@ -71,4 +73,5 @@
   }
 
   @include pdf.theme($theme-config);
+  @include download.theme($theme-config);
 }

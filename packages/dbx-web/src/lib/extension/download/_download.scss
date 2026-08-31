@@ -1,0 +1,14 @@
+@use '../../style/theming';
+
+// MARK: Mixin
+@mixin core() {
+  // The row borrows .dbx-list-item-padded/.dbx-list-two-line-item from _list.scss, so it only needs to be
+  // told to fill its container — otherwise a row placed in a flex column collapses to its content width.
+  .dbx-file-list,
+  .dbx-file-list-item {
+    width: 100%;
+  }
+}
+
+@mixin theme($theme-config) {
+}
