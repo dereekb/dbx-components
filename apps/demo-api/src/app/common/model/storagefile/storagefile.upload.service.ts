@@ -14,6 +14,7 @@ import { DEMO_FORM_SPACE_TYPE_CONFIGS, makeUserAvatarFileStoragePath, USER_AVATA
 import { ALL_USER_UPLOADS_FOLDER_PATH, appFormSpaceTypeConfigService, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, formSpaceTypeConfigRecord, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
+import { demoFormSpaceUploadAuthorizationDelegate } from '../formspace/formspace.upload.authorization';
 import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
 import { makeUserResumeFileUploadInitializer } from './handlers/upload.user.resume';
 
@@ -193,7 +194,17 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
     storageService,
     // ONE initializer covers every form type: the per-type rules come from the FormSpace registry keyed
     // off the loaded space, not from the initializer's own registration.
-    initializer: [...userFileInitializers, ...systemFileInitializers, ...formSpaceStorageFileUploadInitializers({ ...demoFirebaseServerActionsContext, appFormSpaceTypeConfigService: formSpaceTypeConfigService })],
+    initializer: [
+      ...userFileInitializers,
+      ...systemFileInitializers,
+      ...formSpaceStorageFileUploadInitializers({
+        ...demoFirebaseServerActionsContext,
+        appFormSpaceTypeConfigService: formSpaceTypeConfigService,
+        // the demo has one SHARED form type, so the initializer needs a second answer to "is this uploader
+        // allowed" beyond "is it the space's own user"
+        uploadAuthorizationDelegate: demoFormSpaceUploadAuthorizationDelegate(demoFirebaseServerActionsContext)
+      })
+    ],
     storageFileCollection
   };
 

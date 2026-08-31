@@ -3,6 +3,8 @@ import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-serv
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
 import { DEMO_EXAMPLE_FORM_SPACE_PROCESSOR } from '../formspace/handlers/handler.formspace.example';
+import { DEMO_GUESTBOOK_FORM_SPACE_PROCESSOR } from '../formspace/handlers/handler.formspace.guestbook';
+import { DEMO_TEST_FORM_SPACE_PROCESSOR } from '../formspace/handlers/handler.formspace.test';
 import { DEMO_FORM_SPACE_FILE_VALIDATORS } from '../formspace/handlers/validator.formspace.example';
 import { demoCalendarIcsFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.calendar';
 import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
@@ -141,7 +143,7 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
   // The FormSpace submission handler dispatches by FormSpaceType, so `validate` is the app's registered
   // type list — an unhandled type is caught here, at wiring time, rather than at the first submission.
   const formSpaceHandler = formSpaceSubmissionNotificationTaskHandler({
-    processors: [DEMO_EXAMPLE_FORM_SPACE_PROCESSOR],
+    processors: [DEMO_EXAMPLE_FORM_SPACE_PROCESSOR, DEMO_TEST_FORM_SPACE_PROCESSOR, DEMO_GUESTBOOK_FORM_SPACE_PROCESSOR],
     validate: DEMO_FORM_SPACE_TYPE_CONFIGS.map((x) => x.formSpaceType),
     formSpaceFirestoreCollections: demoFirebaseServerActionsContext
   });

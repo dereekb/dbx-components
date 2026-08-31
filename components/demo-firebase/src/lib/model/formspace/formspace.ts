@@ -1,4 +1,4 @@
-import { type FormSpaceData, type FormSpaceFileSlot, type FormSpaceType, type FormSpaceTypeConfig } from '@dereekb/firebase';
+import { type FirestoreModelKey, type FormSpaceData, type FormSpaceFileSlot, type FormSpaceId, formSpaceIdForModel, type FormSpaceType, type FormSpaceTypeConfig } from '@dereekb/firebase';
 import { MS_IN_DAY } from '@dereekb/util';
 
 /**
@@ -40,11 +40,94 @@ export interface DemoExampleFormSpaceData extends FormSpaceData {
   readonly message?: string;
 }
 
+// MARK: demo_test
+/**
+ * The {@link FormSpaceType} of the demo app's test form, the one `/demo/app/formspace` drives.
+ *
+ * Deliberately the SIMPLEST useful shape — one required single-file slot, one folder slot, and a JSON
+ * payload — so the page exercises every part of the lifecycle without also inheriting
+ * {@link DEMO_EXAMPLE_FORM_SPACE_TYPE}'s validation, which has its own coverage.
+ */
+export const DEMO_TEST_FORM_SPACE_TYPE: FormSpaceType = 'demo_test';
+
+/**
+ * The single-file slot of {@link DEMO_TEST_FORM_SPACE_TYPE}.
+ *
+ * A POSITION rather than a folder: uploading again supersedes what was there.
+ */
+export const DEMO_TEST_FORM_SPACE_COVER_SLOT: FormSpaceFileSlot = 'cover';
+
+/**
+ * The FOLDER slot of {@link DEMO_TEST_FORM_SPACE_TYPE}. Uploads accumulate rather than superseding.
+ */
+export const DEMO_TEST_FORM_SPACE_FOLDER_SLOT: FormSpaceFileSlot = 'folder';
+
+/**
+ * How many files {@link DEMO_TEST_FORM_SPACE_FOLDER_SLOT} holds.
+ */
+export const DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES = 4;
+
+/**
+ * The shape of the JSON a {@link DEMO_TEST_FORM_SPACE_TYPE} space parks in its `d` field — the "test
+ * information" the page's dbx-form collects.
+ */
+export interface DemoTestFormSpaceData extends FormSpaceData {
+  readonly title?: string;
+  readonly notes?: string;
+  readonly agreed?: boolean;
+}
+
+// MARK: demo_guestbook
+/**
+ * The {@link FormSpaceType} of a Guestbook's SHARED form space.
+ *
+ * The demo's multi-user case. Unlike every other type here, one space serves a whole guestbook: its `o` is
+ * the guestbook's key rather than a profile's, and anyone who has left an entry on that guestbook may read
+ * it and upload into it. Its id is derived from the guestbook by {@link demoGuestbookFormSpaceId}, because
+ * "one space per guestbook" is its identity and a generated id would let two commenters each mint one.
+ */
+export const DEMO_GUESTBOOK_FORM_SPACE_TYPE: FormSpaceType = 'demo_guestbook';
+
+/**
+ * The shared FOLDER slot of {@link DEMO_GUESTBOOK_FORM_SPACE_TYPE}.
+ */
+export const DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_SLOT: FormSpaceFileSlot = 'photos';
+
+/**
+ * How many files {@link DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_SLOT} holds, across every commenter.
+ */
+export const DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_MAX_FILES = 20;
+
+/**
+ * The shape of the JSON a {@link DEMO_GUESTBOOK_FORM_SPACE_TYPE} space parks in its `d` field.
+ */
+export interface DemoGuestbookFormSpaceData extends FormSpaceData {
+  readonly caption?: string;
+}
+
+/**
+ * The id of a Guestbook's single shared {@link DEMO_GUESTBOOK_FORM_SPACE_TYPE} space.
+ *
+ * Derived rather than issued, so the space resolves with no query and a second concurrent create loses on
+ * the create transaction instead of minting a duplicate. A client can also subscribe to it before it has
+ * ever been created — "does not exist" IS the "nobody has started the album yet" state.
+ *
+ * @param guestbookKey - The key of the guestbook the space belongs to.
+ * @returns The FormSpaceId, e.g. `gb_abc123`.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function demoGuestbookFormSpaceId(guestbookKey: FirestoreModelKey): FormSpaceId {
+  return formSpaceIdForModel(guestbookKey);
+}
+
 /**
  * Every {@link FormSpaceTypeConfig} the demo app registers.
  *
- * Kept to one type on purpose: the point of the registry is that a second type is a data entry, not a code
- * change, and the emulator scenario spec exercises the whole lifecycle through this single one.
+ * Three shapes on purpose, because they are the three the framework has to get right: a single-user form
+ * with validated uploads ({@link DEMO_EXAMPLE_FORM_SPACE_TYPE}), a single-user form without them
+ * ({@link DEMO_TEST_FORM_SPACE_TYPE}), and a SHARED one ({@link DEMO_GUESTBOOK_FORM_SPACE_TYPE}). Adding a
+ * fourth is still a data entry rather than a code change.
  */
 export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
   {
@@ -79,5 +162,54 @@ export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
     ],
     maxUploads: 16,
     expiresIn: 7 * MS_IN_DAY
+  },
+  {
+    formSpaceType: DEMO_TEST_FORM_SPACE_TYPE,
+    name: 'Demo Test Form',
+    description: 'A test form space with one required cover file and a folder holding up to four files.',
+    slots: [
+      {
+        slot: DEMO_TEST_FORM_SPACE_COVER_SLOT,
+        name: 'Cover File',
+        required: true,
+        allowedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg'],
+        maxFileSizeBytes: 2 * 1024 * 1024
+      },
+      {
+        slot: DEMO_TEST_FORM_SPACE_FOLDER_SLOT,
+        name: 'Folder',
+        required: false,
+        maxFiles: DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES,
+        // no validationRequired: the demo's coverage of the validation pipeline lives on
+        // DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, and a second validated slot would only duplicate it
+        allowedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'],
+        maxFileSizeBytes: 2 * 1024 * 1024
+      }
+    ],
+    // one superseding cover plus four folder files, with slack for a replaced file
+    maxUploads: 12,
+    expiresIn: 7 * MS_IN_DAY
+  },
+  {
+    formSpaceType: DEMO_GUESTBOOK_FORM_SPACE_TYPE,
+    name: 'Guestbook Album',
+    description: 'A shared form space every guestbook signer can upload into.',
+    slots: [
+      {
+        slot: DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_SLOT,
+        name: 'Photos',
+        required: false,
+        maxFiles: DEMO_GUESTBOOK_FORM_SPACE_PHOTOS_MAX_FILES,
+        // no validationRequired: a rejection is written for the file's OWNER to act on, and a shared space
+        // has no single owner to act on it
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+        maxFileSizeBytes: 4 * 1024 * 1024
+      }
+    ],
+    // bounds the total work every signer can cause between them, not any one signer's share
+    maxUploads: 40
+    // deliberately no expiresIn: the album is a fixture of the guestbook, not one user's in-progress
+    // draft, and retiring it would silently break every signer's upload path. Omitting it means no `eat`
+    // is ever written, which is what keeps it out of the expiration sweep's inequality query entirely.
   }
 ];

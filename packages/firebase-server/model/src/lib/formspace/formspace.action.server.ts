@@ -11,6 +11,7 @@ import {
   type FormSpaceDocument,
   type FormSpaceFirestoreCollections,
   formSpaceFilesInSlot,
+  type FormSpaceId,
   FormSpaceProcessingState,
   formSpaceSubmissionNotificationTaskTemplate,
   formSpaceSubmitBlockers,
@@ -44,7 +45,7 @@ import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification/notification.expedite.service';
 import { createOrRunUniqueNotificationDocument } from '../notification/notification.create.run';
 import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from '../storagefile/storagefile.util';
-import { formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
+import { formSpaceAlreadyExistsError, formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeMismatchError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
 
 /**
  * NestJS injection token for the {@link BaseFormSpaceServerActionsContext}.
@@ -84,6 +85,21 @@ export interface FormSpaceServerActionsContext extends BaseFormSpaceServerAction
 export interface CreateFormSpaceActionInput {
   readonly uid: string;
   readonly ownerKey?: Maybe<string>;
+  /**
+   * Create the space at THIS id rather than at a generated one.
+   *
+   * For the SHARED shape — one space per target model, reached by everyone who reaches the target — a
+   * generated id lets two concurrent callers each mint one, and neither sees the other's files. Deriving
+   * the id with {@link formSpaceIdForModel} makes the create idempotent and lets a client read the space
+   * with a plain `get` before it has ever called create.
+   */
+  readonly formSpaceId?: Maybe<FormSpaceId>;
+  /**
+   * Return the existing space when {@link formSpaceId} is already taken, instead of failing.
+   *
+   * Only meaningful alongside {@link formSpaceId} — a generated id can never collide.
+   */
+  readonly getOrCreate?: Maybe<boolean>;
 }
 
 /**
@@ -131,7 +147,7 @@ export function formSpaceServerActions(context: FormSpaceServerActionsContext): 
  * @returns An async transform-and-validate function that creates a FormSpace.
  */
 export function createFormSpaceFactory(context: FormSpaceServerActionsContext) {
-  const { formSpaceCollection, appFormSpaceTypeConfigService, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, formSpaceCollection, appFormSpaceTypeConfigService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(createFormSpaceParamsType, async (params) => {
     const { formSpaceType, displayName, targetModelKey, data } = params;
@@ -141,7 +157,7 @@ export function createFormSpaceFactory(context: FormSpaceServerActionsContext) {
       throw formSpaceTypeNotRegisteredError(formSpaceType);
     }
 
-    return async ({ uid, ownerKey }: CreateFormSpaceActionInput) => {
+    return async ({ uid, ownerKey, formSpaceId, getOrCreate }: CreateFormSpaceActionInput) => {
       const now = new Date();
 
       const template = formSpaceTemplate({
@@ -155,8 +171,32 @@ export function createFormSpaceFactory(context: FormSpaceServerActionsContext) {
         now
       });
 
-      const formSpaceDocument = formSpaceCollection.documentAccessor().newDocument();
-      await formSpaceDocument.create(template);
+      let formSpaceDocument: FormSpaceDocument;
+
+      if (formSpaceId == null) {
+        formSpaceDocument = formSpaceCollection.documentAccessor().newDocument();
+        await formSpaceDocument.create(template);
+      } else {
+        // TRANSACTIONAL. Read-then-create on a DERIVED id is exactly the race two callers bootstrapping the
+        // same shared space would lose, and losing it means two "shared" spaces for one target — each of
+        // which looks correct to whoever made it.
+        await firestoreContext.runTransaction(async (transaction) => {
+          const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentForId(formSpaceId);
+          const existing = await documentInTransaction.snapshotData();
+
+          if (existing == null) {
+            await documentInTransaction.create(template);
+          } else if (getOrCreate !== true) {
+            throw formSpaceAlreadyExistsError(formSpaceId);
+          } else if (existing.t !== formSpaceType) {
+            // two types keyed to the same target derive the same id, and handing back the other one's
+            // space would give the caller slots, an expiration and a handler that are not its type's
+            throw formSpaceTypeMismatchError(formSpaceId, formSpaceType, existing.t);
+          }
+        });
+
+        formSpaceDocument = formSpaceCollection.documentAccessor().loadDocumentForId(formSpaceId);
+      }
 
       return formSpaceDocument;
     };

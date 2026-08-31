@@ -25,6 +25,20 @@ service cloud.firestore {
       return resource != null && resource.data != null && resource.data.o != null && request.auth != null && (resource.data.o == 'pr/' + request.auth.uid);
     }
 
+    function authUserHasGuestbookEntryForOwnershipKey() {
+      // A SHARED FormSpace: `o` names a Guestbook rather than a Profile, and everyone who signed that
+      // guestbook can read it. A GuestbookEntry's document id IS its author's uid, so "has this caller
+      // signed?" is one exists() on a path built from the resource's own ownership key — no query, and no
+      // membership array to keep in step with the entries themselves.
+      //
+      // The shape of `o` is asserted BEFORE it is interpolated into a path. `o` is server-written today,
+      // but a predicate that builds a document path out of a stored value should not rest on that staying
+      // true; the anchored single-segment match is what keeps `gb/x/gbe/<uid>` from resolving somewhere else.
+      return resource != null && resource.data != null && resource.data.o != null && request.auth != null
+        && resource.data.o.matches('^gb/[^/]+$')
+        && exists(path('/databases/' + database + '/documents/' + resource.data.o + '/gbe/' + request.auth.uid));
+    }
+
     function oidcEntryIsOwnedByAuthUserUid() {
       // OidcEntry stores the Firebase UID in `uid` (extracted from the oidc-provider payload).
       return resource != null && resource.data != null && resource.data.uid != null && request.auth != null && (resource.data.uid == request.auth.uid);
@@ -149,7 +163,12 @@ service cloud.firestore {
       // by the SAME ownership predicate, so an unscoped list still fails.
       // Writes stay server-only via the default deny: every state transition carries invariants (the
       // submit lock, the "eat" clear, the monotonic upload counter) that a client write would bypass.
-      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
+      //
+      // A guestbook's SHARED space is reachable by everyone who signed that guestbook. Only `get` is
+      // widened: a list rule is evaluated per candidate document, so the exists() would be one billed read
+      // per result — and a shared space never needs listing, because its id is derived from the guestbook
+      // and the client always knows it.
+      allow get: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey() || authUserHasGuestbookEntryForOwnershipKey();
       allow list: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 

@@ -58,3 +58,18 @@ export const FORM_SPACE_UPLOAD_USER_MISMATCH_ERROR_CODE = 'FORM_SPACE_UPLOAD_USE
  * Thrown when a FormSpace upload path names a FormSpace that does not exist.
  */
 export const FORM_SPACE_NOT_FOUND_ERROR_CODE = 'FORM_SPACE_NOT_FOUND';
+
+/**
+ * Thrown when a FormSpace is created at an explicit id that is already taken, without `getOrCreate`.
+ *
+ * Only reachable for a space keyed by {@link formSpaceIdForModel}; a generated id can never collide.
+ */
+export const FORM_SPACE_ALREADY_EXISTS_ERROR_CODE = 'FORM_SPACE_ALREADY_EXISTS';
+
+/**
+ * Thrown when a get-or-create resolves to an existing FormSpace of a DIFFERENT {@link FormSpaceType}.
+ *
+ * Two types keyed to the same target model derive the same id, and returning the other type's space would
+ * hand the caller a document whose slots, expiration and submission handler are all someone else's.
+ */
+export const FORM_SPACE_TYPE_MISMATCH_ERROR_CODE = 'FORM_SPACE_TYPE_MISMATCH';

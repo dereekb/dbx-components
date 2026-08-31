@@ -823,6 +823,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: 'Ownership key, if applicable. Drives read access in the security rules.' },
       { name: 'm', longName: 'targetModelKey', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Key of the model this space was opened against, when it was opened against one.' },
       { name: 'uc', longName: 'uploadCount', tsType: 'number', optional: false, description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.' },
+      { name: 'fi', longName: 'nextFileIndex', tsType: 'number', optional: false, description: "The next index a file's permanent storage path is keyed by." },
       {
         name: 'f',
         longName: 'files',

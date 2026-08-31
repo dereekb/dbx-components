@@ -1,0 +1,40 @@
+<div dbxFirebaseFormSpaceDocument>
+  <dbx-section header="Guestbook Album" hint="Everyone who has signed this guest book can add up to {{ photosMaxFiles }} photos here.">
+    @if (!hasAlbumSignal()) {
+      <div dbxAction dbxActionValue [dbxActionHandler]="handleStartAlbum">
+        <p class="dbx-note">Nobody has started this guest book's album yet.</p>
+        <dbx-button dbxActionButton [raised]="true" color="primary" text="Start the Album"></dbx-button>
+        <dbx-error dbxActionError></dbx-error>
+      </div>
+    } @else {
+      <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="true" fileTypesAccepted="image/jpeg,image/png,application/pdf">
+        <div [dbxFirebaseFormSpaceSlotUpload]="photosSlot" #photosSlotUpload="dbxFirebaseFormSpaceSlotUpload">
+          <div dbxAction dbxActionSnackbarError dbxFirebaseFormSpaceUploadInitializeDocuments [initializeWithExpediteProcessing]="true">
+            <dbx-loading dbxActionLoadingContext>
+              <dbx-label-block header="Photos ({{ photosSignal().length }} / {{ photosMaxFiles }})">
+                @if (!photosSignal().length) {
+                  <div class="dbx-hint">No photos yet. Add the first one.</div>
+                }
+              </dbx-label-block>
+            </dbx-loading>
+          </div>
+          <span class="dbx-spacer"></span>
+          <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="photosSlotUpload.uploadHandlerSignal()" [triggerOnFiles]="true">
+            <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Add Photos" [disabled]="albumIsFullSignal()" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+          </div>
+        </div>
+      </div>
+      <div class="dbx-button-column">
+        @for (photo of photosSignal(); track photo.sf) {
+          <div class="dbx-flex-bar">
+            <dbx-label-block [header]="photo.n ?? 'Photo'">
+              <div class="dbx-hint">Added {{ photo.at | timeDistance }}.</div>
+            </dbx-label-block>
+            <span class="dbx-spacer"></span>
+            <dbx-firebase-storagefile-download-button [config]="downloadButtonConfig" [storageFileKey]="storageFileKeyForFile(photo)"></dbx-firebase-storagefile-download-button>
+          </div>
+        }
+      </div>
+    }
+  </dbx-section>
+</div>

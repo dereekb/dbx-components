@@ -231,6 +231,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.'
       },
       {
+        name: 'fi',
+        longName: 'nextFileIndex',
+        converter: 'firestoreNumber({ default: 0 })',
+        tsType: 'number',
+        optional: false,
+        description: "The next index a file's permanent storage path is keyed by."
+      },
+      {
         name: 'f',
         longName: 'files',
         converter: 'firestoreObjectArray({ objectField: formSpaceFileSubObject })',

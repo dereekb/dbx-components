@@ -127,7 +127,7 @@ import {
 } from '@dereekb/openrouter/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
-import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
+import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection, isGuestbookOwnershipKeySignedByUser } from './guestbook';
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
@@ -412,7 +412,13 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
           const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
           const isOwner = ownerKey != null && ownershipKey === ownerKey;
 
-          return isOwner ? { read: true, download: true } : undefined;
+          // A file in a guestbook's SHARED FormSpace inherits that space's `o` — the guestbook's key — and
+          // its `u` is the album's owner, so neither the `u` branch nor the profile check above matches for
+          // the signer who uploaded it. Without this, a signer sees the file listed on the space's `f` and
+          // then cannot download it.
+          const isGuestbookSigner = isOwner ? false : await isGuestbookOwnershipKeySignedByUser({ collections: context.app, ownershipKey, uid });
+
+          return isOwner || isGuestbookSigner ? { read: true, download: true } : undefined;
         }
       })
     ); // system admin only
@@ -467,7 +473,22 @@ export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<
       grantFormSpaceRolesForUser({
         // the owner drives their own form end to end: read it, edit the draft, upload into it, submit it,
         // and abandon it. Nothing here grants access to anyone else's space.
-        rolesForFormSpaceUser: async () => ({ read: true, update: true, upload: true, submit: true, delete: true })
+        rolesForFormSpaceUser: async () => ({ read: true, update: true, upload: true, submit: true, delete: true }),
+        // A SHARED space: `o` names a Guestbook rather than a Profile, and anyone who has left an entry on
+        // that guestbook may read it and upload into it.
+        //
+        // `update`, `submit` and `delete` are deliberately withheld. They are one-way doors over everyone
+        // else's files, and the branch above already grants them to the space's `u` — which for a shared
+        // space is the guestbook's creator, not whoever happened to open the album first.
+        //
+        // A GuestbookEntry's document id IS its author's uid, so "did this caller sign?" is one existence
+        // check on a path built from the space's own ownership key — no query, and no membership list to
+        // keep in step. `firestore.rules` asks the identical question, which is what stops a direct
+        // document read and a callable from disagreeing about who is a member.
+        rolesForFormSpaceOwnershipKey: async (ownershipKey) => {
+          const signed = await isGuestbookOwnershipKeySignedByUser({ collections: context.app, ownershipKey, uid: context.auth?.uid });
+          return signed ? grantedRoleKeysMapFromArray<FormSpaceRoles>(['read', 'upload']) : undefined;
+        }
       })
     );
   },

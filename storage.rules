@@ -35,6 +35,10 @@ service firebase.storage {
       // without any Firestore read. Whether that FormSpace exists, is still a draft, declares this slot, or
       // has upload budget left cannot be known here — that is enforced authoritatively by
       // formSpaceStorageFileUploadInitializers() after the bytes land. These bounds are the OUTER limit.
+      //
+      // That also covers WHO may upload. Any signed-in user can write under their own {uid} for any
+      // formSpaceId, which is deliberate: a SHARED space is filled by many people, each in their own
+      // namespace, and only the initializer can read the space to learn whether this one is a member.
       match /formSpace/{formSpaceId}/{allPaths=**} {
         allow write: if (isUploadUser() && isAllowedFormSpaceFile()) || userClaimsIsSysAdmin();
       }

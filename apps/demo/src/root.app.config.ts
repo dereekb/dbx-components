@@ -351,7 +351,8 @@ export const APP_CONFIG: ApplicationConfig = {
         provideSystemStateFirestoreCollections: true,
         provideNotificationFirestoreCollections: true,
         provideStorageFileFirestoreCollections: true,
-        provideCalendarFirestoreCollections: true
+        provideCalendarFirestoreCollections: true,
+        provideFormSpaceFirestoreCollections: true
       },
       modelContextService: {
         dbxFirebaseModelContextServiceClass: DemoFirebaseContextService

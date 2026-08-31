@@ -1,4 +1,4 @@
-import { DEMO_EXAMPLE_FORM_SPACE_TYPE, profileIdentity, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, DemoFirestoreCollections, type ProfileDocument, type GuestbookEntryFirestoreCollection, type Profile, type ProfileFirestoreCollection, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { DEMO_EXAMPLE_FORM_SPACE_TYPE, demoGuestbookFormSpaceId, profileIdentity, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, DemoFirestoreCollections, type ProfileDocument, type GuestbookEntryFirestoreCollection, type Profile, type ProfileFirestoreCollection, type InsertGuestbookEntryParams } from 'demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,
@@ -28,6 +28,7 @@ import { DemoApiServerNestContext } from '../app/server/server.context';
 import {
   type CleanupSentNotificationsParams,
   type DocumentReference,
+  type FirebaseAuthUserId,
   type FirestoreCollection,
   type FirestoreModelKey,
   type InitializeAllApplicableNotificationBoxesParams,
@@ -106,6 +107,7 @@ import {
   markStorageFileForDeleteTemplate,
   NotificationExpediteService,
   CalendarServerActions,
+  type CreateFormSpaceActionInput,
   FormSpaceServerActions,
   NotificationInitServerActions,
   NotificationSendService,
@@ -854,7 +856,16 @@ export const demoCalendarContextFactory = () =>
 export const demoCalendarContext = demoCalendarContextFactory();
 
 // MARK: With Guestbook
-export type DemoApiGuestbookTestContextParams = Partial<Guestbook>;
+export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> {
+  /**
+   * The user that created the guestbook, written to `cby`.
+   *
+   * A FIXTURE rather than a uid: `buildTests` runs at describe-registration time, when a user fixture's
+   * instance does not exist yet, so `u.uid` there throws. The uid is read in `initDocument`, which runs in
+   * `beforeEach` alongside every other fixture.
+   */
+  readonly createdBy?: Maybe<DemoApiAuthorizedUserTestContextFixture>;
+}
 
 export class DemoApiGuestbookTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookTestContextInstance<F>> {}
 
@@ -875,7 +886,10 @@ export const demoGuestbookContextFactory = () =>
         name: params.name ?? 'test',
         published: params.published ?? true,
         locked: params.locked ?? false,
-        lockedAt: params.lockedAt ?? (params.locked ? new Date() : undefined)
+        lockedAt: params.lockedAt ?? (params.locked ? new Date() : undefined),
+        // written so a test can assert on the creator. The guestbook's SHARED FormSpace takes its `u` from
+        // here, and a guestbook with no creator would silently hand `u` to whoever opened the album.
+        cby: params.createdBy?.uid ?? params.cby
       });
     }
   });
@@ -1348,11 +1362,23 @@ export interface DemoApiFormSpaceTestContextParams {
    * Display name for the space.
    */
   readonly displayName?: Maybe<string>;
+  /**
+   * The Guestbook whose SHARED space this is.
+   *
+   * Sets the whole shared shape at once — `ownerKey`, `targetModelKey`, the derived id, and `u` (the
+   * guestbook's creator, NOT `params.u`) — so a spec cannot build half of it by hand and get a space that
+   * looks shared but grants `submit` to the wrong person.
+   */
+  readonly g?: Maybe<DemoApiGuestbookTestContextFixture>;
 }
 
 export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<FormSpace, FormSpaceDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiFormSpaceTestContextInstance<F>> {
   async uploadFileToSlot(input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
     return this.instance.uploadFileToSlot(input);
+  }
+
+  async uploadFileToSlotAsUser(uid: FirebaseAuthUserId, input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    return this.instance.uploadFileToSlotAsUser(uid, input);
   }
 
   async initializeUploads(params?: Maybe<InitializeAllStorageFilesFromUploadsParams>): Promise<InitializeAllStorageFilesFromUploadsResult> {
@@ -1406,9 +1432,20 @@ export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunction
    * between the bytes landing and the initializer accepting or rejecting them.
    */
   async uploadFileToSlot(input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
-    const { slot, filename, content, contentType } = input;
     const formSpace = await assertSnapshotData(this.document);
-    const path = formSpaceUploadsFilePath({ uid: formSpace.u, formSpaceId: this.documentId, slot, filename });
+    return this.uploadFileToSlotAsUser(formSpace.u, input);
+  }
+
+  /**
+   * Writes a file into ANOTHER user's uploads folder for this space.
+   *
+   * The uid is the UPLOADER's, not the space's `u`. `storage.rules` confines a write to the caller's own
+   * namespace regardless of which space it targets, so this is exactly the shape a SHARED space's upload
+   * has — and the shape a stranger's refused upload has too.
+   */
+  async uploadFileToSlotAsUser(uid: FirebaseAuthUserId, input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    const { slot, filename, content, contentType } = input;
+    const path = formSpaceUploadsFilePath({ uid, formSpaceId: this.documentId, slot, filename });
     const file = this.testContext.storageContext.file(path);
 
     await file.upload(content, { contentType, stringFormat: 'raw' });
@@ -1484,14 +1521,31 @@ export const demoFormSpaceContextFactory = () =>
     collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.formSpaceCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiFormSpaceTestContextInstance(delegate, ref, testInstance),
     makeRef: async (_collection, params, p) => {
-      const uid = params.u.uid;
+      const guestbookFixture = params.g;
       const createFormSpace = await p.formSpaceServerActions.createFormSpace({
         formSpaceType: params.formSpaceType ?? DEMO_EXAMPLE_FORM_SPACE_TYPE,
         displayName: params.displayName,
-        data: params.data
+        data: params.data,
+        targetModelKey: guestbookFixture ? guestbookFixture.documentKey : undefined
       });
 
-      const formSpaceDocument = await createFormSpace({ uid, ownerKey: firestoreModelKey(profileIdentity, uid) });
+      let createInput: CreateFormSpaceActionInput;
+
+      if (guestbookFixture) {
+        const guestbook = await assertSnapshotData(guestbookFixture.document);
+
+        createInput = {
+          uid: guestbook.cby ?? params.u.uid,
+          ownerKey: guestbookFixture.documentKey,
+          formSpaceId: demoGuestbookFormSpaceId(guestbookFixture.documentKey),
+          getOrCreate: true
+        };
+      } else {
+        const uid = params.u.uid;
+        createInput = { uid, ownerKey: firestoreModelKey(profileIdentity, uid) };
+      }
+
+      const formSpaceDocument = await createFormSpace(createInput);
       return formSpaceDocument.documentRef;
     }
   });

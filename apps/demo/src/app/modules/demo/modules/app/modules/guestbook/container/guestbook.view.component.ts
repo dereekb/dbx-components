@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { map } from 'rxjs';
 import { DemoGuestbookEntryCollectionStoreDirective, DemoGuestbookEntryDocumentStoreDirective, DemoGuestbookEntryListComponent, GuestbookDocumentStore, GuestbookEntryDocumentStore } from 'demo-components';
+import { DemoGuestbookAlbumComponent } from './guestbook.album.component';
 import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.component';
 import { DbxButtonModule, DbxContentContainerDirective, DbxListEmptyContentComponent, DbxLoadingModule, DbxTwoBlockComponent } from '@dereekb/dbx-web';
 import { DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
@@ -15,7 +16,7 @@ import { publishedGuestbookEntriesQuery } from 'demo-firebase';
 @Component({
   selector: 'app-guestbook-view',
   templateUrl: './guestbook.view.component.html',
-  imports: [AsyncPipe, DbxLoadingModule, DbxContentContainerDirective, DbxTwoBlockComponent, DemoGuestbookEntryDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxButtonModule, DbxListEmptyContentComponent, DemoGuestbookEntryListComponent, DemoGuestbookEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, MatDividerModule],
+  imports: [AsyncPipe, DbxLoadingModule, DbxContentContainerDirective, DbxTwoBlockComponent, DemoGuestbookEntryDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxButtonModule, DbxListEmptyContentComponent, DemoGuestbookEntryListComponent, DemoGuestbookEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, MatDividerModule, DemoGuestbookAlbumComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

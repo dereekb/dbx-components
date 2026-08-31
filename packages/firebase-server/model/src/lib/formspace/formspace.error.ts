@@ -1,14 +1,17 @@
 import {
+  FORM_SPACE_ALREADY_EXISTS_ERROR_CODE,
   FORM_SPACE_FILE_NOT_FOUND_ERROR_CODE,
   FORM_SPACE_HAS_INVALID_FILES_ERROR_CODE,
   FORM_SPACE_NOT_EDITABLE_ERROR_CODE,
   FORM_SPACE_NOT_FOUND_ERROR_CODE,
   FORM_SPACE_REQUIRED_SLOT_MISSING_ERROR_CODE,
+  FORM_SPACE_TYPE_MISMATCH_ERROR_CODE,
   FORM_SPACE_TYPE_NOT_REGISTERED_ERROR_CODE,
   FORM_SPACE_UPLOAD_NOT_ALLOWED_ERROR_CODE,
   FORM_SPACE_UPLOAD_USER_MISMATCH_ERROR_CODE,
   FORM_SPACE_VALIDATION_PENDING_ERROR_CODE,
   type FormSpaceFileSlot,
+  type FormSpaceId,
   type FormSpaceSubmitBlocker,
   type FormSpaceType,
   type FormSpaceUploadRejectionReason
@@ -139,5 +142,35 @@ export function formSpaceNotFoundError() {
   return unavailableError({
     message: `The target FormSpace does not exist.`,
     code: FORM_SPACE_NOT_FOUND_ERROR_CODE
+  });
+}
+
+/**
+ * Creates an error indicating an explicit FormSpace id is already taken.
+ *
+ * @param formSpaceId - The id that already exists.
+ * @returns A precondition-conflict HttpsError with the FORM_SPACE_ALREADY_EXISTS error code.
+ */
+export function formSpaceAlreadyExistsError(formSpaceId: FormSpaceId) {
+  return preconditionConflictError({
+    message: `A FormSpace already exists at id "${formSpaceId}".`,
+    code: FORM_SPACE_ALREADY_EXISTS_ERROR_CODE,
+    data: { formSpaceId }
+  });
+}
+
+/**
+ * Creates an error indicating a get-or-create resolved to a space of a different type.
+ *
+ * @param formSpaceId - The id that resolved.
+ * @param expected - The type that was asked for.
+ * @param found - The type the existing space actually carries.
+ * @returns A precondition-conflict HttpsError with the FORM_SPACE_TYPE_MISMATCH error code.
+ */
+export function formSpaceTypeMismatchError(formSpaceId: FormSpaceId, expected: FormSpaceType, found: FormSpaceType) {
+  return preconditionConflictError({
+    message: `The FormSpace at id "${formSpaceId}" is of type "${found}", not "${expected}".`,
+    code: FORM_SPACE_TYPE_MISMATCH_ERROR_CODE,
+    data: { formSpaceId, expected, found }
   });
 }
