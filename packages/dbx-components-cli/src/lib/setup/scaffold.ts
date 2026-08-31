@@ -122,7 +122,7 @@ function deriveEntryMode(archivePath: string): ScaffoldEntryMode {
 
 /**
  * Strips the `.template` infix from a path segment so `project.template.json`
- * becomes `project.json`, `webpack.config.template.js` → `webpack.config.js`.
+ * becomes `project.json`, `esbuild.config.template.js` → `esbuild.config.js`.
  *
  * @param relPath - Path possibly containing a `.template` infix.
  * @returns The path with `.template` removed.

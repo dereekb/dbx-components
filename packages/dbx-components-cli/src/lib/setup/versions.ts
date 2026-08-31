@@ -20,6 +20,11 @@ export interface SetupCoreVersions {
   readonly typescript: string;
   readonly firebaseTools: string;
   readonly node: string;
+  /**
+   * The `esbuild` pin installed alongside `@nx/esbuild` for the API app's `build-base` target.
+   * `@nx/esbuild` declares it only as an optional peer, so npm does not install it on its own.
+   */
+  readonly esbuild: string;
 }
 
 /**
@@ -31,7 +36,8 @@ export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
   angular: '^21.0.0',
   typescript: '^5.9.3',
   firebaseTools: '15.11.0',
-  node: '24'
+  node: '24',
+  esbuild: '0.27.3'
 };
 
 /**
