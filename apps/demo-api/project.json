@@ -34,8 +34,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo-api/mcp.manifest.json"],
       "dependsOn": [
-        { "projects": ["demo-cli"], "target": "generate-api-manifest" },
-        { "projects": ["dbx-cli-generate-mcp-manifest"], "target": "build" }
+        {
+          "projects": ["demo-cli"],
+          "target": "generate-api-manifest"
+        },
+        {
+          "projects": ["dbx-cli-generate-mcp-manifest"],
+          "target": "build"
+        }
       ],
       "inputs": ["{workspaceRoot}/apps/demo-cli/src/lib/manifest/api.manifest.generated.ts", "{workspaceRoot}/components/demo-firebase/src/lib/auth/claims.ts", "{workspaceRoot}/dist/packages/dbx-cli/generate-mcp-manifest/main.js"],
       "options": {
@@ -46,7 +52,13 @@
     "generate-route-manifest": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo-api/route.manifest.json"],
-      "dependsOn": ["generate-mcp-manifest", { "projects": ["dbx-cli-generate-route-manifest"], "target": "build" }],
+      "dependsOn": [
+        "generate-mcp-manifest",
+        {
+          "projects": ["dbx-cli-generate-route-manifest"],
+          "target": "build"
+        }
+      ],
       "inputs": ["{workspaceRoot}/apps/demo/src/**/*.ts", "{workspaceRoot}/dist/apps/demo-api/mcp.manifest.json", "{workspaceRoot}/dist/packages/dbx-cli/generate-route-manifest/main.js"],
       "options": {
         "command": "node dist/packages/dbx-cli/generate-route-manifest/main.js --src='apps/demo/src/**/*.ts' --app=demo --output=dist/apps/demo-api/route.manifest.json --models-input=dist/apps/demo-api/mcp.manifest.json",
@@ -61,7 +73,13 @@
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
         "tsConfig": "apps/demo-api/tsconfig.app.json",
-        "assets": [{ "glob": "**/*", "input": "apps/demo-api/src/assets", "output": "assets" }],
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/demo-api/src/assets",
+            "output": "assets"
+          }
+        ],
         "generatePackageJson": true,
         "platform": "node",
         "target": "node24",
