@@ -12,10 +12,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-cli/test"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "test": {

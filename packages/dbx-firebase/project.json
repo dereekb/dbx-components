@@ -63,10 +63,10 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-firebase"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     }
   }

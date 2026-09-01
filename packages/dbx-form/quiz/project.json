@@ -20,12 +20,6 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-form/quiz"
-      }
     }
   }
 }

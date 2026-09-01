@@ -36,10 +36,10 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "../../coverage/FIREBASE_COMPONENTS_FOLDER"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "test": {

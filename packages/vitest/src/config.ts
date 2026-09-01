@@ -1,10 +1,10 @@
 /// <reference types='vitest' />
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { type loadEnv, type PluginOption } from 'vite';
 import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
@@ -12,7 +12,16 @@ type SequenceHooks = NonNullable<VitestTestConfig['sequence']>['hooks'];
 
 export interface DbxComponentsVitestPresetConfigOptions {
   readonly type: 'angular' | 'firebase' | 'nestjs' | 'node';
+
+  /**
+   * The consuming project's directory.
+   *
+   * Either an absolute path (callers typically pass `__dirname`) or a path relative to
+   * the workspace root; both are resolved against the workspace root, so neither depends
+   * on the working directory vitest is launched from.
+   */
   readonly pathFromRoot: string;
+
   readonly projectName: string;
 
   /**
@@ -106,7 +115,7 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  *
  * @param name - The setup file entry point name (e.g., 'setup-firebase', 'setup-angular').
  * @param rootDir - Absolute path to the workspace root directory.
- * @param pathFromRoot - Relative path from the workspace root to the consuming project.
+ * @param projectRootDir - Absolute path to the consuming project's directory.
  * @returns Absolute or relative file path to the resolved setup file.
  *
  * @example
@@ -116,12 +125,12 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  * //
  * // During workspace development:
  * //   returns '/path/to/workspace/vitest.setup.firebase.ts'
- * resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot);
+ * resolveVitestSetupFile('setup-firebase', rootDir, projectRootDir);
  * ```
  */
-function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: string): string {
+function resolveVitestSetupFile(name: string, rootDir: string, projectRootDir: string): string {
   const _require = createRequire(path.resolve(rootDir, 'noop.js'));
-  const pathToRoot = path.relative(pathFromRoot, rootDir);
+  const pathToRoot = path.relative(projectRootDir, rootDir);
 
   let result: string;
 
@@ -144,6 +153,39 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
 }
 
 /**
+ * Walks up from `startDir` to find the workspace root, identified by an `nx.json`.
+ *
+ * The working directory vitest runs from is not stable: the Nx `@nx/vitest` inferred
+ * target runs it from the project directory, while a direct `vitest` invocation
+ * typically runs from the workspace root. Locating the root explicitly keeps every
+ * derived path correct under both.
+ *
+ * @param startDir - Absolute directory to begin searching from.
+ * @returns Absolute path to the workspace root, or `startDir` when no `nx.json` is found.
+ */
+function findWorkspaceRootDir(startDir: string): string {
+  let dir = startDir;
+  let result = startDir;
+
+  for (;;) {
+    if (existsSync(path.join(dir, 'nx.json'))) {
+      result = dir;
+      break;
+    }
+
+    const parent = path.dirname(dir);
+
+    if (parent === dir) {
+      break;
+    }
+
+    dir = parent;
+  }
+
+  return result;
+}
+
+/**
  * Creates a complete Vitest configuration tailored for dbx-components projects.
  *
  * Handles environment detection (CI vs local), pool/isolation defaults, setup file
@@ -158,8 +200,14 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
   const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, ciEnvVar = 'CI' } = options;
 
-  const rootDir = options.rootDir ?? process.cwd();
-  const pathToRoot = path.relative(pathFromRoot, rootDir);
+  const rootDir = options.rootDir ?? findWorkspaceRootDir(process.cwd());
+  /**
+   * Absolute project directory, resolved from the workspace root rather than from
+   * `process.cwd()` so the config works whether vitest is launched from the workspace
+   * root or from the project directory (as the `@nx/vitest` inferred target does).
+   */
+  const projectRootDir = path.resolve(rootDir, pathFromRoot);
+  const pathToRoot = path.relative(projectRootDir, rootDir);
 
   /**
    * Whether we're running in CI. Used to determine isolation and pool defaults.
@@ -176,7 +224,17 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   let pool: VitestTestConfig['pool'] | undefined;
   let retry: VitestTestConfig['retry'] | undefined;
 
-  const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
+  /**
+   * Resolves the workspace `@dereekb/*` tsconfig path aliases to their source files,
+   * replacing `nxViteTsPaths` from `@nx/vite`, which Nx deprecated for removal in v24.
+   *
+   * `root` is pinned to the workspace root so discovery starts there rather than at the
+   * project directory, which is where vitest's `root` (and the `@nx/vitest` inferred
+   * target's cwd) points. `ignoreConfigErrors` suppresses parse warnings from the
+   * scaffolding templates, whose `tsconfig.json` files contain placeholder tokens and
+   * are not valid JSON.
+   */
+  const plugins: PluginOption[] = [tsconfigPaths({ root: rootDir, ignoreConfigErrors: true })];
 
   const setupFiles: VitestTestConfig['setupFiles'] = [];
 
@@ -184,7 +242,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   switch (type) {
     case 'angular':
-      plugins.push(angular(), nxCopyAssetsPlugin(['*.md']));
+      plugins.push(angular());
       // Angular setup must be loaded via a project-local setup file (projectSpecificSetupFiles)
       // due to a limitation in the Angular vitest plugin that prevents setup files outside the
       // project root from being processed correctly.
@@ -197,15 +255,15 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     case 'firebase':
       environment = 'node';
       usesFirebase = true;
-      setupFiles.push(resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-firebase', rootDir, projectRootDir));
       break;
     case 'nestjs':
       environment = 'node';
-      setupFiles.push(resolveVitestSetupFile('setup-nestjs', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-nestjs', rootDir, projectRootDir));
       break;
     case 'node':
       environment = 'node';
-      setupFiles.push(resolveVitestSetupFile('setup-node', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-node', rootDir, projectRootDir));
       break;
   }
 
@@ -281,7 +339,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     const isolate = forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] == null ? !isCI : process.env['DBX_VITEST_ISOLATE'] === 'true');
 
     return {
-      root: pathFromRoot,
+      root: projectRootDir,
       cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
       plugins,
       server: {

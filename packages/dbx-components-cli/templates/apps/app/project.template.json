@@ -101,10 +101,10 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "../../coverage/ANGULAR_APP_FOLDER"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "ci-deploy-prod": {

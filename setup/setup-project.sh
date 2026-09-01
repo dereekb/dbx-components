@@ -92,6 +92,7 @@ DEP__FIREBASE_TOOLS_VERSION=15.11.0          # firebase-tools
 DEP__ANGULAR_CALENDAR_VERSION=^0.32.1        # angular-calendar
 DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38  # @types/segment-analytics
 DEP__NX_VITEST_VERSION=$NX_VERSION           # @nx/vitest
+DEP__VITE_TSCONFIG_PATHS_VERSION="^6.1.1"    # vite-tsconfig-paths
 DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.3.1  # @analogjs/vite-plugin-angular
 DEP__NG_FORGE_VERSION=^0.7.0                     # @ng-forge/dynamic-forms, @ng-forge/dynamic-forms-material
 
@@ -473,7 +474,7 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add vitest setup/configurations
 echo "Adding vitest configurations..."
-npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION @nx/vite@$DEP__NX_VITEST_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
+npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION vite-tsconfig-paths@$DEP__VITE_TSCONFIG_PATHS_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
 # rm vitest.preset.config.mts
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.preset.config.mts -o vitest.preset.config.mts
@@ -500,8 +501,12 @@ npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: tr
 echo "nx.json: Make build rely on parent build"
 npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
 
+# Keyed by target name rather than by the `@nx/vitest:test` executor, which Nx deprecated
+# for removal in v24. Projects run vitest through `nx:run-commands` targets named `test`
+# (and `run-tests` for emulator-wrapped projects), so the defaults attach by name.
 echo "nx.json: Add vitest configuration"
-npx --yes json -I -f nx.json -e "this.targetDefaults['@nx/vitest:test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'], configurations: { ci: { ci: true, codeCoverage: true } } }";
+npx --yes json -I -f nx.json -e "this.targetDefaults['test'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'] }";
+npx --yes json -I -f nx.json -e "this.targetDefaults['run-tests'] = { cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'] }";
 
 echo "nx.json: Add release configuration used by tools/scripts/release.mjs"
 npx --yes json -I -f nx.json -e "this.release = { projects: ['*'], projectsRelationship: 'fixed', version: { conventionalCommits: true, git: { commit: false, tag: false, stageChanges: false } }, releaseTag: { requireSemver: true, pattern: 'v{version}' }, changelog: { workspaceChangelog: { createRelease: false, file: '{workspaceRoot}/CHANGELOG.md', renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true } }, projectChangelogs: { createRelease: false, file: '{projectRoot}/CHANGELOG.md', renderOptions: { authors: false, applyUsernameToAuthors: false, commitReferences: true, versionTitleDate: true } }, automaticFromRef: true, git: { commit: true, commitMessage: 'release(\$workspace): v{version} release', commitArgs: '--no-verify', tag: false, tagMessage: 'v{version}', stageChanges: true } } }";

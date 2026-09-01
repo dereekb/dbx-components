@@ -84,12 +84,17 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
   const targetDefaults = { ...(nxJson['targetDefaults'] as JsonObject) };
   targetDefaults['build-base'] = { cache: true };
   targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true };
-  targetDefaults['@nx/vitest:test'] = {
+  // Keyed by target name rather than by the `@nx/vitest:test` executor, which Nx
+  // deprecated for removal in v24. The scaffolded projects run vitest through
+  // `nx:run-commands` targets named `test` (and `run-tests` for emulator-wrapped
+  // projects), so the defaults attach by name.
+  const vitestTargetDefault = {
     cache: true,
     dependsOn: ['^build'],
-    inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'],
-    configurations: { ci: { ci: true, codeCoverage: true } }
+    inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts']
   };
+  targetDefaults['test'] = { ...vitestTargetDefault };
+  targetDefaults['run-tests'] = { ...vitestTargetDefault };
   return {
     ...withoutKeys(nxJson, ['nxCloudId']),
     workspaceLayout: { appsDir: naming.appsFolder, libsDir: naming.componentsFolder },
@@ -122,7 +127,8 @@ export const DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS: Readonly<Record<string, strin
   'typescript-eslint': '^8.59.3',
   '@typescript-eslint/utils': '^8.59.3',
   '@analogjs/vite-plugin-angular': '~2.5.0',
-  '@analogjs/vitest-angular': '~2.5.0'
+  '@analogjs/vitest-angular': '~2.5.0',
+  'vite-tsconfig-paths': '^6.1.1'
 };
 
 /**

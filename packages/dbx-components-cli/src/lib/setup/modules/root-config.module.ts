@@ -100,7 +100,9 @@ export const ROOT_MODULE: SetupModule = {
     await shell.run('npm', ['install', '-D', dep('conventional-changelog'), dep('conventional-recommended-bump'), dep('semver'), dep('yargs')], { cwd: workspaceRoot, dryRun });
 
     // vitest (script line 473)
-    await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, `@nx/vite@${nx}`, dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
+    // `@nx/vite` was only needed for the nxViteTsPaths/nxCopyAssetsPlugin helpers, both
+    // deprecated for removal in Nx v24. createVitestConfig uses vite-tsconfig-paths now.
+    await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, dep('vite-tsconfig-paths'), dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
 
     // @dereekb + firebase deps (script line 511). arktype is the runtime validator
     // the scaffolded firebase model files (`*.api.ts`) import.

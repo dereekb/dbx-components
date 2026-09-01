@@ -118,10 +118,10 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo-api"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "watch": {

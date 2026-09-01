@@ -107,13 +107,6 @@
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
       }
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo"
-      }
     }
   }
 }

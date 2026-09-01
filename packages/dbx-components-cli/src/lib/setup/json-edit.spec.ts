@@ -16,7 +16,8 @@ describe('applyNxJsonEdits', () => {
     expect(targetDefaults['build-base']).toEqual({ cache: true });
     expect(targetDefaults['build']).toEqual({ dependsOn: ['^build'], inputs: ['production', '^production'], cache: true });
     expect(targetDefaults['existing']).toEqual({ cache: false });
-    expect((targetDefaults['@nx/vitest:test'] as JsonObject)['configurations']).toEqual({ ci: { ci: true, codeCoverage: true } });
+    expect(targetDefaults['test']).toEqual({ cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'] });
+    expect(targetDefaults['run-tests']).toEqual(targetDefaults['test']);
     const release = result['release'] as JsonObject;
     expect(release['projects']).toEqual(['*']);
     expect((release['version'] as JsonObject)['git']).toEqual({ commit: false, tag: false, stageChanges: false });

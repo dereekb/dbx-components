@@ -34,10 +34,17 @@
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
       "cache": true
     },
+    "run-tests": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"]
+    },
     "test": {
-      "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
-      "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
-      "cache": true
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"]
     },
     "ci-publish-npmjs": {},
     "deploy": {
@@ -61,17 +68,6 @@
         "cache": true,
         "cacheLocation": ".cache/eslint",
         "cacheStrategy": "content"
-      }
-    },
-    "@nx/vitest:test": {
-      "cache": true,
-      "dependsOn": ["build"],
-      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
       }
     },
     "@nx/js:tsc": {
@@ -169,6 +165,13 @@
       "plugin": "@nx/rollup/plugin",
       "options": {
         "buildTargetName": "build-base"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "testMode": "run"
       }
     }
   ],
