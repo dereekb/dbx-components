@@ -1,6 +1,8 @@
-import { type FormSpaceFileValidationResult, type FormSpaceFileValidatorConfig, type FormSpaceFileValidatorInput } from '@dereekb/firebase-server/model';
+import { type FormSpaceFileValidationSubtask, type FormSpaceFileValidationSubtaskMetadata } from '@dereekb/firebase';
+import { type FormSpaceFileValidationResult, type FormSpaceFileValidatorConfig, type FormSpaceFileValidatorInput, type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget, formSpaceFileValidationStorageFileProcessor } from '@dereekb/firebase-server/model';
 import { bufferHasValidPdfMarkings } from '@dereekb/util';
-import { DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, DEMO_EXAMPLE_FORM_SPACE_TYPE } from 'demo-firebase';
+import { DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_SLOT, DEMO_EXAMPLE_FORM_SPACE_TYPE, DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE } from 'demo-firebase';
+import { type DemoFirebaseServerActionsContext } from '../../../../firebase/action.context';
 
 /**
  * The reason a supporting document is rejected.
@@ -48,3 +50,26 @@ export const DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_VALIDATOR: FormSpaceFileValidator
  * accepting every file silently.
  */
 export const DEMO_FORM_SPACE_FILE_VALIDATORS: FormSpaceFileValidatorConfig[] = [DEMO_EXAMPLE_FORM_SPACE_DOCUMENTS_VALIDATOR];
+
+/**
+ * Builds the FormSpace file validation processor for the demo app.
+ *
+ * A FormSpace attachment rides the same `SFP` task as everything else in this folder. ONE processor covers
+ * every form type: it resolves each file's slot from the space it belongs to and runs the validator registered
+ * for that (type, slot), which is why a new form type needs no entry in {@link DEMO_FORM_SPACE_FILE_VALIDATORS}.
+ *
+ * The type registry is reached for rather than injected for the same reason the upload service reaches for it —
+ * it is a memoized lookup over a static constant, and injecting it would mean importing FormSpaceModule into
+ * the notification module for something that is not a service.
+ *
+ * @param demoFirebaseServerActionsContext - Server actions context providing the FormSpace and StorageFile collections.
+ * @returns The subtask processor config targeting the FormSpace file purpose.
+ */
+export function demoFormSpaceFileValidationStorageFileProcessor(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<FormSpaceFileValidationSubtaskMetadata, FormSpaceFileValidationSubtask> {
+  return formSpaceFileValidationStorageFileProcessor({
+    formSpaceFirestoreCollections: demoFirebaseServerActionsContext,
+    storageFileFirestoreCollections: demoFirebaseServerActionsContext,
+    appFormSpaceTypeConfigService: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
+    validators: DEMO_FORM_SPACE_FILE_VALIDATORS
+  });
+}
