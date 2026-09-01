@@ -83,11 +83,13 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         ...baseConfig,
         componentClass,
         init: (filterSource) => {
-          connector.connectWithSource(filterSource);
-
+          // NOTE: the source is seeded before it is connected, as connecting subscribes to filter$ immediately.
+          // A source that carries a default filter would otherwise emit that default at connect time, so merely opening the popover would reset the filter to the default.
           if (initialFilterObs && filterSource.initWithFilter) {
             filterSource.initWithFilter(initialFilterObs);
           }
+
+          connector.connectWithSource(filterSource);
 
           if (closeOnFilterChange !== false) {
             cleanSubscription(

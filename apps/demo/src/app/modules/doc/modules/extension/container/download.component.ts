@@ -1,6 +1,7 @@
-import { type DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent, type DbxDownloadBlobButtonConfig, DbxDownloadBlobButtonComponent } from '@dereekb/dbx-web';
+import { type DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent, type DbxDownloadBlobButtonConfig, DbxDownloadBlobButtonComponent, type DbxFileListEntry, DbxFileListComponent, DbxFileListItemComponent } from '@dereekb/dbx-web';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { addHours, addMinutes } from 'date-fns';
 import { randomNumberFactory, randomPhoneNumberFactory, range, waitForMs } from '@dereekb/util';
 import { type Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
@@ -36,7 +37,7 @@ function createRandomCsvFile() {
 @Component({
   templateUrl: './download.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent, DbxFileListComponent, DbxFileListItemComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionDownloadComponent {
@@ -75,6 +76,45 @@ export class DocExtensionDownloadComponent {
       }
     }
   };
+
+  readonly fileListEntries: DbxFileListEntry[] = [
+    {
+      key: 'abc.csv',
+      name: 'abc.csv',
+      icon: 'description',
+      details: 'Uploaded',
+      detailsDate: addMinutes(new Date(), -20),
+      detailsDateStyle: 'distance',
+      download: {
+        loadBlob: () => new Blob([createRandomCsvFile()], { type: 'application/csv' }),
+        fileName: 'abc.csv',
+        buttonStylePair: {
+          display: {
+            icon: 'download',
+            text: 'Download'
+          },
+          style: {
+            type: 'stroked'
+          }
+        }
+      }
+    },
+    {
+      key: 'xyz.json',
+      name: 'xyz.json',
+      icon: 'data_object',
+      detailsDate: addHours(new Date(), -6)
+    },
+    {
+      key: 'broken.pdf',
+      name: 'broken.pdf',
+      icon: 'error',
+      details: 'This file was rejected.',
+      detailsClass: 'dbx-warn'
+    }
+  ];
+
+  readonly emptyFileListEntries: DbxFileListEntry[] = [];
 
   readonly blobDownloadDelayedConfig: DbxDownloadBlobButtonConfig = {
     loadBlob: () => waitForMs(4000).then(() => new Blob([createRandomCsvFile()], { type: 'application/csv' })),

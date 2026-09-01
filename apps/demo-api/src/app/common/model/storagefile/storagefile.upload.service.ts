@@ -1,9 +1,20 @@
-import { compressImageBufferToTargetSize, type StorageFileInitializeFromUploadService, type StorageFileInitializeFromUploadServiceConfig, type StorageFileInitializeFromUploadServiceInitializer, type StorageFileInitializeFromUploadServiceInitializerInput, type StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
+import {
+  compressImageBufferToTargetSize,
+  formSpaceStorageFileUploadInitializers,
+  type StorageFileInitializeFromUploadService,
+  type StorageFileInitializeFromUploadServiceConfig,
+  type StorageFileInitializeFromUploadServiceInitializer,
+  type StorageFileInitializeFromUploadServiceInitializerInput,
+  type StorageFileInitializeFromUploadServiceInitializerResult,
+  storageFileInitializeFromUploadService,
+  storageFileInitializeFromUploadServiceInitializerResultPermanentFailure
+} from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
+import { DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE, makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
+import { demoFormSpaceUploadAuthorizationDelegate } from '../formspace/formspace.upload.authorization';
 import { makeUserLogFileUploadInitializer } from './handlers/upload.user.log';
 import { makeUserResumeFileUploadInitializer } from './handlers/upload.user.resume';
 
@@ -176,7 +187,22 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
     storageService,
-    initializer: [...userFileInitializers, ...systemFileInitializers],
+    // ONE initializer covers every form type: the per-type rules come from the FormSpace registry keyed
+    // off the loaded space, not from the initializer's own registration.
+    initializer: [
+      ...userFileInitializers,
+      ...systemFileInitializers,
+      ...formSpaceStorageFileUploadInitializers({
+        ...demoFirebaseServerActionsContext,
+        // Reached for rather than injected: the registry is a memoized lookup over a static const, pure data
+        // this file already reaches for the same way it reaches for the avatar/test-file purposes. Injecting
+        // it would mean importing FormSpaceModule for something that is not a service.
+        appFormSpaceTypeConfigService: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
+        // the demo has one SHARED form type, so the initializer needs a second answer to "is this uploader
+        // allowed" beyond "is it the space's own user"
+        uploadAuthorizationDelegate: demoFormSpaceUploadAuthorizationDelegate(demoFirebaseServerActionsContext)
+      })
+    ],
     storageFileCollection
   };
 

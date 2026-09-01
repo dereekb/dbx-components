@@ -1,0 +1,22 @@
+<dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="formSpaceListRef" dbxTwoColumnSrefShowRight>
+  <dbx-two-block left>
+    <dbx-two-column-head top>
+      <!-- Offered whenever there is no draft to resume, rather than only before the first one: a submitted
+           space is locked forever, so "start another" is the only thing left to do with the page. -->
+      @if (hasDraftSignal()) {
+        <span class="dbx-hint">One draft at a time. Resume it below.</span>
+      } @else {
+        <ng-container dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleCreateFormSpace" [dbxActionSuccessHandler]="onFormSpaceCreated">
+          <dbx-button dbxActionButton icon="add" text="Start Form Space"></dbx-button>
+        </ng-container>
+      }
+    </dbx-two-column-head>
+    <!-- The owner-scoped query the page already runs, rendered: submitting a space takes it out of the
+         editor, and without this the record of it would be gone from the app entirely. The draft sits in its
+         own group above the rest, since it is the only one there is anything left to do with. -->
+    <dbx-firebase-formspace-list [state]="formSpaceListStateSignal()" [dbxListTitleGroup]="formSpaceGroupDelegate" dbxListItemModifier [dbxListItemAnchorModifier]="makeFormSpaceAnchor">
+      <dbx-list-empty-content empty>You have not started a form space yet.</dbx-list-empty-content>
+    </dbx-firebase-formspace-list>
+  </dbx-two-block>
+  <ui-view dbxFirebaseFormSpaceDocument storeName="formSpace" dbxRouteModelId right></ui-view>
+</dbx-two-column>

@@ -3,18 +3,19 @@ import { type FirestoreCollectionLike } from '@dereekb/firebase';
 import { CliError } from '../util/output';
 import { assertCliFirestoreQueryParentKey, cliFirestoreCollectionForQuery } from './firestore.collection';
 import { type CliFirestoreModels } from './firestore.models';
+import { FIRESTORE_SDK_INSTANCE_MISMATCH_CODE } from './firestore.sdk-identity';
 
 const REGISTERED = { __registered: true } as unknown as FirestoreCollectionLike<unknown>;
 const OVERRIDE = { __override: true } as unknown as FirestoreCollectionLike<unknown>;
 
-function buildModels(input?: { readonly collectionForModel?: CliFirestoreModels['binding']['collectionForModel'] }): CliFirestoreModels {
+function buildModels(input?: { readonly collectionForModel?: CliFirestoreModels['binding']['collectionForModel']; readonly getFirestoreCollection?: () => FirestoreCollectionLike<unknown> }): CliFirestoreModels {
   return {
     session: {} as never,
     collections: {},
     binding: { collections: () => ({}), models: (() => ({})) as never, collectionForModel: input?.collectionForModel },
     models: (() => ({})) as never,
     allTypes: () => ['gb', 'gbe'],
-    serviceFor: () => ({ loadModelForKey: (() => undefined) as never, getFirestoreCollection: () => REGISTERED }),
+    serviceFor: () => ({ loadModelForKey: (() => undefined) as never, getFirestoreCollection: input?.getFirestoreCollection ?? (() => REGISTERED) }),
     modelTypeForCollection: (collectionName) => collectionName
   };
 }
@@ -73,6 +74,29 @@ describe('cliFirestoreCollectionForQuery()', () => {
     }
     expect(error).toBeInstanceOf(CliError);
     expect((error as CliError).suggestion).toContain('collectionForModel');
+  });
+
+  it('names the model and the handle when the SDK refuses the reference', () => {
+    // the failure this wrapper exists for: `collection()` rejects a bad first argument with a message
+    // naming neither the model nor the handle, and both are known right here
+    const models = buildModels({
+      getFirestoreCollection: () => {
+        throw Object.assign(new Error('Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore'), { code: 'invalid-argument' });
+      }
+    });
+
+    let error: unknown;
+    try {
+      cliFirestoreCollectionForQuery({ models, modelType: 'gb', scope: 'COLLECTION', isNested: false });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(CliError);
+    expect((error as CliError).message).toContain('model "gb"');
+    expect((error as CliError).message).toContain('no --parent');
+    // the stub `models.session` carries no `firestoreContext`, so the identity check owns the diagnosis
+    expect((error as CliError).code).toBe(FIRESTORE_SDK_INSTANCE_MISMATCH_CODE);
   });
 
   it('validates --parent before reaching the scoping derivation', () => {

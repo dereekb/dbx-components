@@ -109,6 +109,29 @@ export function storageFileInitializeFromUploadServiceInitializerResultPermanent
 }
 
 /**
+ * Convenience factory for creating a TRANSIENT failure result, indicating the initializer could not
+ * finish for a reason that may not recur.
+ *
+ * The difference from a permanent failure is what happens to the SOURCE upload: a permanent failure
+ * discards it, while a transient one leaves it in place for the next sweep to retry. Any intermediate
+ * file named by `createdFile` is deleted either way, so a retry never finds a half-written destination.
+ *
+ * Use this for infrastructure — a contended transaction, a storage blip — and reserve the permanent
+ * result for a decision that no retry will reverse.
+ *
+ * @param error - The error that caused the failure.
+ * @param createdFile - Optional path to a file that was created before the error and should be deleted.
+ * @returns A transient failure result with the error and optional created file reference.
+ */
+export function storageFileInitializeFromUploadServiceInitializerResultTransientFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
+  return {
+    error,
+    permanentFailure: false,
+    createdFile
+  };
+}
+
+/**
  * Processes the input details accessor and returns the results.
  */
 export type StorageFileInitializeFromUploadServiceInitializerFunction = (input: StorageFileInitializeFromUploadServiceInitializerInput) => Promise<StorageFileInitializeFromUploadServiceInitializerResult>;

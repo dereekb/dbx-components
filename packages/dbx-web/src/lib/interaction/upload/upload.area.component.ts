@@ -78,7 +78,7 @@ export class DbxFileUploadAreaComponent extends AbstractDbxFileUploadComponent {
   readonly areaDragActiveChanged = output<boolean>();
 
   readonly dragOverStateSignal = signal<boolean>(false);
-  readonly filesAcceptedFunctionSignal = computed(() => fileArrayAcceptMatchFunction({ multiple: this.multipleSignal() ?? false, accept: this.acceptSignal() }));
+  readonly filesAcceptedFunctionSignal = computed(() => fileArrayAcceptMatchFunction({ multiple: this.multipleSignal() ?? false, maxFiles: this.maxFilesSignal(), accept: this.acceptSignal() }));
 
   @HostListener('click', ['$event'])
   onClick(evt: MouseEvent) {

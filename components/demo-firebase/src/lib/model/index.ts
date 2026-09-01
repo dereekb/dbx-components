@@ -1,4 +1,5 @@
 export * from './calendar';
+export * from './formspace';
 export * from './guestbook';
 export * from './profile';
 export * from './service';

@@ -1,5 +1,6 @@
-import { cachedGetter, type Factory, type FactoryWithRequiredInput, type Maybe, slashPathDetails, type SlashPathDetails } from '@dereekb/util';
-import { type StoragePath } from '../../common/storage/storage';
+import { cachedGetter, type ContentTypeMimeType, type Factory, type FactoryWithRequiredInput, fileExtensionForMimeType, type Maybe, SLASH_PATH_FILE_TYPE_SEPARATOR, slashPathDetails, type SlashPathDetails, type SlashPathFile } from '@dereekb/util';
+import { type StoragePath, type StorageSlashPath } from '../../common/storage/storage';
+import { type StorageFileDisplayName } from './storagefile.id';
 import { type StorageCustomMetadata } from '../../common/storage/types';
 import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/accessor';
 
@@ -7,6 +8,62 @@ import { type FirebaseStorageAccessorFile } from '../../common/storage/driver/ac
  * Input for a {@link StoredFileReader}, carrying the storage bucket and path of the file.
  */
 export type StoredFileReaderInput = StoragePath;
+
+/**
+ * Input for {@link storageFileDisplayFileName}.
+ */
+export interface StorageFileDisplayFileNameInput {
+  /**
+   * The StorageFile's own `n`, which is UNTYPED by contract (see {@link StorageFileDisplayName}).
+   */
+  readonly displayName?: Maybe<StorageFileDisplayName>;
+  /**
+   * The object's path — a StorageFile's `pathString`, or the `name` off its storage metadata.
+   */
+  readonly pathString?: Maybe<StorageSlashPath>;
+  /**
+   * The object's content type, used when the path names no extension.
+   */
+  readonly contentType?: Maybe<ContentTypeMimeType>;
+}
+
+/**
+ * Composes the name a stored file should be presented to a user under.
+ *
+ * THE one place that answers "what is this file called". A StorageFile's `n` is untyped by contract, so
+ * the extension always comes from the object's own path — which is why a purpose whose destination is not
+ * name-keyed (a FormSpace file lives at `.../{index}.{ext}`) still downloads and zips under the name its
+ * uploader gave it.
+ *
+ * Falls back to the path's own leaf when there is no display name, so a StorageFile that never had one
+ * behaves exactly as it did before.
+ *
+ * @param input - The display name, the object path, and the content type.
+ * @returns The composed file name, or null when the input names neither.
+ *
+ * @example
+ * ```ts
+ * storageFileDisplayFileName({ displayName: 'resume', pathString: '/fsp/f1/resume/0.pdf' }); // 'resume.pdf'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function storageFileDisplayFileName(input: StorageFileDisplayFileNameInput): Maybe<SlashPathFile> {
+  const { displayName, pathString, contentType } = input;
+  const details = pathString == null ? undefined : slashPathDetails(pathString);
+  const untypedName = displayName || details?.fileName;
+  const extension = details?.typedFileExtension ?? fileExtensionForMimeType(contentType);
+
+  let result: Maybe<SlashPathFile>;
+
+  if (untypedName) {
+    result = (extension == null ? untypedName : `${untypedName}${SLASH_PATH_FILE_TYPE_SEPARATOR}${extension}`) as SlashPathFile;
+  } else {
+    result = details?.end as Maybe<SlashPathFile>;
+  }
+
+  return result;
+}
 
 /**
  * Factory that creates a {@link StoredFileReader} from a {@link FirebaseStorageAccessorFile}.

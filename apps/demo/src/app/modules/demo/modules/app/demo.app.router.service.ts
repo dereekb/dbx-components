@@ -31,6 +31,19 @@ export class DemoAppRouterService {
     };
   }
 
+  formSpaceListRef(): SegueRef {
+    return {
+      ref: 'demo.app.formspace.list'
+    };
+  }
+
+  formSpaceViewRef(id: string): SegueRef {
+    return {
+      ref: 'demo.app.formspace.list.formspace',
+      refParams: { id }
+    };
+  }
+
   oidcClientCreateRef(): SegueRef {
     return {
       ref: 'demo.app.oidc.clients.create'

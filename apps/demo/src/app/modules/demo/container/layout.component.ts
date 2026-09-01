@@ -48,6 +48,11 @@ export class DemoLayoutComponent {
       icon: 'list'
     },
     {
+      title: 'Form Space',
+      ref: 'demo.app.formspace',
+      icon: 'assignment'
+    },
+    {
       title: 'Oidc Clients',
       ref: 'demo.app.oidc',
       icon: 'vpn_key'

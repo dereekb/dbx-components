@@ -186,12 +186,8 @@ function buildPerFileTokens(naming: SetupNaming, options: SetupTokenOptions): Re
     { search: 'API_APP_NAME', replace: naming.apiAppName }
   ]);
 
-  // apps/api/webpack.config.template.js (script line 594)
-  map.set('apps/api/webpack.config.template.js', [
-    { search: 'API_APP_DIST_FOLDER', replace: naming.apiAppDistFolder },
-    { search: 'API_APP_FOLDER', replace: naming.apiAppFolder },
-    { search: 'API_APP_NAME', replace: naming.apiAppName }
-  ]);
+  // apps/api/esbuild.config.template.js + esbuild.prod.config.template.js (script line 594) get no
+  // entry: they resolve their paths from `__dirname`, so they carry no tokens to substitute.
 
   // components/app/project.template.json (script line 600) — ANGULAR_APP_PREFIX is undefined in the
   // script, so its `sed` deletes the token (replace with empty string). Quirk preserved deliberately.

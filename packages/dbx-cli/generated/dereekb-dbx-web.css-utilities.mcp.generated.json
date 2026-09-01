@@ -2017,6 +2017,10 @@
           "value": "hidden"
         },
         {
+          "property": "padding-block",
+          "value": "var(--dbx-shadow-gutter, 4px)"
+        },
+        {
           "property": "--mat-icon-button-touch-target-size",
           "value": "40px"
         },
@@ -2053,7 +2057,11 @@
       "intent": "horizontal action bar — flex row that scrolls horizontally before wrapping",
       "seeAlso": [
         "dbx-flex-center",
-        "dbx-flex-fill"
+        "dbx-flex-fill",
+        "card-horizontal"
+      ],
+      "tokensRead": [
+        "--dbx-shadow-gutter"
       ],
       "tokensSet": [
         "--mat-button-filled-touch-target-size",
@@ -2072,7 +2080,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/flex/_flex.scss",
-      "line": 34,
+      "line": 44,
       "declarations": [
         {
           "property": "display",
@@ -2100,7 +2108,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/flex/_flex.scss",
-      "line": 44,
+      "line": 54,
       "declarations": [
         {
           "property": "display",
@@ -2123,7 +2131,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/flex/_flex.scss",
-      "line": 54,
+      "line": 64,
       "declarations": [
         {
           "property": "flex",
@@ -2143,7 +2151,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/flex/_flex.scss",
-      "line": 65,
+      "line": 75,
       "declarations": [
         {
           "property": "flex",
@@ -2167,7 +2175,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/flex/_flex.scss",
-      "line": 74,
+      "line": 84,
       "declarations": [
         {
           "property": "display",
@@ -3151,7 +3159,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/section/_section.scss",
-      "line": 76,
+      "line": 83,
       "declarations": [
         {
           "property": "padding",

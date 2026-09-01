@@ -22,30 +22,30 @@
       }
     },
     "build-base": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/esbuild:esbuild",
+      "dependsOn": ["^build"],
+      "outputs": ["{options.outputPath}/main.js", "{options.outputPath}/package.json", "{options.outputPath}/package-lock.json", "{options.outputPath}/assets"],
       "options": {
-        "webpackConfig": "API_APP_FOLDER/webpack.config.js",
         "outputPath": "API_APP_DIST_FOLDER",
         "main": "API_APP_FOLDER/src/main.ts",
         "tsConfig": "API_APP_FOLDER/tsconfig.app.json",
-        "assets": ["API_APP_FOLDER/src/assets"],
+        "assets": [{ "glob": "**/*", "input": "API_APP_FOLDER/src/assets", "output": "assets" }],
         "generatePackageJson": true,
-        "compiler": "tsc",
-        "target": "node"
+        "platform": "node",
+        "target": "node24",
+        "format": ["cjs"],
+        "bundle": true,
+        "thirdParty": false,
+        "declaration": false,
+        "skipTypeCheck": false,
+        "deleteOutputPath": false,
+        "minify": false,
+        "sourcemap": false,
+        "esbuildConfig": "API_APP_FOLDER/esbuild.config.js"
       },
       "configurations": {
         "production": {
-          "optimization": true,
-          "extractLicenses": false,
-          "sourceMap": false,
-          "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "API_APP_FOLDER/src/environments/environment.ts",
-              "with": "API_APP_FOLDER/src/environments/environment.prod.ts"
-            }
-          ]
+          "esbuildConfig": "API_APP_FOLDER/esbuild.prod.config.js"
         }
       }
     },

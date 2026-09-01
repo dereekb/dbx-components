@@ -1,103 +1,96 @@
 <dbx-section-page header="Profile">
   <dbx-loading [linear]="true" [context]="context">
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Avatar">
-        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="image/*" [fileModifier]="avatarFileModifierFn">
-          <ng-content>
-            <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true" [dbxActionSuccessHandler]="handleAvatarUploadInitializationSuccess">
-              <div class="dbx-flex-bar">
-                <dbx-loading dbxActionLoadingContext>
-                  <dbx-avatar avatarSize="large" [avatarUrl]="avatarUrlSignal()"></dbx-avatar>
-                </dbx-loading>
-                <span class="dbx-button-spacer"></span>
-                <div>
-                  <dbx-label-block header="Profile Picture">
-                    <div class="dbx-hint">A clear, professional headshot is recommended.</div>
-                  </dbx-label-block>
-                </div>
+    <dbx-section header="Avatar">
+      <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="image/*" [fileModifier]="avatarFileModifierFn">
+        <ng-content>
+          <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true" [dbxActionSuccessHandler]="handleAvatarUploadInitializationSuccess">
+            <div class="dbx-flex-bar">
+              <dbx-loading dbxActionLoadingContext>
+                <dbx-avatar avatarSize="large" [avatarUrl]="avatarUrlSignal()"></dbx-avatar>
+              </dbx-loading>
+              <span class="dbx-button-spacer"></span>
+              <div>
+                <dbx-label-block header="Profile Picture">
+                  <div class="dbx-hint">A clear, professional headshot is recommended.</div>
+                </dbx-label-block>
               </div>
             </div>
-            <span class="dbx-spacer"></span>
-            <!-- Action Space -->
-            <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
-              <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Photo" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
-            </div>
-          </ng-content>
-        </div>
-      </dbx-section>
-    </dbx-content-box>
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Resume" hint="Uploads a PDF, then asks OpenRouter whether the document actually is a resume.">
-        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf">
-          <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
-            <dbx-loading dbxActionLoadingContext>
-              @if (resumeSignal(); as resume) {
-                @switch (resume.state) {
-                  @case (profileResumeState.CHECKING) {
-                    <dbx-label-block header="Resume">
-                      <div class="dbx-hint">Uploaded {{ resume.uploadedAt | timeDistance }} &mdash; checking with OpenRouter...</div>
-                    </dbx-label-block>
-                  }
-                  @case (profileResumeState.CHECKED) {
-                    <dbx-label-block header="Resume">
-                      <div [class]="resume.isResume ? 'dbx-success' : 'dbx-warn'">{{ resume.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
-                      <div class="dbx-hint">{{ resume.reason }}</div>
-                      <div class="dbx-hint">Checked {{ resume.checkedAt | timeDistance }}.</div>
-                    </dbx-label-block>
-                  }
-                  @case (profileResumeState.FAILED) {
-                    <dbx-label-block header="Resume">
-                      <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
-                    </dbx-label-block>
-                  }
-                  @default {
-                    <dbx-label-block header="No Resume">
-                      <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
-                    </dbx-label-block>
-                  }
-                }
-              }
-            </dbx-loading>
           </div>
           <span class="dbx-spacer"></span>
           <!-- Action Space -->
-          <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="resumeUploadHandler" [triggerOnFiles]="true">
-            <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Resume" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+          <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
+            <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Photo" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
           </div>
+        </ng-content>
+      </div>
+    </dbx-section>
+
+    <dbx-section header="Resume" hint="Uploads a PDF, then asks OpenRouter whether the document actually is a resume.">
+      <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="application/pdf">
+        <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument [initializeWithExpediteProcessing]="true">
+          <dbx-loading dbxActionLoadingContext>
+            @if (resumeSignal(); as resume) {
+              @switch (resume.state) {
+                @case (profileResumeState.CHECKING) {
+                  <dbx-label-block header="Resume">
+                    <div class="dbx-hint">Uploaded {{ resume.uploadedAt | timeDistance }} &mdash; checking with OpenRouter...</div>
+                  </dbx-label-block>
+                }
+                @case (profileResumeState.CHECKED) {
+                  <dbx-label-block header="Resume">
+                    <div [class]="resume.isResume ? 'dbx-success' : 'dbx-warn'">{{ resume.isResume ? 'This looks like a resume.' : 'This does not look like a resume.' }}</div>
+                    <div class="dbx-hint">{{ resume.reason }}</div>
+                    <div class="dbx-hint">Checked {{ resume.checkedAt | timeDistance }}.</div>
+                  </dbx-label-block>
+                }
+                @case (profileResumeState.FAILED) {
+                  <dbx-label-block header="Resume">
+                    <div class="dbx-warn">The check did not finish. Upload again to retry.</div>
+                  </dbx-label-block>
+                }
+                @default {
+                  <dbx-label-block header="No Resume">
+                    <div class="dbx-hint">Upload a PDF resume of up to {{ resumeMaxFileSizeKb }}KB to run the check.</div>
+                  </dbx-label-block>
+                }
+              }
+            }
+          </dbx-loading>
         </div>
-      </dbx-section>
-    </dbx-content-box>
-    <dbx-content-box [wide]="true">
-      <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ usernameSignal() }})" hint="Change your profile username.">
-        <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
-        <dbx-button dbxActionButton text="Change Username"></dbx-button>
-        <dbx-error dbxActionError></dbx-error>
-        <div *dbxActionHasSuccess="3000" class="dbx-success">Success</div>
-      </dbx-section>
-    </dbx-content-box>
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Information" dbxAction dbxActionAutoTrigger useFastTriggerPreset dbxActionEnforceModified [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
-        <demo-profile-form [dbxActionFormDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isProfileModified"></demo-profile-form>
-        <dbx-error dbxActionError></dbx-error>
-        <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
-        <div *dbxActionHasSuccess="3000" class="dbx-success">Saved Changes</div>
-      </dbx-section>
-    </dbx-content-box>
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Password" hint="Request a password reset email." dbxAction dbxActionValue [dbxActionHandler]="handleResetPassword">
-        <p class="dbx-hint">Click below to receive a password reset email.</p>
-        <dbx-button dbxActionButton text="Reset Password"></dbx-button>
-        <dbx-error dbxActionError></dbx-error>
-        <div *dbxActionHasSuccess="5000" class="dbx-success">Password reset email sent.</div>
-      </dbx-section>
-    </dbx-content-box>
-    <dbx-content-box [wide]="true">
-      <dbx-section header="Download Files">
-        <div class="dbx-button-column">
-          <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
-          <dbx-firebase-storagefile-download-button [config]="archiveDownloadButtonConfig" [source]="archiveDownloadSource"></dbx-firebase-storagefile-download-button>
+        <span class="dbx-spacer"></span>
+        <!-- Action Space -->
+        <div dbxAction dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="resumeUploadHandler" [triggerOnFiles]="true">
+          <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Resume" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
         </div>
-      </dbx-section>
-    </dbx-content-box>
+      </div>
+    </dbx-section>
+
+    <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ usernameSignal() }})" hint="Change your profile username.">
+      <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
+      <dbx-button dbxActionButton text="Change Username"></dbx-button>
+      <dbx-error dbxActionError></dbx-error>
+      <div *dbxActionHasSuccess="3000" class="dbx-success">Success</div>
+    </dbx-section>
+
+    <dbx-section header="Information" dbxAction dbxActionAutoTrigger useFastTriggerPreset dbxActionEnforceModified [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
+      <demo-profile-form [dbxActionFormDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isProfileModified"></demo-profile-form>
+      <dbx-error dbxActionError></dbx-error>
+      <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
+      <div *dbxActionHasSuccess="3000" class="dbx-success">Saved Changes</div>
+    </dbx-section>
+
+    <dbx-section header="Password" hint="Request a password reset email." dbxAction dbxActionValue [dbxActionHandler]="handleResetPassword">
+      <p class="dbx-hint">Click below to receive a password reset email.</p>
+      <dbx-button dbxActionButton text="Reset Password"></dbx-button>
+      <dbx-error dbxActionError></dbx-error>
+      <div *dbxActionHasSuccess="5000" class="dbx-success">Password reset email sent.</div>
+    </dbx-section>
+
+    <dbx-section header="Download Files">
+      <div class="dbx-button-column">
+        <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
+        <dbx-firebase-storagefile-download-button [config]="archiveDownloadButtonConfig" [source]="archiveDownloadSource"></dbx-firebase-storagefile-download-button>
+      </div>
+    </dbx-section>
   </dbx-loading>
 </dbx-section-page>

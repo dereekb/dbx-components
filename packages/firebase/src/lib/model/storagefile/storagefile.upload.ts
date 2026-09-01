@@ -124,6 +124,29 @@ export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determin
 export interface StorageFilePurposeUploadPolicyBuildPathInput {
   readonly uid: FirebaseAuthUserId;
   readonly filename?: Maybe<SlashPathFile>;
+  /**
+   * The model the upload is scoped to, for a purpose whose destination is not derivable from the uid alone.
+   *
+   * Required when the policy sets {@link StorageFilePurposeUploadPolicy.requiresScopeInput}.
+   */
+  readonly scope?: Maybe<StorageFileUploadScope>;
+}
+
+/**
+ * Names the specific model, and optionally the slot within it, that an upload belongs to.
+ *
+ * This is what lets ONE purpose serve many destinations: a FormSpace upload is `{ id: formSpaceId,
+ * subgroup: slot }` under a single `form_space` purpose, rather than a purpose per form type.
+ */
+export interface StorageFileUploadScope {
+  /**
+   * Id of the model the upload is scoped to.
+   */
+  readonly id: string;
+  /**
+   * Slot/subgroup within the scoped model, when the model has more than one.
+   */
+  readonly subgroup?: Maybe<string>;
 }
 
 /**
@@ -148,4 +171,12 @@ export interface StorageFilePurposeUploadPolicy {
    * When false (e.g. avatar), the path is derived solely from the uid.
    */
   readonly requiresFilenameInput: boolean;
+  /**
+   * When true, the caller MUST provide a {@link StorageFileUploadScope} for `buildUploadPath`.
+   *
+   * Set by a purpose whose destination folder is keyed by a model rather than by the uid alone. The scope
+   * is only a PATH input — it is not itself authorization; the purpose's initializer is what loads the
+   * scoped model and decides whether this uploader may write into it.
+   */
+  readonly requiresScopeInput?: boolean;
 }

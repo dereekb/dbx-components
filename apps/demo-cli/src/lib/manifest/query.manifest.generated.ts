@@ -3,7 +3,9 @@
 // Run `npx nx run demo-cli:generate-firestore-query-manifest` to refresh.
 
 import { profileWithUsernameQuery, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
-import { type CliFirestoreQueryManifest } from '@dereekb/dbx-cli';
+import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
+
+export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.42.0' };
 
 export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
   {

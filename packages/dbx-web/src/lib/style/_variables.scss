@@ -43,6 +43,16 @@ $padding-4-var: --dbx-padding-4;
 /// @utility .dbx-p5, .dbx-mb5
 $padding-5-var: --dbx-padding-5;
 
+/// Shadow gutter — the room a clipping/scrolling container must reserve INSIDE its
+/// padding box so an elevated child's `box-shadow` isn't clipped at the edge.
+/// Sized against Material's raised-button elevation: the resting shadow reaches
+/// 2.5px below the border box and the hover shadow reaches 5px, so 4px clears the
+/// resting state outright and all but the faintest 12% hover layer. Raise it to 5px
+/// to clear hover completely, or set it to 0px to opt out.
+/// @intent shadow gutter, elevation room, keep box-shadow from being clipped
+/// @role spacing
+$shadow-gutter-var: --dbx-shadow-gutter;
+
 $two-column-left-width-var: --dbx-two-column-left-width;
 
 $dbx-color-var: --dbx-color-current;

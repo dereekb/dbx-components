@@ -74,6 +74,7 @@ import { findModelFiles } from './find-model-files';
 import { assembleModels, collectModelEnums } from './assemble-models';
 import { deriveValidatorName, isExportedFromPackage } from './bind-validators';
 import { renderManifest } from './emit';
+import packageJson from '../../package.json' with { type: 'json' };
 import type { CollectedEntry, ModelExtractionSource, PackageRef } from './types';
 
 interface Flags {
@@ -200,7 +201,7 @@ async function main(): Promise<void> {
   const filteredModelEntries = flags.only ? modelEntries.filter((m) => flags.only?.has(m.modelType)) : modelEntries;
   const enumEntries: CliEnumManifest = flags.emitModels ? collectModelEnums({ extractions: modelSources, models: filteredModelEntries }) : {};
 
-  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), enumEntries, enumNamespace: deriveEnumNamespace(flags.project), emitConverters: flags.emitModelConverters });
+  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), enumEntries, enumNamespace: deriveEnumNamespace(flags.project), emitConverters: flags.emitModelConverters, generatorVersion: packageJson.version });
 
   const outcome = writeGeneratedTsFile({ outputFile, contents: formatted });
   console.log(`[${outcome}] ${relative(WORKSPACE_ROOT, outputFile)}`);

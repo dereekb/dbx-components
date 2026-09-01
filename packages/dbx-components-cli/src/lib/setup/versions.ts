@@ -20,6 +20,11 @@ export interface SetupCoreVersions {
   readonly typescript: string;
   readonly firebaseTools: string;
   readonly node: string;
+  /**
+   * The `esbuild` pin installed alongside `@nx/esbuild` for the API app's `build-base` target.
+   * `@nx/esbuild` declares it only as an optional peer, so npm does not install it on its own.
+   */
+  readonly esbuild: string;
 }
 
 /**
@@ -31,7 +36,8 @@ export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
   angular: '^21.0.0',
   typescript: '^5.9.3',
   firebaseTools: '15.11.0',
-  node: '24'
+  node: '24',
+  esbuild: '0.27.3'
 };
 
 /**
@@ -40,6 +46,14 @@ export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
  */
 export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   sharp: '^0.34.5',
+  // The NestJS runtime for the api app. Installed explicitly because the app is generated with
+  // `@nx/node:app` rather than `@nx/node`'s `@nx/nest` wrapper, whose `ensureDependencies` used to
+  // add these. Pinned to the `@dereekb/firebase-server` peer range (`@nx/nest` used `^11.0.0`).
+  '@nestjs/common': '^11.1.19',
+  '@nestjs/core': '^11.1.19',
+  '@nestjs/platform-express': '^11.1.19',
+  'reflect-metadata': '^0.2.0',
+  tslib: '^2.3.0',
   'zone.js': '^0.16.0',
   firebase: '^12.0.0',
   'firebase-admin': '^13.0.0',

@@ -12,6 +12,9 @@ import {
   storageFileFunctionMap,
   StorageFileFunctions,
   type StorageFileFunctionTypeMap,
+  formSpaceFunctionMap,
+  FormSpaceFunctions,
+  type FormSpaceFunctionTypeMap,
   type OidcModelFunctionTypeMap,
   oidcModelFunctionMap,
   OidcModelFunctions,
@@ -31,6 +34,7 @@ export type DemoFirebaseFunctionsMap = {
   readonly profileFunctions: ProfileFunctionTypeMap;
   readonly notificationFunctions: NotificationFunctionTypeMap;
   readonly storageFileFunctions: StorageFileFunctionTypeMap;
+  readonly formSpaceFunctions: FormSpaceFunctionTypeMap;
   readonly systemStateFunctions: SystemStateFunctionTypeMap;
   readonly calendarFunctions: CalendarFunctionTypeMap;
   readonly oidcModelFunctions: OidcModelFunctionTypeMap;
@@ -52,6 +56,7 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
   notificationFunctions: [NotificationFunctions, notificationFunctionMap],
   storageFileFunctions: [StorageFileFunctions, storageFileFunctionMap],
   calendarFunctions: [CalendarFunctions, calendarFunctionMap],
+  formSpaceFunctions: [FormSpaceFunctions, formSpaceFunctionMap],
   oidcModelFunctions: [OidcModelFunctions, oidcModelFunctionMap],
   userExternalConnectionFunctions: [UserExternalConnectionFunctions, userExternalConnectionFunctionMap],
   systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
@@ -69,6 +74,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly notificationFunctions: FirebaseFunctionGetter<NotificationFunctions>;
   abstract readonly storageFileFunctions: FirebaseFunctionGetter<StorageFileFunctions>;
   abstract readonly calendarFunctions: FirebaseFunctionGetter<CalendarFunctions>;
+  abstract readonly formSpaceFunctions: FirebaseFunctionGetter<FormSpaceFunctions>;
   abstract readonly oidcModelFunctions: FirebaseFunctionGetter<OidcModelFunctions>;
   abstract readonly userExternalConnectionFunctions: FirebaseFunctionGetter<UserExternalConnectionFunctions>;
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;

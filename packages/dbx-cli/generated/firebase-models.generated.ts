@@ -149,6 +149,221 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     archetypes: ['root-entity']
   },
   {
+    name: 'FormSpace',
+    identityConst: 'formSpaceIdentity',
+    modelType: 'formSpace',
+    collectionPrefix: 'fsp',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.ts',
+    fields: [
+      {
+        name: 't',
+        longName: 'formSpaceType',
+        converter: 'firestoreString<FormSpaceType>()',
+        tsType: 'FormSpaceType',
+        optional: false,
+        description: 'The kind of form this space holds, resolving its upload restrictions, expiration policy, and the server-side handler its submission is dispatched to.'
+      },
+      {
+        name: 'n',
+        longName: 'displayName',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<string>',
+        optional: true,
+        description: "Display name of the space, for the owner's own list of in-progress forms."
+      },
+      {
+        name: 's',
+        longName: 'state',
+        converter: 'firestoreEnum<FormSpaceState>({ default: FormSpaceState.DRAFT })',
+        tsType: 'FormSpaceState',
+        optional: false,
+        description: 'Lifecycle state. Only DRAFT is editable.',
+        enumRef: 'FormSpaceState'
+      },
+      {
+        name: 'ps',
+        longName: 'processingState',
+        converter: 'firestoreEnum<FormSpaceProcessingState>({ default: FormSpaceProcessingState.INIT_OR_NONE })',
+        tsType: 'FormSpaceProcessingState',
+        optional: false,
+        description: 'Processing state of the submission.',
+        enumRef: 'FormSpaceProcessingState'
+      },
+      {
+        name: 'd',
+        longName: 'data',
+        converter: 'optionalFirestorePassthroughJsonField<FormSpaceData>({ dontStoreIfEmpty: true })',
+        tsType: 'Maybe<T>',
+        optional: true,
+        description: "The form's own values, stored as pass-through JSON."
+      },
+      {
+        name: 'u',
+        longName: 'userId',
+        converter: 'firestoreUID()',
+        tsType: 'FirebaseAuthUserId',
+        optional: false,
+        description: 'The user the space belongs to. Set at creation and never changed.'
+      },
+      {
+        name: 'o',
+        longName: 'ownerKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirebaseAuthOwnershipKey>',
+        optional: true,
+        description: 'Ownership key, if applicable. Drives read access in the security rules.'
+      },
+      {
+        name: 'm',
+        longName: 'targetModelKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirestoreModelKey>',
+        optional: true,
+        description: 'Key of the model this space was opened against, when it was opened against one.'
+      },
+      {
+        name: 'uc',
+        longName: 'uploadCount',
+        converter: 'firestoreNumber({ default: 0 })',
+        tsType: 'number',
+        optional: false,
+        description: 'Monotonic count of uploads this space has ACCEPTED over its whole lifetime.'
+      },
+      {
+        name: 'fi',
+        longName: 'nextFileIndex',
+        converter: 'firestoreNumber({ default: 0 })',
+        tsType: 'number',
+        optional: false,
+        description: "The next index a file's permanent storage path is keyed by."
+      },
+      {
+        name: 'f',
+        longName: 'files',
+        converter: 'firestoreObjectArray({ objectField: formSpaceFileSubObject })',
+        tsType: 'FormSpaceFile[]',
+        optional: false,
+        description: 'Every file the space currently holds, across every slot.'
+      },
+      {
+        name: 'pn',
+        longName: 'processingNotificationKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<NotificationKey>',
+        optional: true,
+        description: "The NotificationTask key processing this space's submission."
+      },
+      {
+        name: 'pat',
+        longName: 'processingAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date `ps` was last moved to PROCESSING. Used to detect a stuck task.'
+      },
+      {
+        name: 'cat',
+        longName: 'createdAt',
+        converter: 'firestoreDate({ saveDefaultAsNow: true })',
+        tsType: 'Date',
+        optional: false,
+        description: 'Created at date.'
+      },
+      {
+        name: 'uat',
+        longName: 'updatedAt',
+        converter: 'firestoreDate({ saveDefaultAsNow: true })',
+        tsType: 'Date',
+        optional: false,
+        description: 'Updated at date. Moves on every content change.'
+      },
+      {
+        name: 'sat',
+        longName: 'submittedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date the space was submitted, if it was. Its presence IS the lock.'
+      },
+      {
+        name: 'cpat',
+        longName: 'completedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date processing of the submission concluded, if it has.'
+      },
+      {
+        name: 'eat',
+        longName: 'expiresAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.'
+      }
+    ],
+    enums: [
+      {
+        name: 'FormSpaceState',
+        values: [
+          {
+            name: 'DRAFT',
+            value: 0
+          },
+          {
+            name: 'SUBMITTED',
+            value: 1
+          },
+          {
+            name: 'EXPIRED',
+            value: 2
+          },
+          {
+            name: 'ARCHIVED',
+            value: 3
+          }
+        ],
+        description: 'Lifecycle state of a {@link FormSpace}.'
+      },
+      {
+        name: 'FormSpaceProcessingState',
+        values: [
+          {
+            name: 'INIT_OR_NONE',
+            value: 0
+          },
+          {
+            name: 'QUEUED_FOR_PROCESSING',
+            value: 1
+          },
+          {
+            name: 'PROCESSING',
+            value: 2
+          },
+          {
+            name: 'FAILED',
+            value: 3
+          },
+          {
+            name: 'SUCCESS',
+            value: 4
+          },
+          {
+            name: 'DO_NOT_PROCESS',
+            value: 5
+          }
+        ],
+        description: 'Processing state of a submitted {@link FormSpace}.'
+      }
+    ],
+    detectionHints: ['t', 'n', 'ps', 'm', 'uc', 'f', 'pn', 'pat', 'uat', 'sat', 'cpat', 'eat'],
+    description: 'A type-registered container for a client-side form: its in-progress JSON, its uploads, and its submission state.',
+    modelGroup: 'FormSpace',
+    collectionKind: 'root',
+    archetypes: ['root-entity', 'state-machine-item']
+  },
+  {
     name: 'NotificationBox',
     identityConst: 'notificationBoxIdentity',
     modelType: 'notificationBox',
@@ -1268,6 +1483,14 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
     sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.ts',
     description: 'Abstract base providing access to the Calendar Firestore collection.',
     modelNames: ['Calendar']
+  },
+  {
+    name: 'FormSpace',
+    containerName: 'FormSpaceFirestoreCollections',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.ts',
+    description: 'Abstract base providing access to the FormSpace Firestore collection.',
+    modelNames: ['FormSpace']
   },
   {
     name: 'Notification',

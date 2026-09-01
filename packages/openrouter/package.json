@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/openrouter",
-  "version": "13.42.0",
+  "version": "13.43.0",
   "type": "module",
   "exports": {
     "./firebase": {
@@ -15,7 +15,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.42.0",
+    "@dereekb/util": "13.43.0",
     "@openrouter/sdk": "^1.2.26"
   }
 }

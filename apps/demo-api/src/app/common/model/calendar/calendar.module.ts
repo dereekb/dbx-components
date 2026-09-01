@@ -4,7 +4,6 @@ import { appCalendarModuleMetadata, BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN } 
 import { DEMO_CALENDAR_TYPE_CONFIGS } from 'demo-firebase';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DemoApiActionModule } from '../../firebase/action.module';
-import { StorageFileModule } from '../storagefile/storagefile.module';
 
 /**
  * The domain every generated event UID is suffixed with.
@@ -31,14 +30,14 @@ export const DEMO_CALENDAR_INVITE_ORGANIZER: ICalendarOrganizer = {
  * Dependencies for the CalendarModule.
  */
 @Module({
-  imports: [DemoApiActionModule, StorageFileModule],
+  imports: [DemoApiActionModule],
   providers: [
     {
       provide: BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN,
       useExisting: DemoFirebaseServerActionsContext
     }
   ],
-  exports: [DemoApiActionModule, StorageFileModule, BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN]
+  exports: [DemoApiActionModule, BASE_CALENDAR_SERVER_ACTION_CONTEXT_TOKEN]
 })
 export class CalendarDependencyModule {}
 

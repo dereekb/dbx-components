@@ -77,6 +77,106 @@ describe('firestore.rules', () => {
       });
     });
 
+    describe('fsp (FormSpace)', () => {
+      const OWNER_FORM_SPACE = 'ownerformspace';
+      const OTHER_FORM_SPACE = 'otherformspace';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'fsp', OWNER_FORM_SPACE), { t: 'demo_example', s: 0, ps: 0, u: OWNER_UID, o: `pr/${OWNER_UID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+          await setDoc(doc(firestore, 'fsp', OTHER_FORM_SPACE), { t: 'demo_example', s: 0, ps: 0, u: OTHER_UID, o: `pr/${OTHER_UID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+        });
+      });
+
+      it('should allow the owner to read their own FormSpace', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      it("should deny reading another user's FormSpace", async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OTHER_UID), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'fsp', OWNER_FORM_SPACE)));
+      });
+
+      // "my outstanding forms" is the screen the model exists for, so list IS granted — but only when the
+      // query is scoped by the same ownership predicate the get rule uses.
+      it('should allow an owner-scoped list', async () => {
+        await assertSucceeds(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'fsp'), where('o', '==', `pr/${OWNER_UID}`))));
+      });
+
+      it('should deny an unscoped list', async () => {
+        await assertFails(getDocs(collection(f.firestoreForUser(OWNER_UID), 'fsp')));
+      });
+
+      it("should deny a list scoped to another user's ownership key", async () => {
+        await assertFails(getDocs(query(collection(f.firestoreForUser(OTHER_UID), 'fsp'), where('o', '==', `pr/${OWNER_UID}`))));
+      });
+
+      // Every state transition carries invariants (the submit lock, the eat clear, the monotonic upload
+      // counter) that a client write would bypass, so all writes stay server-only.
+      it('should deny the owner writing their own FormSpace', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', OWNER_FORM_SPACE), { s: 1 }));
+      });
+
+      it('should deny an unauthenticated write', async () => {
+        await assertFails(setDoc(doc(f.unauthenticatedFirestore(), 'fsp', OWNER_FORM_SPACE), { s: 1 }));
+      });
+
+      // A SHARED album: `o` names a Guestbook rather than a Profile, and having signed the guestbook is what
+      // grants the read. `u` is deliberately a THIRD user, so nothing here can pass by way of the `u` field.
+      describe('a guestbook-owned FormSpace', () => {
+        const GUESTBOOK_ID = 'rulestestguestbook';
+        const GUESTBOOK_FORM_SPACE = `gb_${GUESTBOOK_ID}`;
+        const CREATOR_UID = 'rulestestcreator';
+
+        beforeEach(async () => {
+          await f.withSecurityRulesDisabled(async (firestore) => {
+            await setDoc(doc(firestore, 'gb', GUESTBOOK_ID), { name: 'test', published: true, locked: false });
+            // OWNER_UID has signed; OTHER_UID has not
+            await setDoc(doc(firestore, 'gb', GUESTBOOK_ID, 'gbe', OWNER_UID), { message: 'hello', signed: 'owner', published: true, likes: 0 });
+            await setDoc(doc(firestore, 'fsp', GUESTBOOK_FORM_SPACE), { t: 'demo_guestbook', s: 0, ps: 0, u: CREATOR_UID, o: `gb/${GUESTBOOK_ID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+          });
+        });
+
+        it('should allow a signer to read the album', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', GUESTBOOK_FORM_SPACE)));
+        });
+
+        it('should deny someone who has not signed the guestbook', async () => {
+          // being signed in is not the gate — having an entry is
+          await assertFails(getDoc(doc(f.firestoreForUser(OTHER_UID), 'fsp', GUESTBOOK_FORM_SPACE)));
+        });
+
+        it('should deny an unauthenticated read', async () => {
+          await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'fsp', GUESTBOOK_FORM_SPACE)));
+        });
+
+        // `list` is deliberately NOT widened: it is evaluated per candidate document, so the exists() would
+        // be one billed read per result — and the album's id is derived, so the client always issues a get.
+        it('should deny a signer listing by the guestbook ownership key', async () => {
+          await assertFails(getDocs(query(collection(f.firestoreForUser(OWNER_UID), 'fsp'), where('o', '==', `gb/${GUESTBOOK_ID}`))));
+        });
+
+        it('should deny a signer writing the album', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', GUESTBOOK_FORM_SPACE), { s: 1 }));
+        });
+
+        // pins the anchored single-segment guard on `o`. Without it this `o` would build the path
+        // `.../gb/x/gbe/<uid>/gbe/<uid>` — or, with a craftier value, resolve somewhere the caller does own.
+        it('should deny reading a space whose ownership key is a multi-segment path', async () => {
+          const CRAFTED_FORM_SPACE = 'craftedformspace';
+
+          await f.withSecurityRulesDisabled(async (firestore) => {
+            await setDoc(doc(firestore, 'fsp', CRAFTED_FORM_SPACE), { t: 'demo_guestbook', s: 0, ps: 0, u: CREATOR_UID, o: `gb/${GUESTBOOK_ID}/gbe/${OWNER_UID}`, uc: 0, cat: new Date().toISOString(), uat: new Date().toISOString() });
+          });
+
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'fsp', CRAFTED_FORM_SPACE)));
+        });
+      });
+    });
+
     describe('sys (SystemState)', () => {
       const SYSTEM_STATE_TYPE = 'examplestate';
 
