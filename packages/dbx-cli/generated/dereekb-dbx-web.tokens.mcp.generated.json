@@ -1206,6 +1206,20 @@
       ]
     },
     {
+      "cssVariable": "--dbx-file-list-item-details-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "file list item details gap",
+        "file list item details gap spacing"
+      ],
+      "description": "Component-scoped override point (`download`) read in `packages/dbx-web/src/lib/extension/download/_download.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `0.25em`.",
+      "defaults": {
+        "light": "0.25em"
+      },
+      "componentScope": "download"
+    },
+    {
       "cssVariable": "--dbx-file-upload-square-container-shape",
       "source": "dbx-web",
       "role": "misc",
@@ -2224,6 +2238,21 @@
         "light": "120px"
       },
       "componentScope": "section"
+    },
+    {
+      "cssVariable": "--dbx-shadow-gutter",
+      "scssVariable": "$shadow-gutter-var",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "shadow gutter",
+        "elevation room",
+        "keep box-shadow from being clipped"
+      ],
+      "description": "Shadow gutter — the room a clipping/scrolling container must reserve INSIDE its padding box so an elevated child's `box-shadow` isn't clipped at the edge. Sized against Material's raised-button elevation: the resting shadow reaches 2.5px below the border box and the hover shadow reaches 5px, so 4px clears the resting state outright and all but the faintest 12% hover layer. Raise it to 5px to clear hover completely, or set it to 0px to opt out.",
+      "defaults": {
+        "light": "4px"
+      }
     },
     {
       "cssVariable": "--dbx-sidenav-active-accent",
