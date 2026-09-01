@@ -7,7 +7,7 @@
     "@angular/material": "^22.1.4",
     "@dereekb/dbx-firebase": "13.43.0",
     "@dereekb/dbx-web": "13.43.0",
-    "@dereekb/util": "13.16.0",
+    "@dereekb/util": "13.43.0",
     "@dereekb/vitest": "13.43.0"
   }
 }
