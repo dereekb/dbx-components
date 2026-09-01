@@ -20,6 +20,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "strict": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@dereekb/browser": ["packages/browser/src/index.ts"],
       "@dereekb/browser/oidc": ["packages/browser/oidc/src/index.ts"],

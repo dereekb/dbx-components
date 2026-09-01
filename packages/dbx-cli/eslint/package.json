@@ -6,7 +6,7 @@
     "@dereekb/dbx-cli": "13.43.0",
     "@dereekb/util": "13.43.0",
     "@typescript-eslint/utils": "8.59.3",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "8.59.3",

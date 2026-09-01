@@ -54,7 +54,7 @@
     "body-parser": "^2.2.2",
     "express": "^5.2.1",
     "form-data": "^4.0.5",
-    "mailgun.js": "^12.9.0",
+    "mailgun.js": "^14.0.0",
     "openai": "^6.34.0",
     "@openrouter/sdk": "^1.2.26",
     "raw-body": "^3.0.2",
@@ -63,7 +63,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@angular/core": "21.2.11",
+    "@angular/core": "22.1.4",
     "@nestjs/core": "^11.1.19",
     "@typescript-eslint/parser": "8.59.3",
     "eslint": "10.4.0",

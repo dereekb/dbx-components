@@ -33,8 +33,8 @@ export interface SetupCoreVersions {
 export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
   dbxComponents: '13.18.0',
   nx: '23.0.0',
-  angular: '^21.0.0',
-  typescript: '^5.9.3',
+  angular: '^22.0.0',
+  typescript: '^6.0.3',
   firebaseTools: '15.11.0',
   node: '24',
   esbuild: '0.27.3'
@@ -71,7 +71,7 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'eslint-plugin-jsdoc': '^62.9.0',
   'eslint-plugin-sonarjs': '^4.0.3',
   'eslint-plugin-unicorn': '^64.0.0',
-  'mailgun.js': '^12.0.0',
+  'mailgun.js': '^14.0.0',
   rxjs: '^7.8.0',
   arktype: '^2.2.0',
   'mapbox-gl': '^3.10.0',
@@ -82,14 +82,14 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   '@placemarkio/geo-viewport': '^1.0.2',
   '@uirouter/rx': '^1.0.0',
   '@uirouter/core': '^6.1.2',
-  '@uirouter/angular': '21.0.0',
-  '@ngbracket/ngx-layout': '^21.0.0',
-  '@ngrx/store-devtools': '^21.0.0',
+  '@uirouter/angular': '22.0.0',
+  '@ngbracket/ngx-layout': '^22.0.1',
+  '@ngrx/store-devtools': '^22.0.0',
   '@firebase/rules-unit-testing': '5.0.0',
   'angular-calendar': '^0.32.1',
   '@types/segment-analytics': '^0.0.38',
-  '@analogjs/vite-plugin-angular': '~2.3.1',
-  '@ng-forge/dynamic-forms': '^0.7.0'
+  '@analogjs/vite-plugin-angular': '~2.7.1',
+  '@ng-forge/dynamic-forms': '1.2.0-next.8'
 };
 
 /**

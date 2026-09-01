@@ -5,7 +5,7 @@
 import { profileWithUsernameQuery, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
 import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.42.0' };
+export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.43.0' };
 
 export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
   {

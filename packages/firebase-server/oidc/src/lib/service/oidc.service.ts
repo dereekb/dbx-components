@@ -332,7 +332,9 @@ export class OidcService {
           return Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
         },
         Session: (ctx, _session) => resolveDurationFromCtx(ctx, undefined, config.tokenLifetimes.session),
-        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
+        // No client argument here: oidc-provider types `Grant` as `TTLFunction<Grant, false>` and never
+        // passes a client for it, so the previous third parameter was always `undefined` at runtime.
+        Grant: (ctx, _grant) => resolveDurationFromCtx(ctx, undefined, config.tokenLifetimes.grant),
         Interaction: 60 * 60,
         DeviceCode: 10 * 60
       },

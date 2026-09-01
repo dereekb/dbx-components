@@ -7,8 +7,8 @@
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {
-    "@angular-eslint/template-parser": "21.4.0",
-    "@angular/core": "21.2.11",
+    "@angular-eslint/template-parser": "22.2.0",
+    "@angular/core": "22.1.4",
     "@dereekb/dbx-core": "13.43.0",
     "@dereekb/rxjs": "13.43.0",
     "@typescript-eslint/parser": "8.59.3",
