@@ -92,7 +92,6 @@ DEP__FIREBASE_TOOLS_VERSION=15.11.0          # firebase-tools
 DEP__ANGULAR_CALENDAR_VERSION=^0.32.1        # angular-calendar
 DEP__TYPES_SEGMENT_ANALYTICS_VERSION=^0.0.38  # @types/segment-analytics
 DEP__NX_VITEST_VERSION=$NX_VERSION           # @nx/vitest
-DEP__VITE_TSCONFIG_PATHS_VERSION="^6.1.1"    # vite-tsconfig-paths
 DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION=~2.3.1  # @analogjs/vite-plugin-angular
 DEP__NG_FORGE_VERSION=^0.7.0                     # @ng-forge/dynamic-forms, @ng-forge/dynamic-forms-material
 
@@ -474,7 +473,7 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add vitest setup/configurations
 echo "Adding vitest configurations..."
-npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION vite-tsconfig-paths@$DEP__VITE_TSCONFIG_PATHS_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
+npm install -D @nx/vitest@$DEP__NX_VITEST_VERSION @analogjs/vite-plugin-angular@$DEP__ANALOGJS_VITE_PLUGIN_ANGULAR_VERSION
 # rm vitest.preset.config.mts
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/vitest.preset.config.mts -o vitest.preset.config.mts

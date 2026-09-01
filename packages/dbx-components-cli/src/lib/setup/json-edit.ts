@@ -127,8 +127,7 @@ export const DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS: Readonly<Record<string, strin
   'typescript-eslint': '^8.59.3',
   '@typescript-eslint/utils': '^8.59.3',
   '@analogjs/vite-plugin-angular': '~2.5.0',
-  '@analogjs/vitest-angular': '~2.5.0',
-  'vite-tsconfig-paths': '^6.1.1'
+  '@analogjs/vitest-angular': '~2.5.0'
 };
 
 /**

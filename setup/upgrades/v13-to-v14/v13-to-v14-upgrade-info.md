@@ -23,7 +23,7 @@ APIs that dbx-components relied on, all of which are removed in Nx v24:
 | Deprecated | Warning says | Replacement used here |
 | --- | --- | --- |
 | `@nx/vitest:test` executor | Run `nx g @nx/vitest:convert-to-inferred` | The inferred `@nx/vitest` plugin, or a plain `nx:run-commands` target |
-| `nxViteTsPaths` (`@nx/vite/plugins/nx-tsconfig-paths.plugin`) | Replace with `tsconfigPaths()` from `vite-tsconfig-paths` | `vite-tsconfig-paths` |
+| `nxViteTsPaths` (`@nx/vite/plugins/nx-tsconfig-paths.plugin`) | Replace with `tsconfigPaths()` from `vite-tsconfig-paths` | Vite's built-in `resolve.tsconfigPaths` |
 | `nxCopyAssetsPlugin` (`@nx/vite/plugins/nx-copy-assets.plugin`) | Use Vite's `publicDir` or `vite-plugin-static-copy` | Removed entirely — it was a no-op under Vitest |
 
 Because all three were reached through `@dereekb/vitest`'s `createVitestConfig`, most of this
@@ -74,20 +74,22 @@ Run `npx nx reset` afterwards if you hit stale-cache issues.
 ### Update dependencies
 
 ```
-npm install -D vite-tsconfig-paths
 npm uninstall @nx/vite
 ```
 
 `@nx/vite` was only ever pulled in for the two deprecated plugin helpers. Once
 `createVitestConfig` stops calling them, nothing in a dbx-components project imports `@nx/vite`,
-so it can be removed outright. Check first that you are not using an `@nx/vite:build`,
-`@nx/vite:dev-server`, or `@nx/vite:preview-server` executor anywhere — those are deprecated in
-Nx 23 as well and need `nx g @nx/vite:convert-to-inferred` before you can drop the package.
+so it can be removed outright. Nothing replaces it: path resolution now uses Vite's built-in
+`resolve.tsconfigPaths`, so no third-party resolver package is needed either.
+
+Check first that you are not using an `@nx/vite:build`, `@nx/vite:dev-server`, or
+`@nx/vite:preview-server` executor anywhere — those are deprecated in Nx 23 as well and need
+`nx g @nx/vite:convert-to-inferred` before you can drop the package.
 
 `@nx/vitest` stays: it now provides the inferred plugin rather than the executor.
 
-The `@dereekb/vitest` peer dependencies change accordingly — `@nx/vite` is gone and
-`vite-tsconfig-paths` (`^6.1.1`) is added.
+The `@dereekb/vitest` peer dependencies change accordingly: `@nx/vite` is dropped and nothing
+is added in its place.
 
 ### Convert the test targets
 
@@ -237,10 +239,11 @@ npx nx test <project> --skip-nx-cache
 
 ## Notes and gotchas
 
-### `vite-tsconfig-paths` only discovers `tsconfig.json` / `jsconfig.json`
+### tsconfig path resolution only discovers `tsconfig.json` / `jsconfig.json`
 
-It does **not** discover `tsconfig.base.json` by name. It finds each project's `tsconfig.json`
-and follows `extends` up to the base config, which is how the `paths` entries are picked up.
+Neither Vite's built-in resolution nor the `vite-tsconfig-paths` package discovers
+`tsconfig.base.json` by name. They find each project's `tsconfig.json` and follow `extends` up to
+the base config, which is how the `paths` entries are picked up.
 
 The consequence: a file that sits at the workspace root, outside any project's `tsconfig.json`
 scope, gets no path mapping. In this repo the workspace-root Vitest setup shims
@@ -258,29 +261,29 @@ the shims should keep importing `@dereekb/vitest/setup-node`.
 If you hit this on your own root-level files, the alternative is to add a root `tsconfig.json`
 that extends `tsconfig.base.json`.
 
-### Vite's native `resolve.tsconfigPaths` works, but is still experimental
+### Path resolution uses Vite's built-in `resolve.tsconfigPaths`
 
-Vite 8 prints a notice suggesting you drop `vite-tsconfig-paths` in favour of the built-in
-`resolve.tsconfigPaths: true`:
+`createVitestConfig` sets it directly:
 
 ```ts
-// instead of plugins: [tsconfigPaths(...)]
 resolve: {
   tsconfigPaths: true;
 }
 ```
 
-This was tested on the dbx-components workspace and it does work — the `node`, `angular`, and
-`nestjs` config types all pass with it (2571 tests). It also handles the malformed scaffolding
-template `tsconfig.json` files silently, so it needs no equivalent of `ignoreConfigErrors`.
+Vite 8 prints a notice recommending this over the `vite-tsconfig-paths` package, and it is what
+replaced the deprecated `nxViteTsPaths`. It needs no equivalent of that package's
+`ignoreConfigErrors`: it already tolerates the scaffolding templates' `tsconfig.json` files,
+which contain placeholder tokens and are not valid JSON.
 
-We are staying on `vite-tsconfig-paths` for now anyway, because the option is flagged
-`@experimental` in Vite's own type definitions and `@dereekb/vitest` is a published package that
-downstream projects pin — an experimental resolver changing under a Vite minor is a worse
-trade than one small dependency. Revisit once Vite marks it stable.
+The one caveat: the option is flagged `@experimental` in Vite's own type definitions as of Vite
+8. We took it anyway rather than carry a dependency we would only have to remove later — v14 is
+the right window for that kind of change. If a future Vite release breaks it, the fallback is a
+two-line revert to `plugins: [tsconfigPaths({ root: rootDir, ignoreConfigErrors: true })]` from
+the `vite-tsconfig-paths` package.
 
-Note that switching does **not** avoid the workspace-root file problem described above: Vite's
-native resolution has the same limitation and also fails to map paths for a file outside any
+Note that neither resolver avoids the workspace-root file problem described above: Vite's
+built-in resolution has the same limitation and also fails to map paths for a file outside any
 project `tsconfig.json` scope.
 
 ### `nxCopyAssetsPlugin` needed no replacement
@@ -292,12 +295,13 @@ replaced. (It was also being applied twice for Angular projects.)
 ### Docker-based emulator tests need an image rebuild
 
 `docker-compose.yml` mounts `/code/node_modules` as an anonymous volume, which masks the host's
-`node_modules` with the copy baked into the image. Adding `vite-tsconfig-paths` therefore is not
-visible inside the container until you rebuild:
+`node_modules` with the copy baked into the image. Any dependency change is therefore invisible
+inside the container until you rebuild:
 
 ```
 docker compose build demo-api-server
 ```
 
-Without this you get `Cannot find module 'vite-tsconfig-paths'` from the containerized test run
-while the same command works fine on the host.
+Without this you get a `Cannot find module '…'` from the containerized test run while the same
+command works fine on the host. This bit us mid-upgrade and is worth remembering any time a
+dependency moves.

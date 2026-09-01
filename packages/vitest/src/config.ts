@@ -1,7 +1,6 @@
 /// <reference types='vitest' />
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { type loadEnv, type PluginOption } from 'vite';
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
@@ -224,17 +223,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   let pool: VitestTestConfig['pool'] | undefined;
   let retry: VitestTestConfig['retry'] | undefined;
 
-  /**
-   * Resolves the workspace `@dereekb/*` tsconfig path aliases to their source files,
-   * replacing `nxViteTsPaths` from `@nx/vite`, which Nx deprecated for removal in v24.
-   *
-   * `root` is pinned to the workspace root so discovery starts there rather than at the
-   * project directory, which is where vitest's `root` (and the `@nx/vitest` inferred
-   * target's cwd) points. `ignoreConfigErrors` suppresses parse warnings from the
-   * scaffolding templates, whose `tsconfig.json` files contain placeholder tokens and
-   * are not valid JSON.
-   */
-  const plugins: PluginOption[] = [tsconfigPaths({ root: rootDir, ignoreConfigErrors: true })];
+  const plugins: PluginOption[] = [];
 
   const setupFiles: VitestTestConfig['setupFiles'] = [];
 
@@ -340,6 +329,18 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
     return {
       root: projectRootDir,
+      /**
+       * Resolves the workspace `@dereekb/*` tsconfig path aliases to their source files.
+       *
+       * Vite's built-in resolution, which replaces `nxViteTsPaths` from `@nx/vite` (Nx
+       * deprecated it for removal in v24). Vite prints a notice recommending this over the
+       * `vite-tsconfig-paths` package, and it needs no equivalent of that package's
+       * `ignoreConfigErrors` — it already tolerates the scaffolding templates' placeholder
+       * `tsconfig.json` files. Marked `@experimental` in vite's types as of vite 8.
+       */
+      resolve: {
+        tsconfigPaths: true
+      },
       cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
       plugins,
       server: {
