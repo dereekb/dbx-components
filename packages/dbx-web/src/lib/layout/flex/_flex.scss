@@ -9,12 +9,22 @@ $dbx-flex-group-columns-count: 6;
   /// @dbx-utility flex-bar
   /// @intent horizontal action bar — flex row that scrolls horizontally before wrapping
   /// @role flex
-  /// @see-also dbx-flex-center, dbx-flex-fill
+  /// @see-also dbx-flex-center, dbx-flex-fill, card-horizontal
   .dbx-flex-bar {
     display: flex;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
+
+    // `overflow-x: auto` makes this a scroll container, and a `box-shadow` never
+    // contributes to the scrollable overflow region — so an elevated child's shadow is
+    // CLIPPED at the edge rather than scrolled to. With `align-items: center` and no
+    // fixed height the bar hugs its tallest child exactly, putting the clip edge right on
+    // a raised button's border box. Reserve the shadow's reach as vertical padding so it
+    // lives INSIDE the padding box (the same fix `.dbx-card-horizontal` uses for its
+    // poking tab). Block axis only: `padding-inline` would push the first button off the
+    // bar's leading edge, and the horizontal cut is not what reads as broken.
+    padding-block: var(--dbx-shadow-gutter, 4px);
 
     // Constrain touch targets to prevent overflow scrollbar (48px default > 40px button)
     --mat-icon-button-touch-target-size: 40px;

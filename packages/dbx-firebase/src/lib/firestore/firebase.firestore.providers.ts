@@ -1,5 +1,5 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { CalendarFirestoreCollections, clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { CalendarFirestoreCollections, clientFirebaseFirestoreContextFactory, type FirestoreContext, type FirestoreContextCacheFactory, FormSpaceFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { type Maybe, type ClassLikeType } from '@dereekb/util';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { type Firestore } from 'firebase/firestore';
@@ -66,6 +66,21 @@ export function provideCalendarFirestoreCollections(appCollection: CalendarFires
 }
 
 /**
+ * Provider factory for the FormSpaceFirestoreCollections.
+ *
+ * @param appCollection - The app collection class to use.
+ * @returns Provider factory for the FormSpaceFirestoreCollections.
+ * @throws {Error} When `appCollection` does not expose a `formSpaceCollection`.
+ */
+export function provideFormSpaceFirestoreCollections(appCollection: FormSpaceFirestoreCollections): FormSpaceFirestoreCollections {
+  if (!appCollection.formSpaceCollection) {
+    throw new Error(`FormSpaceFirestoreCollections could not be provided using the app's app collection. Set provideFormSpaceFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement FormSpaceFirestoreCollections.`);
+  }
+
+  return appCollection;
+}
+
+/**
  * Configuration for provideDbxFirestoreCollection().
  */
 export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
@@ -101,6 +116,12 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
    * False by default.
    */
   readonly provideCalendarFirestoreCollections?: boolean;
+  /**
+   * Whether or not to provide the FormSpaceFirestoreCollections.
+   *
+   * False by default.
+   */
+  readonly provideFormSpaceFirestoreCollections?: boolean;
   /**
    * Optional cache factory to enable collection-level caching.
    *
@@ -174,6 +195,14 @@ export function provideDbxFirestoreCollection<T>(config: ProvideDbxFirebaseFires
     providers.push({
       provide: CalendarFirestoreCollections,
       useFactory: provideCalendarFirestoreCollections,
+      deps: [config.appCollectionClass]
+    });
+  }
+
+  if (config.provideFormSpaceFirestoreCollections) {
+    providers.push({
+      provide: FormSpaceFirestoreCollections,
+      useFactory: provideFormSpaceFirestoreCollections,
       deps: [config.appCollectionClass]
     });
   }

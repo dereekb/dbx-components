@@ -181,3 +181,63 @@ describe('DbxFirebaseStorageFileUploadStore.files$', () => {
     });
   });
 });
+
+describe('DbxFirebaseStorageFileUploadStore.maxUploadFiles', () => {
+  it('emits the configured limit over the component limit', async () => {
+    const store = makeStore();
+
+    store.setComponentMaxUploadFiles(4);
+    expect(await firstValueFrom(store.maxUploadFiles$)).toBe(4);
+
+    store.setMaxUploadFiles(2);
+    expect(await firstValueFrom(store.maxUploadFiles$)).toBe(2);
+  });
+
+  it('leaves the raw files alone when no limit is configured', async () => {
+    const store = makeStore();
+    const files = [makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')];
+
+    store.setRawFiles(files);
+    expect(await firstValueFrom(store.rawFiles$)).toEqual(files);
+  });
+
+  it('truncates the raw files to the limit rather than refusing them', async () => {
+    const store = makeStore();
+    const files = [makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')];
+
+    store.setMaxUploadFiles(2);
+    store.setRawFiles(files);
+
+    expect(await firstValueFrom(store.rawFiles$)).toEqual([files[0], files[1]]);
+  });
+
+  it('holds nothing when the destination has no room left', async () => {
+    const store = makeStore();
+
+    store.setMaxUploadFiles(0);
+    store.setRawFiles([makeFile('a.txt')]);
+
+    expect(await firstValueFrom(store.rawFiles$)).toEqual([]);
+  });
+
+  it('leaves the files it already holds alone while the upload handler is working', async () => {
+    const store = makeStore();
+    const files = [makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')];
+
+    store.setRawFiles(files);
+    store.setIsUploadHandlerWorking(true);
+    store.setMaxUploadFiles(1);
+
+    expect(await firstValueFrom(store.rawFiles$)).toEqual(files);
+  });
+
+  it('re-limits the files it already holds when the limit tightens', async () => {
+    const store = makeStore();
+    const files = [makeFile('a.txt'), makeFile('b.txt'), makeFile('c.txt')];
+
+    store.setRawFiles(files);
+    store.setMaxUploadFiles(1);
+
+    expect(await firstValueFrom(store.rawFiles$)).toEqual([files[0]]);
+  });
+});

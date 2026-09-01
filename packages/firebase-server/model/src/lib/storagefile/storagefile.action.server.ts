@@ -88,6 +88,7 @@ import {
   getDocumentSnapshotDataPair,
   createStorageFileDocumentPairFactory,
   StorageFileCreationType,
+  storageFileDisplayFileName,
   storageFileGroupZipFileStoragePath,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
@@ -106,6 +107,7 @@ import {
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH,
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS,
   type StorageFilePurposeUploadPolicy,
+  type StorageFileUploadScope,
   type FirebaseAuthUserId,
   type AsyncFirebaseFunctionCreateAction
 } from '@dereekb/firebase';
@@ -129,7 +131,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -305,6 +307,20 @@ function _assertSignedUploadUrlFileSizeAllowed(policy: StorageFilePurposeUploadP
   }
 }
 
+function _resolveSignedUploadUrlScopeOrThrow(policy: StorageFilePurposeUploadPolicy, scope: Maybe<StorageFileUploadScope>): StorageFileUploadScope | undefined {
+  let resolved: StorageFileUploadScope | undefined;
+
+  if (policy.requiresScopeInput) {
+    if (!scope?.id) {
+      throw badRequestError({ message: `scope is required for purpose "${policy.purpose}"`, code: 'MISSING_SCOPE' });
+    }
+
+    resolved = scope;
+  }
+
+  return resolved;
+}
+
 function _resolveSignedUploadUrlFilenameOrThrow(policy: StorageFilePurposeUploadPolicy, filename: Maybe<string>): SlashPathFile | undefined {
   let resolved: SlashPathFile | undefined;
 
@@ -348,11 +364,12 @@ export function createStorageFileSignedUploadUrlFactory(context: StorageFileServ
     _assertSignedUploadUrlFileSizeAllowed(policy, params.fileSizeBytes);
 
     const filename = _resolveSignedUploadUrlFilenameOrThrow(policy, params.filename);
+    const scope = _resolveSignedUploadUrlScopeOrThrow(policy, params.scope);
     const expiresInMs = _clampSignedUploadUrlExpiresInMs(params.expiresInMs);
     const contentType = params.contentType;
 
     return async ({ uid }: { readonly uid: FirebaseAuthUserId }): Promise<CreateStorageFileSignedUploadUrlResult> => {
-      const pathString = policy.buildUploadPath({ uid, filename });
+      const pathString = policy.buildUploadPath({ uid, filename, scope });
       const expiresAtDate = addMilliseconds(new Date(), expiresInMs);
 
       const file = storageService.file({ pathString });
@@ -395,7 +412,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
   const _initializeStorageFileFromUploadFile = _initializeStorageFileFromUploadFileFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(initializeAllStorageFilesFromUploadsParamsType, async (params) => {
-    const { folderPath, maxFilesToInitialize, overrideUploadsFolderPath } = params;
+    const { folderPath, maxFilesToInitialize, overrideUploadsFolderPath, expediteProcessing } = params;
     const fullPath = mergeSlashPaths([overrideUploadsFolderPath ?? UPLOADS_FOLDER_PATH, folderPath]); // only targets the uploads folder
 
     return async () => {
@@ -413,7 +430,7 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
         readItemsFromPageResult: (results) => results.result.files(),
         iterateEachPageItem: async (file) => {
           const fileInstance = file.file();
-          const initializeResult = await _initializeStorageFileFromUploadFile({ file: fileInstance }).catch(() => null);
+          const initializeResult = await _initializeStorageFileFromUploadFile({ file: fileInstance, expediteProcessing }).catch(() => null);
 
           filesVisited++;
 
@@ -765,10 +782,14 @@ export interface ProcessStorageFileInTransactionInput {
  * Creates or restarts a notification task for the file based on its current processing state,
  * handling stuck-processing detection, forced restarts, and re-processing of already-successful files.
  *
- * @param context - The storage file server actions context.
+ * Takes the BASE context rather than the full one so a sibling model's actions (Calendar's ICS re-flag,
+ * for instance) can build this without standing up the upload service and signed-upload policy registry
+ * it has no use for.
+ *
+ * @param context - The base storage file server actions context.
  * @returns An async function that processes a storage file within a transaction.
  */
-export function _processStorageFileInTransactionFactory(context: StorageFileServerActionsContext) {
+export function _processStorageFileInTransactionFactory(context: BaseStorageFileServerActionsContext) {
   const { storageFileCollection, notificationCollectionGroup } = context;
 
   return async (input: ProcessStorageFileInTransactionInput, transaction: Transaction) => {
@@ -874,10 +895,13 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
  * Processes a single {@link StorageFile} by creating a notification task for it
  * and marking it as processing. Validates the file is in a valid state for processing.
  *
- * @param context - The storage file server actions context.
+ * Takes the BASE context, so a sibling model that needs to re-flag a StorageFile it owns can build this
+ * action directly instead of injecting the whole {@link StorageFileServerActions}.
+ *
+ * @param context - The base storage file server actions context.
  * @returns An async transform-and-validate function that processes a single StorageFile.
  */
-export function processStorageFileFactory(context: StorageFileServerActionsContext) {
+export function processStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
   const processStorageFileInTransaction = _processStorageFileInTransactionFactory(context);
 
@@ -1122,7 +1146,10 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
         return {
           key: item.key,
           url: downloadUrl,
-          fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
+          // the StorageFile's own display name wins over the object's leaf, matching how the zip builder
+          // names its entries — a purpose whose destination is not name-keyed (a FormSpace file lives at
+          // `.../{index}.{ext}`) would otherwise download as its index
+          fileName: storageFileDisplayFileName({ displayName: storageFile.n, pathString: metadata.name, contentType: metadata.contentType }) ?? undefined,
           mimeType: itemResponseContentType ?? metadata.contentType,
           expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
         };

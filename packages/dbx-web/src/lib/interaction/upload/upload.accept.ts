@@ -1,4 +1,4 @@
-import { asDecisionFunction, type DecisionFunction, type MimeTypeWithSubtypeWildcardWithoutParameters, type MimeTypeWithoutParameters, separateValues, SLASH_PATH_FILE_TYPE_SEPARATOR, type SlashPathTypedFileSuffix, splitFront, type MimeTypeWildcard } from '@dereekb/util';
+import { asDecisionFunction, type DecisionFunction, type Maybe, type MimeTypeWithSubtypeWildcardWithoutParameters, type MimeTypeWithoutParameters, separateValues, SLASH_PATH_FILE_TYPE_SEPARATOR, type SlashPathTypedFileSuffix, splitFront, type MimeTypeWildcard } from '@dereekb/util';
 
 /**
  * String used as input for the "accept" attribute of a file input element.
@@ -46,14 +46,58 @@ export function fileAcceptFilterTypeStringArray(accept: FileAcceptString | FileA
 /**
  * Configuration for matching an array of files against accept criteria with optional multiple file support.
  */
-export interface FileArrayAcceptMatchConfig {
+export interface FileArrayAcceptMatchConfig extends FileArrayAcceptMaxFilesInput {
   readonly accept: FileAcceptFunction | FileAcceptString | FileAcceptFilterTypeStringArray;
+}
+
+/**
+ * The two values that together decide how many files a selection may accept.
+ */
+export interface FileArrayAcceptMaxFilesInput {
   /**
    * If false, then only the first file will be accepted.
    *
    * Defaults to true.
    */
-  readonly multiple?: boolean;
+  readonly multiple?: Maybe<boolean>;
+  /**
+   * The most files that may be accepted at once.
+   *
+   * Files past the limit are REJECTED rather than the whole selection being refused, so a user who picks
+   * more than the limit still gets the first ones instead of nothing at all.
+   *
+   * A limit of 0 accepts nothing — which is how a destination that is already full says so. Ignored while
+   * multiple is false, as that is already a limit of one.
+   */
+  readonly maxFiles?: Maybe<number>;
+}
+
+/**
+ * Returns how many files a selection may accept, or undefined when there is no limit.
+ *
+ * @param input - The multiple/maxFiles pair to resolve.
+ * @returns The effective limit, or undefined when unlimited.
+ *
+ * @example
+ * ```ts
+ * fileArrayAcceptMaxFiles({ multiple: false }); // 1
+ * fileArrayAcceptMaxFiles({ multiple: true, maxFiles: 3 }); // 3
+ * fileArrayAcceptMaxFiles({ multiple: true }); // undefined
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function fileArrayAcceptMaxFiles(input: FileArrayAcceptMaxFilesInput): Maybe<number> {
+  const { multiple, maxFiles } = input;
+  let result: Maybe<number>;
+
+  if (multiple === false) {
+    result = 1;
+  } else if (maxFiles != null) {
+    result = Math.max(0, Math.floor(maxFiles));
+  }
+
+  return result;
 }
 
 /**
@@ -64,6 +108,10 @@ export interface FileArrayAcceptMatchResult {
    * If multiple is allowed or not.
    */
   readonly multiple: boolean;
+  /**
+   * The limit that was applied, or undefined when the selection was unlimited.
+   */
+  readonly maxFiles?: Maybe<number>;
   /**
    * The input files.
    */
@@ -112,6 +160,7 @@ export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMat
  */
 export function fileArrayAcceptMatchFunction(config: FileArrayAcceptMatchConfig): FileArrayAcceptMatchFunction {
   const multiple = config.multiple ?? true;
+  const maxFiles = fileArrayAcceptMaxFiles(config);
   const isAcceptedFunction = typeof config.accept === 'function' ? config.accept : fileAcceptFunction(config.accept);
 
   return (input: File[]) => {
@@ -119,13 +168,13 @@ export function fileArrayAcceptMatchFunction(config: FileArrayAcceptMatchConfig)
     let accepted = acceptedType;
     let rejected = rejectedType;
 
-    if (!multiple) {
-      const front = splitFront(acceptedType, 1);
+    if (maxFiles != null) {
+      const front = splitFront(acceptedType, maxFiles);
       accepted = front.front;
       rejected = [...rejectedType, ...front.remaining];
     }
 
-    return { multiple, input, accepted, rejected, acceptedType, rejectedType };
+    return { multiple, maxFiles, input, accepted, rejected, acceptedType, rejectedType };
   };
 }
 

@@ -3,6 +3,7 @@ import { exampleUsageOfSchedule, hourlySchedule } from '../example/example.sched
 import { onScheduleWithDemoNestContext } from '../function.context';
 import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
 import { storageFileHourlyUpdateSchedule } from '../storagefile/storagefile.schedule';
+import { formSpaceHourlyUpdateSchedule } from '../formspace/formspace.schedule';
 import { openRouterRunTaskExpirationSweepSchedule, openRouterRunTaskSweepSchedule } from '../openrouter/openrouter.schedule';
 
 // MARK: Example
@@ -15,6 +16,7 @@ export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
     await exampleUsageOfSchedule(x);
     await hourlySchedule(x);
     await calendarHourlyUpdateSchedule(x); // queues the ICS StorageFile that the storagefile sweep then processes
+    await formSpaceHourlyUpdateSchedule(x); // flags an expired space's files, which the storagefile sweep below then deletes in this same tick
     await storageFileHourlyUpdateSchedule(x);
     await notificationHourlyUpdateSchedule(x);
     await openRouterRunTaskSweepSchedule(x);

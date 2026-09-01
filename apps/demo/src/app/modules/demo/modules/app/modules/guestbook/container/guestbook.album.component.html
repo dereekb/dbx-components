@@ -1,0 +1,12 @@
+<dbx-section header="Guestbook Album" hint="Everyone who has signed this guest book can add up to {{ photosMaxFiles }} photos here.">
+  @if (!hasAlbumSignal()) {
+    <div dbxAction dbxActionValue [dbxActionHandler]="handleStartAlbum">
+      <p class="dbx-note">Nobody has started this guest book's album yet.</p>
+      <dbx-button dbxActionButton [raised]="true" color="primary" text="Start the Album"></dbx-button>
+      <dbx-error dbxActionError></dbx-error>
+    </div>
+  } @else {
+    <!-- mirrors the type's own `fileAccess: 'uploader'`: every signer sees the whole album listed and gets download + remove on their OWN photos only -->
+    <dbx-firebase-formspace-slot-upload [slot]="photosSlot" label="Photos" [maxFiles]="photosMaxFiles" emptyText="No photos yet. Add the first one." uploadText="Add Photos" fileAccess="uploader" inaccessibleText="Added by another signer." fileTypesAccepted="image/jpeg,image/png,application/pdf"></dbx-firebase-formspace-slot-upload>
+  }
+</dbx-section>

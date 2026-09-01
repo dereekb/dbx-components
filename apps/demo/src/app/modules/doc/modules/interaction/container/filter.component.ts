@@ -11,6 +11,7 @@ import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpace
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocInteractionTestFilterPopoverButtonComponent } from '../component/filter.popover.button.component';
+import { DocInteractionTestFormFilterPopoverButtonComponent } from '../component/filter.form.popover.button.component';
 import { DocInteractionTestDateFilterPopoverButtonComponent } from '../component/filter.date.popover.button.component';
 import { DocInteractionTestFilterPresetMenuComponent } from '../component/filter.preset.menu.component';
 import { DocInteractionTestFilterPartialPresetMenuComponent } from '../component/filter.partial.preset.menu.component';
@@ -22,7 +23,22 @@ import { JsonPipe } from '@angular/common';
   providers: [FilterMap],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DocInteractionTestFilterPopoverButtonComponent, DbxFilterMapSourceConnectorDirective, DbxButtonSpacerDirective, DocInteractionTestDateFilterPopoverButtonComponent, DocInteractionTestFilterPresetMenuComponent, DbxFilterConnectSourceDirective, DocInteractionTestFilterPartialPresetMenuComponent, DocInteractionTestFilterPresetFilterComponent, JsonPipe]
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxContentBorderDirective,
+    DocInteractionTestFilterPopoverButtonComponent,
+    DocInteractionTestFormFilterPopoverButtonComponent,
+    DbxFilterMapSourceConnectorDirective,
+    DbxButtonSpacerDirective,
+    DocInteractionTestDateFilterPopoverButtonComponent,
+    DocInteractionTestFilterPresetMenuComponent,
+    DbxFilterConnectSourceDirective,
+    DocInteractionTestFilterPartialPresetMenuComponent,
+    DocInteractionTestFilterPresetFilterComponent,
+    JsonPipe
+  ]
 })
 export class DocInteractionFilterComponent implements OnDestroy {
   readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);
@@ -30,10 +46,12 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly presets = DOC_INTERACTION_TEST_PRESETS;
 
   readonly buttonFilterKey: FilterMapKey = 'button';
+  readonly formFilterKey: FilterMapKey = 'form';
   readonly menuFilterKey: FilterMapKey = 'menu';
   readonly listFilterKey: FilterMapKey = 'list';
 
   readonly filter$ = this.filterMap.filterForKey(this.buttonFilterKey);
+  readonly formFilter$ = this.filterMap.filterForKey(this.formFilterKey);
   readonly menuFilter$ = this.filterMap.filterForKey(this.menuFilterKey);
   readonly listFilter$ = this.filterMap.filterForKey(this.listFilterKey);
 
@@ -99,6 +117,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
   );
 
   readonly filterSignal = toSignal(this.filter$);
+  readonly formFilterSignal = toSignal(this.formFilter$);
   readonly menuFilterSignal = toSignal(this.menuFilter$);
   readonly listFilterSignal = toSignal(this.listFilter$);
   readonly displayForFilterSignal = toSignal(this.displayForFilter$);
@@ -106,6 +125,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
 
   constructor() {
     this.filterMap.addDefaultFilterObs(this.buttonFilterKey, of({}));
+    this.filterMap.addDefaultFilterObs(this.formFilterKey, of({}));
     this.filterMap.addDefaultFilterObs(this.menuFilterKey, of({ date: startOfDay(new Date()) }));
     this.filterMap.addDefaultFilterObs(this.listFilterKey, of({}));
   }

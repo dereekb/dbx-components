@@ -2,7 +2,9 @@ import { type NotificationTaskService, type NotificationTaskServiceTaskHandlerCo
 import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-server';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
+import { demoFormSpaceSubmissionNotificationTaskHandler } from './handlers/formspace/task.handler.formspace.submission';
 import { demoCalendarIcsFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.calendar';
+import { demoFormSpaceFileValidationStorageFileProcessor } from './handlers/storagefile/task.handler.storagefile.formspace';
 import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
 import {
   ALL_NOTIFICATION_TASK_TYPES,
@@ -22,7 +24,7 @@ import {
 } from 'demo-firebase';
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
-import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
 /**
  * Builds the NotificationTaskService for the demo API, registering all task handlers
@@ -134,11 +136,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
 
   const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext, openRouterRunTaskService);
   const exampleHandledHandler = demoExampleHandledNotificationTaskHandler(demoFirebaseServerActionsContext);
+  const formSpaceHandler = demoFormSpaceSubmissionNotificationTaskHandler(demoFirebaseServerActionsContext);
 
-  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler];
+  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler, formSpaceHandler];
 
   const notificationSendService: NotificationTaskService = notificationTaskService({
-    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES],
+    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES],
     handlers
   });
 
@@ -208,7 +211,11 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
     storageAccessor: demoFirebaseServerActionsContext.storageService
   });
 
-  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig, calendarIcsProcessorConfig];
+  // A FormSpace attachment rides the same `SFP` task as everything else here — ONE processor covers every
+  // form type, so a new form type needs no entry in this array.
+  const formSpaceFileValidationProcessorConfig = demoFormSpaceFileValidationStorageFileProcessor(demoFirebaseServerActionsContext);
+
+  const processors: StorageFileProcessingPurposeSubtaskProcessorConfig[] = [testFileProcessorConfig, resumeFileProcessorConfig, calendarIcsProcessorConfig, formSpaceFileValidationProcessorConfig];
 
   return storageFileProcessingNotificationTaskHandler({
     processors,

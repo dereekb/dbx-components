@@ -31,6 +31,8 @@
     #{theming.$padding-4-var}: theming.get-dbx-layout-padding($theme-config, 4);
     #{theming.$padding-5-var}: theming.get-dbx-layout-padding($theme-config, 5);
 
+    #{theming.$shadow-gutter-var}: 4px;
+
     #{theming.$two-column-left-width-var}: theming.get-dbx-two-column-left-width($theme-config);
 
     #{theming.$dbx-app-height-additional-offset-var}: 0px;

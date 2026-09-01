@@ -24,6 +24,10 @@
         </div>
       </div>
       <div class="guestbook-view-content" demoGuestbookEntryCollection [constraints]="entryConstraints" dbxFirebaseCollectionChange="auto">
+        @if (guestbookEntry.exists$ | async) {
+          <mat-divider></mat-divider>
+          <app-guestbook-album></app-guestbook-album>
+        }
         <p></p>
         <mat-divider></mat-divider>
         <div>

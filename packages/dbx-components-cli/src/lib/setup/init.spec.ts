@@ -52,7 +52,10 @@ describe('runSetupInit', () => {
 
     const joined = shell.commands.join('\n');
     expect(joined).toContain('create-nx-workspace@23.0.0');
-    expect(joined).toContain('@nx/nest:app');
+    expect(joined).toContain('@nx/node:app');
+    // The api app is generated as a plain esbuild node app, never through `@nx/nest` (see api.module.ts).
+    expect(joined).not.toContain('@nx/nest');
+    expect(joined).toContain('--bundler=esbuild');
     expect(joined).toContain('git commit --no-verify -m checkpoint: updated nx to latest version');
     expect(joined).toContain('git reset');
     // Late steps: verdaccio cleanup + dependency alignment + a final reconcile install.

@@ -21,6 +21,10 @@ export interface DbxFileUploadComponentConfig {
   readonly mode?: DbxFileUploadMode;
   readonly accept?: Maybe<FileArrayAcceptMatchConfig['accept']>;
   readonly multiple?: Maybe<boolean>;
+  /**
+   * The most files that can be selected at once. Ignored while multiple is false.
+   */
+  readonly maxFiles?: Maybe<number>;
 
   /**
    * If true, the area will be clickable to open the file picker.
@@ -53,7 +57,7 @@ export interface DbxFileUploadComponentConfig {
 @Component({
   selector: 'dbx-file-upload',
   template: `
-    <dbx-file-upload-area #area [show]="showAreaSignal()" [hint]="areaHintSignal()" [text]="areaTextSignal()" [icon]="areaIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="areaFilesChanged($event)" (areaClicked)="areaClicked()" [disabled]="disabledSignal()" [working]="workingSignal()">
+    <dbx-file-upload-area #area [show]="showAreaSignal()" [hint]="areaHintSignal()" [text]="areaTextSignal()" [icon]="areaIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="uploadMaxFilesSignal()" (filesChanged)="areaFilesChanged($event)" (areaClicked)="areaClicked()" [disabled]="disabledSignal()" [working]="workingSignal()">
       <ng-content></ng-content>
       @if (showButtonSignal()) {
         <ng-template [ngTemplateOutlet]="buttonTemplate"></ng-template>
@@ -61,7 +65,7 @@ export interface DbxFileUploadComponentConfig {
     </dbx-file-upload-area>
     <!-- Button Template -->
     <ng-template #buttonTemplate>
-      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()" [buttonStyle]="buttonStyle()"></dbx-file-upload-button>
+      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="uploadMaxFilesSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()" [buttonStyle]="buttonStyle()"></dbx-file-upload-button>
     </ng-template>
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
@@ -131,6 +135,12 @@ export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
     const config = this.config();
     const multiple = this.multipleSignal();
     return multiple ?? config?.multiple;
+  });
+
+  readonly uploadMaxFilesSignal = computed(() => {
+    const config = this.config();
+    const maxFiles = this.maxFilesSignal();
+    return maxFiles ?? config?.maxFiles;
   });
 
   readonly uploadAcceptSignal = computed(() => {

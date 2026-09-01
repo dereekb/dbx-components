@@ -1,0 +1,23 @@
+@use '../../style/theming';
+
+// MARK: Mixin
+@mixin core() {
+  // The row borrows .dbx-list-item-padded/.dbx-list-two-line-item from _list.scss, so it only needs to be
+  // told to fill its container — otherwise a row placed in a flex column collapses to its content width.
+  .dbx-file-list,
+  .dbx-file-list-item {
+    width: 100%;
+  }
+
+  // the details line is assembled from separate spans (a label and a date), so the gap stands in for the
+  // space between them that the template has no reliable way to emit
+  .dbx-file-list-item .item-details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--dbx-file-list-item-details-gap, 0.25em);
+  }
+}
+
+@mixin theme($theme-config) {
+}

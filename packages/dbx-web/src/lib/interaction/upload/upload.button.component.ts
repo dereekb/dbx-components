@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
-import { fileAcceptString, fileArrayAcceptMatchFunction } from './upload.accept';
+import { fileAcceptString, fileArrayAcceptMatchFunction, type FileAcceptFunction } from './upload.accept';
 import { DbxButtonComponent } from '../../button/button.component';
 import { type DbxButtonStyle } from '../../button/button';
 import { type Maybe } from '@dereekb/util';
@@ -10,6 +10,9 @@ import { provideDbxFileUploadActionCompatable } from './upload.action';
  * Event emitted by {@link DbxFileUploadButtonComponent} when files are selected.
  */
 export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEvent;
+
+// stands in for a type filter the input's own accept attribute has already applied
+const ACCEPT_EVERY_FILE: FileAcceptFunction = () => true;
 
 /**
  * File upload button that opens a native file picker and emits accepted/rejected file results.
@@ -49,10 +52,18 @@ export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent
 
   readonly buttonMultipleSignal = computed(() => this.multipleSignal() ?? false);
 
+  /**
+   * The match function the picked files are run through.
+   *
+   * A non-function accept is left to the input's own accept attribute — but the COUNT still has to be
+   * applied here, as the file picker has no concept of a limit and will happily hand back more than the
+   * destination can hold.
+   */
   readonly filesAcceptedFunctionSignal = computed(() => {
     const accept = this.acceptSignal();
     const multiple = this.buttonMultipleSignal();
-    return typeof accept === 'function' ? fileArrayAcceptMatchFunction({ multiple, accept }) : undefined;
+    const maxFiles = this.maxFilesSignal();
+    return fileArrayAcceptMatchFunction({ multiple, maxFiles, accept: typeof accept === 'function' ? accept : ACCEPT_EVERY_FILE });
   });
 
   /**
@@ -84,16 +95,8 @@ export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent
 
     if (!isDisabled) {
       const allFiles = input.files ? Array.from(input.files) : [];
-      const fileAcceptFunction = this.filesAcceptedFunctionSignal();
-
-      if (fileAcceptFunction) {
-        const matchResult = fileAcceptFunction(allFiles);
-        this.filesChanged.emit({ allFiles, matchResult });
-      } else {
-        // if not using a filesAcceptedFunction, then accept all files as the input should have filtered them
-        const multiple = this.buttonMultipleSignal();
-        this.filesChanged.emit({ allFiles, matchResult: { multiple, input: allFiles, accepted: allFiles, rejected: [], acceptedType: allFiles, rejectedType: [] } });
-      }
+      const matchResult = this.filesAcceptedFunctionSignal()(allFiles);
+      this.filesChanged.emit({ allFiles, matchResult });
     }
 
     // reset the input value

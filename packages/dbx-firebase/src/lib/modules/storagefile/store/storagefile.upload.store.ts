@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { type FirebaseStorageAccessorFile, type StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { type ArrayOrValue, asArray, type Maybe, type PercentDecimal, type PromiseOrValue } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Maybe, type PercentDecimal, type PromiseOrValue, takeFront } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { combineLatest, distinctUntilChanged, from, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { type StorageFileUploadFilesEvent, type StorageFileUploadFilesFinalResult } from '../container';
@@ -94,6 +94,13 @@ export interface DbxFirebaseStorageFileUploadStoreState {
    */
   readonly isComponentMultiUploadAllowed?: Maybe<boolean>;
 
+  /**
+   * The most files the component allows to be uploaded at once.
+   *
+   * This may be set by the component.
+   */
+  readonly componentMaxUploadFiles?: Maybe<number>;
+
   // Configuration Step
   /**
    * The accepted file types for the upload.
@@ -110,6 +117,17 @@ export interface DbxFirebaseStorageFileUploadStoreState {
    * If isComponentMultiUploadAllowed is false, then this value is ignored.
    */
   readonly isMultiUploadAllowed?: Maybe<boolean>;
+
+  /**
+   * The most files that may be uploaded at once.
+   *
+   * Overrides the componentMaxUploadFiles value if set. A destination that already holds part of its
+   * capacity passes the REMAINDER here, not its total.
+   *
+   * Files past the limit never reach rawFiles, so a selection larger than the limit uploads its first
+   * files rather than being refused outright.
+   */
+  readonly maxUploadFiles?: Maybe<number>;
 
   /**
    * Path to upload the file(s) to.
@@ -152,6 +170,33 @@ export interface DbxFirebaseStorageFileUploadStoreState {
 }
 
 /**
+ * Returns the most files the given state allows to be uploaded at once, or undefined when unlimited.
+ *
+ * @param state - The upload store state to read the limit from.
+ * @returns The effective limit, or undefined when there is none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function maxUploadFilesForState(state: DbxFirebaseStorageFileUploadStoreState): Maybe<number> {
+  const maxUploadFiles = state.maxUploadFiles ?? state.componentMaxUploadFiles;
+  return maxUploadFiles == null ? undefined : Math.max(0, Math.floor(maxUploadFiles));
+}
+
+/**
+ * Truncates a raw file list to the limit the given state configures.
+ *
+ * @param state - The upload store state to read the limit from.
+ * @param rawFiles - The files to limit.
+ * @returns The files, truncated to the limit when there is one.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function limitRawFilesForState(state: DbxFirebaseStorageFileUploadStoreState, rawFiles: Maybe<File[]>): Maybe<File[]> {
+  const maxUploadFiles = maxUploadFilesForState(state);
+  return rawFiles != null && maxUploadFiles != null ? takeFront(rawFiles, maxUploadFiles) : rawFiles;
+}
+
+/**
  * Store used for selecting a specific NotificationItem from a list of notification items.
  */
 @Injectable()
@@ -172,6 +217,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   );
 
   readonly isMultiUploadAllowed$ = this.select((state) => state.isComponentMultiUploadAllowed !== false && state.isMultiUploadAllowed).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly maxUploadFiles$ = this.select(maxUploadFilesForState).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly uploadPath$ = this.select((state) => state.uploadPath).pipe(distinctUntilChanged(), shareReplay(1));
   readonly rawFiles$ = this.select((state) => state.rawFiles).pipe(distinctUntilChanged(), shareReplay(1));
@@ -200,6 +246,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   // MARK: State Changes
   readonly setComponentFileTypesAccepted = this.updater((state, componentFileTypesAccepted: Maybe<DbxFirebaseStorageFileUploadStoreAllowedTypes>) => ({ ...state, componentFileTypesAccepted }));
   readonly setIsComponentMultiUploadAllowed = this.updater((state, isComponentMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isComponentMultiUploadAllowed }));
+  readonly setComponentMaxUploadFiles = this.updater((state, componentMaxUploadFiles: Maybe<number>) => ({ ...state, componentMaxUploadFiles }));
 
   readonly setUploadPath = this.updater((state, uploadPath: Maybe<StoragePathInput>) => ({ ...state, uploadPath }));
   readonly setFileTypesAccepted = this.updater((state, fileTypesAccepted: Maybe<ArrayOrValue<FileAcceptFilterTypeString>>) => ({ ...state, fileTypesAccepted: fileTypesAccepted ? asArray(fileTypesAccepted) : undefined }));
@@ -208,8 +255,11 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
    * Sets the raw file list to upload.
    *
    * If the upload handler is working, the rawFiles list cannot be changed.
+   *
+   * A list longer than the configured upload limit is truncated to it rather than refused, so the store
+   * never holds more files than the destination can take no matter who set them.
    */
-  readonly setRawFiles = this.updater((state, rawFiles: Maybe<File[]>) => ({ ...state, rawFiles: state.isUploadHandlerWorking ? state.rawFiles : rawFiles }));
+  readonly setRawFiles = this.updater((state, rawFiles: Maybe<File[]>) => ({ ...state, rawFiles: state.isUploadHandlerWorking ? state.rawFiles : limitRawFilesForState(state, rawFiles) }));
 
   /**
    * Sets the per-file modifier applied to each entry of `rawFiles` before it flows through `files$`.
@@ -218,6 +268,13 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
    */
   readonly setFileModifier = this.updater((state, fileModifier: Maybe<DbxFirebaseStorageFileUploadFileModifier>) => ({ ...state, fileModifier }));
   readonly setIsMultiUploadAllowed = this.updater((state, isMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isMultiUploadAllowed }));
+  /**
+   * Sets the most files that may be uploaded at once, re-limiting anything already selected.
+   *
+   * The files are left alone while the upload handler is working, for the same reason setRawFiles leaves
+   * them alone: a list that changes mid-upload changes what the handler is iterating.
+   */
+  readonly setMaxUploadFiles = this.updater((state, maxUploadFiles: Maybe<number>) => ({ ...state, maxUploadFiles, rawFiles: state.isUploadHandlerWorking ? state.rawFiles : limitRawFilesForState({ ...state, maxUploadFiles }, state.rawFiles) }));
 
   /**
    * Flags the upload handler to begin working.

@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { type DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, provideDbxListViewWrapper, AbstractDbxSelectionListWrapperDirective, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, provideDbxListView, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, AbstractDbxValueListViewItemComponent, DbxSpacerDirective } from '../../layout';
+import { type DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, provideDbxListViewWrapper, AbstractDbxSelectionListWrapperDirective, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, provideDbxListView, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, AbstractDbxValueListViewItemComponent } from '../../layout';
 import { of } from 'rxjs';
 import { type DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
-import { DatePipe } from '@angular/common';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
+import { DbxFileListItemComponent } from '../download/list/download.file.list.item.component';
 
 /**
  * A zip preview entry tree node wrapped as a list item for use in selection-based list views.
@@ -74,27 +74,18 @@ export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionLis
 @Component({
   selector: 'dbx-zip-preview-file-entry-list-view-item',
   template: `
-    <div class="dbx-list-item-padded dbx-list-two-line-item">
-      <div class="item-left">
-        <div class="mat-subtitle-2">{{ name }}</div>
-        @if (lastModDate) {
-          <div class="item-details">{{ lastModDate | date: 'short' }}</div>
-        }
-      </div>
-      <dbx-spacer></dbx-spacer>
-      <div class="item-right">
-        @if (canDownload) {
-          <dbx-download-blob-button [config]="downloadBlobButtonConfig"></dbx-download-blob-button>
-        }
-      </div>
-    </div>
+    <dbx-file-list-item [name]="name" [detailsDate]="lastModDate">
+      @if (canDownload) {
+        <dbx-download-blob-button [config]="downloadBlobButtonConfig"></dbx-download-blob-button>
+      }
+    </dbx-file-list-item>
   `,
-  imports: [DatePipe, DbxSpacerDirective, DbxDownloadBlobButtonComponent],
+  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent],
   standalone: true
 })
 export class DbxZipPreviewEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxZipPreviewEntryWithSelection> {
   get name() {
-    return this.itemValue.value.value.filename ?? 'hello';
+    return this.itemValue.value.value.filename;
   }
 
   get lastModDate() {

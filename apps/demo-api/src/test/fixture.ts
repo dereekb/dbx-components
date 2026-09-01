@@ -1,4 +1,4 @@
-import { type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, DemoFirestoreCollections, type ProfileDocument, type GuestbookEntryFirestoreCollection, type Profile, type ProfileFirestoreCollection, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { DEMO_EXAMPLE_FORM_SPACE_TYPE, demoGuestbookFormSpaceId, profileIdentity, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, DemoFirestoreCollections, type ProfileDocument, type GuestbookEntryFirestoreCollection, type Profile, type ProfileFirestoreCollection, type InsertGuestbookEntryParams } from 'demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,
@@ -28,6 +28,7 @@ import { DemoApiServerNestContext } from '../app/server/server.context';
 import {
   type CleanupSentNotificationsParams,
   type DocumentReference,
+  type FirebaseAuthUserId,
   type FirestoreCollection,
   type FirestoreModelKey,
   type InitializeAllApplicableNotificationBoxesParams,
@@ -52,6 +53,24 @@ import {
   type CreateNotificationTemplate,
   createNotificationDocument,
   type UpdateNotificationUserParams,
+  type ExpireAllExpiredFormSpacesParams,
+  type ExpireAllExpiredFormSpacesResult,
+  type FormSpace,
+  type FormSpaceData,
+  type FormSpaceDocument,
+  type FormSpaceFileSlot,
+  type FormSpaceFirestoreCollection,
+  type FormSpaceType,
+  formSpaceUploadsFilePath,
+  storageFilesForFormSpaceQuery,
+  firestoreModelKey,
+  type InitializeAllStorageFilesFromUploadsParams,
+  type InitializeAllStorageFilesFromUploadsResult,
+  type ProcessAllQueuedStorageFilesResult,
+  type RemoveFormSpaceFileParams,
+  type ProcessAllQueuedFormSpacesResult,
+  type SubmitFormSpaceParams,
+  type SubmitFormSpaceResult,
   type Calendar,
   type CalendarDocument,
   type CalendarFirestoreCollection,
@@ -83,11 +102,13 @@ import {
   type RotateCalendarIcsResult
 } from '@dereekb/firebase';
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
+import { objectHasKeys, type ContentTypeMimeType, type SlashPathFile, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
 import {
   markStorageFileForDeleteTemplate,
   NotificationExpediteService,
   CalendarServerActions,
+  type CreateFormSpaceActionInput,
+  FormSpaceServerActions,
   NotificationInitServerActions,
   NotificationSendService,
   NotificationServerActions,
@@ -161,6 +182,7 @@ export interface DemoApiContext {
   get storageContext(): FirebaseStorageContext;
   get envService(): FirebaseServerEnvService;
   get calendarServerActions(): CalendarServerActions;
+  get formSpaceServerActions(): FormSpaceServerActions;
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
@@ -199,6 +221,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get calendarServerActions() {
     return this.instance.calendarServerActions;
+  }
+
+  get formSpaceServerActions() {
+    return this.instance.formSpaceServerActions;
   }
 
   get notificationServerActions() {
@@ -305,6 +331,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get calendarServerActions() {
     return this.get(CalendarServerActions);
+  }
+
+  get formSpaceServerActions() {
+    return this.get(FormSpaceServerActions);
   }
 
   get notificationServerActions() {
@@ -434,6 +464,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.calendarServerActions;
   }
 
+  get formSpaceServerActions() {
+    return this.instance.formSpaceServerActions;
+  }
+
   get notificationServerActions() {
     return this.instance.notificationServerActions;
   }
@@ -530,6 +564,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get calendarServerActions() {
     return this.get(CalendarServerActions);
+  }
+
+  get formSpaceServerActions() {
+    return this.get(FormSpaceServerActions);
   }
 
   get notificationServerActions() {
@@ -818,7 +856,16 @@ export const demoCalendarContextFactory = () =>
 export const demoCalendarContext = demoCalendarContextFactory();
 
 // MARK: With Guestbook
-export type DemoApiGuestbookTestContextParams = Partial<Guestbook>;
+export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> {
+  /**
+   * The user that created the guestbook, written to `cby`.
+   *
+   * A FIXTURE rather than a uid: `buildTests` runs at describe-registration time, when a user fixture's
+   * instance does not exist yet, so `u.uid` there throws. The uid is read in `initDocument`, which runs in
+   * `beforeEach` alongside every other fixture.
+   */
+  readonly createdBy?: Maybe<DemoApiAuthorizedUserTestContextFixture>;
+}
 
 export class DemoApiGuestbookTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookTestContextInstance<F>> {}
 
@@ -839,7 +886,10 @@ export const demoGuestbookContextFactory = () =>
         name: params.name ?? 'test',
         published: params.published ?? true,
         locked: params.locked ?? false,
-        lockedAt: params.lockedAt ?? (params.locked ? new Date() : undefined)
+        lockedAt: params.lockedAt ?? (params.locked ? new Date() : undefined),
+        // written so a test can assert on the creator. The guestbook's SHARED FormSpace takes its `u` from
+        // here, and a guestbook with no creator would silently hand `u` to whoever opened the album.
+        cby: params.createdBy?.uid ?? params.cby
       });
     }
   });
@@ -1293,6 +1343,219 @@ export const demoNotificationWeekContextFactory = () =>
   });
 
 export const demoNotificationWeekContext = demoNotificationWeekContextFactory();
+
+// MARK: FormSpace
+export interface DemoApiFormSpaceTestContextParams {
+  /**
+   * The user the FormSpace belongs to.
+   */
+  readonly u: AuthorizedUserTestContextFixture;
+  /**
+   * The FormSpaceType to create. Defaults to {@link DEMO_EXAMPLE_FORM_SPACE_TYPE}.
+   */
+  readonly formSpaceType?: Maybe<FormSpaceType>;
+  /**
+   * Initial form data.
+   */
+  readonly data?: Maybe<FormSpaceData>;
+  /**
+   * Display name for the space.
+   */
+  readonly displayName?: Maybe<string>;
+  /**
+   * The Guestbook whose SHARED space this is.
+   *
+   * Sets the whole shared shape at once — `ownerKey`, `targetModelKey`, the derived id, and `u` (the
+   * guestbook's creator, NOT `params.u`) — so a spec cannot build half of it by hand and get a space that
+   * looks shared but grants `submit` to the wrong person.
+   */
+  readonly g?: Maybe<DemoApiGuestbookTestContextFixture>;
+}
+
+export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<FormSpace, FormSpaceDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiFormSpaceTestContextInstance<F>> {
+  async uploadFileToSlot(input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    return this.instance.uploadFileToSlot(input);
+  }
+
+  async uploadFileToSlotAsUser(uid: FirebaseAuthUserId, input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    return this.instance.uploadFileToSlotAsUser(uid, input);
+  }
+
+  async initializeUploads(params?: Maybe<InitializeAllStorageFilesFromUploadsParams>): Promise<InitializeAllStorageFilesFromUploadsResult> {
+    return this.instance.initializeUploads(params);
+  }
+
+  async submit(params?: Maybe<Omit<SubmitFormSpaceParams, 'key'>>): Promise<SubmitFormSpaceResult> {
+    return this.instance.submit(params);
+  }
+
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>, uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    return this.instance.removeFile(params, uid);
+  }
+
+  async processStorageFiles(): Promise<ProcessAllQueuedStorageFilesResult> {
+    return this.instance.processStorageFiles();
+  }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    return this.instance.loadProcessingTaskDocument();
+  }
+
+  async loadStorageFiles(): Promise<StorageFileDocument[]> {
+    return this.instance.loadStorageFiles();
+  }
+
+  async expireAllExpiredFormSpaces(params?: Maybe<ExpireAllExpiredFormSpacesParams>): Promise<ExpireAllExpiredFormSpacesResult> {
+    return this.instance.expireAllExpiredFormSpaces(params);
+  }
+
+  async processAllQueuedFormSpaces(): Promise<ProcessAllQueuedFormSpacesResult> {
+    return this.instance.processAllQueuedFormSpaces();
+  }
+}
+
+/**
+ * Input for {@link DemoApiFormSpaceTestContextInstance.uploadFileToSlot}.
+ */
+export interface DemoApiFormSpaceUploadInput {
+  readonly slot: FormSpaceFileSlot;
+  readonly filename: SlashPathFile;
+  readonly content: string;
+  readonly contentType: ContentTypeMimeType;
+}
+
+export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<FormSpace, FormSpaceDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Writes a file into the FormSpace's uploads folder, exactly where a signed upload URL would put it.
+   *
+   * Does NOT initialize it — call {@link initializeUploads} for that, so a spec can assert on the state
+   * between the bytes landing and the initializer accepting or rejecting them.
+   */
+  async uploadFileToSlot(input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    const formSpace = await assertSnapshotData(this.document);
+    return this.uploadFileToSlotAsUser(formSpace.u, input);
+  }
+
+  /**
+   * Writes a file into ANOTHER user's uploads folder for this space.
+   *
+   * The uid is the UPLOADER's, not the space's `u`. `storage.rules` confines a write to the caller's own
+   * namespace regardless of which space it targets, so this is exactly the shape a SHARED space's upload
+   * has — and the shape a stranger's refused upload has too.
+   */
+  async uploadFileToSlotAsUser(uid: FirebaseAuthUserId, input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
+    const { slot, filename, content, contentType } = input;
+    const path = formSpaceUploadsFilePath({ uid, formSpaceId: this.documentId, slot, filename });
+    const file = this.testContext.storageContext.file(path);
+
+    await file.upload(content, { contentType, stringFormat: 'raw' });
+
+    return { bucketId: file.storagePath.bucketId, pathString: file.storagePath.pathString };
+  }
+
+  /**
+   * One pass of the uploads half of `storageFileHourlyUpdateSchedule`.
+   *
+   * Pass `{ expediteProcessing: true }` to also run each accepted file's processing task inline, which is
+   * what a client gets from `storageFile.create:fromUpload` with the same flag.
+   */
+  async initializeUploads(params?: Maybe<InitializeAllStorageFilesFromUploadsParams>): Promise<InitializeAllStorageFilesFromUploadsResult> {
+    const instance = await this.testContext.storageFileServerActions.initializeAllStorageFilesFromUploads(params ?? {});
+    return instance();
+  }
+
+  async submit(params?: Maybe<Omit<SubmitFormSpaceParams, 'key'>>): Promise<SubmitFormSpaceResult> {
+    const instance = await this.testContext.formSpaceServerActions.submitFormSpace({ ...params, key: this.documentKey });
+    return instance(this.document);
+  }
+
+  /**
+   * Removes one file from a slot, flagging its StorageFile for deletion.
+   *
+   * The uid is WHO is removing, which the type's `FormSpaceFileAccess` may narrow the removal by. It
+   * defaults to the space's own `u` — the shape every single-user spec means — so a spec only passes one
+   * when it is exercising a SHARED space, where who is asking is the whole question.
+   */
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>, uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    const instance = await this.testContext.formSpaceServerActions.removeFormSpaceFile({ ...params, key: this.documentKey });
+    const formSpace = await assertSnapshotData(this.document);
+    await instance(this.document, { uid: uid ?? formSpace.u });
+  }
+
+  /**
+   * One pass of the processing half of `storageFileHourlyUpdateSchedule`, which is what creates the `SFP`
+   * task that runs a slot's validator.
+   */
+  async processStorageFiles(): Promise<ProcessAllQueuedStorageFilesResult> {
+    const instance = await this.testContext.storageFileServerActions.processAllQueuedStorageFiles({});
+    return instance();
+  }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    const formSpace = await assertSnapshotData(this.document);
+
+    if (!formSpace.pn) {
+      throw new Error('FormSpace does not have a processing task key associated.');
+    }
+
+    return this.testContext.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(formSpace.pn);
+  }
+
+  /**
+   * Every StorageFile that belongs to this FormSpace's group.
+   */
+  async loadStorageFiles(): Promise<StorageFileDocument[]> {
+    return this.testContext.demoFirestoreCollections.storageFileCollection.queryDocument(storageFilesForFormSpaceQuery(this.documentKey)).getDocs();
+  }
+
+  async expireAllExpiredFormSpaces(params?: Maybe<ExpireAllExpiredFormSpacesParams>): Promise<ExpireAllExpiredFormSpacesResult> {
+    const instance = await this.testContext.formSpaceServerActions.expireAllExpiredFormSpaces(params ?? {});
+    return instance();
+  }
+
+  async processAllQueuedFormSpaces(): Promise<ProcessAllQueuedFormSpacesResult> {
+    const instance = await this.testContext.formSpaceServerActions.processAllQueuedFormSpaces({});
+    return instance();
+  }
+}
+
+export const demoFormSpaceContextFactory = () =>
+  modelTestContextFactory<FormSpace, FormSpaceDocument, DemoApiFormSpaceTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiFormSpaceTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFormSpaceTestContextFixture<FirebaseAdminFunctionTestContextInstance>, FormSpaceFirestoreCollection>({
+    makeFixture: (f) => new DemoApiFormSpaceTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.formSpaceCollection,
+    collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.formSpaceCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiFormSpaceTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (_collection, params, p) => {
+      const guestbookFixture = params.g;
+      const createFormSpace = await p.formSpaceServerActions.createFormSpace({
+        formSpaceType: params.formSpaceType ?? DEMO_EXAMPLE_FORM_SPACE_TYPE,
+        displayName: params.displayName,
+        data: params.data,
+        targetModelKey: guestbookFixture ? guestbookFixture.documentKey : undefined
+      });
+
+      let createInput: CreateFormSpaceActionInput;
+
+      if (guestbookFixture) {
+        const guestbook = await assertSnapshotData(guestbookFixture.document);
+
+        createInput = {
+          uid: guestbook.cby ?? params.u.uid,
+          ownerKey: guestbookFixture.documentKey,
+          formSpaceId: demoGuestbookFormSpaceId(guestbookFixture.documentKey),
+          getOrCreate: true
+        };
+      } else {
+        const uid = params.u.uid;
+        createInput = { uid, ownerKey: firestoreModelKey(profileIdentity, uid) };
+      }
+
+      const formSpaceDocument = await createFormSpace(createInput);
+      return formSpaceDocument.documentRef;
+    }
+  });
+
+export const demoFormSpaceContext = demoFormSpaceContextFactory();
 
 // MARK: StorageFile
 export interface DemoApiStorageFileTestContextParams {

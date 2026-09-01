@@ -54,7 +54,9 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
    */
   readonly connector: FilterSourceConnector<F>;
   /**
-   * (Optional) Inital filter to pass to the filter source.
+   * (Optional) Initial filter to pass to the filter source.
+   *
+   * Must be independent of the connector's output. Deriving this from the connector's own filter$ (the stream this popover's source feeds) is a cycle: the source waits on the connector and the connector waits on the source, so the popover opens with no value. Pass a snapshot of the currently applied filter instead.
    */
   readonly initialFilterObs?: Observable<F>;
   /**

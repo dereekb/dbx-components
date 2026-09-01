@@ -45,6 +45,11 @@ export const RESERVED_MODEL_FOLDERS: readonly ReservedModelFolder[] = [
     recommendedTool: 'dbx_storagefile_m_validate_folder'
   },
   {
+    name: 'formspace',
+    reason: 'FormSpace is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (type, upload, task, util, etc.); a downstream project only registers its own types and does not redeclare the model.',
+    recommendedTool: 'dbx_model_validate_folder'
+  },
+  {
     name: 'calendar',
     reason: 'Calendar is a canonical group from `@dereekb/firebase` with a richer layout than the base 5 files (type, expand, ics, processing, etc.); downstream projects extend rather than redeclare it.',
     recommendedTool: 'dbx_model_validate_folder'

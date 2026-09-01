@@ -235,7 +235,7 @@ class FilterMapItem<F> {
     const obsToRetain = currentObs.filter((x) => x.i !== index);
 
     if (obsToRetain.length !== currentObs.length) {
-      this._obs.next(this._obs.value);
+      this._obs.next(obsToRetain);
     }
   }
 

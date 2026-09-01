@@ -54,6 +54,12 @@ export const DEMO_GUESTBOOK_FUTURE_STATE: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/guestbook/guestbook.module').then((m) => m.DemoGuestbookModule)
 };
 
+export const DEMO_FORMSPACE_FUTURE_STATE: Ng2StateDeclaration = {
+  name: 'demo.app.formspace.**',
+  url: '/formspace',
+  loadChildren: () => import('./modules/formspace/formspace.module').then((m) => m.DemoFormSpaceModule)
+};
+
 export const DEMO_PROFILE_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.app.profile.**',
   url: '/profile',
@@ -75,6 +81,7 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   NOTIFICATION_STATE,
   DEMO_CALENDAR_FUTURE_STATE,
   DEMO_GUESTBOOK_FUTURE_STATE,
+  DEMO_FORMSPACE_FUTURE_STATE,
   DEMO_PROFILE_FUTURE_STATE,
   DEMO_OIDC_FUTURE_STATE
 ];

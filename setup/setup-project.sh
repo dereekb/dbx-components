@@ -54,6 +54,7 @@ ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^21.0.0"}
 TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-"^5.9.3"}
 FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"15.11.0"}
 NODE_VERSION=${NODE_SETUP_VERSION:-"24"}
+ESBUILD_VERSION=${ESBUILD_SETUP_VERSION:-"0.27.3"}    # @nx/esbuild declares esbuild only as an optional peer, so it must be installed explicitly
 
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - node: $NODE_VERSION - from source branch $SOURCE_BRANCH"
 
@@ -245,7 +246,9 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
-npm install -D @nx/nest@$NX_VERSION
+# @nx/nest's generator hardcodes bundler: 'webpack'; the project.json applied below replaces the
+# build-base target with @nx/esbuild:esbuild, so install that bundler alongside it.
+npm install -D @nx/nest@$NX_VERSION @nx/esbuild@$NX_VERSION esbuild@$ESBUILD_VERSION
 npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$NEST_UNIT_TEST_RUNNER
 
 echo "Installing app-server dependencies"
@@ -593,10 +596,10 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/set
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
 
-rm $API_APP_FOLDER/webpack.config.js
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/webpack.config.template.js -o $API_APP_FOLDER/webpack.config.js.tmp
-sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/webpack.config.js.tmp > $API_APP_FOLDER/webpack.config.js
-rm $API_APP_FOLDER/webpack.config.js.tmp
+# The esbuild configs resolve their paths from __dirname, so they carry no tokens and need no sed.
+rm -f $API_APP_FOLDER/webpack.config.js
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/esbuild.config.template.js -o $API_APP_FOLDER/esbuild.config.js
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/esbuild.prod.config.template.js -o $API_APP_FOLDER/esbuild.prod.config.js
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/app/project.template.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp

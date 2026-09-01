@@ -10,6 +10,7 @@ import { DbxActionWorkable, provideDbxActionWorkable } from '@dereekb/dbx-core';
  */
 export abstract class DbxFileUploadActionCompatable extends DbxActionWorkable {
   abstract setMultiple(multiple?: Maybe<boolean>): void;
+  abstract setMaxFiles(maxFiles?: Maybe<number>): void;
   abstract setAccept(accept?: Maybe<FileArrayAcceptMatchConfig['accept']>): void;
 }
 
