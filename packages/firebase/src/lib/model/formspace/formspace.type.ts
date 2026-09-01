@@ -14,6 +14,29 @@ import { type FormSpaceFileSlot, type FormSpaceType } from './formspace.id';
  */
 
 /**
+ * Who may read and remove an individual file, among the users who already reach the FormSpace itself.
+ *
+ * Narrows access; it never widens it. A caller that cannot read the space at all is refused before this is
+ * ever consulted, so `'space'` is not "public" — it is "whoever the space already lets in".
+ *
+ * - `'space'` — anyone holding the corresponding role on the space. The DEFAULT, and the only sensible
+ *   answer for a single-user form, where every file was uploaded by the one person who can reach it.
+ * - `'uploader'` — only the user who uploaded that file, per {@link FormSpaceFile.ub}. For a SHARED space
+ *   whose members contribute side by side rather than collaborating on one pile: a member adds their own
+ *   photos and can take them back, and cannot read or delete anybody else's. The space's own `u` is NOT
+ *   exempt — on a shared space `u` is whoever the space was opened for, not an administrator of its
+ *   contents, and exempting them would quietly hand one member the whole album.
+ */
+export type FormSpaceFileAccess = 'space' | 'uploader';
+
+/**
+ * Default for {@link FormSpaceFileSlotConfig.fileAccess} and {@link FormSpaceTypeConfig.fileAccess}.
+ *
+ * `'space'`, so a type declared before per-file access existed keeps behaving exactly as it did.
+ */
+export const DEFAULT_FORM_SPACE_FILE_ACCESS: FormSpaceFileAccess = 'space';
+
+/**
  * Restrictions for a single named upload slot within a {@link FormSpaceTypeConfig}.
  *
  * A slot is a LOGICAL position, not a file: uploading into an occupied slot supersedes what was there, so
@@ -55,6 +78,14 @@ export interface FormSpaceFileSlotConfig {
    * meant before folders existed.
    */
   readonly minFiles?: Maybe<number>;
+  /**
+   * Who may read and remove an individual file in this slot.
+   *
+   * Defaults to the type's {@link FormSpaceTypeConfig.fileAccess}, which itself defaults to
+   * {@link DEFAULT_FORM_SPACE_FILE_ACCESS}. Narrowing it per slot is what lets one shared space hold a
+   * public banner everybody sees alongside a folder of each member's own documents.
+   */
+  readonly fileAccess?: Maybe<FormSpaceFileAccess>;
   /**
    * Whether a file here must pass validation before the space may be submitted. Defaults to false.
    *
@@ -116,6 +147,11 @@ export interface FormSpaceTypeConfig {
    * Defaults to {@link DEFAULT_FORM_SPACE_MAX_FILE_SIZE_BYTES}.
    */
   readonly maxFileSizeBytes?: Maybe<number>;
+  /**
+   * Who may read and remove an individual file in any slot that does not narrow it further.
+   * Defaults to {@link DEFAULT_FORM_SPACE_FILE_ACCESS}.
+   */
+  readonly fileAccess?: Maybe<FormSpaceFileAccess>;
   // MARK: lifecycle
   /**
    * How long a newly created FormSpace of this type stays editable before the expiration sweep retires it.

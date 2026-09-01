@@ -5,7 +5,7 @@ import { DbxContentContainerDirective, DbxFilterWrapperComponent } from '@dereek
 import { DocInteractionTestFilterCustomFilterFormComponent } from './filter.custom.form.component';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
-const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = { name: 'DI DEFAULT' };
+const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = {};
 
 @Component({
   selector: 'doc-interaction-test-filter-custom-filter',

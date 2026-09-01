@@ -833,6 +833,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedFields: [
           { name: 'sl', longName: 'slot', tsType: 'FormSpaceFileSlot', optional: false, description: 'The slot this file fills.' },
           { name: 'sf', longName: 'storageFileId', tsType: 'StorageFileId', optional: false, description: 'The id of the StorageFile holding the bytes.' },
+          { name: 'ub', longName: 'uploadedBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'The user who put the file here.' },
           { name: 'n', longName: 'fileName', tsType: 'SlashPathFile', optional: false, description: "The file's name, as it was uploaded." },
           { name: 'v', longName: 'validationState', tsType: 'FormSpaceFileValidationState', optional: false, description: 'Validation state.', enumRef: 'FormSpaceFileValidationState' },
           { name: 'r', longName: 'invalidReason', tsType: 'Maybe<string>', optional: true, description: 'Free-text reason the file was judged INVALID, written for the owner to act on.' },

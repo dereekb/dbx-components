@@ -1,4 +1,4 @@
-import { type RemoveFormSpaceFileParams, type SubmitFormSpaceParams, type SubmitFormSpaceResult, type UpdateFormSpaceParams, removeFormSpaceFileParamsType, submitFormSpaceParamsType, updateFormSpaceParamsType } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type RemoveFormSpaceFileParams, type SubmitFormSpaceParams, type SubmitFormSpaceResult, type UpdateFormSpaceParams, removeFormSpaceFileParamsType, submitFormSpaceParamsType, updateFormSpaceParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
 import { type DemoUpdateModelFunction } from '../function.context';
 
@@ -45,22 +45,27 @@ export const formSpaceSubmit: DemoUpdateModelFunction<SubmitFormSpaceParams, Sub
 /**
  * Removes one uploaded file from a FormSpace slot.
  *
- * Gated on `update` rather than `submit`: removing a file is editing a draft, and the owner who uploaded it
- * is the one who should be able to take it back out.
+ * TWO gates, in order. `removeFile` is the space-level role and is what this asks `useModel` for — separate
+ * from `update` so a member of a SHARED space can take their own file back out without also being able to
+ * rewrite the form everybody shares. The action behind it then applies the type's `FormSpaceFileAccess` to
+ * the specific file, which is the check that keeps one signer out of another's photos.
+ *
+ * The caller's uid comes from the request, never the body: it IS the per-file decision.
  */
 export const formSpaceRemoveFile: DemoUpdateModelFunction<RemoveFormSpaceFileParams> = withApiDetails({
   inputType: removeFormSpaceFileParamsType,
   fn: async (request) => {
     const { nest, data } = request;
+    const uid = request.auth.uid as FirebaseAuthUserId;
 
     const removeFormSpaceFile = await nest.formSpaceServerActions.removeFormSpaceFile(data);
     const formSpaceDocument = await nest.useModel('formSpace', {
       request,
       key: data.key,
-      roles: 'update',
+      roles: 'removeFile',
       use: (x) => x.document
     });
 
-    await removeFormSpaceFile(formSpaceDocument);
+    await removeFormSpaceFile(formSpaceDocument, { uid });
   }
 });

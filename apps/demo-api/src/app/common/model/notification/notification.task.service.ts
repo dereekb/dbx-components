@@ -19,6 +19,7 @@ import {
   type ExampleUniqueNotificationTaskCheckpoint,
   type ExampleUniqueNotificationTaskData,
   DEMO_FORM_SPACE_TYPE_CONFIGS,
+  DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   USER_TEST_FILE_PURPOSE,
   USER_TEST_FILE_PURPOSE_PART_A_SUBTASK,
   USER_TEST_FILE_PURPOSE_PART_B_SUBTASK,
@@ -27,7 +28,7 @@ import {
 } from 'demo-firebase';
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
-import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, appFormSpaceTypeConfigService, formSpaceTypeConfigRecord, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
 /**
  * Builds the NotificationTaskService for the demo API, registering all task handlers
@@ -225,13 +226,13 @@ export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseSer
   // form type: it resolves each file's slot from the space it belongs to and runs the validator registered
   // for that (type, slot), which is why a new form type needs no entry in this array.
   //
-  // The registry is built here rather than injected for the same reason the upload service builds its own —
+  // The registry is reached for rather than injected for the same reason the upload service reaches for it —
   // it is a memoized lookup over a static constant, and injecting it would mean importing FormSpaceModule
   // into the notification module for something that is not a service.
   const formSpaceFileValidationProcessorConfig = formSpaceFileValidationStorageFileProcessor({
     formSpaceFirestoreCollections: demoFirebaseServerActionsContext,
     storageFileFirestoreCollections: demoFirebaseServerActionsContext,
-    appFormSpaceTypeConfigService: appFormSpaceTypeConfigService(formSpaceTypeConfigRecord(DEMO_FORM_SPACE_TYPE_CONFIGS)),
+    appFormSpaceTypeConfigService: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
     validators: DEMO_FORM_SPACE_FILE_VALIDATORS
   });
 

@@ -140,6 +140,24 @@ describe('DbxFirebaseStorageFileListComponent', () => {
     expect(fixture.debugElement.query(By.css('.dbx-firebase-storagefile-list-item-remove'))).toBeNull();
   });
 
+  /**
+   * `dbxActionButton` pushes the action's own disabled state onto the button, so a remove button gated only
+   * by the button's `disabled` input is re-enabled the moment the action reports itself enabled — leaving a
+   * live Remove on a listing that is meant to be read-only.
+   */
+  it('should render a disabled remove button when removes are disabled', async () => {
+    testComponent.removeDisabledSignal.set(true);
+    await detectChanges();
+
+    const button: HTMLButtonElement = fixture.debugElement.query(By.css('.dbx-firebase-storagefile-list-item-remove button')).nativeElement;
+    expect(button.disabled).toBe(true);
+  });
+
+  it('should render an enabled remove button by default', () => {
+    const button: HTMLButtonElement = fixture.debugElement.query(By.css('.dbx-firebase-storagefile-list-item-remove button')).nativeElement;
+    expect(button.disabled).toBe(false);
+  });
+
   it('should not render a download button when download buttons are turned off', async () => {
     testComponent.showDownloadButtonSignal.set(false);
     await detectChanges();
@@ -160,7 +178,7 @@ describe('DbxFirebaseStorageFileListComponent', () => {
 
 @Component({
   template: `
-    <dbx-firebase-storagefile-list [state]="stateSignal()" [showDownloadButton]="showDownloadButtonSignal()" [showRemoveButton]="showRemoveButtonSignal()" [removeHandler]="removeHandlerSignal()">
+    <dbx-firebase-storagefile-list [state]="stateSignal()" [showDownloadButton]="showDownloadButtonSignal()" [showRemoveButton]="showRemoveButtonSignal()" [removeDisabled]="removeDisabledSignal()" [removeHandler]="removeHandlerSignal()">
       <dbx-list-empty-content empty>Nothing here yet.</dbx-list-empty-content>
     </dbx-firebase-storagefile-list>
   `,
@@ -176,5 +194,6 @@ class TestDbxFirebaseStorageFileListComponent {
 
   readonly showDownloadButtonSignal = signal<Maybe<boolean>>(undefined);
   readonly showRemoveButtonSignal = signal<Maybe<boolean>>(undefined);
+  readonly removeDisabledSignal = signal<Maybe<boolean>>(undefined);
   readonly removeHandlerSignal = signal<Maybe<WorkUsingContext<string>>>((_, context) => context.success());
 }

@@ -47,6 +47,13 @@ $header-left-reserved-space-small-screen: 120px;
 
       display: flex;
       align-items: center;
+
+      // The header row is a `.dbx-flex-bar`, so it carries the `--dbx-shadow-gutter`
+      // block padding that keeps a raised button's shadow from being clipped. Border-box
+      // makes the header's `min-height` / `height` absorb that gutter instead of adding
+      // to it, so the 48px row stays 48px (40px button + the gutter) rather than growing
+      // to 56px and overflowing a fixed-height section-page header.
+      box-sizing: border-box;
     }
   }
 
@@ -118,6 +125,14 @@ $header-left-reserved-space-small-screen: 120px;
         height: $content-navbar-height;
         max-height: $content-navbar-height;
         max-width: 100%;
+
+        // Unlike the regular `.dbx-section` header (which only sets `min-height` and can
+        // absorb the gutter), this row is height-LOCKED to the navbar height and its title
+        // already fills it. The `.dbx-flex-bar` shadow gutter would eat 8px of that budget
+        // and shave the title, so opt this row out. A raised button in a section-PAGE
+        // header therefore still clips its shadow — the pre-existing behaviour; use a
+        // regular `.dbx-section` header when the action needs elevation.
+        #{theming.$shadow-gutter-var}: 0px;
 
         .dbx-section-header-content-title {
           max-width: calc(80% - var(--dbx-section-page-header-reserved-space, #{$header-left-reserved-space}));

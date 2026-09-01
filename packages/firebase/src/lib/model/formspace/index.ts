@@ -1,3 +1,4 @@
+export * from './formspace.access';
 export * from './formspace.action';
 export * from './formspace.api.error';
 export * from './formspace.api';

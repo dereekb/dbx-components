@@ -20,16 +20,25 @@ export class DbxFirebaseStorageFileUploadStoreDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
 
   readonly multipleUpload = input<Maybe<boolean>>();
+  /**
+   * The most files that may be uploaded at once.
+   *
+   * A destination that already holds part of its capacity passes the REMAINDER here, not its total, so a
+   * selection larger than the remaining room uploads what fits instead of overfilling it.
+   */
+  readonly maxUploadFiles = input<Maybe<number>>();
   readonly fileTypesAccepted = input<Maybe<ArrayOrValue<FileAcceptFilterTypeString>>>();
   readonly fileModifier = input<Maybe<DbxFirebaseStorageFileUploadFileModifier>>();
 
   readonly fileTypesAccepted$ = toObservable(this.fileTypesAccepted).pipe(skipAllInitialMaybe(), shareReplay(1));
   readonly isMultiUploadAllowed$ = toObservable(this.multipleUpload).pipe(skipAllInitialMaybe(), shareReplay(1));
+  readonly maxUploadFiles$ = toObservable(this.maxUploadFiles).pipe(skipAllInitialMaybe(), shareReplay(1));
   readonly fileModifier$ = toObservable(this.fileModifier).pipe(skipAllInitialMaybe(), shareReplay(1));
 
   constructor() {
     cleanSubscription(this.fileTypesAccepted$.subscribe((x) => this.uploadStore.setFileTypesAccepted(x)));
     cleanSubscription(this.isMultiUploadAllowed$.subscribe((x) => this.uploadStore.setIsMultiUploadAllowed(x)));
+    cleanSubscription(this.maxUploadFiles$.subscribe((x) => this.uploadStore.setMaxUploadFiles(x)));
     cleanSubscription(this.fileModifier$.subscribe((x) => this.uploadStore.setFileModifier(x)));
   }
 }

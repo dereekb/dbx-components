@@ -1389,8 +1389,8 @@ export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionT
     return this.instance.submit(params);
   }
 
-  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>): Promise<void> {
-    return this.instance.removeFile(params);
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>, uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    return this.instance.removeFile(params, uid);
   }
 
   async processStorageFiles(): Promise<ProcessAllQueuedStorageFilesResult> {
@@ -1471,10 +1471,15 @@ export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunction
 
   /**
    * Removes one file from a slot, flagging its StorageFile for deletion.
+   *
+   * The uid is WHO is removing, which the type's `FormSpaceFileAccess` may narrow the removal by. It
+   * defaults to the space's own `u` — the shape every single-user spec means — so a spec only passes one
+   * when it is exercising a SHARED space, where who is asking is the whole question.
    */
-  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>): Promise<void> {
+  async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>, uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
     const instance = await this.testContext.formSpaceServerActions.removeFormSpaceFile({ ...params, key: this.documentKey });
-    await instance(this.document);
+    const formSpace = await assertSnapshotData(this.document);
+    await instance(this.document, { uid: uid ?? formSpace.u });
   }
 
   /**

@@ -1,8 +1,8 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { FORM_SPACE_PURPOSE, FormSpaceProcessingState, FormSpaceState, formSpaceStorageFileGroupId, type NotificationKey, StorageFileState } from '@dereekb/firebase';
-import { DEMO_TEST_FORM_SPACE_COVER_SLOT, DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES, DEMO_TEST_FORM_SPACE_FOLDER_SLOT, DEMO_TEST_FORM_SPACE_TYPE, type DemoTestFormSpaceData } from 'demo-firebase';
+import { FORM_SPACE_PURPOSE, FormSpaceProcessingState, FormSpaceState, formSpaceSlotFileAccess, formSpaceStorageFileGroupId, isFormSpaceFileAccessibleByUser, type NotificationKey, StorageFileState } from '@dereekb/firebase';
+import { DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE, DEMO_TEST_FORM_SPACE_COVER_SLOT, DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES, DEMO_TEST_FORM_SPACE_FOLDER_SLOT, DEMO_TEST_FORM_SPACE_TYPE, type DemoTestFormSpaceData } from 'demo-firebase';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoFormSpaceContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 
@@ -125,6 +125,35 @@ demoApiFunctionContextFactory((f) => {
             const formSpace = await assertSnapshotData(fsp.document);
             expect(formSpace.f).toHaveLength(DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES);
             expect(formSpace.uc).toBe(DEMO_TEST_FORM_SPACE_FOLDER_MAX_FILES);
+          });
+
+          it('should record the owner as each file uploader and keep every file reachable', async () => {
+            await uploadFolderFiles(2);
+
+            const formSpace = await assertSnapshotData(fsp.document);
+
+            // the uploader is recorded on a single-user space too, so the field is never absent on anything
+            // written after it existed — the `ub ?? u` fallback is for HISTORY, not for this shape
+            expect(formSpace.f.every((x) => x.ub === u.uid)).toBe(true);
+
+            // `demo_test` declares no fileAccess, so it resolves to 'space' and the owner reaches every file
+            const config = DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE.configForFormSpaceType(DEMO_TEST_FORM_SPACE_TYPE);
+            expect(formSpaceSlotFileAccess({ config, slot: DEMO_TEST_FORM_SPACE_FOLDER_SLOT })).toBe('space');
+            expect(formSpace.f.every((file) => isFormSpaceFileAccessibleByUser({ formSpace, config, file, uid: u.uid }))).toBe(true);
+          });
+
+          it('should let the owner remove a file the uploader fallback covers', async () => {
+            await uploadFolderFiles(1);
+
+            const before = await assertSnapshotData(fsp.document);
+            const [target] = before.f;
+
+            // an entry written before `ub` existed: the owner must still be able to take it back out
+            await fsp.document.update({ f: [{ ...target, ub: null }] });
+            await fsp.removeFile({ slot: DEMO_TEST_FORM_SPACE_FOLDER_SLOT, storageFileId: target.sf });
+
+            const after = await assertSnapshotData(fsp.document);
+            expect(after.f).toHaveLength(0);
           });
 
           it('should remove one file and flag only that file', async () => {

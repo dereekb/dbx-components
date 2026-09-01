@@ -90,6 +90,10 @@ export interface DbxFirebaseStorageFileListRowConfig<T = unknown> {
   readonly removeButtonStyle?: Maybe<DbxButtonStyle>;
   /**
    * Disables every remove button.
+   *
+   * Disables each row's remove ACTION rather than only its button — `dbxActionButton` pushes the action's
+   * own disabled state onto the button it is on, so a button gated by its `disabled` input alone would be
+   * re-enabled by the action the moment it was rendered.
    */
   readonly removeDisabled?: Maybe<boolean>;
   /**
@@ -275,8 +279,9 @@ export class DbxFirebaseStorageFileListViewComponent extends AbstractDbxListView
           <!-- the row's value rides on the confirm config rather than a dbxActionValue: both answer the
                action's trigger by calling readyValue, and dbxActionValue answering first would run the
                removal before the user had confirmed it -->
-          <div class="dbx-firebase-storagefile-list-item-remove" dbxAction dbxActionSnackbarError [dbxActionConfirm]="removeConfirmConfigSignal()" [dbxActionHandler]="removeHandler">
-            <dbx-button dbxActionButton [buttonStyle]="list.removeButtonStyleSignal()" [text]="list.removeTextSignal()" [disabled]="list.removeDisabledSignal()"></dbx-button>
+          <!-- dbxActionDisabled rather than the button's own disabled input, since dbxActionButton drives that from the action's state -->
+          <div class="dbx-firebase-storagefile-list-item-remove" dbxAction dbxActionSnackbarError [dbxActionDisabled]="list.removeDisabledSignal()" [dbxActionConfirm]="removeConfirmConfigSignal()" [dbxActionHandler]="removeHandler">
+            <dbx-button dbxActionButton [buttonStyle]="list.removeButtonStyleSignal()" [text]="list.removeTextSignal()"></dbx-button>
           </div>
         }
       }

@@ -34,9 +34,14 @@ import { DEFAULT_DBX_FILE_LIST_ITEM_DETAILS_CLASS, DEFAULT_DBX_FILE_LIST_ITEM_DE
         @if (hasDetailsSignal()) {
           <div class="item-details" [ngClass]="detailsClassSignal()">
             @if (detailsSignal(); as details) {
-              <span>{{ details }}</span>
+              <!-- The trailing &ngsp; is the separator from the date that follows, and belongs to the text
+                   rather than sitting between the spans: the details read as one sentence with the date
+                   ("Uploaded 3 hours ago"), and Angular drops a whitespace-only text node between two
+                   elements, running the words together. Carried here rather than led on the date so a row
+                   with only a date does not open on a space. -->
+              <span>{{ details }}&ngsp;</span>
             }
-            @if (detailsDateSignal(); as detailsDate) {
+            @if (renderedDetailsDateSignal(); as detailsDate) {
               @if (isDetailsDateDistanceSignal()) {
                 <span>{{ detailsDate | timeDistance }}</span>
               } @else {
@@ -97,7 +102,29 @@ export class DbxFileListItemComponent {
     return this.detailsClass() ?? config?.detailsClass ?? DEFAULT_DBX_FILE_LIST_ITEM_DETAILS_CLASS;
   });
 
-  readonly isDetailsDateDistanceSignal = computed(() => this.detailsDateStyleSignal() === 'distance');
+  readonly isDetailsDateDistanceSignal = computed(() => {
+    const detailsDateStyle = this.detailsDateStyleSignal();
+    return detailsDateStyle === 'distance' || detailsDateStyle === 'distance-past';
+  });
+
+  /**
+   * The date the row actually renders.
+   *
+   * A `'distance-past'` date is pinned to now once it runs ahead of the clock, so a timestamp that landed
+   * marginally in the future reads as "less than a minute ago" rather than as something yet to happen.
+   */
+  readonly renderedDetailsDateSignal = computed(() => {
+    const detailsDateStyle = this.detailsDateStyleSignal();
+    const detailsDate = this.detailsDateSignal();
+    const now = new Date();
+    let result = detailsDate;
+
+    if (detailsDate != null && detailsDateStyle === 'distance-past' && detailsDate > now) {
+      result = now;
+    }
+
+    return result;
+  });
 
   readonly hasDetailsSignal = computed(() => {
     const detailsDate = this.detailsDateSignal();

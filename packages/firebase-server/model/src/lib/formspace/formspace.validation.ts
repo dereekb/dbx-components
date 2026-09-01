@@ -327,6 +327,10 @@ export function formSpaceFileValidationStorageFileProcessor(config: FormSpaceFil
                 const entry: FormSpaceFile = {
                   sl: slot,
                   sf: storageFileDocument.id,
+                  // taken from the StorageFile rather than the space's `u`: this step reconciles a file that
+                  // reached storage by some path other than the initializer, and on a shared space guessing
+                  // `u` here would hand the album's owner a file one of its members uploaded
+                  ub: storageFile.uby,
                   // recomposed from the StorageFile's own display name, NOT the object's leaf: the
                   // destination is keyed by index (`.../{index}.{ext}`), so the leaf would reconcile the
                   // entry as `0.pdf` instead of the name its uploader gave it

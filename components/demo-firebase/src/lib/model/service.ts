@@ -98,6 +98,7 @@ import {
   type FormSpaceTypes,
   formSpaceFirestoreCollection,
   grantFormSpaceRolesForUserAuthFunction,
+  isFormSpaceStorageFileAccessibleByUser,
   type Calendar,
   type CalendarDocument,
   type CalendarFirestoreCollection,
@@ -129,6 +130,7 @@ import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, no
 import { type PromiseOrValue } from '@dereekb/util';
 import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection, isGuestbookOwnershipKeySignedByUser } from './guestbook';
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
+import { DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE } from './formspace/formspace';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
 export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, CalendarFirestoreCollections, FormSpaceFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
@@ -391,16 +393,23 @@ export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebas
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
     const grantStorageFileRolesForUser = grantStorageFileRolesForUserAuthFunction({ output, context, model });
+    const uid = context.auth?.uid;
+    const storageFile = output.data;
+
+    // The FormSpace half of "may this caller see this file". ABSTAINS — returns true — for every file that
+    // is not a FormSpace upload, so it composes as an AND with the grants below rather than replacing them,
+    // and it costs no read at all when the caller is the file's own `uby`.
+    const formSpaceFileAccessAllows = async (): Promise<boolean> => (storageFile == null ? true : isFormSpaceStorageFileAccessibleByUser({ collections: context.app, appFormSpaceTypeConfigService: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE, storageFile, uid }));
+
     return grantModelRolesIfAdmin(
       context,
       fullAccessRoleMap(),
       grantStorageFileRolesForUser({
         rolesForStorageFileUser: async () => {
-          // user can read and download any file that belongs to them
-          return {
-            read: true,
-            download: true
-          };
+          // user can read and download any file that belongs to them — unless it is a FormSpace file whose
+          // type narrows access to its uploader. On a shared album `u` is the space's owner, so without the
+          // narrowing this branch would hand them every member's photo.
+          return (await formSpaceFileAccessAllows()) ? { read: true, download: true } : undefined;
         },
         // A server-derived file has no `u` — nothing uploaded it — and carries only the `o` of the model it
         // was derived from, so the `u` branch above grants nothing and the owner cannot download their own
@@ -408,7 +417,6 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
         // `resourceIsOwnedByAuthOwnershipKey()`, so without this the direct document read succeeds while the
         // download callable returns FORBIDDEN. The calendar's published ICS is the case in point.
         rolesForStorageFileOwnershipKey: async (ownershipKey) => {
-          const uid = context.auth?.uid;
           const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
           const isOwner = ownerKey != null && ownershipKey === ownerKey;
 
@@ -417,8 +425,9 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
           // the signer who uploaded it. Without this, a signer sees the file listed on the space's `f` and
           // then cannot download it.
           const isGuestbookSigner = isOwner ? false : await isGuestbookOwnershipKeySignedByUser({ collections: context.app, ownershipKey, uid });
+          const reachesSpace = isOwner || isGuestbookSigner;
 
-          return isOwner || isGuestbookSigner ? { read: true, download: true } : undefined;
+          return reachesSpace && (await formSpaceFileAccessAllows()) ? { read: true, download: true } : undefined;
         }
       })
     ); // system admin only
@@ -471,11 +480,18 @@ export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<
       context,
       fullAccessRoleMap(),
       grantFormSpaceRolesForUser({
-        // the owner drives their own form end to end: read it, edit the draft, upload into it, submit it,
-        // and abandon it. Nothing here grants access to anyone else's space.
-        rolesForFormSpaceUser: async () => ({ read: true, update: true, upload: true, submit: true, delete: true }),
+        // the owner drives their own form end to end: read it, edit the draft, upload into it, take a file
+        // back out, submit it, and abandon it. Nothing here grants access to anyone else's space.
+        //
+        // `removeFile` only opens the door — WHICH files it reaches is the type's `fileAccess`, and on the
+        // guestbook album that narrows even this branch to the owner's own uploads.
+        rolesForFormSpaceUser: async () => ({ read: true, update: true, uploadFile: true, removeFile: true, submit: true, delete: true }),
         // A SHARED space: `o` names a Guestbook rather than a Profile, and anyone who has left an entry on
-        // that guestbook may read it and upload into it.
+        // that guestbook may read it, upload into it, and take their OWN uploads back out.
+        //
+        // `removeFile` is safe to grant to every signer precisely because it is not `update`: the per-file
+        // gate behind it is the type's `fileAccess`, which this album sets to 'uploader', so the role
+        // reaches a signer's own photos and nobody else's.
         //
         // `update`, `submit` and `delete` are deliberately withheld. They are one-way doors over everyone
         // else's files, and the branch above already grants them to the space's `u` — which for a shared
@@ -487,7 +503,7 @@ export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<
         // document read and a callable from disagreeing about who is a member.
         rolesForFormSpaceOwnershipKey: async (ownershipKey) => {
           const signed = await isGuestbookOwnershipKeySignedByUser({ collections: context.app, ownershipKey, uid: context.auth?.uid });
-          return signed ? grantedRoleKeysMapFromArray<FormSpaceRoles>(['read', 'upload']) : undefined;
+          return signed ? grantedRoleKeysMapFromArray<FormSpaceRoles>(['read', 'uploadFile', 'removeFile']) : undefined;
         }
       })
     );

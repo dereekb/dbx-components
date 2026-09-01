@@ -6,7 +6,7 @@
       <dbx-error dbxActionError></dbx-error>
     </div>
   } @else {
-    <!-- no remove button: a signer may add to the shared album, but the space's `u` is the guestbook's creator, so only they may take a photo back out of it -->
-    <dbx-firebase-formspace-slot-upload [slot]="photosSlot" label="Photos" [maxFiles]="photosMaxFiles" emptyText="No photos yet. Add the first one." uploadText="Add Photos" [showRemoveButton]="false" fileTypesAccepted="image/jpeg,image/png,application/pdf"></dbx-firebase-formspace-slot-upload>
+    <!-- mirrors the type's own `fileAccess: 'uploader'`: every signer sees the whole album listed and gets download + remove on their OWN photos only -->
+    <dbx-firebase-formspace-slot-upload [slot]="photosSlot" label="Photos" [maxFiles]="photosMaxFiles" emptyText="No photos yet. Add the first one." uploadText="Add Photos" fileAccess="uploader" inaccessibleText="Added by another signer." fileTypesAccepted="image/jpeg,image/png,application/pdf"></dbx-firebase-formspace-slot-upload>
   }
 </dbx-section>

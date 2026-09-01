@@ -3,7 +3,8 @@ import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './formspace.router';
 
 import { DemoFormSpaceLayoutComponent } from './container/layout.component';
-import { DemoFormSpaceViewComponent } from './container/formspace.component';
+import { DemoFormSpaceListPageComponent } from './container/list.component';
+import { DemoFormSpaceListPageRightComponent } from './container/list.right.component';
 
 @NgModule({
   imports: [
@@ -11,7 +12,8 @@ import { DemoFormSpaceViewComponent } from './container/formspace.component';
       states: STATES
     }),
     DemoFormSpaceLayoutComponent,
-    DemoFormSpaceViewComponent
+    DemoFormSpaceListPageComponent,
+    DemoFormSpaceListPageRightComponent
   ]
 })
 export class DemoFormSpaceModule {}

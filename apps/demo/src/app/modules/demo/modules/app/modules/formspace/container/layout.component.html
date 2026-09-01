@@ -1,7 +1,8 @@
+<!-- No dbx-content-container around the section page: the two-column below is meant to run edge to edge, and
+     a container's horizontal padding would inset the whole column split from the page. The right column
+     brings its own container for the content INSIDE it. -->
 <dbx-content-page dbxAppContextState="formspace">
-  <dbx-content-container>
-    <dbx-section-page header="Form Space" hint="A test FormSpace: a form, one required file, and a folder of up to four more.">
-      <ui-view></ui-view>
-    </dbx-section-page>
-  </dbx-content-container>
+  <dbx-section-page header="Form Space" hint="A test FormSpace: a form, one required file, and a folder of up to four more.">
+    <ui-view></ui-view>
+  </dbx-section-page>
 </dbx-content-page>

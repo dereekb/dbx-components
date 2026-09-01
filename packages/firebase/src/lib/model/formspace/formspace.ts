@@ -21,6 +21,7 @@ import {
   optionalFirestoreDate,
   optionalFirestorePassthroughJsonField,
   optionalFirestoreString,
+  optionalFirestoreUID,
   optionalFirestoreUnixDateTimeSecondsNumber,
   snapshotConverterFunctions
 } from '../../common';
@@ -131,6 +132,17 @@ export interface FormSpaceFile {
    */
   sf: StorageFileId;
   /**
+   * The user who put the file here.
+   *
+   * On a single-user space this always equals the space's `u`; on a SHARED one it is whichever member
+   * actually uploaded, which is the only thing that can answer "is this MY file". Absent on an entry written
+   * before the field existed, where the space's `u` was necessarily the uploader — which is exactly what
+   * {@link formSpaceFileUploaderId} falls back to.
+   *
+   * @dbxModelVariable uploadedBy
+   */
+  ub?: Maybe<FirebaseAuthUserId>;
+  /**
    * The file's name, as it was uploaded.
    *
    * @dbxModelVariable fileName
@@ -180,6 +192,7 @@ export const formSpaceFileSubObject = firestoreSubObject<FormSpaceFile>({
     fields: {
       sl: firestoreString<FormSpaceFileSlot>(),
       sf: firestoreModelIdString,
+      ub: optionalFirestoreUID(),
       n: firestoreString<SlashPathFile>(),
       v: firestoreEnum<FormSpaceFileValidationState>({ default: FormSpaceFileValidationState.NONE }),
       r: optionalFirestoreString(),
@@ -359,8 +372,20 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
  *
  * `submit` is separate from `update` because it is the one-way door: an owner who may edit a draft is not
  * necessarily the party allowed to finalize it.
+ *
+ * `uploadFile` and `removeFile` are separate from `update` for the mirror-image reason. On a SHARED space a
+ * member contributes files to a form whose `d` belongs to everyone; letting them add or take back their own
+ * file must not also let them rewrite the form. WHICH files a `removeFile` holder may remove is a second,
+ * per-file question the type's {@link FormSpaceFileAccess} answers — the role only opens the door.
+ *
+ * The two are enforced in DIFFERENT places, because an upload and a removal arrive by different routes.
+ * `removeFile` gates a callable, so a role map answers it directly. An upload has no callable at all — the
+ * client writes bytes into its own storage namespace and a storage trigger picks them up with no auth
+ * context to build a role map from — so `uploadFile` is the DECLARATION of who may contribute, and
+ * `FormSpaceUploadAuthorizationDelegate` is where the same app policy is actually applied. Grant them
+ * together, to the same people.
  */
-export type FormSpaceRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole | 'submit' | 'upload';
+export type FormSpaceRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole | 'submit' | 'uploadFile' | 'removeFile';
 
 /**
  * Firestore document wrapper for a {@link FormSpace}.

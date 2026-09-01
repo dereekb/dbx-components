@@ -45,6 +45,14 @@ export const FORM_SPACE_VALIDATION_PENDING_ERROR_CODE = 'FORM_SPACE_VALIDATION_P
 export const FORM_SPACE_FILE_NOT_FOUND_ERROR_CODE = 'FORM_SPACE_FILE_NOT_FOUND';
 
 /**
+ * Thrown when a caller who may reach the FormSpace may not touch THAT file of it.
+ *
+ * Distinct from a plain FORBIDDEN: the caller does hold the space-level role, and the refusal is the type's
+ * {@link FormSpaceFileAccess} narrowing it to the file's own uploader.
+ */
+export const FORM_SPACE_FILE_ACCESS_DENIED_ERROR_CODE = 'FORM_SPACE_FILE_ACCESS_DENIED';
+
+/**
  * Thrown when an upload is rejected by {@link assertFormSpaceUploadAllowed}.
  */
 export const FORM_SPACE_UPLOAD_NOT_ALLOWED_ERROR_CODE = 'FORM_SPACE_UPLOAD_NOT_ALLOWED';

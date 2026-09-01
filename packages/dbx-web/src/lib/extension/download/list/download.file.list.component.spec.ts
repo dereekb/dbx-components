@@ -70,6 +70,40 @@ describe('DbxFileListItemComponent', () => {
     expect(details.textContent).toContain('ago');
   });
 
+  it('should render a distance-past date relative to now', () => {
+    testComponent.detailsSignal.set(undefined);
+    testComponent.detailsDateSignal.set(new Date(Date.now() - 3 * 60 * 60 * 1000));
+    testComponent.detailsDateStyleSignal.set('distance-past');
+    fixture.detectChanges();
+
+    const details: HTMLElement = fixture.debugElement.query(By.css('.item-details')).nativeElement;
+    expect(details.textContent).toContain('ago');
+  });
+
+  /**
+   * An upload time stored as whole Unix seconds rounds UP, so it sits ahead of the clock that reads it.
+   */
+  it('should not render a distance-past date as the future', () => {
+    testComponent.detailsSignal.set(undefined);
+    testComponent.detailsDateSignal.set(new Date(Date.now() + 1000));
+    testComponent.detailsDateStyleSignal.set('distance-past');
+    fixture.detectChanges();
+
+    const details: HTMLElement = fixture.debugElement.query(By.css('.item-details')).nativeElement;
+    expect(details.textContent).toContain('ago');
+    expect(details.textContent).not.toContain('in less than');
+  });
+
+  it('should still render a plain distance date as the future', () => {
+    testComponent.detailsSignal.set(undefined);
+    testComponent.detailsDateSignal.set(new Date(Date.now() + 3 * 60 * 60 * 1000));
+    testComponent.detailsDateStyleSignal.set('distance');
+    fixture.detectChanges();
+
+    const details: HTMLElement = fixture.debugElement.query(By.css('.item-details')).nativeElement;
+    expect(details.textContent).toContain('in ');
+  });
+
   it('should omit the details line entirely when there is nothing to show', () => {
     testComponent.detailsSignal.set(undefined);
     testComponent.detailsDateSignal.set(undefined);

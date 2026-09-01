@@ -253,6 +253,9 @@ export function formSpaceStorageFileUploadInitializers(config: FormSpaceStorageF
             const newFile: FormSpaceFile = {
               sl: slot,
               sf: pairResult.storageFileDocument.id,
+              // the UPLOADER, which on a shared space is not the space's `u`. It is what an 'uploader'
+              // FormSpaceFileAccess reads to decide whose file this is.
+              ub: uploaderId,
               n: nameDetails.fileName,
               v: validationRequired ? FormSpaceFileValidationState.PENDING : FormSpaceFileValidationState.NONE,
               at: new Date()

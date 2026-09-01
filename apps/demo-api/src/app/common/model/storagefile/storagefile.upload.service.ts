@@ -10,8 +10,8 @@ import {
   storageFileInitializeFromUploadServiceInitializerResultPermanentFailure
 } from '@dereekb/firebase-server/model';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { DEMO_FORM_SPACE_TYPE_CONFIGS, makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
-import { ALL_USER_UPLOADS_FOLDER_PATH, appFormSpaceTypeConfigService, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, formSpaceTypeConfigRecord, StorageFileCreationType } from '@dereekb/firebase';
+import { DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE, makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileGroupIds, userTestFileGroupIds, userTestFileStoragePath } from 'demo-firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByUserUploadsFolderWrapperFunction, type FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimeTypeForImageFileExtension, type SlashPathPathMatcherPath } from '@dereekb/util';
 import sharp from 'sharp';
 import { demoFormSpaceUploadAuthorizationDelegate } from '../formspace/formspace.upload.authorization';
@@ -40,11 +40,6 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
     defaultCreationType: StorageFileCreationType.INIT_FROM_UPLOAD
   });
-
-  // Built here rather than injected: the registry is a memoized lookup over DEMO_FORM_SPACE_TYPE_CONFIGS,
-  // pure data this file already reaches for the same way it reaches for the avatar/test-file purposes.
-  // Injecting it would mean importing FormSpaceModule for something that is not a service.
-  const formSpaceTypeConfigService = appFormSpaceTypeConfigService(formSpaceTypeConfigRecord(DEMO_FORM_SPACE_TYPE_CONFIGS));
 
   // MARK: User Upload Files
   const matchUserUploadsFolderMatcherPath: SlashPathPathMatcherPath = [ALL_USER_UPLOADS_FOLDER_PATH, true]; // matches to /uploads/u/{userId}
@@ -199,7 +194,10 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       ...systemFileInitializers,
       ...formSpaceStorageFileUploadInitializers({
         ...demoFirebaseServerActionsContext,
-        appFormSpaceTypeConfigService: formSpaceTypeConfigService,
+        // Reached for rather than injected: the registry is a memoized lookup over a static const, pure data
+        // this file already reaches for the same way it reaches for the avatar/test-file purposes. Injecting
+        // it would mean importing FormSpaceModule for something that is not a service.
+        appFormSpaceTypeConfigService: DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
         // the demo has one SHARED form type, so the initializer needs a second answer to "is this uploader
         // allowed" beyond "is it the space's own user"
         uploadAuthorizationDelegate: demoFormSpaceUploadAuthorizationDelegate(demoFirebaseServerActionsContext)

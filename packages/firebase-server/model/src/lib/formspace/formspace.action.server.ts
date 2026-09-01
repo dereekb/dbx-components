@@ -19,6 +19,7 @@ import {
   formSpacesDueForExpirationQuery,
   formSpacesQueuedForProcessingQuery,
   isFormSpaceEditable,
+  isFormSpaceFileAccessibleByUser,
   iterateFirestoreDocumentSnapshotPairs,
   type NotificationFirestoreCollections,
   type ProcessAllQueuedFormSpacesParams,
@@ -45,7 +46,7 @@ import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification/notification.expedite.service';
 import { createOrRunUniqueNotificationDocument } from '../notification/notification.create.run';
 import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from '../storagefile/storagefile.util';
-import { formSpaceAlreadyExistsError, formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeMismatchError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
+import { formSpaceAlreadyExistsError, formSpaceFileAccessDeniedError, formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeMismatchError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
 
 /**
  * NestJS injection token for the {@link BaseFormSpaceServerActionsContext}.
@@ -103,6 +104,22 @@ export interface CreateFormSpaceActionInput {
 }
 
 /**
+ * Extra input for {@link FormSpaceServerActions.removeFormSpaceFile}, supplied by the callable rather than by
+ * the caller: WHO is removing decides which files they may remove, so it can never be a value in the request
+ * body.
+ */
+export interface RemoveFormSpaceFileActionInput {
+  /**
+   * The uid of the caller.
+   *
+   * A REQUIRED key with a nullable value, so a call site has to state it rather than inherit an unrestricted
+   * remove by forgetting an optional argument. A null uid is refused by any slot whose
+   * {@link FormSpaceFileAccess} is `'uploader'`, which is the fail-closed direction.
+   */
+  readonly uid: Maybe<string>;
+}
+
+/**
  * The server actions for the FormSpace model.
  *
  * @see {@link formSpaceServerActions} for the concrete implementation factory.
@@ -111,7 +128,7 @@ export abstract class FormSpaceServerActions {
   abstract createFormSpace(params: CreateFormSpaceParams): Promise<TransformAndValidateFunctionResult<CreateFormSpaceParams, (input: CreateFormSpaceActionInput) => Promise<FormSpaceDocument>>>;
   abstract updateFormSpace(params: UpdateFormSpaceParams): Promise<TransformAndValidateFunctionResult<UpdateFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<FormSpaceDocument>>>;
   abstract submitFormSpace(params: SubmitFormSpaceParams): Promise<TransformAndValidateFunctionResult<SubmitFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<SubmitFormSpaceResult>>>;
-  abstract removeFormSpaceFile(params: RemoveFormSpaceFileParams): Promise<TransformAndValidateFunctionResult<RemoveFormSpaceFileParams, (formSpaceDocument: FormSpaceDocument) => Promise<FormSpaceDocument>>>;
+  abstract removeFormSpaceFile(params: RemoveFormSpaceFileParams): Promise<TransformAndValidateFunctionResult<RemoveFormSpaceFileParams, (formSpaceDocument: FormSpaceDocument, input: RemoveFormSpaceFileActionInput) => Promise<FormSpaceDocument>>>;
   abstract deleteFormSpace(params: DeleteFormSpaceParams): Promise<TransformAndValidateFunctionResult<DeleteFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<void>>>;
   abstract processAllQueuedFormSpaces(params: ProcessAllQueuedFormSpacesParams): Promise<TransformAndValidateFunctionResult<ProcessAllQueuedFormSpacesParams, () => Promise<ProcessAllQueuedFormSpacesResult>>>;
   abstract expireAllExpiredFormSpaces(params: ExpireAllExpiredFormSpacesParams): Promise<TransformAndValidateFunctionResult<ExpireAllExpiredFormSpacesParams, () => Promise<ExpireAllExpiredFormSpacesResult>>>;
@@ -313,16 +330,23 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
  * remove refund it would turn `maxUploads` from a bound on work done into a bound on files retained, which
  * an upload/remove loop could then evade entirely.
  *
+ * The caller's `removeFile` ROLE opened the door; the type's {@link FormSpaceFileAccess} decides which files
+ * inside it are theirs. That second check is made HERE rather than in the callable because it is per-file
+ * and needs the space's own `f` array — the same snapshot the removal writes, read under the same
+ * transaction, so a concurrent supersede cannot slip a different file under the decision.
+ *
  * @param context - The FormSpace server actions context.
  * @returns An async transform-and-validate function that removes one file from a draft FormSpace.
  */
 export function removeFormSpaceFileFactory(context: FormSpaceServerActionsContext) {
-  const { firestoreContext, formSpaceCollection, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, formSpaceCollection, storageFileCollection, appFormSpaceTypeConfigService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(removeFormSpaceFileParamsType, async (params) => {
     const { slot, storageFileId } = params;
 
-    return async (formSpaceDocument: FormSpaceDocument) => {
+    return async (formSpaceDocument: FormSpaceDocument, input: RemoveFormSpaceFileActionInput) => {
+      const { uid } = input;
+
       await firestoreContext.runTransaction(async (transaction) => {
         const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
         const current = await assertSnapshotData(documentInTransaction);
@@ -339,6 +363,12 @@ export function removeFormSpaceFileFactory(context: FormSpaceServerActionsContex
 
         if (target == null) {
           throw formSpaceFileNotFoundError(slot);
+        }
+
+        const config = appFormSpaceTypeConfigService.configForFormSpaceType(current.t);
+
+        if (!isFormSpaceFileAccessibleByUser({ formSpace: current, config, file: target, uid })) {
+          throw formSpaceFileAccessDeniedError(slot);
         }
 
         await documentInTransaction.update({

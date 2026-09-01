@@ -4,10 +4,16 @@ import { type DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.c
 /**
  * How a file list item renders its details date.
  *
- * `'distance'` renders the date relative to now ("3 hours ago"), while the remaining values are
- * passed through to Angular's DatePipe.
+ * `'distance'` renders the date relative to now ("3 hours ago", "in 2 days"), and `'distance-past'` does
+ * the same for a date that describes something that ALREADY HAPPENED — clamping it to now so it can never
+ * read as the future. The remaining values are passed through to Angular's DatePipe.
+ *
+ * Prefer `'distance-past'` for an uploaded-at or created-at date. A stored timestamp lands marginally
+ * ahead of the client more often than it looks: a clock a second out will do it, and so will a value
+ * stored as whole Unix seconds, which rounds UP. Under `'distance'` such a date reads "in less than a
+ * minute", which for something that already happened is nonsense.
  */
-export type DbxFileListItemDetailsDateStyle = 'distance' | 'short' | 'medium' | 'long';
+export type DbxFileListItemDetailsDateStyle = 'distance' | 'distance-past' | 'short' | 'medium' | 'long';
 
 /**
  * Default details date style used by a file list item.

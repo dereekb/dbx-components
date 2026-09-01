@@ -1,5 +1,6 @@
 import {
   FORM_SPACE_ALREADY_EXISTS_ERROR_CODE,
+  FORM_SPACE_FILE_ACCESS_DENIED_ERROR_CODE,
   FORM_SPACE_FILE_NOT_FOUND_ERROR_CODE,
   FORM_SPACE_HAS_INVALID_FILES_ERROR_CODE,
   FORM_SPACE_NOT_EDITABLE_ERROR_CODE,
@@ -103,6 +104,24 @@ export function formSpaceFileNotFoundError(slot: FormSpaceFileSlot) {
   return badRequestError({
     message: `The target FormSpace does not hold that file in slot "${slot}".`,
     code: FORM_SPACE_FILE_NOT_FOUND_ERROR_CODE,
+    data: { slot }
+  });
+}
+
+/**
+ * Creates an error indicating the caller may reach the FormSpace but not this file of it.
+ *
+ * Deliberately NOT a plain forbidden: the caller passed the space-level role check, and what refused them is
+ * the type's `FormSpaceFileAccess` narrowing to the file's own uploader. A distinct code lets a client say
+ * "that is someone else's file" rather than "you cannot edit this form".
+ *
+ * @param slot - The slot holding the file.
+ * @returns A bad-request HttpsError with the FORM_SPACE_FILE_ACCESS_DENIED error code.
+ */
+export function formSpaceFileAccessDeniedError(slot: FormSpaceFileSlot) {
+  return badRequestError({
+    message: `Only the user who uploaded a file in slot "${slot}" may read or remove it.`,
+    code: FORM_SPACE_FILE_ACCESS_DENIED_ERROR_CODE,
     data: { slot }
   });
 }

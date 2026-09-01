@@ -28,6 +28,13 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
   readonly multiple = input<Maybe<boolean>, Maybe<boolean | ''>>(undefined, { transform: (x) => x === '' || x });
 
   /**
+   * The most files that can be selected at once.
+   *
+   * Ignored while multiple is false, which is already a limit of one.
+   */
+  readonly maxFiles = input<Maybe<number>>();
+
+  /**
    * Accepted file types filter.
    */
   readonly accept = input<FileArrayAcceptMatchConfig['accept']>([]);
@@ -48,6 +55,11 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
   private readonly _multipleSignal = signal<Maybe<boolean>>(undefined);
 
   /**
+   * This signal is set by setMaxFiles
+   */
+  private readonly _maxFilesSignal = signal<Maybe<number>>(undefined);
+
+  /**
    * This signal is set by setAccept
    */
   private readonly _acceptSignal = signal<Maybe<FileArrayAcceptMatchConfig['accept']>>(undefined);
@@ -66,6 +78,12 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
     const multipleInput = this.multiple();
     const multipleSignal = this._multipleSignal();
     return multipleSignal ?? multipleInput;
+  });
+
+  readonly maxFilesSignal = computed(() => {
+    const maxFilesInput = this.maxFiles();
+    const maxFilesSignal = this._maxFilesSignal();
+    return maxFilesSignal ?? maxFilesInput;
   });
 
   readonly acceptSignal = computed(() => {
@@ -105,6 +123,10 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
 
   setMultiple(multiple?: Maybe<boolean>): void {
     this._multipleSignal.set(multiple);
+  }
+
+  setMaxFiles(maxFiles?: Maybe<number>): void {
+    this._maxFilesSignal.set(maxFiles);
   }
 
   setAccept(accept?: Maybe<FileArrayAcceptMatchConfig['accept']>): void {

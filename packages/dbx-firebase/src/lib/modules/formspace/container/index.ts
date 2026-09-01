@@ -1,3 +1,4 @@
+export * from './formspace.list.component';
 export * from './formspace.section.component';
 export * from './formspace.slot.upload.component';
 export * from './formspace.slot.upload.directive';

@@ -31,9 +31,16 @@ export class DemoAppRouterService {
     };
   }
 
-  formSpaceRef(): SegueRef {
+  formSpaceListRef(): SegueRef {
     return {
-      ref: 'demo.app.formspace.view'
+      ref: 'demo.app.formspace.list'
+    };
+  }
+
+  formSpaceViewRef(id: string): SegueRef {
+    return {
+      ref: 'demo.app.formspace.list.formspace',
+      refParams: { id }
     };
   }
 

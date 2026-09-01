@@ -15,6 +15,13 @@
       <p>Another example.</p>
       <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForDateFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
     </doc-feature-example>
+    <doc-feature-example header="dbx-filter-popover-button (custom filter only)" hint="When only a custom filter component is configured the popover opens directly to that filter's form, and the preset/customize switch buttons are hidden.">
+      <dbx-content-border>
+        <p>Filter Value: {{ formFilterSignal() | json }}</p>
+      </dbx-content-border>
+      <p>This uses the same form as the "Customize" view above, but reaches it in a single click.</p>
+      <doc-interaction-test-form-filter-popover-button [dbxFilterMapSourceConnector]="formFilterKey"></doc-interaction-test-form-filter-popover-button>
+    </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of preset filters.">
       <dbx-content-border>
         <p>Filter Value: {{ menuFilterSignal() | json }}</p>
