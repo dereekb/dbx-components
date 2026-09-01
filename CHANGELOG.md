@@ -1,3 +1,16 @@
+# [13.43.0](https://github.com/dereekb/dbx-components/compare/v13.42.0-dev...v13.43.0) (2026-09-01)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([01509c31](https://github.com/dereekb/dbx-components/commit/01509c31779bc78e96375142a3e28b5559cd264f))
+
+
+### Features
+
+- **dbx-cli:** name Firestore SDK/wiring faults and build drift ([89b6be81](https://github.com/dereekb/dbx-components/commit/89b6be81b5bfd96be87c449fb82b73d0f96b40bc))
+- formspace model ([#56](https://github.com/dereekb/dbx-components/issues/56)) ([f75c5510](https://github.com/dereekb/dbx-components/commit/f75c5510499a881f082dfb883cde4d03379114f4)), closes [#56](https://github.com/dereekb/dbx-components/issues/56)
+
 # [13.42.0](https://github.com/dereekb/dbx-components/compare/v13.41.0-dev...v13.42.0) (2026-08-28)
 
 

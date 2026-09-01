@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/nestjs/eslint",
-  "version": "13.42.0",
+  "version": "13.43.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/util": "13.42.0",
+    "@dereekb/util": "13.43.0",
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {
