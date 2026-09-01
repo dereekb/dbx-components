@@ -46,6 +46,9 @@
       "configurations": {
         "production": {
           "esbuildConfig": "API_APP_FOLDER/esbuild.prod.config.js"
+        },
+        "staging": {
+          "esbuildConfig": "API_APP_FOLDER/esbuild.staging.config.js"
         }
       }
     },

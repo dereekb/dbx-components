@@ -321,8 +321,12 @@ export function formatTwoSideResult<TResult extends TwoSideResult>(config: { rea
 
 /**
  * Minimum violation shape required by {@link formatFileGroupedResult}.
+ *
+ * The optional `TCode` parameter narrows the `code` field to a domain
+ * union, mirroring {@link FolderGroupedViolation}; the default keeps
+ * existing call sites that pass `string` working unchanged.
  */
-export interface FileGroupedViolation extends ViolationLine {
+export interface FileGroupedViolation<TCode extends string = string> extends ViolationLine<TCode> {
   readonly file: string;
   readonly line: number | undefined;
 }

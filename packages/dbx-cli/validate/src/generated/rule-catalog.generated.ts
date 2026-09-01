@@ -2911,5 +2911,95 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whenItApplies: 'When a key on `<app>SystemStateStoredDataConverterMap` is neither a local `<NAME>_SYSTEM_STATE_TYPE` constant nor an imported identifier.',
     whenItDoesNotApply: 'Keys imported from upstream packages — those are detected via `importedIdentifiers` and skipped.',
     canonicalFix: 'Either declare the missing constant locally or import it from the upstream package that owns it.'
+  },
+  {
+    code: 'WORKSPACE_DEPLOY_ENVIRONMENT_FILE_MISSING',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: "A configuration's file-replacement or esbuild-config path does not exist on disk",
+    whatItFlags: "A configuration's file-replacement or esbuild-config path does not exist on disk.",
+    whenItApplies: "When a `fileReplacements` `replace` / `with` path, or a configuration's `esbuildConfig` path, names a file that is absent from the working tree.",
+    whenItDoesNotApply: "Generated files produced by an earlier target in the same pipeline — declare them as that target's `outputs` so the dependency is explicit, or the reference is genuinely broken.",
+    canonicalFix: 'Create the missing file or correct the path. An Angular build fails loudly on a missing replacement, but an esbuild `additionalProperties: true` schema accepts a bad path silently.'
+  },
+  {
+    code: 'WORKSPACE_DEPLOY_ENVIRONMENT_FILE_UNREFERENCED',
+    source: 'dbx_workspace_validate',
+    severity: 'warning',
+    title: 'An `environment.<name>.ts` file exists but no build configuration references it',
+    whatItFlags: 'An `environment.<name>.ts` file exists but no build configuration references it.',
+    whenItApplies: "When a file matching `environment.*.ts` sits in a project's `src/environments/` directory and appears in no configuration's `fileReplacements`, and no `esbuildConfig` file references it.",
+    whenItDoesNotApply: 'The base `environment.ts` (always the replacement source, never a target), and environment files imported directly by application code rather than swapped in by the build.',
+    canonicalFix: 'Add the configuration that consumes it, or delete the file. An unreachable environment file reads as a working deploy lane that does not exist — the file is edited, reviewed, and never compiled.'
+  },
+  {
+    code: 'WORKSPACE_DEPLOY_HOSTING_TARGET_MISSING',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: 'A deploy command targets a firebase hosting target that `firebase.json` does not declare',
+    whatItFlags: 'A deploy command targets a firebase hosting target that `firebase.json` does not declare.',
+    whenItApplies: 'When a deploy command runs `firebase deploy --only hosting:<target>` and `<target>` matches no `target` (or `site`) entry under `hosting` in `firebase.json`.',
+    whenItDoesNotApply: 'Workspaces that resolve hosting targets through `.firebaserc` target aliases the scanner does not read — verify manually if this misfires.',
+    canonicalFix: 'Add the hosting entry to `firebase.json`, or point the command at a declared target. `firebase deploy` fails on an unknown hosting target, so this breaks the lane outright.'
+  },
+  {
+    code: 'WORKSPACE_DEPLOY_LANE_ASYMMETRIC',
+    source: 'dbx_workspace_validate',
+    severity: 'warning',
+    title: 'A deploy lane is wired on one side of the app/api pair but not the other',
+    whatItFlags: 'A deploy lane is wired on one side of the app/api pair but not the other.',
+    whenItApplies: 'When one project in the workspace declares `ci-deploy-<lane>` and a sibling project that declares at least one other `ci-deploy-*` lane does not declare this one.',
+    whenItDoesNotApply: 'Projects deliberately deployed on their own cadence, and workspaces with a single deployable project. Suppress by giving the sibling the lane, or accept the warning.',
+    canonicalFix: 'Add the missing `ci-deploy-<lane>` target to the sibling project. A lane present on the API but not the web app (or vice versa) deploys half an application and leaves the two halves on different builds.'
+  },
+  {
+    code: 'WORKSPACE_DEPLOY_LANE_NO_ENVIRONMENT_SELECTION',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: 'A deploy lane builds a configuration that selects no environment file',
+    whatItFlags: 'A deploy lane builds a configuration that selects no environment file.',
+    whenItApplies: 'When a `ci-deploy-<lane>` target builds a configuration that provides no environment-selection mechanism for its executor — no `fileReplacements` for an Angular `application` build, or no lane-specific `esbuildConfig` for an `@nx/esbuild:esbuild` build.',
+    whenItDoesNotApply: 'Non-deploy configurations such as `development`, which are expected to compile the base `environment.ts`. Only configurations reachable from a `ci-deploy-*` target are checked.',
+    canonicalFix: "Add the `fileReplacements` entry (or the lane's `esbuildConfig`) to the configuration. Without it the lane deploys the unreplaced `environment.ts` — localhost URLs, dev credentials, and any developer-only function map — to a live project."
+  },
+  {
+    code: 'WORKSPACE_TARGET_OUTPUT_ESCAPES_ROOT',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: "A target's `outputs` entry resolves outside the workspace root",
+    whatItFlags: "A target's `outputs` entry resolves outside the workspace root.",
+    whenItApplies: 'When an `outputs` entry — after `{options.<name>}` substitution from the target\'s own options — resolves to a path above the workspace root. The common shape is `outputs: ["{options.reportsDirectory}"]` with a `../../`-relative option value.',
+    whenItDoesNotApply: 'Entries anchored by `{workspaceRoot}` or `{projectRoot}`, and entries whose `{options.<name>}` token has no resolvable value (skipped rather than guessed).',
+    canonicalFix: 'Anchor the entry explicitly, e.g. `"{workspaceRoot}/coverage/{projectRoot}"`. Nx refuses to cache an output it cannot place inside the workspace and will report the task as flaky instead of failing loudly.'
+  },
+  {
+    code: 'WORKSPACE_TARGET_REF_CONFIGURATION_MISSING',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: 'An `nx run <project>:<target>:<configuration>` reference names a configuration the target does not declare',
+    whatItFlags: 'An `nx run <project>:<target>:<configuration>` reference names a configuration the target does not declare.',
+    whenItApplies: "Whenever a reference carries a configuration segment and the target's `configurations` map has no such key.",
+    whenItDoesNotApply: 'Targets that declare no `configurations` at all — Nx tolerates a configuration argument there, so it is not reported.',
+    canonicalFix: 'Rename the reference to a declared configuration (a `prod` / `production` mismatch is the usual cause), or add the configuration to the target. Nx does NOT error on an unknown configuration: `create-task-graph.js` silently substitutes `defaultConfiguration`, so a mismatch here ships whatever that default builds — and ships the base options with no configuration merged at all when no default is set.'
+  },
+  {
+    code: 'WORKSPACE_TARGET_REF_PROJECT_MISSING',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: 'An `nx run <project>:...` reference names a project that does not exist in the workspace',
+    whatItFlags: 'An `nx run <project>:...` reference names a project that does not exist in the workspace.',
+    whenItApplies: 'When a target reference in a `project.json` command, CI config, shell script, or npm script names a project with no matching entry in the workspace project graph.',
+    whenItDoesNotApply: 'References built from shell variables or CI interpolation the scanner cannot resolve — those are skipped rather than reported.',
+    canonicalFix: "Create the project, or update the reference to the project's real name. A renamed or deleted project leaves these references behind and they only fail at deploy time."
+  },
+  {
+    code: 'WORKSPACE_TARGET_REF_TARGET_MISSING',
+    source: 'dbx_workspace_validate',
+    severity: 'error',
+    title: 'An `nx run <project>:<target>` reference names a target the project does not declare',
+    whatItFlags: 'An `nx run <project>:<target>` reference names a target the project does not declare.',
+    whenItApplies: 'When the referenced project exists but has no target by that name (after `nx.json` `targetDefaults` are accounted for).',
+    whenItDoesNotApply: "Targets contributed by an inferred-target plugin the scanner does not evaluate — declare the plugin's targets explicitly if this misfires.",
+    canonicalFix: 'Add the target to the project, or point the reference at an existing one. This is the single most common way a CI lane silently stops doing anything.'
   }
 ];

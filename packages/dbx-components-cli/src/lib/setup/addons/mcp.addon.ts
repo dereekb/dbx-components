@@ -129,7 +129,8 @@ function buildMcpInjections(context: AddonContext): readonly MarkerInjection[] {
     { filePath: join(api, 'app.module.ts'), fileTag: 'api-app-module', site: 'global-exports', snippet: `APP_CODE_PREFIXApiAppMcpAnalyticsModule,` },
     // environments
     { filePath: join(apiEnv, 'environment.ts'), fileTag: 'api-env', site: 'fields', snippet: `appMcpUrl: '${mcpDevUrl}',` },
-    { filePath: join(apiEnv, 'environment.prod.ts'), fileTag: 'api-env', site: 'fields', snippet: `appMcpUrl: 'https://example.com/mcp',` }
+    { filePath: join(apiEnv, 'environment.prod.ts'), fileTag: 'api-env', site: 'fields', snippet: `appMcpUrl: 'https://example.com/mcp',` },
+    { filePath: join(apiEnv, 'environment.staging.ts'), fileTag: 'api-env', site: 'fields', snippet: `appMcpUrl: 'https://staging.example.com/mcp',` }
   ];
 
   return inputs.map((input) => buildInjection(input, render));

@@ -58,6 +58,7 @@ export * as storagefileValidateApp from './lib/storagefile-m-validate-app/index.
 export * as storagefileValidateFolder from './lib/storagefile-m-validate-folder/index.js';
 export * as systemValidateFolder from './lib/system-m-validate-folder/index.js';
 export * as fixtureValidate from './lib/model-fixture-shared/index.js';
+export * as workspaceValidate from './lib/workspace-validate/index.js';
 
 // per-domain app-introspection extractors (list / lookup)
 export * as modelListComponent from './lib/model-list-component/index.js';

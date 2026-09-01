@@ -62,6 +62,13 @@
           }],
           "outputHashing": "all"
         },
+        "staging": {
+          "fileReplacements": [{
+            "replace": "ANGULAR_APP_FOLDER/src/environments/environment.ts",
+            "with": "ANGULAR_APP_FOLDER/src/environments/environment.staging.ts"
+          }],
+          "outputHashing": "all"
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,
@@ -117,7 +124,7 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run ANGULAR_APP_NAME:build-base:prod"
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:production"
           },
           {
             "command": "npx firebase --project=prod deploy --only hosting:prod"

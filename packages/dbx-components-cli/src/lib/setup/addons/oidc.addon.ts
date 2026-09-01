@@ -145,6 +145,7 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     // api — environments
     { filePath: join(apiEnv, 'environment.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'http://localhost:${naming.angularAppPort}/api',` },
     { filePath: join(apiEnv, 'environment.prod.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://example.com/api',` },
+    { filePath: join(apiEnv, 'environment.staging.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://staging.example.com/api',` },
     // frontend — root app config
     { filePath: join(app, 'root.app.config.ts'), fileTag: 'root-config', site: 'imports', snippet: `import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';\nimport { APP_CODE_PREFIX_CAPS_APP_OAUTH_INTERACTION_PATH, APP_CODE_PREFIX_CAPS_OIDC_AVAILABLE_SCOPES, APP_CODE_PREFIX_CAPS_OIDC_TOKEN_ENDPOINT_AUTH_METHODS } from 'FIREBASE_COMPONENTS_NAME';`, multiline: true },
     {
