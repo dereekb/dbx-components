@@ -53,17 +53,6 @@ export abstract class AbstractNestContext {
    * Returns the NestJS application context.
    *
    * @returns The NestJS application context.
-   *
-   * @deprecated use nestApplication instead.
-   */
-  get nest(): INestApplicationContext {
-    return this._nestApplication;
-  }
-
-  /**
-   * Returns the NestJS application context.
-   *
-   * @returns The NestJS application context.
    */
   get nestApplication(): INestApplicationContext {
     return this._nestApplication;

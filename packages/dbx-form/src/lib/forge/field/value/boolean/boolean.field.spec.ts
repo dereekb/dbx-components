@@ -24,7 +24,6 @@ describe('DbxForgeToggleFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -76,7 +75,6 @@ describe('DbxForgeCheckboxFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -130,8 +128,8 @@ describe('dbxForgeToggleField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should set description as hint in props', () => {
-    const field = dbxForgeToggleField({ key: 'active', description: 'A hint' });
+  it('should set hint in props', () => {
+    const field = dbxForgeToggleField({ key: 'active', hint: 'A hint' });
     expect(field.props?.hint).toBe('A hint');
   });
 
@@ -170,8 +168,8 @@ describe('dbxForgeCheckboxField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should set description as hint in props', () => {
-    const field = dbxForgeCheckboxField({ key: 'agree', description: 'A hint' });
+  it('should set hint in props', () => {
+    const field = dbxForgeCheckboxField({ key: 'agree', hint: 'A hint' });
     expect(field.props?.hint).toBe('A hint');
   });
 

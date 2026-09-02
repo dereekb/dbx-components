@@ -23,7 +23,6 @@ describe('DbxForgeTextEditorFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -80,8 +79,8 @@ describe('dbxForgeTextEditorField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeTextEditorField({ key: 'bio', description: 'Write your bio' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeTextEditorField({ key: 'bio', hint: 'Write your bio' });
     expect(field.props?.hint).toBe('Write your bio');
   });
 

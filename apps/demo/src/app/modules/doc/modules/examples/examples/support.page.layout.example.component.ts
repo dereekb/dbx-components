@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
-import { DbxAnchorComponent, DbxButtonComponent, DbxIconTileComponent, DbxTextColorDirective } from '@dereekb/dbx-web';
+import { type DbxButtonStyle, DbxAnchorComponent, DbxButtonComponent, DbxIconTileComponent, DbxTextColorDirective } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
 
 interface SupportPageTopicLink {
@@ -66,8 +66,8 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
  * as a plain `<ul>` / `<li>` so the browser's default disc marker
  * provides the bullet (color-themed via `::marker`).
  *
- * The "Chat with Support" button uses `<dbx-button>` (`flat`,
- * `customButtonColor` / `customTextColor` re-pointing the M3
+ * The "Chat with Support" button uses `<dbx-button>` (`flat`, with a
+ * `buttonStyle` re-pointing the M3
  * `--mat-sys-inverse-surface` / `--mat-sys-inverse-on-surface` tokens)
  * so it flips correctly between light/dark themes, and composes the
  * `dbx-grow-button` + `dbx-button-big` utilities for full-width / tall
@@ -214,7 +214,7 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
             <mat-card-content>
               <h3 class="dbx-text-title-medium dbx-mb3">Need help? We're here.</h3>
               <div fxLayout="row" fxLayout.lt-md="column" fxLayoutGap="var(--dbx-padding-3)" fxLayoutAlign="start stretch">
-                <dbx-button class="dbx-grow-button dbx-button-form-field-height" fxFlex="1 1 50%" flat icon="help_outline" text="Chat with Support" customButtonColor="var(--mat-sys-inverse-surface)" customTextColor="var(--mat-sys-inverse-on-surface)" (buttonClick)="onChatClick()"></dbx-button>
+                <dbx-button class="dbx-grow-button dbx-button-form-field-height" fxFlex="1 1 50%" flat icon="help_outline" text="Chat with Support" [buttonStyle]="chatButtonStyle" (buttonClick)="onChatClick()"></dbx-button>
                 <mat-form-field class="dbx-p0" appearance="outline" fxFlex="1 1 50%" subscriptSizing="dynamic">
                   <input matInput placeholder="Search for a topic or question…" />
                 </mat-form-field>
@@ -252,6 +252,8 @@ export class DocSupportPageLayoutExampleComponent {
   private readonly _snackBar = inject(MatSnackBar);
 
   readonly topics = SUPPORT_PAGE_TOPICS;
+
+  readonly chatButtonStyle: DbxButtonStyle = { color: { color: 'var(--mat-sys-inverse-surface)', contrast: 'var(--mat-sys-inverse-on-surface)' }, customTextColor: 'var(--mat-sys-inverse-on-surface)' };
 
   anchorFor(link: SupportPageTopicLink): ClickableAnchor {
     return {

@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { type DbxButtonEcho, cleanSubscription } from '@dereekb/dbx-core';
-import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
+import { type DbxButtonStyle, type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -252,6 +252,9 @@ export class DocInteractionButtonComponent {
   readonly errorEcho: DbxButtonEcho = { icon: 'error', color: 'warn', iconOnly: true, duration: 2000 };
   readonly customEcho: DbxButtonEcho = { icon: 'star', text: 'Nice!', color: 'ok', duration: 3000 };
   readonly iconOnlyEcho: DbxButtonEcho = { icon: 'thumb_up', color: 'success', iconOnly: true, duration: 2000 };
+
+  // MARK: Custom Color Demos
+  readonly customColorButtonStyle: DbxButtonStyle = { color: { color: '#1877F2', contrast: '#FFF' }, customTextColor: '#FFF' };
 
   constructor() {
     this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));

@@ -6,6 +6,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { waitForMs } from '@dereekb/util';
 import { dbxForgeNameField, dbxForgeEmailField, dbxForgeCityField, dbxForgeStateField, dbxForgeCountryField, dbxForgeZipCodeField, dbxForgeLatLngTextField, DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER } from './text.additional.field';
+import type { DynamicText } from '@ng-forge/dynamic-forms';
 import type { DbxForgeEmailFieldConfig, DbxForgeStateFieldConfig } from './text.additional.field';
 import type { DbxForgeTextFieldConfig } from './text.field';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
@@ -18,7 +19,7 @@ import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 // ============================================================================
 
 describe('DbxForgeEmailFieldConfig - Exhaustive Whitelist', () => {
-  type ExpectedKeys = 'key' | 'label' | 'placeholder' | 'required' | 'readonly' | 'description' | 'autocomplete';
+  type ExpectedKeys = 'key' | 'label' | 'placeholder' | 'required' | 'readonly' | 'hint' | 'autocomplete';
 
   type ActualKeys = keyof DbxForgeEmailFieldConfig;
 
@@ -47,8 +48,8 @@ describe('DbxForgeEmailFieldConfig - Exhaustive Whitelist', () => {
       expectTypeOf<DbxForgeEmailFieldConfig['readonly']>().toEqualTypeOf<boolean | undefined>();
     });
 
-    it('description', () => {
-      expectTypeOf<DbxForgeEmailFieldConfig['description']>().toEqualTypeOf<string | undefined>();
+    it('hint', () => {
+      expectTypeOf<DbxForgeEmailFieldConfig['hint']>().toEqualTypeOf<DynamicText | undefined>();
     });
 
     it('autocomplete', () => {

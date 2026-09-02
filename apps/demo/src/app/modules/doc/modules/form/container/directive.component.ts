@@ -44,7 +44,7 @@ export class DocFormDirectiveComponent implements OnInit {
   } as const satisfies FormConfig;
 
   readonly forgeExampleConfig: FormConfig = {
-    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), dbxForgeEmailField({ key: 'email' }), dbxForgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), dbxForgeToggleField({ key: 'active', label: 'Active', description: 'Toggle active state.' })]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), dbxForgeEmailField({ key: 'email' }), dbxForgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), dbxForgeToggleField({ key: 'active', label: 'Active', hint: 'Toggle active state.' })]
   };
 
   readonly forgeExampleData = { name: 'Test User', email: 'test@example.com', age: 25, active: true };

@@ -21,12 +21,6 @@ export interface DbxErrorWidgetEntry {
    */
   readonly code: StringErrorCode;
   /**
-   * Error widget component class to use.
-   *
-   * @deprecated use `widgetComponentClass` instead.
-   */
-  readonly componentClass?: Maybe<Type<unknown>>;
-  /**
    * In-line error widget component class to use.
    *
    * This changes how it appears in dbx-error.
@@ -89,11 +83,7 @@ export class DbxErrorWidgetService {
     let registered = false;
 
     if (override || !this._entries.has(entry.code)) {
-      this._entries.set(entry.code, {
-        ...entry,
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        widgetComponentClass: entry.widgetComponentClass ?? entry.componentClass
-      });
+      this._entries.set(entry.code, entry);
       registered = true;
     }
 

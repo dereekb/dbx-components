@@ -69,7 +69,6 @@ export function cssTokenVar<T extends CssToken>(cssToken: T): CssTokenVar<T> {
   return `var(${cssToken})`;
 }
 
-// MARK: Compat
 /**
  * Represents a single CSS Style
  *

@@ -43,5 +43,5 @@ export function demoTestFormSpaceNotesField() {
  * @returns A forge toggle field configuration for the agreement.
  */
 export function demoTestFormSpaceAgreedField() {
-  return dbxForgeToggleField({ key: 'agreed', label: 'Agreed', description: 'Whether the terms of this test submission are agreed to.' });
+  return dbxForgeToggleField({ key: 'agreed', label: 'Agreed', hint: 'Whether the terms of this test submission are agreed to.' });
 }

@@ -46,8 +46,8 @@ describe('dbxForgeWebsiteUrlField()', () => {
     expect(field.required).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeWebsiteUrlField({ description: 'Enter your website' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeWebsiteUrlField({ hint: 'Enter your website' });
     expect(field.props?.hint).toBe('Enter your website');
   });
 

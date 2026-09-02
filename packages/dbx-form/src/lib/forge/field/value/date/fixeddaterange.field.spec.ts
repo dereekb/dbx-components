@@ -26,8 +26,8 @@ describe('dbxForgeFixedDateRangeField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', description: 'Picks a 10-day range' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeFixedDateRangeField({ key: 'fixedRange', hint: 'Picks a 10-day range' });
     expect(field.props?.hint).toBe('Picks a 10-day range');
   });
 

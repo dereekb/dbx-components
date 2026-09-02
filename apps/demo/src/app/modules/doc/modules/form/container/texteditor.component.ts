@@ -18,7 +18,7 @@ export class DocFormTextEditorComponent {
       dbxForgeTextEditorField({
         key: 'editor',
         label: 'Text Editor',
-        description: 'This is a text editor.'
+        hint: 'This is a text editor.'
       }) as any
     ]
   };

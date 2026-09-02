@@ -32,7 +32,6 @@ describe('DbxForgeNumberSliderFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -100,10 +99,6 @@ describe('DbxForgeNumberSliderFieldConfig - Exhaustive Whitelist', () => {
 
     it('hint', () => {
       expectTypeOf<DbxForgeNumberSliderFieldConfig['hint']>().toEqualTypeOf<DynamicText | undefined>();
-    });
-
-    it('description', () => {
-      expectTypeOf<DbxForgeNumberSliderFieldConfig['description']>().toEqualTypeOf<DynamicText | undefined>();
     });
 
     it('validators', () => {
@@ -295,12 +290,7 @@ describe('dbxForgeNumberSliderField()', () => {
     expect(slider.props?.tickInterval).toBeUndefined();
   });
 
-  // MARK: hint/description mapping
-  it('should map description to hint in slider props', () => {
-    const slider = dbxForgeNumberSliderField({ key: 'rating', max: 10, description: 'Pick a rating' });
-    expect(slider.props?.hint).toBe('Pick a rating');
-  });
-
+  // MARK: hint mapping
   it('should map hint to slider props', () => {
     const slider = dbxForgeNumberSliderField({ key: 'rating', max: 10, hint: 'Drag to select' });
     expect(slider.props?.hint).toBe('Drag to select');

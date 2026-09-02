@@ -40,14 +40,3 @@ export function expectFailAssertHttpErrorServerErrorCode(expectedCode: string): 
     return true;
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated Use ExpectedHttpErrorWithSpecificServerErrorCode from shared instead. This is kept for backwards compatibility.
- */
-export class JestExpectedHttpErrorWithSpecificServerErrorCode extends ExpectedHttpErrorWithSpecificServerErrorCode {}
-
-/**
- * @deprecated Use expectFailAssertHttpErrorServerErrorCode from shared instead. This is kept for backwards compatibility.
- */
-export const jestExpectFailAssertHttpErrorServerErrorCode = expectFailAssertHttpErrorServerErrorCode;

@@ -74,6 +74,7 @@ export interface NewZohoCrmNoteData extends Pick<ZohoCrmNoteData, 'Note_Title' |
  * Status string for a note. Exact values are not yet fully documented.
  */
 export type ZohoCrmNoteStatus = string; // TODO
+
 /**
  * File size in bytes for any attachment associated with a note.
  */

@@ -599,17 +599,6 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     return this.delegate.loadImpersonationAuthDetails ? this.delegate.loadImpersonationAuthDetails(this, userId) : of(undefined);
   }
 
-  /**
-   * @param email - The email address to send the reset to.
-   * @returns Resolves when the email has been sent.
-   *
-   * @deprecated use {@link sendPasswordReset} instead, which delegates to the configured
-   * {@link DbxFirebaseAuthServiceDelegate.sendPasswordReset} implementation.
-   */
-  sendPasswordResetEmail(email: string): Promise<void> {
-    return this.sendPasswordReset(email);
-  }
-
   logInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
     return signInWithEmailAndPassword(this.firebaseAuth, email, password);
   }

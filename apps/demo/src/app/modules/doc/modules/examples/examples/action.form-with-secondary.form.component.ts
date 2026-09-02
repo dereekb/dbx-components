@@ -19,7 +19,7 @@ export class DocActionFormWithSecondaryFormComponent extends AbstractSyncForgeFo
         key: 'reason',
         label: 'Reason',
         required: true,
-        description: 'The Approve handler receives this value via dbxActionForm. Type something to enable Approve.'
+        hint: 'The Approve handler receives this value via dbxActionForm. Type something to enable Approve.'
       })
     ]
   } as FormConfig;

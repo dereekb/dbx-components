@@ -100,7 +100,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', description: 'Pick a rating', min: 0, max: 10 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', hint: 'Pick a rating', min: 0, max: 10 }) as any]
       };
 
       await settle(fixture);

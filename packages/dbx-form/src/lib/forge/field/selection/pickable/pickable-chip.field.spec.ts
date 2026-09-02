@@ -42,7 +42,6 @@ describe('DbxForgePickableChipFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -106,7 +105,7 @@ describe('DbxForgePickableChipFieldConfig - Exhaustive Whitelist', () => {
     });
 
     it('hint is accessible with concrete generics', () => {
-      // hint/description are conditional on the props type having a hint property.
+      // hint is conditional on the props type having a hint property.
       // With default generics the conditional defers to never; with concrete types it resolves.
       const config: DbxForgePickableChipFieldConfig<string> = { key: 'test', hint: 'test hint' };
       expect(config.hint).toBe('test hint');
@@ -255,18 +254,13 @@ describe('dbxForgePickableChipField()', () => {
     expect(inner.readonly).toBe(true);
   });
 
-  // MARK: Hint/description mapping
-  it('should map description to inner field props.hint', () => {
-    const inner = dbxForgePickableChipField({ ...minimalConfig(), description: 'Pick your tags' });
-    expect(inner.props?.hint).toBe('Pick your tags');
-  });
-
+  // MARK: Hint mapping
   it('should map hint to inner field props.hint', () => {
     const inner = dbxForgePickableChipField({ ...minimalConfig(), hint: 'Pick your tags' });
     expect(inner.props?.hint).toBe('Pick your tags');
   });
 
-  it('should not set hint on inner field when neither hint nor description is provided', () => {
+  it('should not set hint on inner field when hint is not provided', () => {
     const inner = dbxForgePickableChipField(minimalConfig());
     expect(inner.props?.hint).toBeUndefined();
   });

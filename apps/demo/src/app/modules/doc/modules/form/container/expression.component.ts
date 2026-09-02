@@ -27,12 +27,12 @@ export class DocFormExpressionComponent {
   // Forge equivalent — uses ng-forge logic configs for conditional hide/show
   readonly forgeBasicFieldsConfig: FormConfig = {
     fields: [
-      dbxForgeToggleField({ key: 'toggle', label: 'Hide Toggle', description: 'this field is watched by another field to see when this is toggled on.' }),
+      dbxForgeToggleField({ key: 'toggle', label: 'Hide Toggle', hint: 'this field is watched by another field to see when this is toggled on.' }),
       dbxForgeNameField({ logic: [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'notEquals', value: true } }] }),
       dbxForgeValueSelectionField({
         key: 'show',
         label: 'Select One',
-        description: 'This selection is watched by the other fields to toggle showing/hiding based on the selected value.',
+        hint: 'This selection is watched by the other fields to toggle showing/hiding based on the selected value.',
         props: {
           options: SHOW_VALUE_SELECTION_VALUES.filter((x): x is { label: string; value: string } => 'value' in x)
         }

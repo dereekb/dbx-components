@@ -1,3 +1,4 @@
+import type { DynamicText } from '@ng-forge/dynamic-forms';
 import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 import { type DbxForgeTextFieldConfig, dbxForgeTextField } from './text.field';
@@ -50,7 +51,7 @@ export interface DbxForgeEmailFieldConfig {
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly readonly?: boolean;
-  readonly description?: string;
+  readonly hint?: DynamicText;
   /**
    * Sets the autocomplete attribute on the input. Pass `false` to disable browser autofill.
    */
@@ -77,7 +78,7 @@ export interface DbxForgeEmailFieldConfig {
  * ```
  */
 export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
-  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, description, autocomplete } = config;
+  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com', required, readonly: isReadonly, hint, autocomplete } = config;
 
   return dbxForgeTextField({
     key,
@@ -85,7 +86,7 @@ export function dbxForgeEmailField(config: DbxForgeEmailFieldConfig = {}) {
     placeholder,
     required,
     readonly: isReadonly,
-    description,
+    hint,
     autocomplete,
     inputType: 'email'
   });

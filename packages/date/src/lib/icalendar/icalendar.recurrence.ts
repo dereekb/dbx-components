@@ -15,12 +15,6 @@ import { type ICalendarDateTimeValue, type ICalendarRecurrence } from './icalend
 export const ICALENDAR_RECURRENCE_RRULE_PROPERTY_TYPE = 'RRULE';
 
 /**
- * @deprecated RDATE is separated upstream by `separateRRuleStringSetValues()`; this is no longer used to
- * match a line here. Use `RRULE_RDATE_PROPERTY_TYPE` from the rrule parse module instead.
- */
-export const ICALENDAR_RECURRENCE_RDATE_PROPERTY_TYPE = 'RDATE';
-
-/**
  * Converts the workspace's stored recurrence form into an {@link ICalendarRecurrence}.
  *
  * THE TRAP THIS EXISTS TO CLOSE: {@link ICalendarRecurrence.rules} holds the VALUE PART only

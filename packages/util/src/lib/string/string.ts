@@ -663,7 +663,6 @@ export function isNotBlankString(input: Maybe<string>): input is string {
   return typeof input === 'string' && input.trim().length > 0;
 }
 
-// MARK: Compat
 /**
  * Joins an array of strings into a single string using commas. Does not trim empty values by default.
  *

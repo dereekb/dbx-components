@@ -89,7 +89,7 @@ export function oidcClientTokenEndpointAuthMethodForgeField(config?: OidcEntryCl
   return dbxForgeValueSelectionField({
     key: 'token_endpoint_auth_method',
     label: 'Token Endpoint Auth Method',
-    description: 'How the client authenticates when exchanging tokens. Cannot be changed after creation.',
+    hint: 'How the client authenticates when exchanging tokens. Cannot be changed after creation.',
     required: true,
     props: { options }
   });
@@ -254,7 +254,7 @@ export function oidcClientTestRedirectUriForgeField(redirectUris: OidcRedirectUr
   return dbxForgeValueSelectionField({
     key: 'redirect_uri',
     label: 'Redirect URI',
-    description: 'Select the redirect URI to use for the test flow.',
+    hint: 'Select the redirect URI to use for the test flow.',
     required: true,
     props: { options }
   });

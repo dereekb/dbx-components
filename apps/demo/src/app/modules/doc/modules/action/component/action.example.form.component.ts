@@ -22,8 +22,8 @@ export class DocActionFormExampleFormComponent extends AbstractSyncForgeFormDire
       dbxForgeDateTimeField({ key: 'date' }),
       dbxForgeDateTimeRangeRow({
         props: { showTimezone: true },
-        start: { key: 'startTime', label: 'Start Time', description: 'When the event begins.' },
-        end: { key: 'endTime', label: 'End Time', description: 'When the event ends.' }
+        start: { key: 'startTime', label: 'Start Time', hint: 'When the event begins.' },
+        end: { key: 'endTime', label: 'End Time', hint: 'When the event ends.' }
       })
     ]
   } as FormConfig;

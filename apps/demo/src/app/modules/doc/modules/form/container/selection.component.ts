@@ -135,31 +135,31 @@ export class DocFormSelectionComponent implements OnInit {
       dbxForgeValueSelectionField({
         key: 'selectOne',
         label: 'Select One',
-        description: 'This is a simple selection field for picking a single value.',
+        hint: 'This is a simple selection field for picking a single value.',
         props: { options: VALUE_SELECTION_VALUES }
       }),
       dbxForgeValueSelectionField({
         key: 'selectOneWithClearOption',
         label: 'Select One With Clear Option',
-        description: 'This selection includes a ValueSelectionOptionClear entry in the options array.',
+        hint: 'This selection includes a ValueSelectionOptionClear entry in the options array.',
         props: { options: VALUE_SELECTION_VALUES_WITH_CLEAR }
       }),
       dbxForgeValueSelectionField({
         key: 'selectOneWithClear',
         label: 'Select One With Clear',
-        description: 'This is a simple selection field with a custom clear value added via the addClearOption.',
+        hint: 'This is a simple selection field with a custom clear value added via the addClearOption.',
         props: { options: VALUE_SELECTION_VALUES, addClearOption: '>> Custom Clear Me <<' }
       }),
       dbxForgeValueSelectionField({
         key: 'selectMultiple',
         label: 'Select Multiple',
-        description: 'This is a simple selection field for picking an array of values.',
+        hint: 'This is a simple selection field for picking an array of values.',
         props: { options: VALUE_SELECTION_VALUES, multiple: true }
       }),
       dbxForgeValueSelectionField({
         key: 'selectWithObservable',
         label: 'Select With Observable Data Source',
-        description: 'This select uses an Observable for options, which falls back to the custom DbxForgeValueSelectionFieldComponent.',
+        hint: 'This select uses an Observable for options, which falls back to the custom DbxForgeValueSelectionFieldComponent.',
         props: { options: of(VALUE_SELECTION_VALUES) }
       })
     ]

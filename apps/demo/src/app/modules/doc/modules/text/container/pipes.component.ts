@@ -70,7 +70,7 @@ export class DocTextPipesComponent {
   readonly timezone$ = this._timezone.asObservable();
   readonly timezoneSignal = toSignal(this.timezone$, { initialValue: undefined });
   readonly dateTimezoneConfig: FormConfig = {
-    fields: [dbxForgeDateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }), dbxForgeTimezoneStringField({ required: false })]
+    fields: [dbxForgeDateTimeField({ key: 'date', required: true, hint: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }), dbxForgeTimezoneStringField({ required: false })]
   } as FormConfig;
 
   readonly onDateTimezoneChange = (value: { date: Maybe<Date>; timezone: Maybe<TimezoneString> }) => {
