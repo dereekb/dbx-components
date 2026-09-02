@@ -1,5 +1,10 @@
 /**
- * Fails the build when a published ESM bundle named-imports a binding that Node cannot bind.
+ * Fails the build when an ESM bundle named-imports a binding that Node cannot bind.
+ *
+ * Covers both the published package bundles under `dist/packages` and the esm-only app bundles
+ * under `dist/apps`. The app bundles matter as much as the packages: a Firebase Functions bundle
+ * is loaded by bare Node, so an unbindable named import is a load-time crash of the entire
+ * deployed function rather than a single broken call site.
  *
  * A dependency without an `exports` map resolves through `main` to its CommonJS build, and
  * Node synthesizes that module's ESM namespace with `cjs-module-lexer`. Any name the lexer
@@ -14,8 +19,8 @@
  * `needs to be compiled using the JIT compiler` errors from importing Angular libraries
  * outside an Angular app.
  *
- * Usage: node tools/scripts/check-esm-named-imports.mjs [distDir]
- *   distDir defaults to `dist/packages`.
+ * Usage: node tools/scripts/check-esm-named-imports.mjs [distDir...]
+ *   distDirs default to `dist/packages` and `dist/apps`.
  *
  * Exits non-zero and lists every offending (bundle, specifier, name) triple.
  */
@@ -24,7 +29,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 
-const DIST_DIR = process.argv[2] ?? 'dist/packages';
+const DIST_DIRS = process.argv.slice(2).length ? process.argv.slice(2) : ['dist/packages', 'dist/apps'];
 
 /**
  * Specifiers deliberately not checked, each with the reason it is exempt.
@@ -34,12 +39,45 @@ const DIST_DIR = process.argv[2] ?? 'dist/packages';
  */
 const EXEMPT = new Map([['mapbox-gl', 'Imported only by @dereekb/dbx-web/mapbox, an ng-packagr Angular package that can never load in bare Node regardless (its Angular peer dependencies cannot). mapbox-gl also declares a `default` whose type is a strict subset of its namespace, so the interop unwrap used elsewhere would be a type lie in TypeScript.']]);
 
-/** Collect every published ESM bundle: rollup `index.esm.js` plus ng-packagr `fesm2022/*.mjs`. */
+/**
+ * The entry of an esm-only `@nx/esbuild` app bundle, or `undefined` when `dir` is not one.
+ *
+ * An app bundle is a single self-contained file rather than a published package, so it has
+ * neither the rollup nor the ng-packagr filename. What identifies it is the generated
+ * `package.json` that `@nx/js` writes for an esm-only build: `"type": "module"` plus a `main`
+ * pointing at the emitted entry. The `type` is load-bearing here — the entry is named `.js`,
+ * so without it Node parses the bundle as CommonJS and none of this applies.
+ */
+function esmAppEntry(dir) {
+  const manifest = join(dir, 'package.json');
+  let entry;
+
+  if (existsSync(manifest)) {
+    try {
+      const pkg = JSON.parse(readFileSync(manifest, 'utf8'));
+      const main = typeof pkg.main === 'string' ? join(dir, pkg.main) : undefined;
+
+      if (pkg.type === 'module' && main && existsSync(main) && statSync(main).isFile()) {
+        entry = main;
+      }
+    } catch {
+      entry = undefined; // an unreadable/!JSON package.json is not an app bundle.
+    }
+  }
+
+  return entry;
+}
+
+/**
+ * Collect every ESM bundle: rollup `index.esm.js`, ng-packagr `fesm2022/*.mjs`, plus the
+ * esm-only app bundles under `dist/apps` (demo-api and any scaffolded API app), which are
+ * exposed to exactly the same CJS-interop hazard once they stop being CommonJS.
+ */
 function collectBundles(dir, depth = 0) {
-  const found = [];
+  const found = new Set();
 
   if (depth > 3 || !existsSync(dir)) {
-    return found;
+    return [];
   }
 
   for (const entry of readdirSync(dir)) {
@@ -50,7 +88,13 @@ function collectBundles(dir, depth = 0) {
     }
 
     if (existsSync(join(path, 'index.esm.js'))) {
-      found.push(join(path, 'index.esm.js'));
+      found.add(join(path, 'index.esm.js'));
+    }
+
+    const appEntry = esmAppEntry(path);
+
+    if (appEntry) {
+      found.add(appEntry);
     }
 
     const fesm = join(path, 'fesm2022');
@@ -58,15 +102,17 @@ function collectBundles(dir, depth = 0) {
     if (existsSync(fesm)) {
       for (const file of readdirSync(fesm)) {
         if (file.endsWith('.mjs')) {
-          found.push(join(fesm, file));
+          found.add(join(fesm, file));
         }
       }
     }
 
-    found.push(...collectBundles(path, depth + 1));
+    for (const nested of collectBundles(path, depth + 1)) {
+      found.add(nested);
+    }
   }
 
-  return found;
+  return [...found];
 }
 
 const NAMED_IMPORT = /^import\s+(?:[\w$]+\s*,\s*)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/gm;
@@ -109,10 +155,10 @@ function collectNamedImports(bundles) {
   return bySpecifier;
 }
 
-const bundles = collectBundles(DIST_DIR);
+const bundles = [...new Set(DIST_DIRS.flatMap((dir) => collectBundles(dir)))];
 
 if (!bundles.length) {
-  console.error(`check-esm-named-imports: no ESM bundles found under ${DIST_DIR} — build first.`);
+  console.error(`check-esm-named-imports: no ESM bundles found under ${DIST_DIRS.join(', ')} — build first.`);
   process.exit(1);
 }
 

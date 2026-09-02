@@ -83,7 +83,7 @@
         "generatePackageJson": true,
         "platform": "node",
         "target": "node24",
-        "format": ["cjs"],
+        "format": ["esm"],
         "bundle": true,
         "thirdParty": false,
         "declaration": false,

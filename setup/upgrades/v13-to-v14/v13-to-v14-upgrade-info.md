@@ -7,6 +7,7 @@
 - Move the Angular app's `build` and `serve` onto the `@angular/build:*` builders and drop
   `@angular-devkit/build-angular` for real
 - Replace `@Injectable({ providedIn: 'root' })` with Angular 22's `@Service()`
+- Build the Firebase API app as ESM instead of CommonJS
 
 ## Overview
 
@@ -116,6 +117,30 @@ As of v14, `createVitestConfig` locates the workspace root by walking up for `nx
 produces the same configuration regardless of which directory Vitest is launched from. If you
 call `createVitestConfig` you get this for free. If you hand-rolled a Vitest config that assumes
 the workspace root is the working directory, fix it before converting your test targets.
+
+### The API app builds as ESM
+
+The Firebase API app's `build-base` now uses `"format": ["esm"]` instead of `["cjs"]`.
+
+The motivating defect: `stripe` v22 publishes a real dual build whose two entries do *not* have
+the same shape. The ESM entry has `export class Stripe` alongside `export default Stripe`, while
+the CommonJS entry is `module.exports = StripeConstructor` with no `.Stripe` property at all.
+Under a CJS bundle, `import { Stripe } from 'stripe'` type-checks (TypeScript resolves types
+through `moduleResolution: "bundler"`, which picks the ESM `.d.ts`) and passes Vitest (which runs
+ESM), then emits `new import_stripe.Stripe(...)` — `undefined` — and dies in the deployed
+container with `TypeError: import_stripe.Stripe is not a constructor`.
+
+The general problem is that the app was the last thing in the workspace still consuming
+dependencies through CommonJS interop, while every `@dereekb/*` package is published as ESM.
+Two interop models meant a dependency could be imported correctly for one and wrongly for the
+other, with nothing in the build or the test suite able to tell the difference.
+
+ESM's interop is the stricter of the two, so this is a real trade rather than a free win: an
+unbindable named import is a load-time `SyntaxError` that takes down the whole function instead
+of one broken call site. What makes it the right trade here is that the strict direction is
+already checked. `tools/scripts/check-esm-named-imports.mjs` has guarded the published packages
+against exactly this since `@dereekb/date` shipped an ESM build that named-imported `RRule` from
+`rrule`, and as of v14 it also covers the app bundles under `dist/apps`.
 
 ## Migrations
 
@@ -458,6 +483,51 @@ npx nx run <app>:serve
 The serve output should print a `[vite]` line and a `Local: http://localhost:<port>/` with no
 deprecation banner above it. Do this *after* `npm prune`, not before — with the package still on
 disk the swap can look successful while an unnoticed target is still pulling it in.
+
+### Switch the API app build to ESM
+
+In the API app's `project.json`, under `build-base`:
+
+```diff
+-        "format": ["cjs"],
++        "format": ["esm"],
+```
+
+Nothing else in the target changes. The `outputs` still list `main.js`, because
+`@nx/esbuild`'s `ESM_FILE_EXTENSION` is already `.js` — the emitted file keeps its name and the
+`outExtension: { '.js': '.js' }` in `esbuild.config.js` becomes a no-op that only matters if you
+ever go back to `cjs` (where the executor would emit `main.cjs` and break the entry contract).
+
+What actually makes the bundle ESM is the `"type": "module"` that `@nx/js` writes into the
+*generated* `dist` `package.json` for an esm-only build. Both halves have to agree: the entry is
+still named `.js`, so if that `type` goes missing Node silently parses the bundle as CommonJS
+again. Verify it after building:
+
+```
+npx nx run <api-app>:build
+cat dist/apps/<api-app>/package.json    # expect "type": "module", "main": "./main.js"
+```
+
+Then confirm every named import can actually bind, which is the failure mode ESM introduces:
+
+```
+npx nx run workspace:check-esm-imports
+```
+
+Fix anything it reports by importing the namespace and unwrapping `default` when present — see
+`packages/date/src/lib/rrule/rrule.interop.ts` and
+`packages/nestjs/twilio/src/lib/twilio.interop.ts` for the established pattern. That shim is only
+needed for a dependency that is CommonJS-only. One that publishes a real ESM entry — `stripe` — can
+be named-imported directly, which is what `@dereekb/nestjs/stripe` now does; the CJS-safe default
+import it briefly carried is no longer necessary once nothing emits CommonJS.
+
+Deployment needs no change. `firebase-tools` resolves the entry as
+`path.join(sourceDir, data.main || 'index.js')`, which the generated `main` still satisfies, and
+`firebase-functions`' loader handles an ESM entry either way — on Node 24 `require()` of an ESM
+module without top-level await simply succeeds and returns the namespace, and its
+`ERR_REQUIRE_ESM` / `ERR_REQUIRE_ASYNC_MODULE` branch falls back to a dynamic `import()`
+otherwise. Function discovery is unaffected: the endpoint exports are found on the namespace the
+same way they were found on `module.exports`.
 
 ## Notes and gotchas
 

@@ -1,4 +1,8 @@
 import { type ServerError } from '@dereekb/util';
+// Requires an ESM consumer, which as of v14 is the only thing this package is built for. Stripe 22
+// exports `Stripe` as a named binding from its ESM entry only; the CJS entry is
+// `module.exports = StripeConstructor` with no `.Stripe`, so a CommonJS bundle would emit
+// `require('stripe').Stripe` -- undefined -- and throw "Stripe is not a constructor" at runtime.
 import { Stripe } from 'stripe';
 import { type Request } from 'express';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
