@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { type AnalyticsUser, type AnalyticsUserProperties, type DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
 import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { BehaviorSubject, map, type Observable, of, switchMap, shareReplay, combineLatest } from 'rxjs';
@@ -28,9 +28,7 @@ export const DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY: DbxFirebase
 /**
  * DbxAnalyticsUserSource implementation that uses the DbxFirebaseAuthService.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 

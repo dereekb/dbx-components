@@ -6,6 +6,7 @@
 - Remove the Vitest/Vite APIs that Nx deprecated for removal in v24
 - Move the Angular app's `build` and `serve` onto the `@angular/build:*` builders and drop
   `@angular-devkit/build-angular` for real
+- Replace `@Injectable({ providedIn: 'root' })` with Angular 22's `@Service()`
 
 ## Overview
 
@@ -43,6 +44,24 @@ is handled for you by upgrading the package. The parts you still have to do your
   `paths` entries work without it as long as they are written relative to the config file
   (`"@yourorg/util": ["./packages/util/src/index.ts"]`). If your `paths` entries are currently
   written relative to a `baseUrl`, rewrite them with a leading `./` before removing it.
+
+### `@Service()` replaces `@Injectable({ providedIn: 'root' })`
+
+Angular 22 adds a `@Service()` decorator that is the direct replacement for the
+`@Injectable({ providedIn: 'root' })` pairing every auto-provided service used to spell out:
+
+| Before | After |
+| --- | --- |
+| `@Injectable({ providedIn: 'root' })` | `@Service()` |
+| `@Injectable()` | `@Service({ autoProvided: false })` |
+| `@Injectable({ providedIn: 'root', useFactory: () => x })` | `@Service({ factory: () => x })` |
+
+`autoProvided` defaults to `true`, so `@Service()` is auto-provided and tree-shakeable exactly the
+way `providedIn: 'root'` was. This is a change of spelling, not of behavior — the resulting
+provider semantics are identical, which is why it can be done as a mechanical sweep.
+
+There is no `@Service` equivalent for the other `providedIn` values. `'platform'`, `'any'`, and
+`null` keep `@Injectable`.
 
 ### Angular builders: the webpack deprecation warning you are still seeing
 
@@ -219,6 +238,69 @@ absent. Run `npm prune` to drop it from an existing `node_modules`, since removi
 `package.json` alone leaves the installed copy on disk and the warning would appear to persist.
 
 This also takes webpack itself out of the dependency tree, which is the actual payoff.
+
+### Migrate `@Injectable({ providedIn: 'root' })` to `@Service()`
+
+Angular ships a schematic for this. It is *not* listed in `@angular/core`'s `migrations.json`, so
+`nx migrate --run-migrations` will not run it — you have to invoke it yourself:
+
+```
+npx nx g @angular/core:service-migration --path=./packages --dry-run
+```
+
+Drop `--dry-run` once the file list looks right. `--path` is relative to the workspace root and
+defaults to `./`; the schematic is also aliased as `@angular/core:service`.
+
+What it rewrites, per class:
+
+| Decorator | Becomes |
+| --- | --- |
+| `@Injectable({ providedIn: 'root' })` | `@Service()` |
+| `@Injectable()` | `@Service({ autoProvided: false })` |
+| anything else (`providedIn: 'platform'`/`'any'`/`null`, or any second option) | left alone |
+
+It also fixes the `@angular/core` import, but only drops `Injectable` when *every* injectable in
+the file migrated — a file with one migratable and one skipped class correctly keeps both imports.
+
+NestJS services are safe. The schematic matches on the decorator actually resolving to
+`@angular/core`, so the `@Injectable()` that `demo-api` imports from `@nestjs/common` is never
+touched.
+
+#### The schematic silently skips constructor DI
+
+This is the part worth knowing before you run it. The schematic refuses any class whose
+constructor — or the constructor of *any* class in its `extends` chain — takes parameters:
+
+```ts
+@Injectable({ providedIn: 'root' })
+export class MyService {
+  constructor(private readonly http: HttpClient) {} // ← not migrated
+}
+```
+
+There is no warning and no error. The class simply keeps its `@Injectable`, and you are left with
+a half-migrated codebase that builds and runs fine. If you want full coverage, run
+
+```
+npx nx g @angular/core:inject-migration
+```
+
+first to move constructor DI onto `inject()`, then run the service migration.
+
+The base-class half of that rule catches classes that look clean on their own: a service with no
+constructor of its own is still skipped if it extends an abstract class whose constructor takes
+parameters. Check the whole `extends` chain, not just the decorated class.
+
+#### What dbx-components converted
+
+Only the `providedIn: 'root'` sites — 30 of them, all already on field `inject()`, so none were
+skipped. The ~100 bare `@Injectable()` classes (mostly the `*.store.ts` ComponentStore subclasses)
+were deliberately left alone: `@Service({ autoProvided: false })` is longer than `@Injectable()`
+and buys nothing, so converting them is churn in exchange for a large diff. Run the schematic
+without a narrowed `--path` if you would rather have both kinds converted in one pass.
+
+The one `providedIn: null` service (`dbx-web/mapbox`'s `DbxMapboxChangeService`) stays on
+`@Injectable`, since there is no `@Service` spelling for it.
 
 ### Convert the test targets
 

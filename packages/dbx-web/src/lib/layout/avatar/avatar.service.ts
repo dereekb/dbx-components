@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAvatarViewComponent } from './avatar.view.component';
 import { type DbxAvatarContext } from './avatar';
@@ -54,9 +54,7 @@ export abstract class DbxAvatarViewServiceConfig {
  * Provides fallback URLs, icons, and component configurations used by {@link DbxAvatarComponent}
  * and {@link DbxAvatarViewComponent}. Configure application-wide defaults by providing {@link DbxAvatarViewServiceConfig}.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAvatarViewService {
   private readonly _serviceConfig = inject(DbxAvatarViewServiceConfig, { optional: true });
 

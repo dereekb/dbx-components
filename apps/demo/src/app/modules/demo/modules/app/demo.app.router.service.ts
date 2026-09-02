@@ -1,9 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { type SegueRef } from '@dereekb/dbx-core';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DemoAppRouterService {
   userNotificationListRef(): SegueRef {
     return {

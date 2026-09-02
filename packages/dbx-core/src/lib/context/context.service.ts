@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { type DbxAppContextState } from './context';
 import { onDbxAppContext, fromDbxAppContext } from './state';
@@ -22,9 +22,7 @@ import { type DbxAppContextFullState } from './state/state';
  * }
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAppContextService {
   readonly store = inject(Store<DbxAppContextFullState>);
   readonly state$ = this.store.select(fromDbxAppContext.selectDbxAppContextState);

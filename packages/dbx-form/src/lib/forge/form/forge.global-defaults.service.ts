@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
 import { dbxForgeDefaultValidationMessages } from '../validation';
@@ -11,9 +11,7 @@ import { type DbxForgeGlobalFormConfigDefaults } from './forge.form';
  * Seeded with {@link dbxForgeDefaultValidationMessages} so apps receive the standard
  * dbx-form validation messages without any explicit configuration.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxForgeGlobalDefaultConfigService {
   private _defaults: DbxForgeGlobalFormConfigDefaults = {
     defaultValidationMessages: dbxForgeDefaultValidationMessages()

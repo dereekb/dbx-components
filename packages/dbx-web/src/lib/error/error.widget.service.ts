@@ -1,4 +1,4 @@
-import { Injectable, type Type } from '@angular/core';
+import { Service, type Type } from '@angular/core';
 import { type Maybe, filterMaybeArrayValues, mapIterable, type StringErrorCode } from '@dereekb/util';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
@@ -59,9 +59,7 @@ export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntr
  *
  * By default the DbxErrorDefaultErrorWidgetComponent is registered to both the default and unknown error entries.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxErrorWidgetService {
   private readonly _entries = new Map<StringErrorCode, DbxErrorWidgetEntry>();
 
