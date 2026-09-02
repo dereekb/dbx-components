@@ -14,7 +14,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/angular:application",
+      "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
@@ -67,7 +67,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@nx/angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "ANGULAR_APP_NAME:build-base:production",

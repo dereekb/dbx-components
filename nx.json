@@ -12,7 +12,7 @@
     "packageManager": "npm"
   },
   "targetDefaults": {
-    "@nx/angular:application": {
+    "@angular/build:application": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]

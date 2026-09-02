@@ -8,7 +8,7 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
-      "executor": "@nx/angular:application",
+      "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/demo",
@@ -71,7 +71,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@nx/angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
           "proxyConfig": "apps/demo/proxy.conf.prod.json",

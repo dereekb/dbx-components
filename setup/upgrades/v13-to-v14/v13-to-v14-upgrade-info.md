@@ -4,12 +4,17 @@
 - Update Angular to v22 and TypeScript to v6
 - Retire the `tsconfig` `baseUrl` ahead of TypeScript 7
 - Remove the Vitest/Vite APIs that Nx deprecated for removal in v24
+- Move the Angular app's `build` and `serve` onto the `@angular/build:*` builders and drop
+  `@angular-devkit/build-angular` for real
 
 ## Overview
 
 This update is much smaller than v12 to v13. The bulk of it is dependency version bumps plus
 clearing out the Vitest/Vite APIs that Nx has scheduled for removal, so that a later jump to
 Nx v24 is a version bump instead of a migration.
+
+The one addition is finishing the webpack removal that v13 only got halfway through — see
+[Angular builders](#angular-builders-the-webpack-deprecation-warning-you-are-still-seeing).
 
 ### Nx 23
 
@@ -38,6 +43,43 @@ is handled for you by upgrading the package. The parts you still have to do your
   `paths` entries work without it as long as they are written relative to the config file
   (`"@yourorg/util": ["./packages/util/src/index.ts"]`). If your `paths` entries are currently
   written relative to a `baseUrl`, rewrite them with a leading `./` before removing it.
+
+### Angular builders: the webpack deprecation warning you are still seeing
+
+If you followed the v13 notes, `nx serve` still prints this on every start:
+
+```
+The "@angular-devkit/build-angular:dev-server" builder is deprecated as part of Angular's
+Webpack support deprecation. Use "@angular/build:dev-server" instead.
+```
+
+This surprises people, because v13 was where the app moved off the webpack `browser` builder.
+The build did move. `serve` did not.
+
+`@nx/angular:dev-server` is not a Vite-native executor. It is a wrapper that imports the
+deprecated package unconditionally and hands the whole job to it:
+
+```js
+assertPackageIsInstalled('@angular-devkit/build-angular', '@nx/angular:dev-server');
+combineLatest([from(import('@angular-devkit/build-angular')), ...])
+```
+
+`@angular-devkit/build-angular`'s dev-server logs that banner as the first statement of its
+`execute()` — *before* it decides between webpack and Vite.
+
+**You were already on Vite.** Nx patches `context.getBuilderNameForTarget` so that
+`@nx/angular:application` reports itself as `@angular-devkit/build-angular:application`, which
+makes Angular's `isEsbuildBased()` check pass and routes the serve through Vite. So the banner
+is cosmetic as far as *what actually runs* goes.
+
+What is not cosmetic is the dependency. `@nx/angular:dev-server` hard-asserts that
+`@angular-devkit/build-angular` is installed, which is why the v13 instruction to "remove
+`@angular-devkit/build-angular` from your `devDependencies`" could never actually be carried
+out. Those two v13 bullets contradicted each other; this is the resolution.
+
+The fix is to skip the Nx wrappers and use Angular's builders directly. This is also what Nx 23's
+own Angular application generator scaffolds — a freshly generated esbuild app in Nx 23 has no
+`@nx/angular:*` build or serve executor at all.
 
 ### Vitest is no longer run from the workspace root
 
@@ -90,6 +132,93 @@ Check first that you are not using an `@nx/vite:build`, `@nx/vite:dev-server`, o
 
 The `@dereekb/vitest` peer dependencies change accordingly: `@nx/vite` is dropped and nothing
 is added in its place.
+
+### Switch the Angular app to the `@angular/build` builders
+
+In your Angular app's `project.json`:
+
+```diff
+     "build": {
+-      "executor": "@nx/angular:application",
++      "executor": "@angular/build:application",
+     },
+     "serve": {
+-      "executor": "@nx/angular:dev-server",
++      "executor": "@angular/build:dev-server",
+     },
+```
+
+For most projects this is a straight rename. The Angular schemas are supersets of what the Nx
+wrappers accept for everything except the wrapper-only options:
+
+| Wrapper | Options that exist only on the Nx executor |
+| --- | --- |
+| `@nx/angular:application` | `buildLibsFromSource`, `indexHtmlTransformer`, `plugins` |
+| `@nx/angular:dev-server` | `buildLibsFromSource`, `watchDependencies`, `esbuildMiddleware`, `forceEsbuild`, `publicHost`, `disableHostCheck` |
+
+Check your targets against that list before renaming:
+
+- **You set none of them** (the dbx-components default — `buildTarget`, `port`, `proxyConfig`,
+  `outputPath`, `assets`, `styles`, `budgets`, `fileReplacements` are all standard Angular).
+  Rename and you are done.
+- **You set `buildLibsFromSource: false`.** This is the one that needs thought. It is the Nx
+  wrapper's mechanism for compiling workspace libraries as prebuilt artifacts rather than from
+  source, and Angular's builder has no equivalent. Stay on `@nx/angular:application` for that
+  project and accept the warning, or drop the option and build libs from source.
+- **You set `plugins` or `indexHtmlTransformer`.** These are esbuild extension points that
+  `@angular/build:application` exposes under the same names — verify against its schema rather
+  than assuming.
+- **Your build is still webpack** (`@angular-devkit/build-angular:browser`). This swap does not
+  apply; migrate the build to an esbuild builder first.
+
+Then rekey the executor-keyed entry in `nx.json` `targetDefaults`, which silently stops matching
+once the executor name changes:
+
+```diff
+ "targetDefaults": {
+-  "@nx/angular:application": {
++  "@angular/build:application": {
+     "cache": true,
+     "dependsOn": ["^build"],
+     "inputs": ["production", "^production", "{workspaceRoot}/.browserslistrc"]
+   },
+```
+
+Miss this and the target falls back to the name-keyed `build` default, quietly dropping
+`.browserslistrc` from its cache inputs — a browserslist edit would then serve a stale cached
+build. Nothing errors.
+
+Two things that deliberately do **not** change:
+
+- `@nx/angular:package` — the library build executor. It has no Angular equivalent and is not
+  deprecated.
+- The `@nx/angular:application` key under `nx.json`'s `generators` block. That is the *generator*
+  namespace, not the executor namespace, and it is still the right generator to invoke.
+
+Also grep your own tooling for the executor strings. Any script or generator that keys off
+`@nx/angular:application` to locate a project's build config (in this repo, a local Nx plugin
+that reads `options.tsConfig` off the build target) will silently stop matching and fall through
+to its default.
+
+### Drop `@angular-devkit/build-angular`
+
+Only after no target references it:
+
+```
+npm uninstall @angular-devkit/build-angular
+```
+
+Confirm `@angular/build` is a direct `devDependency` first. It is only an *optional* peer of
+`@nx/angular` and `@analogjs/vite-plugin-angular`, so nothing installs it transitively and
+removing the other package would otherwise leave the `@angular/build:*` executors unresolvable.
+
+`@angular-devkit/build-angular` remains in `package-lock.json` afterwards as an optional-peer
+declaration on those two packages. That is inert — check that the
+`node_modules/@angular-devkit/build-angular` *package entry* is gone, not that the string is
+absent. Run `npm prune` to drop it from an existing `node_modules`, since removing it from
+`package.json` alone leaves the installed copy on disk and the warning would appear to persist.
+
+This also takes webpack itself out of the dependency tree, which is the actual payoff.
 
 ### Convert the test targets
 
@@ -237,6 +366,17 @@ npx nx test <project> --skip-nx-cache
 `root` is resolving relative to the project directory instead of the workspace root. Upgrading
 `@dereekb/vitest` to v14 fixes this for `createVitestConfig` users.
 
+### Verify the builder swap
+
+```
+npx nx run <app>:build:development --skip-nx-cache
+npx nx run <app>:serve
+```
+
+The serve output should print a `[vite]` line and a `Local: http://localhost:<port>/` with no
+deprecation banner above it. Do this *after* `npm prune`, not before — with the package still on
+disk the swap can look successful while an unnoticed target is still pulling it in.
+
 ## Notes and gotchas
 
 ### tsconfig path resolution only discovers `tsconfig.json` / `jsconfig.json`
@@ -291,6 +431,14 @@ project `tsconfig.json` scope.
 Its only real work happens in the Rollup `writeBundle` hook, which Vitest never calls because a
 test run produces no bundle. It was dead weight in a test config, so it was removed rather than
 replaced. (It was also being applied twice for Angular projects.)
+
+### The v12 to v13 notes are stale on Angular executors
+
+`setup/upgrades/v12-to-v13/v12-to-v13-upgrade-info.md` still tells you to move `build` to
+`@nx/angular:application` and `serve` to `@nx/angular:dev-server`, and then, a paragraph later,
+to remove `@angular-devkit/build-angular`. Those cannot both be done — the second executor
+requires the package. That page has been left as-is as a historical record; the instructions
+above supersede it.
 
 ### Docker-based emulator tests need an image rebuild
 
