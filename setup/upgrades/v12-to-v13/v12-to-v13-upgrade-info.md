@@ -629,6 +629,9 @@ provideAppInitializer(() => {
 ### Update `project.json`
 - Update the build executor from `@angular-devkit/build-angular:application` to `@nx/angular:application`.
 - Update update the serve executor from `@angular-devkit/build-angular:dev-server` to `@nx/angular:dev-server`.
+- Update the extract-i18n executor from `@angular-devkit/build-angular:extract-i18n` to `@angular/build:extract-i18n`. The two builders take the same options, so this is a straight rename.
+
+Once no target references it, you can remove `@angular-devkit/build-angular` from your `devDependencies` entirely. Angular's Webpack support is deprecated upstream in favor of the esbuild/Vite-based `@angular/build` package, and `@angular-devkit/build-angular` is only an *optional* peer of `@nx/angular` and `@analogjs/vite-plugin-angular`, so nothing pulls it back in.
 
 You can remove the jest preset from `nx.json` after jest is removed entirely.
 
