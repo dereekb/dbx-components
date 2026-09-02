@@ -40,7 +40,6 @@ export interface DbxInjectionDialogComponentConfig<T = unknown> extends Omit<Mat
     </dbx-dialog-content>
   `,
   imports: [DbxInjectionComponent, DbxDialogContentDirective, DbxDialogContentCloseComponent, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxInjectionDialogComponent<T = unknown> extends AbstractDialogDirective<void, DbxInjectionDialogComponentConfig<T>> {

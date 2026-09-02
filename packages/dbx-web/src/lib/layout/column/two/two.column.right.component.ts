@@ -64,7 +64,6 @@ import { DbxAnchorComponent } from '../../../router';
     class: 'dbx-two-column-right d-block'
   },
   imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTwoColumnRightComponent {

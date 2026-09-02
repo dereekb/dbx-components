@@ -19,7 +19,6 @@ import { type OAuthConsentScopesFormFieldsConfig, type OAuthConsentScopesFormVal
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseOAuthConsentScopeFormComponent extends AbstractConfigAsyncForgeFormDirective<OAuthConsentScopesFormValue, OAuthConsentScopesFormFieldsConfig> {

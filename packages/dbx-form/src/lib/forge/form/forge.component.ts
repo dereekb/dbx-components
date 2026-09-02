@@ -27,7 +27,6 @@ import { cleanSubscription } from '@dereekb/dbx-core';
   },
   providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit {

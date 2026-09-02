@@ -35,7 +35,6 @@ interface DbxStyleDemoShapeStep {
 @Component({
   selector: 'dbx-style-demo-shape-scale-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, DbxButtonComponent],
   template: `
     <dbx-docs-ui-example header="Shape Scale" hint="The Material 3 corner-radius scale.">

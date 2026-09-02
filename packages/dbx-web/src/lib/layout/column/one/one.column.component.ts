@@ -28,7 +28,6 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.col
   exportAs: 'columns',
   providers: provideTwoColumnsContext(),
   imports: [DbxTwoColumnComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxOneColumnComponent {

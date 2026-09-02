@@ -32,7 +32,6 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClient
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientFormValue, DbxFirebaseOidcEntryClientFormComponentConfig> {

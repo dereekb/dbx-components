@@ -39,7 +39,6 @@ import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
   host: {
     class: 'dbx-popup-control-buttons'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxButtonModule, DbxButtonSpacerDirective],
   standalone: true
 })

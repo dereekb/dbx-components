@@ -18,7 +18,6 @@ import { map, shareReplay, switchMap } from 'rxjs';
     class: 'dbx-schedule-selection-calendar-cell'
   },
   imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarCellComponent {

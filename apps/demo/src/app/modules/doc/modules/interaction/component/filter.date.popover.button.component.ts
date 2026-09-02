@@ -10,7 +10,6 @@ import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date
   template: `
     <dbx-filter-popover-button [buttonDisplayStyle]="buttonDisplayStyle()" [config]="config"></dbx-filter-popover-button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxFilterPopoverButtonComponent]
 })

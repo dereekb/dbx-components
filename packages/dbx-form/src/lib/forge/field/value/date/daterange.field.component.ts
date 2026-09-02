@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AsyncPipe } from '@angular/common';
 import type { DynamicText, FieldMeta, ValidationMessages, BaseValueField } from '@ng-forge/dynamic-forms';
-import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import type { Maybe } from '@dereekb/util';
@@ -81,7 +81,6 @@ export type DbxForgeDateRangeFieldDef = BaseValueField<DbxForgeDateRangeFieldCom
   selector: 'dbx-forge-daterange-field',
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './daterange.field.component.html',
   styles: `
     .dbx-forge-daterange-field {

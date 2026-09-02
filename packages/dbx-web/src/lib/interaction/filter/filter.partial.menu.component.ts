@@ -20,7 +20,6 @@ import { NgClass } from '@angular/common';
   selector: 'dbx-partial-preset-filter-menu',
   templateUrl: './filter.partial.menu.component.html', // share the same template as the preset menu
   imports: [NgClass, MatMenuModule, MatButtonModule, MatIconModule, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPartialPresetFilterMenuComponent<F> extends AbstractDbxPartialPresetFilterMenuDirective<F> {

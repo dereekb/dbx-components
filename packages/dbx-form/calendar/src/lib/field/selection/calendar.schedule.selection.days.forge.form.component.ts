@@ -11,7 +11,6 @@ export type DbxScheduleSelectionCalendarDateDaysForgeFormValue = EnabledDays;
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDaysForgeFormComponent extends AbstractSyncForgeFormDirective<DbxScheduleSelectionCalendarDateDaysForgeFormValue> {

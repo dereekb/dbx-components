@@ -126,7 +126,6 @@ const DOC_HORIZONTAL_CARD_DAYS: readonly DocHorizontalCardDay[] = [
 @Component({
   selector: 'doc-horizontal-card-example',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatButtonModule, MatCardModule, MatIconModule, DbxChipDirective, DbxColorDirective, DbxIconTileComponent, DbxTextColorDirective],
   template: `
     <dbx-docs-ui-example header="Horizontal Card Row" hint="Fixed-width, equal-height outlined mat-cards in a .dbx-card-horizontal row that scrolls on the x-axis, with full-bleed [dbxColor] status headers and bottom-anchored footer CTAs.">

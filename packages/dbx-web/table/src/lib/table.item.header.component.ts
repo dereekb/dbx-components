@@ -10,7 +10,6 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxInjectionComponent],
   standalone: true
 })

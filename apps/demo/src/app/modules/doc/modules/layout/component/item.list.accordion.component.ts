@@ -12,7 +12,6 @@ import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, Mat
   selector: 'doc-item-list-accordion',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirective<DocValue> {
@@ -29,7 +28,6 @@ export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirecti
   template: DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListAccordionViewComponent),
   imports: [DbxListAccordionViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionViewDirective<DocValue> {

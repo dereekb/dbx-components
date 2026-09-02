@@ -21,7 +21,6 @@ interface RangeValue {
   selector: 'dbx-schedule-selection-calendar-date-range',
   templateUrl: './calendar.schedule.selection.range.component.html',
   imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, DbxButtonSpacerDirective, MatDatepickerModule, TimezoneAbbreviationPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {

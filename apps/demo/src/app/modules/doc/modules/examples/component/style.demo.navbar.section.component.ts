@@ -14,7 +14,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
 @Component({
   selector: 'doc-style-demo-navbar-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxNavbarComponent],
   template: `
     <dbx-docs-ui-example header="Navbar (demo app)" hint="Route-bound dbx-navbar tabs.">

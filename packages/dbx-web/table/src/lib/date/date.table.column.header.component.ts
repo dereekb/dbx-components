@@ -16,7 +16,6 @@ import { DatePipe } from '@angular/common';
       </div>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DatePipe],
   standalone: true
 })

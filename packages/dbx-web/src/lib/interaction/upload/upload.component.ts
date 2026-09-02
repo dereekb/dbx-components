@@ -70,7 +70,6 @@ export interface DbxFileUploadComponentConfig {
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
   imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {

@@ -19,7 +19,6 @@ import { type FirebaseAuthOobCode, firebaseAuthErrorToReadableError } from '@der
   selector: 'dbx-firebase-password-reset',
   templateUrl: './login.password.reset.component.html',
   imports: [DbxFirebasePasswordResetFormComponent, DbxActionModule, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective, DbxActionFormDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebasePasswordResetComponent {

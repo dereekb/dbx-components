@@ -143,7 +143,6 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
     `
   ],
   imports: [DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     // `mat-form-field-animations-enabled` is intentionally retained: it gates

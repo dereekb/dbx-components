@@ -53,7 +53,6 @@ export interface DbxLoadingComponentState {
     </dbx-basic-loading>
   `,
   imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxLoadingComponent {

@@ -37,7 +37,6 @@ import { MatIcon } from '@angular/material/icon';
     class: 'dbx-click-to-copy-text-component'
   },
   imports: [DbxClickToCopyTextDirective, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxClickToCopyTextComponent {

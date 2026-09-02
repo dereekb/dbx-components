@@ -155,7 +155,6 @@ export interface DbxForgeFixedDateRangeFieldComponentProps {
   selector: 'dbx-forge-fixeddaterange-field',
   standalone: true,
   imports: [MatDatepickerModule, MatFormFieldModule, ReactiveFormsModule, MatInputModule, MatError, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './fixeddaterange.field.component.html',
   providers: [
     {

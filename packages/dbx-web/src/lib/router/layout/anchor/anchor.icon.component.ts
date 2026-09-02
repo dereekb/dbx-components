@@ -19,7 +19,6 @@ import { DbxAnchorComponent } from './anchor.component';
   selector: 'dbx-anchor-icon',
   standalone: true,
   imports: [MatIconModule, MatButtonModule, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dbx-anchor [anchor]="anchor()">
       <button mat-icon-button>

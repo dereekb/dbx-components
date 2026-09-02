@@ -43,7 +43,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
     '[class.dbx-pagebar-hide]': 'hidePagebarSignal()'
   },
   imports: [DbxSidenavPagebarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSidenavPageComponent {

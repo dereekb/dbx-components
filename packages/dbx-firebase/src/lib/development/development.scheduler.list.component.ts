@@ -26,7 +26,6 @@ export type ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection =
   selector: 'dbx-firebase-development-scheduler-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxFirebaseDevelopmentSchedulerListComponent),
   standalone: true
 })
@@ -43,7 +42,6 @@ export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSel
   selector: 'dbx-firebase-development-scheduler-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListView(DbxFirebaseDevelopmentSchedulerListViewComponent),
   standalone: true
 })
@@ -62,7 +60,6 @@ export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDb
     </div>
   `,
   imports: [DbxActionModule, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseDevelopmentSchedulerListViewItemComponent extends AbstractDbxValueListViewItemComponent<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {

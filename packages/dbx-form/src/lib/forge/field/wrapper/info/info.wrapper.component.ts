@@ -25,7 +25,6 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
     </div>
   `,
   imports: [MatIconButton, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeInfoWrapperComponent implements FieldWrapper {

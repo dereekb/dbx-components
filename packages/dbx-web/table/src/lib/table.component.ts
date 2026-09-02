@@ -92,7 +92,6 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
       useExisting: ElementRef
     }
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTableViewComponent<I, C, T, G = unknown> {

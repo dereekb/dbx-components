@@ -5,7 +5,6 @@ import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 @Component({
   templateUrl: './home.component.html',
   imports: [DbxContentLayoutModule, DbxAppContextStateDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class AppHomeComponent { }
+export class AppHomeComponent {}

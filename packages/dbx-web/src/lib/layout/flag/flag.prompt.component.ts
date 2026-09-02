@@ -25,7 +25,6 @@ import { type Maybe } from '@dereekb/util';
     </dbx-flag>
   `,
   imports: [DbxFlagComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFlagPromptComponent {

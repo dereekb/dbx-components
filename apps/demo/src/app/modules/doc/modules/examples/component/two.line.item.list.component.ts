@@ -22,7 +22,6 @@ import { type TwoLineItemValue, type TwoLineItemValueWithSelection } from './two
   selector: 'doc-two-line-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapperDirective<TwoLineItemValue> {
@@ -39,7 +38,6 @@ export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapper
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
   providers: provideDbxListView(DocTwoLineItemListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocTwoLineItemListViewComponent extends AbstractDbxSelectionListViewDirective<TwoLineItemValue> {
@@ -79,7 +77,6 @@ const STATUS_COLOR: Record<NonNullable<TwoLineItemValue['status']>, TwoLineItemS
     </div>
   `,
   imports: [DbxSpacerDirective, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocTwoLineItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoLineItemValue> {

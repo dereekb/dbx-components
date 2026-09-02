@@ -24,7 +24,6 @@ import { JsonPipe } from '@angular/common';
     class: 'd-block dbx-error-default-error-widget dbx-content-container'
   },
   imports: [DbxLabelBlockComponent, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxErrorDefaultErrorWidgetComponent extends AbstractDbxErrorWidgetComponent<ServerError> {

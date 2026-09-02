@@ -47,7 +47,6 @@ import { MatIconModule } from '@angular/material/icon';
     </div>
   `,
   imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxCardBoxComponent {

@@ -78,7 +78,6 @@ import { NgTemplateOutlet } from '@angular/common';
   `,
   standalone: true,
   imports: [MatIconModule, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.dbx-section-header-full-title]': 'headerConfigSignal().onlyHeader',
     '[class.dbx-section-header-padded]': 'headerConfigSignal().paddedHeader'

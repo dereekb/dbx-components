@@ -32,7 +32,6 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
     </dbx-pagebar>
   `,
   imports: [DbxPagebarComponent, DbxSidenavButtonComponent, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSidenavPagebarComponent extends DbxPagebarComponent {

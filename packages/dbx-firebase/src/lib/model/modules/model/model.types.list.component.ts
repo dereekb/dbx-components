@@ -12,7 +12,6 @@ export type DbxFirebaseModelTypeInstanceListItem = DbxValueAsListItem<DbxFirebas
   selector: 'dbx-firebase-model-type-instance-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceListComponent),
   standalone: true
 })
@@ -29,7 +28,6 @@ export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelect
   selector: 'dbx-firebase-model-type-instance-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListView(DbxFirebaseModelTypeInstanceListViewComponent),
   standalone: true
 })
@@ -45,7 +43,6 @@ export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSe
   template: `
     <span>{{ title }}</span>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseModelTypeInstanceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {

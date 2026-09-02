@@ -22,7 +22,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     </div>
   `,
   imports: [MatToolbarModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFlagComponent {

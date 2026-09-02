@@ -41,7 +41,6 @@ import type { DbxForgeExpandFieldProps } from './expand.field';
     }
   `,
   imports: [MatButtonModule, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[class]': 'className()'

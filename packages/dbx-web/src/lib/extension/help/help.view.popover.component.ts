@@ -92,7 +92,6 @@ export type DbxHelpViewPopoverConfigWithoutOrigin = Omit<DbxHelpViewPopoverConfi
 @Component({
   templateUrl: './help.view.popover.component.html',
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxHelpViewListComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknown, DbxHelpViewPopoverConfig> {

@@ -27,7 +27,6 @@ export type DbxEmbedComponentElement = 'embed' | 'img';
   template: `
     <span #root></span>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxEmbedComponent {

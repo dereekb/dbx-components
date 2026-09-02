@@ -16,7 +16,6 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
     </div>
   `,
   imports: [DbxFlexGroupDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeFlexWrapperComponent implements FieldWrapper {

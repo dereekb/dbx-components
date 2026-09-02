@@ -32,7 +32,6 @@ interface DbxStyleDemoOutline {
 @Component({
   selector: 'dbx-style-demo-surfaces-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent],
   template: `
     <dbx-docs-ui-example header="Surfaces" hint="The Material 3 surface ramp from system tokens.">

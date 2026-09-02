@@ -20,7 +20,6 @@ import { dbxFirebaseModelEntityWidgetInjectionConfigFactory } from './model.enti
   selector: 'dbx-firebase-model-entities-entity',
   templateUrl: './model.entities.entity.component.html',
   imports: [DbxInjectionComponent, DbxLoadingComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseModelEntitiesEntityComponent {

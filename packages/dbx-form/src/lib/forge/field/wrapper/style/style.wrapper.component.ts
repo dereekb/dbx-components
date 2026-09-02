@@ -17,7 +17,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
     </div>
   `,
   imports: [NgClass, NgStyle],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeStyleWrapperComponent implements FieldWrapper {

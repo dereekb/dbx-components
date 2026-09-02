@@ -71,7 +71,6 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
     '[class]': 'cssClassSignal()'
   },
   imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

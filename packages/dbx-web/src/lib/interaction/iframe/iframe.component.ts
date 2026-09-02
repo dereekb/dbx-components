@@ -18,7 +18,6 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
   template: `
     <iframe #iframe src="about:blank" frameborder="0" [scrolling]="scrolling()" allow="autoplay"></iframe>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxIframeComponent {

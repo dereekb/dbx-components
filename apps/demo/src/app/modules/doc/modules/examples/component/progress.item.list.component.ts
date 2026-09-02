@@ -36,7 +36,6 @@ import { type ProgressItemValue, type ProgressItemValueWithSelection } from './p
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocProgressItemListComponent extends AbstractDbxSelectionListWrapperDirective<ProgressItemValue> {
@@ -56,7 +55,6 @@ export class DocProgressItemListComponent extends AbstractDbxSelectionListWrappe
   host: {
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocProgressItemListViewComponent extends AbstractDbxSelectionListViewDirective<ProgressItemValue> {
@@ -82,7 +80,6 @@ export class DocProgressItemListViewComponent extends AbstractDbxSelectionListVi
     </div>
   `,
   imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocProgressItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ProgressItemValue> {

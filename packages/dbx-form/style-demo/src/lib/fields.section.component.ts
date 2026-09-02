@@ -20,7 +20,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
 @Component({
   selector: 'dbx-form-style-demo-fields-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxForgeFormComponentImportsModule],
   providers: dbxForgeFormComponentProviders(),
   template: `

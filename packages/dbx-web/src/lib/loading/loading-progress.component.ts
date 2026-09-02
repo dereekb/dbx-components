@@ -52,7 +52,6 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
     </div>
   `,
   imports: [MatProgressBar, MatProgressSpinner, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxLoadingProgressComponent {

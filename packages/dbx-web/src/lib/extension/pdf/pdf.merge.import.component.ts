@@ -84,7 +84,6 @@ export interface DbxPdfMergeImportConfig {
     '[class.dbx-mb3]': 'activeSignal()'
   },
   imports: [MatIconModule, DbxFileUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeImportComponent {

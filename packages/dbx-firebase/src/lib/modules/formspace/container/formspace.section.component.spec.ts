@@ -179,7 +179,6 @@ describe('DbxFirebaseFormSpaceSectionComponent', () => {
     <dbx-firebase-formspace-section [step]="1" [slot]="slotSignal()" header="Cover File" [complete]="completeSignal()"></dbx-firebase-formspace-section>
   `,
   imports: [DbxFirebaseFormSpaceSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseFormSpaceSectionComponent {

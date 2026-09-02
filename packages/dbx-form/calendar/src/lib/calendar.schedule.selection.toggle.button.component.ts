@@ -14,7 +14,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
     <dbx-button [disabled]="disableButtonSignal()" [buttonDisplay]="buttonDisplaySignal()" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
   `,
   imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {

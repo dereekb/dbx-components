@@ -94,7 +94,6 @@ describe('DbxFileUploadButtonComponent max files', () => {
     <dbx-file-upload-button [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="maxFilesSignal()"></dbx-file-upload-button>
   `,
   imports: [DbxFileUploadButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFileUploadButtonComponent {

@@ -75,7 +75,6 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
       useClass: DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy
     }
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [MatDatepickerModule, ReactiveFormsModule, MatButtonModule]
 })

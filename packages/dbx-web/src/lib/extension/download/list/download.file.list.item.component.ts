@@ -59,7 +59,6 @@ import { DEFAULT_DBX_FILE_LIST_ITEM_DETAILS_CLASS, DEFAULT_DBX_FILE_LIST_ITEM_DE
     class: 'dbx-file-list-item d-block'
   },
   imports: [DatePipe, NgClass, MatIconModule, TimeDistancePipe, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFileListItemComponent {

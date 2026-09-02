@@ -158,7 +158,6 @@ export interface DbxFirebaseFormSpaceSubmitButtonComponentConfig {
     class: 'dbx-firebase-formspace-submit-button d-block dbx-pt3'
   },
   imports: [DbxActionModule, DbxButtonComponent, DbxErrorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceSubmitButtonComponent {

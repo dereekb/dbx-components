@@ -23,7 +23,6 @@ import { PROGRESS_ITEM_VALUES, type ProgressItemValue } from '../component/progr
 @Component({
   selector: 'doc-list-progress-example',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocProgressItemListComponent],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Customized List With Button" hint="Two-line row with a template-painted icon tile, full-width progress bar, and trailing action button.">

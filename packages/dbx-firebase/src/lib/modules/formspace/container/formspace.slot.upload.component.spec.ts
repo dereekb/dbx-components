@@ -212,7 +212,6 @@ describe('DbxFirebaseFormSpaceSlotUploadComponent remaining uploads', () => {
     <dbx-firebase-formspace-slot-upload slot="cover" label="Cover File" [maxFiles]="maxFilesSignal()" [uploadText]="uploadTextSignal()" [replaceText]="replaceTextSignal()"></dbx-firebase-formspace-slot-upload>
   `,
   imports: [DbxFirebaseFormSpaceSlotUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseFormSpaceSlotUploadComponent {

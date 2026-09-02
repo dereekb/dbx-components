@@ -16,7 +16,6 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
     </div>
   `,
   imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {

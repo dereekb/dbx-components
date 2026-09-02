@@ -37,7 +37,6 @@ export interface DbxDetachOverlayData {
   host: {
     class: 'dbx-detach-overlay-host'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxDetachOverlayComponent implements AfterViewInit {

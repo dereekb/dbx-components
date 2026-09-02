@@ -31,7 +31,6 @@ import { NgClass, NgStyle } from '@angular/common';
   templateUrl: './bar.button.component.html',
   styleUrls: ['./bar.button.component.scss', './shared.button.component.scss'],
   imports: [MatButtonModule, MatIconModule, MatProgressBar, NgClass, NgStyle],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxProgressBarButtonComponent extends AbstractProgressButtonDirective {

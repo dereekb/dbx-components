@@ -79,7 +79,6 @@ export type DbxPdfMergeEditorOutputSizeState = 'ok' | 'warn' | 'error';
     class: 'dbx-pdf-merge-editor d-block'
   },
   imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeEditorComponent {

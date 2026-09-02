@@ -18,7 +18,6 @@ export const EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY: DbxMapboxMarkerFactory<LatLng
   template: `
     <dbx-mapbox-markers [data]="locations()" [markerFactory]="markerFactory"></dbx-mapbox-markers>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxMapboxMarkersComponent]
 })

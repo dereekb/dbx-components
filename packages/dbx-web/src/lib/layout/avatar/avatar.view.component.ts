@@ -53,7 +53,6 @@ import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxCuratedC
   },
   imports: [MatIconModule, DbxColorDirective],
   hostDirectives: [DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxAvatarViewComponent {

@@ -44,7 +44,6 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
   selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html',
   imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxBasicLoadingComponent {

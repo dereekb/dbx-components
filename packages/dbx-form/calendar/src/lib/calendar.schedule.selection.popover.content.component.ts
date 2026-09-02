@@ -14,7 +14,6 @@ import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.sched
     </dbx-content-container>
   `,
   imports: [DbxContentContainerDirective, DbxScheduleSelectionCalendarDateRangeComponent, DbxLabelBlockComponent, DbxScheduleSelectionCalendarDateDaysComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDatePopoverContentComponent {}

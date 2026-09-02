@@ -10,7 +10,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
     <dbx-mapbox-marker [marker]="markerSignal()"></dbx-mapbox-marker>
   `,
   imports: [DbxMapboxMarkerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeMapboxLatLngFieldMarkerComponent {

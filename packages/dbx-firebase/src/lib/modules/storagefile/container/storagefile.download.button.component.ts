@@ -128,7 +128,6 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
     }
   `,
   imports: [DbxButtonComponent, DbxActionModule, DbxActionSnackbarErrorDirective, DbxActionDialogDirective, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseStorageFileDownloadButtonComponent {

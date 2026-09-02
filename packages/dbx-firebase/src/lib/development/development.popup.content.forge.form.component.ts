@@ -27,7 +27,6 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponentImportsModule],
   providers: dbxForgeFormComponentProviders(),
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {

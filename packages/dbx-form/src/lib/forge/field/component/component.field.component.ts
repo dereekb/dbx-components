@@ -52,7 +52,6 @@ export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<D
     <div class="dbx-form-component" dbx-injection [config]="configSignal()"></div>
   `,
   imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[class]': 'className()',

@@ -10,7 +10,6 @@ import { type Maybe } from '@dereekb/util';
   templateUrl: './notificationitem.content.component.html',
   styleUrls: ['./notificationitem.content.scss'],
   imports: [DatePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseNotificationItemContentComponent {

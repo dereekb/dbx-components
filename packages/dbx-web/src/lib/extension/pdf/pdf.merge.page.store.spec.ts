@@ -290,7 +290,6 @@ describe('DbxPdfMergeEditorStore page editing', () => {
     <div dbxPdfMergeEditorStore [config]="config()"></div>
   `,
   imports: [DbxPdfMergeEditorStoreDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestHostComponent {

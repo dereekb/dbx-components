@@ -20,7 +20,6 @@ import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.compon
     class: 'dbx-popup-controls'
   },
   imports: [DbxPopupControlButtonsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPopupControlsComponent {

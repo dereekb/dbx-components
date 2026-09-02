@@ -16,7 +16,6 @@ export interface CustomDocValue extends DocValue {
   selector: 'doc-custom-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<DocValue> {
@@ -31,7 +30,6 @@ export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<
   template: DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxValueListViewComponentImportsModule],
   providers: provideDbxListView(DocCustomItemListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective<DocValue> {
@@ -49,7 +47,6 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
       <p>{{ name }}</p>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocCustomItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {

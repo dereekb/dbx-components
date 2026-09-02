@@ -42,7 +42,6 @@ import { DbxBarDirective } from './bar.directive';
     class: 'dbx-bar-header dbx-hint'
   },
   imports: [DbxBarDirective, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxBarHeaderComponent {

@@ -12,7 +12,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
   selector: 'doc-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirective<DocValue> {

@@ -15,7 +15,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
 @Component({
   selector: 'dbx-style-demo-color-tones-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective],
   template: `
     <dbx-docs-ui-example header="Color & Tones" hint="Themed [dbxColor] backgrounds, full and tonal.">

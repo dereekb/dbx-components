@@ -38,7 +38,6 @@ import { type ObservableOrValueGetter } from '@dereekb/rxjs';
     <ng-template #content></ng-template>
   `,
   imports: [],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {

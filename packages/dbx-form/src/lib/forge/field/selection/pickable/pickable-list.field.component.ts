@@ -19,7 +19,6 @@ import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
   selector: 'dbx-forge-pickable-list-field',
   templateUrl: './pickable-list.field.component.html',
   imports: [ReactiveFormsModule, MatListModule, MatIconModule, MatDivider, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgePickableItemFieldDirective<T, M, H> {

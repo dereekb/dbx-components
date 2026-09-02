@@ -43,7 +43,6 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_ITEM_STORE_POPOVER_KEY = 'notific
 @Component({
   templateUrl: './notification.item.store.popover.component.html',
   imports: [DbxPopoverInteractionModule, DbxListModifierModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseNotificationItemStorePopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseNotificationItemStorePopoverParams> {

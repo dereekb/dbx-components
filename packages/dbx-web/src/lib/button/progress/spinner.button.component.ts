@@ -31,7 +31,6 @@ import { NgClass, NgStyle } from '@angular/common';
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
   imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {

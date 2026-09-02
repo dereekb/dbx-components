@@ -10,7 +10,6 @@ import { type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@d
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxInjectionComponent],
   standalone: true
 })

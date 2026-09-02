@@ -23,7 +23,6 @@ export type DbxWebFilePreviewComponentConfig = DbxWebFilePreviewServicePreviewCo
     <dbx-injection [config]="componentConfigSignal()"></dbx-injection>
   `,
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxInjectionComponent]
 })
 export class DbxWebFilePreviewComponent {

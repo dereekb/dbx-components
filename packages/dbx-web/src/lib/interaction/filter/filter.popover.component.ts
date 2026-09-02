@@ -45,7 +45,6 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 @Component({
   templateUrl: './filter.popover.component.html',
   imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {

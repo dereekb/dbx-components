@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './sidenav.component.html',
   standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective, DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .dbx-sidenav-demo-container {

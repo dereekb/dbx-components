@@ -38,7 +38,6 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
   selector: 'dbx-forge-source-select-field',
   templateUrl: './sourceselect.field.component.html',
   imports: [MatFormField, MatLabel, MatSelect, MatOption, MatOptgroup, MatHint, MatError, MatSuffix, FormField, DynamicTextPipe, AsyncPipe, DbxButtonComponent, DbxActionModule, DbxLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[id]': '`${key()}`',

@@ -21,7 +21,6 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './filter.component.html',
   providers: [FilterMap],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     DbxContentContainerDirective,

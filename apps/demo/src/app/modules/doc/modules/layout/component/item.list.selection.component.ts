@@ -11,7 +11,6 @@ import { type DocValue, type DocValueWithSelection } from './item.list';
   selector: 'doc-complex-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapperDirective<DocValue> {

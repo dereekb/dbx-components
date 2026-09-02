@@ -183,7 +183,6 @@ describe('DbxFirebaseStorageFileListComponent', () => {
     </dbx-firebase-storagefile-list>
   `,
   imports: [DbxFirebaseStorageFileListComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseStorageFileListComponent {

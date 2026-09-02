@@ -37,7 +37,6 @@ export function iconForDbxZipPreviewEntryWithSelection(entry: DbxZipBlobPreviewE
   selector: 'dbx-zip-preview-file-entry-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxZipPreviewEntryListComponent),
   standalone: true
 })
@@ -57,7 +56,6 @@ export class DbxZipPreviewEntryListComponent extends AbstractDbxSelectionListWra
   selector: 'dbx-zip-preview-file-entry-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   providers: provideDbxListView(DbxZipPreviewEntryListViewComponent)
 })

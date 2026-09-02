@@ -13,7 +13,6 @@ import { DbxActionSuccessHandlerDirective, type DbxActionSuccessHandlerFunction 
     <div dbxAction [dbxActionHandler]="handlerFunctionSignal()" [dbxActionSuccessHandler]="successHandlerSignal()"></div>
   `,
   imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxActionSuccessHandlerDirectiveComponent {

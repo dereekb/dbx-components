@@ -30,7 +30,6 @@ import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
   selector: 'dbx-forge-searchable-chip-field',
   templateUrl: './searchable-chip.field.component.html',
   imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatChipsModule, MatOptionModule, MatIconModule, DbxLoadingModule, DbxSearchableFieldAutocompleteItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableChipFieldProps<T, M, H>> {

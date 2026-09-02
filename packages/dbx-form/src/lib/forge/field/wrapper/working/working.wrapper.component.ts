@@ -21,7 +21,6 @@ import { FIELD_SIGNAL_CONTEXT } from '@ng-forge/dynamic-forms/integration';
     </div>
   `,
   imports: [MatProgressBarModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeWorkingWrapperComponent implements FieldWrapper {

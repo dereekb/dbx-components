@@ -33,7 +33,6 @@ import { type OAuthConsentScope } from './oauth.consent.scope';
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelectionListWrapperDirective<OAuthConsentScope> {
@@ -56,7 +55,6 @@ export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelect
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
   providers: provideDbxListView(DbxFirebaseOAuthConsentScopeListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSelectionListViewDirective<OAuthConsentScope> {

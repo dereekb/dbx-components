@@ -28,7 +28,6 @@ export interface DbxFirebaseEmailFormConfig {
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> {

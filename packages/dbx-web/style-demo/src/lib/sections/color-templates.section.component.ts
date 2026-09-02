@@ -24,7 +24,6 @@ interface DbxStyleDemoColorTemplate {
 @Component({
   selector: 'dbx-style-demo-color-templates-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxColorDirective],
   template: `
     <dbx-docs-ui-example header="Color Templates" hint="Registered DbxColorService templates.">

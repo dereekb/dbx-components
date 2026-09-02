@@ -34,7 +34,6 @@ import { DbxInjectionComponent } from './injection.component';
     }
   `,
   imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxInjectionArrayComponent {

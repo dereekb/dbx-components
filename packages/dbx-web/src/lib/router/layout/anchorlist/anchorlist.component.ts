@@ -37,7 +37,6 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
   selector: 'dbx-anchor-list',
   templateUrl: './anchorlist.component.html',
   imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxAnchorListComponent {

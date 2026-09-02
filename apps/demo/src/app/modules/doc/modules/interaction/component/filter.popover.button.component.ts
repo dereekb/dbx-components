@@ -11,7 +11,6 @@ import { type Maybe } from '@dereekb/util';
   template: `
     <dbx-filter-popover-button [buttonDisplayStyle]="buttonDisplayStyle()" [config]="config" [disabled]="disabled()"></dbx-filter-popover-button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxFilterPopoverButtonComponent]
 })

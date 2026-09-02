@@ -126,7 +126,6 @@ export function dbxFirebaseFormSpaceSectionBlockerHint(status: Maybe<FormSpaceSl
     class: 'dbx-firebase-formspace-section d-block'
   },
   imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceSectionComponent {

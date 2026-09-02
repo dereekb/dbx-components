@@ -38,7 +38,6 @@ import { type WorthKnowingItemValue, type WorthKnowingItemValueWithSelection } f
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-no-item-padding'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocWorthKnowingItemListComponent extends AbstractDbxSelectionListWrapperDirective<WorthKnowingItemValue> {
@@ -58,7 +57,6 @@ export class DocWorthKnowingItemListComponent extends AbstractDbxSelectionListWr
   host: {
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocWorthKnowingItemListViewComponent extends AbstractDbxSelectionListViewDirective<WorthKnowingItemValue> {
@@ -88,7 +86,6 @@ export class DocWorthKnowingItemListViewComponent extends AbstractDbxSelectionLi
     </div>
   `,
   imports: [MatButtonModule, DbxColorDirective, DbxIconTileComponent, DbxButtonComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocWorthKnowingItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<WorthKnowingItemValue> {

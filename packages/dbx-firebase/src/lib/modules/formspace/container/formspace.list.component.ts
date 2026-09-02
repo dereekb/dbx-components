@@ -202,7 +202,6 @@ export class DbxFirebaseFormSpaceListViewComponent extends AbstractDbxSelectionL
     </div>
   `,
   imports: [NgClass, TimeDistancePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseFormSpaceListValue> {

@@ -26,7 +26,6 @@ import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
     class: 'dbx-pdf-merge-list'
   },
   imports: [AsyncPipe, CdkDropList, DbxPdfMergeEntryComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeListComponent {

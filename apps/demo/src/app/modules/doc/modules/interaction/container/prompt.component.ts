@@ -8,7 +8,6 @@ import { MatButton, MatAnchor } from '@angular/material/button';
 
 @Component({
   templateUrl: './prompt.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxContentBorderDirective, DbxPromptComponent, MatAnchor, DbxPromptBoxDirective, DbxPromptPageComponent]
 })

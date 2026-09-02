@@ -22,7 +22,6 @@ import { clean } from '@dereekb/dbx-core';
       <ng-content></ng-content>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPopupCoordinatorComponent {

@@ -12,7 +12,6 @@ import { callbackTest } from '@dereekb/util/test';
     <div #action="action" dbxAction [dbxActionHandler]="handlerFunctionSignal()"></div>
   `,
   imports: [DbxActionDirective, DbxActionHandlerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestActionContextDirectiveComponent {

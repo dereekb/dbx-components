@@ -16,7 +16,6 @@ import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective } from 
 @Component({
   selector: 'dbx-style-demo-cards-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective],
   template: `
     <dbx-docs-ui-example header="Cards" hint="Material 3 card appearances painted from system surface tokens.">

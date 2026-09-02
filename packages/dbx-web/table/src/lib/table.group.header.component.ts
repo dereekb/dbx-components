@@ -10,7 +10,6 @@ import { AbstractDbxTableGroupDirective } from './table.group.directive';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxInjectionComponent],
   standalone: true
 })

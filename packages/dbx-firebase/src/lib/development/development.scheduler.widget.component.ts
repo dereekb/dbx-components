@@ -28,7 +28,6 @@ export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDeve
     </div>
   `,
   imports: [DbxFirebaseDevelopmentSchedulerListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseDevelopmentSchedulerWidgetComponent {

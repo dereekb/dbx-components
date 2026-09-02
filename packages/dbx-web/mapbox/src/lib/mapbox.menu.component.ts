@@ -20,7 +20,6 @@ import { toObservable } from '@angular/core/rxjs-interop';
     '[style.top]': 'posSignal().y',
     '[style.left]': 'posSignal().x'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxMapboxMenuComponent {

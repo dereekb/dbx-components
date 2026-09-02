@@ -51,7 +51,6 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
     class: 'dbx-icon-button'
   },
   imports: [MatButtonModule, MatIconModule, MatIconButton, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}

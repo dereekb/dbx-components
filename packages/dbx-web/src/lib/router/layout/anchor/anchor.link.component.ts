@@ -22,7 +22,6 @@ import { DbxAnchorComponent } from './anchor.component';
       <ng-content></ng-content>
     </dbx-anchor>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'd-inline dbx-link'
   }

@@ -12,7 +12,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
     <dbx-injection-array [entries]="entriesSignal()"></dbx-injection-array>
   `,
   imports: [DbxInjectionArrayComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxMapboxInjectionComponent {

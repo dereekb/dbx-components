@@ -23,7 +23,6 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
     }
   `,
   imports: [DbxSectionComponent, DbxSubSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeSectionWrapperComponent implements FieldWrapper {

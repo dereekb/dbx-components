@@ -82,7 +82,6 @@ export interface DbxFirebaseFormSpaceStepBlockComponentConfig {
     '[class.dbx-firebase-formspace-step-block-complete]': 'completeSignal()'
   },
   imports: [DbxStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceStepBlockComponent {

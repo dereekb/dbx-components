@@ -62,7 +62,6 @@ export type NavbarButtonMode = 'menu' | 'rotate';
     class: 'dbx-navbar'
   },
   imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxButtonComponent, MatIconModule, MatMenu, MatMenuItem, NgClass, MatMenuTrigger],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective {

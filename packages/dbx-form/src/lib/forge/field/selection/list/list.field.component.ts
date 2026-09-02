@@ -24,7 +24,6 @@ import { dbxForgeFieldDisabled } from '../../field.util';
   selector: 'dbx-forge-list-selection-field',
   templateUrl: './list.field.component.html',
   imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeListSelectionFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> implements OnInit {

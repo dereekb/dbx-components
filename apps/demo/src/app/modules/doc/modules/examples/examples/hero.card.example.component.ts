@@ -33,7 +33,6 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 @Component({
   selector: 'doc-hero-card-example',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressBar, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Hero Card (Onboarding Progress)" hint="Top-of-page hero on an inverse surface with eyebrow, headline, progress, action, and trailing percent.">

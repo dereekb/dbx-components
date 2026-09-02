@@ -38,7 +38,6 @@ export interface DbxLinkifyConfig {
   host: {
     class: 'dbx-i dbx-linkify'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxLinkifyComponent {

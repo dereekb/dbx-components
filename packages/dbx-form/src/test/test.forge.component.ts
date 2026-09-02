@@ -23,7 +23,6 @@ export interface TestFormValue {
   `,
   providers: [provideDbxForgeFormContext()],
   imports: [DbxForgeFormComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractSyncForgeFormDirective<T> {

@@ -20,7 +20,6 @@ import { PDF_MERGE_RESULT_MIME_TYPE } from './pdf.merge';
     class: 'dbx-pdf-preview d-block dbx-w100 dbx-h100'
   },
   imports: [DbxEmbedComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfPreviewComponent {

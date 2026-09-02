@@ -37,7 +37,6 @@ let testItemDestroyCount = 0;
   template: `
     <span class="test-item-name">{{ itemValue.name }}</span>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestItemComponent extends AbstractDbxValueListViewItemComponent<TestItem> implements OnDestroy {

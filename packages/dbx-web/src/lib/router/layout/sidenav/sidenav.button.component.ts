@@ -30,7 +30,6 @@ export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
     }
   `,
   imports: [MatIconModule, MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSidenavButtonComponent {

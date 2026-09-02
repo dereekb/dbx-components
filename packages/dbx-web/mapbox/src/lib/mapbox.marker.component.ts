@@ -27,7 +27,6 @@ import { NgClass, NgStyle } from '@angular/common';
   `,
   styleUrls: ['./mapbox.marker.component.scss'],
   imports: [MarkerComponent, DbxAnchorComponent, MatIconModule, NgStyle, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxMapboxMarkerComponent implements OnDestroy {

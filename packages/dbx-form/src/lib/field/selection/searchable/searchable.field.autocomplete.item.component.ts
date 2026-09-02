@@ -24,7 +24,6 @@ export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('Dbx
     </dbx-anchor>
   `,
   imports: [DbxAnchorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSearchableFieldAutocompleteItemComponent<T> {
@@ -85,7 +84,6 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
     </div>
   `,
   imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {

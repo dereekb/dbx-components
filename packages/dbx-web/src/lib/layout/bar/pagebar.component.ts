@@ -35,7 +35,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     </mat-toolbar>
   `,
   imports: [MatToolbarModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPagebarComponent {}

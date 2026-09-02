@@ -32,7 +32,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
       <span>{{ titleSignal() }}</span>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-anchor-content'
   }

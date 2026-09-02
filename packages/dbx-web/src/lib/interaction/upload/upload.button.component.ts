@@ -32,7 +32,6 @@ const ACCEPT_EVERY_FILE: FileAcceptFunction = () => true;
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadButtonComponent),
   imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent {

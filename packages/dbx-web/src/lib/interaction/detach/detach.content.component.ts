@@ -27,7 +27,6 @@ import { DbxDetachController, DbxDetachWindowState } from './detach';
   host: {
     class: 'dbx-detach-content'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxDetachContentComponent {

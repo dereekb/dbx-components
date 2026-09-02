@@ -67,7 +67,6 @@ const UNREADABLE_ICON = 'error';
     class: 'dbx-pdf-merge-page-list d-block'
   },
   imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergePageListComponent {

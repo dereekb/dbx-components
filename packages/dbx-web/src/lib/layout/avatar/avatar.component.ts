@@ -51,7 +51,6 @@ import { type DbxColorInput, type DbxColorTone } from '../style/style';
     '[class.dbx-avatar-small]': `avatarSize() === 'small'`,
     '[class.dbx-avatar-large]': `avatarSize() === 'large'`
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxAvatarComponent {

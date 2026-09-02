@@ -35,7 +35,6 @@ import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
   host: {
     class: 'dbx-detach-control-buttons'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxButtonModule, DbxButtonSpacerDirective],
   standalone: true
 })

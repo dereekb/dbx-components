@@ -16,7 +16,6 @@ import { DbxFirebaseModelTypeInstanceListComponent } from '../model.types.list.c
     </dbx-firebase-model-type-instance-list>
   `,
   imports: [DbxFirebaseModelTypeInstanceListComponent, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseModelHistoryComponent {

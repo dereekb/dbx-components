@@ -92,7 +92,6 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
   selector: 'dbx-forge-datetime-field',
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, MatMenuModule, MatDividerModule, ReactiveFormsModule, FormsModule, NgTemplateOutlet, DatePipe, DateDistancePipe, TimeDistancePipe, GetValuePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './datetime.field.component.html',
   styles: `
     .dbx-forge-datetime-field-wrapper {

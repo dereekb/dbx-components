@@ -20,7 +20,6 @@ export interface DbxScheduleSelectionCalendarDatePopoverConfig {
     </dbx-popover-content>
   `,
   imports: [DbxPopoverInteractionModule, DbxScheduleSelectionCalendarDatePopoverContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDatePopoverComponent extends AbstractPopoverDirective<void> {

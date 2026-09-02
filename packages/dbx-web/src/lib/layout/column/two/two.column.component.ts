@@ -74,7 +74,6 @@ export interface DbxTwoColumnViewState {
     '[class]': 'cssClassSignal()'
   },
   imports: [DbxResizedDirective, DbxContentContainerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTwoColumnComponent {

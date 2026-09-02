@@ -225,7 +225,6 @@ describe('DbxFirebaseFormSpaceSubmitButtonComponent', () => {
     <dbx-firebase-formspace-submit-button text="Submit Form Space" [requireComplete]="requireCompleteSignal()" [disabled]="disabledSignal()" [incompleteHint]="incompleteHintSignal()"></dbx-firebase-formspace-submit-button>
   `,
   imports: [DbxFirebaseFormSpaceSubmitButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseFormSpaceSubmitButtonComponent {

@@ -51,7 +51,6 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
     </div>
   `,
   imports: [NgClass, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-title-group-header'
   },

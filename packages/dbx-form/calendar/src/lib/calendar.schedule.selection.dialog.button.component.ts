@@ -10,7 +10,6 @@ import { DbxButtonComponent } from '@dereekb/dbx-web';
     <dbx-button [raised]="true" color="accent" [text]="buttonText()" [disabled]="disabled()" (buttonClick)="clickCustomize()"></dbx-button>
   `,
   imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDialogButtonComponent {

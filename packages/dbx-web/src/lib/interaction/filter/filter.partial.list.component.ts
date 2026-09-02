@@ -16,7 +16,6 @@ import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlis
     <dbx-anchor-list [anchors]="presetAnchorsSignal()"></dbx-anchor-list>
   `,
   imports: [DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPartialPresetFilterListComponent<F> extends AbstractDbxPartialPresetFilterMenuDirective<F> {}

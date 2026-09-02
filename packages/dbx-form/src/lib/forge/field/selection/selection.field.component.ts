@@ -110,7 +110,6 @@ export function resolveForgeSelectionOptions<T>(options: ValueSelectionOption<T>
   selector: 'dbx-forge-value-selection-field',
   templateUrl: './selection.field.component.html',
   imports: [MatFormField, MatLabel, MatSelect, MatOption, MatHint, FormField, MatError, DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
     '[id]': '`${key()}`',

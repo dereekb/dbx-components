@@ -22,7 +22,6 @@ type DbxStyleDemoButtonVariant = 'basic' | 'stroked' | 'flat' | 'raised' | 'tona
 @Component({
   selector: 'dbx-style-demo-buttons-section',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxButtonComponent, DbxButtonSpacerDirective],
   template: `
     <dbx-docs-ui-example header="Buttons" hint="dbx-button appearances across theme colors.">

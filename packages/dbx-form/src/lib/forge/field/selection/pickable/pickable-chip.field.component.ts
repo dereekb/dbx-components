@@ -19,7 +19,6 @@ import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
   selector: 'dbx-forge-pickable-chip-field',
   templateUrl: './pickable-chip.field.component.html',
   imports: [ReactiveFormsModule, MatChipsModule, MatIconModule, MatDivider, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgePickableItemFieldDirective<T, M, H> {

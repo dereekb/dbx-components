@@ -11,7 +11,6 @@ import { type DocValue, type DocValueWithSelection } from './item.list';
   selector: 'doc-item-list-grid',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<DocValue> {
@@ -28,7 +27,6 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
   template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListGridViewComponent),
   imports: [DbxListGridViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirective<DocValue> {

@@ -137,7 +137,6 @@ export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxVal
     '[class]': 'cssClassSignal()'
   },
   imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

@@ -30,7 +30,6 @@ import { type ManualActionItemValue, type ManualActionItemValueWithSelection } f
   host: {
     class: 'dbx-list-auto-height dbx-list-no-hover-effects dbx-list-no-item-padding'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocManualActionsItemListComponent extends AbstractDbxSelectionListWrapperDirective<ManualActionItemValue> {
@@ -50,7 +49,6 @@ export class DocManualActionsItemListComponent extends AbstractDbxSelectionListW
   host: {
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionListViewDirective<ManualActionItemValue> {
@@ -81,7 +79,6 @@ export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionL
     </div>
   `,
   imports: [MatButtonModule, DbxButtonComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocManualActionsItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ManualActionItemValue> {

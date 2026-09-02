@@ -5,7 +5,7 @@ import { NgxMatInputTelComponent } from 'ngx-mat-input-tel';
 import { MatInputModule } from '@angular/material/input';
 import { AsyncPipe } from '@angular/common';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, type E164PhoneNumber } from '@dereekb/util';
@@ -66,7 +66,6 @@ export const DEFAULT_FORGE_PREFERRED_COUNTRIES = ['us'];
   selector: 'dbx-forge-phone-field',
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, ReactiveFormsModule, NgxMatInputTelComponent, DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './phone.field.component.html',
   styles: [
     `

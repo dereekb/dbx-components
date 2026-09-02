@@ -67,7 +67,6 @@ describe('DbxFirebaseFormSpaceStepBlockComponent badge', () => {
     <dbx-firebase-formspace-step-block [step]="2" header="Cover File" [complete]="completeSignal()" [icon]="iconSignal()"></dbx-firebase-formspace-step-block>
   `,
   imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseFormSpaceStepBlockComponent {

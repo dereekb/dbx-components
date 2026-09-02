@@ -206,7 +206,6 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
     DbxFirebaseFormSpaceSlotUploadDirective,
     DbxFirebaseFormSpaceUploadInitializeDocumentsDirective
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseFormSpaceSlotUploadComponent {

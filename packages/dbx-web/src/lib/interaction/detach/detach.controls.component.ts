@@ -20,7 +20,6 @@ import { DbxDetachControlButtonsComponent } from './detach.controls.buttons.comp
     class: 'dbx-detach-controls'
   },
   imports: [DbxDetachControlButtonsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxDetachControlsComponent {

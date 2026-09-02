@@ -6,7 +6,6 @@ import { UIView } from '@uirouter/angular';
 @Component({
   templateUrl: './layout.component.html',
   imports: [UIView, DbxNavbarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DemoAppOidcLayoutComponent {

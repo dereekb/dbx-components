@@ -69,7 +69,6 @@ const ROTATION_VALUES: readonly PdfMergePageRotation[] = [0, 90, 180, 270];
     '[class.dbx-pdf-merge-page--removed]': 'removedSignal()'
   },
   imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergePageComponent {

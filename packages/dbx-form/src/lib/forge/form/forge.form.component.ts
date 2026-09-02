@@ -15,7 +15,6 @@ import { AbstractConfigAsyncForgeFormDirective } from './forge.directive';
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeAsyncConfigFormComponent<O = unknown, C extends FormConfig = FormConfig> extends AbstractConfigAsyncForgeFormDirective<O, C> {

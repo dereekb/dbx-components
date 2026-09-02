@@ -179,7 +179,6 @@ const DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT = 'Cancel';
     '[class.dbx-pdf-merge-editor-file-upload--superseded]': 'supersededByEncryptedSignal()'
   },
   imports: [CdkDropList, MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, DbxPdfMergeEditorFileUploadValidatorSlot {

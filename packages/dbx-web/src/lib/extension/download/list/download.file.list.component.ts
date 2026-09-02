@@ -36,7 +36,6 @@ import { DbxFileListItemComponent } from './download.file.list.item.component';
     class: 'dbx-file-list d-block'
   },
   imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFileListComponent<T = unknown> {

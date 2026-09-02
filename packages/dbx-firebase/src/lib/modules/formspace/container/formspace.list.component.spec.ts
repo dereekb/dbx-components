@@ -183,7 +183,6 @@ describe('DbxFirebaseFormSpaceListComponent', () => {
     </dbx-firebase-formspace-list>
   `,
   imports: [DbxFirebaseFormSpaceListComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFirebaseFormSpaceListComponent {

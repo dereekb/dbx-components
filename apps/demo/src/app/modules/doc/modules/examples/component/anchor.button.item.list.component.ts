@@ -23,7 +23,6 @@ import { type AnchorButtonItemValue, type AnchorButtonItemValueWithSelection } f
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocAnchorButtonItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorButtonItemValue> {
@@ -43,7 +42,6 @@ export class DocAnchorButtonItemListComponent extends AbstractDbxSelectionListWr
   host: {
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorButtonItemValue> {
@@ -72,7 +70,6 @@ export class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionLi
     </div>
   `,
   imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocAnchorButtonItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorButtonItemValue> {

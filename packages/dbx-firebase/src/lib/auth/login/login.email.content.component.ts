@@ -34,7 +34,6 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
 @Component({
   templateUrl: './login.email.content.component.html',
   imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailForgeFormComponent, DbxFirebaseEmailRecoveryForgeFormComponent, DbxFormSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseLoginEmailContentComponent {

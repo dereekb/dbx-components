@@ -18,7 +18,6 @@ import { type AnchorRowItemValue, type AnchorRowItemValueWithSelection } from '.
   selector: 'doc-anchor-row-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-card-items-list'
   },
@@ -41,7 +40,6 @@ export class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapp
   host: {
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorRowItemValue> {
@@ -67,7 +65,6 @@ export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListV
     </div>
   `,
   imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DocAnchorRowItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorRowItemValue> {

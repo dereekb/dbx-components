@@ -27,7 +27,6 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
   host: {
     class: 'dbx-popup-content'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPopupContentComponent {

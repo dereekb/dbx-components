@@ -14,7 +14,6 @@ import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
     }
   `,
   imports: [DbxMapboxMarkerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxMapboxMarkersComponent<T> {

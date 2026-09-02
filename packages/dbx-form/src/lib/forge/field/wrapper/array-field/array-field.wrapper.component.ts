@@ -22,7 +22,6 @@ import { DbxForgeFormContextService } from '../../../form/forge.context.service'
   selector: 'dbx-forge-array-field-wrapper',
   templateUrl: './array-field.wrapper.component.html',
   imports: [DynamicTextPipe, AsyncPipe, CdkDropList, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {

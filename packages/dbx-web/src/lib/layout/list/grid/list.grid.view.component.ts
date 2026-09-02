@@ -101,7 +101,6 @@ export class DbxValueListGridSizeDirective {
     '[class]': 'cssClassSignal()'
   },
   imports: [DbxInjectionComponent, DbxAnchorComponent, FlexLayoutModule, MatRipple],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {

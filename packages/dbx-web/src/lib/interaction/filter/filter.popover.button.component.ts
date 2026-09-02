@@ -23,7 +23,6 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
     <dbx-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [disabled]="disabled()"></dbx-button>
   `,
   imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {

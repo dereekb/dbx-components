@@ -12,7 +12,6 @@ import { formatToMonthDayString } from '@dereekb/date';
     <dbx-button #buttonPopoverOrigin icon="date_range" [disabled]="disabledSignal()" [raised]="true" color="accent" [text]="buttonTextSignal()" (buttonClick)="openPopover()"></dbx-button>
   `,
   imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {

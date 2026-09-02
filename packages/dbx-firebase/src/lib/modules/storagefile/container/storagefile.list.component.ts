@@ -153,7 +153,6 @@ export function keyForDbxFirebaseStorageFileListEntry(entry: DbxFirebaseStorageF
   host: {
     class: 'dbx-firebase-storagefile-list dbx-list-auto-height dbx-list-no-hover-effects'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseStorageFileListComponent<T = unknown> extends AbstractDbxListWrapperDirective<DbxFirebaseStorageFileListEntry<T>> {
@@ -239,7 +238,6 @@ export class DbxFirebaseStorageFileListComponent<T = unknown> extends AbstractDb
     // the row owns all of its own padding
     class: 'dbx-list-item-p0'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseStorageFileListViewComponent extends AbstractDbxListViewDirective<DbxFirebaseStorageFileListEntry> {
@@ -296,7 +294,6 @@ export class DbxFirebaseStorageFileListViewComponent extends AbstractDbxListView
     DbxFileListItemComponent,
     DbxFirebaseStorageFileDownloadButtonComponent
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseStorageFileListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseStorageFileListEntry> {

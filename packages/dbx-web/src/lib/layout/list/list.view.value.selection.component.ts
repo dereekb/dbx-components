@@ -55,7 +55,6 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
     class: 'dbx-list-view dbx-selection-list-view'
   },
   imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {

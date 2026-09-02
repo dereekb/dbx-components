@@ -61,7 +61,6 @@ const ERROR_ICON = 'error';
     '[class.dbx-pdf-merge-entry--encrypted]': 'isEncryptedSignal()'
   },
   imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeEntryComponent {

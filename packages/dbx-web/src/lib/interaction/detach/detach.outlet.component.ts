@@ -29,7 +29,6 @@ import { DbxDetachService } from './detach.service';
   host: {
     class: 'dbx-detach-outlet'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxDetachOutletComponent implements OnInit, OnDestroy {

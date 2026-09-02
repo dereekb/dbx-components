@@ -45,7 +45,6 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
     </dbx-loading>
   `,
   imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFirebaseModelEntitiesComponent {

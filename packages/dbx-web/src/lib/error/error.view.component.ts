@@ -49,7 +49,6 @@ export interface DbxErrorViewButtonEvent {
   host: {
     class: 'dbx-error dbx-warn dbx-b'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatIconModule, MatButtonModule, DbxTextColorDirective],
   standalone: true
 })

@@ -43,7 +43,6 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     '[attr.aria-label]': 'headerConfigSignal().header'
   },
   imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {

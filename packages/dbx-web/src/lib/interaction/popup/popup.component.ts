@@ -76,7 +76,6 @@ export interface DbxPopupComponentConfig<O, I, T> {
     }
   ],
   imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I> {

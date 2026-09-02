@@ -163,7 +163,6 @@ describe('DbxFileListComponent', () => {
     </dbx-file-list-item>
   `,
   imports: [DbxFileListItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFileListItemComponent {
@@ -182,7 +181,6 @@ class TestDbxFileListItemComponent {
     <dbx-file-list [entries]="entriesSignal()" [emptyText]="emptyTextSignal()"></dbx-file-list>
   `,
   imports: [DbxFileListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 class TestDbxFileListComponent {

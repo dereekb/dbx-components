@@ -59,7 +59,6 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
   },
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadAreaComponent),
   imports: [MatIconModule, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxFileUploadAreaComponent extends AbstractDbxFileUploadComponent {

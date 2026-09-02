@@ -24,7 +24,6 @@ import { type Maybe } from '@dereekb/util';
     </div>
   `,
   styleUrls: ['./side.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class AppSideNavBarTitleComponent {

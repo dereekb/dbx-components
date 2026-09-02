@@ -44,7 +44,6 @@ class TestExistingInjectionContent implements OnDestroy {
       <dbx-test-existing-content></dbx-test-existing-content>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DbxInjectionContextDirective, TestExistingInjectionContent]
 })

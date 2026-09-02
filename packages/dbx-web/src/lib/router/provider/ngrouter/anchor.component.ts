@@ -11,7 +11,6 @@ import { overrideClickElementEffect } from '../../../util/click';
 @Component({
   templateUrl: './anchor.component.html',
   imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxAngularRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {

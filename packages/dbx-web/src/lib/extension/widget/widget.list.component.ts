@@ -26,7 +26,6 @@ export type DbxWidgetDataPairWithSelection = DbxValueAsListItem<DbxWidgetDataPai
   selector: 'dbx-widget-grid',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<DbxWidgetDataPair> {
@@ -45,7 +44,6 @@ export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<
   selector: 'dbx-widget-grid-view',
   template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListGridViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   providers: provideDbxListView(DbxWidgetListGridViewComponent)
 })

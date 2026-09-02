@@ -26,7 +26,6 @@ import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
   selector: 'dbx-forge-searchable-text-field',
   templateUrl: './searchable-text.field.component.html',
   imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableTextFieldProps<T, M, H>> {

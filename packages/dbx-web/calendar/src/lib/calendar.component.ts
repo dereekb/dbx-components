@@ -13,7 +13,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
   selector: 'dbx-calendar',
   templateUrl: './calendar.component.html',
   imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxCalendarComponent<T> {
