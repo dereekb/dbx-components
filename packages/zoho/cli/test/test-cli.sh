@@ -1,6 +1,6 @@
 #!/bin/bash
 # Integration test script for zoho-cli.
-# Modeled after setup/setup-project.sh and .circleci/config.yml patterns.
+# Modeled after .circleci/config.yml patterns.
 #
 # Usage:
 #   bash packages/zoho/cli/test/test-cli.sh

@@ -108,7 +108,7 @@ The partial was renamed `_m2-visual-compat.scss` → `_shapes.scss` and `_index.
 | `src/lib/style/_style-demo.scss:13` | stale comment reference updated to `_shapes.scss` |
 | `apps/demo/src/style/_doc.scss:67` (dark-doc theme) | `m2-visual-compat()` → `dbx-components-shapes()` |
 | `apps/demo/src/app/modules/demo/style/_demo.scss:32` (alt demo theme) | `m2-visual-compat()` → `dbx-components-shapes()` |
-| `setup/templates/apps/app/src/style/_app.scss:36,66` (new-app scaffold, light + dark) | `m2-visual-compat()` → `dbx-components-shapes()` |
+| `packages/dbx-components-cli/templates/apps/app/src/style/_app.scss:36,66` (new-app scaffold, light + dark) | `m2-visual-compat()` → `dbx-components-shapes()` |
 
 **Visual delta** (anywhere the swapped themes apply — demo dark mode, the alternate demo theme, and
 freshly-scaffolded apps; the demo light theme was already on `dbx-components-shapes()`):

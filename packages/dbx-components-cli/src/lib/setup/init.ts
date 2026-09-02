@@ -38,7 +38,11 @@ function finalizeProjectConfig(context: SetupContext): void {
  */
 export interface SetupInitFlags {
   /**
-   * Interactive firebase init (vs scaffolding rules from templates).
+   * Reserved; not yet honored. The retired `setup-project.sh` used this to pick
+   * interactive `firebase init` over template-scaffolded rules. This port always
+   * scaffolds `firestore.rules` / `firestore.indexes.json` / `storage.rules` /
+   * `firebase.json` from the template archive, so there is no branch to select —
+   * run `firebase init` by hand to pull existing remote config down instead.
    */
   readonly manual: boolean;
   /**

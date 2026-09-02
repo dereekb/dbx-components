@@ -26,7 +26,10 @@ const ROOT_LEVEL_FILES: readonly { readonly archivePath: string; readonly dest: 
   { archivePath: 'project.template.json', dest: 'project.json', noTokens: true },
   { archivePath: 'make-api-package.js', dest: 'make-api-package.js' },
   { archivePath: 'update-dbx-components.sh', dest: 'update-dbx-components.sh' },
-  { archivePath: '.circleci/config.yml', dest: '.circleci/config.yml' }
+  { archivePath: '.circleci/config.yml', dest: '.circleci/config.yml' },
+  // The post-setup task list. The retired setup-project.sh curl'd this from the repo's
+  // setup/ folder as its last step; it ships in the archive so setup works offline.
+  { archivePath: 'getting-started-checklist.md', dest: 'getting-started-checklist.md', noTokens: true }
 ];
 
 /**

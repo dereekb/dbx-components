@@ -25,7 +25,7 @@ ROOT_FILES=(
   "vitest.workspace.ts"
 )
 
-# Files to download from setup/templates
+# Files to download from the dbx-components-cli template archive source
 TEMPLATE_FILES=(
   "vitest.setup.node.ts"
   "vitest.setup.typings.ts"
@@ -41,8 +41,8 @@ for FILE in "${ROOT_FILES[@]}"; do
 done
 
 for FILE in "${TEMPLATE_FILES[@]}"; do
-  echo "Downloading $FILE from setup/templates..."
-  curl -fsSL "$BASE_URL/setup/templates/$FILE" -o "$FILE"
+  echo "Downloading $FILE from packages/dbx-components-cli/templates/root..."
+  curl -fsSL "$BASE_URL/packages/dbx-components-cli/templates/root/$FILE" -o "$FILE"
   echo "✓ Downloaded $FILE"
 done
 

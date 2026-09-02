@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Scaffold a Zoho integration into a dbx-components project.
 //
-// Reads dbx.setup.json (written by setup-project.sh) for project naming,
+// Reads dbx.setup.json (written by dbx-components-cli setup) for project naming,
 // prompts for which Zoho products to wire up, and renders templates from
 // ./templates/ into apps/<api>/src/app/api/zoho/.
 //

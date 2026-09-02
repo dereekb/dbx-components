@@ -451,7 +451,8 @@ Keep the `run-tests` name if you use `exec-with-emulator.sh` — the script (and
 keys off that target name to decide whether a project needs the Firebase emulator.
 
 This `nx:run-commands` form is fully self-contained: it needs no inferred plugin and no
-`@nx/vitest` executor, which is why the scaffolding templates in `setup/templates` use it.
+`@nx/vitest` executor, which is why the scaffolding templates in
+`packages/dbx-components-cli/templates` use it.
 
 ### Verify the conversion
 
