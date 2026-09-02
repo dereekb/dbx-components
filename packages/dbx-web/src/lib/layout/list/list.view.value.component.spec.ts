@@ -1,6 +1,6 @@
 import { DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION, DbxValueListViewContentComponent } from './list.view.value.component';
 import { type DbxValueListItem, type DbxValueListItemConfig, addConfigToValueListItems, type AbstractDbxValueListViewConfig, dbxValueListItemKeyForItemValue } from './list.view.value';
-import { type ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, input, type OnDestroy } from '@angular/core';
 import { type Observable, of } from 'rxjs';
 import { type ListLoadingStateContext } from '@dereekb/rxjs';
@@ -225,7 +225,7 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.destroy();
     });
 
-    it('should render configured items', fakeAsync(() => {
+    it('should render configured items', async () => {
       const items: TestItem[] = [
         { key: 'a', name: 'Alpha', category: 'first' },
         { key: 'b', name: 'Beta', category: 'first' }
@@ -233,16 +233,15 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(items));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       const itemElements = fixture.nativeElement.querySelectorAll('.test-item-name');
       expect(itemElements.length).toBe(2);
       expect(itemElements[0].textContent).toBe('Alpha');
       expect(itemElements[1].textContent).toBe('Beta');
-    }));
+    });
 
-    it('should NOT destroy item components when data updates with same keys', fakeAsync(() => {
+    it('should NOT destroy item components when data updates with same keys', async () => {
       const itemsBefore: TestItem[] = [
         { key: 'a', name: 'Alpha Before', category: 'first' },
         { key: 'b', name: 'Beta Before', category: 'first' }
@@ -250,8 +249,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       // Capture the original component instances
       const instanceA1 = TEST_ITEM_INSTANCE_TRACKER.get('a');
@@ -271,8 +269,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       // No item components should have been destroyed since the keys are stable
       expect(testItemDestroyCount).toBe(0);
@@ -283,9 +280,9 @@ describe('DbxValueListViewContentComponent', () => {
 
       expect(instanceA2).toBe(instanceA1);
       expect(instanceB2).toBe(instanceB1);
-    }));
+    });
 
-    it('should destroy and recreate only the removed item when one item is removed', fakeAsync(() => {
+    it('should destroy and recreate only the removed item when one item is removed', async () => {
       const itemsBefore: TestItem[] = [
         { key: 'a', name: 'Alpha', category: 'first' },
         { key: 'b', name: 'Beta', category: 'first' },
@@ -294,8 +291,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       const instanceA1 = TEST_ITEM_INSTANCE_TRACKER.get('a');
       const instanceC1 = TEST_ITEM_INSTANCE_TRACKER.get('c');
@@ -313,8 +309,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       // Only the removed item 'b' should have been destroyed
       expect(testItemDestroyCount).toBe(1);
@@ -323,9 +318,9 @@ describe('DbxValueListViewContentComponent', () => {
       expect(TEST_ITEM_INSTANCE_TRACKER.get('a')).toBe(instanceA1);
       expect(TEST_ITEM_INSTANCE_TRACKER.get('c')).toBe(instanceC1);
       expect(TEST_ITEM_INSTANCE_TRACKER.has('b')).toBe(false);
-    }));
+    });
 
-    it('should reuse item components when items are reordered', fakeAsync(() => {
+    it('should reuse item components when items are reordered', async () => {
       const itemsBefore: TestItem[] = [
         { key: 'a', name: 'Alpha', category: 'first' },
         { key: 'b', name: 'Beta', category: 'first' },
@@ -334,8 +329,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       const instanceA1 = TEST_ITEM_INSTANCE_TRACKER.get('a');
       const instanceB1 = TEST_ITEM_INSTANCE_TRACKER.get('b');
@@ -352,8 +346,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       // No items should be destroyed during a reorder with stable keys
       expect(testItemDestroyCount).toBe(0);
@@ -361,7 +354,7 @@ describe('DbxValueListViewContentComponent', () => {
       expect(TEST_ITEM_INSTANCE_TRACKER.get('a')).toBe(instanceA1);
       expect(TEST_ITEM_INSTANCE_TRACKER.get('b')).toBe(instanceB1);
       expect(TEST_ITEM_INSTANCE_TRACKER.get('c')).toBe(instanceC1);
-    }));
+    });
   });
 
   describe('grouped list with DbxListTitleGroupDirective', () => {
@@ -375,7 +368,7 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.destroy();
     });
 
-    it('should render items grouped by category', fakeAsync(() => {
+    it('should render items grouped by category', async () => {
       const items: TestItem[] = [
         { key: 'a', name: 'Alpha', category: 'alpha' },
         { key: 'b', name: 'Beta', category: 'beta' },
@@ -387,17 +380,16 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.componentRef.setInput('groupDelegate', delegate);
       fixture.componentRef.setInput('items', makeConfiguredItems(items));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       const groupElements = fixture.nativeElement.querySelectorAll('dbx-list-view-content-group');
       expect(groupElements.length).toBe(2);
 
       const itemElements = fixture.nativeElement.querySelectorAll('.test-item-name');
       expect(itemElements.length).toBe(3);
-    }));
+    });
 
-    it('should NOT destroy item components when grouped data updates with same keys', fakeAsync(() => {
+    it('should NOT destroy item components when grouped data updates with same keys', async () => {
       const delegate = makeTestGroupDelegate();
 
       const itemsBefore: TestItem[] = [
@@ -408,8 +400,7 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.componentRef.setInput('groupDelegate', delegate);
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       const instanceA1 = TEST_ITEM_INSTANCE_TRACKER.get('a');
       const instanceB1 = TEST_ITEM_INSTANCE_TRACKER.get('b');
@@ -427,17 +418,16 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       // Items should NOT be destroyed and recreated
       expect(testItemDestroyCount).toBe(0);
 
       expect(TEST_ITEM_INSTANCE_TRACKER.get('a')).toBe(instanceA1);
       expect(TEST_ITEM_INSTANCE_TRACKER.get('b')).toBe(instanceB1);
-    }));
+    });
 
-    it('should properly re-group items when an item moves between categories', fakeAsync(() => {
+    it('should properly re-group items when an item moves between categories', async () => {
       const delegate = makeTestGroupDelegate();
 
       const itemsBefore: TestItem[] = [
@@ -449,8 +439,7 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.componentRef.setInput('groupDelegate', delegate);
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       let groupElements = fixture.nativeElement.querySelectorAll('dbx-list-view-content-group');
       expect(groupElements.length).toBe(2);
@@ -464,8 +453,7 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       groupElements = fixture.nativeElement.querySelectorAll('dbx-list-view-content-group');
       expect(groupElements.length).toBe(2);
@@ -473,9 +461,9 @@ describe('DbxValueListViewContentComponent', () => {
       // Verify total items still rendered
       const itemElements = fixture.nativeElement.querySelectorAll('.test-item-name');
       expect(itemElements.length).toBe(3);
-    }));
+    });
 
-    it('should collapse to one group when all items move to the same category', fakeAsync(() => {
+    it('should collapse to one group when all items move to the same category', async () => {
       const delegate = makeTestGroupDelegate();
 
       const itemsBefore: TestItem[] = [
@@ -486,8 +474,7 @@ describe('DbxValueListViewContentComponent', () => {
       fixture.componentRef.setInput('groupDelegate', delegate);
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsBefore));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       let groupElements = fixture.nativeElement.querySelectorAll('dbx-list-view-content-group');
       expect(groupElements.length).toBe(2);
@@ -500,14 +487,13 @@ describe('DbxValueListViewContentComponent', () => {
 
       fixture.componentRef.setInput('items', makeConfiguredItems(itemsAfter));
       fixture.detectChanges();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       groupElements = fixture.nativeElement.querySelectorAll('dbx-list-view-content-group');
       expect(groupElements.length).toBe(1);
 
       const itemElements = fixture.nativeElement.querySelectorAll('.test-item-name');
       expect(itemElements.length).toBe(2);
-    }));
+    });
   });
 });

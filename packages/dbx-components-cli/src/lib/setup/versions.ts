@@ -65,7 +65,6 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   '@nestjs/platform-express': '^12.0.1',
   'reflect-metadata': '^0.2.0',
   tslib: '^2.3.0',
-  'zone.js': '^0.16.0',
   firebase: '^12.0.0',
   'firebase-admin': '^13.0.0',
   'firebase-functions': '^7.0.0',

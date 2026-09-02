@@ -1,4 +1,4 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIRouterModule } from '@uirouter/angular';
@@ -9,13 +9,13 @@ import { provideDbxRouterWebUiRouterProviderConfig } from '../../provider/uirout
 import { provideDbxScreenMediaService } from '../../../screen/screen.providers';
 
 describe('NavbarComponent', () => {
-  beforeEach(waitForAsync(() => {
-    void TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       imports: [NoopAnimationsModule, UIRouterModule.forRoot()],
       providers: [{ provide: APP_BASE_HREF, useValue: '/' }, provideDbxScreenMediaService(), provideDbxUIRouterService(), provideDbxRouterWebUiRouterProviderConfig()]
     }).compileComponents();
-  }));
+  });
 
   let testComponent: TestViewComponent;
   let fixture: ComponentFixture<TestViewComponent>;

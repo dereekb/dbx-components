@@ -196,6 +196,23 @@ function findWorkspaceRootDir(startDir: string): string {
 }
 
 /**
+ * Packages that must be transformed by vite rather than imported natively by node.
+ *
+ * The angular setup file calls `setupTestBed()`, which initializes the `TestBed` singleton
+ * exported by `@angular/core/testing`, and `@analogjs/vite-plugin-angular` pins the angular
+ * testing bundles to the vite-processed copy (`ssr.noExternal: [/fesm2022(.*?)testing/]`).
+ * When `@dereekb/vitest` is installed from npm its published `package.json` declares
+ * `"type": "module"`, so vitest reads it as a valid native import and externalizes it. The
+ * setup file then runs against a *second* copy of `@angular/core/testing` and initializes a
+ * `TestBed` no spec can ever see, so every angular spec fails on
+ * `Need to call TestBed.initTestEnvironment() first`.
+ *
+ * Inlining the package keeps its setup files in the same module graph as the spec files, which
+ * is what already happens inside this workspace, where `@dereekb/vitest` resolves to source.
+ */
+const ALWAYS_INLINE_DEPS: readonly string[] = ['@dereekb/vitest'];
+
+/**
  * Name of the workspace-root tsconfig whose `paths` declare every `@dereekb/*` alias.
  */
 const WORKSPACE_TSCONFIG_FILE_NAME = 'tsconfig.base.json';
@@ -406,6 +423,19 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
    */
   const jestSequenceHooksBehavior: SequenceHooks = 'stack';
 
+  /**
+   * {@link ALWAYS_INLINE_DEPS} is about this package's own correctness, so a project's own
+   * `server.deps.inline` patterns are added to it rather than replaced by it.
+   */
+  const configuredInlineDeps = testConfig?.server?.deps?.inline;
+  const server: VitestTestConfig['server'] = {
+    ...testConfig?.server,
+    deps: {
+      ...testConfig?.server?.deps,
+      inline: configuredInlineDeps === true ? true : [...ALWAYS_INLINE_DEPS, ...(configuredInlineDeps ?? [])]
+    }
+  };
+
   return defineConfig(() => {
     const configuredEnv = configureEnv?.();
     const env: Record<string, string> = {
@@ -461,6 +491,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         retry,
         typecheck,
         ...testConfig,
+        server,
         env,
         name: projectName,
         environment,

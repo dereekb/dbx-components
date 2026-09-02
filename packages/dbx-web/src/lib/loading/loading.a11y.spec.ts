@@ -1,4 +1,4 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
@@ -6,9 +6,9 @@ import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { type Maybe } from '@dereekb/util';
 
 describe('Loading a11y', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   describe('DbxBasicLoadingComponent', () => {
     let fixture: ComponentFixture<TestBasicLoadingComponent>;

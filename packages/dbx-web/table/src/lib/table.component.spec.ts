@@ -1,12 +1,12 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxTableViewComponent } from './table.component';
 import { DbxTableStore } from './table.store';
 
 describe('DbxTableViewComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   let fixture: ComponentFixture<TableTestComponent>;
   let component: TableTestComponent;

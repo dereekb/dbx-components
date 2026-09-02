@@ -1,4 +1,4 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 import { BrowserModule } from '@angular/platform-browser';
@@ -7,12 +7,12 @@ describe('DbxMapboxInjectionComponent', () => {
   let component: DbxMapboxInjectionComponent;
   let fixture: ComponentFixture<DbxMapboxInjectionComponent>;
 
-  beforeEach(waitForAsync(() => {
-    void TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [BrowserModule, DbxMapboxInjectionComponent],
       providers: [DbxMapboxInjectionStore]
     }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DbxMapboxInjectionComponent);

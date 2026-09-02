@@ -1,5 +1,5 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Injector, runInInjectionContext, signal, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
@@ -10,9 +10,9 @@ import { filter, first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxBasicLoadingComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
     const injector = TestBed.inject(Injector);

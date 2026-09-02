@@ -194,8 +194,7 @@
     "vite": "8.2.2",
     "vitest": "4.1.11",
     "vitest-axe": "^0.1.0",
-    "yargs": "^18.0.0",
-    "zone.js": "^0.16.1"
+    "yargs": "^18.0.0"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "0.35.4",

@@ -1,11 +1,11 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DbxIconButtonComponent } from './icon.button.component';
 
 describe('DbxIconButtonComponent a11y', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   let fixture: ComponentFixture<DbxIconButtonComponent>;
 

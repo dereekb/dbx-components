@@ -120,6 +120,20 @@ produces the same configuration regardless of which directory Vitest is launched
 call `createVitestConfig` you get this for free. If you hand-rolled a Vitest config that assumes
 the workspace root is the working directory, fix it before converting your test targets.
 
+### zone.js is gone
+
+The Angular apps went zoneless in 13.18, but zone.js stayed installed because the test setup
+still loaded it: `@dereekb/vitest/setup-angular` imported `@analogjs/vitest-angular/setup-zone`,
+which kept `fakeAsync` / `tick` / `flush` / `waitForAsync` working alongside the zoneless
+`TestBed`. As of v14 it imports `@analogjs/vitest-angular/setup-snapshots` instead — the same
+Angular fixture snapshot serializers, without zone.js — so nothing in a dbx-components project
+loads zone.js and the dependency comes out.
+
+The zone-only test helpers go with it. Angular throws
+`zone-testing.js is needed for the fakeAsync() test helper but could not be found` (and the
+`waitForAsync()` equivalent) when a spec still calls them, so this fails loudly rather than
+quietly. See [Remove zone.js](#remove-zonejs) for the two mechanical rewrites.
+
 ### The API app builds as ESM
 
 The Firebase API app's `build-base` now uses `"format": ["esm"]` instead of `["cjs"]`.
@@ -231,6 +245,58 @@ Check first that you are not using an `@nx/vite:build`, `@nx/vite:dev-server`, o
 
 The `@dereekb/vitest` peer dependencies change accordingly: `@nx/vite` is dropped and nothing
 is added in its place.
+
+### Remove zone.js
+
+```
+npm uninstall zone.js
+```
+
+zone.js is an *optional* peer of `@angular/core`, so removing it leaves no unmet-peer warning,
+and no `@dereekb` package declares it. Nothing else needs to change in the setup files: a
+downstream `src/test-setup.ts` is just `import '@dereekb/vitest/setup-angular';`, which now
+initializes the `TestBed` zonelessly without zone.js present.
+
+Then rewrite the specs that used the zone-only helpers. Both rewrites are mechanical:
+
+```diff
+-  beforeEach(waitForAsync(() => {
++  beforeEach(() => {
+     TestBed.configureTestingModule({ ... });
+-  }));
++  });
+```
+
+When the body compiles components, await it instead:
+
+```diff
+-  beforeEach(waitForAsync(() => {
+-    void TestBed.configureTestingModule({ ... }).compileComponents();
+-  }));
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({ ... }).compileComponents();
++  });
+```
+
+```diff
+-  it('should open the dialog', fakeAsync(() => {
++  it('should open the dialog', async () => {
+     sourceInstance.trigger();
+-    tick();
+-    fixture.detectChanges();
++    await fixture.whenStable();
+
+     expect(matDialog.openDialogs.length).toBe(1);
+-
+-    flush();
+-  }));
++  });
+```
+
+`whenStable()` runs change detection and resolves off Angular's pending-task tracking, so it
+replaces the `tick()` + `detectChanges()` pair. The trailing `flush()` is dropped rather than
+translated: it existed to drain `fakeAsync`'s timer queue, which otherwise failed the test with
+`X timer(s) still in the queue`. Zoneless has no such queue to drain.
 
 ### Switch the Angular app to the `@angular/build` builders
 

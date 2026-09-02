@@ -1,11 +1,11 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DbxErrorViewComponent } from './error.view.component';
 
 describe('Error a11y', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   describe('DbxErrorViewComponent', () => {
     let fixture: ComponentFixture<DbxErrorViewComponent>;

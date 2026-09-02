@@ -1,4 +1,4 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DbxCalendarComponent } from './calendar.component';
 import { DbxCalendarStore } from './calendar.store';
 
@@ -6,12 +6,12 @@ describe('DbxCalendarComponent', () => {
   let component: DbxCalendarComponent<any>;
   let fixture: ComponentFixture<DbxCalendarComponent<any>>;
 
-  beforeEach(waitForAsync(() => {
-    void TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [DbxCalendarComponent],
       providers: [DbxCalendarStore]
     }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DbxCalendarComponent);
