@@ -2,8 +2,37 @@ import { type Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util'
 import { BehaviorSubject, map, of, first, switchMap, delay } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { type LoadingState, beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateWithDefinedValue, isLoadingStateLoading, successResult } from './loading.state';
-import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
+import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 import { callbackTest } from '@dereekb/util/test';
+
+describe('mapLoadingState()', () => {
+  it(
+    'should keep the page metadata of the input state',
+    callbackTest((done) => {
+      of({ page: 3, loading: false, value: { data: [1, 2] } })
+        .pipe(mapLoadingState({ mapValue: (x) => x.data }), first())
+        .subscribe((x) => {
+          expect(x.page).toBe(3);
+          expect(x.value).toEqual([1, 2]);
+          done();
+        });
+    })
+  );
+
+  it(
+    'should pass an error state through with its error intact',
+    callbackTest((done) => {
+      of(errorResult<{ data: number[] }>(new Error('failed')))
+        .pipe(mapLoadingState({ mapValue: (x) => x.data }), first())
+        .subscribe((x) => {
+          expect(x.error).toBeDefined();
+          expect(x.value).toBeUndefined();
+          expect(isLoadingStateWithError(x)).toBe(true);
+          done();
+        });
+    })
+  );
+});
 
 describe('mapLoadingStateValueWithOperator()', () => {
   it(

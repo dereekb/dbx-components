@@ -8,6 +8,7 @@ import path from 'node:path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
 type SequenceHooks = NonNullable<VitestTestConfig['sequence']>['hooks'];
+type VitestTypecheckConfig = NonNullable<VitestTestConfig['typecheck']>;
 
 export interface DbxComponentsVitestPresetConfigOptions {
   readonly type: 'angular' | 'firebase' | 'nestjs' | 'node';
@@ -76,6 +77,16 @@ export interface DbxComponentsVitestPresetConfigOptions {
     suiteName?: string;
     outputFilePrefix?: string;
   };
+
+  /**
+   * Enables Vitest's type-level testing for this project.
+   *
+   * Off unless provided. A project opts in when it has `expectTypeOf` assertions worth pinning, since
+   * enabling it adds a `tsc` pass to every run. Pass `true` for the convention default (every
+   * `src/**\/*.types.spec.ts` checked against `tsconfig.spec.json`, ignoring type errors in files
+   * outside that set), or a partial config to override any of it.
+   */
+  readonly typecheck?: boolean | Partial<VitestTypecheckConfig>;
 
   /**
    * Name of the environment variable used to detect CI.
@@ -257,7 +268,23 @@ function readWorkspaceSourceAliases(rootDir: string): WorkspaceSourceAlias[] {
  * @__NO_SIDE_EFFECTS__
  */
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, ciEnvVar = 'CI' } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, typecheck: inputTypecheck, ciEnvVar = 'CI' } = options;
+
+  /**
+   * Type-level tests live beside the runtime specs as `*.types.spec.ts`, so they are picked up by the
+   * normal `include` too (where their `expectTypeOf` assertions are inert) and by the typechecker here.
+   * `ignoreSourceErrors` keeps a project's unrelated pre-existing spec type errors from failing the
+   * run — only the opted-in type-level files are asserted on.
+   */
+  const typecheck: VitestTypecheckConfig | undefined = inputTypecheck
+    ? {
+        enabled: true,
+        include: ['src/**/*.types.spec.ts'],
+        tsconfig: 'tsconfig.spec.json',
+        ignoreSourceErrors: true,
+        ...(typeof inputTypecheck === 'object' ? inputTypecheck : undefined)
+      }
+    : undefined;
 
   const rootDir = options.rootDir ?? findWorkspaceRootDir(process.cwd());
   /**
@@ -363,6 +390,16 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   }
 
   /**
+   * Type-level test files are collected by the typechecker, not by the runtime runner. They are
+   * named `*.types.spec.ts` rather than vitest's `*.test-d.ts` default so they sit beside the specs
+   * they cover, which means the runtime `include` would otherwise pick them up and fail on their
+   * `declare const` fixtures, which have no runtime value.
+   */
+  if (typecheck?.include?.length) {
+    exclude.push(...typecheck.include);
+  }
+
+  /**
    * Keep Jest behavior of running beforeEach/afterEach in order.
    *
    * See: https://vitest.dev/guide/migration.html#hooks
@@ -422,6 +459,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         pool,
         maxWorkers,
         retry,
+        typecheck,
         ...testConfig,
         env,
         name: projectName,

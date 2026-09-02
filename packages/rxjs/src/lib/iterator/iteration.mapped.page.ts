@@ -6,13 +6,13 @@ import { type Maybe } from '@dereekb/util';
 /**
  * {@link MappedItemIteration} specialized for {@link PageItemIteration}, preserving page-specific loading state types.
  */
-export type MappedPageItemIteration<O, I = unknown, M extends PageLoadingState<O> = PageLoadingState<O>, L extends PageLoadingState<I> = PageLoadingState<I>, N extends PageItemIteration<I, L> = PageItemIteration<I, L>> = MappedItemIteration<O, I, M, L, N>;
+export type MappedPageItemIteration<M extends PageLoadingState, L extends PageLoadingState, N extends PageItemIteration<L> = PageItemIteration<L>> = MappedItemIteration<M, L, N>;
 
 /**
  * Instance of a mapped page iteration that implements both {@link MappedItemIterationInstance}
  * and {@link PageItemIteration}, providing transformed states alongside page-specific operations.
  */
-export interface MappedPageItemIterationInstance<O, I = unknown, M extends PageLoadingState<O> = PageLoadingState<O>, L extends PageLoadingState<I> = PageLoadingState<I>, N extends PageItemIteration<I, L> = PageItemIteration<I, L>> extends MappedItemIterationInstance<O, I, M, L, N>, PageItemIteration<O, M> {}
+export interface MappedPageItemIterationInstance<M extends PageLoadingState, L extends PageLoadingState, N extends PageItemIteration<L> = PageItemIteration<L>> extends MappedItemIterationInstance<M, L, N>, PageItemIteration<M> {}
 
 /**
  * Creates a {@link MappedPageItemIterationInstance} that wraps a {@link PageItemIteration}
@@ -23,13 +23,13 @@ export interface MappedPageItemIterationInstance<O, I = unknown, M extends PageL
  * @param config - Mapping configuration for transforming loading state values.
  * @returns Mapped page iteration instance.
  */
-export function mappedPageItemIteration<O, I = unknown, M extends PageLoadingState<O> = PageLoadingState<O>, L extends PageLoadingState<I> = PageLoadingState<I>, N extends PageItemIteration<I, L> = PageItemIteration<I, L>>(itemIteration: N, config: MappedItemIterationInstanceMapConfig<O, I, M, L>): MappedPageItemIterationInstance<O, I, M, L, N> {
+export function mappedPageItemIteration<M extends PageLoadingState, L extends PageLoadingState, N extends PageItemIteration<L> = PageItemIteration<L>>(itemIteration: N, config: MappedItemIterationInstanceMapConfig<L, M>): MappedPageItemIterationInstance<M, L, N> {
   function nextPage(request?: ItemIteratorNextRequest): Promise<number> {
     return itemIteration.nextPage(request);
   }
 
   return {
-    ...mapItemIteration(itemIteration, config),
+    ...mapItemIteration<M, L, N>(itemIteration, config),
     latestLoadedPage$: itemIteration.latestLoadedPage$,
 
     getMaxPageLoadLimit(): Maybe<number> {

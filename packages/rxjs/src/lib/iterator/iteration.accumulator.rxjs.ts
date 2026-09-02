@@ -1,7 +1,7 @@
 import { lastValue, flattenArray } from '@dereekb/util';
 import { filterMaybe, scanBuildArray } from '../rxjs';
 import { combineLatest, map, type Observable, shareReplay, skipWhile } from 'rxjs';
-import { mapLoadingStateResults, mapLoadingStateValueFunction, type PageListLoadingState } from '../loading';
+import { type LoadingState, mapLoadingStateResults, mapLoadingStateValueFunction, type PageListLoadingState, type PageLoadingState } from '../loading';
 import { type ItemAccumulator, type ItemAccumulatorValuePair, type PageItemAccumulator } from './iteration.accumulator';
 
 /**
@@ -21,7 +21,7 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
       const skipValue = firstLatestItemPair?.input;
       const seed: T[] = flattenArray(pairs.map((x) => x.output));
 
-      const mapStateToItem = mapLoadingStateValueFunction(accumulator.mapItemFunction);
+      const mapStateToItem = mapLoadingStateValueFunction<LoadingState<I>, T[]>(accumulator.mapItemFunction);
       const accumulatorObs: Observable<T[]> = accumulator.itemIteration.latestState$.pipe(
         skipWhile((x) => x.value === skipValue),
         map(mapStateToItem),
@@ -50,7 +50,7 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
 export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulator: PageItemAccumulator<T[], I>): Observable<PageListLoadingState<T>> {
   return combineLatest([accumulator.itemIteration.currentState$, flattenAccumulatorResultItemArray(accumulator)]).pipe(
     map(([state, values]) =>
-      mapLoadingStateResults(state, {
+      mapLoadingStateResults<PageLoadingState<I>, T[], PageListLoadingState<T>>(state, {
         alwaysMapValue: true,
         mapValue: () => values
       })
@@ -72,7 +72,7 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
 export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
   return combineLatest([accumulator.itemIteration.currentState$, accumulator.currentAllItems$]).pipe(
     map(([state, values]) =>
-      mapLoadingStateResults(state, {
+      mapLoadingStateResults<PageLoadingState<I>, V[], PageListLoadingState<V>>(state, {
         alwaysMapValue: true,
         mapValue: () => values
       })

@@ -23,7 +23,7 @@ export interface ItemIteratorNextRequest {
  * Consumers call {@link next} to trigger loading of the next batch and observe results
  * through the various state observables.
  */
-export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
+export interface ItemIteration<L extends LoadingState = LoadingState> extends Destroyable {
   /**
    * Whether or not there are more items to be loaded.
    *
@@ -69,7 +69,7 @@ export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingS
  * Adds page-specific operations like {@link nextPage} (promise-based) and page load limits
  * to prevent unbounded iteration.
  */
-export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
+export interface PageItemIteration<L extends PageLoadingState = PageLoadingState> extends ItemIteration<L> {
   /**
    * Returns the maximum number of pages allowed to be loaded.
    *

@@ -1,6 +1,6 @@
 import { filterMaybe } from '../rxjs';
 import { type PageLoadingState, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from '../loading';
-import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot, type Configurable, invertMaybeBoolean } from '@dereekb/util';
+import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot, invertMaybeBoolean } from '@dereekb/util';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, defaultIfEmpty } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
@@ -179,7 +179,7 @@ export interface ItemPageIterationInstanceState<V> {
  * tracking loading/success/error states, and exposing all results as reactive observables.
  * Implements {@link PageItemIteration} for use with accumulators and other iteration utilities.
  */
-export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
+export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<PageLoadingState<V>>, Destroyable {
   private readonly _iterator: ItemPageIterator<V, F, C>;
   private readonly _config: C;
 
@@ -552,11 +552,15 @@ function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunctio
 }
 
 function itemPageLoadingStateFromResultPageLoadingState<V>(input: PageLoadingState<ItemPageIteratorResult<V>>): PageLoadingState<V> {
-  // TODO(breaking-change): refactor to build the result as an object literal so mapValue narrows V and hasNextPage can be assigned without the cast. See https://github.com/dereekb/dbx-components issue tracking for cleanup.
-  // TODO: Fix eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast widens mapValue's V|undefined inference to V and removes readonly so hasNextPage can be assigned; tsc reports both errors without it
-  const result = mapLoadingStateResults(input, {
-    mapValue: (result: ItemPageIteratorResult<V>) => result.value
-  }) as Configurable<PageLoadingState<V>>;
-  result.hasNextPage = invertMaybeBoolean(input.value?.end);
-  return result;
+  /**
+   * `B` is stated explicitly because `ItemPageIteratorResult<V>.value` is optional, so inference alone
+   * gives `B = V | undefined`. `PageLoadingState<Maybe<V>>` and `PageLoadingState<V>` are the same
+   * type structurally (`value` is already `Maybe<V>` on both), which is what lets the result be built
+   * as an object literal instead of mutated onto a readonly-stripped cast.
+   */
+  const mapped = mapLoadingStateResults<PageLoadingState<ItemPageIteratorResult<V>>, Maybe<V>, PageLoadingState<Maybe<V>>>(input, {
+    mapValue: (result) => result.value
+  });
+
+  return { ...mapped, hasNextPage: invertMaybeBoolean(input.value?.end) };
 }

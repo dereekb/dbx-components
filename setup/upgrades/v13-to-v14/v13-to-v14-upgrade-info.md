@@ -8,6 +8,8 @@
   `@angular-devkit/build-angular` for real
 - Replace `@Injectable({ providedIn: 'root' })` with Angular 22's `@Service()`
 - Build the Firebase API app as ESM instead of CommonJS
+- Reshape the `@dereekb/rxjs` `LoadingState` generics — one runtime behavior change, several
+  type-parameter reorderings, and five removed exports
 
 ## Overview
 
@@ -141,6 +143,59 @@ of one broken call site. What makes it the right trade here is that the strict d
 already checked. `tools/scripts/check-esm-named-imports.mjs` has guarded the published packages
 against exactly this since `@dereekb/date` shipped an ESM build that named-imported `RRule` from
 `rrule`, and as of v14 it also covers the app bundles under `dist/apps`.
+
+### The `LoadingState` generics were reshaped
+
+This is the first `@dereekb/*` API-surface change in a v13 to v14 upgrade; everything else in this
+guide is tooling. It is a breaking change on purpose.
+
+`LoadingState`-generic helpers in `@dereekb/rxjs` were declared two different ways, and neither
+worked. The problem is that `LoadingStateValue<L>` is a conditional type:
+
+```ts
+export type LoadingStateValue<L extends LoadingState> = L extends LoadingState<infer T> ? T : never;
+```
+
+A conditional type is a **non-inferable position**. A signature like
+`<L extends LoadingState>(op: OperatorFunction<LoadingStateValue<L>, O>)` can never infer `L` from
+its arguments — it only ever arrives via the contextual return type, and degrades to
+`LoadingState<unknown>` when there is none. Separately, reading `x.value` where `x: L` resolves
+through `L`'s *apparent* type (its constraint), which is `Maybe<unknown>` — which is why v13 carried
+a cast at every single `.value` read inside the library.
+
+The other half of the problem was the four-parameter shape
+`<A, B, L extends LoadingState<A>, O extends LoadingState<B>>` on `mapLoadingState` and friends: `A`
+is only inferable when the caller *annotates* `mapValue`'s parameter, so every call site in
+dbx-components annotated it, and one that did not was silently running with `A = unknown`.
+
+v14 states one rule instead. Pick the shape by whether the function preserves the state's shape, and
+by whether callers infer or explicitly instantiate:
+
+| Family | Shape | Examples |
+| --- | --- | --- |
+| **1 — value out** (state shape discarded) | `<T>(): OperatorFunction<LoadingState<T>, X<T>>` | `currentValueFromLoadingState`, `valueFromLoadingState`, `valueFromFinishedLoadingState`, `arrayValueFromFinishedLoadingState`, `promiseFromLoadingState`, `loadingStateFromObs` |
+| **2 — shape preserving, value derived** | `<L extends LoadingState>`, with `LoadingStateValue<L>` only in callback-parameter positions | `distinctLoadingState`, `tapOnLoadingState*`, `catchLoadingStateErrorWithOperator`, `startWithBeginLoading`, the four type guards |
+| **3 — shape preserving, value transformed** | `<L extends LoadingState, B, O extends LoadingState = LoadingStateWithValueType<L, B>>` — **state first** | `mapLoadingState`, `mapLoadingStateResults`, `MapLoadingStateResultsConfiguration`, `MapLoadingState*Fn` |
+| **4 — caller instantiated containers** | value-first `<T, S extends LoadingState<T> = LoadingState<T>>` | `LoadingStateContext`, `ListLoadingStateContext`, `cleanLoadingContext` |
+
+Family 3's ordering is load-bearing rather than cosmetic. TypeScript resolves type parameters left to
+right and only evaluates a parameter's default once the ones before it are fixed, so `L` (index 0)
+and `B` (index 1) must both resolve before `O` (index 2) can default to
+`LoadingStateWithValueType<L, B>`. Any other order collapses `O` and drops the input state's `page`
+key. Family 4 keeps its value-first order deliberately: callers write
+`cleanLoadingContext<MyData>(obs$)`, and state-first would make the dominant call *more* verbose.
+
+Two guardrails come with the rule, and both will bite anyone writing their own `LoadingState`-generic
+helper:
+
+- **G1 — any parameter that mentions the value type must be non-inferable.** Argument inference is
+  priority 0 and *wipes* the contextual-return candidate. A plain
+  `valueFromFinishedLoadingState<T>(d?: GetterOrValue<T>)` infers `T = never[]` from a `() => []`
+  default and then rejects the real stream. Wrap it: `GetterOrValue<NoInfer<T>>`. The same applies to
+  `catchLoadingStateErrorWithOperator`, whose operator mentions `L` directly.
+- **G2 — `Partial<L>` *is* an inference source.** It is a homomorphic mapped type (priority 8), which
+  also outranks the contextual return type, so `startWithBeginLoading(filteredPage)` would
+  reverse-infer `L := FilteredPage`. It takes `Partial<NoInfer<L>>` for that reason.
 
 ## Migrations
 
@@ -530,6 +585,203 @@ module without top-level await simply succeeds and returns the namespace, and it
 otherwise. Function discovery is unaffected: the endpoint exports are found on the namespace the
 same way they were found on `module.exports`.
 
+### Sweep the `LoadingState` API changes
+
+Work these in order — the first one is the only change that does not announce itself with a compile
+error.
+
+#### 1. `loadingStateType` now gives `error` precedence over `value`
+
+`loadingStateType` classifies a finished state by checking the error *before* the value:
+
+```ts
+// v14
+if (isLoading) {
+  type = LoadingStateType.LOADING;
+} else if (loadingState.error != null) {
+  type = LoadingStateType.ERROR;
+} else if (objectHasKey(loadingState, 'value')) {
+  type = LoadingStateType.SUCCESS;
+} else {
+  type = LoadingStateType.IDLE;
+}
+```
+
+A state carrying **both** an error and a value reported `SUCCESS` in v13 and reports `ERROR` in v14.
+Such states are produced by `mapLoadingStateResults` / `mapLoadingState` over an error state (they
+always write a `value` key), and by `mergeLoadingStateWithError` applied to a state that already had
+a value. Anything branching on `LoadingStateType` or on `isLoadingStateInErrorState` can flip,
+including template `@switch` blocks over a state type.
+
+Two smaller consequences of the same reorder:
+
+- The error test moved from `objectHasKey(state, 'error')` to `state.error != null`, so
+  `{ loading: false, error: undefined }` is now `IDLE` rather than `ERROR`.
+- The `value` test is still `objectHasKey`, deliberately: `value: null` remains a meaningful
+  "loaded, but empty" signal and still reports `SUCCESS`.
+
+#### 2. Type parameter order and count changes
+
+These compile silently when the positional arguments you were passing still satisfy the new
+constraints — they just mean something else. Grep for each name.
+
+| v13 | v14 |
+| --- | --- |
+| `MapLoadingStateResultsConfiguration<A, B, L, O>` | `MapLoadingStateResultsConfiguration<L, B, O>` |
+| `mapLoadingStateResults<A, B, L, O>(input, config)` | `mapLoadingStateResults<L, B, O>(input, config)` |
+| `mapLoadingState<A, B, L, O>(config)` | `mapLoadingState<L, B, O>(config)` |
+| `MapLoadingStateFn<A, B, L, O>` | `MapLoadingStateFn<L, B, O>` |
+| `MapLoadingStateValuesFn<A, B, L>` | `MapLoadingStateValuesFn<L, B>` |
+| `MapLoadingStateValueFunction<O, I, L>` | `MapLoadingStateValueFunction<L, O>` |
+| `MapLoadingStateValueMapFunction<O, I, L>` | `MapLoadingStateValueMapFunction<L, O>` |
+| `mapLoadingStateValueFunction<O, I, L>(mapFn)` | `mapLoadingStateValueFunction<L, O>(mapFn)` |
+| `ItemIteration<V, L>` | `ItemIteration<L>` |
+| `PageItemIteration<V, L>` | `PageItemIteration<L>` |
+| `MappedItemIteration<O, I, M, L, N>` | `MappedItemIteration<M, L, N>` |
+| `MappedItemIterationInstance<O, I, M, L, N>` | `MappedItemIterationInstance<M, L, N>` |
+| `MappedItemIterationInstanceMapConfig<O, I, M, L>` | `MappedItemIterationInstanceMapConfig<L, M>` |
+| `MappedPageItemIteration<O, I, M, L, N>` | `MappedPageItemIteration<M, L, N>` |
+| `MappedPageItemIterationInstance<O, I, M, L, N>` | `MappedPageItemIterationInstance<M, L, N>` |
+| `mapItemIteration<O, I, M, L, N>(it, config)` | `mapItemIteration<M, L, N>(it, config)` |
+| `mappedPageItemIteration<O, I, M, L, N>(it, config)` | `mappedPageItemIteration<M, L, N>(it, config)` |
+
+The iteration types now take loading states rather than item values, because `V` was never used in
+`ItemIteration`'s body — every member was already expressed in terms of `L`. Restate an item value as
+its state:
+
+```ts
+// v13
+PageItemIteration<QueryDocumentSnapshotArray<T>>
+ItemAccumulator<O, I, N extends ItemIteration<I>>
+
+// v14
+PageItemIteration<PageLoadingState<QueryDocumentSnapshotArray<T>>>
+ItemAccumulator<O, I, N extends ItemIteration<LoadingState<I>>>
+```
+
+The payoff is that the fully-spelled restatements disappear. In dbx-components' own Firestore
+iterator, five type arguments (two of which just repeated the other two wrapped in
+`PageLoadingState<...>`) became three:
+
+```ts
+// v13
+export interface FirestoreItemPageIteration<T>
+  extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {}
+
+// v14
+export interface FirestoreItemPageIteration<T>
+  extends MappedPageItemIterationInstance<PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {}
+```
+
+`ListLoadingStateContext<L, S>` became `ListLoadingStateContext<T, S>` (and the same for
+`MutableListLoadingStateContext`, `ListLoadingStateContextConfig`, `ListLoadingStateContextInput`,
+`listLoadingStateContext`, and `cleanListLoadingContext`). That is a **rename only** — the order and
+meaning are unchanged, so there is nothing to do.
+
+#### 3. Removed exports
+
+| Removed | Replacement |
+| --- | --- |
+| `FilteredPageLoadingState<T, F>` | Compose at the use site: `PageLoadingState<T> & FilteredPage<F>` |
+| `FilteredPageListLoadingState<T, F>` | `PageListLoadingState<T> & FilteredPage<F>` |
+| `mapMultipleLoadingStateResults` | Had no callers. Combine with `combineLoadingStates` / `mergeLoadingStatesArray`, then map. |
+| `MapMultipleLoadingStateResultsConfiguration` | — |
+| `MapMultipleLoadingStateValuesFn` | — |
+
+#### 4. Changed signatures
+
+```ts
+// errorResult splits, mirroring toReadableError: only the non-optional form can promise an error.
+export function errorResult<T = never>(error: ErrorInput): LoadingStateWithError<T>;
+export function errorResult<T = never>(error?: Maybe<ErrorInput>): LoadingState<T>;
+
+// beginLoading's page overload now requires `page`. In v13 the PageLoadingState overload shadowed
+// the plain one entirely, so every beginLoading({ ... }) typed as PageLoadingState<T> while the body
+// never supplied the required `page`.
+export function beginLoading<T = never>(): LoadingState<T>;
+export function beginLoading<T = never>(state: Partial<LoadingState<T>> & Page): PageLoadingState<T>;
+export function beginLoading<T = never>(state?: Partial<LoadingState<T>>): LoadingState<T>;
+
+// successPageResult now advertises the value key it always set.
+export function successPageResult<T>(page: PageNumber, value: T): PageLoadingState<T> & LoadingStateWithValue<T>;
+
+// errorPageResult accepts any ErrorInput, so a plain Error works (it did not in v13).
+export function errorPageResult<T = never>(page: PageNumber, error?: Maybe<ErrorInput>): PageLoadingState<T>;
+
+// The three merge helpers no longer claim to return S. Each clears a field that S may require, so
+// returning S was a lie for something like LoadingStateWithDefinedValue<Foo>.
+export type MergedLoadingState<S extends LoadingState> = Omit<S, 'value' | 'error'> & LoadingState<LoadingStateValue<S>>;
+
+export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, loading?: boolean): MergedLoadingState<S>;
+export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: Maybe<LoadingStateValue<S>>): MergedLoadingState<S>;
+export function mergeLoadingStateWithError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): MergedLoadingState<S>;
+```
+
+The four value/error type guards now intersect their narrowing type with the input state, so a
+narrowed `PageLoadingState` keeps its `page` key instead of collapsing to the bare type:
+
+```ts
+// v14
+export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithDefinedValue<LoadingStateValue<L>>;
+export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithError<LoadingStateValue<L>>;
+export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithDefinedValue<LoadingStateValue<L>>;
+export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithError<LoadingStateValue<L>>;
+```
+
+Their `| LoadingStateWithDefinedValue<...>` parameter unions are gone. They only existed to satisfy
+predicate-assignability against the non-intersected narrowing type, and are dead now.
+
+#### 5. Delete the casts the `T = never` defaults make unnecessary
+
+`beginLoading`, `errorResult`, and `idleLoadingState` default to `T = never`, so a bare call is
+assignable into any `LoadingState<Foo>`:
+
+```ts
+// v13
+of(errorResult(error) as LoadingState<DocumentSnapshot<T>>)
+toSignal(store.entriesLoadingState$, { initialValue: beginLoading<EntryMap>() as LoadingState<EntryMap> })
+of(beginLoading() as ListLoadingState<any>)
+
+// v14
+of(errorResult(error))
+toSignal(store.entriesLoadingState$, { initialValue: beginLoading() })
+of(beginLoading())
+```
+
+Explicit `beginLoading<Foo>()` still compiles; it is just no longer needed to satisfy an assignment.
+
+The same reduction applies to explicit type arguments on the family-1 and family-2 operators, which
+now infer from the stream:
+
+```ts
+// v13
+mapLoadingStateResults<DocValue[], DocValueWithSelection[]>(x, { mapValue: (values) => /* ... */ })
+catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([])))
+
+// v14
+mapLoadingStateResults(x, { mapValue: (values) => /* ... */ })
+catchLoadingStateErrorWithOperator(map(() => successResult([])))
+```
+
+#### 6. Adopt the new helpers
+
+| Helper | Replaces |
+| --- | --- |
+| `isPageLoadingState(state)` | An ad-hoc `'page' in state` test |
+| `loadingStateHasNextPage(state)` | `(state as unknown as PageLoadingState)?.hasNextPage` |
+| `loadingStateValue(state)` | `state.value as Maybe<LoadingStateValue<L>>` inside a generic helper |
+| `loadingStateWithValueType(state, value)` | `{ ...state, value } as unknown as LoadingStateWithValueType<L, T>` |
+| `mergeLoadingStatesArray(states, mergeFn?)` | `mergeLoadingStates(...states, mergeFn) as LoadingState<O>` — the array form makes `O` inferable |
+
+`Page` is deliberately kept orthogonal to `LoadingState`; `hasNextPage` was **not** hoisted onto the
+base type. `isPageLoadingState` and `loadingStateHasNextPage` are the supported way to ask.
+
+Also note that `valueFromLoadingState()` is **callable for the first time** in v14. Its v13
+constraint was `L extends LoadingStateWithDefinedValue`, which can never match a source whose `value`
+is optional — which is to say, any real `LoadingState` stream. It had zero call sites for that
+reason. Code that hand-rolled `currentValueFromLoadingState()` followed by `filterMaybe()` can
+collapse to it.
+
 ## Notes and gotchas
 
 ### tsconfig path resolution only discovers `tsconfig.json` / `jsconfig.json`
@@ -606,3 +858,30 @@ docker compose build demo-api-server
 Without this you get a `Cannot find module '…'` from the containerized test run while the same
 command works fine on the host. This bit us mid-upgrade and is worth remembering any time a
 dependency moves.
+
+### A `scan` / `reduce` seed built from a bare loading-state constructor now infers `never`
+
+This is the one place where the `T = never` defaults make previously-working code stop compiling
+rather than get simpler. A seed argument is an inference source, so:
+
+```ts
+// infers LoadingState<never> and then rejects every real state pushed into the accumulator
+scan((acc, next) => /* ... */, beginLoading())
+```
+
+Pass the type argument explicitly at a seed: `beginLoading<Foo>()`, `errorResult<Foo>(err)`,
+`idleLoadingState<Foo>()`. Nothing in dbx-components hit this — no `scan` or `reduce` seed in the
+workspace is built from a loading-state constructor — but downstream code may.
+
+### The `loadingStateType` reorder is the only change with no compile error
+
+Everything else in the `LoadingState` sweep surfaces as a type error somewhere. The error-before-value
+reorder does not: a state carrying both an error and a value keeps compiling and silently changes
+which branch it takes. If a downstream app renders differently after the upgrade without any build
+failure, that is the first thing to check.
+
+Related, and easy to miss: `@dereekb/rxjs` type-level regressions of this class are now pinned by
+`packages/rxjs/src/lib/loading/loading.state.types.spec.ts`, which runs under Vitest's `typecheck`
+mode. A downstream app can do the same by passing `typecheck: true` to `createVitestConfig` and
+adding `*.types.spec.ts` files; the preset points the typechecker at them and excludes them from the
+runtime run.

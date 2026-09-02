@@ -273,7 +273,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
   };
 }
 
-export interface FirestoreItemPageIteration<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
+export interface FirestoreItemPageIteration<T> extends MappedPageItemIterationInstance<PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
   /**
    * The underlying iteration instance that works with raw query snapshots.
    *
@@ -433,9 +433,9 @@ export function firestoreItemPageIteration<T>(config: FirestoreItemPageIteration
 }
 
 function _firestoreItemPageIterationWithSnapshotIteration<T>(snapshotIteration: InternalFirestoreItemPageIterationInstance<T>): FirestoreItemPageIterationInstance<T> {
-  const mappedIteration = mappedPageItemIteration(snapshotIteration, {
+  const mappedIteration: MappedPageItemIterationInstance<PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> = mappedPageItemIteration(snapshotIteration, {
     forwardDestroy: true,
-    mapValue: (x: FirestoreItemPageQueryResult<T>) => x.docs
+    mapValue: (x) => x.docs
   });
 
   const result: FirestoreItemPageIterationInstance<T> = {

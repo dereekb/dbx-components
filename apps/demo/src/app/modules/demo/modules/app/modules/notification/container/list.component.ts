@@ -5,7 +5,7 @@ import { type NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
-import { type LoadingState, type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
+import { type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
 import { ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -22,7 +22,7 @@ export class DemoNotificationListPageComponent {
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
   readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
 
-  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
+  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator(map(() => successResult([]))));
 
   private readonly _notificationIdInstance = clean(dbxRouteModelIdParamRedirect(this.dbxRouterService));
 

@@ -86,7 +86,7 @@ export class DocLayoutListComponent implements OnInit {
 
   readonly stateWithSelection$: Observable<ListLoadingState<DocValueWithSelection>> = this.state$.pipe(
     map((x) =>
-      mapLoadingStateResults<DocValue[], DocValueWithSelection[]>(x, {
+      mapLoadingStateResults(x, {
         mapValue: (values) =>
           values.map((x: DocValue) => {
             const item: DocValueWithSelection = { ...x, selected: Math.random() > 0.5, key: x.name, disabled: Math.random() > 0.8 };
@@ -98,7 +98,7 @@ export class DocLayoutListComponent implements OnInit {
 
   readonly stateWithAnchors$: Observable<ListLoadingState<CustomDocValue>> = this.state$.pipe(
     map((x) =>
-      mapLoadingStateResults<DocValue[], CustomDocValue[]>(x, {
+      mapLoadingStateResults(x, {
         mapValue: (values) =>
           values.map((x, i) => {
             const n = i % 4;
@@ -133,7 +133,7 @@ export class DocLayoutListComponent implements OnInit {
     )
   );
 
-  readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading() as ListLoadingState<any>);
+  readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading());
   readonly stateWithNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of(
     successResult<DocValue[]>([
       { name: 'A', icon: 'warning' },
@@ -141,7 +141,7 @@ export class DocLayoutListComponent implements OnInit {
     ])
   );
 
-  readonly statePermanentlyLoadingWithEmptyResult$: Observable<ListLoadingState<any>> = of({ ...successResult([]), ...beginLoading() } as ListLoadingState<any>);
+  readonly statePermanentlyLoadingWithEmptyResult$: Observable<ListLoadingState<any>> = of({ ...successResult([]), ...beginLoading() });
   readonly statePermanentlyLoadingAfterEmptyResult$: Observable<ListLoadingState<any>> = this.statePermanentlyLoading$.pipe(startWith(successResult([])));
   readonly statePermanentlyLoadingAfterNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of({
     ...successResult<DocValue[]>([
@@ -149,7 +149,7 @@ export class DocLayoutListComponent implements OnInit {
       { name: 'B', icon: 'person' }
     ]),
     ...beginLoading()
-  } as ListLoadingState<any>);
+  });
   readonly statePermanentlyLoadingAfterEmptyResultWithEmptyValue$: Observable<ListLoadingState<any>> = this.statePermanentlyLoadingWithEmptyResult$.pipe(startWith(successResult([])));
   readonly emptyResult$: Observable<ListLoadingState<any>> = of(successResult([]));
 

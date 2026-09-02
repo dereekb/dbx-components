@@ -1,6 +1,7 @@
 import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
 import { type TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { mappedPageItemIteration, type MappedPageItemIterationInstance } from './iteration.mapped.page';
+import { type PageLoadingState } from '../loading';
 import { first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
@@ -18,7 +19,7 @@ describe('iteration.mapped.page', () => {
   });
 
   describe('MappedPageItemIterationInstance', () => {
-    let mappedInstance: MappedPageItemIterationInstance<string, number>;
+    let mappedInstance: MappedPageItemIterationInstance<PageLoadingState<string>, PageLoadingState<number>>;
 
     beforeEach(() => {
       mappedInstance = mappedPageItemIteration(instance, {

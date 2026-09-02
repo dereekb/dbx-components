@@ -5,13 +5,14 @@ import { accumulatorFlattenPageListLoadingState, flattenAccumulatorResultItemArr
 import { filter, first, skip } from 'rxjs';
 import { itemAccumulator, type ItemAccumulatorInstance } from './iteration.accumulator';
 import { type PageItemIteration } from './iteration';
+import { type PageLoadingState } from '../loading';
 import { isLoadingStateFinishedLoading } from '../loading';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('iteration.rxjs', () => {
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
   let iteration: ItemPageIterationInstance<number[], TestPageIteratorFilter>;
-  let accumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<number[]>>;
+  let accumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<PageLoadingState<number[]>>>;
 
   beforeEach(() => {
     iterator = new ItemPageIterator(TEST_PAGE_ARRAY_ITERATOR_DELEGATE);
@@ -67,7 +68,7 @@ describe('iteration.rxjs', () => {
     );
 
     describe('with mapping', () => {
-      let accumulatorWithMapping: ItemAccumulatorInstance<string[], number[], PageItemIteration<number[]>>;
+      let accumulatorWithMapping: ItemAccumulatorInstance<string[], number[], PageItemIteration<PageLoadingState<number[]>>>;
 
       beforeEach(() => {
         accumulatorWithMapping = itemAccumulator(iteration, (x: number[]) => x.map(String));
@@ -101,7 +102,7 @@ describe('iteration.rxjs', () => {
       callbackTest((done) => {
         const maxPageLoadLimit = 1;
         const limitedIteration: ItemPageIterationInstance<number[], TestPageIteratorFilter> = iterator.instance({ maxPageLoadLimit });
-        const limitedAccumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<number[]>> = itemAccumulator(limitedIteration);
+        const limitedAccumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<PageLoadingState<number[]>>> = itemAccumulator(limitedIteration);
 
         // Load the first (and only allowed) page
         void limitedIteration.nextPage().then(() => {
