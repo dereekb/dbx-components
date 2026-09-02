@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';

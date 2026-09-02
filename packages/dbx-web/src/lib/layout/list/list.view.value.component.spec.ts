@@ -1,7 +1,7 @@
 import { DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION, DbxValueListViewContentComponent } from './list.view.value.component';
 import { type DbxValueListItem, type DbxValueListItemConfig, addConfigToValueListItems, type AbstractDbxValueListViewConfig, dbxValueListItemKeyForItemValue } from './list.view.value';
 import { type ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, input, type OnDestroy } from '@angular/core';
+import { Component, input, type OnDestroy } from '@angular/core';
 import { type Observable, of } from 'rxjs';
 import { type ListLoadingStateContext } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';

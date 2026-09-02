@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AbstractPopoverDirective, DbxPopoverCloseButtonComponent, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { DbxStyleDemoControlsService } from '@dereekb/dbx-web/style-demo';
 import { DbxFormStyleDemoSectionsComponent } from './controls.sections.component';

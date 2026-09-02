@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
 import { type DbxPromptConfirmConfig, DbxPromptConfirmComponent } from '../../interaction/prompt/prompt.confirm.component';
 import { DbxErrorComponent } from '../../error/error.component';

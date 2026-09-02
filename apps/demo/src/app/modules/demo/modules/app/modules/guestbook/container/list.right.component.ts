@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnDestroy, Component, inject } from '@angular/core';
+import { type OnDestroy, Component, inject } from '@angular/core';
 import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { GuestbookDocumentStore } from 'demo-components';

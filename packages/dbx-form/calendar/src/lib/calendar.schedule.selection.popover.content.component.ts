@@ -1,5 +1,5 @@
 import { DbxScheduleSelectionCalendarDateDaysComponent } from './calendar.schedule.selection.days.component';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxLabelBlockComponent } from '@dereekb/dbx-web';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.schedule.selection.range.component';
 

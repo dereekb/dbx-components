@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxFirebaseModelHistoryComponent, DbxFirebaseModelHistoryPopoverButtonComponent, type DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from '@dereekb/dbx-firebase';
 import { DbxContentLayoutModule, DbxListEmptyContentComponent, DbxSectionLayoutModule, DbxSpacerDirective } from '@dereekb/dbx-web';
 

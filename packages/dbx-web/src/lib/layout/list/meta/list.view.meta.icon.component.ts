@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, InjectionToken, inject } from '@angular/core';
+import { Component, InjectionToken, inject } from '@angular/core';
 import { DBX_VALUE_LIST_VIEW_ITEM, type DbxValueListItem } from '../list.view.value';
 import { type Maybe } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';

@@ -1,6 +1,6 @@
 import { filter, switchMap, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, Component, inject, signal, input, effect } from '@angular/core';
+import { Component, inject, signal, input, effect } from '@angular/core';
 import { type Maybe, DestroyFunctionObject, isNotFalse } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';

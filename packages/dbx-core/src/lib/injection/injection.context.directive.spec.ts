@@ -1,6 +1,6 @@
 import { failDueToSuccess, callbackTest } from '@dereekb/util/test';
 import { DbxInjectionContextDirective } from './injection.context.directive';
-import { ChangeDetectionStrategy, Component, type OnDestroy, type Type, viewChild } from '@angular/core';
+import { Component, type OnDestroy, type Type, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { waitForMs } from '@dereekb/util';

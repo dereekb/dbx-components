@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, type Signal } from '@angular/core';
+import { Component, computed, input, type Signal } from '@angular/core';
 import { type ClickableAnchorLinkTree, DbxInjectionComponent, type ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
 import { type Configurable, type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from '../anchor/anchor.component';

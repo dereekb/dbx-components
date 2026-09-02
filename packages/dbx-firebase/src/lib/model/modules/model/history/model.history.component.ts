@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective } from '@dereekb/dbx-web';
 import { type ListLoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';

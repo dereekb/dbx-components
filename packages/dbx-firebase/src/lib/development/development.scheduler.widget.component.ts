@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
 import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';

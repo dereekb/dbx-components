@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * Runnable-snippet slot inside a `<dbx-docs-ui-example>`.

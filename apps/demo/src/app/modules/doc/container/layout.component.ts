@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLink, type ClickableAnchorLinkTree, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DOC_HOME_ROUTE, DOC_ROUTES } from '../doc';
 import { DbxSidenavComponent, DbxColorDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';

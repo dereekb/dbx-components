@@ -9,7 +9,7 @@ import { dbxForgePickableChipField } from './pickable-chip.field';
 import type { DbxForgePickableChipFieldDef, DbxForgePickableFieldProps } from './pickable.field';
 import { DbxForgePickableChipFieldComponent } from './pickable-chip.field.component';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';

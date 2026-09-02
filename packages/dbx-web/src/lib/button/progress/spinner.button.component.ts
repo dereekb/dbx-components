@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, viewChild } from '@angular/core';
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type Type } from '@angular/core';
+import { Component, computed, inject, input, type Type } from '@angular/core';
 import { of } from 'rxjs';
 import {
   AbstractDbxListViewDirective,

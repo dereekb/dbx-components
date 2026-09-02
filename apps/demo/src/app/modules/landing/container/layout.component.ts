@@ -1,5 +1,5 @@
 import { type ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationItemStore, DbxFirebaseNotificationItemStorePopoverButtonComponent, DbxFirebaseNotificationSummaryDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { type AnchorForValueFunction, DbxContentLayoutModule, DbxSectionPageComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { type NotificationItem } from '@dereekb/firebase';

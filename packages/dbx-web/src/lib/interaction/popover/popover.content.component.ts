@@ -1,5 +1,5 @@
 import { BehaviorSubject, throttleTime } from 'rxjs';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';

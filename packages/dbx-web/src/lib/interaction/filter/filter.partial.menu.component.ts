@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, type DbxPresetFilterMenuConfig } from './filter.menu';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';

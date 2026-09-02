@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { type DbxWidgetDataPair } from './widget';
 import { DbxWidgetViewComponent } from './widget.component';

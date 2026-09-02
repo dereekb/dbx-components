@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ComponentFixture } from '@angular/core/testing';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { AbstractSyncForgeFormDirective } from '../lib/forge/form/forge.directive';

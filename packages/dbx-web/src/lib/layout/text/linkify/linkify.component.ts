@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 import { mergeObjects, type Maybe } from '@dereekb/util';

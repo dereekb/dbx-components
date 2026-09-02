@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import type { Maybe } from '@dereekb/util';
 import { AbstractSyncForgeFormDirective, dbxForgeFixedDateRangeField, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';

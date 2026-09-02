@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { SimpleLoadingContext } from '@dereekb/rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';

@@ -23,7 +23,7 @@ import {
 import { type CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { type ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, type Observable, delay, of } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, type OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, type OnInit, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DocValue, type DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { type Maybe, takeFront } from '@dereekb/util';

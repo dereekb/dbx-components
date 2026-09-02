@@ -1,4 +1,4 @@
-import { Component, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective, DbxContentPitDirective } from '@dereekb/dbx-web';
 import { type Quiz, QuizComponent, QuizPreQuizIntroComponent, QuizQuestionTextComponent, QuizAnswerNumberComponent, QuizAnswerMultipleChoiceComponent, quizAgreementPrompt, quizFrequencyPrompt } from '@dereekb/dbx-form/quiz';

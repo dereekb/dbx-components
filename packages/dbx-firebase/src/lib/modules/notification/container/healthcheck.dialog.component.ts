@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type Injector } from '@angular/core';
+import { Component, type Injector } from '@angular/core';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective } from '@dereekb/dbx-web';
 import { DbxFirebaseNotificationHealthCheckViewComponent } from './healthcheck.view.component';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/dbx-web';
 import { DbxStyleDemoControlsService } from '@dereekb/dbx-web/style-demo';
 import { DbxFormStyleDemoPresetsComponent } from './controls.presets.component';

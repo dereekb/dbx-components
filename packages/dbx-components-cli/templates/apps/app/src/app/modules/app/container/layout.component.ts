@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { UIView } from '@uirouter/angular';
 import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 

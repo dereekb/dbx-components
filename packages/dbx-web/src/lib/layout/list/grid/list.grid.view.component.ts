@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, type Signal, computed, inject, input } from '@angular/core';
+import { Component, Directive, type Signal, computed, inject, input } from '@angular/core';
 import { of } from 'rxjs';
 import { type DbxValueListItem } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';

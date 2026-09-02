@@ -3,7 +3,7 @@ import { DBX_INJECTION_COMPONENT_DATA, type ClickableAnchor, type DbxActionSucce
 import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
-import { Component, EventEmitter, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, EventEmitter, inject, signal } from '@angular/core';
 import { type DbxFirebaseLoginContext } from './login.context';
 import { type DbxFirebaseEmailFormValue, type DbxFirebaseEmailFormConfig, DbxFirebaseEmailForgeFormComponent } from './login.email.forge.form.component';
 import { type DbxFirebaseLoginMode } from './login';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';

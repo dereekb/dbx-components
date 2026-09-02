@@ -1,6 +1,6 @@
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, type Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
-import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, input, output, signal, computed } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 import { type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, loadingStateHasNextPage } from '@dereekb/rxjs';
 import { invertMaybeBoolean, type Maybe, type Milliseconds } from '@dereekb/util';

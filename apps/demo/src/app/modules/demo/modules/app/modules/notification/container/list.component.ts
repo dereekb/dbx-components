@@ -1,5 +1,5 @@
 import { type AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { type NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';

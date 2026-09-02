@@ -1,5 +1,5 @@
 import { map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatListModule, MatSelectionList, type MatSelectionListChange } from '@angular/material/list';
 import { type DbxListSelectionMode, type ListSelectionStateItem } from './list.view';
 import { type DbxValueListItem, type AbstractDbxValueListViewConfig } from './list.view.value';

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type Observable, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { AbstractConfigAsyncForgeFormDirective, dbxForgeComponentField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';

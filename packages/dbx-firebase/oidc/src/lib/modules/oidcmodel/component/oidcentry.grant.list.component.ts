@@ -1,5 +1,5 @@
 import { type DocumentDataWithIdAndKey, type OidcEntryGrantPayloadData, type OidcEntry } from '@dereekb/firebase';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
   AbstractDbxSelectionListWrapperDirective,

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { map, shareReplay } from 'rxjs';
 import { spaceSeparatedCssClasses } from '@dereekb/util';

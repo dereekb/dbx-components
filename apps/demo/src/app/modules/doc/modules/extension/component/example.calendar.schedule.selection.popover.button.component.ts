@@ -1,5 +1,5 @@
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './example.calendar.schedule.selection.popover.component';
-import { Component, ElementRef, Injector, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
 

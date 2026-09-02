@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
 import { DbxFirebaseLoginComponent } from '@dereekb/dbx-firebase';

@@ -1,6 +1,6 @@
 import { type AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { type Guestbook, publishedGuestbooksQuery } from 'demo-firebase';
-import { ChangeDetectionStrategy, Component, inject, viewChild, type OnInit } from '@angular/core';
+import { Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent } from 'demo-components';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective } from '@dereekb/dbx-firebase';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
 import { type Maybe, type Seconds } from '@dereekb/util';

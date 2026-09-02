@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, type DbxHelpViewPopoverButtonConfig, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

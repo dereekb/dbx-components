@@ -10,10 +10,14 @@ import { type MailgunMessagesClient, type MailgunDomainsClient } from './mailgun
  */
 type MailgunMessageData = Parameters<MailgunMessagesClient['create']>[1];
 type MessagesSendResult = Awaited<ReturnType<MailgunMessagesClient['create']>>;
-/** The object-with-`data` member of mailgun's `attachment` union — i.e. its `CustomFile`. */
+/**
+ * The object-with-`data` member of mailgun's `attachment` union — i.e. its `CustomFile`.
+ */
 type CustomFile = Extract<NonNullable<MailgunMessageData['attachment']>, { data: unknown }>;
 type CustomFileData = CustomFile['data'];
-/** mailgun's generic `{ status, body }` envelope, reached via a method that returns it verbatim. */
+/**
+ * mailgun's generic `{ status, body }` envelope, reached via a method that returns it verbatim.
+ */
 type APIResponse = Awaited<ReturnType<MailgunDomainsClient['assignIp']>>;
 
 export type MailgunSenderDomainString = EmailAddressDomain;

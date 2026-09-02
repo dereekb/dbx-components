@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentContainerDirective, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseOidcEntryClientCreateComponent } from '@dereekb/dbx-firebase/oidc';
 import { type CreateOidcClientResult } from '@dereekb/firebase';

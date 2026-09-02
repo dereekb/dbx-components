@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { map, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';

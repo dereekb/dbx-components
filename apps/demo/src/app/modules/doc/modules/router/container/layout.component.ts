@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective, DbxSectionPageComponent, DbxNavbarComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';

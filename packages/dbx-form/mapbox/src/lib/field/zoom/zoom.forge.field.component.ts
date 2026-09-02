@@ -1,5 +1,5 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { BehaviorSubject, shareReplay, type Observable } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { type ZoomLevel, type Maybe, type LatLngPoint, latLngPoint } from '@dereekb/util';

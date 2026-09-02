@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlist.component';
 

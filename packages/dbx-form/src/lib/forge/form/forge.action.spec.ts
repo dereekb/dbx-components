@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, viewChild, inject } from '@angular/core';
+import { Component, viewChild, inject } from '@angular/core';
 
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map, delay, Subject, BehaviorSubject, filter } from 'rxjs';

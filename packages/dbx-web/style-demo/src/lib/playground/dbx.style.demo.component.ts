@@ -1,5 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, type Signal, computed, effect, inject, input, viewChild } from '@angular/core';
+import { Component, ElementRef, type Signal, computed, effect, inject, input, viewChild } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';

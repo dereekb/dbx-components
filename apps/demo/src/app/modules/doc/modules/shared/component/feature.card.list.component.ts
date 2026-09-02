@@ -1,5 +1,5 @@
 import { type ClickableAnchor } from '@dereekb/dbx-core';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 
 import { DbxAnchorComponent } from '@dereekb/dbx-web';

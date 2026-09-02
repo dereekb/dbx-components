@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, input, viewChild } from '@angular/core';
+import { Component, type ElementRef, input, viewChild } from '@angular/core';
 import { DbxClickToCopyTextDirective } from './copy.text.directive';
 import { type Maybe } from '@dereekb/util';
 import { type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig } from '../../util';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DbxAnchorListComponent, DbxBarDirective, DbxBarHeaderComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxPagebarComponent } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';

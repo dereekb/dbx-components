@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatAnchor } from '@angular/material/button';
 import { AnchorUISref, UISref } from '@uirouter/angular';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';

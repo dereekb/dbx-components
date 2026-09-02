@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, type OnInit, viewChild } from '@angular/core';
+import { Component, inject, type OnInit, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseCollectionChangeDirective, DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';

@@ -1,6 +1,6 @@
 import { type DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core';
+import { Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core';
 import { DbxLoadingComponent } from './loading.component';
 import { DbxActionLoadingContextDirective } from './loading.action.directive';
 import { By } from '@angular/platform-browser';

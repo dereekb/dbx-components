@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
+import { Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
 import { type DbxInjectionComponentConfig, type DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';

@@ -1,4 +1,4 @@
-import { Component, computed, input, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxSectionHeaderConfig, type DbxSectionHeaderHType } from './section';
 import { MatIconModule } from '@angular/material/icon';

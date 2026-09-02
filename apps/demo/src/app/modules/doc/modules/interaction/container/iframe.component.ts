@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxIframeComponent, DbxContentLayoutModule, DbxLoadingModule, DbxEmbedComponent } from '@dereekb/dbx-web';
 
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

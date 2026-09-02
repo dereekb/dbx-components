@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs';
 import { type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';

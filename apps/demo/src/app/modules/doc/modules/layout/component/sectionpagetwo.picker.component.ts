@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { dbxForgeFormComponentProviders, AbstractSyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, DbxForgeFormComponentImportsModule, dbxForgeSearchableTextField } from '@dereekb/dbx-form';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DemoSystemStateAccessor } from 'demo-components';
 import { DbxAppEnvironmentService, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DbxContentPageDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent } from '@dereekb/dbx-web';

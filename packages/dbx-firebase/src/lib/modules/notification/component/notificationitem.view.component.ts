@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { type DbxWidgetViewComponentConfig, DbxWidgetViewComponent } from '@dereekb/dbx-web';
 import { type NotificationItem, type NotificationItemMetadata } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';

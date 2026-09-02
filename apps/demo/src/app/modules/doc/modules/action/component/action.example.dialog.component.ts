@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';

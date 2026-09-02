@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 
 @Component({

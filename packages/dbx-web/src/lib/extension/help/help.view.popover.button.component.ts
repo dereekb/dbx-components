@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { AbstractPopoverRefDirective } from '../../interaction/popover/abstract.popover.ref.directive';
 import { DbxPopoverService } from '../../interaction/popover/popover.service';

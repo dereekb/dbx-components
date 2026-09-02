@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, HostListener, input, output, signal } from '@angular/core';
+import { Component, computed, HostListener, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 import { fileArrayAcceptMatchFunction } from './upload.accept';

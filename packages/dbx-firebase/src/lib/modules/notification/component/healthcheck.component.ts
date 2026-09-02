@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent } from '@dereekb/dbx-web';

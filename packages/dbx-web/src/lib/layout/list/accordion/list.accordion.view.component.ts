@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type TrackByFunction } from '@angular/core';
+import { Component, computed, inject, input, type TrackByFunction } from '@angular/core';
 import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 import { AbstractDbxValueListViewDirective } from '../list.view.value.directive';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';

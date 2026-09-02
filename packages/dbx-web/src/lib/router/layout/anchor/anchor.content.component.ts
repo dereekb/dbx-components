@@ -1,5 +1,5 @@
 import { combineLatest, map, type Observable, of, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, inject, computed, input } from '@angular/core';
+import { Component, inject, computed, input } from '@angular/core';
 import { type ClickableAnchor, type ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';

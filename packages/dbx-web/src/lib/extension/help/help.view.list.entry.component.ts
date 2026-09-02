@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type Signal } from '@angular/core';
+import { Component, computed, inject, input, type Signal } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';

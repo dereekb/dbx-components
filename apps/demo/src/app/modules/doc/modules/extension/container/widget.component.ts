@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxWidgetDataPair, DbxContentContainerDirective, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent } from '@dereekb/dbx-web';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { map, type Observable, of } from 'rxjs';

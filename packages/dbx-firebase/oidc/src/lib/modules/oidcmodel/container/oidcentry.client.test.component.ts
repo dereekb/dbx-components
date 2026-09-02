@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal, computed } from '@angular/core';
+import { Component, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

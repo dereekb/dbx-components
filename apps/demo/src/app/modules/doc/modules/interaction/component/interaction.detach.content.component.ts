@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/dbx-web';
 

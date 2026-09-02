@@ -127,6 +127,7 @@ describe('Action Button', () => {
 
 @Component({
   template: `
+    <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -- the value is supplied from TypeScript via sourceInstance -->
     <div dbxAction>
       <button dbxButton dbxActionButtonTrigger>Trigger</button>
     </div>
@@ -141,6 +142,7 @@ class TestDbxActionButtonTriggerDirectiveComponent {
 
 @Component({
   template: `
+    <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -- the value is supplied from TypeScript via sourceInstance -->
     <div dbxAction>
       <button dbxButton dbxActionButton>Action</button>
     </div>

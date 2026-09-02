@@ -1,4 +1,4 @@
-import { InjectionToken, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { InjectionToken, Component, inject } from '@angular/core';
 import { type PrimativeKey } from '@dereekb/util';
 import { type DbxListTitleGroupData } from './list.view.value.group.title';
 import { MatIconModule } from '@angular/material/icon';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, inject } from '@angular/core';
+import { Component, type ElementRef, inject } from '@angular/core';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../../interaction/popover/abstract.popover.directive';
 import { type DbxPopoverKey } from '../../interaction/popover/popover';

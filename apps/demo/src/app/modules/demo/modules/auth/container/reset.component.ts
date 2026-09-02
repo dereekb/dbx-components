@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DbxFirebasePasswordResetComponent } from '@dereekb/dbx-firebase';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDialogDirective } from './abstract.dialog.directive';

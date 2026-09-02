@@ -1,5 +1,5 @@
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { ChangeDetectionStrategy, Component, type Signal, type TrackByFunction, computed, inject, input } from '@angular/core';
+import { Component, type Signal, type TrackByFunction, computed, inject, input } from '@angular/core';
 import { shareReplay, map, type Observable, switchMap, of } from 'rxjs';
 import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';

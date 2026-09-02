@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
+import { Component, ElementRef, inject, input, effect } from '@angular/core';
 
 import { type Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';

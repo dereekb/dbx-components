@@ -1,5 +1,5 @@
 import { DOC_LAYOUT_ROOT_ROUTE } from './../../layout/doc.layout';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DOC_ROUTER_ROOT_ROUTE } from '../doc.router';
 import { DocRouterCustomAnchorContentComponent } from '../component/anchor.content';

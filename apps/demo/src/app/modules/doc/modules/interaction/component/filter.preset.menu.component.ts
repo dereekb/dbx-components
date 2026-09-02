@@ -1,4 +1,4 @@
-import { Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit } from '@angular/core';
 import { type ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { type DbxPresetFilterMenuConfig, DbxPresetFilterMenuComponent } from '@dereekb/dbx-web';
 import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './filter';

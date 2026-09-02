@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxChipDirective, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxIconTileComponent, type DbxThemeColor } from '@dereekb/dbx-web';

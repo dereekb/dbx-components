@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxOAuthConsentComponent } from '@dereekb/dbx-firebase/oidc';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 

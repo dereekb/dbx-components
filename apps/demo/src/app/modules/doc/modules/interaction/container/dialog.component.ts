@@ -1,5 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DocInteractionExampleDialogComponent } from '../component/interaction.dialog.component';
 import { DbxContentContainerDirective, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, openIframeDialog } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

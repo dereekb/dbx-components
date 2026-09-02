@@ -1,5 +1,5 @@
 import { incrementingNumberTimer, successResult } from '@dereekb/rxjs';
-import { Component, type OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, type OnInit, inject } from '@angular/core';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';

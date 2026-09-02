@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, type Injector } from '@angular/core';
+import { Component, type ElementRef, type Injector } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxScheduleSelectionCalendarDatePopoverContentComponent } from './calendar.schedule.selection.popover.content.component';

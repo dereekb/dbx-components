@@ -1,6 +1,6 @@
 import { type AnchorForValueFunction, DbxAnchorComponent, DbxButtonComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { type OidcEntry, firestoreModelKey, oidcClientEntriesByOwnerQuery, type DocumentDataWithIdAndKey, type FirestoreQueryConstraint } from '@dereekb/firebase';
-import { ChangeDetectionStrategy, Component, inject, viewChild, type OnInit } from '@angular/core';
+import { Component, inject, viewChild, type OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { DbxFirebaseOidcEntryClientListComponent, OidcEntryCollectionStoreDirective, OidcEntryDocumentStoreDirective } from '@dereekb/dbx-firebase/oidc';
 import { DbxFirebaseCollectionListDirective, DbxFirebaseAuthService } from '@dereekb/dbx-firebase';

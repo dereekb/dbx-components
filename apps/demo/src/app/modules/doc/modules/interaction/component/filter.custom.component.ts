@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { type DocInteractionTestFilter } from './filter';
 import { DbxContentContainerDirective, DbxFilterWrapperComponent } from '@dereekb/dbx-web';

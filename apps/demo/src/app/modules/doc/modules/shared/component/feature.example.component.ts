@@ -1,5 +1,5 @@
 import { DbxSectionComponent, DbxSectionComponent as DbxSectionComponent_1 } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'doc-feature-example',

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { DynamicFormLogger, NoopLogger, type AsyncCustomValidator, type FormConfig } from '@ng-forge/dynamic-forms';

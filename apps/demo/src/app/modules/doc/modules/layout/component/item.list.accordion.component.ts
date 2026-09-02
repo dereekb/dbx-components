@@ -1,5 +1,5 @@
 import { LOREM } from '../../shared/lorem';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';

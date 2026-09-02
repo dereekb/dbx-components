@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, type Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectionStrategy, Component, type Type, type OnInit, signal } from '@angular/core';
+import { Component, type Type, type OnInit, signal } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import {
   filterPickableItemFieldValuesByLabel,

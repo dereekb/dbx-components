@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
+import { Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
 import { type ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { mergeArraysIntoArray } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';

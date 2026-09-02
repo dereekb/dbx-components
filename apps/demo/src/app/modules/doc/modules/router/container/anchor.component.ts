@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type ClickableAnchor, type ClickableAnchorLink, type ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
 import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxButtonComponent } from '@dereekb/dbx-web';

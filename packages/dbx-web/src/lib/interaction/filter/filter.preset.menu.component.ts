@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { type FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';

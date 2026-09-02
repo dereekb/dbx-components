@@ -1,5 +1,5 @@
 import { DOC_ROUTES } from './../doc';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DocFeatureCard, DocFeatureCardListComponent } from '../modules/shared/component/feature.card.list.component';
 import { DbxContentContainerDirective, DbxSectionPageComponent } from '@dereekb/dbx-web';
 

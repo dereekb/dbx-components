@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, inject, input } from '@angular/core';
+import { Component, type OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnDestroy, Component, inject } from '@angular/core';
+import { type OnDestroy, Component, inject } from '@angular/core';
 import { DbxTwoColumnRightComponent, DbxLoadingComponent, DbxSectionLayoutModule, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientTestComponent, OidcEntryDocumentStore } from '@dereekb/dbx-firebase/oidc';
 import { loadingStateContext } from '@dereekb/rxjs';

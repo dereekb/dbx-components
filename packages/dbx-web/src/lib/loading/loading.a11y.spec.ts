@@ -1,5 +1,5 @@
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxLoadingProgressComponent } from './loading-progress.component';

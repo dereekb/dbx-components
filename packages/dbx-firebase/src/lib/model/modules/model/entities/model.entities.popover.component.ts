@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, type Injector } from '@angular/core';
+import { Component, type ElementRef, type Injector } from '@angular/core';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, type DbxPopoverConfigSizing, DbxPopoverContentComponent, DbxPopoverHeaderComponent, type DbxPopoverKey, DbxPopoverScrollContentDirective, type DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesComponent } from './model.entities.component';

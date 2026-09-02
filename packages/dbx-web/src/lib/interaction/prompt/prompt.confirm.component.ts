@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { DbxPromptComponent } from './prompt.component';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';

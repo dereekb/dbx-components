@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { type ReadableErrorWithCode } from '@dereekb/util';
 

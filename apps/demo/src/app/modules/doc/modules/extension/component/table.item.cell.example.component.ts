@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxTableColumn } from '@dereekb/dbx-web/table';
 import { type ExampleTableData } from './table.item';
 

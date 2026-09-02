@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
 import { AbstractDbxSelectionListViewDirective, AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, provideDbxListView, provideDbxListViewWrapper, type DbxSelectionValueListViewConfig, type DbxValueAsListItem } from '@dereekb/dbx-web';
 import { AppFormSpaceTypeConfigService, type DocumentDataWithIdAndKey, type FormSpace, FormSpaceProcessingState, FormSpaceState } from '@dereekb/firebase';

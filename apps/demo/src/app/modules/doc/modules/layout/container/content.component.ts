@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPitDirective, DbxLabelBlockComponent, DbxContentDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

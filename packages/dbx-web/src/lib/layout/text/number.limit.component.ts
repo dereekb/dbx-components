@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective } from '../style/style.color.directive';
 import { type DbxThemeColor } from '../style/style';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
 import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapper } from '@ng-forge/dynamic-forms';
 import { type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';

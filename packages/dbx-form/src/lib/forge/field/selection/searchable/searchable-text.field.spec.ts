@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 import type { DbxForgeSearchableTextFieldConfig, DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 import { dbxForgeSearchableTextField } from './searchable-text.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';

@@ -1,6 +1,6 @@
 import { DOC_EXTENSION_ROUTES } from '../doc.extension';
 import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
 
 @Component({

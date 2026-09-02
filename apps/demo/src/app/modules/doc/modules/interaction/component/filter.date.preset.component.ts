@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
 import { type DocInteractionTestFilter, DOC_INTERACTION_DATE_TEST_PRESETS } from './filter';
 import { isSameDateDayRange } from '@dereekb/date';

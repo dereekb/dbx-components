@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type TrackByFunction, inject, computed, input, type Signal, viewChild, ElementRef } from '@angular/core';
+import { Component, type TrackByFunction, inject, computed, input, type Signal, viewChild, ElementRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
 import { type LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';

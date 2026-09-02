@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithKeyAndStore, type DbxFirebaseModelEntityWithStore } from './model.entities';
 import { MatAccordion } from '@angular/material/expansion';
 import { DbxButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';

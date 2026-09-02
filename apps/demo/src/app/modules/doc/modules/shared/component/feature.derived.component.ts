@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
 

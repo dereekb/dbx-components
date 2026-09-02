@@ -1,4 +1,4 @@
-import { Component, type ElementRef, type OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type ElementRef, type OnInit } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatButton } from '@angular/material/button';

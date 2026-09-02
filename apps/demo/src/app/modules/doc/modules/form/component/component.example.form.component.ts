@@ -1,5 +1,5 @@
 import { LOREM } from './../../shared/lorem';
-import { type Type, InjectionToken, inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type Type, InjectionToken, inject, Component } from '@angular/core';
 import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 

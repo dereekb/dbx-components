@@ -1,4 +1,4 @@
-import { Component, type Type, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type Type, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { type Maybe, type PixelsString } from '@dereekb/util';
 import { CompactContextStore } from '../../layout/compact/compact.store';

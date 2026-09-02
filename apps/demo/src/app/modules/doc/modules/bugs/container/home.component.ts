@@ -1,6 +1,6 @@
 import { DOC_BUGS_ROUTES } from '../doc.bugs';
 import { type DocFeatureCard, DocFeatureCardListComponent } from '../../shared/component/feature.card.list.component';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   templateUrl: './home.component.html',

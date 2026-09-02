@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule } from '@dereekb/dbx-web';
 import { type DocValue } from './item.list';
 import { MatListModule } from '@angular/material/list';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingModule, DbxLoadingProgressComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { readableError, type ReadableError } from '@dereekb/util';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxInjectionArrayComponent } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 import { toSignal } from '@angular/core/rxjs-interop';

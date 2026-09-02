@@ -1,5 +1,5 @@
 import { DbxPopupController } from './popup';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopupCoordinatorService } from './popup.coordinator.service';
 import { delay, map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';

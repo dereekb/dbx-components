@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent } from '@dereekb/dbx-web';

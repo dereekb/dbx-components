@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ServerError, type ServerErrorResponseData } from '@dereekb/util';
 import { AbstractDbxErrorWidgetComponent } from './error.widget.directive';
 import { DbxLabelBlockComponent } from '../layout/text/label.block.component';

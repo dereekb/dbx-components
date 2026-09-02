@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { type Maybe, randomNumber, readableError, type ReadableError, serverError } from '@dereekb/util';
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';

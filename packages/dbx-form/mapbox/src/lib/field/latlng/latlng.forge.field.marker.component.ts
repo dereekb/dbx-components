@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { shareReplay, map, type Observable, combineLatest } from 'rxjs';
 import { type DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
 import { DbxForgeMapboxLatLngFieldComponent } from './latlng.forge.field.component';

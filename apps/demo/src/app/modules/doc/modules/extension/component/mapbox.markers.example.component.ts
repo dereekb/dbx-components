@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { dbxMapboxColoredDotStyle, type DbxMapboxMarkerFactory, DbxMapboxMarkersComponent } from '@dereekb/dbx-web/mapbox';
 import { type Maybe, type LatLngTuple } from '@dereekb/util';
 

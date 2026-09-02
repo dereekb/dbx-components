@@ -1,4 +1,4 @@
-import { Component, type ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type ElementRef } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatFormFieldModule } from '@angular/material/form-field';

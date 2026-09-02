@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, type AfterViewInit, ElementRef } from '@angular/core';
+import { Component, inject, type AfterViewInit, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxDetachController } from './detach';
 import { CompactContextStore, CompactMode } from '../../layout/compact';

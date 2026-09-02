@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type DbxMapboxMarker, type DbxMapboxMarkerFactory } from './mapbox.marker';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 

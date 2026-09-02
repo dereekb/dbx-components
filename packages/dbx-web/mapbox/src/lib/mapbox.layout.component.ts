@@ -1,5 +1,5 @@
 import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, type Observable, delay } from 'rxjs';
-import { Component, ElementRef, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
+import { Component, ElementRef, type OnInit, inject, signal, computed, input, output, viewChild, type Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { DbxMapboxService } from './mapbox.service';

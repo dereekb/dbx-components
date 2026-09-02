@@ -1,5 +1,5 @@
 import { type ClickableAnchorLinkSegueRef, type ClickableAnchorLink, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { type Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, type DbxFirebaseModelEntitiesPopoverButtonConfig } from '@dereekb/dbx-firebase';

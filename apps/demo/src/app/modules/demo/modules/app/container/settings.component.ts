@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { JsonPipe } from '@angular/common';

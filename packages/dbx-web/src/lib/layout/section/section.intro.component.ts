@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { MatButtonModule } from '@angular/material/button';
 

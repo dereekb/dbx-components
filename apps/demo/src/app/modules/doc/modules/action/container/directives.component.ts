@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';

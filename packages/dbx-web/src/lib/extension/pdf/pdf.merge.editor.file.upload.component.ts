@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
+import { Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';

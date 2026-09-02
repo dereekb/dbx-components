@@ -1,6 +1,6 @@
 import { type DbxActionContextStoreSourceInstance, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { type ComponentFixture, TestBed, waitForAsync, fakeAsync, tick, flush } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, viewChild, signal } from '@angular/core';
+import { Component, viewChild, signal } from '@angular/core';
 import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from './action.confirm.directive';
 import { DbxButtonComponent } from '../button/button.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';

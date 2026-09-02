@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
 import { type WorkUsingObservable, type IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';

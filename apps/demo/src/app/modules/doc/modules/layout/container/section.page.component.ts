@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { LOREM } from '../../shared';
 import { DbxButtonComponent, DbxSectionPageComponent } from '@dereekb/dbx-web';
 

@@ -1,4 +1,4 @@
-import { Component, type OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, type OnInit, inject, input, output } from '@angular/core';
 import { type CalendarEvent, type CalendarMonthViewBeforeRenderEvent, type CalendarMonthViewDay, CalendarMonthViewComponent, CalendarDatePipe } from 'angular-calendar';
 import { map, shareReplay, type Subject, first, throttleTime, distinctUntilChanged, type Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { type DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';

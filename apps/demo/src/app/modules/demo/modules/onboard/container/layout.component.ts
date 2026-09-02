@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentPageDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { UIView } from '@uirouter/angular';

@@ -1,5 +1,5 @@
 import { switchMap, shareReplay, map, of } from 'rxjs';
-import { Component, input, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 import { DbxSidenavComponent } from './sidenav.component';
 import { type Maybe } from '@dereekb/util';
 import { SideNavDisplayMode } from './sidenav';

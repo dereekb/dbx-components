@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
 

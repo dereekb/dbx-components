@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from 'date-fns';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarScheduleSelectionStore, type DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { type DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';

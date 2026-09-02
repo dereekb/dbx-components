@@ -4,7 +4,7 @@ import { type DateCellScheduleDateFilterConfig, dateCellTiming, type DateRange }
 import { BehaviorSubject } from 'rxjs';
 import { type Maybe, type TimezoneString, waitForMs } from '@dereekb/util';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';

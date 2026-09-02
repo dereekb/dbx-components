@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type Injector, computed, inject } from '@angular/core';
+import { Component, type Injector, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { type ThemePalette } from '@angular/material/core';

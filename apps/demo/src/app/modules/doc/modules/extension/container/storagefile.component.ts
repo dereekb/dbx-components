@@ -1,5 +1,5 @@
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DbxFirebaseStorageService, storageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';

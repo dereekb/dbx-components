@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxFirebaseOAuthLoginComponent } from '@dereekb/dbx-firebase/oidc';
 import { DbxFirebaseLoginComponent } from '@dereekb/dbx-firebase';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';

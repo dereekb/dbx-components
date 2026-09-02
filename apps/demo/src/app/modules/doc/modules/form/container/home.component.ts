@@ -1,6 +1,6 @@
 import { DOC_FORM_ROUTES } from '../doc.form';
 import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   templateUrl: './home.component.html',

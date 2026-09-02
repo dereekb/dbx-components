@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, inject } from '@angular/core';
+import { Component, type OnDestroy, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseFormSpaceModule, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
 import { DbxActionModule, DbxButtonModule, DbxContentContainerDirective, DbxErrorComponent, DbxLoadingComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';

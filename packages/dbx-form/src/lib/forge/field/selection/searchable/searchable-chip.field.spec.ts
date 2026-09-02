@@ -7,7 +7,7 @@ import { firstValueFrom, first, of, timeout } from 'rxjs';
 import type { DbxForgeSearchableChipFieldConfig, DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
 import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, signal } from '@angular/core';
+import { Component, type ElementRef, signal } from '@angular/core';
 import { type Milliseconds, type TimeUnit, TIME_UNIT_SHORT_LABEL_MAP, timeUnitToMilliseconds } from '@dereekb/util';
 import { type TimeDurationData, durationDataToMilliseconds, getDurationDataValue, millisecondsToDurationData, setDurationDataValue } from '@dereekb/date';
 import { AbstractPopoverDirective, type DbxPopoverService } from '@dereekb/dbx-web';

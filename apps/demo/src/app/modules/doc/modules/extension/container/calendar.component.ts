@@ -1,4 +1,4 @@
-import { type OnInit, Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { type OnInit, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';

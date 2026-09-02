@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
 import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';

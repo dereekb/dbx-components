@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { MatCardModule } from '@angular/material/card';

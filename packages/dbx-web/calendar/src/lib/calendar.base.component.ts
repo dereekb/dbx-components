@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
 import { map, withLatestFrom } from 'rxjs';

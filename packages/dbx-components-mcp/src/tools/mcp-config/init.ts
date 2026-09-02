@@ -305,7 +305,7 @@ interface DefaultOutInput {
 
 function defaultOutFor(input: DefaultOutInput): string {
   const targetAbs = resolve(input.snapshot.workspaceRoot, '.tmp/dbx-mcp', `${input.slug}.${clusterFilenameSegment(input.cluster)}.json`);
-  return relative(dirname(input.scanConfigPath), targetAbs).split('\\').join('/');
+  return relative(dirname(input.scanConfigPath), targetAbs).replaceAll('\\', '/');
 }
 
 function resolveScanOut(scanConfigPath: string, out: string): string {
@@ -314,13 +314,13 @@ function resolveScanOut(scanConfigPath: string, out: string): string {
 
 function relativeFromConfig(snapshot: WorkspaceSnapshot, absolute: string): string {
   const configDir = snapshot.configPath === null ? snapshot.workspaceRoot : dirname(snapshot.configPath);
-  return relative(configDir, absolute).split('\\').join('/');
+  return relative(configDir, absolute).replaceAll('\\', '/');
 }
 
 function workspaceRel(workspaceRoot: string, absolute: string): string {
   const rel = relative(workspaceRoot, absolute);
   if (rel.length === 0) return '.';
-  return rel.split('\\').join('/');
+  return rel.replaceAll('\\', '/');
 }
 
 function serializeJson(value: unknown): string {

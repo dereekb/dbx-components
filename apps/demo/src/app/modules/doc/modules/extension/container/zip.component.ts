@@ -1,5 +1,5 @@
 import { DbxContentContainerDirective, DbxContentLayoutModule, DbxZipPreviewComponent } from '@dereekb/dbx-web';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 

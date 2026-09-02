@@ -1,5 +1,5 @@
 import { DbxButtonComponent, DbxContentContainerDirective, DbxContentLayoutModule, DbxWebFilePreviewComponent, type DbxWebFilePreviewComponentConfig, DbxWebFilePreviewService } from '@dereekb/dbx-web';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxListEmptyContentComponent } from '../../../layout';
 import { DbxDownloadBlobButtonComponent } from '../blob/download.blob.button.component';

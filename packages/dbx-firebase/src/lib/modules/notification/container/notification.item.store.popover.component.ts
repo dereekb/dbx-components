@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef } from '@angular/core';
+import { Component, type ElementRef } from '@angular/core';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, type AnchorForValueFunction, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxPopoverInteractionModule, type DbxPopoverKey, type DbxPopoverService } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';

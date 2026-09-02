@@ -1,7 +1,7 @@
 import { type DbxInjectionTemplateConfig, type DbxInjectionComponentConfig } from './injection';
 import { DbxInjectionComponent } from './injection.component';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, type Type, viewChild, type OnDestroy, ChangeDetectionStrategy, model } from '@angular/core';
+import { Component, type Type, viewChild, type OnDestroy, model } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { type Maybe } from '@dereekb/util';
 

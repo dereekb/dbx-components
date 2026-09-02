@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { DbxFlagComponent } from './flag.component';
 import { type Maybe } from '@dereekb/util';

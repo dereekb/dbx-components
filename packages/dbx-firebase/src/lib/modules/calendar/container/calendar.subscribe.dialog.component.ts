@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxDialogModule } from '@dereekb/dbx-web';

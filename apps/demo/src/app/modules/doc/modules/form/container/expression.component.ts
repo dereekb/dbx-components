@@ -1,5 +1,5 @@
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ValueSelectionOption, dbxForgeToggleField, dbxForgeNameField, dbxForgeTextField, dbxForgeTextAreaField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';

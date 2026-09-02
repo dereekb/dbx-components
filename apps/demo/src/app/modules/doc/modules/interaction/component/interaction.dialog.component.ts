@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDialogDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 

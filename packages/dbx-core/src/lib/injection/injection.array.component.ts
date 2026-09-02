@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type DbxInjectionArrayEntry } from './injection.array';
 import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent } from './injection.component';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type DbxColorInput } from '@dereekb/dbx-web';
 import { type FormSpaceFileSlot, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker } from '@dereekb/firebase';

@@ -1,5 +1,5 @@
 import { type DocInteractionTestFilter } from './filter';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractSyncForgeFormDirective, dbxForgeDateTimeField, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeTextField } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 
