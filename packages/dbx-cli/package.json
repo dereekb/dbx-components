@@ -65,18 +65,18 @@
     "@dereekb/model": "13.43.0",
     "@dereekb/nestjs": "13.43.0",
     "@dereekb/util": "13.43.0",
-    "@nestjs/common": "^11.1.19",
+    "@nestjs/common": "^12.0.1",
     "arktype": "^2.2.0",
-    "firebase": "^12.12.1",
-    "jiti": "2.6.1",
-    "prettier": "3.8.3",
-    "ts-morph": "^21.0.0",
-    "vitest": "4.1.5",
+    "firebase": "^12.18.0",
+    "jiti": "2.7.0",
+    "prettier": "3.9.6",
+    "ts-morph": "^28.0.0",
+    "vitest": "4.1.11",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@angular/core": "22.1.4",
     "@types/yargs": "^17.0.35",
-    "eslint": "10.4.0"
+    "eslint": "10.9.1"
   }
 }

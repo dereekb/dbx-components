@@ -22,7 +22,7 @@
           "optional": false
         }
       ],
-      "returns": "A factory function that produces a clamped {@link DateCellRangeWithRange } from optional start/end input.",
+      "returns": "A factory function that produces a clamped {@link DateCellRangeWithRange} from optional start/end input.",
       "tags": [
         "date",
         "cell",
@@ -55,7 +55,7 @@
         {
           "name": "config",
           "type": "DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig",
-          "description": "- A {@link DateCellTiming } or full factory configuration.",
+          "description": "- A {@link DateCellTiming} or full factory configuration.",
           "optional": false
         },
         {
@@ -65,7 +65,7 @@
           "optional": true
         }
       ],
-      "returns": "A clamped {@link DateCellRangeWithRange } derived from the timing and input.",
+      "returns": "A clamped {@link DateCellRangeWithRange} derived from the timing and input.",
       "tags": [
         "date",
         "cell",
@@ -104,7 +104,7 @@
           "optional": true
         }
       ],
-      "returns": "A {@link DateCellRangeWithRange } covering only the completed day indexes.",
+      "returns": "A {@link DateCellRangeWithRange} covering only the completed day indexes.",
       "tags": [
         "date",
         "cell",
@@ -177,7 +177,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link DateCellIndexRange } with exclusive `maxIndex`.",
+      "returns": "A {@link DateCellIndexRange} with exclusive `maxIndex`.",
       "tags": [
         "date",
         "cell",
@@ -212,7 +212,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link DateCellRangeWithRange } with inclusive `to`.",
+      "returns": "A {@link DateCellRangeWithRange} with inclusive `to`.",
       "tags": [
         "date",
         "cell",
@@ -259,7 +259,7 @@
           "optional": true
         }
       ],
-      "returns": "A {@link DateCellIndexRange } representing the computed index bounds.",
+      "returns": "A {@link DateCellIndexRange} representing the computed index bounds.",
       "tags": [
         "date",
         "cell",
@@ -365,7 +365,7 @@
           "optional": false
         }
       ],
-      "returns": "A factory function that expands date cell blocks into {@link DateCellDurationSpan } arrays.",
+      "returns": "A factory function that expands date cell blocks into {@link DateCellDurationSpan} arrays.",
       "tags": [
         "date",
         "cell",
@@ -401,7 +401,7 @@
           "optional": false
         }
       ],
-      "returns": "A factory that computes {@link DateCellDayTimingInfo } for any date or day index.",
+      "returns": "A factory that computes {@link DateCellDayTimingInfo} for any date or day index.",
       "tags": [
         "date",
         "cell",
@@ -438,7 +438,7 @@
           "optional": false
         }
       ],
-      "returns": "True if the input is a {@link DateCellTimingRelativeIndexFactory }.",
+      "returns": "True if the input is a {@link DateCellTimingRelativeIndexFactory}.",
       "tags": [
         "date",
         "cell",
@@ -810,7 +810,7 @@
           "optional": false
         }
       ],
-      "returns": "A new {@link FullDateCellTiming } with the requested aspects replaced.",
+      "returns": "A new {@link FullDateCellTiming} with the requested aspects replaced.",
       "tags": [
         "date",
         "cell",
