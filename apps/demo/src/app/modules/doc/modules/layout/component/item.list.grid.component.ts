@@ -40,8 +40,7 @@ export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirecti
       <h5 class="no-margin dbx-p0">{{ name }}</h5>
       <div>{{ lorem }}</div>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocItemListGridViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

@@ -54,8 +54,7 @@ export class DocTwoColumnSrefListViewComponent extends AbstractDbxSelectionListV
         <span>{{ title }}</span>
       </div>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocTwoColumnSrefListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoColumnSrefValue> {
   get title() {

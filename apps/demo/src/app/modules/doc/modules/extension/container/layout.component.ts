@@ -5,8 +5,7 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [DbxContentContainerDirective, DbxSectionPageComponent, DbxNavbarComponent, UIView, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxSectionPageComponent, DbxNavbarComponent, UIView, DbxWebPageTitleInfoDirective]
 })
 export class DocExtensionLayoutComponent {
   readonly navAnchors: ClickableAnchorLinkSegueRef[] = [

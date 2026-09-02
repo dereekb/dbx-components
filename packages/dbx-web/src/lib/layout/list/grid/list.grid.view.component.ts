@@ -142,8 +142,7 @@ export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueL
   host: {
     class: 'dbx-list-grid-view'
   },
-  imports: [DbxValueListGridViewContentGroupComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListGridViewContentGroupComponent]
 })
 export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   private readonly _gridSizeOverride = inject(DbxValueListGridSizeDirective, { optional: true });
@@ -180,7 +179,6 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
   template: `
     <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config().grid" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? true"></dbx-list-grid-view-content>
   `,
-  imports: [DbxValueListGridViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListGridViewContentComponent]
 })
 export class DbxValueListGridViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListGridViewConfig<T, I, V> = DbxValueListGridViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {}

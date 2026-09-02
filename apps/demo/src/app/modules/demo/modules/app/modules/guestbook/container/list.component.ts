@@ -10,8 +10,7 @@ import { type DocumentDataWithIdAndKey } from '@dereekb/firebase';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [UIView, DbxTwoColumnLayoutModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, DemoGuestbookDocumentStoreDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective, DbxListItemAnchorModifierDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxTwoColumnLayoutModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, DemoGuestbookDocumentStoreDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective, DbxListItemAnchorModifierDirective]
 })
 export class DemoGuestbookListPageComponent implements OnInit {
   readonly demoAppRouterService = inject(DemoAppRouterService);

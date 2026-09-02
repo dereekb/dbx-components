@@ -370,8 +370,7 @@ describe('inputValue$ non-string coercion', () => {
     <dbx-forge></dbx-forge>
   `,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class SearchableTextTestHostComponent {
   readonly context = inject(DbxForgeFormContext);

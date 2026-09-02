@@ -21,8 +21,7 @@ import { type DbxWebPageTitleDetails, type DbxWebPageTitleInfoConfig } from './t
       </div>
     }
   `,
-  imports: [DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWebPageTitleInfoDirective]
 })
 class TestHostComponent {
   readonly showRoot = signal(true);

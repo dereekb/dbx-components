@@ -78,8 +78,7 @@ class MockDbxListView extends DbxListView<TestItem> {
   template: `
     <dbx-list-view-content [items]="items()"></dbx-list-view-content>
   `,
-  imports: [DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListViewContentComponent]
 })
 class TestListHostComponent {
   readonly items = input<Maybe<DbxValueListItemConfig<TestItem>[]>>();
@@ -91,8 +90,7 @@ class TestListHostComponent {
   template: `
     <dbx-list-view-content [dbxListTitleGroup]="groupDelegate()" [items]="items()"></dbx-list-view-content>
   `,
-  imports: [DbxValueListViewContentComponent, DbxListTitleGroupDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListViewContentComponent, DbxListTitleGroupDirective]
 })
 class TestGroupedListHostComponent {
   readonly items = input<Maybe<DbxValueListItemConfig<TestItem>[]>>();

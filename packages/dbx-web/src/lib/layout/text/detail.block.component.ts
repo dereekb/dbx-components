@@ -37,8 +37,7 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
     class: 'dbx-detail-block d-block',
     '[class.dbx-detail-block-big-header]': 'bigHeader()'
   },
-  imports: [DbxDetailBlockHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDetailBlockHeaderComponent]
 })
 export class DbxDetailBlockComponent {
   readonly icon = input<Maybe<string>>();

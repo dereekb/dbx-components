@@ -7,8 +7,7 @@ import { DbxPresetFilterListComponent } from '@dereekb/dbx-web';
   selector: 'doc-interaction-test-filter-preset-filter',
   template: '<dbx-preset-filter-list [presets]="presets"></dbx-preset-filter-list>',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPresetFilterComponent)],
-  imports: [DbxPresetFilterListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPresetFilterListComponent]
 })
 export class DocInteractionTestFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
   readonly presets = DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS;

@@ -17,8 +17,7 @@ import { DbxContentBoxDirective, DbxButtonComponent, DbxErrorComponent, DbxActio
     </dbx-content-box>
   `,
   providers: [ProfileDocumentStore],
-  imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoOnboardUserComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

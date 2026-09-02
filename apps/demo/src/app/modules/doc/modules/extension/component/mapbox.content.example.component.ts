@@ -13,8 +13,7 @@ export interface DocExtensionMapboxContentExampleData {}
       </dbx-content-border>
     </div>
   `,
-  imports: [DbxContentBorderDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBorderDirective]
 })
 export class DocExtensionMapboxContentExampleComponent {
   readonly data? = inject<DocExtensionMapboxContentExampleData>(DBX_INJECTION_COMPONENT_DATA, { optional: true });

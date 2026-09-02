@@ -6,8 +6,7 @@ import { UISref } from '@uirouter/angular';
 
 @Component({
   templateUrl: './authorize.component.html',
-  imports: [DbxLoadingComponent, MatButton, UISref],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLoadingComponent, MatButton, UISref]
 })
 export class DemoAuthAuthorizeComponent {
   readonly context = new SimpleLoadingContext(true);

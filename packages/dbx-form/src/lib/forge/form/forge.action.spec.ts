@@ -23,8 +23,7 @@ import { dbxForgeTextField } from '../field/value/text/text.field';
     </div>
   `,
   imports: [DbxForgeFormComponent, DbxActionFormDirective, DbxFormSourceDirective, DbxCoreActionModule, DbxActionHandlerDirective],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestForgeActionHostComponent {
   readonly context = inject(DbxForgeFormContext);

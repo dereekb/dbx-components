@@ -12,8 +12,7 @@ export interface DocExtensionWidgetIconExampleData {
 @Component({
   templateUrl: './widget.icon.example.component.html',
   styleUrls: ['./widget.icon.example.scss'],
-  imports: [MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIcon]
 })
 export class DocExtensionWidgetIconExampleComponent extends AbstractDbxWidgetComponent<DocExtensionWidgetIconExampleData> {
   get icon() {

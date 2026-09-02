@@ -9,8 +9,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './component.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DbxBarDirective, MatButton, DbxButtonSpacerDirective, DbxSpacerDirective, DocForgeExampleComponentFormComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DbxBarDirective, MatButton, DbxButtonSpacerDirective, DbxSpacerDirective, DocForgeExampleComponentFormComponent]
 })
 export class DocFormComponentComponent {
   config: DocFormExampleComponentFormConfig = {

@@ -6,8 +6,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent, MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent, MatButton]
 })
 export class DemoHomeComponent {
   readonly _demoSystemStateAccessor: DemoSystemStateAccessor = inject(DemoSystemStateAccessor);

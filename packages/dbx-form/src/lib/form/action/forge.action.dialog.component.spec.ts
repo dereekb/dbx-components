@@ -39,8 +39,7 @@ const TEST_PROVIDERS = [provideNoopAnimations(), provideDbxForgeFormFieldDeclara
 @Component({
   template: `
     <div></div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 class DialogTestHostComponent {
   readonly matDialog = inject(MatDialog);

@@ -4,7 +4,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'doc-feature-example',
   templateUrl: './feature.example.component.html',
-  imports: [DbxSectionComponent_1],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionComponent_1]
 })
 export class DocFeatureExampleComponent extends DbxSectionComponent {}

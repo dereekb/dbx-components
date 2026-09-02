@@ -56,8 +56,7 @@ function filesChangedEvent(file: File): DbxFileUploadFilesChangedEvent {
       <dbx-pdf-merge-editor-file-upload slotId="license" [config]="slotConfig()"></dbx-pdf-merge-editor-file-upload>
     </div>
   `,
-  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent]
 })
 class TestHostComponent {
   readonly slotConfig = signal<Maybe<DbxPdfMergeEditorFileUploadConfig>>(undefined);

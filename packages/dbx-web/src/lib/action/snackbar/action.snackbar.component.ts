@@ -20,8 +20,7 @@ import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
  */
 @Component({
   templateUrl: './action.snackbar.component.html',
-  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective]
 })
 export class DbxActionSnackbarComponent implements AfterViewInit {
   readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);

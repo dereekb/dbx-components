@@ -5,8 +5,7 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxSectionComponent, DocFeatureCardListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionComponent, DocFeatureCardListComponent]
 })
 export class DocActionHomeComponent {
   cards: DocFeatureCard[] = DOC_ACTION_ROUTES.map((anchor) => ({

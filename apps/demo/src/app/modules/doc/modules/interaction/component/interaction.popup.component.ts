@@ -17,8 +17,7 @@ export interface DocInteractionPopupConfig {
       <doc-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></doc-interaction-example-popup-content>
     </dbx-popup-content>
   `,
-  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent]
 })
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> {
   private readonly popupService = inject(DbxPopupService);

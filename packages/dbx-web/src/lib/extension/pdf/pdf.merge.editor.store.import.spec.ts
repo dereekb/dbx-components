@@ -231,8 +231,7 @@ describe('DbxPdfMergeEditorStore.addFileToSlot()', () => {
   template: `
     <div dbxPdfMergeEditorStore [source]="source()" [sourceConfig]="sourceConfig()"></div>
   `,
-  imports: [DbxPdfMergeEditorStoreDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective]
 })
 class SourceHostComponent {
   readonly source = signal<Maybe<Blob>>(undefined);

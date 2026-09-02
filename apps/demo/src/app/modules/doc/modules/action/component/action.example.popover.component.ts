@@ -25,8 +25,7 @@ export interface DocInteractionPopoverConfig {
       </dbx-content-container>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 export class DocActionExamplePopoverComponent extends AbstractPopoverDirective<DocActionFormExampleValue> {
   static openPopover(popoverService: DbxPopoverService, { origin }: DocInteractionPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, DocActionFormExampleValue> {

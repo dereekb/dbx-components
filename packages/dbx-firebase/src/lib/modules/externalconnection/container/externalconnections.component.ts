@@ -44,8 +44,7 @@ import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalco
     class: 'd-block dbx-firebase-external-connections'
   },
   imports: [DbxErrorComponent, DbxFirebaseExternalConnectionListComponent, DbxListEmptyContentComponent],
-  providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore]
 })
 export class DbxFirebaseExternalConnectionsComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

@@ -29,8 +29,7 @@ const _disabled$ = new BehaviorSubject(false);
   selector: 'doc-feature-form-tabs',
   templateUrl: './feature.formtabs.component.html',
   styleUrls: ['./feature.formtabs.component.scss'],
-  imports: [MatSlideToggle, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatSlideToggle, DbxSpacerDirective]
 })
 export class DocFeatureFormTabsComponent {
   private readonly _breakpointObserver = inject(BreakpointObserver);

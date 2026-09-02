@@ -47,8 +47,7 @@ import { DbxActionConfirmConfig } from '@dereekb/dbx-web';
         </dbx-button>
       </dbx-bar>
     </dbx-card-box>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class DangerZoneComponent {
   readonly deleteAccountAction = /* DbxActionContextStoreSourceInstance<...> */ null;

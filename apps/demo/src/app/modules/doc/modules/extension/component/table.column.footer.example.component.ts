@@ -9,8 +9,7 @@ import { DatePipe } from '@angular/common';
       <div class="dbx-small dbx-hint">{{ column.meta | date: 'MMM d, y' }}</div>
     </div>
   `,
-  imports: [DatePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DatePipe]
 })
 export class DocExtensionTableColumnFooterExampleComponent {
   column!: DbxTableColumn<Date>;

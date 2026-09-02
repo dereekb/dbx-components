@@ -7,8 +7,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './section.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSectionComponent, DbxButtonComponent, MatButton, DbxSubSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSectionComponent, DbxButtonComponent, MatButton, DbxSubSectionComponent]
 })
 export class DocLayoutSectionComponent {
   lorem = LOREM;

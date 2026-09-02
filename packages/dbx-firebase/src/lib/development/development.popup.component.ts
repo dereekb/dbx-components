@@ -12,8 +12,7 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY = 'devpopup';
       <dbx-firebase-development-popup-content (shouldClose)="closePopup()"></dbx-firebase-development-popup-content>
     </dbx-popup-content>
   `,
-  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxFirebaseDevelopmentPopupContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxFirebaseDevelopmentPopupContentComponent]
 })
 export class DbxFirebaseDevelopmentPopupComponent extends AbstractPopupDirective {
   private readonly popupService = inject(DbxPopupService);

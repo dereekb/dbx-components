@@ -22,8 +22,7 @@ import { type WorkInstance } from '@dereekb/rxjs';
   selector: 'dbx-filter-wrapper',
   templateUrl: './filter.wrapper.component.html',
   providers: [provideActionStoreSource(null)],
-  imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule]
 })
 export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);

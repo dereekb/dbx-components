@@ -51,8 +51,7 @@ export interface TestCalendarEventData extends DateCell {
     DatePipe,
     DocFeatureFormTabsComponent,
     DocFormForgeExampleComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);

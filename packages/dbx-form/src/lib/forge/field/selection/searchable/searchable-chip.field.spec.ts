@@ -416,8 +416,7 @@ describe('dbxForgeSearchableStringChipField()', () => {
     <dbx-forge></dbx-forge>
   `,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class SearchableChipTestHostComponent {
   readonly context = inject(DbxForgeFormContext);

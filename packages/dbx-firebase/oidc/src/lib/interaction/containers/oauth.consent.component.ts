@@ -57,8 +57,7 @@ export interface DbxOAuthConsentComponentConfig {
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxOAuthConsentComponent implements OnDestroy {
   private readonly dbxRouterService = inject(DbxRouterService);

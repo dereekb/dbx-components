@@ -35,8 +35,7 @@ import { map, shareReplay } from 'rxjs';
     DbxFirebaseFormSpaceModule,
     DemoTestFormSpaceFormComponent,
     TimeDistancePipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoFormSpaceListPageRightComponent implements OnDestroy {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

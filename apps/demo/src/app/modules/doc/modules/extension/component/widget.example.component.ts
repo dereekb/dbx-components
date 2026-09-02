@@ -12,8 +12,7 @@ export interface DocExtensionWidgetExampleData {
 
 @Component({
   templateUrl: './widget.example.component.html',
-  imports: [MatIcon, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIcon, JsonPipe]
 })
 export class DocExtensionWidgetExampleComponent extends AbstractDbxWidgetComponent<DocExtensionWidgetExampleData> {
   readonly type = DOC_EXTENSION_WIDGET_EXAMPLE_TYPE;

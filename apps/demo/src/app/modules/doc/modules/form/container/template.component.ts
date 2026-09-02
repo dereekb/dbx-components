@@ -10,8 +10,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 
 @Component({
   templateUrl: './template.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent]
 })
 export class DocFormTemplateComponent {
   readonly forgeUsernamePasswordLoginConfig: FormConfig = {

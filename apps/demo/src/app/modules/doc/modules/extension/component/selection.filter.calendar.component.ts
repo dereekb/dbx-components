@@ -47,8 +47,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
     </dbx-content-border>
   `,
   providers: [DbxCalendarScheduleSelectionStore],
-  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

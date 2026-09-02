@@ -51,8 +51,7 @@ import { MatInputModule } from '@angular/material/input';
         <dbx-button text="Cancel" stroked (btnClick)="cancel()"></dbx-button>
       </dbx-bar>
     </dbx-section>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class AccountSettingsComponent {
   private readonly fb = inject(FormBuilder);

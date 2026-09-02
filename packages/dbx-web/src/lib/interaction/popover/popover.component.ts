@@ -104,8 +104,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   host: {
     '[class]': 'config.panelClass'
   },
-  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent]
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
   private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);

@@ -12,7 +12,6 @@ import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
     </div>
   `,
   styleUrls: ['./table.item.action.example.scss'],
-  imports: [MatIconButton, MatIcon, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconButton, MatIcon, DbxButtonSpacerDirective]
 })
 export class DocExtensionTableItemActionExampleComponent {}

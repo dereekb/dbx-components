@@ -64,7 +64,6 @@ export class DbxWidgetListGridViewComponent extends AbstractDbxListGridViewDirec
   template: `
     <dbx-widget-view [config]="itemValue"></dbx-widget-view>
   `,
-  imports: [DbxWidgetViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWidgetViewComponent]
 })
 export class DbxWidgetListGridViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxWidgetDataPair> {}

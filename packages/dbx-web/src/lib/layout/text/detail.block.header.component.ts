@@ -40,8 +40,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'dbx-detail-block-header',
     '[class]': '{ "dbx-detail-block-header-no-icon": !icon(), "dbx-detail-block-header-align": alignHeader() }'
   },
-  imports: [MatIconModule, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, NgTemplateOutlet]
 })
 export class DbxDetailBlockHeaderComponent {
   readonly icon = input<Maybe<string>>();

@@ -5,8 +5,7 @@ import { DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@d
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DocFeatureCardListComponent, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DocFeatureCardListComponent, DbxWebPageTitleInfoDirective]
 })
 export class DocExtensionHomeComponent {
   cards: DocFeatureCard[] = DOC_EXTENSION_ROUTES.map((anchor) => ({

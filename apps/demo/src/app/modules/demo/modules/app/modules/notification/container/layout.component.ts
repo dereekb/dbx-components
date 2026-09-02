@@ -10,8 +10,7 @@ import { UIView } from '@uirouter/angular';
 @Component({
   templateUrl: './layout.component.html',
   providers: [DbxFirebaseNotificationItemStore],
-  imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DemoProfileDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationSummaryDocumentStoreDirective, DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxSectionPageComponent, DbxSpacerDirective, DbxFirebaseNotificationItemStorePopoverButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DemoProfileDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationSummaryDocumentStoreDirective, DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxSectionPageComponent, DbxSpacerDirective, DbxFirebaseNotificationItemStorePopoverButtonComponent]
 })
 export class DemoNotificationLayoutComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

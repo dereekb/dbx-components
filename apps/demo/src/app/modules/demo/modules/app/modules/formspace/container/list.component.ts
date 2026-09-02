@@ -61,8 +61,7 @@ export const DEMO_FORM_SPACE_LIST_GROUP_ORDER: Record<DemoFormSpaceListGroup, nu
     DbxTwoColumnLayoutModule,
     DbxRouteModelIdDirective,
     DbxFirebaseFormSpaceModule
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoFormSpaceListPageComponent {
   readonly auth = inject(DbxFirebaseAuthService);

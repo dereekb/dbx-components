@@ -48,8 +48,7 @@ const APPLICATION_SELECTED_INDEXES: number[] = [0, 1, 4, 5, 6, 7, 8, 11, 12, 13,
         outline-offset: -2px;
       }
     `
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocBugsCalendarComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

@@ -60,8 +60,7 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
     DbxListTitleGroupDirective,
     DbxListEmptyContentComponent,
     JsonPipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocLayoutListComponent implements OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

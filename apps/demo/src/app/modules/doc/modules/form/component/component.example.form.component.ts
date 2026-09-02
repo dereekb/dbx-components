@@ -22,8 +22,7 @@ export interface DocFormExampleComponentFormConfig {
       </dbx-content-box>
     </div>
   `,
-  imports: [DbxContentBoxDirective, DbxSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxSectionComponent]
 })
 export class DocFormExampleComponentFormTestViewAComponent {
   lorem = LOREM;
@@ -42,7 +41,6 @@ export class DocFormExampleComponentFormTestViewAComponent {
       </p>
     </div>
   `,
-  imports: [DbxLinkComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLinkComponent]
 })
 export class DocFormExampleComponentFormTestViewBComponent {}

@@ -25,8 +25,7 @@ import { type DbxForgeDateTimeRangeRowConfig, dbxForgeDateTimeRangeRow } from '.
     }
   `,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestForgeDateTimeHostComponent {
   config!: FormConfig;

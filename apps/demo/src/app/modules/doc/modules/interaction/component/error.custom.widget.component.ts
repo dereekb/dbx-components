@@ -10,8 +10,7 @@ export const CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE = 'CUSTOM_ERROR_WIDGET_TEST_ERR
     <p class="mat-header">Custom widget content</p>
     <div class="dbx-json">Error Data: {{ data | json }}</div>
   `,
-  imports: [JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [JsonPipe]
 })
 export class DocInteractionCustomErrorWidgetComponent {
   readonly data = inject<ReadableErrorWithCode>(DBX_INJECTION_COMPONENT_DATA);

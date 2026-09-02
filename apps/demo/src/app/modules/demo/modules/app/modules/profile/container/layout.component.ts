@@ -4,7 +4,6 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [DbxContentContainerDirective, UIView],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, UIView]
 })
 export class DemoProfileLayoutComponent {}

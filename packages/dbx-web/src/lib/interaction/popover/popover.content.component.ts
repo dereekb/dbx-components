@@ -28,8 +28,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
       </div>
     </div>
   `,
-  imports: [DbxResizedDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxResizedDirective]
 })
 export class DbxPopoverContentComponent {
   readonly hasControls = completeOnDestroy(new BehaviorSubject<boolean>(false));

@@ -21,8 +21,7 @@ export interface DocLayoutSectionPageTwoPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, MatFormFieldModule, MatInputModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, MatFormFieldModule, MatInputModule]
 })
 export class DocLayoutSectionPageTwoPopoverComponent extends AbstractPopoverDirective<void> {
   static openPopover(popoverService: DbxPopoverService, { origin }: DocLayoutSectionPageTwoPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<unknown, void> {

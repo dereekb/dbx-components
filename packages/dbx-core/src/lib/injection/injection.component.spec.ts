@@ -40,8 +40,7 @@ class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<
   template: `
     <dbx-injection [config]="config()" [template]="template()"></dbx-injection>
   `,
-  imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent]
 })
 class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> {}
 

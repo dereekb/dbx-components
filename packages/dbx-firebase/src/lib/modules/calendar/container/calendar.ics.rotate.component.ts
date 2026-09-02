@@ -27,8 +27,7 @@ import { DbxFirebaseCalendarIcsRotateButtonComponent } from './calendar.ics.rota
     }
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate' },
-  imports: [DbxFirebaseCalendarIcsRotateButtonComponent, TimeDistanceCountdownPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxFirebaseCalendarIcsRotateButtonComponent, TimeDistanceCountdownPipe]
 })
 export class DbxFirebaseCalendarIcsRotateComponent {
   /**

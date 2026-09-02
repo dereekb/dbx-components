@@ -18,8 +18,7 @@ import { MatIconButton } from '@angular/material/button';
   template: `
     <button mat-icon-button (click)="dbxPopoverComponent.close()"><mat-icon>close</mat-icon></button>
   `,
-  imports: [MatIconModule, MatIconButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, MatIconButton]
 })
 export class DbxPopoverCloseButtonComponent {
   readonly dbxPopoverComponent = inject(DbxPopoverComponent);

@@ -45,8 +45,7 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
     class: 'd-block dbx-content-page dbx-section-page',
     '[class]': 'classConfigSignal()'
   },
-  imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSectionPageComponent extends DbxSectionHeaderComponent {
   readonly scroll = input<DbxSectionPageScrollLockedMode>('all');

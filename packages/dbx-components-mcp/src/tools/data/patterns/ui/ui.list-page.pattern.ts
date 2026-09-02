@@ -50,8 +50,7 @@ interface Item {
         </dbx-list-empty-content>
       </dbx-list>
     </dbx-section-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class ItemsPageComponent {
   readonly items$: Observable<ListLoadingState<Item>> = /* ... */ null!;

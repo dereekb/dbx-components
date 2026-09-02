@@ -42,8 +42,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
       </div>
     }
   `,
-  imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent]
 })
 export class DbxFirebaseOidcEntryClientTestComponent {
   private readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

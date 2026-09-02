@@ -12,7 +12,6 @@ import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
       <a mat-stroked-button uiSref="demo.home">Home</a>
     </div>
   `,
-  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective]
 })
 export class DemoAuthLoggedOutComponent {}

@@ -64,8 +64,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
       </ng-template>
     </mat-expansion-panel>
   `,
-  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective]
 })
 export class DocItemListAccordionItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

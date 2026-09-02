@@ -91,8 +91,7 @@ describe('Loading a11y', () => {
   template: `
     <dbx-basic-loading [loading]="loading()" [error]="error()"><p>Content</p></dbx-basic-loading>
   `,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxBasicLoadingComponent]
 })
 class TestBasicLoadingComponent {
   readonly loading = input<Maybe<boolean>>();

@@ -23,8 +23,7 @@ import { tap } from 'rxjs';
       <dbx-button [raised]="true" dbxActionButton text="Create"></dbx-button>
     </div>
   `,
-  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent]
 })
 export class DbxFirebaseOidcEntryClientCreateComponent {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

@@ -59,8 +59,7 @@ import { type DbxStyleDemoConfig } from './dbx.style.demo';
       </div>
     </div>
   `,
-  imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective]
 })
 export class DbxStyleDemoComponent {
   private readonly _registry = inject(DbxStyleDemoSectionRegistry);

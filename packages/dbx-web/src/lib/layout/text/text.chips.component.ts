@@ -50,8 +50,7 @@ export interface TextChip extends LabeledValue<string> {
       </mat-chip-listbox>
     }
   `,
-  imports: [MatChipsModule, MatTooltipModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatChipsModule, MatTooltipModule]
 })
 export class DbxTextChipsComponent {
   private readonly _colorService = inject(DbxColorService, { optional: true });

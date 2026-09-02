@@ -7,8 +7,7 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './navbar.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent]
 })
 export class DocRouterNavbarComponent {
   anchors = [

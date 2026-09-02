@@ -5,8 +5,7 @@ import { DbxContentContainerDirective, DbxSectionPageComponent } from '@dereekb/
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxContentContainerDirective, DbxSectionPageComponent, DocFeatureCardListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxSectionPageComponent, DocFeatureCardListComponent]
 })
 export class DocHomeComponent {
   cards: DocFeatureCard[] = DOC_ROUTES.map((anchor) => ({

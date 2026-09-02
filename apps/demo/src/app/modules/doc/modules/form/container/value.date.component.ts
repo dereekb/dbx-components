@@ -15,8 +15,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './value.date.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxFormValueChangeDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxFormValueChangeDirective]
 })
 export class DocFormDateValueComponent {
   readonly dateValues$ = of({

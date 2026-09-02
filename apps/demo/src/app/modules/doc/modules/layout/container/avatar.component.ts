@@ -5,8 +5,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './avatar.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAvatarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAvatarComponent]
 })
 export class DocLayoutAvatarComponent {
   readonly demoAvatarUrl = 'https://www.gravatar.com/avatar/205d5c6f1f0075bf8cb6a6021b223206';

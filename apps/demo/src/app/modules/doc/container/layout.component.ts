@@ -6,8 +6,7 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [DbxSidenavComponent, DbxColorDirective, DbxAppContextStateDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSidenavComponent, DbxColorDirective, DbxAppContextStateDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxWebPageTitleInfoDirective]
 })
 export class DocLayoutComponent {
   readonly home: ClickableAnchorLink = DOC_HOME_ROUTE;

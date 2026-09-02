@@ -33,8 +33,7 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
       }
     `
   ],
-  imports: [DbxSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionComponent]
 })
 export class DbxDocsUiExampleComponent {
   readonly header = input.required<string>();

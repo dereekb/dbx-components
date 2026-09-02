@@ -48,8 +48,7 @@ import { MatButtonModule } from '@angular/material/button';
       }
     </div>
   `,
-  imports: [MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButtonModule]
 })
 export class DbxIntroActionSectionComponent {
   readonly hint = input<Maybe<string>>();

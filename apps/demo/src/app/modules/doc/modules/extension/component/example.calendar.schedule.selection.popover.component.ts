@@ -18,8 +18,7 @@ export interface DocExtensionExampleScheduleSelectionCalendarDatePopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverScrollContentDirective, DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverScrollContentDirective, DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent]
 })
 export class DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent extends AbstractPopoverDirective<void> {
   static openPopover(popoverService: DbxPopoverService, { origin, injector }: DocExtensionExampleScheduleSelectionCalendarDatePopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, number> {

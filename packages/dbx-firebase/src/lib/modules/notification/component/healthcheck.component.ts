@@ -78,8 +78,7 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck'
   },
-  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent, DbxFirebaseNotificationHealthCheckMethodComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent, DbxFirebaseNotificationHealthCheckMethodComponent]
 })
 export class DbxFirebaseNotificationHealthCheckComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

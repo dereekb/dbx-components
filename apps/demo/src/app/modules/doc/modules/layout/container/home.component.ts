@@ -4,8 +4,7 @@ import { DOC_LAYOUT_ROUTES } from '../doc.layout';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DocFeatureCardListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DocFeatureCardListComponent]
 })
 export class DocLayoutHomeComponent {
   cards: DocFeatureCard[] = DOC_LAYOUT_ROUTES.map((anchor) => ({

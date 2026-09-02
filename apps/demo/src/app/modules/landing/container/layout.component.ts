@@ -21,8 +21,7 @@ export interface LandingItemChild {
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['../landing.scss'],
-  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent, DbxColorDirective]
 })
 export class LandingLayoutComponent {
   readonly docsAnchor: ClickableAnchorLink = {

@@ -4,7 +4,6 @@ import { DbxAnchorComponent, DbxContentLayoutModule } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxContentLayoutModule, DbxAnchorComponent, MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentLayoutModule, DbxAnchorComponent, MatButtonModule]
 })
 export class DemoAppHomeComponent {}

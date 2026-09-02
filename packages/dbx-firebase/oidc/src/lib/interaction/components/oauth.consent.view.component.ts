@@ -102,8 +102,7 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent-view'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthConsentViewComponent {
   readonly details = input<Maybe<OAuthInteractionLoginDetails>>();

@@ -15,8 +15,7 @@ import { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME } from './working.wrapper';
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestWorkingWrapperHostComponent {
   readonly context = inject(DbxForgeFormContext);

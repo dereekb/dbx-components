@@ -8,8 +8,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './dialog.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent]
 })
 export class DocInteractionDialogComponent {
   readonly matDialog = inject(MatDialog);

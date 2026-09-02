@@ -54,8 +54,7 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-login-view'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthLoginViewComponent {
   readonly loginStateCase = input.required<OidcLoginStateCase>();

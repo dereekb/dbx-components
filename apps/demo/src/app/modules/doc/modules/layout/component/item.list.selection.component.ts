@@ -25,8 +25,7 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
   selector: 'doc-complex-item-list-selection',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocSelectionItemListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: provideDbxListView(DocSelectionItemListViewComponent)
 })
 export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
@@ -51,8 +50,7 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
       </div>
     </div>
   `,
-  imports: [DbxSpacerDirective, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSpacerDirective, DbxChipDirective]
 })
 export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

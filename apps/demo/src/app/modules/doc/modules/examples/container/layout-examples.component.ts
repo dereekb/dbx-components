@@ -7,7 +7,6 @@ import { DocBotStatusLayoutExampleComponent } from '../examples/bot.status.layou
 
 @Component({
   templateUrl: './layout-examples.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocDashboardOverviewLayoutExampleComponent, DocBotStatusLayoutExampleComponent, DocSupportPageLayoutExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocDashboardOverviewLayoutExampleComponent, DocBotStatusLayoutExampleComponent, DocSupportPageLayoutExampleComponent]
 })
 export class DocExamplesLayoutExamplesComponent {}

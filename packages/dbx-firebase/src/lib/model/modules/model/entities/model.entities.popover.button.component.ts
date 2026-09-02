@@ -28,8 +28,7 @@ export interface DbxFirebaseModelEntitiesPopoverButtonConfig extends DbxFirebase
   template: `
     <dbx-button #button (buttonClick)="showEntitiesPopover()" [buttonStyle]="buttonStyleSignal()" [buttonDisplay]="buttonDisplaySignal()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);

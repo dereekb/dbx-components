@@ -28,8 +28,7 @@ export interface DbxFormStyleDemoSectionsFormValue {
     <dbx-forge></dbx-forge>
   `,
   imports: [DbxForgeFormComponentImportsModule],
-  providers: dbxForgeFormComponentProviders(),
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: dbxForgeFormComponentProviders()
 })
 export class DbxFormStyleDemoSectionsComponent extends AbstractDbxFormStyleDemoControlsFormDirective<DbxFormStyleDemoSectionsFormValue> {
   readonly formConfig: FormConfig = {

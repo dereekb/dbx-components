@@ -27,8 +27,7 @@ export interface DbxDialogContentFooterConfig {
   host: {
     class: 'dbx-dialog-content-footer'
   },
-  imports: [MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButtonModule]
 })
 export class DbxDialogContentFooterComponent {
   readonly config = input<Maybe<DbxDialogContentFooterConfig>>();

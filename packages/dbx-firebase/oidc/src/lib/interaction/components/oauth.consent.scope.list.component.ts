@@ -84,8 +84,7 @@ export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSe
         }
       </div>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DbxFirebaseOAuthConsentScopeListItemComponent extends AbstractDbxValueListViewItemComponent<OAuthConsentScope> {
   get name() {

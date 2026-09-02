@@ -4,8 +4,7 @@ import { DbxContentLayoutModule, DbxListEmptyContentComponent, DbxSectionLayoutM
 
 @Component({
   templateUrl: './history.component.html',
-  imports: [DbxContentLayoutModule, DbxSectionLayoutModule, DbxSpacerDirective, DbxFirebaseModelHistoryPopoverButtonComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentLayoutModule, DbxSectionLayoutModule, DbxSpacerDirective, DbxFirebaseModelHistoryPopoverButtonComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent]
 })
 export class DemoAppHistoryComponent {
   readonly dbxFirebaseModelTrackerService = inject(DbxFirebaseModelTrackerService);

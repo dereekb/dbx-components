@@ -21,8 +21,7 @@ import { DbxErrorWidgetViewComponent } from './error.widget.component';
   host: {
     class: 'd-block dbx-error-details'
   },
-  imports: [DbxErrorWidgetViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxErrorWidgetViewComponent]
 })
 export class DbxErrorDetailsComponent {
   readonly error = input<Maybe<ReadableError>>();

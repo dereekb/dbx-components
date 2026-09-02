@@ -7,8 +7,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './bar.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxPagebarComponent, MatButton, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxBarDirective, DbxSpacerDirective, DbxBarHeaderComponent, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxPagebarComponent, MatButton, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxBarDirective, DbxSpacerDirective, DbxBarHeaderComponent, DbxColorDirective]
 })
 export class DocLayoutBarComponent {
   lorem = LOREM;

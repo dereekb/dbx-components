@@ -529,8 +529,7 @@ interface OrphanTestFormValue {
     <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
   `,
   imports: [DbxForgeFormComponent, DbxFormSourceDirective],
-  providers: [provideDbxForgeFormContext(), DbxCalendarStore, DbxCalendarScheduleSelectionStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext(), DbxCalendarStore, DbxCalendarScheduleSelectionStore]
 })
 class TestForgeCalendarOrphanHostComponent {
   readonly context = inject(DbxForgeFormContext) as DbxForgeFormContext<OrphanTestFormValue>;

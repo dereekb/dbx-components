@@ -37,8 +37,7 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     MinutesStringPipe,
     TimeDistanceCountdownPipe,
     TimeDistancePipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocTextPipesComponent {
   // TODO: Should not require a delay to set the value properly

@@ -35,8 +35,7 @@ import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryGrantListComponent extends AbstractDbxSelectionListWrapperDirective<OidcEntry> {
   constructor() {
@@ -51,8 +50,7 @@ export class DbxFirebaseOidcEntryGrantListComponent extends AbstractDbxSelection
   selector: 'dbx-firebase-oidc-grant-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseOidcEntryGrantListViewComponent),
-  imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
   readonly config: DbxSelectionValueListViewConfig<OidcEntry & { key: string; itemValue: OidcEntry }> = {
@@ -94,8 +92,7 @@ export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelec
     </div>
   `,
   imports: [DatePipe, DbxSpacerDirective, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
-  providers: [OidcEntryDocumentStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [OidcEntryDocumentStore]
 })
 export class DbxFirebaseOidcEntryGrantListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

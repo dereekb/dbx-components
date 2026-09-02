@@ -12,8 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [UIView, DbxTwoColumnLayoutModule, OidcEntryCollectionStoreDirective, DbxFirebaseOidcEntryClientListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, OidcEntryDocumentStoreDirective, DbxRouteModelIdDirective, DbxListItemAnchorModifierDirective, DbxAnchorComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxTwoColumnLayoutModule, OidcEntryCollectionStoreDirective, DbxFirebaseOidcEntryClientListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, OidcEntryDocumentStoreDirective, DbxRouteModelIdDirective, DbxListItemAnchorModifierDirective, DbxAnchorComponent, DbxButtonComponent]
 })
 export class DemoAppOidcClientListPageComponent implements OnInit {
   readonly demoAppRouterService = inject(DemoAppRouterService);

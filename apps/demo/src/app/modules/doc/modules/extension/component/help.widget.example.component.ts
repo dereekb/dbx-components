@@ -18,7 +18,6 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
       </ul>
     </div>
   `,
-  imports: [],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: []
 })
 export class DocExtensionHelpExampleWidgetComponent {}

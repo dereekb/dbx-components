@@ -5,7 +5,6 @@ import { DbxStyleLayoutModule } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [UIView, DbxStyleLayoutModule, DbxFirebaseDevelopmentDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxStyleLayoutModule, DbxFirebaseDevelopmentDirective]
 })
-export class RootAppLayoutComponent { }
+export class RootAppLayoutComponent {}

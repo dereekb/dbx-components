@@ -59,8 +59,7 @@ export interface DbxFirebaseLoginButtonConfig {
   host: {
     class: 'dbx-firebase-login-button dbx-button-neutral-interaction-color'
   },
-  imports: [MatIconModule, DbxActionModule, DbxButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, DbxActionModule, DbxButtonModule]
 })
 export class DbxFirebaseLoginButtonComponent {
   readonly config = model<Maybe<DbxFirebaseLoginButtonConfig>>(null);
@@ -124,8 +123,7 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
  */
 export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
-  imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent]
 };
 
 /**

@@ -15,8 +15,7 @@ const lastLoaded = signal<'a' | 'b' | undefined>(undefined);
 @Component({
   template: `
     <span>A</span>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 class TestViewAComponent {
   constructor() {
@@ -27,8 +26,7 @@ class TestViewAComponent {
 @Component({
   template: `
     <span>B</span>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 class TestViewBComponent {
   constructor() {
@@ -44,8 +42,7 @@ class TestViewBComponent {
     }
   `,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestHostComponent {
   config: Maybe<FormConfig>;

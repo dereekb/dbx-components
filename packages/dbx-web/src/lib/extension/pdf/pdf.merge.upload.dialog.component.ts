@@ -81,8 +81,7 @@ export interface DbxPdfMergeUploadDialogConfig {
     class: 'dbx-pdf-merge-upload-dialog'
   },
   providers: [provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(true)],
-  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxInjectionComponent, DbxPdfMergeEditorComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxInjectionComponent, DbxPdfMergeEditorComponent, DbxButtonComponent]
 })
 export class DbxPdfMergeUploadDialogComponent extends AbstractDialogDirective<Blob, DbxPdfMergeUploadDialogConfig> {
   readonly store = inject(DbxPdfMergeEditorStore);

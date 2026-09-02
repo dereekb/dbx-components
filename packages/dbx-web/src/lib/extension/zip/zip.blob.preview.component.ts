@@ -41,8 +41,7 @@ export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreview
 @Component({
   selector: 'dbx-zip-blob-preview',
   templateUrl: './zip.blob.preview.component.html',
-  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective]
 })
 export class DbxZipBlobPreviewComponent {
   readonly blob = input<Maybe<Blob>>();

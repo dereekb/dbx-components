@@ -12,8 +12,7 @@ import { DemoGuestbookViewComponent } from './guestbook.view.component';
  */
 @Component({
   templateUrl: './list.right.component.html',
-  imports: [DbxTwoColumnRightComponent, DemoGuestbookViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent, DemoGuestbookViewComponent]
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);

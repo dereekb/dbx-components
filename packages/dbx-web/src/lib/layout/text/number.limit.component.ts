@@ -52,8 +52,7 @@ export interface NumberWithLimit<T extends number = number> {
       <span>{{ suffixSignal() }}</span>
     </span>
   `,
-  imports: [DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxColorDirective]
 })
 export class DbxNumberWithLimitComponent<T extends number = number> {
   readonly number = input<NumberWithLimit<T>>();

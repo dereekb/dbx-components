@@ -32,8 +32,7 @@ const _addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ 
 
 @Component({
   templateUrl: './table.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton]
 })
 export class DocExtensionTableComponent implements OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {

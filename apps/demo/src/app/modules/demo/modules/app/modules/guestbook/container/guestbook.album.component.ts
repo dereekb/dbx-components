@@ -30,8 +30,7 @@ import { map, shareReplay } from 'rxjs';
     DbxErrorComponent,
     DbxSectionComponent,
     DbxFirebaseFormSpaceModule
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoGuestbookAlbumComponent {
   readonly guestbookStore = inject(GuestbookDocumentStore);

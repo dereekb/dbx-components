@@ -131,8 +131,7 @@ export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackB
     class: 'dbx-list-view',
     '[class.dbx-list-sticky-headers]': 'stickyHeaders()'
   },
-  imports: [MatNavList, DbxValueListViewContentGroupComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatNavList, DbxValueListViewContentGroupComponent]
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxListView = inject(DbxListView<T>);
@@ -193,8 +192,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   template: `
     <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-list-view-content>
   `,
-  imports: [DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListViewContentComponent]
 })
 export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
   readonly emitAllClicksSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.emitAllClicks);

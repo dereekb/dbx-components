@@ -36,7 +36,6 @@ import { DbxSectionHeaderComponent } from './section.header.component';
       </div>
     </div>
   `,
-  imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSubSectionComponent extends DbxSectionComponent {}

@@ -23,8 +23,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
       </div>
     </dbx-dialog-content>
   `,
-  imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent]
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {

@@ -6,8 +6,7 @@ import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
 
 @Component({
   templateUrl: './webfilepreview.component.html',
-  imports: [DbxContentContainerDirective, DbxButtonComponent, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxWebFilePreviewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxButtonComponent, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxWebFilePreviewComponent]
 })
 export class DocExtensionWebFilePreviewComponent {
   readonly webFilePreviewService = inject(DbxWebFilePreviewService);

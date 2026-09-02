@@ -7,8 +7,7 @@ import { DbxRouterService } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './list.create.component.html',
-  imports: [DbxTwoColumnRightComponent, DbxFirebaseOidcEntryClientCreateComponent, DbxContentContainerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent, DbxFirebaseOidcEntryClientCreateComponent, DbxContentContainerDirective]
 })
 export class DemoAppOidcClientCreatePageComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

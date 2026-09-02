@@ -8,8 +8,7 @@ import { randomNumber } from '@dereekb/util';
       :
       <span class="dbx-primary">{{ value }}</span>
     </span>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocRouterCustomAnchorContentComponent {
   readonly value = randomNumber(100);

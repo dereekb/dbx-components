@@ -25,8 +25,7 @@ import { DbxFormStyleDemoPresetsComponent } from './controls.presets.component';
       </div>
     </dbx-detach-content>
   `,
-  imports: [DbxDetachContentComponent, DbxDetachControlsComponent, DbxFormStyleDemoPresetsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDetachContentComponent, DbxDetachControlsComponent, DbxFormStyleDemoPresetsComponent]
 })
 export class DbxFormStyleDemoControlsDetachComponent {
   readonly controlsService = inject(DbxStyleDemoControlsService);

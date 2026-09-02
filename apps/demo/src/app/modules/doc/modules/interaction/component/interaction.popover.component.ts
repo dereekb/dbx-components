@@ -31,8 +31,7 @@ export interface DocInteractionPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent]
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> implements OnInit {
   readonly onCloseValue = 12345;

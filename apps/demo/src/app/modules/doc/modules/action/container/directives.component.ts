@@ -62,8 +62,7 @@ import { JsonPipe } from '@angular/common';
     DbxActionIsWorkingDirective,
     DbxActionIsModifiedDirective,
     JsonPipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocActionDirectivesComponent {
   successValue: any;

@@ -21,8 +21,7 @@ import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup
 @Component({
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
-  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe]
 })
 export class DemoCalendarViewComponent {
   readonly matDialog = inject(MatDialog);

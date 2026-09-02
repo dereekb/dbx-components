@@ -31,8 +31,7 @@ import { type CalendarDocumentStore } from '../store/calendar.document.store';
     </div>
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate-button' },
-  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent]
 })
 export class DbxFirebaseCalendarIcsRotateButtonComponent {
   /**

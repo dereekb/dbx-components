@@ -93,8 +93,7 @@ interface DbxFirebaseNotificationHealthCheckProbeNoticeInput {
     class: 'd-block dbx-firebase-notification-healthcheck-view'
   },
   imports: [DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxButtonComponent, DbxContentPitDirective, DbxErrorComponent, DbxFirebaseNotificationHealthCheckComponent],
-  providers: [DbxFirebaseNotificationUserHealthCheckStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxFirebaseNotificationUserHealthCheckStore]
 })
 export class DbxFirebaseNotificationHealthCheckViewComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

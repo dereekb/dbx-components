@@ -26,8 +26,7 @@ export interface DbxFirebaseNotificationHealthCheckDialogButtonComponentConfig {
   host: {
     class: 'dbx-firebase-notification-healthcheck-dialog-button'
   },
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DbxFirebaseNotificationHealthCheckDialogButtonComponent {
   private readonly _matDialog = inject(MatDialog);

@@ -21,8 +21,7 @@ import { DbxFirebaseOidcEntryGrantListComponent } from '../component/oidcentry.g
       <dbx-firebase-oidc-grant-list dbxFirebaseCollectionList></dbx-firebase-oidc-grant-list>
     </div>
   `,
-  imports: [OidcEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseOidcEntryGrantListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [OidcEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseOidcEntryGrantListComponent]
 })
 export class DbxFirebaseOidcEntryGrantListContainerComponent implements OnInit {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

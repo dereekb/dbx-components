@@ -29,8 +29,7 @@ import { JsonPipe } from '@angular/common';
   `,
   selector: 'doc-forge-example-form',
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe]
 })
 export class DocFormForgeExampleComponent extends AbstractConfigAsyncForgeFormDirective<any, FormConfig> {
   readonly none = input(false);

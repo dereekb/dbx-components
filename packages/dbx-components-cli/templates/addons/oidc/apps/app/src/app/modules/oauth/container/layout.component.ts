@@ -5,7 +5,6 @@ import { DbxContentPageDirective, DbxContentContainerDirective } from '@dereekb/
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [DbxContentPageDirective, DbxContentContainerDirective, DbxAppContextStateDirective, UIView],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentPageDirective, DbxContentContainerDirective, DbxAppContextStateDirective, UIView]
 })
 export class APP_CODE_PREFIXOAuthLayoutComponent {}

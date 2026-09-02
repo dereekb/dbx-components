@@ -11,8 +11,7 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './popover.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, FlexModule, MatButton, DbxSpacerDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, FlexModule, MatButton, DbxSpacerDirective, JsonPipe]
 })
 export class DocInteractionPopoverComponent implements AfterViewInit {
   readonly cdRef = inject(ChangeDetectorRef);

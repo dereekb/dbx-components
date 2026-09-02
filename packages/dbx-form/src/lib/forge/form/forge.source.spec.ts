@@ -27,8 +27,7 @@ interface TestFormValue {
     <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
   `,
   imports: [DbxForgeFormComponent, DbxFormSourceDirective],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestForgeSourceHostComponent {
   readonly context = inject(DbxForgeFormContext) as DbxForgeFormContext<TestFormValue>;

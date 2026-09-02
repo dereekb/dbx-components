@@ -4,8 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DocFeatureCardListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DocFeatureCardListComponent]
 })
 export class DocBugsHomeComponent {
   cards: DocFeatureCard[] = DOC_BUGS_ROUTES.map((anchor) => ({

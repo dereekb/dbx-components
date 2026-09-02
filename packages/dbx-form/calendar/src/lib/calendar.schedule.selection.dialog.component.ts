@@ -27,8 +27,7 @@ export interface DbxScheduleSelectionCalendarDatePopupConfig {
       <dbx-dialog-content-footer [config]="closeConfig" (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxScheduleSelectionCalendarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxScheduleSelectionCalendarComponent]
 })
 export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDialogDirective<void, DbxScheduleSelectionCalendarDatePopupConfig> {
   get contentConfig() {

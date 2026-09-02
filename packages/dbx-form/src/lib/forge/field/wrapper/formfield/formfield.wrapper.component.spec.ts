@@ -14,8 +14,7 @@ import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from '../../../form';
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestFormFieldWrapperHostComponent {
   readonly context = inject(DbxForgeFormContext);

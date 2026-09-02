@@ -33,8 +33,7 @@ import { AsyncPipe } from '@angular/common';
     DbxActionButtonDirective,
     DbxActionValueDirective,
     AsyncPipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocActionMapComponent {
   private _value = completeOnDestroy(

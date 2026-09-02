@@ -44,8 +44,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
       }
     </dbx-content-pit>
   `,
-  imports: [CommonModule, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [CommonModule, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective]
 })
 export class DbxFirebaseOidcEntryClientViewComponent {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

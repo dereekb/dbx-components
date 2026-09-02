@@ -31,8 +31,7 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
       </ng-container>
     </dbx-prompt-confirm>
   `,
-  imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective {
   readonly config: DbxPromptConfirmConfig = {

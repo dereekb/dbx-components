@@ -43,8 +43,7 @@ export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
       </dbx-prompt-confirm>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogContentDirective, DbxPromptConfirmComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, DbxPromptConfirmComponent, DbxInjectionComponent]
 })
 export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> {
   get config(): DbxPromptConfirmDialogConfig {

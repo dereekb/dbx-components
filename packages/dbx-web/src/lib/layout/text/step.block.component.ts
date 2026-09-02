@@ -83,8 +83,7 @@ export interface DbxStepBlockComponentConfig {
     class: 'dbx-step-block d-block',
     '[class.dbx-step-block-center]': 'centerSignal()'
   },
-  imports: [DbxIconTileComponent, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxIconTileComponent, DbxColorDirective]
 })
 export class DbxStepBlockComponent {
   readonly config = input<Maybe<DbxStepBlockComponentConfig>>();

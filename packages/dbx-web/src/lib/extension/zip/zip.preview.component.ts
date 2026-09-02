@@ -22,8 +22,7 @@ import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
       <dbx-zip-blob-preview [downloadFileName]="downloadFileName()" [blob]="zipFileBlobSignal()"></dbx-zip-blob-preview>
     </dbx-loading>
   `,
-  imports: [DbxLoadingComponent, DbxZipBlobPreviewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLoadingComponent, DbxZipBlobPreviewComponent]
 })
 export class DbxZipPreviewComponent {
   /**

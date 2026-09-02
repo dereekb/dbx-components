@@ -12,8 +12,7 @@ import { DocTwoColumnSrefListComponent, type TwoColumnSrefValue } from '../compo
 
 @Component({
   templateUrl: './two.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, MatIconButton, MatIcon, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DocTwoColumnSrefListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, UIView],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, MatIconButton, MatIcon, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DocTwoColumnSrefListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, UIView]
 })
 export class DocLayoutTwoColumnsComponent {
   showRight = true;

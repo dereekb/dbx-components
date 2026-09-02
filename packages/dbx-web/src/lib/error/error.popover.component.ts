@@ -48,8 +48,7 @@ export interface DbxErrorPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent]
 })
 export class DbxErrorPopoverComponent extends AbstractPopoverDirective<void, ReadableError> {
   readonly error = this.popover.data as ReadableError;

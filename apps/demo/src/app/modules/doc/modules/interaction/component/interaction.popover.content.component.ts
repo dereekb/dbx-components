@@ -10,8 +10,7 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button color="warn" (click)="closeWithoutValue()">Close</button>
     </div>
   `,
-  imports: [MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton]
 })
 export class DocInteractionExamplePopoverContentComponent {
   readonly return = output<number>();

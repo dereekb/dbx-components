@@ -13,8 +13,7 @@ import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotific
   template: `
     <dbx-widget-view [config]="configSignal()"></dbx-widget-view>
   `,
-  imports: [DbxWidgetViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWidgetViewComponent]
 })
 export class DbxFirebaseNotificationItemViewComponent<D extends NotificationItemMetadata = {}> {
   readonly item = input<Maybe<NotificationItem<D>>>();

@@ -36,8 +36,7 @@ import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/d
     DbxActionPopoverDirective,
     DbxActionDialogDirective,
     DbxActionAnalyticsDirective
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocActionInteractionComponent {
   readonly cdRef = inject(ChangeDetectorRef);

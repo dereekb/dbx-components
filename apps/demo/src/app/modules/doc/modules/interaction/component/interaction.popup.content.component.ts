@@ -9,8 +9,7 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button (click)="shouldClose.emit()">Close</button>
     </div>
   `,
-  imports: [MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton]
 })
 export class DocInteractionExamplePopupContentComponent {
   readonly reopen = input<() => void>();

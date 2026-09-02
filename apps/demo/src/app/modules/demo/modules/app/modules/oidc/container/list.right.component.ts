@@ -5,8 +5,7 @@ import { loadingStateContext } from '@dereekb/rxjs';
 
 @Component({
   templateUrl: './list.right.component.html',
-  imports: [DbxTwoColumnRightComponent, DbxSectionLayoutModule, DbxLoadingComponent, DbxContentContainerDirective, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientTestComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent, DbxSectionLayoutModule, DbxLoadingComponent, DbxContentContainerDirective, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientTestComponent]
 })
 export class DemoAppOidcClientListPageRightComponent implements OnDestroy {
   readonly oidcEntryStore = inject(OidcEntryDocumentStore);

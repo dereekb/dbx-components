@@ -11,8 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
-  imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, MatToolbar, DbxAnchorComponent, DbxButtonComponent, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, MatToolbar, DbxAnchorComponent, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);

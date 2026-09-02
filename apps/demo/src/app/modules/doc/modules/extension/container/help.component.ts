@@ -13,8 +13,7 @@ import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO } from '../component/help.widget
  */
 @Component({
   templateUrl: './help.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent, DbxContentPitDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent, DbxContentPitDirective, JsonPipe]
 })
 export class DocExtensionHelpComponent {
   private readonly _helpContextService = inject(DbxHelpContextService);

@@ -11,8 +11,7 @@ import { type DbxStyleDemoStyleLoaderInput } from './style.template';
   template: `
     <div [dbxStyleDemoStyleLoader]="loaderInput()"></div>
   `,
-  imports: [DbxStyleDemoStyleLoaderDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxStyleDemoStyleLoaderDirective]
 })
 class TestHostComponent {
   readonly loaderInput = signal<Maybe<DbxStyleDemoStyleLoaderInput>>(undefined);

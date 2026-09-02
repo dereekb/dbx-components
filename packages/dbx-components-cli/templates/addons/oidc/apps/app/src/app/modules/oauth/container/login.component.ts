@@ -18,7 +18,6 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
       </dbx-firebase-oauth-login>
     </dbx-content-box>
   `,
-  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DbxFirebaseLoginComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DbxFirebaseLoginComponent]
 })
 export class APP_CODE_PREFIXOAuthLoginComponent {}

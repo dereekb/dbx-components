@@ -60,8 +60,7 @@ import { LOREM } from '../../shared';
     DbxIconTileDirective,
     DbxIconTileComponent,
     MatIconModule
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocTextTextComponent {
   private readonly dbxLinkifyService = inject(DbxLinkifyService);

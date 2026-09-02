@@ -11,7 +11,6 @@ const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = {};
   selector: 'doc-interaction-test-filter-custom-filter',
   templateUrl: './filter.custom.component.html',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterCustomFilterComponent, () => DEFAULT_FILTER_VALUE)],
-  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestFilterCustomFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {}

@@ -53,8 +53,7 @@ describe('DbxFormLoadingSourceDirective with forge form', () => {
       <dbx-test-dbx-form [dbxFormLoadingSource]="source()"></dbx-test-dbx-form>
     </div>
   `,
-  imports: [DbxTestDbxFormComponent, DbxFormLoadingSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTestDbxFormComponent, DbxFormLoadingSourceDirective]
 })
 class TestDbxFormLoadingSourceComponent {
   readonly source = signal<Maybe<Observable<LoadingState<{ text: string }>>>>(undefined);

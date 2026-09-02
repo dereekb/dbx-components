@@ -33,8 +33,7 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule]
 })
 export class DbxIconItemComponent {
   readonly icon = input<Maybe<string>>();

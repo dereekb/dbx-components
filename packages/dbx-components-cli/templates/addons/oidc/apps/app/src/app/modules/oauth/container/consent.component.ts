@@ -13,7 +13,6 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
       <dbx-firebase-oauth-consent></dbx-firebase-oauth-consent>
     </dbx-content-box>
   `,
-  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent]
 })
 export class APP_CODE_PREFIXOAuthConsentComponent {}

@@ -15,8 +15,7 @@ export interface DocFeatureCard {
 @Component({
   selector: 'doc-feature-card-list',
   templateUrl: './feature.card.list.component.html',
-  imports: [FlexModule, DbxAnchorComponent, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardActions],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [FlexModule, DbxAnchorComponent, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardActions]
 })
 export class DocFeatureCardListComponent {
   readonly cards = input<DocFeatureCard[]>([]);

@@ -7,8 +7,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './popup.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective]
 })
 export class DocInteractionPopupComponent implements AfterViewInit {
   readonly popupService = inject(DbxPopupService);

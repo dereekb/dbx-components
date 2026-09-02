@@ -17,8 +17,7 @@ import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from './forge.component.template';
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestForgeFormHostComponent {
   readonly context = inject(DbxForgeFormContext);

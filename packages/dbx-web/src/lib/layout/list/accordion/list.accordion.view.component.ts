@@ -187,8 +187,7 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
   host: {
     class: 'dbx-list-accordion-view'
   },
-  imports: [MatAccordion, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatAccordion, DbxInjectionComponent]
 })
 export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multi = input<Maybe<boolean>>();
@@ -227,7 +226,6 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
   template: `
     <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? false"></dbx-list-accordion-view-content>
   `,
-  imports: [DbxValueListAccordionViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListAccordionViewContentComponent]
 })
 export class DbxValueListAccordionViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListAccordionViewConfig<T, I, V> = DbxValueListAccordionViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {}

@@ -48,8 +48,7 @@ interface Member {
         </dbx-two-column-right>
       </dbx-two-column>
     </dbx-section-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class MembersPageComponent {
   readonly members$: Observable<ListLoadingState<Member>> = /* ... */ null!;

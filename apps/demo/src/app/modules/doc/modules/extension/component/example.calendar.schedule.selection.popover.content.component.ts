@@ -9,7 +9,6 @@ import { DbxScheduleSelectionCalendarDateDaysComponent } from '@dereekb/dbx-form
       <dbx-schedule-selection-calendar-date-days></dbx-schedule-selection-calendar-date-days>
     </div>
   `,
-  imports: [DbxScheduleSelectionCalendarDateDaysComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxScheduleSelectionCalendarDateDaysComponent]
 })
 export class DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent {}

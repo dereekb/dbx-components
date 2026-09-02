@@ -51,8 +51,7 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDis
     DbxAvatarComponent,
     DbxLoadingProgressComponent,
     DbxFirebaseStorageFileDownloadButtonComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly environmentService = inject(DbxAppEnvironmentService);

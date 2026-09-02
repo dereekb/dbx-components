@@ -7,7 +7,6 @@ import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
       <p>Right content.</p>
     </dbx-two-column-right>
   `,
-  imports: [DbxTwoColumnRightComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent]
 })
 export class DocLayoutTwoColumnsChildComponent {}

@@ -10,7 +10,6 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button (click)="close()">Closed</button>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, MatButton]
 })
 export class DocInteractionExampleDialogComponent extends AbstractDialogDirective {}

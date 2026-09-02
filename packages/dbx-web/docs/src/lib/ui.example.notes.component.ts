@@ -10,7 +10,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'dbx-docs-ui-example-notes',
   template: `
     <ng-content></ng-content>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DbxDocsUiExampleNotesComponent {}

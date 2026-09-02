@@ -33,8 +33,7 @@ export interface DemoCalendarTestEventPopupComponentConfig {
       </div>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxActionFormDirective, DbxFormSourceDirective, DemoCalendarTestEventFormComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxActionFormDirective, DbxFormSourceDirective, DemoCalendarTestEventFormComponent]
 })
 export class DemoCalendarTestEventPopupComponent extends AbstractDialogDirective<unknown, DemoCalendarTestEventPopupComponentConfig> {
   readonly defaultValue: DemoCalendarTestEventFormValue = {

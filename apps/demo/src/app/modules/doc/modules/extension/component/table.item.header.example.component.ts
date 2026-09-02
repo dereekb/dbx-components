@@ -5,8 +5,7 @@ import { type ExampleTableData } from './table.item';
   template: `
     <div>{{ name }}</div>
     <div class="dbx-small dbx-hint">Item Header</div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocExtensionTableItemHeaderExampleComponent {
   item!: ExampleTableData;

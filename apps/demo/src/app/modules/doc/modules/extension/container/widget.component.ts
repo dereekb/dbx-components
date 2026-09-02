@@ -10,8 +10,7 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './widget.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent, JsonPipe]
 })
 export class DocExtensionWidgetComponent {
   readonly examplePair: DbxWidgetDataPair = {

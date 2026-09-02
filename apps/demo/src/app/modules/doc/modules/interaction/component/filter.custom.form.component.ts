@@ -9,8 +9,7 @@ export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-interaction-test-filter-custom-filter-form',
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DocInteractionTestFilterCustomFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
   readonly formConfig: FormConfig = {

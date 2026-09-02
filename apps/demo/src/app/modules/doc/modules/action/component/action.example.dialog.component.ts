@@ -16,8 +16,7 @@ import { MatButton } from '@angular/material/button';
       </div>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective<number> {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {

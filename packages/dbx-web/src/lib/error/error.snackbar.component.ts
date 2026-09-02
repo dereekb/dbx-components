@@ -59,8 +59,7 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
       </button>
     </div>
   `,
-  imports: [MatIconModule, MatButtonModule, DbxErrorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, MatButtonModule, DbxErrorComponent]
 })
 export class DbxErrorSnackbarComponent {
   readonly snackBarRef = inject(MatSnackBarRef<DbxErrorSnackbarComponent>);

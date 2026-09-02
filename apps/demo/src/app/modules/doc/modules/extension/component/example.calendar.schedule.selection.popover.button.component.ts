@@ -8,8 +8,7 @@ import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
   template: `
     <dbx-button #buttonPopoverOrigin icon="date_range" [raised]="true" color="accent" text="Custom Button" (buttonClick)="openPopover()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly popoverService = inject(DbxPopoverService);

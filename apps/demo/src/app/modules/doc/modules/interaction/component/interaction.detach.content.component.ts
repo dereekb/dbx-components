@@ -22,8 +22,7 @@ import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/
       }
     `
   ],
-  imports: [MatButton, DbxDetachContentComponent, DbxDetachControlsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton, DbxDetachContentComponent, DbxDetachControlsComponent]
 })
 export class DocInteractionExampleDetachContentComponent {
   counter = 0;

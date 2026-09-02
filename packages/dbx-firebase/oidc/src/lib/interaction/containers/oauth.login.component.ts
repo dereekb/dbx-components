@@ -31,8 +31,7 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-login'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthLoginComponent {
   private readonly dbxRouterService = inject(DbxRouterService);

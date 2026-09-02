@@ -27,8 +27,7 @@ import { DbxFormStyleDemoSectionsComponent } from './controls.sections.component
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, DbxFormStyleDemoSectionsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, DbxFormStyleDemoSectionsComponent]
 })
 export class DbxFormStyleDemoSectionsPopoverComponent extends AbstractPopoverDirective {
   readonly controlsService = inject(DbxStyleDemoControlsService);

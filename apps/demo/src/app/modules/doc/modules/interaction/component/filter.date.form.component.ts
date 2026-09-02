@@ -15,8 +15,7 @@ export type DocInteractionTestDateFilterFormValue = {
   `,
   selector: 'doc-interaction-test-date-filter-form',
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
   readonly formConfig: FormConfig = {

@@ -58,8 +58,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'dbx-icon-tile',
     '[class.dbx-icon-tile-round]': 'round()'
   },
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule]
 })
 export class DbxIconTileComponent {
   readonly icon = input<Maybe<string>>();

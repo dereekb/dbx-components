@@ -7,7 +7,6 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       <p class="dbx-hint dbx-small">This is an example component that shows up at the bottom of the help list. It is configured in DbxHelpWidgetServiceConfig.</p>
     </div>
   `,
-  imports: [],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: []
 })
 export class DocExtensionHelpListBottomExampleComponent {}

@@ -53,8 +53,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
     DbxMapboxMapStoreInjectionBlockDirective,
     JsonPipe,
     DocFormForgeExampleComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocExtensionMapboxComponent implements OnInit {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

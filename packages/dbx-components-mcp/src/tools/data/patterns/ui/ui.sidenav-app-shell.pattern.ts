@@ -31,8 +31,7 @@ import { UIRouterModule } from '@uirouter/angular';
         <ui-view></ui-view>
       </div>
     </dbx-sidenav-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class AppShellComponent {
   readonly navAnchors: ClickableAnchor[] = [

@@ -43,8 +43,7 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
   host: {
     class: 'dbx-help-view-list dbx-block'
   },
-  imports: [MatAccordion, DbxHelpViewListEntryComponent, DbxListEmptyContentComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatAccordion, DbxHelpViewListEntryComponent, DbxListEmptyContentComponent, DbxInjectionComponent]
 })
 export class DbxHelpViewListComponent {
   readonly helpWidgetService = inject(DbxHelpWidgetService);

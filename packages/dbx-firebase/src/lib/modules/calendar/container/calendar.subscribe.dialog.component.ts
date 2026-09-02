@@ -42,8 +42,7 @@ export interface DbxFirebaseCalendarSubscribeDialogComponentConfig {
       <dbx-dialog-content-footer (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateComponent]
 })
 export class DbxFirebaseCalendarSubscribeDialogComponent extends AbstractDialogDirective<unknown, DbxFirebaseCalendarSubscribeDialogComponentConfig> {
   readonly icsUrlSignal = toSignal(this.data.calendarDocumentStore.icsUrl$);

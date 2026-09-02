@@ -104,8 +104,7 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   template: `
     <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-selection-list-view-content>
   `,
-  imports: [DbxSelectionValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSelectionValueListViewContentComponent]
 })
 export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewDirective<T, I, V, DbxSelectionValueListViewConfig<T, I, V>> {
   readonly selectionMode$ = (this.dbxListView.selectionMode$ ?? of('select')).pipe(

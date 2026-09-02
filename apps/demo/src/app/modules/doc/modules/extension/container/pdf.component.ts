@@ -53,8 +53,7 @@ const DOC_PDF_MERGE_UPLOAD_DELAY_MS = 3000;
     }
   `,
   imports: [DbxContentBorderDirective, DbxPdfMergeEditorComponent],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorDefaultExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -92,8 +91,7 @@ export class DocPdfMergeEditorDefaultExampleComponent {
     }
   `,
   imports: [MatIconModule, DbxContentBorderDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorSlotsExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -123,8 +121,7 @@ export class DocPdfMergeEditorSlotsExampleComponent {
     }
   `,
   imports: [DbxContentBorderDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorMaxFilesExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -156,8 +153,7 @@ export class DocPdfMergeEditorMaxFilesExampleComponent {
     }
   `,
   imports: [DbxContentBorderDirective, DbxPdfMergeEditorComponent],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorConfigExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -195,8 +191,7 @@ export class DocPdfMergeEditorConfigExampleComponent {
       </div>
     </dbx-pdf-merge-editor>
   `,
-  imports: [DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective]
 })
 export class DocPdfMergeUploadButtonCustomContentComponent {
   readonly receiptsConfig: DbxPdfMergeEditorFileUploadConfig = {
@@ -226,8 +221,7 @@ export class DocPdfMergeUploadButtonCustomContentComponent {
       </dbx-content-pit>
     }
   `,
-  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
 })
 export class DocPdfMergeUploadButtonDefaultExampleComponent {
   readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
@@ -272,8 +266,7 @@ export class DocPdfMergeUploadButtonDefaultExampleComponent {
       </dbx-content-pit>
     }
   `,
-  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
 })
 export class DocPdfMergeUploadButtonCustomExampleComponent {
   readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
@@ -347,8 +340,7 @@ export class DocPdfMergeUploadButtonCustomExampleComponent {
     }
   `,
   imports: [JsonPipe, MatIconModule, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorPageEditingExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -375,8 +367,7 @@ export class DocPdfMergeEditorPageEditingExampleComponent {
     <p class="dbx-hint">Add a multi-page PDF, then toggle the checkbox: the same entries render as files when off and as individual pages when on. Page edits are kept while the mode is off.</p>
   `,
   imports: [MatCheckboxModule, DbxContentBorderDirective, DbxPdfMergeEditorComponent],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEditorPageEditingToggleExampleComponent {
   readonly pageEditingSignal = signal<boolean>(true);
@@ -413,8 +404,7 @@ const DOC_PDF_MERGE_ENCRYPTED_ASSET_URL = '/assets/test/encrypted.pdf';
     }
   `,
   imports: [MatIconModule, DbxButtonComponent, DbxContentBorderDirective, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeEncryptedExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
@@ -525,8 +515,7 @@ interface DocPdfMergeImportSummary {
     }
   `,
   imports: [JsonPipe, MatIconModule, DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorComponent, DbxPdfMergeImportComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective, DbxPdfMergeEditorFileUploadHasStateDirective],
-  providers: [DbxPdfMergeEditorStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [DbxPdfMergeEditorStore]
 })
 export class DocPdfMergeReimportExampleComponent {
   readonly importConfig: DbxPdfMergeImportConfig = {
@@ -604,7 +593,6 @@ export class DocPdfMergeReimportExampleComponent {
     DocPdfMergeEditorPageEditingToggleExampleComponent,
     DocPdfMergeEncryptedExampleComponent,
     DocPdfMergeReimportExampleComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocExtensionPdfComponent {}

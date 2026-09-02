@@ -11,7 +11,6 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
   template: `
     <dbx-button icon="live_help">Ask Support</dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DocExtensionHelpExampleWidgetHeaderComponent {}

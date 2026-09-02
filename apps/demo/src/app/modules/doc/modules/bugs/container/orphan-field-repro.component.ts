@@ -27,8 +27,7 @@ type ViewState = 'form' | 'success';
 @Component({
   templateUrl: './orphan-field-repro.component.html',
   imports: [DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxForgeFormComponentImportsModule, DbxFormSourceDirective],
-  providers: [...dbxForgeFormComponentProviders(), DbxCalendarStore, DbxCalendarScheduleSelectionStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [...dbxForgeFormComponentProviders(), DbxCalendarStore, DbxCalendarScheduleSelectionStore]
 })
 export class DocBugsOrphanFieldReproComponent implements OnInit, OnDestroy {
   // TODO: link to production Trello/Zoho ticket once the convention exists.

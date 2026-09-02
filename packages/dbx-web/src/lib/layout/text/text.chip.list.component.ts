@@ -35,8 +35,7 @@ import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
     class: 'dbx-chip-list',
     '[style.display]': '"inline"'
   },
-  imports: [DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxChipDirective]
 })
 export class DbxChipListComponent {
   readonly chips = input<Maybe<DbxChipDisplay[]>>();

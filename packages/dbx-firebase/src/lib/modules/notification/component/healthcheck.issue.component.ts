@@ -33,8 +33,7 @@ import { DbxFirebaseNotificationHealthCheckPresentationService } from '../servic
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-issue'
   },
-  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent]
 })
 export class DbxFirebaseNotificationHealthCheckIssueComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

@@ -9,8 +9,7 @@ import { type ExampleTableData } from './table.item';
       <div class="dbx-small">{{ value }}</div>
       <div class="dbx-small dbx-hint">{{ columnName }}</div>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocExtensionTableItemCellExampleComponent {
   item!: ExampleTableData;

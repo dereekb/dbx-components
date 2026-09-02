@@ -31,8 +31,7 @@ import { type Maybe } from '@dereekb/util';
     </div>
     <mat-divider></mat-divider>
   `,
-  imports: [MatIconModule, MatDivider],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, MatDivider]
 })
 export class DbxPopoverHeaderComponent implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });

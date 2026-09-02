@@ -10,7 +10,6 @@ import { DbxFirebaseOidcEntryGrantListContainerComponent } from '@dereekb/dbx-fi
       <dbx-firebase-oidc-grant-list-container></dbx-firebase-oidc-grant-list-container>
     </dbx-content-container>
   `,
-  imports: [DbxContentContainerDirective, DbxFirebaseOidcEntryGrantListContainerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxFirebaseOidcEntryGrantListContainerComponent]
 })
 export class DemoAppOidcGrantListPageComponent {}

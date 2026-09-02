@@ -17,7 +17,6 @@ import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.comp
       </dbx-firebase-oauth-login>
     </dbx-content-box>
   `,
-  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DemoAuthLoginViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxFirebaseOAuthLoginComponent, DemoAuthLoginViewComponent]
 })
 export class DemoOAuthLoginComponent {}

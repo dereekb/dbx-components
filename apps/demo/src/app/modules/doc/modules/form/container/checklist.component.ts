@@ -9,8 +9,7 @@ import { dbxForgeCheckboxField, dbxForgeRow } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './checklist.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent]
 })
 export class DocFormChecklistComponent {
   readonly forgeChecklistConfig: FormConfig = {

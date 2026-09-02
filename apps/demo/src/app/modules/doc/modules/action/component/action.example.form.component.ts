@@ -13,8 +13,7 @@ export interface DocActionFormExampleValue {
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-action-form-example-form',
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DocActionFormExampleFormComponent extends AbstractSyncForgeFormDirective<DocActionFormExampleValue> {
   readonly formConfig: FormConfig = {

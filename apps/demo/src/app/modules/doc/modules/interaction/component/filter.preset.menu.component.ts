@@ -7,8 +7,7 @@ import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './f
   selector: 'doc-interaction-test-filter-preset-menu',
   template: '<dbx-preset-filter-menu [config]="menuConfig" [presets]="presets"></dbx-preset-filter-menu>',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPresetMenuComponent)],
-  imports: [DbxPresetFilterMenuComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPresetFilterMenuComponent]
 })
 export class DocInteractionTestFilterPresetMenuComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> implements OnInit {
   readonly menuConfig: DbxPresetFilterMenuConfig = {

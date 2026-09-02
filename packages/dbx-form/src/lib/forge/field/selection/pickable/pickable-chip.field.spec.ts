@@ -429,8 +429,7 @@ describe('scenarios', () => {
     }
   `,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestForgePickableChipHostComponent {
   config!: FormConfig;

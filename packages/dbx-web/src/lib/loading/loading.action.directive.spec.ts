@@ -128,8 +128,7 @@ const TEST_CONTENT = 'Content';
       </dbx-loading>
     </div>
   `,
-  imports: [DbxLoadingComponent, DbxActionLoadingContextDirective, DbxActionDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLoadingComponent, DbxActionLoadingContextDirective, DbxActionDirective]
 })
 class LoadingComponent {
   readonly show = input<Maybe<boolean>>();

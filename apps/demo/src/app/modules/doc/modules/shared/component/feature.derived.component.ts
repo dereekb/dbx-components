@@ -33,8 +33,7 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
       </dbx-content-box>
     </div>
   `,
-  imports: [DbxContentBoxDirective, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, MatIcon]
 })
 export class DocFeatureDerivedComponent {
   readonly type = input<DocFeatureDerviedType>('integrated');

@@ -32,8 +32,7 @@ import { DbxSubSectionComponent } from '../../layout/section/subsection.componen
       </dbx-subsection>
     </div>
   `,
-  imports: [DbxSubSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSubSectionComponent]
 })
 export class DbxPromptComponent {
   readonly header = input<Maybe<string>>();

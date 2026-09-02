@@ -37,8 +37,7 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
   `,
   host: {
     class: 'd-block dbx-firebase-manage-auth-providers'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseManageAuthProvidersComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

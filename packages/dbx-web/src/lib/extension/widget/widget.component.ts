@@ -36,8 +36,7 @@ import { NgTemplateOutlet } from '@angular/common';
   host: {
     class: 'dbx-widget-view'
   },
-  imports: [DbxInjectionComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent, NgTemplateOutlet]
 })
 export class DbxWidgetViewComponent {
   readonly dbxWidgetService = inject(DbxWidgetService);

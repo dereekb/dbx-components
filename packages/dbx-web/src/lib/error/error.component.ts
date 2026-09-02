@@ -61,8 +61,7 @@ interface DbxErrorComponentState {
       }
     }
   `,
-  imports: [DbxErrorViewComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxErrorViewComponent, DbxInjectionComponent]
 })
 export class DbxErrorComponent {
   private readonly popoverService = inject(DbxPopoverService);

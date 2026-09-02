@@ -8,7 +8,6 @@ import { DocListAnchorRowModifierExampleComponent } from '../examples/list.ancho
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocListStandardExampleComponent, DocListProgressExampleComponent, DocListAnchorButtonExampleComponent, DocListAnchorRowModifierExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocListStandardExampleComponent, DocListProgressExampleComponent, DocListAnchorButtonExampleComponent, DocListAnchorRowModifierExampleComponent]
 })
 export class DocExamplesListComponent {}

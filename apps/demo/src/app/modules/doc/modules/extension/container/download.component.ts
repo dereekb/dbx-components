@@ -36,8 +36,7 @@ function createRandomCsvFile() {
 
 @Component({
   templateUrl: './download.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent, DbxFileListComponent, DbxFileListItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, DbxDownloadBlobButtonComponent, DbxFileListComponent, DbxFileListItemComponent]
 })
 export class DocExtensionDownloadComponent {
   readonly csvContent: DownloadTextContent = {

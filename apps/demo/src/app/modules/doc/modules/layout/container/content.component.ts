@@ -6,7 +6,6 @@ import { FlexModule } from '@ngbracket/ngx-layout/flex';
 
 @Component({
   templateUrl: './content.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPitDirective, FlexModule, DbxLabelBlockComponent, DbxContentDirective, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPitDirective, FlexModule, DbxLabelBlockComponent, DbxContentDirective, DbxColorDirective]
 })
 export class DocLayoutContentComponent {}

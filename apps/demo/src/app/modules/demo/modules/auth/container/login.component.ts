@@ -8,7 +8,6 @@ import { DemoAuthLoginViewComponent } from './login.view.component';
       <app-login-view></app-login-view>
     </dbx-content-box>
   `,
-  imports: [DbxContentBoxDirective, DemoAuthLoginViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DemoAuthLoginViewComponent]
 })
 export class DemoAuthLoginComponent {}

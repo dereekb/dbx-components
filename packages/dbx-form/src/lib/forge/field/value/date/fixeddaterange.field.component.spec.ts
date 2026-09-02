@@ -22,8 +22,7 @@ import { type Maybe } from '@dereekb/util';
     }
   `,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestForgeFixedDateRangeHostComponent {
   config!: FormConfig;

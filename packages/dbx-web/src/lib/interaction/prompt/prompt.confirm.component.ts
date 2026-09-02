@@ -43,8 +43,7 @@ export interface DbxPromptConfirmConfig {
       </div>
     </dbx-prompt>
   `,
-  imports: [DbxPromptComponent, MatButtonModule, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPromptComponent, MatButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxPromptConfirmComponent {
   readonly config = input<Maybe<DbxPromptConfirmConfig>>({});

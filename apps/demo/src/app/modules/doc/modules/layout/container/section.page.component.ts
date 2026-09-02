@@ -4,8 +4,7 @@ import { DbxButtonComponent, DbxSectionPageComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './section.page.component.html',
-  imports: [DbxButtonComponent, DbxSectionPageComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent, DbxSectionPageComponent]
 })
 export class DocLayoutSectionPageComponent {
   lorem = LOREM;

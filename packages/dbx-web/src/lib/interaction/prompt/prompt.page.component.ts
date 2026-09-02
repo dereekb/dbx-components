@@ -23,7 +23,6 @@ import { DbxContentContainerDirective } from '../../layout/content/content.conta
   host: {
     class: 'd-block dbx-prompt-page'
   },
-  imports: [DbxContentContainerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective]
 })
 export class DbxPromptPageComponent {}

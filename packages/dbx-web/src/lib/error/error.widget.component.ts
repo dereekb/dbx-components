@@ -22,8 +22,7 @@ import { DbxErrorWidgetService } from './error.widget.service';
   host: {
     class: 'dbx-error-widget-view'
   },
-  imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent]
 })
 export class DbxErrorWidgetViewComponent {
   readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);

@@ -21,7 +21,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
         display: block;
       }
     `
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DbxDocsUiExampleContentComponent {}

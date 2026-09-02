@@ -19,8 +19,7 @@ const AUTO_CONFIRM_READY_VALUE = 'autoConfirmReadyValue';
       <dbx-button dbxActionButton text="Confirm Action"></dbx-button>
     </ng-container>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestConfirmComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
@@ -39,8 +38,7 @@ class TestConfirmComponent {
       <dbx-button dbxActionButton text="Skip Confirm Action"></dbx-button>
     </ng-container>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestConfirmSkipComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
@@ -61,8 +59,7 @@ class TestConfirmSkipComponent {
       <dbx-button dbxActionButton text="Auto Confirm Action"></dbx-button>
     </ng-container>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestAutoConfirmComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
