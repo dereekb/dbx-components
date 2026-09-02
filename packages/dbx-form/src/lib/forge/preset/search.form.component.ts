@@ -5,9 +5,8 @@ import { map, type Observable } from 'rxjs';
 import { AbstractConfigAsyncForgeFormDirective } from '../form/forge.directive';
 import { DbxForgeFormComponentImportsModule, dbxForgeFormComponentProviders } from '../form/forge.component.template';
 import { DbxFormValueChangeDirective } from '../../form/io/form.change.directive';
-import { dbxFormSearchFormFields, type DbxFormSearchFormFieldsConfig, type DbxFormSearchFormFieldsValue } from './preset.form';
+import { dbxForgePresetSearchFormFields, type DbxForgePresetSearchFormFieldsConfig, type DbxForgePresetSearchFormFieldsValue } from './preset.form';
 
-// TODO(migrate): Will be renamed in a future release to DbxForgePresetSearchFormComponent.
 @Component({
   selector: 'dbx-form-search-form',
   template: `
@@ -19,13 +18,13 @@ import { dbxFormSearchFormFields, type DbxFormSearchFormFieldsConfig, type DbxFo
     class: 'd-block dbx-form-search-form'
   }
 })
-export class DbxFormSearchFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> {
+export class DbxForgePresetSearchFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxForgePresetSearchFormFieldsValue, DbxForgePresetSearchFormFieldsConfig> {
   // eslint-disable-next-line @angular-eslint/no-output-native
   readonly search = output<string>();
 
-  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config) => ({ fields: dbxFormSearchFormFields(config) }) as FormConfig));
+  readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config) => ({ fields: dbxForgePresetSearchFormFields(config) }) as FormConfig));
 
-  searchChanged(value: Maybe<DbxFormSearchFormFieldsValue>) {
+  searchChanged(value: Maybe<DbxForgePresetSearchFormFieldsValue>) {
     this.search.emit(value?.search ?? '');
   }
 }

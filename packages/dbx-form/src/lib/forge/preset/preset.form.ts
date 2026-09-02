@@ -3,13 +3,11 @@ import { type MatInputField, type MatInputProps } from '@ng-forge/dynamic-forms-
 import { dbxForgeTextField } from '../field';
 import { type DbxForgeField } from '../form';
 
-// TODO(migrate): Will be renamed in a future release to DbxForgePresetSearchFormFieldsValue.
-export interface DbxFormSearchFormFieldsValue {
+export interface DbxForgePresetSearchFormFieldsValue {
   readonly search: string;
 }
 
-// TODO(migrate): Will be renamed in a future release to DbxForgePresetSearchFormFieldsConfig.
-export interface DbxFormSearchFormFieldsConfig {
+export interface DbxForgePresetSearchFormFieldsConfig {
   readonly key?: string;
   readonly label?: string;
   readonly placeholder?: string;
@@ -25,10 +23,8 @@ export interface DbxFormSearchFormFieldsConfig {
  *
  * @param config - Optional search field configuration with label and placeholder.
  * @returns The forge field defs for the search form
- *
- * TODO(migrate): Will be renamed in a future release to dbxForgePresetSearchFormFields.
  */
-export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsConfig>) {
+export function dbxForgePresetSearchFormFields(config: Maybe<DbxForgePresetSearchFormFieldsConfig>) {
   const { key = 'search', label, placeholder = 'Search', props } = config ?? {};
 
   const field: DbxForgeField<MatInputField> = dbxForgeTextField({

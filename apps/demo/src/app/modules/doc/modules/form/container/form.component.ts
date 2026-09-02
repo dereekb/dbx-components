@@ -1,4 +1,4 @@
-import { type DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
+import { type DbxForgePresetSearchFormFieldsConfig, DbxForgePresetSearchFormComponent } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -6,18 +6,18 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './form.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxForgePresetSearchFormComponent, DbxContentBorderDirective]
 })
 export class DocFormFormComponent {
   searchText = '';
 
-  topSearchFormConfig: DbxFormSearchFormFieldsConfig = {
+  topSearchFormConfig: DbxForgePresetSearchFormFieldsConfig = {
     key: 'test-search',
     label: 'Search Label',
     placeholder: 'Search For Something Cool'
   };
 
-  searchFormConfig: DbxFormSearchFormFieldsConfig = {
+  searchFormConfig: DbxForgePresetSearchFormFieldsConfig = {
     ...this.topSearchFormConfig,
     key: 'test-search'
   };

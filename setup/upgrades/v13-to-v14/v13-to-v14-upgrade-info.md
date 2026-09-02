@@ -160,8 +160,9 @@ against exactly this since `@dereekb/date` shipped an ESM build that named-impor
 
 ### The `LoadingState` generics were reshaped
 
-This is the first `@dereekb/*` API-surface change in a v13 to v14 upgrade; everything else in this
-guide is tooling. It is a breaking change on purpose.
+This is the largest of the three `@dereekb/*` API-surface changes in a v13 to v14 upgrade (the
+other two follow below); everything else in this guide is tooling. It is a breaking change on
+purpose.
 
 `LoadingState`-generic helpers in `@dereekb/rxjs` were declared two different ways, and neither
 worked. The problem is that `LoadingStateValue<L>` is a conditional type:
@@ -210,6 +211,39 @@ helper:
 - **G2 — `Partial<L>` *is* an inference source.** It is a homomorphic mapped type (priority 8), which
   also outranks the contextual return type, so `startWithBeginLoading(filteredPage)` would
   reverse-infer `L := FilteredPage`. It takes `Partial<NoInfer<L>>` for that reason.
+
+### The forge preset search form was renamed
+
+`@dereekb/dbx-form` exports a small preset search form. Its four symbols were named for the
+`DbxForm*` family they predate rather than the `DbxForge*` family they actually belong to, and v13
+carried `TODO(migrate)` markers saying as much. v14 does the rename.
+
+| v13 | v14 |
+| --- | --- |
+| `DbxFormSearchFormComponent` | `DbxForgePresetSearchFormComponent` |
+| `DbxFormSearchFormFieldsConfig` | `DbxForgePresetSearchFormFieldsConfig` |
+| `DbxFormSearchFormFieldsValue` | `DbxForgePresetSearchFormFieldsValue` |
+| `dbxFormSearchFormFields` | `dbxForgePresetSearchFormFields` |
+
+Only the TypeScript symbols move. The component keeps its `dbx-form-search-form` selector and its
+`.dbx-form-search-form` host class, so templates and stylesheets are untouched. No deprecated
+aliases are kept — the old names are gone, which makes every missed reference a compile error.
+
+### The Zoho related-records `filter` param was removed
+
+`ZohoCrmGetRelatedRecordsRequest.filter` and `ZohoRecruitGetRelatedRecordsRequest.filter` were
+`@deprecated` in v13 and are removed in v14.
+
+It was always redundant, and it leaked. `filter` was a `ZohoPageFilter` — `page` and `per_page`,
+nothing else — and both request interfaces already extend that same filter, so every key it could
+carry was already settable on the request itself.
+
+It also leaked a junk parameter. The related-records factory merged `input` and `input.filter` into
+one `URLSearchParams`, which picked the nested page values up, but `input` still carried its own
+`filter` key holding that object — and `URLSearchParams` calls `String()` on every value, so each
+call using it also appended `filter=%5Bobject+Object%5D` to the query string.
+
+Set `page` / `per_page` on the request directly, which is what the deprecation note already said.
 
 ## Migrations
 
@@ -847,6 +881,42 @@ constraint was `L extends LoadingStateWithDefinedValue`, which can never match a
 is optional — which is to say, any real `LoadingState` stream. It had zero call sites for that
 reason. Code that hand-rolled `currentValueFromLoadingState()` followed by `filterMaybe()` can
 collapse to it.
+
+### Rename the forge preset search form
+
+Four symbols, all mechanical:
+
+```bash
+grep -rl 'DbxFormSearchForm\|dbxFormSearchFormFields' src \
+  | xargs sed -i '' \
+    -e 's/\bDbxFormSearchFormFieldsValue\b/DbxForgePresetSearchFormFieldsValue/g' \
+    -e 's/\bDbxFormSearchFormFieldsConfig\b/DbxForgePresetSearchFormFieldsConfig/g' \
+    -e 's/\bDbxFormSearchFormComponent\b/DbxForgePresetSearchFormComponent/g' \
+    -e 's/\bdbxFormSearchFormFields\b/dbxForgePresetSearchFormFields/g'
+```
+
+Drop the `''` after `-i` on GNU sed. Leave `<dbx-form-search-form>` and `.dbx-form-search-form`
+alone — the selector and host class did not change, so this is a `.ts` sweep only.
+
+### Drop the Zoho related-records `filter`
+
+Flatten it into the request:
+
+```ts
+// v13
+getNotesForRecord({ module: 'Contacts', id, fields: 'Note_Title', filter: { page: 2, per_page: 50 } });
+
+// v14
+getNotesForRecord({ module: 'Contacts', id, fields: 'Note_Title', page: 2, per_page: 50 });
+```
+
+`fields` is unaffected — it was never part of `filter`, and stays required on the notes/attachments
+requests.
+
+`grep -rn 'filter:' src | grep -i 'relatedrecords\|getNotesFor\|getEmailsFor\|getAttachmentsFor'`
+finds the call sites. A `filter` passed in an object literal is now an excess property and fails to
+compile, but one assembled into an intermediate un-annotated variable first will pass the excess
+property check and be silently dropped — so run the grep rather than trusting the build.
 
 ## Notes and gotchas
 

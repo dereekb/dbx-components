@@ -624,10 +624,6 @@ export interface ZohoRecruitGetRelatedRecordsRequest extends ZohoRecruitGetRecor
    * For example, providing this value will return the Notes with these ids when searching on related Notes for the primary/target record.
    */
   readonly ids?: Maybe<ArrayOrValue<ZohoRecruitRecordId>>;
-  /**
-   * @deprecated set variables on request object directly instead of using this filter.
-   */
-  readonly filter?: Maybe<ZohoRecruitGetRelatedRecordsPageFilter>;
 }
 
 /**
@@ -674,8 +670,7 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
 export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
-    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
+    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
   };
 }
 
