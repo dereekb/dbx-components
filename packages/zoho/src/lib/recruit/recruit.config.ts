@@ -79,10 +79,3 @@ export interface ZohoRecruitContext extends ZohoRateLimiterRef {
 export interface ZohoRecruitContextRef {
   readonly recruitContext: ZohoRecruitContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZohoRecruitFetchFactoryParams instead.
- */
-export type ZohoRecruitFetchFactoryInput = ZohoRecruitFetchFactoryParams;

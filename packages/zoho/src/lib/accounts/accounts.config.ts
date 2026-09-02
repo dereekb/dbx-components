@@ -154,10 +154,3 @@ export interface ZohoAccountsContext {
 export interface ZohoAccountsContextRef {
   readonly accountsContext: ZohoAccountsContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZohoAccountsFetchFactoryParams instead.
- */
-export type ZohoAccountsFetchFactoryInput = ZohoAccountsFetchFactoryParams;

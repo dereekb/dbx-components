@@ -124,10 +124,3 @@ export interface ZoomOAuthContext {
 export interface ZoomOAuthContextRef {
   readonly oauthContext: ZoomOAuthContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZoomOAuthFetchFactoryParams instead.
- */
-export type ZoomOAuthFetchFactoryInput = ZoomOAuthFetchFactoryParams;

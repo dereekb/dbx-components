@@ -37,9 +37,3 @@ export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFie
   type: 'multi-checkbox' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
 }) as DbxForgeChecklistFieldFunction;
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link DbxForgeChecklistFieldFunction} instead.
- */
-export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;

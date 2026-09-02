@@ -116,10 +116,3 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
     }
   });
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
- */
-export const DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION;

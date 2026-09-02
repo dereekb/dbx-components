@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { randomBytes } from 'node:crypto';
 import { type SystemState, snapshotConverterFunctions } from '@dereekb/firebase';
 import { addHours, addMinutes } from 'date-fns';
-import { type ZohoAccessTokenSystemStateData, type ZohoAccessTokenSystemStateEmbeddedToken, zohoAccessTokenSystemStateDataConverter, zohoAccessTokenSystemStateDataConverterFactory } from './zoho.accounts.firebase.system';
+import { type ZohoAccessTokenSystemStateData, type ZohoAccessTokenSystemStateEmbeddedToken, zohoAccessTokenSystemStateDataConverterFactory } from './zoho.accounts.firebase.system';
 
 const encryptionSecret = randomBytes(32).toString('hex');
 const otherEncryptionSecret = randomBytes(32).toString('hex');
@@ -106,21 +106,5 @@ describe('zohoAccessTokenSystemStateDataConverterFactory()', () => {
       expect(() => (result = converter.mapFunctions.from(foreign))).not.toThrow();
       expect(result?.data.tokens).toHaveLength(0);
     });
-  });
-});
-
-describe('zohoAccessTokenSystemStateDataConverter (deprecated)', () => {
-  const plaintextConverter = snapshotConverterFunctions<SystemState<ZohoAccessTokenSystemStateData>>({
-    fields: {
-      data: zohoAccessTokenSystemStateDataConverter
-    }
-  });
-
-  it('should still round-trip the access token in plaintext', () => {
-    const model = modelWithTokens([tokenForKey('recruit', addHours(new Date(), 1))]);
-    const data: any = plaintextConverter.mapFunctions.to(model);
-
-    expect(data.data.tokens[0].accessToken).toBe(PLAINTEXT_TOKEN);
-    expect(plaintextConverter.mapFunctions.from(data).data.tokens[0].accessToken).toBe(PLAINTEXT_TOKEN);
   });
 });

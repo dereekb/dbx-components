@@ -260,22 +260,3 @@ export function onCallCreateModelResult(modelKeys: ArrayOrValue<FirestoreModelKe
     modelKeys: asArray(modelKeys)
   };
 }
-
-// COMPAT: Deprecated aliases
-/**
- * Creates OnCallTypedModelParams for the input.
- *
- * Convenience function for calling onCallTypedModelParamsFunction and executing it with the input.
- *
- * @param modelTypeInput - The model type string or ref.
- * @param data - The call payload.
- * @param specifier - Optional sub-function specifier.
- * @param call - The CRUD call type.
- * @returns The constructed {@link OnCallTypedModelParams}
- *
- * @deprecated Move towards using onCallTypedModelParamsFunction directly with the call type instead of using this function. Will not be removed in the future.
- */
-// eslint-disable-next-line @typescript-eslint/max-params -- deprecated function, not worth refactoring
-export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string, call?: OnCallFunctionType): OnCallTypedModelParams<T> {
-  return onCallTypedModelParamsFunction(call)(modelTypeInput, data, specifier);
-}

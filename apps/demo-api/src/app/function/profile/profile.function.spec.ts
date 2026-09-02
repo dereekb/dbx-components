@@ -1,5 +1,4 @@
 import { demoCallModel } from '../model/crud.functions';
-import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, type SetProfileUsernameParams, type UpdateProfileParams } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
@@ -18,51 +17,8 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 // Every test is done within its own context; the firestore/auth/etc. is empty between each test since under the hood our test app name changes.
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // describeCallableRequestTest wraps a jest describe along with the following:
-  // - Build our profileSetUsername function using our testing context instances's Nest App for each test, and the profileSetUsername factory.
-  // - wrap the function to make it a usable function and exposed as profileSetUsernameWrappedFn
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  describeCallableRequestTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameWrappedFn) => {
-    // with our DemoApiFunctionContextFixture, we can easily create a new user for this test case.
-    demoAuthorizedUserContext({ f }, (u) => {
-      // jest it - test setting the username successfully.
-      it('should set the profile username.', async () => {
-        const username = 'username';
-        const params: SetProfileUsernameParams = {
-          username
-        };
-
-        // Call the function using our user instance.
-        // This automatically creates a look-alike token/context to pass to the function so we don't have to mock that directly.
-        await u.callWrappedFunction(profileSetUsernameWrappedFn, params);
-
-        // Check our results.
-        const profileDocument = u.instance.loadUserProfile();
-        const profileDocumentSnapshot = await profileDocument.snapshot();
-
-        expect(profileDocumentSnapshot.data()?.username).toBe(username);
-      });
-
-      // second user
-      demoAuthorizedUserContext({ f }, (u2) => {
-        itShouldFail('if the username is already taken.', async () => {
-          // eslint-disable-next-line @typescript-eslint/no-deprecated
-          const fn = f.fnWrapper.wrapCallableRequest(profileSetUsername(f.nestAppPromiseGetter));
-
-          const params: SetProfileUsernameParams = {
-            username: 'username'
-          };
-
-          // take with first user
-          await fn(params, await u.makeContextOptions());
-
-          // attempt to take with user 2
-          await expectFail(async () => fn(params, await u2.makeContextOptions()));
-        });
-      });
-    });
-  });
-
-  // describe tests for updateProfile
+  // - Build our demoCallModel function using our testing context instance's Nest App for each test, and the demoCallModel factory.
+  // - wrap the function to make it a usable function and exposed as callProfileWrappedFn
   describeCallableRequestTest('updateProfile', { f, fn: demoCallModel }, (callProfileWrappedFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it(`should update the target user's profile.`, async () => {
@@ -88,6 +44,33 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
+      });
+
+      it(`should set the profile username.`, async () => {
+        const username = 'username';
+        const data: SetProfileUsernameParams = {
+          username
+        };
+
+        await u.callWrappedFunction(callProfileWrappedFn, onCallUpdateModelParams(profileIdentity, data, 'username'));
+
+        const profileData = await u.instance.loadUserProfile().snapshotData();
+        expect(profileData?.username).toBe(username);
+      });
+
+      // second user
+      demoAuthorizedUserContext({ f }, (u2) => {
+        itShouldFail('if the username is already taken.', async () => {
+          const data: SetProfileUsernameParams = {
+            username: 'username'
+          };
+
+          // take with first user
+          await u.callWrappedFunction(callProfileWrappedFn, onCallUpdateModelParams(profileIdentity, data, 'username'));
+
+          // attempt to take with user 2
+          await expectFail(() => u2.callWrappedFunction(callProfileWrappedFn, onCallUpdateModelParams(profileIdentity, data, 'username')));
+        });
       });
     });
   });

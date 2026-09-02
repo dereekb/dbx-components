@@ -96,13 +96,11 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
     ? combineLatest(
         documents.map((document) =>
           document.accessor.stream().pipe(
-            map(
-              (snapshot): FirestoreDocumentSnapshotDataPair<D> => ({
-                document,
-                snapshot,
-                data: documentDataWithIdAndKey(snapshot) as DocumentDataWithIdAndKey<FirestoreDocumentData<D>>
-              })
-            )
+            map((snapshot): FirestoreDocumentSnapshotDataPair<D> => ({
+              document,
+              snapshot,
+              data: documentDataWithIdAndKey(snapshot) as DocumentDataWithIdAndKey<FirestoreDocumentData<D>>
+            }))
           )
         )
       )
@@ -126,10 +124,3 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
 export function streamDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Observable<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
   return streamDocumentSnapshotDataPairs(documents).pipe(map((pairs) => pairs.filter((pair): pair is FirestoreDocumentSnapshotDataPairWithData<D> => pair.data != null)));
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link streamDocumentSnapshotsData} instead.
- */
-export const latestDataFromDocuments = streamDocumentSnapshotsData;

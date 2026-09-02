@@ -82,7 +82,6 @@ export interface NestFirebaseServerEnvironmentConfig {
   readonly environment: FirebaseServerEnvironmentConfig;
 }
 
-// COMPAT: Deprecated alias for NestFirebaseServerEnvironmentConfig.
 /**
  * Creates a {@link NestServerInstance} that manages NestJS server lifecycle within Firebase Cloud Functions.
  *
@@ -175,9 +174,3 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
     removeNestServer
   };
 }
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use NestFirebaseServerEnvironmentConfig instead.
- */
-export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;

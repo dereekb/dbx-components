@@ -52,9 +52,3 @@ export const dbxForgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSe
   type: FORGE_VALUE_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
 }) as DbxForgeValueSelectionFieldFunction;
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead.
- */
-export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFunction;

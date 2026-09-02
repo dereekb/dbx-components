@@ -352,8 +352,8 @@ export const APP_CODE_PREFIX_CAMELAuthorizedUserContextFactory = (params: APP_CO
     makeInstance: (uid, testInstance) => new APP_CODE_PREFIXApiAuthorizedUserTestContextInstance(uid, testInstance),
     initUser: async (instance) => {
       const userRecord = await instance.loadUserRecord();
-      const fn = instance.testContext.fnWrapper.wrapCloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
-      await instance.callEventCloudFunction(fn, userRecord);
+      const fn = instance.testContext.fnWrapper.wrapBlockingFunction(initUserOnCreate(instance.nestAppPromiseGetter));
+      await instance.callAuthBlockingFunction({ fn, userRecord, eventType: 'google.firebase.auth.user.create' });
     }
   });
 

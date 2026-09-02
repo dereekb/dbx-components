@@ -1,5 +1,5 @@
 import { skipAllInitialMaybe } from '@dereekb/rxjs';
-import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed, ElementRef } from '@angular/core';
+import { Component, TemplateRef, HostListener, inject, viewChild, input, computed, ElementRef } from '@angular/core';
 import { AbstractDbxAnchorDirective, type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet, NgClass } from '@angular/common';
@@ -68,8 +68,7 @@ import { overrideClickElementEffect } from '../../../util/click';
   host: {
     class: 'd-inline dbx-anchor',
     'dbx-anchor-block': 'block()'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
   private readonly _dbNgxRouterWebProviderConfig = inject(DbxRouterWebProviderConfig);

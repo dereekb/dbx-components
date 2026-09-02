@@ -253,7 +253,7 @@ export const orphanSystemDataConverter: SystemStateStoredDataFieldConverterConfi
 
   it('accepts imported identifiers used as converter-map keys (e.g. Zoho token from @dereekb/firebase-server/zoho)', () => {
     const source = `import { firestoreDate, firestoreNumber, firestoreSubObject, type SystemStateStoredData, type SystemStateStoredDataConverterMap, type SystemStateStoredDataFieldConverterConfig } from '@dereekb/firebase';
-import { ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE, zohoAccessTokenSystemStateDataConverter } from '@dereekb/firebase-server/zoho';
+import { ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE, zohoAccessTokenSystemStateDataConverterFactory } from '@dereekb/firebase-server/zoho';
 
 export const REGION_ENTITIES_SYSTEM_STATE_TYPE = 'regionentities';
 
@@ -273,7 +273,7 @@ export const regionEntitiesSystemDataConverter: SystemStateStoredDataFieldConver
 
 export const appSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
   [REGION_ENTITIES_SYSTEM_STATE_TYPE]: regionEntitiesSystemDataConverter,
-  [ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE]: zohoAccessTokenSystemStateDataConverter
+  [ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE]: zohoAccessTokenSystemStateDataConverterFactory({ encryptionSecret: 'test-secret' })
 };
 `;
     const result = validateSystemFolders([systemInspection(CANONICAL_FILES, source)]);

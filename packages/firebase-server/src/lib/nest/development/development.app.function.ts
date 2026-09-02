@@ -1,5 +1,5 @@
 import { type OnCallDevelopmentParams, type RUN_DEV_FUNCTION_APP_FUNCTION_KEY, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
-import { type CallableHttpFunction, type RunnableHttpFunction } from '../../function/type';
+import { type CallableHttpFunction } from '../../function/type';
 import { type NestAppPromiseGetter } from '../app';
 import { type NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
 import { type OnCallHandlerWithNestContextFactory } from '../function/v2/call';
@@ -60,8 +60,7 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
  * Spread this into your Firebase Functions exports to register the dev endpoint.
  */
 export interface FirebaseServerDevFunctions {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- RunnableHttpFunction supports legacy gen 1 deployments
-  readonly [RUN_DEV_FUNCTION_APP_FUNCTION_KEY]: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
+  readonly [RUN_DEV_FUNCTION_APP_FUNCTION_KEY]: CallableHttpFunction<OnCallDevelopmentParams>;
 }
 
 /**
@@ -91,8 +90,7 @@ export interface FirebaseServerDevFunctions {
 export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap>(config: FirebaseServerDevFunctionsConfig<N, S>): FirebaseServerDevFunctions {
   const { enabled, secure, nest, developerFunctionsMap, onCallFactory, allScheduledFunctions, disableDevelopmentScheduleFunction } = config;
 
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- RunnableHttpFunction supports legacy gen 1 deployments
-  let dev: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
+  let dev: CallableHttpFunction<OnCallDevelopmentParams>;
 
   if (enabled) {
     const fullFunctionsMap: OnCallDevelopmentFunctionMap<N> = {

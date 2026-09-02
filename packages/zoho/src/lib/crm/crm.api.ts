@@ -1322,16 +1322,3 @@ export interface ZohoCrmMultiRecordResultEntry<I, O> {
    */
   readonly result: O;
 }
-
-// MARK: Compat
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use makeUrlSearchParams instead.
- */
-export const zohoCrmUrlSearchParams = makeUrlSearchParams;
-
-/**
- * @deprecated use ZohoCrmGetRelatedRecordsPageFilter instead.
- */
-export type ZohoCrmGetNotesPageFilter = ZohoCrmGetRelatedRecordsPageFilter;

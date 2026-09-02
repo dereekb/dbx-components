@@ -88,10 +88,3 @@ export interface ZohoCrmNote extends ZohoCrmNoteData, UniqueModelWithId {}
  * A note associated with a specific CRM record. Currently identical to {@link ZohoCrmNote}.
  */
 export type ZohoCrmRecordNote = ZohoCrmNote;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use NewZohoCrmNewNoteData instead.
- */
-export type NewZohoCrmNewNoteData = NewZohoCrmNoteData;
