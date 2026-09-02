@@ -34,7 +34,6 @@ export interface DemoCalendarTestEventPopupComponentConfig {
     </dbx-dialog-content>
   `,
   imports: [DbxDialogModule, DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxActionFormDirective, DbxFormSourceDirective, DemoCalendarTestEventFormComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoCalendarTestEventPopupComponent extends AbstractDialogDirective<unknown, DemoCalendarTestEventPopupComponentConfig> {

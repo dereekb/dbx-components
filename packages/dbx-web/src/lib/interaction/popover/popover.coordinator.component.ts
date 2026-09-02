@@ -21,8 +21,7 @@ import { clean } from '@dereekb/dbx-core';
     @if (showSignal()) {
       <ng-content></ng-content>
     }
-  `,
-  standalone: true
+  `
 })
 export class DbxPopoverCoordinatorComponent {
   private readonly _service = inject(DbxPopoverCoordinatorService);

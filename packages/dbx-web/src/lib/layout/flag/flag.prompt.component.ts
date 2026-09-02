@@ -24,8 +24,7 @@ import { type Maybe } from '@dereekb/util';
       <ng-content></ng-content>
     </dbx-flag>
   `,
-  imports: [DbxFlagComponent],
-  standalone: true
+  imports: [DbxFlagComponent]
 })
 export class DbxFlagPromptComponent {
   readonly color = input<ThemePalette>('accent');

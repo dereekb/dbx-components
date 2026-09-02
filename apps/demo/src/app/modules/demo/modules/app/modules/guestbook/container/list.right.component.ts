@@ -13,7 +13,6 @@ import { DemoGuestbookViewComponent } from './guestbook.view.component';
 @Component({
   templateUrl: './list.right.component.html',
   imports: [DbxTwoColumnRightComponent, DemoGuestbookViewComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {

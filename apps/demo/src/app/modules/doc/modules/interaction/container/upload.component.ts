@@ -11,7 +11,6 @@ function mapFileToString(file: File) {
 
 @Component({
   templateUrl: './upload.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxContentPitDirective, NgTemplateOutlet, DbxFileUploadComponent, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

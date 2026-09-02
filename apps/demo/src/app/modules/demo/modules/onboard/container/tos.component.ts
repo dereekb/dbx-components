@@ -7,7 +7,6 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
       <p>Onboard ToS</p>
     </dbx-content-box>
   `,
-  standalone: true,
   imports: [DbxContentBoxDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

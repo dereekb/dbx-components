@@ -66,8 +66,7 @@ describe('DbxFirebaseFormSpaceStepBlockComponent badge', () => {
   template: `
     <dbx-firebase-formspace-step-block [step]="2" header="Cover File" [complete]="completeSignal()" [icon]="iconSignal()"></dbx-firebase-formspace-step-block>
   `,
-  imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceStepBlockComponent]
 })
 class TestDbxFirebaseFormSpaceStepBlockComponent {
   readonly block = viewChild.required(DbxFirebaseFormSpaceStepBlockComponent);

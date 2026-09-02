@@ -107,8 +107,7 @@ export function provideDbxActionButtonEchoConfig(config: DbxActionButtonEchoConf
  * ```
  */
 @Directive({
-  selector: '[dbxActionButton]',
-  standalone: true
+  selector: '[dbxActionButton]'
 })
 export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective {
   private readonly _injectedEchoConfig = inject<Maybe<DbxActionButtonEchoConfig>>(DBX_ACTION_BUTTON_ECHO_CONFIG, { optional: true });

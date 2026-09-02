@@ -73,8 +73,7 @@ export interface DbxTwoColumnViewState {
     class: 'dbx-two-column',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxResizedDirective, DbxContentContainerDirective],
-  standalone: true
+  imports: [DbxResizedDirective, DbxContentContainerDirective]
 })
 export class DbxTwoColumnComponent {
   private readonly _elementRef = inject(ElementRef);

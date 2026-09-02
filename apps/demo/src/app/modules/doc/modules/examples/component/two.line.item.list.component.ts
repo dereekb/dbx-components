@@ -21,8 +21,7 @@ import { type TwoLineItemValue, type TwoLineItemValueWithSelection } from './two
 @Component({
   selector: 'doc-two-line-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapperDirective<TwoLineItemValue> {
   constructor() {
@@ -37,8 +36,7 @@ export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapper
   selector: 'doc-two-line-item-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocTwoLineItemListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DocTwoLineItemListViewComponent)
 })
 export class DocTwoLineItemListViewComponent extends AbstractDbxSelectionListViewDirective<TwoLineItemValue> {
   readonly config: DbxSelectionValueListViewConfig<TwoLineItemValueWithSelection> = {
@@ -76,8 +74,7 @@ const STATUS_COLOR: Record<NonNullable<TwoLineItemValue['status']>, TwoLineItemS
       </div>
     </div>
   `,
-  imports: [DbxSpacerDirective, DbxChipDirective],
-  standalone: true
+  imports: [DbxSpacerDirective, DbxChipDirective]
 })
 export class DocTwoLineItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoLineItemValue> {
   get title(): string {

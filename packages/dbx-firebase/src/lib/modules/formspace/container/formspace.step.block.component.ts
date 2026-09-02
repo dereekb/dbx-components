@@ -81,8 +81,7 @@ export interface DbxFirebaseFormSpaceStepBlockComponentConfig {
     class: 'dbx-firebase-formspace-step-block d-block',
     '[class.dbx-firebase-formspace-step-block-complete]': 'completeSignal()'
   },
-  imports: [DbxStepBlockComponent],
-  standalone: true
+  imports: [DbxStepBlockComponent]
 })
 export class DbxFirebaseFormSpaceStepBlockComponent {
   readonly config = input<Maybe<DbxFirebaseFormSpaceStepBlockComponentConfig>>();

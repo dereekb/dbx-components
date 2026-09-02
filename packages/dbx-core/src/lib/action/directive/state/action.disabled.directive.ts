@@ -38,8 +38,7 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
  * @see {@link DbxActionDisabledOnSuccessDirective} for disabling after success.
  */
 @Directive({
-  selector: '[dbxActionDisabled]',
-  standalone: true
+  selector: '[dbxActionDisabled]'
 })
 export class DbxActionDisabledDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

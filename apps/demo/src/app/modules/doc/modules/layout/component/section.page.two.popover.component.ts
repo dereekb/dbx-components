@@ -21,7 +21,6 @@ export interface DocLayoutSectionPageTwoPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

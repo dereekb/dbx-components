@@ -26,8 +26,7 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
   selector: 'dbx-firebase-development-popup-content-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponentImportsModule],
-  providers: dbxForgeFormComponentProviders(),
-  standalone: true
+  providers: dbxForgeFormComponentProviders()
 })
 export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(

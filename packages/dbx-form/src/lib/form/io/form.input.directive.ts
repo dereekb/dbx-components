@@ -113,8 +113,7 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
  * @typeParam T - The form value type.
  */
 @Directive({
-  selector: '[dbxFormSource]',
-  standalone: true
+  selector: '[dbxFormSource]'
 })
 export class DbxFormSourceDirective<T = unknown> {
   readonly form = inject(DbxMutableForm<T>, { host: true });

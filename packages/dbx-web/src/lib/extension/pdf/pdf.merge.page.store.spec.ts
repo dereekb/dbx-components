@@ -289,8 +289,7 @@ describe('DbxPdfMergeEditorStore page editing', () => {
   template: `
     <div dbxPdfMergeEditorStore [config]="config()"></div>
   `,
-  imports: [DbxPdfMergeEditorStoreDirective],
-  standalone: true
+  imports: [DbxPdfMergeEditorStoreDirective]
 })
 class TestHostComponent {
   readonly config = signal<Maybe<DbxPdfMergeEditorConfig>>(undefined);

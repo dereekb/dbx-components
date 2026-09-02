@@ -64,7 +64,6 @@ import { overrideClickElementEffect } from '../../../util/click';
       <ng-content></ng-content>
     </ng-template>
   `,
-  standalone: true,
   imports: [NgTemplateOutlet, NgClass, DbxInjectionComponent],
   host: {
     class: 'd-inline dbx-anchor',

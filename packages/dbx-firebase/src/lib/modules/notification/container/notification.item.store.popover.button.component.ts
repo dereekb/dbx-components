@@ -13,7 +13,6 @@ export type DbxFirebaseNotificationItemStorePopoverButtonConfig = DbxFirebaseNot
   template: `
     <dbx-button #button (buttonClick)="showNotificationsPopover()" icon="notifications" iconOnly aria-label="Notifications"></dbx-button>
   `,
-  standalone: true,
   imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

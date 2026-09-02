@@ -41,7 +41,6 @@ export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreview
 @Component({
   selector: 'dbx-zip-blob-preview',
   templateUrl: './zip.blob.preview.component.html',
-  standalone: true,
   imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

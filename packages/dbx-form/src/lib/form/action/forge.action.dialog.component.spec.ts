@@ -40,7 +40,6 @@ const TEST_PROVIDERS = [provideNoopAnimations(), provideDbxForgeFormFieldDeclara
   template: `
     <div></div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class DialogTestHostComponent {

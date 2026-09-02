@@ -31,7 +31,6 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
       </ng-container>
     </dbx-prompt-confirm>
   `,
-  standalone: true,
   imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   templateUrl: './sidenav.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective, DbxAnchorListComponent],
   styles: [
     `

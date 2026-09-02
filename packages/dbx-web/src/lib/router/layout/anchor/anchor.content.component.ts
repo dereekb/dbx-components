@@ -22,7 +22,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  */
 @Component({
   selector: 'dbx-anchor-content',
-  standalone: true,
   imports: [MatIconModule],
   template: `
     @if (iconSignal()) {

@@ -24,7 +24,6 @@ export interface DemoGuestbookEntryPopupComponentConfig {
     </dbx-dialog-content>
   `,
   imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {

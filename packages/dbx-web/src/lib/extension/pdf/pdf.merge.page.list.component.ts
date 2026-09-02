@@ -66,8 +66,7 @@ const UNREADABLE_ICON = 'error';
   host: {
     class: 'dbx-pdf-merge-page-list d-block'
   },
-  imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent],
-  standalone: true
+  imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent]
 })
 export class DbxPdfMergePageListComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

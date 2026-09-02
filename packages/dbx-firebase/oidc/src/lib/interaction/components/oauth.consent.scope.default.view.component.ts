@@ -68,8 +68,7 @@ const OAUTH_CONSENT_SCOPES_PIT_SCROLLABLE_HEIGHT: DbxContentPitScrollableInput =
       </div>
     </dbx-content-pit>
   `,
-  imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective, DbxContentPitDirective, DbxLinkComponent],
-  standalone: true
+  imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective, DbxContentPitDirective, DbxLinkComponent]
 })
 export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);

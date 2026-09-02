@@ -55,8 +55,7 @@ export interface DbxForgeMapboxZoomFieldComponentProps {
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
   styleUrls: ['../mapbox.field.component.scss'],
-  imports: [NgClass, DbxMapboxModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
-  standalone: true
+  imports: [NgClass, DbxMapboxModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule]
 })
 export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });

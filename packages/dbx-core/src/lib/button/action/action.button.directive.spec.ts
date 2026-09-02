@@ -131,7 +131,6 @@ describe('Action Button', () => {
       <button dbxButton dbxActionButtonTrigger>Trigger</button>
     </div>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxButtonDirective, DbxActionButtonTriggerDirective]
 })
 class TestDbxActionButtonTriggerDirectiveComponent {
@@ -146,7 +145,6 @@ class TestDbxActionButtonTriggerDirectiveComponent {
       <button dbxButton dbxActionButton>Action</button>
     </div>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxButtonDirective, DbxActionButtonDirective]
 })
 class TestDbxActionButtonDirectiveComponent {

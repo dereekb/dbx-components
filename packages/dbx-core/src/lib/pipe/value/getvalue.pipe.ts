@@ -22,7 +22,6 @@ import { type GetterOrValue, getValueFromGetter } from '@dereekb/util';
  */
 @Pipe({
   name: 'getValue',
-  standalone: true,
   pure: false
 })
 export class GetValuePipe implements PipeTransform {
@@ -50,7 +49,6 @@ export class GetValuePipe implements PipeTransform {
  */
 @Pipe({
   name: 'getValueOnce',
-  standalone: true,
   pure: true
 })
 export class GetValueOncePipe implements PipeTransform {

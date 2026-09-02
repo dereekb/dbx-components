@@ -15,7 +15,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './value.date.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxFormValueChangeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

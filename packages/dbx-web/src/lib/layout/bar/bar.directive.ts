@@ -29,7 +29,6 @@ import { Directive } from '@angular/core';
   selector: 'dbx-bar,[dbxBar]',
   host: {
     class: 'dbx-bar'
-  },
-  standalone: true
+  }
 })
 export class DbxBarDirective {}

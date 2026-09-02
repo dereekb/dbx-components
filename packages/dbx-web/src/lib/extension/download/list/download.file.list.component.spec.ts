@@ -162,8 +162,7 @@ describe('DbxFileListComponent', () => {
       <span class="test-control">control</span>
     </dbx-file-list-item>
   `,
-  imports: [DbxFileListItemComponent],
-  standalone: true
+  imports: [DbxFileListItemComponent]
 })
 class TestDbxFileListItemComponent {
   readonly item = viewChild.required(DbxFileListItemComponent);
@@ -180,8 +179,7 @@ class TestDbxFileListItemComponent {
   template: `
     <dbx-file-list [entries]="entriesSignal()" [emptyText]="emptyTextSignal()"></dbx-file-list>
   `,
-  imports: [DbxFileListComponent],
-  standalone: true
+  imports: [DbxFileListComponent]
 })
 class TestDbxFileListComponent {
   readonly list = viewChild.required(DbxFileListComponent);

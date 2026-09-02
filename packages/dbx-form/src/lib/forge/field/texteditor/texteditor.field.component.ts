@@ -57,8 +57,7 @@ export interface DbxForgeTextEditorFieldDef extends BaseValueField<DbxForgeTextE
 @Component({
   selector: 'dbx-forge-texteditor-field',
   templateUrl: './texteditor.field.component.html',
-  imports: [NgClass, NgxEditorModule, FormsModule, ReactiveFormsModule],
-  standalone: true
+  imports: [NgClass, NgxEditorModule, FormsModule, ReactiveFormsModule]
 })
 export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   private readonly _compactContextStore = inject(CompactContextStore, { optional: true });

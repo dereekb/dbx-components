@@ -44,7 +44,6 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
     class: 'dbx-help-view-list dbx-block'
   },
   imports: [MatAccordion, DbxHelpViewListEntryComponent, DbxListEmptyContentComponent, DbxInjectionComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxHelpViewListComponent {

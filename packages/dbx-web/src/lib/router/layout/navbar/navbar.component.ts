@@ -61,8 +61,7 @@ export type NavbarButtonMode = 'menu' | 'rotate';
   host: {
     class: 'dbx-navbar'
   },
-  imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxButtonComponent, MatIconModule, MatMenu, MatMenuItem, NgClass, MatMenuTrigger],
-  standalone: true
+  imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxButtonComponent, MatIconModule, MatMenu, MatMenuItem, NgClass, MatMenuTrigger]
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective {
   private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);

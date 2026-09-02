@@ -53,7 +53,6 @@ export interface NumberWithLimit<T extends number = number> {
     </span>
   `,
   imports: [DbxColorDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxNumberWithLimitComponent<T extends number = number> {

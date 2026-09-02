@@ -16,7 +16,6 @@ const lastLoaded = signal<'a' | 'b' | undefined>(undefined);
   template: `
     <span>A</span>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestViewAComponent {
@@ -29,7 +28,6 @@ class TestViewAComponent {
   template: `
     <span>B</span>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestViewBComponent {
@@ -45,7 +43,6 @@ class TestViewBComponent {
       <form [dynamic-form]="config" [(value)]="formValue"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
   providers: [EventDispatcher],
   changeDetection: ChangeDetectionStrategy.OnPush

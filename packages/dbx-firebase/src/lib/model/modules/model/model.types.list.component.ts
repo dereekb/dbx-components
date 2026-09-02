@@ -12,8 +12,7 @@ export type DbxFirebaseModelTypeInstanceListItem = DbxValueAsListItem<DbxFirebas
   selector: 'dbx-firebase-model-type-instance-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceListComponent),
-  standalone: true
+  providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceListComponent)
 })
 export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelectionListWrapperDirective<DbxFirebaseModelTypesServiceInstancePair> {
   constructor() {
@@ -28,8 +27,7 @@ export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelect
   selector: 'dbx-firebase-model-type-instance-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DbxFirebaseModelTypeInstanceListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DbxFirebaseModelTypeInstanceListViewComponent)
 })
 export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
   readonly config: DbxSelectionValueListViewConfig<DbxFirebaseModelTypeInstanceListItem> = {
@@ -42,8 +40,7 @@ export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSe
   selector: 'dbx-firebase-model-type-instance-list-view-item',
   template: `
     <span>{{ title }}</span>
-  `,
-  standalone: true
+  `
 })
 export class DbxFirebaseModelTypeInstanceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {
   readonly title = this.itemValue.displayInfo.title;

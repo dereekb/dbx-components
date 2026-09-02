@@ -7,7 +7,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       <p>Page B</p>
     </div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocRouterNavbarBComponent {}

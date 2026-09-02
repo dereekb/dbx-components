@@ -7,7 +7,6 @@ import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PARTIAL_PRESETS } f
   selector: 'doc-interaction-test-filter-partial-preset-menu',
   template: '<dbx-partial-preset-filter-menu [config]="menuConfig" [partialPresets]="partialPresets"></dbx-partial-preset-filter-menu>',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPartialPresetMenuComponent)],
-  standalone: true,
   imports: [DbxPartialPresetFilterMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

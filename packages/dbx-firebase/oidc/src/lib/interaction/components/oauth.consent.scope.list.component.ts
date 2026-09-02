@@ -32,8 +32,7 @@ import { type OAuthConsentScope } from './oauth.consent.scope';
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelectionListWrapperDirective<OAuthConsentScope> {
   constructor() {
@@ -54,8 +53,7 @@ export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelect
   selector: 'dbx-firebase-oauth-consent-scope-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DbxFirebaseOAuthConsentScopeListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DbxFirebaseOAuthConsentScopeListViewComponent)
 })
 export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSelectionListViewDirective<OAuthConsentScope> {
   readonly config: DbxSelectionValueListViewConfig<OAuthConsentScope> = {
@@ -87,7 +85,6 @@ export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSe
       </div>
     </div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseOAuthConsentScopeListItemComponent extends AbstractDbxValueListViewItemComponent<OAuthConsentScope> {

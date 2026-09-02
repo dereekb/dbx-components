@@ -39,7 +39,6 @@ import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
   host: {
     class: 'dbx-us-address'
   },
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxUnitedStatesAddressComponent {

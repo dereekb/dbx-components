@@ -139,8 +139,7 @@ export function keyForDbxFirebaseFormSpaceListValue(formSpace: DbxFirebaseFormSp
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-firebase-formspace-list'
-  },
-  standalone: true
+  }
 })
 export class DbxFirebaseFormSpaceListComponent extends AbstractDbxSelectionListWrapperDirective<DbxFirebaseFormSpaceListValue> {
   constructor() {
@@ -158,8 +157,7 @@ export class DbxFirebaseFormSpaceListComponent extends AbstractDbxSelectionListW
   selector: 'dbx-firebase-formspace-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseFormSpaceListViewComponent),
-  imports: [DbxSelectionValueListViewComponentImportsModule],
-  standalone: true
+  imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DbxFirebaseFormSpaceListViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseFormSpaceListValue> {
   readonly config: DbxSelectionValueListViewConfig<DbxFirebaseFormSpaceListItem> = {
@@ -201,8 +199,7 @@ export class DbxFirebaseFormSpaceListViewComponent extends AbstractDbxSelectionL
       </div>
     </div>
   `,
-  imports: [NgClass, TimeDistancePipe],
-  standalone: true
+  imports: [NgClass, TimeDistancePipe]
 })
 export class DbxFirebaseFormSpaceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseFormSpaceListValue> {
   /**

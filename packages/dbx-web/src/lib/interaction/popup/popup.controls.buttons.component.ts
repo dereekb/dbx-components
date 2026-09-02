@@ -39,8 +39,7 @@ import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
   host: {
     class: 'dbx-popup-control-buttons'
   },
-  imports: [DbxButtonModule, DbxButtonSpacerDirective],
-  standalone: true
+  imports: [DbxButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxPopupControlButtonsComponent {
   private readonly _appPopupController = inject(DbxPopupController);

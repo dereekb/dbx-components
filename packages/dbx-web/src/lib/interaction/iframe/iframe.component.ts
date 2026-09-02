@@ -17,8 +17,7 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
   selector: 'dbx-iframe',
   template: `
     <iframe #iframe src="about:blank" frameborder="0" [scrolling]="scrolling()" allow="autoplay"></iframe>
-  `,
-  standalone: true
+  `
 })
 export class DbxIframeComponent {
   readonly sanitizer = inject(DomSanitizer);

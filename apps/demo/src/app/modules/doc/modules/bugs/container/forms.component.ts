@@ -11,7 +11,6 @@ import { DocFormForgeExampleComponent } from '../../shared/component/forge.examp
 
 @Component({
   templateUrl: './forms.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxErrorComponent, DbxActionErrorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

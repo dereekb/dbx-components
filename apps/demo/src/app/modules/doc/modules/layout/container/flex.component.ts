@@ -5,7 +5,6 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './flex.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFlexGroupDirective, DbxFlexSizeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

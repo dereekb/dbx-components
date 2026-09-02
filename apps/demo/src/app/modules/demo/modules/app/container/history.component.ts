@@ -5,7 +5,6 @@ import { DbxContentLayoutModule, DbxListEmptyContentComponent, DbxSectionLayoutM
 @Component({
   templateUrl: './history.component.html',
   imports: [DbxContentLayoutModule, DbxSectionLayoutModule, DbxSpacerDirective, DbxFirebaseModelHistoryPopoverButtonComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAppHistoryComponent {

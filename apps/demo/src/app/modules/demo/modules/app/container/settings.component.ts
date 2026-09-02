@@ -9,7 +9,6 @@ import { map, of, switchMap } from 'rxjs';
 @Component({
   templateUrl: './settings.component.html',
   imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAppSettingsComponent {

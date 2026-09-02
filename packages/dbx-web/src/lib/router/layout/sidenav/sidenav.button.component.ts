@@ -29,8 +29,7 @@ export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
       </button>
     }
   `,
-  imports: [MatIconModule, MatButtonModule],
-  standalone: true
+  imports: [MatIconModule, MatButtonModule]
 })
 export class DbxSidenavButtonComponent {
   readonly parent = inject(DbxSidenavComponent);

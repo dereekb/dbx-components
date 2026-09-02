@@ -19,8 +19,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'd-flex dbx-two-column-head',
     '[class.d-block]': 'block()',
     '[class.full]': 'full()'
-  },
-  standalone: true
+  }
 })
 export class DbxTwoColumnColumnHeadDirective {
   /**

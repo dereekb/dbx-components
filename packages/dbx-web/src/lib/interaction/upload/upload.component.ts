@@ -69,8 +69,7 @@ export interface DbxFileUploadComponentConfig {
     </ng-template>
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
-  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet],
-  standalone: true
+  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet]
 })
 export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
   readonly config = input<Maybe<DbxFileUploadComponentConfig>>();

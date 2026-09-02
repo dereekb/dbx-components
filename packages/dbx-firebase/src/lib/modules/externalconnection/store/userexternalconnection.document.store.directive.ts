@@ -8,8 +8,7 @@ import { UserExternalConnectionDocumentStore } from './userexternalconnection.do
  */
 @Directive({
   selector: '[dbxFirebaseUserExternalConnectionDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseUserExternalConnectionDocumentStoreDirective, UserExternalConnectionDocumentStore),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseUserExternalConnectionDocumentStoreDirective, UserExternalConnectionDocumentStore)
 })
 export class DbxFirebaseUserExternalConnectionDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<UserExternalConnection, UserExternalConnectionDocument, UserExternalConnectionDocumentStore> {
   constructor() {

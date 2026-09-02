@@ -9,7 +9,6 @@ import { UIView } from '@uirouter/angular';
 @Component({
   templateUrl: './layout.component.html',
   imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DbxSectionPageComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoFormSpaceLayoutComponent {}

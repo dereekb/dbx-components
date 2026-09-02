@@ -75,8 +75,7 @@ export interface DbxPopupComponentConfig<O, I, T> {
       provide: CompactContextStore
     }
   ],
-  imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent],
-  standalone: true
+  imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent]
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I> {
   private readonly popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);

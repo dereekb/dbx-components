@@ -20,8 +20,7 @@ import { type AnchorRowItemValue, type AnchorRowItemValueWithSelection } from '.
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-card-items-list'
-  },
-  standalone: true
+  }
 })
 export class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorRowItemValue> {
   constructor() {
@@ -39,8 +38,7 @@ export class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapp
   providers: provideDbxListView(DocAnchorRowItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  standalone: true
+  }
 })
 export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorRowItemValue> {
   readonly config: DbxSelectionValueListViewConfig<AnchorRowItemValueWithSelection> = {
@@ -64,8 +62,7 @@ export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListV
       </div>
     </div>
   `,
-  imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
-  standalone: true
+  imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent]
 })
 export class DocAnchorRowItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorRowItemValue> {
   get icon(): string {

@@ -29,7 +29,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
     </div>
   `,
   imports: [DbxResizedDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverContentComponent {

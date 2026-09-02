@@ -157,8 +157,7 @@ export interface DbxFirebaseFormSpaceSubmitButtonComponentConfig {
     // above it wherever it is dropped
     class: 'dbx-firebase-formspace-submit-button d-block dbx-pt3'
   },
-  imports: [DbxActionModule, DbxButtonComponent, DbxErrorComponent],
-  standalone: true
+  imports: [DbxActionModule, DbxButtonComponent, DbxErrorComponent]
 })
 export class DbxFirebaseFormSpaceSubmitButtonComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

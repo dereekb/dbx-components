@@ -19,8 +19,7 @@ import { DbxDetachControlButtonsComponent } from './detach.controls.buttons.comp
   host: {
     class: 'dbx-detach-controls'
   },
-  imports: [DbxDetachControlButtonsComponent],
-  standalone: true
+  imports: [DbxDetachControlButtonsComponent]
 })
 export class DbxDetachControlsComponent {
   readonly header = input<string>();

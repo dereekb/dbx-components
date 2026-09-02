@@ -4,7 +4,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'doc-feature-layout',
   templateUrl: './feature.layout.component.html',
-  standalone: true,
   imports: [DbxSectionComponent_1],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -38,7 +38,6 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
     '[class.dbx-detail-block-big-header]': 'bigHeader()'
   },
   imports: [DbxDetailBlockHeaderComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDetailBlockComponent {

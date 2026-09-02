@@ -42,8 +42,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     '[class]': 'classConfigSignal()',
     '[attr.aria-label]': 'headerConfigSignal().header'
   },
-  imports: [DbxSectionHeaderComponent],
-  standalone: true
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
   /**

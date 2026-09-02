@@ -26,8 +26,7 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
   `,
   host: {
     class: 'dbx-popup-content'
-  },
-  standalone: true
+  }
 })
 export class DbxPopupContentComponent {
   private readonly appPopupController = inject(DbxPopupController);

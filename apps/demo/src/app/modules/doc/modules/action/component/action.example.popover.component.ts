@@ -25,7 +25,6 @@ export interface DocInteractionPopoverConfig {
       </dbx-content-container>
     </dbx-popover-content>
   `,
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

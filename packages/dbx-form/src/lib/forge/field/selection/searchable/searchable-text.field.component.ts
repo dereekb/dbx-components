@@ -25,8 +25,7 @@ import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-forge-searchable-text-field',
   templateUrl: './searchable-text.field.component.html',
-  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent],
-  standalone: true
+  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent]
 })
 export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableTextFieldProps<T, M, H>> {
   private readonly elementRef = inject(ElementRef<HTMLElement>);

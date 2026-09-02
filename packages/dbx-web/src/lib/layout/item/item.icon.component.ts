@@ -33,7 +33,6 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  standalone: true,
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

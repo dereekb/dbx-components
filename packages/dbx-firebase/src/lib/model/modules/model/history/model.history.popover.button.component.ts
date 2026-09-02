@@ -11,7 +11,6 @@ export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistory
   template: `
     <dbx-button #button (buttonClick)="showHistoryPopover()" icon="history" iconOnly></dbx-button>
   `,
-  standalone: true,
   imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -37,7 +37,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
  */
 @Directive({
   selector: '[dbxWebPageTitleInfo]',
-  standalone: true,
   exportAs: 'dbxWebPageTitleInfo'
 })
 export class DbxWebPageTitleInfoDirective implements DbxWebPageTitleInfoReference {

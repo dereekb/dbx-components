@@ -105,8 +105,7 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
   selector: 'dbx-schedule-selection-calendar',
   templateUrl: './calendar.schedule.selection.component.html',
   imports: [NgClass, CalendarMonthViewComponent, CalendarDatePipe, DbxCalendarBaseComponent, DbxInjectionComponent, DbxButtonSpacerDirective, DbxScheduleSelectionCalendarCellComponent, DbxScheduleSelectionCalendarSelectionToggleButtonComponent],
-  providers: [DbxCalendarStore],
-  standalone: true
+  providers: [DbxCalendarStore]
 })
 export class DbxScheduleSelectionCalendarComponent<T> implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<T>);

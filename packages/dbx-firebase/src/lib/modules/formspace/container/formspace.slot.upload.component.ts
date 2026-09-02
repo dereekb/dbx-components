@@ -205,8 +205,7 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
     DbxFirebaseStorageFileUploadSyncDirective,
     DbxFirebaseFormSpaceSlotUploadDirective,
     DbxFirebaseFormSpaceUploadInitializeDocumentsDirective
-  ],
-  standalone: true
+  ]
 })
 export class DbxFirebaseFormSpaceSlotUploadComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

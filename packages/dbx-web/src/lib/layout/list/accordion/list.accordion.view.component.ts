@@ -136,8 +136,7 @@ export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxVal
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListAccordionViewContentComponent = inject(DbxValueListAccordionViewContentComponent<T>);
@@ -188,7 +187,6 @@ export class DbxValueListAccordionViewContentGroupComponent<G, T, I extends DbxV
   host: {
     class: 'dbx-list-accordion-view'
   },
-  standalone: true,
   imports: [MatAccordion, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -229,7 +227,6 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
   template: `
     <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? false"></dbx-list-accordion-view-content>
   `,
-  standalone: true,
   imports: [DbxValueListAccordionViewContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

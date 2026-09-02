@@ -23,7 +23,6 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
  */
 @Component({
   selector: 'dbx-firebase-oauth-login',
-  standalone: true,
   imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
     <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" (retryClick)="retry()">

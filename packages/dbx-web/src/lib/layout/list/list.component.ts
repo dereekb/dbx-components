@@ -22,8 +22,7 @@ import { DbxLoadingComponent } from '../../loading/loading.component';
   host: {
     class: 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide()'
-  },
-  standalone: true
+  }
 })
 export class DbxListInternalContentDirective {
   private readonly parent = inject(DbxListComponent);
@@ -143,8 +142,7 @@ export const DEFAULT_DBX_LIST_THROTTLE_SCROLL = 50;
     role: 'list',
     '[class.dbx-list-padded]': 'padded()'
   },
-  imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent],
-  standalone: true
+  imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent]
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
   /**

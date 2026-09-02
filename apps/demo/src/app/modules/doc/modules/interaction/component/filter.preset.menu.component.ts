@@ -7,7 +7,6 @@ import { type DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './f
   selector: 'doc-interaction-test-filter-preset-menu',
   template: '<dbx-preset-filter-menu [config]="menuConfig" [presets]="presets"></dbx-preset-filter-menu>',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPresetMenuComponent)],
-  standalone: true,
   imports: [DbxPresetFilterMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

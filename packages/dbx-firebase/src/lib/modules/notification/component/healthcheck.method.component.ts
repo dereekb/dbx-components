@@ -104,7 +104,6 @@ export interface DbxFirebaseNotificationHealthCheckMethodProbeActionConfig {
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-method'
   },
-  standalone: true,
   imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxChipDirective, DbxColorDirective, DbxErrorComponent, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

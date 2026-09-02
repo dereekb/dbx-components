@@ -15,8 +15,7 @@ export interface CustomDocValue extends DocValue {
 @Component({
   selector: 'doc-custom-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<DocValue> {
   constructor() {
@@ -29,8 +28,7 @@ export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<
 @Component({
   template: DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocCustomItemListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DocCustomItemListViewComponent)
 })
 export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective<DocValue> {
   readonly config: DbxValueListViewConfig<DocValueWithSelection> = {
@@ -46,8 +44,7 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
       <h4 class="no-margin">{{ anchorType }}</h4>
       <p>{{ name }}</p>
     </div>
-  `,
-  standalone: true
+  `
 })
 export class DocCustomItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

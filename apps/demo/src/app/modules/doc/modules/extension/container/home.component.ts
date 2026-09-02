@@ -5,7 +5,6 @@ import { DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@d
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DocFeatureCardListComponent, DbxWebPageTitleInfoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

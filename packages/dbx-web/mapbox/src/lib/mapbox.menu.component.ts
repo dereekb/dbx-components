@@ -19,8 +19,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
     style: 'visibility: hidden; position: fixed',
     '[style.top]': 'posSignal().y',
     '[style.left]': 'posSignal().x'
-  },
-  standalone: true
+  }
 })
 export class DbxMapboxMenuComponent {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

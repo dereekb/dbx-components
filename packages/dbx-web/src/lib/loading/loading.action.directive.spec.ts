@@ -128,7 +128,6 @@ const TEST_CONTENT = 'Content';
       </dbx-loading>
     </div>
   `,
-  standalone: true,
   imports: [DbxLoadingComponent, DbxActionLoadingContextDirective, DbxActionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

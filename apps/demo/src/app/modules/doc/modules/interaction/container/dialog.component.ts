@@ -8,7 +8,6 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './dialog.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxContentPitDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

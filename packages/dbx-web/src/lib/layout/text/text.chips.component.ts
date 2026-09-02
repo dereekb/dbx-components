@@ -51,7 +51,6 @@ export interface TextChip extends LabeledValue<string> {
     }
   `,
   imports: [MatChipsModule, MatTooltipModule],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTextChipsComponent {

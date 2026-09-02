@@ -11,7 +11,6 @@ import { combineLatest, map, of, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './quiz.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DbxContentPitDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, QuizComponent, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

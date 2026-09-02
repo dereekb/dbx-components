@@ -6,7 +6,6 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent, MatButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

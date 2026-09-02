@@ -36,7 +36,6 @@ import { map, shareReplay } from 'rxjs';
     DemoTestFormSpaceFormComponent,
     TimeDistancePipe
   ],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoFormSpaceListPageRightComponent implements OnDestroy {

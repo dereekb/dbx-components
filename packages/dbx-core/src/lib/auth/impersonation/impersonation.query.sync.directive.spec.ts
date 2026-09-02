@@ -44,7 +44,6 @@ class TestDbxRouterService {
   template: `
     <div dbxAuthImpersonationQuerySync></div>
   `,
-  standalone: true,
   imports: [DbxAuthImpersonationQuerySyncDirective]
 })
 class TestHostComponent {}

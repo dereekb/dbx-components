@@ -34,7 +34,6 @@ export interface DbxHelpViewPopoverButtonConfig extends DbxHelpViewPopoverConfig
   template: `
     <dbx-button #button (buttonClick)="showHelpPopover()" [buttonStyle]="buttonStyleSignal()" [buttonDisplay]="buttonDisplaySignal()"></dbx-button>
   `,
-  standalone: true,
   imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

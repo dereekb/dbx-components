@@ -29,7 +29,6 @@ export interface TestCalendarEventData extends DateCell {
 @Component({
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

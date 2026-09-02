@@ -11,8 +11,7 @@ import { Directive, ElementRef, Injector, inject } from '@angular/core';
  * ```
  */
 @Directive({
-  selector: '[dbxStructure]',
-  standalone: true
+  selector: '[dbxStructure]'
 })
 export class DbxStructureDirective {
   readonly injector = inject(Injector);

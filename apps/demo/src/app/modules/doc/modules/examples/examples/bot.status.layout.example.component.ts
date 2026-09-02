@@ -95,7 +95,6 @@ const SEND_HISTORY_COLUMNS = ['sentAt', 'trigger', 'itemsRemaining', 'status'];
  */
 @Component({
   selector: 'doc-bot-status-layout-example',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxSectionComponent, DbxAnchorComponent, DbxButtonComponent, DbxColorDirective, DbxTextColorDirective, DbxChipDirective, DocManualActionsItemListComponent, MatCardModule, MatTableModule, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Bot Status Layout" hint="success color-accented status card, a mat-table send history with tonal dbx-chip pills, and a hover-free manual-actions card with a dashed generate box.">

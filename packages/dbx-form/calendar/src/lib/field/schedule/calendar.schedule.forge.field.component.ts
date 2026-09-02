@@ -53,8 +53,7 @@ export interface DbxForgeCalendarDateScheduleRangeFieldComponentProps extends Pi
     </div>
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()],
-  imports: [DbxInjectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent],
-  standalone: true
+  imports: [DbxInjectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent]
 })
 export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly compact = inject(CompactContextStore, { optional: true });

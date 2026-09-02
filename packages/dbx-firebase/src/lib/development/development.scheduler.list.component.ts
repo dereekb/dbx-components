@@ -26,8 +26,7 @@ export type ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection =
   selector: 'dbx-firebase-development-scheduler-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  providers: provideDbxListViewWrapper(DbxFirebaseDevelopmentSchedulerListComponent),
-  standalone: true
+  providers: provideDbxListViewWrapper(DbxFirebaseDevelopmentSchedulerListComponent)
 })
 export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSelectionListWrapperDirective<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
   constructor() {
@@ -42,8 +41,7 @@ export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSel
   selector: 'dbx-firebase-development-scheduler-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DbxFirebaseDevelopmentSchedulerListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DbxFirebaseDevelopmentSchedulerListViewComponent)
 })
 export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDbxSelectionListViewDirective<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
   readonly config: DbxSelectionValueListViewConfig<ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection> = {
@@ -59,8 +57,7 @@ export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDb
       <div *dbxActionHasSuccess="3000" class="dbx-success">Success</div>
     </div>
   `,
-  imports: [DbxActionModule, DbxButtonComponent, DbxActionButtonDirective],
-  standalone: true
+  imports: [DbxActionModule, DbxButtonComponent, DbxActionButtonDirective]
 })
 export class DbxFirebaseDevelopmentSchedulerListViewItemComponent extends AbstractDbxValueListViewItemComponent<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
   readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);

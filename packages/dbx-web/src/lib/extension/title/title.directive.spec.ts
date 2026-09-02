@@ -21,7 +21,6 @@ import { type DbxWebPageTitleDetails, type DbxWebPageTitleInfoConfig } from './t
       </div>
     }
   `,
-  standalone: true,
   imports: [DbxWebPageTitleInfoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

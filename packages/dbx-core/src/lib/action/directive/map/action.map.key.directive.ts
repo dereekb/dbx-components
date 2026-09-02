@@ -33,8 +33,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive({
   selector: '[dbxActionFromMap]',
-  providers: provideSecondaryActionStoreSource(DbxActionFromMapDirective),
-  standalone: true
+  providers: provideSecondaryActionStoreSource(DbxActionFromMapDirective)
 })
 export class DbxActionFromMapDirective implements SecondaryActionContextStoreSource {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);

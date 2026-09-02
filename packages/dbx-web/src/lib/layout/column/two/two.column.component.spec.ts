@@ -33,7 +33,6 @@ describe('DbxTwoColumnComponent', () => {
       </div>
     </dbx-two-column>
   `,
-  standalone: true,
   imports: [DbxTwoColumnComponent],
   providers: provideTwoColumnsContext()
 })

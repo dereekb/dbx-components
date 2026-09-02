@@ -19,7 +19,6 @@ const AUTO_CONFIRM_READY_VALUE = 'autoConfirmReadyValue';
       <dbx-button dbxActionButton text="Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -40,7 +39,6 @@ class TestConfirmComponent {
       <dbx-button dbxActionButton text="Skip Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -63,7 +61,6 @@ class TestConfirmSkipComponent {
       <dbx-button dbxActionButton text="Auto Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

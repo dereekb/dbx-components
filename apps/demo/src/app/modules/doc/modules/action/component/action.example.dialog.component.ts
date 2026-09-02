@@ -16,7 +16,6 @@ import { MatButton } from '@angular/material/button';
       </div>
     </dbx-dialog-content>
   `,
-  standalone: true,
   imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

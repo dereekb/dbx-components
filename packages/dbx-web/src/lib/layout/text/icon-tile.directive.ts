@@ -49,8 +49,7 @@ import { Directive, input } from '@angular/core';
   host: {
     class: 'dbx-icon-tile',
     '[class.dbx-icon-tile-round]': 'dbxIconTileRound()'
-  },
-  standalone: true
+  }
 })
 export class DbxIconTileDirective {
   /**

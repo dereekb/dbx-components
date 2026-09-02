@@ -17,8 +17,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * @see {@link DbxActionAutoModifyDirective} for always keeping the action modified.
  */
 @Directive({
-  selector: '[dbxActionIsModified]',
-  standalone: true
+  selector: '[dbxActionIsModified]'
 })
 export class DbxActionIsModifiedDirective extends AbstractIfDirective {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);

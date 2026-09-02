@@ -22,7 +22,6 @@ import { makeAnchorButtonItemValues, type AnchorButtonItemValue } from '../compo
  */
 @Component({
   selector: 'doc-list-anchor-button-example',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocAnchorButtonItemListComponent],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Anchor-Button List" hint="Two-line row whose trailing button wraps a per-item ClickableAnchor via dbx-anchor.">

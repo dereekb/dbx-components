@@ -5,7 +5,6 @@ import { DbxContentContainerDirective, DbxSectionPageComponent } from '@dereekb/
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DbxSectionPageComponent, DocFeatureCardListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -20,8 +20,7 @@ import { registerHelpContextKeysWithDbxHelpContextService } from './help.context
  * ```
  */
 @Directive({
-  selector: '[dbxHelpContext]',
-  standalone: true
+  selector: '[dbxHelpContext]'
 })
 export class DbxHelpContextDirective {
   /**

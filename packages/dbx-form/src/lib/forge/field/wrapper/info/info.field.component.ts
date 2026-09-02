@@ -27,7 +27,6 @@ import type { DbxForgeInfoButtonFieldProps } from './info.field';
     }
   `,
   imports: [MatIconButton, MatIconModule],
-  standalone: true,
   host: {
     '[class]': 'className()'
   }

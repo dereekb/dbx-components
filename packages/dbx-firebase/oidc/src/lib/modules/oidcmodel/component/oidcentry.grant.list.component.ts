@@ -32,7 +32,6 @@ import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
   selector: 'dbx-firebase-oidc-grant-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DbxFirebaseOidcEntryGrantListComponent),
-  standalone: true,
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
@@ -52,7 +51,6 @@ export class DbxFirebaseOidcEntryGrantListComponent extends AbstractDbxSelection
   selector: 'dbx-firebase-oidc-grant-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseOidcEntryGrantListViewComponent),
-  standalone: true,
   imports: [DbxSelectionValueListViewComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -95,7 +93,6 @@ export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelec
       </div>
     </div>
   `,
-  standalone: true,
   imports: [DatePipe, DbxSpacerDirective, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
   providers: [OidcEntryDocumentStore],
   changeDetection: ChangeDetectionStrategy.OnPush

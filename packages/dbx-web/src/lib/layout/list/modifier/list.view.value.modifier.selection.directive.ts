@@ -31,8 +31,7 @@ export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisio
  * ```
  */
 @Directive({
-  selector: 'dbxListItemIsSelectedModifier,[dbxListItemIsSelectedModifier]',
-  standalone: true
+  selector: 'dbxListItemIsSelectedModifier,[dbxListItemIsSelectedModifier]'
 })
 export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> {
   readonly listItemIsSelected = input.required<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<'' | DbxValueListItemDecisionFunction<T>>>({ alias: 'dbxListItemIsSelectedModifier', transform: transformEmptyStringInputToUndefined });

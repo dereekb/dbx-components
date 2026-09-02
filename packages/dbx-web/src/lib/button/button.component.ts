@@ -62,8 +62,7 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
   `,
   providers: provideDbxButton(DbxButtonComponent),
   imports: [DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, NgTemplateOutlet],
-  hostDirectives: [DbxColorDirective],
-  standalone: true
+  hostDirectives: [DbxColorDirective]
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
   /**

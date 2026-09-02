@@ -21,7 +21,6 @@ import { MatIconModule } from '@angular/material/icon';
     class: 'dbx-dialog-content-close',
     '[class.dbx-dialog-content-close-padding]': 'padded()'
   },
-  standalone: true,
   imports: [MatIconModule, MatIconButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

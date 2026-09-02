@@ -52,7 +52,6 @@ export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<D
     <div class="dbx-form-component" dbx-injection [config]="configSignal()"></div>
   `,
   imports: [DbxInjectionComponent],
-  standalone: true,
   host: {
     '[class]': 'className()',
     '[class.dbx-forge-disabled]': 'showDisabledStateSignal()'

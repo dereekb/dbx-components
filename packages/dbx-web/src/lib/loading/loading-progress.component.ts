@@ -51,8 +51,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
       }
     </div>
   `,
-  imports: [MatProgressBar, MatProgressSpinner, NgClass],
-  standalone: true
+  imports: [MatProgressBar, MatProgressSpinner, NgClass]
 })
 export class DbxLoadingProgressComponent {
   readonly defaultDiameter = DEFAULT_LOADING_PROGRESS_DIAMETER;

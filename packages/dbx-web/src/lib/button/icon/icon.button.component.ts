@@ -50,7 +50,6 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
   host: {
     class: 'dbx-icon-button'
   },
-  imports: [MatButtonModule, MatIconModule, MatIconButton, NgTemplateOutlet],
-  standalone: true
+  imports: [MatButtonModule, MatIconModule, MatIconButton, NgTemplateOutlet]
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}

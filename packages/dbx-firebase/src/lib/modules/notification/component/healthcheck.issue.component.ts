@@ -33,7 +33,6 @@ import { DbxFirebaseNotificationHealthCheckPresentationService } from '../servic
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-issue'
   },
-  standalone: true,
   imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

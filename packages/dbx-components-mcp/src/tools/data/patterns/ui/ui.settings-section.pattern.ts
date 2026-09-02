@@ -35,7 +35,6 @@ import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-account-settings',
-  standalone: true,
   imports: [DbxSectionComponent, DbxBarDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxActionDirective, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
   template: \`
     <dbx-section header="Account" icon="person" hint="Update your profile">

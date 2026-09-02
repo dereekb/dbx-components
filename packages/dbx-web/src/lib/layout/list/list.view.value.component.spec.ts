@@ -36,8 +36,7 @@ let testItemDestroyCount = 0;
   selector: 'dbx-test-item',
   template: `
     <span class="test-item-name">{{ itemValue.name }}</span>
-  `,
-  standalone: true
+  `
 })
 class TestItemComponent extends AbstractDbxValueListViewItemComponent<TestItem> implements OnDestroy {
   constructor() {
@@ -79,7 +78,6 @@ class MockDbxListView extends DbxListView<TestItem> {
   template: `
     <dbx-list-view-content [items]="items()"></dbx-list-view-content>
   `,
-  standalone: true,
   imports: [DbxValueListViewContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -93,7 +91,6 @@ class TestListHostComponent {
   template: `
     <dbx-list-view-content [dbxListTitleGroup]="groupDelegate()" [items]="items()"></dbx-list-view-content>
   `,
-  standalone: true,
   imports: [DbxValueListViewContentComponent, DbxListTitleGroupDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

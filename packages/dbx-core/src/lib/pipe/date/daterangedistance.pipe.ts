@@ -23,7 +23,6 @@ import { type DateRange, formatDateDistance } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateRangeDistance',
-  standalone: true,
   pure: false
 })
 export class DateRangeDistancePipe implements PipeTransform {

@@ -13,7 +13,6 @@ export interface DocExtensionMapboxContentExampleData {}
       </dbx-content-border>
     </div>
   `,
-  standalone: true,
   imports: [DbxContentBorderDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

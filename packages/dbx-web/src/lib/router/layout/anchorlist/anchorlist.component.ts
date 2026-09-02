@@ -36,8 +36,7 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
 @Component({
   selector: 'dbx-anchor-list',
   templateUrl: './anchorlist.component.html',
-  imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent],
-  standalone: true
+  imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent]
 })
 export class DbxAnchorListComponent {
   readonly anchors = input.required<ClickableAnchorLinkTree[], Maybe<ClickableAnchorLinkTree[]>>({ transform: (x) => x ?? [] });

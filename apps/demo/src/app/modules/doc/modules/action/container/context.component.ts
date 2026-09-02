@@ -10,7 +10,6 @@ import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 @Component({
   templateUrl: './context.component.html',
-  standalone: true,
   imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

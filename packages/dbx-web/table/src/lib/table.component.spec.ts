@@ -26,7 +26,6 @@ describe('DbxTableViewComponent', () => {
   template: `
     <dbx-table-view></dbx-table-view>
   `,
-  standalone: true,
   imports: [DbxTableViewComponent],
   providers: [DbxTableStore]
 })

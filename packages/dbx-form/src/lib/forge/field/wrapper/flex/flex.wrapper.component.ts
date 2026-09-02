@@ -15,8 +15,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
       <ng-container #fieldComponent></ng-container>
     </div>
   `,
-  imports: [DbxFlexGroupDirective],
-  standalone: true
+  imports: [DbxFlexGroupDirective]
 })
 export class DbxForgeFlexWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

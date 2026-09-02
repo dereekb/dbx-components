@@ -91,8 +91,7 @@ export type DbxHelpViewPopoverConfigWithoutOrigin = Omit<DbxHelpViewPopoverConfi
  */
 @Component({
   templateUrl: './help.view.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxHelpViewListComponent, DbxInjectionComponent],
-  standalone: true
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxHelpViewListComponent, DbxInjectionComponent]
 })
 export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknown, DbxHelpViewPopoverConfig> {
   private readonly _helpContextService = inject(DbxHelpContextService);

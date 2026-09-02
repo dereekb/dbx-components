@@ -36,7 +36,6 @@ import { LOREM } from '../../shared';
 
 @Component({
   templateUrl: './text.component.html',
-  standalone: true,
   imports: [
     DbxButtonComponent,
     DbxContentContainerDirective,

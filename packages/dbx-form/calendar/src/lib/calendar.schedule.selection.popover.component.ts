@@ -19,8 +19,7 @@ export interface DbxScheduleSelectionCalendarDatePopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverInteractionModule, DbxScheduleSelectionCalendarDatePopoverContentComponent],
-  standalone: true
+  imports: [DbxPopoverInteractionModule, DbxScheduleSelectionCalendarDatePopoverContentComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverComponent extends AbstractPopoverDirective<void> {
   static openPopover(popoverService: DbxPopoverService, { origin, injector }: DbxScheduleSelectionCalendarDatePopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, number> {

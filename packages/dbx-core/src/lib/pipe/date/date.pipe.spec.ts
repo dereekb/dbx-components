@@ -42,7 +42,6 @@ describe('Date Pipe Test Component', () => {
       <p>{{ date | toMinutes }}</p>
     </div>
   `,
-  standalone: true,
   imports: [DateFormatFromToPipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistancePipe, ToJsDatePipe, ToMinutesPipe]
 })
 class DatePipesTestComponent {

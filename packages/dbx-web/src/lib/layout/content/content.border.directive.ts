@@ -39,8 +39,7 @@ export type DbxContentBorderOpacity = 'lite' | 'full';
     class: 'd-block dbx-content-border',
     '[style.--dbx-border-color]': 'borderColorVarSignal()',
     '[style.--dbx-border-opacity]': 'borderOpacityValueSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxContentBorderDirective {
   readonly color = input<DbxThemeColor>('default');

@@ -528,7 +528,6 @@ interface OrphanTestFormValue {
   template: `
     <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent, DbxFormSourceDirective],
   providers: [provideDbxForgeFormContext(), DbxCalendarStore, DbxCalendarScheduleSelectionStore],
   changeDetection: ChangeDetectionStrategy.OnPush

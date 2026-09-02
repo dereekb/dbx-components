@@ -15,7 +15,6 @@ import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/d
 
 @Component({
   templateUrl: './interaction.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

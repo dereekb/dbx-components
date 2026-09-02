@@ -61,7 +61,6 @@ interface DbxErrorComponentState {
       }
     }
   `,
-  standalone: true,
   imports: [DbxErrorViewComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

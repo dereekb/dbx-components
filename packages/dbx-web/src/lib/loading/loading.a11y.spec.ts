@@ -91,7 +91,6 @@ describe('Loading a11y', () => {
   template: `
     <dbx-basic-loading [loading]="loading()" [error]="error()"><p>Content</p></dbx-basic-loading>
   `,
-  standalone: true,
   imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -26,8 +26,7 @@ import { Directive, input } from '@angular/core';
     class: 'd-block dbx-content-box',
     '[class.dbx-content-elevate]': 'elevate()',
     '[class.dbx-content-box-wide]': 'wide()'
-  },
-  standalone: true
+  }
 })
 export class DbxContentBoxDirective {
   readonly elevate = input<boolean>(true);

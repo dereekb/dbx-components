@@ -58,8 +58,7 @@ import { DEFAULT_DBX_FILE_LIST_ITEM_DETAILS_CLASS, DEFAULT_DBX_FILE_LIST_ITEM_DE
   host: {
     class: 'dbx-file-list-item d-block'
   },
-  imports: [DatePipe, NgClass, MatIconModule, TimeDistancePipe, DbxSpacerDirective],
-  standalone: true
+  imports: [DatePipe, NgClass, MatIconModule, TimeDistancePipe, DbxSpacerDirective]
 })
 export class DbxFileListItemComponent {
   readonly config = input<Maybe<DbxFileListItemComponentConfig>>();

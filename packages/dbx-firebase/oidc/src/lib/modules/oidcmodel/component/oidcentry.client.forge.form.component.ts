@@ -31,8 +31,7 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClient
   selector: 'dbx-firebase-oidc-client-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientFormValue, DbxFirebaseOidcEntryClientFormComponentConfig> {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);

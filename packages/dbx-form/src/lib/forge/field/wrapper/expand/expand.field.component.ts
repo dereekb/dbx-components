@@ -41,7 +41,6 @@ import type { DbxForgeExpandFieldProps } from './expand.field';
     }
   `,
   imports: [MatButtonModule, MatIconModule],
-  standalone: true,
   host: {
     '[class]': 'className()'
   }

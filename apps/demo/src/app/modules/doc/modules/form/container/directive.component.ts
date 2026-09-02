@@ -15,7 +15,6 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directive.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

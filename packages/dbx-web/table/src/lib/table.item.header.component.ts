@@ -10,8 +10,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableItemHeaderComponent<T> extends AbstractDbxTableItemDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(

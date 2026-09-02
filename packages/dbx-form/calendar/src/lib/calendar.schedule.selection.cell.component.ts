@@ -17,8 +17,7 @@ import { map, shareReplay, switchMap } from 'rxjs';
   host: {
     class: 'dbx-schedule-selection-calendar-cell'
   },
-  imports: [MatIconModule],
-  standalone: true
+  imports: [MatIconModule]
 })
 export class DbxScheduleSelectionCalendarCellComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

@@ -14,7 +14,6 @@ import { JsonPipe } from '@angular/common';
   templateUrl: './action.example.tool.component.html',
   selector: 'doc-action-example-tools',
   providers: [provideDbxForgeFormContext()],
-  standalone: true,
   imports: [DbxActionSourceDirective, MatDivider, FlexModule, DbxErrorComponent, DbxActionErrorDirective, JsonPipe]
 })
 export class DocActionExampleToolsComponent {

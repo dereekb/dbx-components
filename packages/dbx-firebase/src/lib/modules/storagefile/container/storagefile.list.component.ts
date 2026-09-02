@@ -152,8 +152,7 @@ export function keyForDbxFirebaseStorageFileListEntry(entry: DbxFirebaseStorageF
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-firebase-storagefile-list dbx-list-auto-height dbx-list-no-hover-effects'
-  },
-  standalone: true
+  }
 })
 export class DbxFirebaseStorageFileListComponent<T = unknown> extends AbstractDbxListWrapperDirective<DbxFirebaseStorageFileListEntry<T>> {
   readonly rowConfig = input<Maybe<DbxFirebaseStorageFileListRowConfig<T>>>();
@@ -237,8 +236,7 @@ export class DbxFirebaseStorageFileListComponent<T = unknown> extends AbstractDb
   host: {
     // the row owns all of its own padding
     class: 'dbx-list-item-p0'
-  },
-  standalone: true
+  }
 })
 export class DbxFirebaseStorageFileListViewComponent extends AbstractDbxListViewDirective<DbxFirebaseStorageFileListEntry> {
   readonly config: DbxValueListViewConfig<DbxFirebaseStorageFileListItem> = {
@@ -293,8 +291,7 @@ export class DbxFirebaseStorageFileListViewComponent extends AbstractDbxListView
     DbxButtonSpacerDirective,
     DbxFileListItemComponent,
     DbxFirebaseStorageFileDownloadButtonComponent
-  ],
-  standalone: true
+  ]
 })
 export class DbxFirebaseStorageFileListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseStorageFileListEntry> {
   readonly list = inject(DbxFirebaseStorageFileListComponent);

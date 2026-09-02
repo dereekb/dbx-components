@@ -22,7 +22,6 @@ import { dbxForgeTextField } from '../field/value/text/text.field';
       <dbx-forge dbxActionForm [dbxFormSource]="source$ ?? undefined" [dbxActionFormDisabledOnWorking]="disabledOnWorking"></dbx-forge>
     </div>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent, DbxActionFormDirective, DbxFormSourceDirective, DbxCoreActionModule, DbxActionHandlerDirective],
   providers: [provideDbxForgeFormContext()],
   changeDetection: ChangeDetectionStrategy.OnPush

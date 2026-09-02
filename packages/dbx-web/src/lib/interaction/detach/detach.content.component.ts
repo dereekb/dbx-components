@@ -26,8 +26,7 @@ import { DbxDetachController, DbxDetachWindowState } from './detach';
   `,
   host: {
     class: 'dbx-detach-content'
-  },
-  standalone: true
+  }
 })
 export class DbxDetachContentComponent {
   private readonly _detachController = inject(DbxDetachController);

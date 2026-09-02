@@ -11,7 +11,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   template: `
     <ng-content></ng-content>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDocsUiExampleNotesComponent {}

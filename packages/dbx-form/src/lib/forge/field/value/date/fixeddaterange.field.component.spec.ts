@@ -21,7 +21,6 @@ import { type Maybe } from '@dereekb/util';
       <form [dynamic-form]="config" [(value)]="formValue" [formOptions]="formOptions()"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
   providers: [EventDispatcher],
   changeDetection: ChangeDetectionStrategy.OnPush

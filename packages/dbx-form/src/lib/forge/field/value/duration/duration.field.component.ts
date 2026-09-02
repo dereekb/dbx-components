@@ -80,7 +80,6 @@ export interface DbxForgeTimeDurationFieldComponentProps {
  */
 @Component({
   selector: 'dbx-forge-timeduration-field',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, FormsModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
   templateUrl: './duration.field.component.html'
 })

@@ -5,7 +5,6 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DbxSectionComponent, DocFeatureCardListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

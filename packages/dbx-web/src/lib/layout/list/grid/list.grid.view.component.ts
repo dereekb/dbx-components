@@ -56,8 +56,7 @@ export const DEFAULT_LIST_GRID_SIZE_CONFIG: DbxValueListGridItemViewGridSizeConf
  * ```
  */
 @Directive({
-  selector: '[dbxListGridSize]',
-  standalone: true
+  selector: '[dbxListGridSize]'
 })
 export class DbxValueListGridSizeDirective {
   readonly gridSize = input.required<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>({ alias: 'dbxListGridSize' });
@@ -100,8 +99,7 @@ export class DbxValueListGridSizeDirective {
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent, DbxAnchorComponent, FlexLayoutModule, MatRipple],
-  standalone: true
+  imports: [DbxInjectionComponent, DbxAnchorComponent, FlexLayoutModule, MatRipple]
 })
 export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListGridViewContentComponent = inject(DbxValueListGridViewContentComponent<T>);
@@ -144,7 +142,6 @@ export class DbxValueListGridViewContentGroupComponent<G, T, I extends DbxValueL
   host: {
     class: 'dbx-list-grid-view'
   },
-  standalone: true,
   imports: [DbxValueListGridViewContentGroupComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -183,7 +180,6 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
   template: `
     <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config().grid" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? true"></dbx-list-grid-view-content>
   `,
-  standalone: true,
   imports: [DbxValueListGridViewContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

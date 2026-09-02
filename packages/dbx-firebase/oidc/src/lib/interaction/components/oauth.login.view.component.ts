@@ -29,7 +29,6 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
  */
 @Component({
   selector: 'dbx-firebase-oauth-login-view',
-  standalone: true,
   imports: [DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent],
   template: `
     <div class="dbx-firebase-oauth-login-view">

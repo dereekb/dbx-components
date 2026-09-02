@@ -22,7 +22,6 @@ export type DbxWebFilePreviewComponentConfig = DbxWebFilePreviewServicePreviewCo
   template: `
     <dbx-injection [config]="componentConfigSignal()"></dbx-injection>
   `,
-  standalone: true,
   imports: [DbxInjectionComponent]
 })
 export class DbxWebFilePreviewComponent {

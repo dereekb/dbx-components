@@ -43,7 +43,6 @@ import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalco
   host: {
     class: 'd-block dbx-firebase-external-connections'
   },
-  standalone: true,
   imports: [DbxErrorComponent, DbxFirebaseExternalConnectionListComponent, DbxListEmptyContentComponent],
   providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore],
   changeDetection: ChangeDetectionStrategy.OnPush

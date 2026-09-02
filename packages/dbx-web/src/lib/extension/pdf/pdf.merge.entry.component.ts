@@ -60,8 +60,7 @@ const ERROR_ICON = 'error';
     '[class.dbx-pdf-merge-entry--ignored]': 'isIgnoredSignal()',
     '[class.dbx-pdf-merge-entry--encrypted]': 'isEncryptedSignal()'
   },
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective],
-  standalone: true
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective]
 })
 export class DbxPdfMergeEntryComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

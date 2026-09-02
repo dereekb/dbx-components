@@ -24,7 +24,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 @Component({
   templateUrl: './mapbox.component.html',
   providers: [DbxMapboxMapStore, DbxMapboxModule, DbxMapboxInjectionStore, DbxMapboxChangeService],
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

@@ -12,7 +12,6 @@ export interface DocExtensionWidgetExampleData {
 
 @Component({
   templateUrl: './widget.example.component.html',
-  standalone: true,
   imports: [MatIcon, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

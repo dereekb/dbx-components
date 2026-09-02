@@ -22,7 +22,6 @@ import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/
       }
     `
   ],
-  standalone: true,
   imports: [MatButton, DbxDetachContentComponent, DbxDetachControlsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

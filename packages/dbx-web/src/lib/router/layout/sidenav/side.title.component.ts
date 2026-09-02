@@ -23,8 +23,7 @@ import { type Maybe } from '@dereekb/util';
       <ng-content></ng-content>
     </div>
   `,
-  styleUrls: ['./side.scss'],
-  standalone: true
+  styleUrls: ['./side.scss']
 })
 export class AppSideNavBarTitleComponent {
   readonly header = input<Maybe<string>>();

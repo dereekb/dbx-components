@@ -36,8 +36,7 @@ import { FormSpaceDocumentStore } from '../store/formspace.document.store';
  */
 @Directive({
   selector: '[dbxFirebaseFormSpaceSlotUpload]',
-  exportAs: 'dbxFirebaseFormSpaceSlotUpload',
-  standalone: true
+  exportAs: 'dbxFirebaseFormSpaceSlotUpload'
 })
 export class DbxFirebaseFormSpaceSlotUploadDirective {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

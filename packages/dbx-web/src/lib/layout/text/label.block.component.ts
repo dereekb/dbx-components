@@ -27,7 +27,6 @@ import { type Maybe } from '@dereekb/util';
   host: {
     class: 'dbx-label-block'
   },
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLabelBlockComponent {

@@ -15,8 +15,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
  * ```
  */
 @Directive({
-  selector: '[dbxActionButtonTrigger]',
-  standalone: true
+  selector: '[dbxActionButtonTrigger]'
 })
 export class DbxActionButtonTriggerDirective {
   readonly dbxButton = inject(DbxButton, { host: true });

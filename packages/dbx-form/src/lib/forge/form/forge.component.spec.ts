@@ -16,7 +16,6 @@ import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from './forge.component.template';
 // MARK: Test Host
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
-  standalone: true,
   imports: [DbxForgeFormComponent],
   providers: [provideDbxForgeFormContext()],
   changeDetection: ChangeDetectionStrategy.OnPush

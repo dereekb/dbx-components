@@ -29,7 +29,6 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   templateUrl: './mapbox.layout.component.html',
   styleUrls: ['./mapbox.layout.component.scss'],
   imports: [DbxResizedDirective, NgClass, DbxMapboxLayoutDrawerComponent, MatDrawer, MatDrawerContainer, MatDrawerContent, MatIconModule, MatIconButton, DbxColorDirective],
-  standalone: true,
   host: {
     '[style.--mat-sidenav-container-width]': 'dbxMapboxService.drawerWidth'
   }

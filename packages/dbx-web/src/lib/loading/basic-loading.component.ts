@@ -43,8 +43,7 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
 @Component({
   selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html',
-  imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet],
-  standalone: true
+  imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet]
 })
 export class DbxBasicLoadingComponent {
   readonly customError = viewChild<string, Maybe<ElementRef>>('customError', { read: ElementRef });

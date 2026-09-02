@@ -10,7 +10,6 @@ import { type ExampleTableData } from './table.item';
       <div class="dbx-small dbx-hint">{{ columnName }}</div>
     </div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableItemCellExampleComponent {

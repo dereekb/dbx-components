@@ -22,7 +22,6 @@ import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
   imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoCalendarViewComponent {

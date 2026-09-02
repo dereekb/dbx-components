@@ -33,7 +33,6 @@ import { JsonPipe } from '@angular/common';
     }
   `,
   providers: [DbxCalendarScheduleSelectionStore],
-  standalone: true,
   imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -13,8 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-button [disabled]="disableButtonSignal()" [buttonDisplay]="buttonDisplaySignal()" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
   readonly disabled = input<Maybe<boolean>>();

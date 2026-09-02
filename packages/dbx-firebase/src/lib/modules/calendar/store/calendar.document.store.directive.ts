@@ -8,8 +8,7 @@ import { CalendarDocumentStore } from './calendar.document.store';
  */
 @Directive({
   selector: '[dbxFirebaseCalendarDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(CalendarDocumentStoreDirective, CalendarDocumentStore),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreDirective(CalendarDocumentStoreDirective, CalendarDocumentStore)
 })
 export class CalendarDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<Calendar, CalendarDocument, CalendarDocumentStore> {
   constructor() {

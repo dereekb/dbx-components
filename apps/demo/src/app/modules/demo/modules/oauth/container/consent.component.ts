@@ -19,7 +19,6 @@ import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.comp
       </dbx-firebase-oauth-consent>
     </dbx-content-box>
   `,
-  standalone: true,
   imports: [DbxContentBoxDirective, DbxOAuthConsentComponent, DemoAuthLoginViewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

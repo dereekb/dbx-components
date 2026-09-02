@@ -23,7 +23,6 @@ import { DbxErrorWidgetService } from './error.widget.service';
     class: 'dbx-error-widget-view'
   },
   imports: [DbxInjectionComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorWidgetViewComponent {

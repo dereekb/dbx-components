@@ -6,7 +6,6 @@ import { loadingStateContext } from '@dereekb/rxjs';
 @Component({
   templateUrl: './list.right.component.html',
   imports: [DbxTwoColumnRightComponent, DbxSectionLayoutModule, DbxLoadingComponent, DbxContentContainerDirective, DbxFirebaseOidcEntryClientViewComponent, DbxFirebaseOidcEntryClientUpdateComponent, DbxFirebaseOidcEntryClientTestComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoAppOidcClientListPageRightComponent implements OnDestroy {

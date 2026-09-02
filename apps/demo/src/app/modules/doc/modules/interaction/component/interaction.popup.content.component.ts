@@ -9,7 +9,6 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button (click)="shouldClose.emit()">Close</button>
     </div>
   `,
-  standalone: true,
   imports: [MatButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

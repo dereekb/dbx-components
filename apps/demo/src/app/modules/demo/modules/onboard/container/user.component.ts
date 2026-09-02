@@ -17,7 +17,6 @@ import { DbxContentBoxDirective, DbxButtonComponent, DbxErrorComponent, DbxActio
     </dbx-content-box>
   `,
   providers: [ProfileDocumentStore],
-  standalone: true,
   imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

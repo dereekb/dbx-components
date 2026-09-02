@@ -59,7 +59,6 @@ import { type DbxStyleDemoConfig } from './dbx.style.demo';
       </div>
     </div>
   `,
-  standalone: true,
   imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

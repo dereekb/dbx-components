@@ -79,7 +79,6 @@ export type DbxForgeDateRangeFieldDef = BaseValueField<DbxForgeDateRangeFieldCom
  */
 @Component({
   selector: 'dbx-forge-daterange-field',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
   templateUrl: './daterange.field.component.html',
   styles: `

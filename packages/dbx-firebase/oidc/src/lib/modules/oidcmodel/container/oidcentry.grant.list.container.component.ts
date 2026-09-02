@@ -21,7 +21,6 @@ import { DbxFirebaseOidcEntryGrantListComponent } from '../component/oidcentry.g
       <dbx-firebase-oidc-grant-list dbxFirebaseCollectionList></dbx-firebase-oidc-grant-list>
     </div>
   `,
-  standalone: true,
   imports: [OidcEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseOidcEntryGrantListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

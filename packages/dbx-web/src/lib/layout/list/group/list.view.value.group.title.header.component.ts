@@ -53,8 +53,7 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
   imports: [NgClass, MatIconModule],
   host: {
     class: 'dbx-list-title-group-header'
-  },
-  standalone: true
+  }
 })
 export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> extends AbstractDbxListTitleGroupHeaderComponent<O, D> {
   readonly icon = this.data.icon;

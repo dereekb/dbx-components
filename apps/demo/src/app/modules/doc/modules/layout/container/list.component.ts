@@ -40,7 +40,6 @@ import { DocItemListAccordionComponent } from '../component/item.list.accordion.
 
 @Component({
   templateUrl: './list.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DbxContentDirective,

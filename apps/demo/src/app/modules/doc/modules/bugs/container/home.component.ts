@@ -4,7 +4,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DocFeatureCardListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

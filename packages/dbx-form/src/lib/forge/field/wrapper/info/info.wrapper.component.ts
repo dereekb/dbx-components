@@ -24,8 +24,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
       </div>
     </div>
   `,
-  imports: [MatIconButton, MatIconModule],
-  standalone: true
+  imports: [MatIconButton, MatIconModule]
 })
 export class DbxForgeInfoWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

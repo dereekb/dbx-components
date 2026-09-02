@@ -9,7 +9,6 @@ export const CUSTOM_DBX_ERROR_TEST_ERROR_CODE = 'CUSTOM_DBX_ERROR_TEST_ERROR';
     <h3>Custom inline error widget content</h3>
     <p class="mat-header">Custom inline error widget content</p>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionCustomInlineErrorWidgetComponent {

@@ -76,7 +76,6 @@ import { NgTemplateOutlet } from '@angular/common';
       </span>
     </ng-template>
   `,
-  standalone: true,
   imports: [MatIconModule, NgTemplateOutlet],
   host: {
     '[class.dbx-section-header-full-title]': 'headerConfigSignal().onlyHeader',

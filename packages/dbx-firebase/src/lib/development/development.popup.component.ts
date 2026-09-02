@@ -13,7 +13,6 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY = 'devpopup';
     </dbx-popup-content>
   `,
   imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxFirebaseDevelopmentPopupContentComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseDevelopmentPopupComponent extends AbstractPopupDirective {

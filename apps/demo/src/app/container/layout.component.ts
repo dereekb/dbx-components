@@ -12,7 +12,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
   imports: [UIView, DbxStyleBodyDirective, DbxFirebaseDevelopmentDirective, DbxBodyDirective, MatToolbar, DbxAnchorComponent, DbxButtonComponent, DbxButtonSpacerDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppLayoutComponent {

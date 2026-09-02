@@ -9,7 +9,6 @@ import { PrettyJsonPipe } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './firebase.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, MatButton, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent, PrettyJsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

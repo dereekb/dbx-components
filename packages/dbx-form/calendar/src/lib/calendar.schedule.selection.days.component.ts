@@ -15,8 +15,7 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
       <dbx-schedule-selection-calendar-date-days-forge-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormIsModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-forge-form>
     </div>
   `,
-  imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective],
-  standalone: true
+  imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective]
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
   readonly dbxCalendarStore = inject(DbxCalendarStore);

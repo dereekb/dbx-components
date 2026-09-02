@@ -13,7 +13,6 @@ import { DocFormForgeExampleComponent } from '../../shared/component/forge.examp
 
 @Component({
   templateUrl: './value.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

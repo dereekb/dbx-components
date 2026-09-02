@@ -19,8 +19,7 @@ import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.compon
   host: {
     class: 'dbx-popup-controls'
   },
-  imports: [DbxPopupControlButtonsComponent],
-  standalone: true
+  imports: [DbxPopupControlButtonsComponent]
 })
 export class DbxPopupControlsComponent {
   readonly header = input<string>();

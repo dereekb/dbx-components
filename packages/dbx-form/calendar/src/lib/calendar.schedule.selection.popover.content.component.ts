@@ -13,7 +13,6 @@ import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.sched
       </dbx-label-block>
     </dbx-content-container>
   `,
-  imports: [DbxContentContainerDirective, DbxScheduleSelectionCalendarDateRangeComponent, DbxLabelBlockComponent, DbxScheduleSelectionCalendarDateDaysComponent],
-  standalone: true
+  imports: [DbxContentContainerDirective, DbxScheduleSelectionCalendarDateRangeComponent, DbxLabelBlockComponent, DbxScheduleSelectionCalendarDateDaysComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverContentComponent {}

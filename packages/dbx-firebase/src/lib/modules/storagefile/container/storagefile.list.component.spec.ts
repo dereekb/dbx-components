@@ -182,8 +182,7 @@ describe('DbxFirebaseStorageFileListComponent', () => {
       <dbx-list-empty-content empty>Nothing here yet.</dbx-list-empty-content>
     </dbx-firebase-storagefile-list>
   `,
-  imports: [DbxFirebaseStorageFileListComponent, DbxListEmptyContentComponent],
-  standalone: true
+  imports: [DbxFirebaseStorageFileListComponent, DbxListEmptyContentComponent]
 })
 class TestDbxFirebaseStorageFileListComponent {
   readonly list = viewChild.required(DbxFirebaseStorageFileListComponent);

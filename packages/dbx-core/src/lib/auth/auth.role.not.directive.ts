@@ -26,8 +26,7 @@ import { AbstractIfDirective } from '../view/if.directive';
  * @see {@link DbxAuthHasAnyRoleDirective} for requiring **any** of the specified roles.
  */
 @Directive({
-  selector: '[dbxAuthNotAnyRole]',
-  standalone: true
+  selector: '[dbxAuthNotAnyRole]'
 })
 export class DbxAuthNotAnyRoleDirective extends AbstractIfDirective {
   private readonly _authService = inject(DbxAuthService);

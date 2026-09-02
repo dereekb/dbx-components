@@ -21,8 +21,7 @@ import { CompactContextStore } from './compact.store';
 @Directive({
   selector: '[dbxCompact]',
   providers: [CompactContextStore],
-  exportAs: 'compact',
-  standalone: true
+  exportAs: 'compact'
 })
 export class DbxCompactDirective {
   readonly mode = input.required<CompactMode | boolean>({ alias: 'dbxCompact' });

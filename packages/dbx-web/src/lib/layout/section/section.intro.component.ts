@@ -48,7 +48,6 @@ import { MatButtonModule } from '@angular/material/button';
       }
     </div>
   `,
-  standalone: true,
   imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

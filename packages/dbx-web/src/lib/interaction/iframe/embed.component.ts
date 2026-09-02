@@ -26,8 +26,7 @@ export type DbxEmbedComponentElement = 'embed' | 'img';
   selector: 'dbx-embed',
   template: `
     <span #root></span>
-  `,
-  standalone: true
+  `
 })
 export class DbxEmbedComponent {
   private readonly _browserObjectUrlRef = clean(browserObjectUrlRef());

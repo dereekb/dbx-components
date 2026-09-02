@@ -50,8 +50,7 @@ import { type Work } from '@dereekb/rxjs';
         <dbx-button text="Archive" dbxActionButton></dbx-button>
       </ng-container>
     </div>
-  \`,
-  standalone: true
+  \`
 })
 export class ContentToolbarComponent {
   private readonly store = inject(ArticleDocumentStore);

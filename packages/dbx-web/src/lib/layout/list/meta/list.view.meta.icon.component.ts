@@ -32,7 +32,6 @@ export interface DbxListViewMetaIconConfig {
   template: `
     <mat-icon class="dbx-list-view-meta-icon">{{ icon }}</mat-icon>
   `,
-  standalone: true,
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

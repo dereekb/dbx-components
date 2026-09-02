@@ -13,7 +13,6 @@ import { AsyncPipe } from '@angular/common';
 
 @Component({
   templateUrl: './map.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

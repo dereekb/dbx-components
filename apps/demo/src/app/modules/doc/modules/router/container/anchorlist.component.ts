@@ -9,7 +9,6 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './anchorlist.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAnchorListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

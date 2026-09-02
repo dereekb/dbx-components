@@ -56,8 +56,7 @@ export interface QuizComponentViewPostQuizConfig {
   selector: 'dbx-quiz',
   templateUrl: './quiz.component.html',
   imports: [DbxInjectionComponent, DbxButtonModule, DbxWindowKeyDownListenerDirective, NgTemplateOutlet],
-  providers: [QuizStore, provideCurrentQuestionQuizQuestionAccessor()],
-  standalone: true
+  providers: [QuizStore, provideCurrentQuestionQuizQuestionAccessor()]
 })
 export class QuizComponent {
   readonly quizStore = inject(QuizStore);

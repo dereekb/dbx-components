@@ -22,7 +22,6 @@ import { type WorkInstance } from '@dereekb/rxjs';
   selector: 'dbx-filter-wrapper',
   templateUrl: './filter.wrapper.component.html',
   providers: [provideActionStoreSource(null)],
-  standalone: true,
   imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

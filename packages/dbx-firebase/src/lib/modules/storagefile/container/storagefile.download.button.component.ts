@@ -127,8 +127,7 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
       </ng-container>
     }
   `,
-  imports: [DbxButtonComponent, DbxActionModule, DbxActionSnackbarErrorDirective, DbxActionDialogDirective, DbxAnchorComponent],
-  standalone: true
+  imports: [DbxButtonComponent, DbxActionModule, DbxActionSnackbarErrorDirective, DbxActionDialogDirective, DbxAnchorComponent]
 })
 export class DbxFirebaseStorageFileDownloadButtonComponent {
   readonly matDialog = inject(MatDialog);

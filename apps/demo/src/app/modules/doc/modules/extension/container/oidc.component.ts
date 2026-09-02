@@ -13,7 +13,6 @@ import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/contai
  */
 @Component({
   templateUrl: './oidc.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DemoAuthLoginViewComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

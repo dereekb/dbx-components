@@ -31,8 +31,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
       <ng-content right></ng-content>
     </dbx-pagebar>
   `,
-  imports: [DbxPagebarComponent, DbxSidenavButtonComponent, DbxButtonSpacerDirective],
-  standalone: true
+  imports: [DbxPagebarComponent, DbxSidenavButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxSidenavPagebarComponent extends DbxPagebarComponent {
   /**

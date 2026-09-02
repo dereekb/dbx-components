@@ -5,7 +5,6 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  standalone: true,
   imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, UIView],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

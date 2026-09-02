@@ -35,8 +35,7 @@ import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
   host: {
     class: 'dbx-detach-control-buttons'
   },
-  imports: [DbxButtonModule, DbxButtonSpacerDirective],
-  standalone: true
+  imports: [DbxButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxDetachControlButtonsComponent {
   private readonly _detachController = inject(DbxDetachController);

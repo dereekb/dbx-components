@@ -10,8 +10,7 @@ import { clean } from '@dereekb/dbx-core';
  * Directive for showing the development tools snackbar when the app opens up and listening for keybindings for opening the popup.
  */
 @Directive({
-  selector: '[dbxFirebaseDevelopment]',
-  standalone: true
+  selector: '[dbxFirebaseDevelopment]'
 })
 export class DbxFirebaseDevelopmentDirective implements AfterViewInit {
   readonly popupService = inject(DbxPopupService);

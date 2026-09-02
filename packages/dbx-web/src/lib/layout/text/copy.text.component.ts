@@ -36,8 +36,7 @@ import { MatIcon } from '@angular/material/icon';
   host: {
     class: 'dbx-click-to-copy-text-component'
   },
-  imports: [DbxClickToCopyTextDirective, MatIcon],
-  standalone: true
+  imports: [DbxClickToCopyTextDirective, MatIcon]
 })
 export class DbxClickToCopyTextComponent {
   readonly contentElementRef = viewChild<ElementRef<HTMLElement>>('content');

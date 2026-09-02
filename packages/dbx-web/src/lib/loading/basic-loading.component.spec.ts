@@ -308,7 +308,6 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
   imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -327,7 +326,6 @@ class BasicLoadingWithContentComponent {
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
   imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -345,7 +343,6 @@ class BasicLoadingWithCustomErrorComponent {
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
   imports: [DbxBasicLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -11,7 +11,6 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './popover.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, FlexModule, MatButton, DbxSpacerDirective, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

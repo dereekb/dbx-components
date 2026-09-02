@@ -64,7 +64,6 @@ export const DEFAULT_FORGE_PREFERRED_COUNTRIES = ['us'];
  */
 @Component({
   selector: 'dbx-forge-phone-field',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule, ReactiveFormsModule, NgxMatInputTelComponent, DynamicTextPipe, AsyncPipe],
   templateUrl: './phone.field.component.html',
   styles: [

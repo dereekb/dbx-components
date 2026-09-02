@@ -22,7 +22,6 @@ import { map } from 'rxjs';
       <dbx-button [raised]="true" dbxActionButton text="Save"></dbx-button>
     </div>
   `,
-  standalone: true,
   imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

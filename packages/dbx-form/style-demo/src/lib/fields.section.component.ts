@@ -19,7 +19,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
  */
 @Component({
   selector: 'dbx-form-style-demo-fields-section',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxForgeFormComponentImportsModule],
   providers: dbxForgeFormComponentProviders(),
   template: `

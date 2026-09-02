@@ -34,7 +34,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
       <ng-content select="[right]"></ng-content>
     </mat-toolbar>
   `,
-  imports: [MatToolbarModule],
-  standalone: true
+  imports: [MatToolbarModule]
 })
 export class DbxPagebarComponent {}

@@ -21,8 +21,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
       </mat-toolbar>
     </div>
   `,
-  imports: [MatToolbarModule],
-  standalone: true
+  imports: [MatToolbarModule]
 })
 export class DbxFlagComponent {
   readonly color = input<ThemePalette>('accent');

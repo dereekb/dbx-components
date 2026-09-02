@@ -10,7 +10,6 @@ export interface DocActionFormWithSecondaryFormValue {
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-action-form-with-secondary-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

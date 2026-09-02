@@ -22,7 +22,6 @@ import { type DateRange, formatToTimeRangeString } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateTimeRangeOnly',
-  standalone: true,
   pure: true
 })
 export class DateTimeRangeOnlyPipe implements PipeTransform {

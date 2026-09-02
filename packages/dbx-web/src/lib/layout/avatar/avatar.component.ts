@@ -50,8 +50,7 @@ import { type DbxColorInput, type DbxColorTone } from '../style/style';
     class: 'dbx-avatar',
     '[class.dbx-avatar-small]': `avatarSize() === 'small'`,
     '[class.dbx-avatar-large]': `avatarSize() === 'large'`
-  },
-  standalone: true
+  }
 })
 export class DbxAvatarComponent {
   readonly injector = inject(Injector);

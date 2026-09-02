@@ -84,8 +84,7 @@ export interface DbxForgeMapboxLatLngFieldComponentProps {
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
   styleUrls: ['../mapbox.field.component.scss'],
-  imports: [NgClass, MapComponent, MarkerComponent, ReactiveFormsModule, MatIconModule, DbxMapboxModule, MatButtonModule, MatFormFieldModule, MatInputModule],
-  standalone: true
+  imports: [NgClass, MapComponent, MarkerComponent, ReactiveFormsModule, MatIconModule, DbxMapboxModule, MatButtonModule, MatFormFieldModule, MatInputModule]
 })
 export class DbxForgeMapboxLatLngFieldComponent {
   private readonly _geolocationService = inject(WaGeolocationService);

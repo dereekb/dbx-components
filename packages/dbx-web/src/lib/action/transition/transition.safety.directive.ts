@@ -37,8 +37,7 @@ export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
  * ```
  */
 @Directive({
-  selector: '[dbxActionTransitionSafety]',
-  standalone: true
+  selector: '[dbxActionTransitionSafety]'
 })
 export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
   protected readonly _safetyType = completeOnDestroy(new BehaviorSubject<Maybe<DbxActionTransitionSafetyType>>(undefined));

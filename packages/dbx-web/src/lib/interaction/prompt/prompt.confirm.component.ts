@@ -43,7 +43,6 @@ export interface DbxPromptConfirmConfig {
       </div>
     </dbx-prompt>
   `,
-  standalone: true,
   imports: [DbxPromptComponent, MatButtonModule, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -34,8 +34,7 @@ import { type Work } from '@dereekb/rxjs';
         dbxActionForm
         [dbxFormSource]="settings$"></my-settings-form>
     </div>
-  \`,
-  standalone: true
+  \`
 })
 export class SettingsAutosaveComponent {
   private readonly store = inject(SettingsDocumentStore);

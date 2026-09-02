@@ -27,7 +27,6 @@ export interface DbxFormStyleDemoSectionsFormValue {
   template: `
     <dbx-forge></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   providers: dbxForgeFormComponentProviders(),
   changeDetection: ChangeDetectionStrategy.OnPush

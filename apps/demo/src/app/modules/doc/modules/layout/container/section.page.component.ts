@@ -4,7 +4,6 @@ import { DbxButtonComponent, DbxSectionPageComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './section.page.component.html',
-  standalone: true,
   imports: [DbxButtonComponent, DbxSectionPageComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

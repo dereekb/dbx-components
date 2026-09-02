@@ -5,8 +5,7 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [UIView, DbxNavbarComponent],
-  standalone: true
+  imports: [UIView, DbxNavbarComponent]
 })
 export class DemoAppOidcLayoutComponent {
   readonly navAnchors: ClickableAnchorLinkSegueRef[] = [

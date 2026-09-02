@@ -27,7 +27,6 @@ import { DbxFormStyleDemoSectionsComponent } from './controls.sections.component
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, DbxFormStyleDemoSectionsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

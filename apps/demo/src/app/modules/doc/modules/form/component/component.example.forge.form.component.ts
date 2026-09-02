@@ -9,7 +9,6 @@ import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-forge-example-component-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

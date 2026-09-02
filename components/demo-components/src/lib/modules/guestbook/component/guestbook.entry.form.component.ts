@@ -10,7 +10,6 @@ export type DemoGuestbookEntryFormValue = Pick<GuestbookEntry, 'message' | 'sign
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'demo-guestbook-entry-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule]
 })
 export class DemoGuestbookEntryFormComponent extends AbstractSyncForgeFormDirective<DemoGuestbookEntryFormValue> {

@@ -37,8 +37,7 @@ import { clean } from '../../../rxjs/clean';
       useFactory: actionContextStoreSourceMap
     }
   ],
-  exportAs: 'actionMap',
-  standalone: true
+  exportAs: 'actionMap'
 })
 export class DbxActionContextMapDirective {
   readonly actionContextStoreSourceMap = clean(inject(ActionContextStoreSourceMap));

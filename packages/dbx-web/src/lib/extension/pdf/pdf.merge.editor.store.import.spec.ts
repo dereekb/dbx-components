@@ -231,7 +231,6 @@ describe('DbxPdfMergeEditorStore.addFileToSlot()', () => {
   template: `
     <div dbxPdfMergeEditorStore [source]="source()" [sourceConfig]="sourceConfig()"></div>
   `,
-  standalone: true,
   imports: [DbxPdfMergeEditorStoreDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -41,8 +41,7 @@ import { DbxBarDirective } from './bar.directive';
   host: {
     class: 'dbx-bar-header dbx-hint'
   },
-  imports: [DbxBarDirective, MatIconModule],
-  standalone: true
+  imports: [DbxBarDirective, MatIconModule]
 })
 export class DbxBarHeaderComponent {
   readonly text = input<Maybe<string>>();

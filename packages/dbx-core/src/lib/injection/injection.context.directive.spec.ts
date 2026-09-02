@@ -14,8 +14,7 @@ const CUSTOM_CONTENT = 'Custom Content';
 // TODO(TEST): add tests showing AbstractForwardDbxInjectionContextDirective usage.
 
 @Component({
-  template: '<span id="custom-content">Custom Content</span>',
-  standalone: true
+  template: '<span id="custom-content">Custom Content</span>'
 })
 class TestInjectionContent implements OnDestroy {
   destroyed = false;
@@ -27,8 +26,7 @@ class TestInjectionContent implements OnDestroy {
 
 @Component({
   selector: 'dbx-test-existing-content',
-  template: '<span id="existing-content">Existing Content</span>',
-  standalone: true
+  template: '<span id="existing-content">Existing Content</span>'
 })
 class TestExistingInjectionContent implements OnDestroy {
   destroyed = false;
@@ -44,7 +42,6 @@ class TestExistingInjectionContent implements OnDestroy {
       <dbx-test-existing-content></dbx-test-existing-content>
     </div>
   `,
-  standalone: true,
   imports: [DbxInjectionContextDirective, TestExistingInjectionContent]
 })
 class TestInjectionContextDirective<T = any> {

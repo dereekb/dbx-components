@@ -42,7 +42,6 @@ describe('DbxLoadingProgress', () => {
   template: `
     <dbx-loading-progress [text]="text"></dbx-loading-progress>
   `,
-  standalone: true,
   imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressSpinnerComponent {
@@ -53,7 +52,6 @@ class LoadingProgressSpinnerComponent {
   template: `
     <dbx-loading-progress [linear]="true" [text]="text"></dbx-loading-progress>
   `,
-  standalone: true,
   imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressLinearComponent {

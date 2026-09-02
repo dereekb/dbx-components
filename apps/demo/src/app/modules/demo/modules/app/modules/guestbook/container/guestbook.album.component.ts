@@ -31,7 +31,6 @@ import { map, shareReplay } from 'rxjs';
     DbxSectionComponent,
     DbxFirebaseFormSpaceModule
   ],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookAlbumComponent {

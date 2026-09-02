@@ -37,8 +37,7 @@ import { type ObservableOrValueGetter } from '@dereekb/rxjs';
   template: `
     <ng-template #content></ng-template>
   `,
-  imports: [],
-  standalone: true
+  imports: []
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   /**

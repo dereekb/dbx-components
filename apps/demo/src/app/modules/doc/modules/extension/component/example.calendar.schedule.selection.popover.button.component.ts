@@ -8,7 +8,6 @@ import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
   template: `
     <dbx-button #buttonPopoverOrigin icon="date_range" [raised]="true" color="accent" text="Custom Button" (buttonClick)="openPopover()"></dbx-button>
   `,
-  standalone: true,
   imports: [DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

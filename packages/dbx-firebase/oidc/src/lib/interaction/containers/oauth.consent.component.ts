@@ -49,7 +49,6 @@ export interface DbxOAuthConsentComponentConfig {
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent',
-  standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
     <dbx-firebase-oauth-consent-view [details]="resolvedDetailsSignal()" [consentStateCase]="consentStateCaseSignal()" [scopeInjectionConfig]="scopeInjectionConfigSignal()" [requiredScopes]="requiredScopesSignal()" [approveHandler]="handleApprove" [denyHandler]="handleDeny">

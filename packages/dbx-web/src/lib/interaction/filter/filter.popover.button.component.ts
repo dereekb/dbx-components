@@ -22,8 +22,7 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   template: `
     <dbx-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [disabled]="disabled()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {
   readonly buttonElement = viewChild<string, Maybe<ElementRef>>('button', { read: ElementRef });

@@ -41,7 +41,6 @@ import { type Maybe } from '@dereekb/util';
     '[class]': '{ "dbx-detail-block-header-no-icon": !icon(), "dbx-detail-block-header-align": alignHeader() }'
   },
   imports: [MatIconModule, NgTemplateOutlet],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDetailBlockHeaderComponent {

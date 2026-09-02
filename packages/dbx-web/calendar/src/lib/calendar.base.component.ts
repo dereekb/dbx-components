@@ -12,7 +12,6 @@ import { CalendarDatePipe } from 'angular-calendar';
 
 @Component({
   selector: 'dbx-calendar-base',
-  standalone: true,
   imports: [MatButtonModule, MatButtonToggleModule, DbxButtonSpacerDirective, MatIconModule, CalendarDatePipe, FlexLayoutModule],
   templateUrl: './calendar.base.component.html'
 })

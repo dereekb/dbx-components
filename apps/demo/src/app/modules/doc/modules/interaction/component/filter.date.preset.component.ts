@@ -17,7 +17,6 @@ import { DbxPresetFilterListComponent, DbxFilterWrapperComponent } from '@dereek
     </dbx-filter-wrapper>
   `,
   providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
-  standalone: true,
   imports: [DbxPresetFilterListComponent, DbxFilterWrapperComponent, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

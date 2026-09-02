@@ -13,8 +13,7 @@ import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
       <dbx-mapbox-marker [marker]="marker"></dbx-mapbox-marker>
     }
   `,
-  imports: [DbxMapboxMarkerComponent],
-  standalone: true
+  imports: [DbxMapboxMarkerComponent]
 })
 export class DbxMapboxMarkersComponent<T> {
   readonly data = input.required<Maybe<T[]>>();

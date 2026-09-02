@@ -4,7 +4,6 @@ import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxContentLayoutModule, DbxAppContextStateDirective],
-  standalone: true
+  imports: [DbxContentLayoutModule, DbxAppContextStateDirective]
 })
 export class AppHomeComponent {}

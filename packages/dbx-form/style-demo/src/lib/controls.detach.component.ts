@@ -25,7 +25,6 @@ import { DbxFormStyleDemoPresetsComponent } from './controls.presets.component';
       </div>
     </dbx-detach-content>
   `,
-  standalone: true,
   imports: [DbxDetachContentComponent, DbxDetachControlsComponent, DbxFormStyleDemoPresetsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

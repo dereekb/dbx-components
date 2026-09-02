@@ -32,7 +32,6 @@ import { DbxSubSectionComponent } from '../../layout/section/subsection.componen
       </dbx-subsection>
     </div>
   `,
-  standalone: true,
   imports: [DbxSubSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

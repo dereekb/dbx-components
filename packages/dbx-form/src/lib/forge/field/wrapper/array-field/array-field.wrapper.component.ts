@@ -21,8 +21,7 @@ import { DbxForgeFormContextService } from '../../../form/forge.context.service'
 @Component({
   selector: 'dbx-forge-array-field-wrapper',
   templateUrl: './array-field.wrapper.component.html',
-  imports: [DynamicTextPipe, AsyncPipe, CdkDropList, DbxButtonComponent],
-  standalone: true
+  imports: [DynamicTextPipe, AsyncPipe, CdkDropList, DbxButtonComponent]
 })
 export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

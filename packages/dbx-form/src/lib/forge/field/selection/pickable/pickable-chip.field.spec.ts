@@ -428,7 +428,6 @@ describe('scenarios', () => {
       <form [dynamic-form]="config" [(value)]="formValue"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
   providers: [EventDispatcher],
   changeDetection: ChangeDetectionStrategy.OnPush

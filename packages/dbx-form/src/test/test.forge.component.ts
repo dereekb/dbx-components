@@ -22,8 +22,7 @@ export interface TestFormValue {
     <dbx-forge></dbx-forge>
   `,
   providers: [provideDbxForgeFormContext()],
-  imports: [DbxForgeFormComponent],
-  standalone: true
+  imports: [DbxForgeFormComponent]
 })
 export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractSyncForgeFormDirective<T> {
   readonly formConfig: FormConfig = {

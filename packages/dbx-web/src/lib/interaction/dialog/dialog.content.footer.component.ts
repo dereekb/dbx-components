@@ -27,7 +27,6 @@ export interface DbxDialogContentFooterConfig {
   host: {
     class: 'dbx-dialog-content-footer'
   },
-  standalone: true,
   imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

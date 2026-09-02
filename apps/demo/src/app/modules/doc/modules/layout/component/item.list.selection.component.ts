@@ -10,8 +10,7 @@ import { type DocValue, type DocValueWithSelection } from './item.list';
 @Component({
   selector: 'doc-complex-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapperDirective<DocValue> {
   constructor() {
@@ -27,7 +26,6 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
   providers: provideDbxListView(DocSelectionItemListViewComponent),
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
@@ -54,7 +52,6 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
     </div>
   `,
   imports: [DbxSpacerDirective, DbxChipDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {

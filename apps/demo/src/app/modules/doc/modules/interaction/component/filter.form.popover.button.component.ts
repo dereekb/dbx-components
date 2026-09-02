@@ -15,7 +15,6 @@ import { type Maybe } from '@dereekb/util';
   template: `
     <dbx-filter-popover-button [buttonDisplayStyle]="buttonDisplayStyle()" [config]="config" [disabled]="disabled()"></dbx-filter-popover-button>
   `,
-  standalone: true,
   imports: [DbxFilterPopoverButtonComponent]
 })
 export class DocInteractionTestFormFilterPopoverButtonComponent {

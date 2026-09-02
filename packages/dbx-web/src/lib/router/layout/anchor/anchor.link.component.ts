@@ -15,7 +15,6 @@ import { DbxAnchorComponent } from './anchor.component';
  */
 @Component({
   selector: 'dbx-link',
-  standalone: true,
   imports: [DbxAnchorComponent],
   template: `
     <dbx-anchor [anchor]="anchorSignal()">

@@ -10,7 +10,6 @@ import { DatePipe } from '@angular/common';
     </div>
   `,
   imports: [DatePipe],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableColumnFooterExampleComponent {

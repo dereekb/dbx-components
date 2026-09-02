@@ -13,7 +13,6 @@ export interface DocActionFormExampleValue {
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-action-form-example-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

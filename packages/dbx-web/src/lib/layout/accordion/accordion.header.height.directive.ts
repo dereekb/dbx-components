@@ -24,8 +24,7 @@ import { type Maybe } from '@dereekb/util';
   selector: '[dbxAccordionHeaderHeight]',
   host: {
     '[style]': 'expansionPanelStyleSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxAccordionHeaderHeightDirective {
   private readonly _screenMediaService = inject(DbxScreenMediaService);

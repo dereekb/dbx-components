@@ -7,7 +7,6 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './navbar.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

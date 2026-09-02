@@ -22,7 +22,6 @@ import { DbxErrorWidgetViewComponent } from './error.widget.component';
     class: 'd-block dbx-error-details'
   },
   imports: [DbxErrorWidgetViewComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorDetailsComponent {

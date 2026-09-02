@@ -21,7 +21,6 @@ export interface LandingItemChild {
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['../landing.scss'],
-  standalone: true,
   imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

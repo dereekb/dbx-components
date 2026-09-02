@@ -12,8 +12,7 @@ import { overrideClickElementEffect } from '../../../util/click';
  */
 @Component({
   templateUrl: './anchor.component.html',
-  imports: [UIRouterModule, DbxInjectionComponent],
-  standalone: true
+  imports: [UIRouterModule, DbxInjectionComponent]
 })
 export class DbxUIRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {
   private readonly _parentAnchorSignal = toSignal(this.parent.anchor$, { initialValue: undefined });

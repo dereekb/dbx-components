@@ -10,7 +10,6 @@ import { DbxFirebaseLoginContextDirective } from './login.context.directive';
  */
 @Component({
   selector: 'dbx-firebase-login',
-  standalone: true,
   imports: [DbxInjectionContextDirective, DbxFirebaseLoginContextDirective, DbxFirebaseLoginListComponent],
   template: `
     <ng-container *dbxInjectionContext dbxFirebaseLoginContext>

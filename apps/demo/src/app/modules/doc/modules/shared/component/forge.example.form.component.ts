@@ -29,7 +29,6 @@ import { JsonPipe } from '@angular/common';
   `,
   selector: 'doc-forge-example-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

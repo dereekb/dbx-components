@@ -10,7 +10,6 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 
 @Component({
   templateUrl: './template.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -14,7 +14,6 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
 
 @Component({
   templateUrl: './pipes.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

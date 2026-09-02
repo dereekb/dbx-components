@@ -16,7 +16,6 @@ export type DemoTestFormSpaceFormValue = DemoTestFormSpaceData;
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'demo-test-formspace-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule]
 })
 export class DemoTestFormSpaceFormComponent extends AbstractSyncForgeFormDirective<DemoTestFormSpaceFormValue> {

@@ -26,7 +26,6 @@ import { formatDateDistance } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateDistance',
-  standalone: true,
   pure: false
 })
 export class DateDistancePipe implements PipeTransform {

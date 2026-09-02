@@ -16,8 +16,7 @@ export interface DbxFirebaseEmailRecoveryFormValue {
   selector: 'dbx-firebase-email-recovery-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseEmailRecoveryForgeFormComponent extends AbstractSyncForgeFormDirective<DbxFirebaseEmailRecoveryFormValue> {
   readonly formConfig: FormConfig = { fields: [dbxForgeEmailField({ key: 'email', required: true })] };

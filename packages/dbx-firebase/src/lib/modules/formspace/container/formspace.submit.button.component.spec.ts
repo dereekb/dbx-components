@@ -224,8 +224,7 @@ describe('DbxFirebaseFormSpaceSubmitButtonComponent', () => {
   template: `
     <dbx-firebase-formspace-submit-button text="Submit Form Space" [requireComplete]="requireCompleteSignal()" [disabled]="disabledSignal()" [incompleteHint]="incompleteHintSignal()"></dbx-firebase-formspace-submit-button>
   `,
-  imports: [DbxFirebaseFormSpaceSubmitButtonComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSubmitButtonComponent]
 })
 class TestDbxFirebaseFormSpaceSubmitButtonComponent {
   readonly button = viewChild.required(DbxFirebaseFormSpaceSubmitButtonComponent);

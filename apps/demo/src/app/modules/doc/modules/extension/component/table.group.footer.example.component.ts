@@ -6,7 +6,6 @@ import { type DbxTableItemGroup } from '@dereekb/dbx-web/table';
   template: `
     <div>Footer View For: {{ name }}</div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionTableGroupFooterExampleComponent {

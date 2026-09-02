@@ -78,8 +78,7 @@ export type DbxPdfMergeEditorOutputSizeState = 'ok' | 'warn' | 'error';
   host: {
     class: 'dbx-pdf-merge-editor d-block'
   },
-  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
-  standalone: true
+  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent]
 })
 export class DbxPdfMergeEditorComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

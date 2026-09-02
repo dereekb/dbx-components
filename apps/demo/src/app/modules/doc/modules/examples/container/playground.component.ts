@@ -5,7 +5,6 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 
 @Component({
   templateUrl: './playground.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DbxStyleDemoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

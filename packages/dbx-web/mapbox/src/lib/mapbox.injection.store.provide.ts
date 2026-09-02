@@ -11,8 +11,7 @@ export class DbxMapboxInjectionStoreProviderBlock {
 
 @Directive({
   selector: '[dbxMapboxInjectionStoreParentBlocker]',
-  providers: [DbxMapboxInjectionStoreProviderBlock],
-  standalone: true
+  providers: [DbxMapboxInjectionStoreProviderBlock]
 })
 export class DbxMapboxInjectionStoreInjectionBlockDirective {}
 

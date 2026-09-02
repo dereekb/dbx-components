@@ -32,7 +32,6 @@ interface Item {
 
 @Component({
   selector: 'app-items-loaded',
-  standalone: true,
   imports: [CommonModule, DbxLoadingComponent, DbxListComponent, DbxListEmptyContentComponent, DbxIntroActionSectionComponent],
   template: \`
     <dbx-loading [state]="state$ | async" text="Loading items...">

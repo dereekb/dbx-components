@@ -22,7 +22,6 @@ export interface DocFormExampleComponentFormConfig {
       </dbx-content-box>
     </div>
   `,
-  standalone: true,
   imports: [DbxContentBoxDirective, DbxSectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -43,7 +42,6 @@ export class DocFormExampleComponentFormTestViewAComponent {
       </p>
     </div>
   `,
-  standalone: true,
   imports: [DbxLinkComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

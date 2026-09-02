@@ -11,7 +11,6 @@ import { type DocumentDataWithIdAndKey } from '@dereekb/firebase';
 @Component({
   templateUrl: './list.component.html',
   imports: [UIView, DbxTwoColumnLayoutModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxListModifierModule, DemoGuestbookDocumentStoreDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective, DbxListItemAnchorModifierDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookListPageComponent implements OnInit {

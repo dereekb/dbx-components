@@ -91,8 +91,7 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
       provide: DBX_TABLE_COLUMN_SIZE_PARENT_ELEMENT_REF_TOKEN,
       useExisting: ElementRef
     }
-  ],
-  standalone: true
+  ]
 })
 export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);

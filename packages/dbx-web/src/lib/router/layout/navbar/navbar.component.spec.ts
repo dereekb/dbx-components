@@ -50,7 +50,6 @@ describe('NavbarComponent', () => {
   template: `
     <dbx-navbar [anchors]="anchors()"></dbx-navbar>
   `,
-  standalone: true,
   imports: [DbxNavbarComponent]
 })
 class TestViewComponent {

@@ -49,8 +49,7 @@ export interface DbxErrorViewButtonEvent {
   host: {
     class: 'dbx-error dbx-warn dbx-b'
   },
-  imports: [MatIconModule, MatButtonModule, DbxTextColorDirective],
-  standalone: true
+  imports: [MatIconModule, MatButtonModule, DbxTextColorDirective]
 })
 export class DbxErrorViewComponent {
   readonly icon = input<string>('error');

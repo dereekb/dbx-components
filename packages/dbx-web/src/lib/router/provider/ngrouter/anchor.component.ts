@@ -10,8 +10,7 @@ import { overrideClickElementEffect } from '../../../util/click';
  */
 @Component({
   templateUrl: './anchor.component.html',
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxAngularRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {
   readonly anchorElement = viewChild.required<string, ElementRef<HTMLElement>>('anchor', { read: ElementRef });

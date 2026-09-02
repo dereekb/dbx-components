@@ -6,8 +6,7 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './iframe.component.html',
-  imports: [DbxLoadingModule, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxIframeComponent, DbxEmbedComponent],
-  standalone: true
+  imports: [DbxLoadingModule, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxIframeComponent, DbxEmbedComponent]
 })
 export class DocInteractionIframeComponent {
   readonly contentUrl = 'https://iframetester.com/';

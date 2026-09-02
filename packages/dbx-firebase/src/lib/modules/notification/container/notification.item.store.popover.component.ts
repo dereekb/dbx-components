@@ -42,8 +42,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_ITEM_STORE_POPOVER_KEY = 'notific
 
 @Component({
   templateUrl: './notification.item.store.popover.component.html',
-  imports: [DbxPopoverInteractionModule, DbxListModifierModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective],
-  standalone: true
+  imports: [DbxPopoverInteractionModule, DbxListModifierModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective]
 })
 export class DbxFirebaseNotificationItemStorePopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseNotificationItemStorePopoverParams> {
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, makeNotificationItemAnchor, notificationItemsLoadingState$ }: DbxFirebaseNotificationItemStorePopoverParams, popoverKey?: DbxPopoverKey): NgPopoverRef {

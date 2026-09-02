@@ -17,8 +17,7 @@ import { DbxHelpWidgetService } from './help.widget.service';
 @Component({
   selector: 'dbx-help-view-list-entry',
   templateUrl: './help.view.list.entry.component.html',
-  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon],
-  standalone: true
+  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon]
 })
 export class DbxHelpViewListEntryComponent {
   readonly helpWidgetEntry = input.required<DbxHelpWidgetServiceEntry>();

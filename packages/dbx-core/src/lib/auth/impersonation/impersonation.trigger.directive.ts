@@ -22,7 +22,6 @@ import { DbxAuthImpersonationService } from './impersonation.service';
  */
 @Directive({
   selector: '[dbxAuthImpersonationTrigger]',
-  standalone: true,
   providers: provideDbxRouteModelIdDirectiveDelegate(DbxAuthImpersonationTriggerDirective)
 })
 export class DbxAuthImpersonationTriggerDirective extends DbxRouteModelIdDirectiveDelegate {

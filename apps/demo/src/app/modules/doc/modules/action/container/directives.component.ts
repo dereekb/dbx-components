@@ -34,7 +34,6 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directives.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

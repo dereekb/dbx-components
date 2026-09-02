@@ -6,7 +6,6 @@ import { DbxLinkComponent } from '@dereekb/dbx-web';
 @Component({
   selector: 'app-login-view',
   templateUrl: './login.view.component.html',
-  standalone: true,
   imports: [DbxFirebaseLoginComponent, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

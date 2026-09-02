@@ -20,8 +20,7 @@ import { FIELD_SIGNAL_CONTEXT } from '@ng-forge/dynamic-forms/integration';
       }
     </div>
   `,
-  imports: [MatProgressBarModule],
-  standalone: true
+  imports: [MatProgressBarModule]
 })
 export class DbxForgeWorkingWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

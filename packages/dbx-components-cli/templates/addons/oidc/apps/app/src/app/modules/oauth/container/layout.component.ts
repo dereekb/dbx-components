@@ -5,7 +5,6 @@ import { DbxContentPageDirective, DbxContentContainerDirective } from '@dereekb/
 
 @Component({
   templateUrl: './layout.component.html',
-  standalone: true,
   imports: [DbxContentPageDirective, DbxContentContainerDirective, DbxAppContextStateDirective, UIView],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

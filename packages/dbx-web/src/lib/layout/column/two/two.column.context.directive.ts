@@ -20,8 +20,7 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
  */
 @Directive({
   selector: '[dbxTwoColumnContext]',
-  providers: provideTwoColumnsContext(),
-  standalone: true
+  providers: provideTwoColumnsContext()
 })
 export class DbxTwoColumnContextDirective {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore, { self: true });

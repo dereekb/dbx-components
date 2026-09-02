@@ -33,8 +33,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
  */
 @Component({
   templateUrl: './login.email.content.component.html',
-  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailForgeFormComponent, DbxFirebaseEmailRecoveryForgeFormComponent, DbxFormSourceDirective],
-  standalone: true
+  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailForgeFormComponent, DbxFirebaseEmailRecoveryForgeFormComponent, DbxFormSourceDirective]
 })
 export class DbxFirebaseLoginEmailContentComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

@@ -9,7 +9,6 @@ export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'doc-interaction-test-filter-custom-filter-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

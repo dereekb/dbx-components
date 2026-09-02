@@ -182,8 +182,7 @@ describe('DbxFirebaseFormSpaceListComponent', () => {
       <dbx-list-empty-content empty>No form spaces yet.</dbx-list-empty-content>
     </dbx-firebase-formspace-list>
   `,
-  imports: [DbxFirebaseFormSpaceListComponent, DbxListEmptyContentComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceListComponent, DbxListEmptyContentComponent]
 })
 class TestDbxFirebaseFormSpaceListComponent {
   readonly formSpacesSignal = signal<DbxFirebaseFormSpaceListValue[]>([listValue('a', { n: 'My Draft' }), listValue('b', { s: FormSpaceState.SUBMITTED, ps: FormSpaceProcessingState.SUCCESS, sat: SUBMITTED_AT, cpat: COMPLETED_AT })]);

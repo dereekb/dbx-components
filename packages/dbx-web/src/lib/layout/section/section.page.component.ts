@@ -45,7 +45,6 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
     class: 'd-block dbx-content-page dbx-section-page',
     '[class]': 'classConfigSignal()'
   },
-  standalone: true,
   imports: [DbxSectionHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

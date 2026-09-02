@@ -105,7 +105,6 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
     '[class]': 'config.panelClass'
   },
   imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {

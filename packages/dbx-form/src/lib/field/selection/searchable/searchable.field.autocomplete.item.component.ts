@@ -23,8 +23,7 @@ export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('Dbx
       <dbx-injection [config]="configSignal()"></dbx-injection>
     </dbx-anchor>
   `,
-  imports: [DbxAnchorComponent, DbxInjectionComponent],
-  standalone: true
+  imports: [DbxAnchorComponent, DbxInjectionComponent]
 })
 export class DbxSearchableFieldAutocompleteItemComponent<T> {
   readonly displayValue = input.required<ConfiguredSearchableValueFieldDisplayValue<T>>();
@@ -83,8 +82,7 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
       }
     </div>
   `,
-  imports: [MatIconModule],
-  standalone: true
+  imports: [MatIconModule]
 })
 export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {
   readonly icon = this.displayValue.icon;

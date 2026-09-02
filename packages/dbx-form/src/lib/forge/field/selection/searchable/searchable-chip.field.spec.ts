@@ -415,7 +415,6 @@ describe('dbxForgeSearchableStringChipField()', () => {
   template: `
     <dbx-forge></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent],
   providers: [provideDbxForgeFormContext()],
   changeDetection: ChangeDetectionStrategy.OnPush

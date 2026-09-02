@@ -13,7 +13,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './list.component.html',
   imports: [UIView, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoNotificationListPageComponent {

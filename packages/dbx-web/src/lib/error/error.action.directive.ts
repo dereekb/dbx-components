@@ -14,8 +14,7 @@ import { DbxErrorComponent } from './error.component';
  * ```
  */
 @Directive({
-  selector: '[dbxActionError]',
-  standalone: true
+  selector: '[dbxActionError]'
 })
 export class DbxActionErrorDirective {
   readonly error = inject(DbxErrorComponent, { host: true });

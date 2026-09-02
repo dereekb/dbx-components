@@ -36,8 +36,7 @@ export interface DbxDetachOverlayData {
   ],
   host: {
     class: 'dbx-detach-overlay-host'
-  },
-  standalone: true
+  }
 })
 export class DbxDetachOverlayComponent implements AfterViewInit {
   private readonly _elementRef = inject(ElementRef);

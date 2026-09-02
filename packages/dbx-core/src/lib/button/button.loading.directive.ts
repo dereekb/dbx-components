@@ -22,8 +22,7 @@ import { cleanSubscription } from '../rxjs/subscription';
  * ```
  */
 @Directive({
-  selector: '[dbxLoadingButton]',
-  standalone: true
+  selector: '[dbxLoadingButton]'
 })
 export class DbxLoadingButtonDirective {
   readonly dbxButton = inject(DbxButton, { host: true });

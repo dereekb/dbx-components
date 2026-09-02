@@ -23,8 +23,7 @@ export type TwoColumnSrefValueWithSelection = DbxValueAsListItem<TwoColumnSrefVa
 @Component({
   selector: 'doc-two-column-sref-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocTwoColumnSrefListComponent extends AbstractDbxSelectionListWrapperDirective<TwoColumnSrefValue> {
   constructor() {
@@ -39,8 +38,7 @@ export class DocTwoColumnSrefListComponent extends AbstractDbxSelectionListWrapp
   selector: 'doc-two-column-sref-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocTwoColumnSrefListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DocTwoColumnSrefListViewComponent)
 })
 export class DocTwoColumnSrefListViewComponent extends AbstractDbxSelectionListViewDirective<TwoColumnSrefValue> {
   readonly config: DbxSelectionValueListViewConfig<TwoColumnSrefValueWithSelection> = {
@@ -57,7 +55,6 @@ export class DocTwoColumnSrefListViewComponent extends AbstractDbxSelectionListV
       </div>
     </div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocTwoColumnSrefListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoColumnSrefValue> {

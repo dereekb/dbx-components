@@ -84,7 +84,6 @@ describe('DbxActionContextMapDirective', () => {
       </dbx-action>
     </ng-container>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxActionContextMapDirective, DbxActionMapSourceDirective, DbxActionFromMapDirective]
 })
 class TestDbxActionContextMapDirectiveComponent {

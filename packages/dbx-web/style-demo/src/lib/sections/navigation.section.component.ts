@@ -16,7 +16,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
  */
 @Component({
   selector: 'dbx-style-demo-navigation-section',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxPagebarComponent, DbxBarDirective, DbxBarHeaderComponent, DbxAnchorListComponent, DbxButtonComponent, DbxButtonSpacerDirective],
   template: `
     <dbx-docs-ui-example header="Navigation" hint="Router-free navigation building blocks.">

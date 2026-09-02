@@ -16,7 +16,6 @@ import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlis
   template: `
     <dbx-anchor-list [anchors]="presetAnchorsSignal()"></dbx-anchor-list>
   `,
-  imports: [DbxAnchorListComponent],
-  standalone: true
+  imports: [DbxAnchorListComponent]
 })
 export class DbxPresetFilterListComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {}

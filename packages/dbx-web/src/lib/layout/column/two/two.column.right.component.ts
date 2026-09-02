@@ -63,8 +63,7 @@ import { DbxAnchorComponent } from '../../../router';
   host: {
     class: 'dbx-two-column-right d-block'
   },
-  imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent],
-  standalone: true
+  imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent]
 })
 export class DbxTwoColumnRightComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

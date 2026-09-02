@@ -233,7 +233,6 @@ const CUSTOM_CONTENT = 'Custom Content';
       <span id="custom-content">Custom Content</span>
     </dbx-anchor>
   `,
-  standalone: true,
   imports: [DbxAnchorComponent]
 })
 class TestViewComponent {

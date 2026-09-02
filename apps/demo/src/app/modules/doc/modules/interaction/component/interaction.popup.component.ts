@@ -17,7 +17,6 @@ export interface DocInteractionPopupConfig {
       <doc-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></doc-interaction-example-popup-content>
     </dbx-popup-content>
   `,
-  standalone: true,
   imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

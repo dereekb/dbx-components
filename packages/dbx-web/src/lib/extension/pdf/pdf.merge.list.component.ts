@@ -25,8 +25,7 @@ import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
   host: {
     class: 'dbx-pdf-merge-list'
   },
-  imports: [AsyncPipe, CdkDropList, DbxPdfMergeEntryComponent],
-  standalone: true
+  imports: [AsyncPipe, CdkDropList, DbxPdfMergeEntryComponent]
 })
 export class DbxPdfMergeListComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

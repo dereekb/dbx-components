@@ -21,7 +21,6 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
 
 @Component({
   templateUrl: './expression.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

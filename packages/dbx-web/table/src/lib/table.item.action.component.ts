@@ -10,8 +10,7 @@ import { type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@d
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableItemActionComponent<T> extends AbstractDbxTableItemDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(

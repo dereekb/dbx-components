@@ -39,7 +39,6 @@ export interface TestFilter {
       <ng-container #source dbxFilterMapSource="a"></ng-container>
     </ng-container>
   `,
-  standalone: true,
   imports: [DbxFilterMapDirective, DbxFilterMapSourceConnectorDirective, DbxFilterMapSourceDirective]
 })
 class TestDbxFilterMapDirectiveComponent {

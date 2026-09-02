@@ -6,7 +6,6 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  standalone: true,
   imports: [DbxSidenavComponent, DbxColorDirective, DbxAppContextStateDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxWebPageTitleInfoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

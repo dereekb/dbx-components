@@ -19,8 +19,7 @@ import { dbxFirebaseModelEntityWidgetInjectionConfigFactory } from './model.enti
 @Component({
   selector: 'dbx-firebase-model-entities-entity',
   templateUrl: './model.entities.entity.component.html',
-  imports: [DbxInjectionComponent, DbxLoadingComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, MatIcon],
-  standalone: true
+  imports: [DbxInjectionComponent, DbxLoadingComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, MatIcon]
 })
 export class DbxFirebaseModelEntitiesEntityComponent {
   readonly widgetInjectionConfigFactory = dbxFirebaseModelEntityWidgetInjectionConfigFactory();

@@ -28,7 +28,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       <ng-content></ng-content>
     </div>
   `,
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxListEmptyContentComponent {}

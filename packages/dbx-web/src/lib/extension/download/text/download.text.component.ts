@@ -25,7 +25,6 @@ import { DbxContentPitDirective } from '../../../layout/content/content.pit.dire
 @Component({
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
-  standalone: true,
   imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

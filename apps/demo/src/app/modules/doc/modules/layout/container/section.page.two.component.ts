@@ -13,7 +13,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './section.page.two.component.html',
-  standalone: true,
   imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent, DbxContentContainerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

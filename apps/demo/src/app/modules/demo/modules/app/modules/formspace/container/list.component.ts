@@ -62,7 +62,6 @@ export const DEMO_FORM_SPACE_LIST_GROUP_ORDER: Record<DemoFormSpaceListGroup, nu
     DbxRouteModelIdDirective,
     DbxFirebaseFormSpaceModule
   ],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoFormSpaceListPageComponent {

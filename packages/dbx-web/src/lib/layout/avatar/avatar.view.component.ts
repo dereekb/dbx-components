@@ -52,8 +52,7 @@ import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxCuratedC
     '[class.dbx-avatar-view-tile]': 'avatarTileSignal()'
   },
   imports: [MatIconModule, DbxColorDirective],
-  hostDirectives: [DbxColorDirective],
-  standalone: true
+  hostDirectives: [DbxColorDirective]
 })
 export class DbxAvatarViewComponent {
   readonly defaultContext: Maybe<DbxAvatarContext> = inject(DBX_AVATAR_CONTEXT_DATA_TOKEN, { optional: true });

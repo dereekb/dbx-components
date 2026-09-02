@@ -22,8 +22,7 @@ export type DbxFirebaseOidcEntryClientTestFormComponentConfig = OidcEntryClientT
   selector: 'dbx-firebase-oidc-client-test-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryClientTestForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientTestFormValue, DbxFirebaseOidcEntryClientTestFormComponentConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config) => (config ? oidcEntryClientTestForgeFormFields(config) : undefined)));

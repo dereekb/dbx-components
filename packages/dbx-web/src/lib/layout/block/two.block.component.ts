@@ -35,7 +35,6 @@ import { DbxResizedDirective } from '../../screen/resize.directive';
     '[class]': '{ "dbx-two-block-fixed-top": fixedTop() }'
   },
   imports: [DbxResizedDirective, NgStyle],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTwoBlockComponent {

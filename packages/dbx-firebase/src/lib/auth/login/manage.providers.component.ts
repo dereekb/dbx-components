@@ -22,7 +22,6 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
  */
 @Component({
   selector: 'dbx-firebase-manage-auth-providers',
-  standalone: true,
   imports: [DbxFirebaseLoginComponent, DbxSectionComponent],
   template: `
     @if (linkedMethodTypesSignal().length) {

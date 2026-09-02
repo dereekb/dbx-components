@@ -36,8 +36,7 @@ export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = 'action_map_working_disab
  * @see {@link DbxActionContextMapDirective} for the parent map provider.
  */
 @Directive({
-  selector: '[dbxActionMapWorkingDisable]',
-  standalone: true
+  selector: '[dbxActionMapWorkingDisable]'
 })
 export class DbxActionMapWorkingDisableDirective {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);

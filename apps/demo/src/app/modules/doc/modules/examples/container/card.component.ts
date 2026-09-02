@@ -8,7 +8,6 @@ import { DocHorizontalCardExampleComponent } from '../examples/horizontal.card.e
 
 @Component({
   templateUrl: './card.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocHeroCardExampleComponent, DocSupportBannerCardExampleComponent, DocFeedbackSelectionCardExampleComponent, DocHorizontalCardExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

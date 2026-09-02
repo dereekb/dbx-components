@@ -34,7 +34,6 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
     `
   ],
   imports: [DbxSectionComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDocsUiExampleComponent {

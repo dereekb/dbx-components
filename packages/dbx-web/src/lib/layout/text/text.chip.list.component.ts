@@ -36,7 +36,6 @@ import { type DbxChipDisplay, DbxChipDirective } from './text.chip.directive';
     '[style.display]': '"inline"'
   },
   imports: [DbxChipDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxChipListComponent {

@@ -5,8 +5,7 @@ import { type StorageFile, type StorageFileDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseStorageFileCollection]',
-  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseStorageFileCollectionStoreDirective, StorageFileCollectionStore),
-  standalone: true
+  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseStorageFileCollectionStoreDirective, StorageFileCollectionStore)
 })
 export class DbxFirebaseStorageFileCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<StorageFile, StorageFileDocument, StorageFileCollectionStore> {
   constructor() {

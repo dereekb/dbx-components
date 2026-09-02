@@ -20,8 +20,7 @@ import { NgClass } from '@angular/common';
 @Component({
   selector: 'dbx-preset-filter-menu',
   templateUrl: './filter.preset.menu.component.html',
-  imports: [NgClass, MatButtonModule, MatMenuModule, MatIconModule, DbxAnchorComponent],
-  standalone: true
+  imports: [NgClass, MatButtonModule, MatMenuModule, MatIconModule, DbxAnchorComponent]
 })
 export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {
   readonly config = input<DbxPresetFilterMenuConfig>({});

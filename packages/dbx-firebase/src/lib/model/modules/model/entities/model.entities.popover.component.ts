@@ -65,8 +65,7 @@ export const DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY = 'entiti
  */
 @Component({
   templateUrl: './model.entities.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent],
-  standalone: true
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent]
 })
 export class DbxFirebaseModelEntitiesPopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseModelEntitiesPopoverConfig> {
   readonly entities$ = this.popover.data?.entities$;

@@ -4,7 +4,6 @@ import { DOC_LAYOUT_ROUTES } from '../doc.layout';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
   imports: [DocFeatureCardListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

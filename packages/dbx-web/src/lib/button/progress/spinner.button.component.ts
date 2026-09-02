@@ -30,8 +30,7 @@ import { NgClass, NgStyle } from '@angular/common';
   selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
-  standalone: true
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle]
 })
 export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {
   readonly buttonRef = viewChild.required<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });

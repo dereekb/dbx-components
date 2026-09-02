@@ -15,8 +15,7 @@ import { DbxFirebaseModelTypeInstanceListComponent } from '../model.types.list.c
       <ng-content empty select="[empty]"></ng-content>
     </dbx-firebase-model-type-instance-list>
   `,
-  imports: [DbxFirebaseModelTypeInstanceListComponent, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective],
-  standalone: true
+  imports: [DbxFirebaseModelTypeInstanceListComponent, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective]
 })
 export class DbxFirebaseModelHistoryComponent {
   readonly dbxFirebaseModelTrackerService = inject(DbxFirebaseModelTrackerService);

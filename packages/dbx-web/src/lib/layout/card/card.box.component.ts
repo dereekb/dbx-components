@@ -46,8 +46,7 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  imports: [MatIconModule],
-  standalone: true
+  imports: [MatIconModule]
 })
 export class DbxCardBoxComponent {
   readonly header = input<string>();

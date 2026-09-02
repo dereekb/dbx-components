@@ -78,7 +78,6 @@ function filesChangedEvent(file: File): DbxFileUploadFilesChangedEvent {
       }
     </div>
   `,
-  standalone: true,
   imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeImportComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -101,7 +100,6 @@ class TestHostComponent {
   template: `
     <dbx-pdf-merge-editor-file-upload slotId="receipts"></dbx-pdf-merge-editor-file-upload>
   `,
-  standalone: true,
   imports: [DbxPdfMergeEditorFileUploadComponent],
   providers: [provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(true)],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -116,7 +114,6 @@ class PreservingSlotHostComponent {}
       }
     </div>
   `,
-  standalone: true,
   imports: [DbxPdfMergeEditorStoreDirective, PreservingSlotHostComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

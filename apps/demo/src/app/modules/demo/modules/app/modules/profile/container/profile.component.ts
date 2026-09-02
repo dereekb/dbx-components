@@ -52,7 +52,6 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDis
     DbxLoadingProgressComponent,
     DbxFirebaseStorageFileDownloadButtonComponent
   ],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoProfileViewComponent implements OnInit {

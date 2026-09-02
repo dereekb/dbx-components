@@ -15,7 +15,6 @@ import { dbxFormSearchFormFields, type DbxFormSearchFormFieldsConfig, type DbxFo
   `,
   providers: dbxForgeFormComponentProviders(),
   imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective],
-  standalone: true,
   host: {
     class: 'd-block dbx-form-search-form'
   }

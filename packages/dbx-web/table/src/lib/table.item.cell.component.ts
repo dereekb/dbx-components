@@ -11,8 +11,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableItemDirective<T, C> {
   readonly column = input<Maybe<DbxTableColumn<C>>>();

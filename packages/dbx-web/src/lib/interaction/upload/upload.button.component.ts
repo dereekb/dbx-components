@@ -31,8 +31,7 @@ const ACCEPT_EVERY_FILE: FileAcceptFunction = () => true;
     <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal()" (change)="fileInputChanged()" />
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadButtonComponent),
-  imports: [DbxButtonComponent],
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent {
   readonly fileInput = viewChild.required<string, ElementRef<HTMLInputElement>>('fileInput', { read: ElementRef });

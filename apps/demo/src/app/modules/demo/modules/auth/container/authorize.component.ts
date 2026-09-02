@@ -6,7 +6,6 @@ import { UISref } from '@uirouter/angular';
 
 @Component({
   templateUrl: './authorize.component.html',
-  standalone: true,
   imports: [DbxLoadingComponent, MatButton, UISref],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -5,7 +5,6 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 
 @Component({
   templateUrl: './structure.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxStructureDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -11,7 +11,6 @@ import { type DbxStyleDemoStyleLoaderInput } from './style.template';
   template: `
     <div [dbxStyleDemoStyleLoader]="loaderInput()"></div>
   `,
-  standalone: true,
   imports: [DbxStyleDemoStyleLoaderDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

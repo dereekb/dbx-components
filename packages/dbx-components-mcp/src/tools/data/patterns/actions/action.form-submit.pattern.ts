@@ -30,8 +30,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
       <dbx-button [raised]="true" text="Save" dbxActionButton></dbx-button>
       <dbx-error dbxActionError></dbx-error>
     </form>
-  \`,
-  standalone: true
+  \`
 })
 export class EditProfilePageComponent {
   private readonly profileStore = inject(ProfileDocumentStore);

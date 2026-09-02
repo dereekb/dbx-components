@@ -11,8 +11,7 @@ import { formatToMonthDayString } from '@dereekb/date';
   template: `
     <dbx-button #buttonPopoverOrigin icon="date_range" [disabled]="disabledSignal()" [raised]="true" color="accent" [text]="buttonTextSignal()" (buttonClick)="openPopover()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly injector = inject(Injector);

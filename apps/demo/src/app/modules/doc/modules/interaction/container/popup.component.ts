@@ -7,7 +7,6 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './popup.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -24,7 +24,6 @@ import { toJsDate } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateFormatDistance',
-  standalone: true,
   pure: false
 })
 export class DateFormatDistancePipe implements PipeTransform {

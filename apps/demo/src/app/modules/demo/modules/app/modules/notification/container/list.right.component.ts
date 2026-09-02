@@ -7,7 +7,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './list.right.component.html',
   imports: [DbxTwoColumnRightComponent, DbxFirebaseNotificationItemViewComponent, DbxLoadingComponent, DbxContentContainerDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoNotificationListPageRightComponent implements OnDestroy {

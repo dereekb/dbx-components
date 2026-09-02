@@ -17,7 +17,6 @@ import { DbxAnchorComponent } from './anchor.component';
  */
 @Component({
   selector: 'dbx-anchor-icon',
-  standalone: true,
   imports: [MatIconModule, MatButtonModule, DbxAnchorComponent],
   template: `
     <dbx-anchor [anchor]="anchor()">

@@ -42,8 +42,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
     class: 'd-block',
     '[class.dbx-pagebar-hide]': 'hidePagebarSignal()'
   },
-  imports: [DbxSidenavPagebarComponent],
-  standalone: true
+  imports: [DbxSidenavPagebarComponent]
 })
 export class DbxSidenavPageComponent {
   readonly parent = inject(DbxSidenavComponent);

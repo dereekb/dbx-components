@@ -23,7 +23,6 @@ import { cutString, type Maybe } from '@dereekb/util';
  */
 @Pipe({
   name: 'cutText',
-  standalone: true,
   pure: true
 })
 export class CutTextPipe implements PipeTransform {

@@ -92,7 +92,6 @@ interface DbxFirebaseNotificationHealthCheckProbeNoticeInput {
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-view'
   },
-  standalone: true,
   imports: [DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxButtonComponent, DbxContentPitDirective, DbxErrorComponent, DbxFirebaseNotificationHealthCheckComponent],
   providers: [DbxFirebaseNotificationUserHealthCheckStore],
   changeDetection: ChangeDetectionStrategy.OnPush

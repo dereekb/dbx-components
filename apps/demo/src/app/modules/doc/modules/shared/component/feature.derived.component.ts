@@ -33,7 +33,6 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
       </dbx-content-box>
     </div>
   `,
-  standalone: true,
   imports: [DbxContentBoxDirective, MatIcon],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

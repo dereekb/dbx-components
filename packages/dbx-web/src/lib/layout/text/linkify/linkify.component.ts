@@ -37,8 +37,7 @@ export interface DbxLinkifyConfig {
   `,
   host: {
     class: 'dbx-i dbx-linkify'
-  },
-  standalone: true
+  }
 })
 export class DbxLinkifyComponent {
   private readonly sanitizer = inject(DomSanitizer);

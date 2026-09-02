@@ -22,8 +22,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
       </dbx-section>
     }
   `,
-  imports: [DbxSectionComponent, DbxSubSectionComponent],
-  standalone: true
+  imports: [DbxSectionComponent, DbxSubSectionComponent]
 })
 export class DbxForgeSectionWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

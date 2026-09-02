@@ -36,8 +36,7 @@ const DEFAULT_DUPLICATE_BUTTON: DbxButtonDisplayStylePair = {
 @Component({
   selector: 'dbx-forge-array-field-element-wrapper',
   templateUrl: './array-field.element.wrapper.component.html',
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, DbxChipDirective, MatIconModule, MatButtonModule, DbxButtonComponent, DbxButtonSpacerDirective],
-  standalone: true
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, DbxChipDirective, MatIconModule, MatButtonModule, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

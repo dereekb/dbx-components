@@ -18,7 +18,6 @@ import { DbxFirebaseOAuthLoginViewComponent } from '@dereekb/dbx-firebase/oidc';
  */
 @Component({
   selector: 'dbx-firebase-style-demo-login-section',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxFirebaseLoginComponent, DbxFirebaseOAuthLoginViewComponent],
   template: `
     <dbx-docs-ui-example header="Firebase Login" hint="The OIDC login view in each render state.">

@@ -6,7 +6,6 @@ import { provideDbxFirebaseDocumentStoreContextStore } from './store.document.co
  */
 @Directive({
   selector: '[dbxFirebaseDocumentStoreContextStore]',
-  providers: provideDbxFirebaseDocumentStoreContextStore(),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreContextStore()
 })
 export class DbxFirebaseDocumentStoreContextStoreDirective {}

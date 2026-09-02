@@ -84,7 +84,6 @@ export interface DbxStepBlockComponentConfig {
     '[class.dbx-step-block-center]': 'centerSignal()'
   },
   imports: [DbxIconTileComponent, DbxColorDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxStepBlockComponent {

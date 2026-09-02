@@ -32,8 +32,7 @@ import { cleanSubscriptionWithLockSet } from '../../../rxjs';
  * @see {@link DbxActionValueTriggerDirective} for lazy getter values on trigger.
  */
 @Directive({
-  selector: '[dbxActionValueStream]',
-  standalone: true
+  selector: '[dbxActionValueStream]'
 })
 export class DbxActionValueStreamDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

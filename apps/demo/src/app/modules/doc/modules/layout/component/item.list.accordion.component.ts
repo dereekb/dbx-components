@@ -11,8 +11,7 @@ import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, Mat
 @Component({
   selector: 'doc-item-list-accordion',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirective<DocValue> {
   constructor() {
@@ -27,8 +26,7 @@ export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirecti
   selector: 'doc-item-list-accordion-view',
   template: DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListAccordionViewComponent),
-  imports: [DbxListAccordionViewComponentImportsModule],
-  standalone: true
+  imports: [DbxListAccordionViewComponentImportsModule]
 })
 export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionViewDirective<DocValue> {
   readonly config: DbxValueListAccordionViewConfig<DocValueWithSelection> = {
@@ -67,7 +65,6 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
     </mat-expansion-panel>
   `,
   imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocItemListAccordionItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {

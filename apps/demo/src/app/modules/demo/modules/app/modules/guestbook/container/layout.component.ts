@@ -3,7 +3,6 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [UIView],
-  standalone: true
+  imports: [UIView]
 })
 export class DemoGuestbookLayoutComponent {}

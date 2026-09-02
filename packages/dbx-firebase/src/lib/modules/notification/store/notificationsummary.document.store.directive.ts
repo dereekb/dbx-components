@@ -8,8 +8,7 @@ import { type NotificationSummary, type NotificationSummaryDocument } from '@der
  */
 @Directive({
   selector: '[dbxFirebaseNotificationSummaryDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationSummaryDocumentStoreDirective, NotificationSummaryDocumentStore),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationSummaryDocumentStoreDirective, NotificationSummaryDocumentStore)
 })
 export class DbxFirebaseNotificationSummaryDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<NotificationSummary, NotificationSummaryDocument, NotificationSummaryDocumentStore> {
   constructor() {

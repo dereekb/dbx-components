@@ -15,7 +15,6 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
   templateUrl: './button.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, MatButtonModule, MatFormFieldModule, MatInputModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

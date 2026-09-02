@@ -14,8 +14,7 @@ import { AbstractConfigAsyncForgeFormDirective } from './forge.directive';
   selector: 'dbx-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxForgeAsyncConfigFormComponent<O = unknown, C extends FormConfig = FormConfig> extends AbstractConfigAsyncForgeFormDirective<O, C> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$;

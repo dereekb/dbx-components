@@ -26,8 +26,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
     '[class.dbx-forge-form-disabled]': 'isDisabledSignal()'
   },
   providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
-  imports: [DynamicForm],
-  standalone: true
+  imports: [DynamicForm]
 })
 export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit {
   private readonly _context = inject(DbxForgeFormContext<T>);

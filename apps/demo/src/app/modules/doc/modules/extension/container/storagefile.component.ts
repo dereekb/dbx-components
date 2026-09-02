@@ -8,7 +8,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './storagefile.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

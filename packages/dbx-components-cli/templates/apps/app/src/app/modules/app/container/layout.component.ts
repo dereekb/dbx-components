@@ -5,7 +5,6 @@ import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 @Component({
   templateUrl: './layout.component.html',
   encapsulation: ViewEncapsulation.None,
-  imports: [UIView, DbxAppContextStateDirective],
-  standalone: true
+  imports: [UIView, DbxAppContextStateDirective]
 })
 export class AppLayoutComponent {}

@@ -12,7 +12,6 @@ export interface DocExtensionWidgetIconExampleData {
 @Component({
   templateUrl: './widget.icon.example.component.html',
   styleUrls: ['./widget.icon.example.scss'],
-  standalone: true,
   imports: [MatIcon],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

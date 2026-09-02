@@ -13,7 +13,6 @@ import { DocActionFormExampleFormTwoComponent } from '../component/action.exampl
 
 @Component({
   templateUrl: './form.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocActionExampleToolsComponent, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxFormSourceDirective, DocActionFormExampleFormTwoComponent, DbxErrorComponent, DbxActionErrorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

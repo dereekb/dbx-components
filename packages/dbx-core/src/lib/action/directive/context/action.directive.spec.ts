@@ -11,8 +11,7 @@ import { callbackTest } from '@dereekb/util/test';
   template: `
     <div #action="action" dbxAction [dbxActionHandler]="handlerFunctionSignal()"></div>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective],
-  standalone: true
+  imports: [DbxActionDirective, DbxActionHandlerDirective]
 })
 class TestActionContextDirectiveComponent {
   readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);

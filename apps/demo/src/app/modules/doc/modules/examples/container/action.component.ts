@@ -5,7 +5,6 @@ import { DocActionFormWithSecondaryExampleComponent } from '../examples/action.f
 
 @Component({
   templateUrl: './action.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocActionFormWithSecondaryExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

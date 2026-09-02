@@ -13,7 +13,6 @@ import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotific
   template: `
     <dbx-widget-view [config]="configSignal()"></dbx-widget-view>
   `,
-  standalone: true,
   imports: [DbxWidgetViewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

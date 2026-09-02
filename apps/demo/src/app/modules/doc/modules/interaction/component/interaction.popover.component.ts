@@ -31,7 +31,6 @@ export interface DocInteractionPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

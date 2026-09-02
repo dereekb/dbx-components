@@ -33,8 +33,7 @@ import { DbxInjectionComponent } from './injection.component';
       <dbx-injection [config]="entry.injectionConfig"></dbx-injection>
     }
   `,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxInjectionArrayComponent {
   /**

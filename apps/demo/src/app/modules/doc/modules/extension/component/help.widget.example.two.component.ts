@@ -13,7 +13,6 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO: DbxHelpContextKey = 'exampl
       <p>This is a second help example widget.</p>
     </div>
   `,
-  standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

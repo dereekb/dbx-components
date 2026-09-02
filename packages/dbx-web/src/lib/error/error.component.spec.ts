@@ -19,7 +19,6 @@ describe('ReadableErrorComponent', () => {
   template: `
     <dbx-error [error]="error"></dbx-error>
   `,
-  standalone: true,
   imports: [DbxErrorComponent]
 })
 class ErrorComponent {

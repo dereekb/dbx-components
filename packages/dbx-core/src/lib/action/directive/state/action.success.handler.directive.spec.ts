@@ -12,8 +12,7 @@ import { DbxActionSuccessHandlerDirective, type DbxActionSuccessHandlerFunction 
   template: `
     <div dbxAction [dbxActionHandler]="handlerFunctionSignal()" [dbxActionSuccessHandler]="successHandlerSignal()"></div>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective],
-  standalone: true
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective]
 })
 class TestDbxActionSuccessHandlerDirectiveComponent {
   readonly directive = viewChild.required(DbxActionDirective);

@@ -11,7 +11,6 @@ import { UIView } from '@uirouter/angular';
   templateUrl: './layout.component.html',
   providers: [DbxFirebaseNotificationItemStore],
   imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DemoProfileDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective, DbxFirebaseNotificationSummaryDocumentStoreDirective, DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective, DbxSectionPageComponent, DbxSpacerDirective, DbxFirebaseNotificationItemStorePopoverButtonComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoNotificationLayoutComponent {

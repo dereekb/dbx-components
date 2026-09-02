@@ -17,7 +17,6 @@ import { type Maybe } from '@dereekb/util';
     </dbx-quiz-post-quiz>
   `,
   imports: [DbxQuizPostQuizComponent, DbxQuizScoreComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionQuizExampleResultComponent {

@@ -29,8 +29,7 @@ import { type ManualActionItemValue, type ManualActionItemValueWithSelection } f
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-auto-height dbx-list-no-hover-effects dbx-list-no-item-padding'
-  },
-  standalone: true
+  }
 })
 export class DocManualActionsItemListComponent extends AbstractDbxSelectionListWrapperDirective<ManualActionItemValue> {
   constructor() {
@@ -48,8 +47,7 @@ export class DocManualActionsItemListComponent extends AbstractDbxSelectionListW
   providers: provideDbxListView(DocManualActionsItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  standalone: true
+  }
 })
 export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionListViewDirective<ManualActionItemValue> {
   // Drop `icon` (rows render no tile) and `anchor` (button owns it; row stays non-clickable).
@@ -78,8 +76,7 @@ export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionL
       </div>
     </div>
   `,
-  imports: [MatButtonModule, DbxButtonComponent, DbxAnchorComponent],
-  standalone: true
+  imports: [MatButtonModule, DbxButtonComponent, DbxAnchorComponent]
 })
 export class DocManualActionsItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ManualActionItemValue> {
   get title(): string {

@@ -12,8 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-calendar',
   templateUrl: './calendar.component.html',
-  imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass],
-  standalone: true
+  imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass]
 })
 export class DbxCalendarComponent<T> {
   readonly calendarStore = inject(DbxCalendarStore<T>);

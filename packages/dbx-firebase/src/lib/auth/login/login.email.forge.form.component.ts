@@ -27,8 +27,7 @@ export interface DbxFirebaseEmailFormConfig {
   selector: 'dbx-firebase-email-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(

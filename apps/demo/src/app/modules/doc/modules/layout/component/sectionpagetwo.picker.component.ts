@@ -12,8 +12,7 @@ export interface DocLayoutSectionPageTwoSearchValue {
   selector: 'doc-layout-section-page-two-search',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DocLayoutSectionPageTwoSearchComponent extends AbstractSyncForgeFormDirective<DocLayoutSectionPageTwoSearchValue> {
   readonly formConfig: FormConfig = {

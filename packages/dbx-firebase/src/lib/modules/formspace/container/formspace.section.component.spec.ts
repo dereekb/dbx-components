@@ -178,8 +178,7 @@ describe('DbxFirebaseFormSpaceSectionComponent', () => {
   template: `
     <dbx-firebase-formspace-section [step]="1" [slot]="slotSignal()" header="Cover File" [complete]="completeSignal()"></dbx-firebase-formspace-section>
   `,
-  imports: [DbxFirebaseFormSpaceSectionComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSectionComponent]
 })
 class TestDbxFirebaseFormSpaceSectionComponent {
   readonly section = viewChild.required(DbxFirebaseFormSpaceSectionComponent);

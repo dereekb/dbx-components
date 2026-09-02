@@ -11,8 +11,7 @@ import { type Maybe } from '@dereekb/util';
  */
 @Directive({
   selector: '[dbxFirebaseStorageFileUploadInitializeDocument]',
-  exportAs: 'dbxFirebaseStorageFileUploadInitializeDocument',
-  standalone: true
+  exportAs: 'dbxFirebaseStorageFileUploadInitializeDocument'
 })
 export class DbxFirebaseStorageFileUploadInitializeDocumentDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);

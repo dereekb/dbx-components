@@ -15,7 +15,6 @@ export type DocInteractionTestDateFilterFormValue = {
   `,
   selector: 'doc-interaction-test-date-filter-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -143,7 +143,6 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
     `
   ],
   imports: [DynamicTextPipe, AsyncPipe],
-  standalone: true,
   host: {
     // `mat-form-field-animations-enabled` is intentionally retained: it gates
     // the 300ms subscript fade animation via Material's

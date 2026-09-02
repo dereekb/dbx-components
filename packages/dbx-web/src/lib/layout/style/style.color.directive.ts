@@ -49,8 +49,7 @@ import { type Maybe } from '@dereekb/util';
     '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
     '[style.--dbx-bg-color-current]': 'bgColorStyleSignal()',
     '[style.--dbx-color-current]': 'colorStyleSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxColorDirective {
   private readonly _colorService = inject(DbxColorService, { optional: true });

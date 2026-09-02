@@ -44,8 +44,7 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
       }
     </dbx-loading>
   `,
-  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent],
-  standalone: true
+  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent]
 })
 export class DbxFirebaseModelEntitiesComponent {
   readonly entitiesWidgetService = inject(DbxFirebaseModelEntitiesWidgetService);

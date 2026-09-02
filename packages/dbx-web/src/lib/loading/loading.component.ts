@@ -52,8 +52,7 @@ export interface DbxLoadingComponentState {
       <ng-content errorAction select="[errorAction]"></ng-content>
     </dbx-basic-loading>
   `,
-  imports: [DbxBasicLoadingComponent],
-  standalone: true
+  imports: [DbxBasicLoadingComponent]
 })
 export class DbxLoadingComponent {
   private readonly _contextOverrideSignal = signal<MaybeObservableOrValue<LoadingContext>>(undefined);

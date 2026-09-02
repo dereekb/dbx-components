@@ -17,7 +17,6 @@ import { publishedGuestbookEntriesQuery } from 'demo-firebase';
   selector: 'app-guestbook-view',
   templateUrl: './guestbook.view.component.html',
   imports: [AsyncPipe, DbxLoadingModule, DbxContentContainerDirective, DbxTwoBlockComponent, DemoGuestbookEntryDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxButtonModule, DbxListEmptyContentComponent, DemoGuestbookEntryListComponent, DemoGuestbookEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, MatDividerModule, DemoGuestbookAlbumComponent],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoGuestbookViewComponent implements OnDestroy {

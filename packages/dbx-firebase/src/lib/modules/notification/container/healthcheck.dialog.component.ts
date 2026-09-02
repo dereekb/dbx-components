@@ -26,7 +26,6 @@ export interface DbxFirebaseNotificationHealthCheckDialogComponentConfig {
       <dbx-firebase-notification-healthcheck-view></dbx-firebase-notification-healthcheck-view>
     </dbx-dialog-content>
   `,
-  standalone: true,
   imports: [DbxDialogContentDirective, DbxFirebaseNotificationHealthCheckViewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -9,7 +9,6 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  standalone: true,
   imports: [DbxInjectionComponent]
 })
 export class DbxTableActionCellComponent {

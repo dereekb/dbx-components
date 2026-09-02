@@ -58,8 +58,7 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
     '[class.dbx-file-upload-area-drag-over]': '!disabledSignal() && dragOverStateSignal()'
   },
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadAreaComponent),
-  imports: [MatIconModule, NgTemplateOutlet],
-  standalone: true
+  imports: [MatIconModule, NgTemplateOutlet]
 })
 export class DbxFileUploadAreaComponent extends AbstractDbxFileUploadComponent {
   readonly icon = input<Maybe<string>>();

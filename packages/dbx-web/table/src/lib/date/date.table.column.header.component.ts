@@ -16,8 +16,7 @@ import { DatePipe } from '@angular/common';
       </div>
     }
   `,
-  imports: [DatePipe],
-  standalone: true
+  imports: [DatePipe]
 })
 export class DbxTableDateHeaderComponent {
   readonly left = 'E';

@@ -35,8 +35,7 @@ import { DbxFileListItemComponent } from './download.file.list.item.component';
   host: {
     class: 'dbx-file-list d-block'
   },
-  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent, DbxListEmptyContentComponent],
-  standalone: true
+  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent, DbxListEmptyContentComponent]
 })
 export class DbxFileListComponent<T = unknown> {
   readonly config = input<Maybe<DbxFileListComponentConfig<T>>>();

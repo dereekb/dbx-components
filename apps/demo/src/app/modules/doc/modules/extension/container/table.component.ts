@@ -32,7 +32,6 @@ const _addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ 
 
 @Component({
   templateUrl: './table.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

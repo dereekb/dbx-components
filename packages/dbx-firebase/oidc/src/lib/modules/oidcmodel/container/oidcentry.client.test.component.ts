@@ -42,7 +42,6 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
       </div>
     }
   `,
-  standalone: true,
   imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

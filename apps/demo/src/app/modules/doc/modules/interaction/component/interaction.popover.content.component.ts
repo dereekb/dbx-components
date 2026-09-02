@@ -10,7 +10,6 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button color="warn" (click)="closeWithoutValue()">Close</button>
     </div>
   `,
-  standalone: true,
   imports: [MatButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

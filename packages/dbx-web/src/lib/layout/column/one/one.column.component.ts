@@ -27,8 +27,7 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.col
   `,
   exportAs: 'columns',
   providers: provideTwoColumnsContext(),
-  imports: [DbxTwoColumnComponent],
-  standalone: true
+  imports: [DbxTwoColumnComponent]
 })
 export class DbxOneColumnComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

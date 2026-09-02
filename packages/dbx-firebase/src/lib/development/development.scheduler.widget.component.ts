@@ -27,8 +27,7 @@ export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDeve
       <dbx-firebase-development-scheduler-list [state]="state$"></dbx-firebase-development-scheduler-list>
     </div>
   `,
-  imports: [DbxFirebaseDevelopmentSchedulerListComponent],
-  standalone: true
+  imports: [DbxFirebaseDevelopmentSchedulerListComponent]
 })
 export class DbxFirebaseDevelopmentSchedulerWidgetComponent {
   readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);

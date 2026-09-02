@@ -16,8 +16,7 @@ import { DbxDetachService } from './detach.service';
  * ```
  */
 @Directive({
-  selector: '[dbxDetachInit]',
-  standalone: true
+  selector: '[dbxDetachInit]'
 })
 export class DbxDetachInitDirective implements OnInit {
   private readonly _detachService = inject(DbxDetachService);

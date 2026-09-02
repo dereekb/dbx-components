@@ -24,7 +24,6 @@ import { type DbxForgeDateTimeRangeRowConfig, dbxForgeDateTimeRangeRow } from '.
       <form [dynamic-form]="config" [(value)]="formValue" [formOptions]="formOptions()"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
   providers: [EventDispatcher],
   changeDetection: ChangeDetectionStrategy.OnPush

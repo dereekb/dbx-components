@@ -29,7 +29,6 @@ const _disabled$ = new BehaviorSubject(false);
   selector: 'doc-feature-form-tabs',
   templateUrl: './feature.formtabs.component.html',
   styleUrls: ['./feature.formtabs.component.scss'],
-  standalone: true,
   imports: [MatSlideToggle, DbxSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

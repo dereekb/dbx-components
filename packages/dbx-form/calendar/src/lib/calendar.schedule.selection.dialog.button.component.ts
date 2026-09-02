@@ -9,8 +9,7 @@ import { DbxButtonComponent } from '@dereekb/dbx-web';
   template: `
     <dbx-button [raised]="true" color="accent" [text]="buttonText()" [disabled]="disabled()" (buttonClick)="clickCustomize()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
   readonly injector = inject(Injector);

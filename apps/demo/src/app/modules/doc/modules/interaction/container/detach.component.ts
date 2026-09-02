@@ -7,7 +7,6 @@ import { DocInteractionExampleDetachContentComponent } from '../component/intera
 
 @Component({
   templateUrl: './detach.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDetachOutletComponent, DbxDetachInitDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

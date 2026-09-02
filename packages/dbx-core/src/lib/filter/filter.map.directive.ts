@@ -21,8 +21,7 @@ import { clean } from '../rxjs/clean';
 @Directive({
   selector: '[dbxFilterMap]',
   exportAs: 'dbxFilterMap',
-  providers: [FilterMap],
-  standalone: true
+  providers: [FilterMap]
 })
 export class DbxFilterMapDirective<F> {
   readonly filterMap = clean(inject(FilterMap<F>));

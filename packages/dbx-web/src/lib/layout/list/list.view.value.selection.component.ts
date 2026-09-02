@@ -54,8 +54,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   host: {
     class: 'dbx-list-view dbx-selection-list-view'
   },
-  imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent],
-  standalone: true
+  imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent]
 })
 export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multiple = input<Maybe<boolean>>();
@@ -105,7 +104,6 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   template: `
     <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-selection-list-view-content>
   `,
-  standalone: true,
   imports: [DbxSelectionValueListViewContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

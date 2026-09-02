@@ -16,8 +16,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
       <ng-container #fieldComponent></ng-container>
     </div>
   `,
-  imports: [NgClass, NgStyle],
-  standalone: true
+  imports: [NgClass, NgStyle]
 })
 export class DbxForgeStyleWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

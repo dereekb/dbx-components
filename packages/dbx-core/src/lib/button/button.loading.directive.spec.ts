@@ -54,7 +54,6 @@ describe('DbxLoadingButton', () => {
       <button dbxButton [dbxLoadingButton]="context">Loading</button>
     </div>
   `,
-  standalone: true,
   imports: [DbxButtonDirective, DbxLoadingButtonDirective]
 })
 class TestDbxLoadingButtonDirectiveComponent {

@@ -7,7 +7,6 @@ import { DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective, DbxAuthNotAnyRole
 
 @Component({
   templateUrl: './role.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective, DbxAuthNotAnyRoleDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

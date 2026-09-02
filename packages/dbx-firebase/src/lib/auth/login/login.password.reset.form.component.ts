@@ -35,8 +35,7 @@ export interface DbxFirebasePasswordResetFormConfig {
   selector: 'dbx-firebase-password-reset-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponentImportsModule],
-  providers: dbxForgeFormComponentProviders(),
-  standalone: true
+  providers: dbxForgeFormComponentProviders()
 })
 export class DbxFirebasePasswordResetFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebasePasswordResetFormValue, DbxFirebasePasswordResetFormConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(

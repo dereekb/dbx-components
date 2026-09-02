@@ -56,8 +56,7 @@ export interface DbxSidenavSidebarState {
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
-  standalone: true
+  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent]
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit {
   private readonly _sidenavSub = cleanSubscription();

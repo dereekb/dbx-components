@@ -83,8 +83,7 @@ export interface DbxPdfMergeImportConfig {
     '[class.d-block]': 'activeSignal()',
     '[class.dbx-mb3]': 'activeSignal()'
   },
-  imports: [MatIconModule, DbxFileUploadComponent],
-  standalone: true
+  imports: [MatIconModule, DbxFileUploadComponent]
 })
 export class DbxPdfMergeImportComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

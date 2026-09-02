@@ -93,8 +93,7 @@ describe('DbxFileUploadButtonComponent max files', () => {
   template: `
     <dbx-file-upload-button [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="maxFilesSignal()"></dbx-file-upload-button>
   `,
-  imports: [DbxFileUploadButtonComponent],
-  standalone: true
+  imports: [DbxFileUploadButtonComponent]
 })
 class TestDbxFileUploadButtonComponent {
   readonly button = viewChild.required(DbxFileUploadButtonComponent);

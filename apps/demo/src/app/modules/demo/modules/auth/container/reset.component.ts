@@ -26,7 +26,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
       </dbx-firebase-password-reset>
     </dbx-content-box>
   `,
-  standalone: true,
   imports: [DbxContentBoxDirective, DbxFirebasePasswordResetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -59,7 +59,6 @@ import { type Maybe } from '@dereekb/util';
     '[class.dbx-icon-tile-round]': 'round()'
   },
   imports: [MatIconModule],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxIconTileComponent {

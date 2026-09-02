@@ -21,7 +21,6 @@ import { TWO_LINE_ITEM_VALUES, type TwoLineItemValue } from '../component/two.li
  */
 @Component({
   selector: 'doc-list-standard-example',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocTwoLineItemListComponent],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Standard List With Chip" hint="Two-line row with parent-rendered leading icon, title/details/footnote, and a trailing status chip.">

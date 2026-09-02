@@ -211,8 +211,7 @@ describe('DbxFirebaseFormSpaceSlotUploadComponent remaining uploads', () => {
   template: `
     <dbx-firebase-formspace-slot-upload slot="cover" label="Cover File" [maxFiles]="maxFilesSignal()" [uploadText]="uploadTextSignal()" [replaceText]="replaceTextSignal()"></dbx-firebase-formspace-slot-upload>
   `,
-  imports: [DbxFirebaseFormSpaceSlotUploadComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSlotUploadComponent]
 })
 class TestDbxFirebaseFormSpaceSlotUploadComponent {
   readonly slot = viewChild.required(DbxFirebaseFormSpaceSlotUploadComponent);

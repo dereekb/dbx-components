@@ -28,8 +28,7 @@ import { DbxDetachService } from './detach.service';
   `,
   host: {
     class: 'dbx-detach-outlet'
-  },
-  standalone: true
+  }
 })
 export class DbxDetachOutletComponent implements OnInit, OnDestroy {
   private readonly _detachService = inject(DbxDetachService);

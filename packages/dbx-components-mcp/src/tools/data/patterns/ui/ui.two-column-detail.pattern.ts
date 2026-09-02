@@ -37,7 +37,6 @@ interface Member {
 
 @Component({
   selector: 'app-members-page',
-  standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnRightComponent, DbxListComponent],
   template: \`
     <dbx-section-page header="Members" icon="group" scroll="body">

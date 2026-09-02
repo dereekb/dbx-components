@@ -53,7 +53,6 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent-view',
-  standalone: true,
   imports: [DbxInjectionComponent, DbxAvatarComponent, DbxBasicLoadingComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective, DbxActionSnackbarErrorDirective],
   styleUrls: ['./oauth.consent.view.component.scss'],
   template: `

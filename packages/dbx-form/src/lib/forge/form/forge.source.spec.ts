@@ -26,7 +26,6 @@ interface TestFormValue {
   template: `
     <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent, DbxFormSourceDirective],
   providers: [provideDbxForgeFormContext()],
   changeDetection: ChangeDetectionStrategy.OnPush

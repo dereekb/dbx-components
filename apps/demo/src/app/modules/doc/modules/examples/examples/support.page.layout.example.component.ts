@@ -90,7 +90,6 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
  */
 @Component({
   selector: 'doc-support-page-layout-example',
-  standalone: true,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxAnchorComponent, DbxButtonComponent, DbxIconTileComponent, DbxTextColorDirective, MatCardModule, MatFormFieldModule, MatInputModule, FlexLayoutModule],
   styles: [
     `

@@ -11,8 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-injection-array [entries]="entriesSignal()"></dbx-injection-array>
   `,
-  imports: [DbxInjectionArrayComponent],
-  standalone: true
+  imports: [DbxInjectionArrayComponent]
 })
 export class DbxMapboxInjectionComponent {
   readonly dbxMapboxMapKeyInjectionStore = inject(DbxMapboxInjectionStore);

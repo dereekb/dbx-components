@@ -18,8 +18,7 @@ import { DbxListTitleGroupHeaderComponent, DBX_LIST_TITLE_GROUP_DATA } from './l
  */
 @Directive({
   selector: '[dbxListTitleGroup]',
-  providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)],
-  standalone: true
+  providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)]
 })
 export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I> {
   readonly delegate = input<Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>>(undefined, { alias: 'dbxListTitleGroup' });

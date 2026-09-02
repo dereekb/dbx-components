@@ -9,8 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-mapbox-marker [marker]="markerSignal()"></dbx-mapbox-marker>
   `,
-  imports: [DbxMapboxMarkerComponent],
-  standalone: true
+  imports: [DbxMapboxMarkerComponent]
 })
 export class DbxForgeMapboxLatLngFieldMarkerComponent {
   readonly fieldComponent = inject(DbxForgeMapboxLatLngFieldComponent);

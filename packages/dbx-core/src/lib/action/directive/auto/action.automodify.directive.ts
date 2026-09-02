@@ -33,8 +33,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * @see {@link DbxActionAutoTriggerDirective} for automatically triggering modified actions.
  */
 @Directive({
-  selector: 'dbxActionAutoModify, [dbxActionAutoModify]',
-  standalone: true
+  selector: 'dbxActionAutoModify, [dbxActionAutoModify]'
 })
 export class DbxActionAutoModifyDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

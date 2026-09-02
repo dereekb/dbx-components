@@ -18,7 +18,6 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
       </ul>
     </div>
   `,
-  standalone: true,
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

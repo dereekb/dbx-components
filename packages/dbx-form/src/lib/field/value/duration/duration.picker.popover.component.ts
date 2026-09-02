@@ -66,8 +66,7 @@ export interface DbxDurationPickerPopoverData {
  */
 @Component({
   templateUrl: 'duration.picker.popover.component.html',
-  imports: [MatIconModule, MatButtonModule],
-  standalone: true
+  imports: [MatIconModule, MatButtonModule]
 })
 export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<TimeDurationData, DbxDurationPickerPopoverData> {
   readonly durationData = signal<TimeDurationData>(this.popover.data?.current ?? {});

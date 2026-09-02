@@ -18,7 +18,6 @@ export interface DocExtensionExampleScheduleSelectionCalendarDatePopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverScrollContentDirective, DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

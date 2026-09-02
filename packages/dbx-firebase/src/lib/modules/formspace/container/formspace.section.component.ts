@@ -125,8 +125,7 @@ export function dbxFirebaseFormSpaceSectionBlockerHint(status: Maybe<FormSpaceSl
   host: {
     class: 'dbx-firebase-formspace-section d-block'
   },
-  imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  standalone: true
+  imports: [DbxFirebaseFormSpaceStepBlockComponent]
 })
 export class DbxFirebaseFormSpaceSectionComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

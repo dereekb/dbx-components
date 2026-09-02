@@ -39,8 +39,7 @@ export interface DbxInjectionDialogComponentConfig<T = unknown> extends Omit<Mat
       <dbx-injection [config]="componentConfig"></dbx-injection>
     </dbx-dialog-content>
   `,
-  imports: [DbxInjectionComponent, DbxDialogContentDirective, DbxDialogContentCloseComponent, NgClass],
-  standalone: true
+  imports: [DbxInjectionComponent, DbxDialogContentDirective, DbxDialogContentCloseComponent, NgClass]
 })
 export class DbxInjectionDialogComponent<T = unknown> extends AbstractDialogDirective<void, DbxInjectionDialogComponentConfig<T>> {
   get showCloseButton() {

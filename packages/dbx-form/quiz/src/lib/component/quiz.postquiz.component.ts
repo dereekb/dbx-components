@@ -27,8 +27,7 @@ export type DbxQuizPostQuizState = 'presubmit' | 'postsubmit';
 @Component({
   selector: 'dbx-quiz-post-quiz',
   templateUrl: './quiz.postquiz.component.html',
-  imports: [DbxButtonModule, DbxActionModule, NgTemplateOutlet],
-  standalone: true
+  imports: [DbxButtonModule, DbxActionModule, NgTemplateOutlet]
 })
 export class DbxQuizPostQuizComponent {
   readonly quizStore = inject(QuizStore);

@@ -9,8 +9,7 @@ import { type Maybe } from '@dereekb/util';
   selector: 'dbx-firebase-notificationitem-content',
   templateUrl: './notificationitem.content.component.html',
   styleUrls: ['./notificationitem.content.scss'],
-  imports: [DatePipe],
-  standalone: true
+  imports: [DatePipe]
 })
 export class DbxFirebaseNotificationItemContentComponent {
   readonly subject = input<Maybe<string>>();

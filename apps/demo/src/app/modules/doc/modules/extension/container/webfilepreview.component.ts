@@ -6,7 +6,6 @@ import { ZIP_FILE_MIME_TYPE } from '@dereekb/util';
 
 @Component({
   templateUrl: './webfilepreview.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DbxButtonComponent, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxWebFilePreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })

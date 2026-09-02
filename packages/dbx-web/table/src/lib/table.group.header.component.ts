@@ -10,8 +10,7 @@ import { AbstractDbxTableGroupDirective } from './table.group.directive';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableGroupHeaderComponent<T> extends AbstractDbxTableGroupDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(

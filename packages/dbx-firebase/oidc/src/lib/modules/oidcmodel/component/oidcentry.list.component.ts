@@ -9,7 +9,6 @@ export type OidcEntryWithSelection = DbxValueAsListItem<OidcEntry>;
   selector: 'dbx-firebase-oidc-client-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DbxFirebaseOidcEntryClientListComponent),
-  standalone: true,
   imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryClientListComponent extends AbstractDbxSelectionListWrapperDirective<OidcEntry> {
@@ -25,7 +24,6 @@ export class DbxFirebaseOidcEntryClientListComponent extends AbstractDbxSelectio
   selector: 'dbx-firebase-oidc-client-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseOidcEntryClientListViewComponent),
-  standalone: true,
   imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryClientListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
@@ -43,8 +41,7 @@ export class DbxFirebaseOidcEntryClientListViewComponent extends AbstractDbxSele
       <p>{{ name }}</p>
       <p class="dbx-hint">{{ clientId }}</p>
     </div>
-  `,
-  standalone: true
+  `
 })
 export class DbxFirebaseOidcEntryClientListViewItemClientComponent {
   readonly entry = input.required<OidcEntry>();
@@ -66,8 +63,7 @@ export class DbxFirebaseOidcEntryClientListViewItemClientComponent {
     <div>
       <p>{{ entry().type }}</p>
     </div>
-  `,
-  standalone: true
+  `
 })
 export class DbxFirebaseOidcEntryClientListViewItemDefaultComponent {
   readonly entry = input.required<OidcEntry>();
@@ -84,7 +80,6 @@ export class DbxFirebaseOidcEntryClientListViewItemDefaultComponent {
       }
     }
   `,
-  standalone: true,
   imports: [DbxFirebaseOidcEntryClientListViewItemClientComponent, DbxFirebaseOidcEntryClientListViewItemDefaultComponent]
 })
 export class DbxFirebaseOidcEntryClientListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {

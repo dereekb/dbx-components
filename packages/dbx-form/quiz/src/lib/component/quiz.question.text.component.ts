@@ -36,8 +36,7 @@ export interface QuizQuestionTextComponentConfig {
  * ```
  */
 @Component({
-  templateUrl: './quiz.question.text.component.html',
-  standalone: true
+  templateUrl: './quiz.question.text.component.html'
 })
 export class QuizQuestionTextComponent {
   readonly config = model<Maybe<QuizQuestionTextComponentConfig>>();

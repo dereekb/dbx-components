@@ -143,7 +143,6 @@ const TEST_CONTENT = 'Content';
       </div>
     </dbx-loading>
   `,
-  standalone: true,
   imports: [DbxLoadingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
