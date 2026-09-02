@@ -56,15 +56,15 @@ describe('alignDbxPeerDependencies', () => {
     });
     const deps = result['dependencies'] as JsonObject;
     const dev = result['devDependencies'] as JsonObject;
-    expect(deps['@angular/core']).toBe('21.2.11');
-    expect(deps['@angular/common']).toBe('21.2.11');
+    expect(deps['@angular/core']).toBe('22.1.4');
+    expect(deps['@angular/common']).toBe('22.1.4');
     expect(deps['express']).toBe('^5.2.1');
     expect(deps['@dereekb/util']).toBe('^13.18.0'); // untouched
-    expect(dev['@angular/compiler-cli']).toBe('21.2.11');
+    expect(dev['@angular/compiler-cli']).toBe('22.1.4');
     expect(dev['@types/express']).toBe('^5.0.0');
-    expect(dev['typescript-eslint']).toBe('^8.59.3');
-    expect(dev['@analogjs/vite-plugin-angular']).toBe('~2.5.0');
-    expect(dev['@analogjs/vitest-angular']).toBe('~2.5.0');
+    expect(dev['typescript-eslint']).toBe('8.69.0');
+    expect(dev['@analogjs/vite-plugin-angular']).toBe('~2.7.1');
+    expect(dev['@analogjs/vitest-angular']).toBe('~2.7.1');
   });
 
   it('does not add a package that is not already declared', () => {
@@ -73,8 +73,8 @@ describe('alignDbxPeerDependencies', () => {
   });
 
   it('leaves the Angular build/devkit packages on their own line', () => {
-    const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '21.2.7', '@angular/cli': '21.2.7' } });
-    expect(result['devDependencies']).toEqual({ '@angular/build': '21.2.7', '@angular/cli': '21.2.7' });
+    const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '22.1.6', '@angular/cli': '22.1.6' } });
+    expect(result['devDependencies']).toEqual({ '@angular/build': '22.1.6', '@angular/cli': '22.1.6' });
   });
 });
 

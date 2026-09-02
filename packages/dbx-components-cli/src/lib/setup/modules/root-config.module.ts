@@ -9,7 +9,7 @@
 import { join } from 'node:path';
 import { archiveScaffoldEntry, buildScaffoldPlan, literalScaffoldEntry, type ScaffoldPlanEntry } from '../scaffold.js';
 import { applyFirebaseJsonEdits, applyTsconfigBaseEdits, editJsonFile } from '../json-edit.js';
-import { DEREEKB_PACKAGES, SETUP_DEPENDENCY_VERSIONS, deriveCiDistVersionMap } from '../versions.js';
+import { DEREEKB_PACKAGES, SETUP_DEPENDENCY_VERSIONS, ciTestInstallFlags, deriveCiDistVersionMap } from '../versions.js';
 import { type SetupContext, type SetupModule } from '../module.js';
 
 /**
@@ -110,7 +110,15 @@ export const ROOT_MODULE: SetupModule = {
 
     // @dereekb + firebase deps (script line 511). arktype is the runtime validator
     // the scaffolded firebase model files (`*.api.ts`) import.
-    await shell.run('npm', ['install', '--force', dep('mailgun.js'), dep('rxjs'), dep('arktype'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
+    //
+    // `@angular/animations` and `zone.js` ride along here because nothing else supplies them:
+    // `create-nx-workspace` scaffolds neither, and no `@dereekb` package declares them as peers.
+    // `@angular/platform-browser`'s animations entry point imports `@angular/animations` and the
+    // `@dereekb/dbx-web` + `@angular/material` imports pull that entry point in, so the app build
+    // fails on `Could not resolve "@angular/animations/browser"` without it; `zone.js` is imported
+    // by `@analogjs/vitest-angular/setup-zone.js`, so `nx test` on the Angular app fails without it.
+    // animations tracks the exact framework version the rest of Angular is pinned to.
+    await shell.run('npm', ['install', '--force', ...ciTestInstallFlags(versions), dep('mailgun.js'), dep('rxjs'), dep('arktype'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), `@angular/animations@${versions.core.angular}`, dep('zone.js'), ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
 
     // mapbox deps (script line 514)
     await shell.run('npm', ['install', '--force', dep('mapbox-gl'), dep('ngx-mapbox-gl'), dep('@ng-web-apis/geolocation'), dep('@ng-web-apis/common')], { cwd: workspaceRoot, dryRun });

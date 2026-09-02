@@ -1,8 +1,9 @@
 /**
  * `app-components` module — the shared `<proj>-components` `@nx/angular` library
- * (script lines 260-273, 632-674). Generates the library (after the pinned
- * Angular reinstall), then scaffolds the `components/app` subtree plus the
- * literal barrel file.
+ * (script lines 260-273, 632-674). Generates the library, then scaffolds the
+ * `components/app` subtree plus the literal barrel and vitest test-setup files.
+ * The test-setup is required, not optional: the subtree's `vitest.config.mts`
+ * names it in `projectSpecificSetupFiles`, so `nx test` cannot load without it.
  */
 
 import { join } from 'node:path';
@@ -18,7 +19,7 @@ import { type SetupContext, type SetupModule } from '../module.js';
 function buildPlan(context: SetupContext): readonly ScaffoldPlanEntry[] {
   const { workspaceRoot, naming, archive, tokens } = context;
   const destRoot = join(workspaceRoot, naming.angularComponentsFolder);
-  return [...buildScaffoldPlan({ archive, subtree: 'components/app', destRoot, tokens }), literalScaffoldEntry({ destPath: join(destRoot, 'src/index.ts'), content: "export * from './lib'\n" })];
+  return [...buildScaffoldPlan({ archive, subtree: 'components/app', destRoot, tokens }), literalScaffoldEntry({ destPath: join(destRoot, 'src/index.ts'), content: "export * from './lib'\n" }), literalScaffoldEntry({ destPath: join(destRoot, 'src/test-setup.ts'), content: "import '@dereekb/vitest/setup-angular'\n" })];
 }
 
 /**

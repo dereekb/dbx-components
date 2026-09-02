@@ -3,9 +3,10 @@
  * `*_VERSION`, and `DBX_COMPONENTS_VERSION*` variables of `setup-project.sh`.
  *
  * These pin the toolchain (nx / angular / typescript / node / firebase-tools)
- * and every npm dependency the `install` phases add. The defaults are exactly
- * the script's; `resolveSetupVersions` lets the orchestration layer override
- * any of them via environment / flags.
+ * and every npm dependency the `install` phases add. The defaults started as the
+ * script's and now track the current dbx-components release, whose `@dereekb/*`
+ * peer ranges they have to satisfy; `resolveSetupVersions` lets the orchestration
+ * layer override any of them via environment / flags.
  */
 
 import { type Maybe } from '@dereekb/util';
@@ -16,6 +17,12 @@ import { type Maybe } from '@dereekb/util';
 export interface SetupCoreVersions {
   readonly dbxComponents: string;
   readonly nx: string;
+  /**
+   * The Angular framework line. Exact rather than a range, because the `@dereekb/*` Angular peers
+   * are themselves exact (`"@angular/core": "22.1.4"`) and Angular requires every framework package
+   * to sit on the same version — a `^22.0.0` here lets packages installed at different points in
+   * the pipeline land on different patches.
+   */
   readonly angular: string;
   readonly typescript: string;
   readonly firebaseTools: string;
@@ -28,12 +35,15 @@ export interface SetupCoreVersions {
 }
 
 /**
- * Default core versions, matching `setup-project.sh`.
+ * Default core versions, pinned to the toolchain the {@link DEFAULT_SETUP_CORE_VERSIONS}.`dbxComponents`
+ * release is built against.
  */
 export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
-  dbxComponents: '13.18.0',
-  nx: '23.0.0',
-  angular: '^22.0.0',
+  dbxComponents: '13.43.0',
+  // 23.0.0 cannot create the workspace at all: its `angular-monorepo` preset dies inside the forked
+  // `@nx/workspace:preset` generator with `Cannot convert undefined or null to object`.
+  nx: '23.1.3',
+  angular: '22.1.4',
   typescript: '^6.0.3',
   firebaseTools: '15.11.0',
   node: '24',
@@ -48,10 +58,11 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   sharp: '^0.34.5',
   // The NestJS runtime for the api app. Installed explicitly because the app is generated with
   // `@nx/node:app` rather than `@nx/node`'s `@nx/nest` wrapper, whose `ensureDependencies` used to
-  // add these. Pinned to the `@dereekb/firebase-server` peer range (`@nx/nest` used `^11.0.0`).
-  '@nestjs/common': '^11.1.19',
-  '@nestjs/core': '^11.1.19',
-  '@nestjs/platform-express': '^11.1.19',
+  // add these. Pinned to the `@dereekb/firebase-server` peer range (`@nx/nest` used `^11.0.0`) — a
+  // lower major here is not merely stale, it is an unresolvable peer conflict.
+  '@nestjs/common': '^12.0.1',
+  '@nestjs/core': '^12.0.1',
+  '@nestjs/platform-express': '^12.0.1',
   'reflect-metadata': '^0.2.0',
   tslib: '^2.3.0',
   'zone.js': '^0.16.0',
@@ -127,6 +138,24 @@ export interface ResolvedSetupVersions {
    * Whether this run installs `@dereekb/*` from the CI dist folder instead of npm.
    */
   readonly isCiTest: boolean;
+}
+
+/**
+ * The extra `npm install` flags a `--ci-test` run needs.
+ *
+ * `--ci-test` resolves every `@dereekb/*` dependency to a `file:` path pointing at a built package
+ * directory, which npm installs as a symlink. npm does not read the peerDependencies of a symlinked
+ * local package, and every `@dereekb/*` package declares its whole runtime surface as peers with no
+ * `dependencies` of its own — so without this the scaffolded project ends up missing `date-fns`,
+ * `extra-set`, `@angular/material`, `@ngrx/*` and the rest, and fails to build on unresolved
+ * imports. `--install-links` makes npm copy those directories in as ordinary packages instead, so
+ * their peers resolve and auto-install like any registry dependency.
+ *
+ * @param versions - The resolved setup versions.
+ * @returns `['--install-links']` for a ci-test run, otherwise an empty list.
+ */
+export function ciTestInstallFlags(versions: ResolvedSetupVersions): readonly string[] {
+  return versions.isCiTest ? ['--install-links'] : [];
 }
 
 /**

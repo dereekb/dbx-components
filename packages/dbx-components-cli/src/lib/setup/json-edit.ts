@@ -14,6 +14,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { type Maybe } from '@dereekb/util';
 import { type SetupNaming } from './naming.js';
+import { DEFAULT_SETUP_CORE_VERSIONS } from './versions.js';
 
 /**
  * A parsed JSON object.
@@ -105,29 +106,40 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
 }
 
 /**
- * Dependency versions pinned to align a scaffolded project with the
- * `@dereekb/*` 13.18.0 peer ranges, so a strict (non-`--force`) `npm install`
- * resolves: the Angular framework packages to 21.2.11 (`@dereekb/dbx-analytics`),
- * express 5 (`@dereekb/calcom`), `@typescript-eslint` 8.59.3 (`@dereekb/firebase`),
- * and analogjs 2.5.0 (`@dereekb/vitest`). The Angular build/devkit/CLI packages
- * keep their own 21.2.x line and are intentionally not listed.
+ * The Angular framework packages that take {@link DEFAULT_SETUP_CORE_VERSIONS}.`angular` verbatim.
+ */
+const DBX_PEER_ALIGNED_ANGULAR_PACKAGES: readonly string[] = ['@angular/animations', '@angular/common', '@angular/compiler', '@angular/compiler-cli', '@angular/core', '@angular/forms', '@angular/language-service', '@angular/material-date-fns-adapter', '@angular/platform-browser', '@angular/platform-server', '@angular/router'];
+
+/**
+ * Dependency versions pinned to align a scaffolded project with the `@dereekb/*` peer ranges of the
+ * {@link DEFAULT_SETUP_CORE_VERSIONS}.`dbxComponents` release, so the reconcile `npm install`
+ * resolves.
+ *
+ * The `@dereekb` Angular peers are exact versions rather than ranges (`"@angular/core": "22.1.4"`),
+ * while `create-nx-workspace` scaffolds the framework packages as `~22.0.4` — a range that resolves
+ * to a 22.0.x no `@dereekb` package accepts and that `@angular/build` rejects outright. So every
+ * framework package is pinned onto the one patch the install phases use. The rest follow their own
+ * exact peers: express 5 (`@dereekb/calcom` / `@dereekb/firebase-server`), typescript and
+ * `@typescript-eslint` (the `@dereekb` eslint config packages the root `eslint.config.mjs` imports),
+ * and analogjs (`@dereekb/vitest`).
+ *
+ * The Angular build/devkit/CLI packages are intentionally absent: they peer the framework by caret
+ * range, so they stay on whichever line the generator scaffolded.
  */
 export const DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
-  '@angular/common': '21.2.11',
-  '@angular/compiler': '21.2.11',
-  '@angular/core': '21.2.11',
-  '@angular/forms': '21.2.11',
-  '@angular/platform-browser': '21.2.11',
-  '@angular/platform-server': '21.2.11',
-  '@angular/router': '21.2.11',
-  '@angular/compiler-cli': '21.2.11',
-  '@angular/language-service': '21.2.11',
+  ...Object.fromEntries(DBX_PEER_ALIGNED_ANGULAR_PACKAGES.map((name) => [name, DEFAULT_SETUP_CORE_VERSIONS.angular])),
+  // cdk / material ship their own patch line inside the framework minor, so they take the caret form
+  // their `@dereekb` peers declare rather than the exact framework version.
+  '@angular/cdk': `^${DEFAULT_SETUP_CORE_VERSIONS.angular}`,
+  '@angular/material': `^${DEFAULT_SETUP_CORE_VERSIONS.angular}`,
   express: '^5.2.1',
   '@types/express': '^5.0.0',
-  'typescript-eslint': '^8.59.3',
-  '@typescript-eslint/utils': '^8.59.3',
-  '@analogjs/vite-plugin-angular': '~2.5.0',
-  '@analogjs/vitest-angular': '~2.5.0'
+  typescript: '6.0.3',
+  'typescript-eslint': '8.69.0',
+  '@typescript-eslint/parser': '8.69.0',
+  '@typescript-eslint/utils': '8.69.0',
+  '@analogjs/vite-plugin-angular': '~2.7.1',
+  '@analogjs/vitest-angular': '~2.7.1'
 };
 
 /**
@@ -253,7 +265,11 @@ export function applyTsconfigBaseEdits(tsconfig: JsonObject): JsonObject {
 export function applyApiTsconfigEdits(tsconfig: JsonObject): JsonObject {
   return {
     ...tsconfig,
-    compilerOptions: { ...(tsconfig['compilerOptions'] as JsonObject), esModuleInterop: false }
+    // TypeScript 6 reports `esModuleInterop: false` as a deprecation *error* (TS5107) unless the
+    // opt-out is declared, which fails the api build outright. `ignoreDeprecations` keeps the
+    // existing behaviour; the option itself stops functioning in TypeScript 7 and has to go then —
+    // dbx-components' own api app no longer sets it at all.
+    compilerOptions: { ...(tsconfig['compilerOptions'] as JsonObject), esModuleInterop: false, ignoreDeprecations: '6.0' }
   };
 }
 

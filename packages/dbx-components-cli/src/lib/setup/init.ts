@@ -13,6 +13,7 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { runModuleScaffold, runModulePhases, type SetupContext } from './module.js';
 import { alignDbxPeerDependencies, editJsonFile, removeVerdaccioFromPackageJson } from './json-edit.js';
+import { ciTestInstallFlags } from './versions.js';
 import { API_MODULE, APP_COMPONENTS_MODULE, APP_MODULE, FIREBASE_COMPONENTS_MODULE, INTEGRATIONS_MODULE, ROOT_MODULE, WORKSPACE_MODULE } from './modules/index.js';
 
 /**
@@ -172,15 +173,19 @@ export async function runSetupInit(context: SetupContext, flags: SetupInitFlags)
     finalizeProjectConfig(context);
   }
 
-  // 18c. Reconcile install — the incremental `npm install -D` / `--force` steps
-  //      leave node_modules out of sync with the final package.json. The peer
-  //      alignment above lets this resolve; the lone remaining `--legacy-peer-deps`
-  //      is for the stale `@nx/vite@22.7.1` pin still declared by
-  //      `@dereekb/vitest@13.18.0` — drop the flag once dbx-components 13.19.0
-  //      (which fixes that pin) is the install target.
+  // 18c. Reconcile install — the incremental `npm install -D` / `--force` steps leave node_modules
+  //      out of sync with the final package.json.
+  //
+  //      `--force` rather than `--legacy-peer-deps`: every `@dereekb/*` package declares its whole
+  //      runtime surface (`date-fns`, `extra-set`, `ts-essentials`, `@angular/material`, `@ngrx/*`,
+  //      …) as peerDependencies and carries no `dependencies` of its own, so the scaffolded project
+  //      relies on npm auto-installing missing peers. `--legacy-peer-deps` ignores peerDependencies
+  //      outright, which does not merely skip that — it prunes the peers the earlier `--force`
+  //      installs already added, and the app then fails to build on unresolved imports. `--force`
+  //      keeps the auto-install and only relaxes conflict checking.
   if (!flags.templatesOnly && !flags.skipInstall) {
     record('install: reconcile node_modules');
-    await shell.run('npm', ['install', '--legacy-peer-deps'], { cwd, dryRun });
+    await shell.run('npm', ['install', '--force', ...ciTestInstallFlags(versions)], { cwd, dryRun });
   }
   await commit('checkpoint: reconciled dependencies');
 
