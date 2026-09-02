@@ -3,7 +3,7 @@ import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
 import { type loadEnv, type PluginOption } from 'vite';
 import { createRequire } from 'node:module';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
@@ -185,6 +185,66 @@ function findWorkspaceRootDir(startDir: string): string {
 }
 
 /**
+ * Name of the workspace-root tsconfig whose `paths` declare every `@dereekb/*` alias.
+ */
+const WORKSPACE_TSCONFIG_FILE_NAME = 'tsconfig.base.json';
+
+/**
+ * A vite `resolve.alias` entry mapping one exact module specifier to a source file.
+ */
+interface WorkspaceSourceAlias {
+  readonly find: RegExp;
+  readonly replacement: string;
+}
+
+/**
+ * Builds `resolve.alias` entries for the workspace `paths` aliases, anchored at the workspace root.
+ *
+ * `resolve.tsconfigPaths` alone is not enough. Vite resolves a path mapping using the tsconfig
+ * nearest the *importing* file, and the three `dbx-cli` entrypoint `tsconfig.lib.json` files
+ * deliberately declare an empty `"paths": {}`. That empty map is load-bearing for the rollup build
+ * — it blanks the inherited workspace `paths` so no `@dereekb/*` import can resolve to another
+ * package's SOURCE (which is what `buildLibsFromSource: false` exists to prevent), after which
+ * `withNx` re-adds only that project's graph dependencies mapped to their `dist/` outputs.
+ *
+ * Vitest never runs that Nx step, so for any file under those packages the blank map was the final
+ * word: `@dereekb/*` imports fell through to bare Node resolution and failed to load with
+ * `Cannot find package '@dereekb/dbx-cli'`, taking 18 `dbx-components-mcp` suites down with them.
+ *
+ * Anchoring the aliases at the workspace root gives every file one consistent mapping regardless of
+ * which tsconfig happens to sit closest to it, which is what this preset always intended to do.
+ *
+ * @param rootDir - Absolute path to the workspace root directory.
+ * @returns Alias entries pointing each mapped specifier at its source entry point, or an empty array
+ * when the workspace tsconfig is absent or unreadable (leaving vite's own resolution in charge).
+ */
+function readWorkspaceSourceAliases(rootDir: string): WorkspaceSourceAlias[] {
+  const configFilePath = path.join(rootDir, WORKSPACE_TSCONFIG_FILE_NAME);
+  let result: WorkspaceSourceAlias[] = [];
+
+  if (existsSync(configFilePath)) {
+    try {
+      const { compilerOptions } = JSON.parse(readFileSync(configFilePath, 'utf8')) as { compilerOptions?: { paths?: Record<string, string[]> } };
+
+      result = Object.entries(compilerOptions?.paths ?? {}).flatMap(([specifier, targets]) => {
+        const target = targets[0];
+        /**
+         * The specifier is matched exactly. A prefix match on `@dereekb/util` would also rewrite an
+         * unmapped subpath such as `@dereekb/util/not-an-alias` and corrupt its resolution, so an
+         * unmapped subpath is left for vite to resolve normally.
+         */
+        const escapedSpecifier = specifier.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+        return target == null ? [] : [{ find: new RegExp(`^${escapedSpecifier}$`), replacement: path.resolve(rootDir, target) }];
+      });
+    } catch (e) {
+      console.warn(`@dereekb/vitest: could not read the "paths" aliases from "${configFilePath}"; falling back to vite's tsconfig resolution. ${e}`);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Creates a complete Vitest configuration tailored for dbx-components projects.
  *
  * Handles environment detection (CI vs local), pool/isolation defaults, setup file
@@ -207,6 +267,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
    */
   const projectRootDir = path.resolve(rootDir, pathFromRoot);
   const pathToRoot = path.relative(projectRootDir, rootDir);
+  const workspaceSourceAliases = readWorkspaceSourceAliases(rootDir);
 
   /**
    * Whether we're running in CI. Used to determine isolation and pool defaults.
@@ -339,6 +400,11 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
        * `tsconfig.json` files. Marked `@experimental` in vite's types as of vite 8.
        */
       resolve: {
+        /**
+         * Root-anchored aliases take precedence so a package that blanks its own inherited `paths`
+         * (see {@link readWorkspaceSourceAliases}) still resolves `@dereekb/*` to source under vitest.
+         */
+        alias: workspaceSourceAliases,
         tsconfigPaths: true
       },
       cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,

@@ -139,10 +139,10 @@ function lineNumberOf(text: string, offset: number): number {
 }
 
 /**
- * Returns the registry's spacing entry whose default value exactly equals
- * `raw` (e.g. `12px` → `--dbx-padding-3`). Returns undefined when no exact
- * match exists — substring matches are intentionally rejected because
- * `findByValue('4px')` would otherwise pick up `--dbx-padding-5` (24px).
+ * Describes how a radius value lines up with the design system, for use as a
+ * trailing clause in a smell's fix text: an exact match on a corner token's
+ * default reads differently from a full / pill radius that is idiomatic
+ * regardless of its literal value.
  *
  * @param exact - The token entry whose default may match `raw`.
  * @param raw - The raw radius value being classified.
@@ -154,11 +154,39 @@ function matchKindForRadius(exact: TokenEntry | undefined, raw: string): string 
   return '(idiomatic full / pill radius — design system token).';
 }
 
-function findExactRoleToken(registry: TokenRegistry, raw: string, role: string): TokenEntry | undefined {
+interface FindExactRoleTokenParams {
+  readonly registry: TokenRegistry;
+  /**
+   * The raw value being matched.
+   */
+  readonly raw: string;
+  /**
+   * The token role to search within.
+   */
+  readonly role: string;
+  /**
+   * Optional predicate narrowing which entries of the role may be returned. A role bucket
+   * mixes the general scale with component-specific tokens, and only the caller knows which
+   * of those is a legitimate substitute for its declaration.
+   */
+  readonly isAllowed?: (entry: TokenEntry) => boolean;
+}
+
+/**
+ * Returns the registry entry for `role` whose default value exactly equals `raw`
+ * (e.g. `12px` → `--dbx-padding-3`). Returns undefined when no exact match
+ * exists — substring matches are intentionally rejected because
+ * `findByValue('4px')` would otherwise pick up `--dbx-padding-5` (24px).
+ *
+ * @param params - The role token search parameters.
+ * @returns The matching token entry, or undefined when the value has no exact match.
+ */
+function findExactRoleToken(params: FindExactRoleTokenParams): TokenEntry | undefined {
+  const { registry, raw, role, isAllowed } = params;
   const candidates = registry.byRole.get(role) ?? [];
   let result: TokenEntry | undefined;
   for (const entry of candidates) {
-    if (entry.defaults.light === raw || entry.defaults.dark === raw) {
+    if ((entry.defaults.light === raw || entry.defaults.dark === raw) && (isAllowed === undefined || isAllowed(entry))) {
       result = entry;
       break;
     }
@@ -395,7 +423,7 @@ const hardcodedRadius: SmellDetector = (input) => {
     const colonIndex = input.scss.indexOf(':', match.index);
     if (colonIndex !== -1 && isInsideScssVarDeclaration(input.scss, colonIndex)) continue;
     const raw = match[1];
-    let exact = findExactRoleToken(input.tokenRegistry, raw, 'radius');
+    let exact = findExactRoleToken({ registry: input.tokenRegistry, raw, role: 'radius' });
     if (exact === undefined && FULL_RADIUS_SYNONYMS.has(raw)) {
       exact = input.tokenRegistry.findByCssVariable('--mat-sys-corner-full');
     }
@@ -435,7 +463,7 @@ const hardcodedShadow: SmellDetector = (input) => {
     if (match.index === undefined) continue;
     const raw = match[1].trim();
     if (raw.startsWith('var(') || raw === 'none') continue;
-    const exact = findExactRoleToken(input.tokenRegistry, raw, 'elevation');
+    const exact = findExactRoleToken({ registry: input.tokenRegistry, raw, role: 'elevation' });
     const fix = exact === undefined ? 'Hardcoded `box-shadow:` declarations should map to one of the `--mat-sys-level0..5` elevation tokens, or wrap the surface in `<dbx-content-box [elevate]="true">` so the shadow comes from the design system.' : `Replace this hardcoded shadow with \`box-shadow: var(${exact.cssVariable})\` or use \`<dbx-content-box [elevate]="true">\` to apply the elevation through the wrapper component.`;
     matches.push({
       id: 'hardcoded-shadow',
@@ -492,11 +520,23 @@ const hardcodedHintColor: SmellDetector = (input) => {
 const HARDCODED_PADDING_RE = /(?:padding|margin)\s*(?:-(?:top|right|bottom|left))?\s*:\s*(\d+(?:\.\d+)?px)(?!\s*\))/gi;
 
 /**
+ * Matches the general spacing scale (`--dbx-padding-{0..5}`).
+ *
+ * The `spacing` role also holds component-specific tokens that pin a raw px value —
+ * `--dbx-shadow-gutter` (4px), `--dbx-list-card-items-list-gap` (8px),
+ * `--dbx-step-block-gap` (16px), `--dbx-prompt-box-padding` (40px). Those are not generic
+ * substitutes for an arbitrary declaration: suggesting `margin-top: var(--dbx-shadow-gutter)`
+ * because both happen to be 4px is the same class of wrong answer as a substring match.
+ */
+const DBX_PADDING_SCALE_RE = /^--dbx-padding-\d+$/;
+
+/**
  * Flags hardcoded `padding: <N>px` / `margin: <N>px` that exactly match one of
  * the spacing tokens (`--dbx-padding-{0..5}`). Values that don't have an
  * exact-match token are deliberately ignored — substring matches such as
  * `4px` → `--dbx-padding-5` (24px) are wrong and undermine confidence in the
- * tool's other suggestions.
+ * tool's other suggestions, and so is a coincidental value match against a
+ * component-specific spacing token (see {@link DBX_PADDING_SCALE_RE}).
  *
  * @param input - The smell detection input.
  * @returns Matches for each exact-match hardcoded spacing declaration.
@@ -506,7 +546,7 @@ const hardcodedPadding: SmellDetector = (input) => {
   for (const match of input.scss.matchAll(HARDCODED_PADDING_RE)) {
     if (match.index === undefined) continue;
     const raw = match[1];
-    const exact = findExactRoleToken(input.tokenRegistry, raw, 'spacing');
+    const exact = findExactRoleToken({ registry: input.tokenRegistry, raw, role: 'spacing', isAllowed: (entry) => DBX_PADDING_SCALE_RE.test(entry.cssVariable) });
     if (exact !== undefined) {
       const utility = exact.utilityClasses?.[0];
       const fix = ['Replace `' + match[0].trim() + '` with `var(' + exact.cssVariable + ')`' + (utility === undefined ? '' : ` (or use the \`${utility}\` utility class on the host element)`) + '.'].join('\n');
