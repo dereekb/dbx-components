@@ -1,6 +1,14 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import type { Maybe } from '@dereekb/util';
 import { join, relative } from 'node:path';
+
+import { DEFAULT_LINT_CACHE_LINTER, LINT_CACHE_LINTER_TARGET_NAMES } from './types';
+
+/**
+ * The Nx target consulted when a caller does not name one.
+ */
+const DEFAULT_TARGET_NAME = LINT_CACHE_LINTER_TARGET_NAMES[DEFAULT_LINT_CACHE_LINTER];
 
 /**
  * Directory names that are never descended into during project discovery:
@@ -17,6 +25,53 @@ export interface ProjectInfo {
   readonly absoluteRoot: string;
   readonly lintFilePatterns: Maybe<readonly string[]>;
   readonly hasLintTarget: boolean;
+}
+
+/**
+ * Project names that declare a given target in the Nx *project graph*, cached per
+ * `(workspaceRoot, targetName)` for the life of the process.
+ *
+ * Needed because an **inferred** target — the kind `@nx/oxlint` produces — exists
+ * only in the graph and is never written to `project.json`, so the disk scan below
+ * cannot see it. Reading the graph costs a subprocess, so it is consulted lazily
+ * and only when the disk scan comes up empty (see {@link listProjects}).
+ */
+const graphTargetCache = new Map<string, ReadonlySet<string>>();
+
+/**
+ * Asks Nx which projects have a given target, including targets contributed by
+ * inference plugins rather than declared in `project.json`.
+ *
+ * Failure is non-fatal and yields an empty set: callers fall back to the disk scan,
+ * which is the correct answer for every explicitly-declared target.
+ *
+ * @param workspaceRoot - Absolute path to the Nx workspace root.
+ * @param targetName - The target to look for, e.g. `oxlint`.
+ * @returns The set of project names Nx reports as having that target.
+ */
+export function projectNamesWithTarget(workspaceRoot: string, targetName: string): ReadonlySet<string> {
+  const key = `${workspaceRoot}\u0000${targetName}`;
+  let cached = graphTargetCache.get(key);
+
+  if (!cached) {
+    let names: readonly string[];
+    try {
+      const stdout = execFileSync('npx', ['nx', 'show', 'projects', `--with-target=${targetName}`, '--json'], {
+        cwd: workspaceRoot,
+        encoding: 'utf8',
+        env: { ...process.env, FORCE_COLOR: '0' },
+        stdio: ['ignore', 'pipe', 'ignore']
+      });
+      const parsed = JSON.parse(stdout) as unknown;
+      names = Array.isArray(parsed) ? (parsed.filter((n) => typeof n === 'string') as readonly string[]) : [];
+    } catch {
+      names = [];
+    }
+    cached = new Set(names);
+    graphTargetCache.set(key, cached);
+  }
+
+  return cached;
 }
 
 /**
@@ -55,27 +110,36 @@ function discoverTopLevelDirs(workspaceRoot: string): readonly string[] {
  *
  * @param workspaceRoot - Absolute path to the Nx workspace root.
  * @param projectName - The Nx project name to locate (matches against the `name` field in project.json).
+ * @param targetName - The lint target to report on via `hasLintTarget`. Defaults to `lint`.
  * @returns The matched project info, or `null` if no project with that name was found.
  */
-export function findProject(workspaceRoot: string, projectName: string): Maybe<ProjectInfo> {
+export function findProject(workspaceRoot: string, projectName: string, targetName: string = DEFAULT_TARGET_NAME): Maybe<ProjectInfo> {
   let result: Maybe<ProjectInfo> = null;
 
   for (const dir of discoverTopLevelDirs(workspaceRoot)) {
     if (result) break;
-    result = walkForProject(workspaceRoot, join(workspaceRoot, dir), projectName);
+    result = walkForProject({ workspaceRoot, dir: join(workspaceRoot, dir), projectName, targetName });
   }
 
   if (!result) {
     const rootProject = readProjectJson(join(workspaceRoot, 'project.json'));
     if (rootProject?.name === projectName) {
-      result = toProjectInfo(workspaceRoot, workspaceRoot, rootProject);
+      result = toProjectInfo({ workspaceRoot, projectRoot: workspaceRoot, pj: rootProject, targetName });
     }
   }
 
   return result;
 }
 
-function walkForProject(workspaceRoot: string, dir: string, projectName: string): Maybe<ProjectInfo> {
+interface WalkForProjectInput {
+  readonly workspaceRoot: string;
+  readonly dir: string;
+  readonly projectName: string;
+  readonly targetName: string;
+}
+
+function walkForProject(input: WalkForProjectInput): Maybe<ProjectInfo> {
+  const { workspaceRoot, dir, projectName, targetName } = input;
   let found: Maybe<ProjectInfo> = null;
   const entries = readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
@@ -87,11 +151,11 @@ function walkForProject(workspaceRoot: string, dir: string, projectName: string)
     if (existsSync(pjPath)) {
       const pj = readProjectJson(pjPath);
       if (pj?.name === projectName) {
-        found = toProjectInfo(workspaceRoot, childDir, pj);
+        found = toProjectInfo({ workspaceRoot, projectRoot: childDir, pj, targetName });
         continue;
       }
     }
-    found = walkForProject(workspaceRoot, childDir, projectName);
+    found = walkForProject({ workspaceRoot, dir: childDir, projectName, targetName });
   }
   return found;
 }
@@ -104,24 +168,65 @@ function walkForProject(workspaceRoot: string, dir: string, projectName: string)
  * `hasLintTarget` is left to the caller so this stays useful for future
  * inspection commands that do not care whether `lint` is wired up.
  *
+ * An **inferred** target (one contributed by an Nx plugin, e.g. the `oxlint` target
+ * `@nx/oxlint` produces) never appears in `project.json`, so the disk scan alone
+ * reports `hasLintTarget: false` for every project. Pass
+ * `options.resolveInferredTargets` for those targets and the flag is recomputed
+ * from the Nx project graph instead. It is opt-in rather than inferred from an
+ * empty disk scan so a declared target never pays for the subprocess, and so an
+ * empty or non-Nx directory does not silently shell out.
+ *
  * @param workspaceRoot - Absolute path to the Nx workspace root.
+ * @param targetName - The lint target to report on via `hasLintTarget`. Defaults to `lint`.
+ * @param options - Set `resolveInferredTargets` when the target comes from an Nx inference plugin.
  * @returns Every discovered project, sorted by name.
  */
-export function listProjects(workspaceRoot: string): readonly ProjectInfo[] {
+export function listProjects(workspaceRoot: string, targetName: string = DEFAULT_TARGET_NAME, options: ListProjectsOptions = {}): readonly ProjectInfo[] {
   const out: ProjectInfo[] = [];
 
   for (const dir of discoverTopLevelDirs(workspaceRoot)) {
-    collectProjects(workspaceRoot, join(workspaceRoot, dir), out);
+    collectProjects({ workspaceRoot, dir: join(workspaceRoot, dir), out, targetName });
   }
 
   const rootProject = readProjectJson(join(workspaceRoot, 'project.json'));
-  if (rootProject) out.push(toProjectInfo(workspaceRoot, workspaceRoot, rootProject));
+  if (rootProject) out.push(toProjectInfo({ workspaceRoot, projectRoot: workspaceRoot, pj: rootProject, targetName }));
 
   out.sort((a, b) => a.name.localeCompare(b.name));
-  return out;
+
+  return options.resolveInferredTargets ? withInferredTarget(workspaceRoot, targetName, out) : out;
 }
 
-function collectProjects(workspaceRoot: string, dir: string, out: ProjectInfo[]): void {
+export interface ListProjectsOptions {
+  /**
+   * Resolve `hasLintTarget` from the Nx project graph rather than from
+   * `project.json`. Required for targets contributed by an inference plugin.
+   */
+  readonly resolveInferredTargets?: boolean;
+}
+
+/**
+ * Recomputes `hasLintTarget` from the Nx project graph, for the case where the
+ * target is inferred rather than declared in any `project.json`.
+ *
+ * @param workspaceRoot - Absolute path to the Nx workspace root.
+ * @param targetName - The inferred target to look up in the graph.
+ * @param projects - The projects discovered by the disk scan.
+ * @returns The same projects, with `hasLintTarget` set from the graph.
+ */
+function withInferredTarget(workspaceRoot: string, targetName: string, projects: readonly ProjectInfo[]): readonly ProjectInfo[] {
+  const names = projectNamesWithTarget(workspaceRoot, targetName);
+  return projects.map((p) => ({ ...p, hasLintTarget: names.has(p.name) }));
+}
+
+interface CollectProjectsInput {
+  readonly workspaceRoot: string;
+  readonly dir: string;
+  readonly out: ProjectInfo[];
+  readonly targetName: string;
+}
+
+function collectProjects(input: CollectProjectsInput): void {
+  const { workspaceRoot, dir, out, targetName } = input;
   const entries = readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
     if (!e.isDirectory()) continue;
@@ -130,10 +235,10 @@ function collectProjects(workspaceRoot: string, dir: string, out: ProjectInfo[])
     const pjPath = join(childDir, 'project.json');
     if (existsSync(pjPath)) {
       const pj = readProjectJson(pjPath);
-      if (pj) out.push(toProjectInfo(workspaceRoot, childDir, pj));
+      if (pj) out.push(toProjectInfo({ workspaceRoot, projectRoot: childDir, pj, targetName }));
     }
     // Keep recursing — this workspace nests sub-projects (e.g. packages/dbx-cli/lint-cache).
-    collectProjects(workspaceRoot, childDir, out);
+    collectProjects({ workspaceRoot, dir: childDir, out, targetName });
   }
 }
 
@@ -152,8 +257,16 @@ function readProjectJson(path: string): Maybe<RawProjectJson> {
   return parsed;
 }
 
-function toProjectInfo(workspaceRoot: string, projectRoot: string, pj: RawProjectJson): ProjectInfo {
-  const lintTarget = pj.targets?.['lint'];
+interface ToProjectInfoInput {
+  readonly workspaceRoot: string;
+  readonly projectRoot: string;
+  readonly pj: RawProjectJson;
+  readonly targetName: string;
+}
+
+function toProjectInfo(input: ToProjectInfoInput): ProjectInfo {
+  const { workspaceRoot, projectRoot, pj, targetName } = input;
+  const lintTarget = pj.targets?.[targetName];
   const lintPatterns = lintTarget?.options?.lintFilePatterns;
   return {
     name: pj.name ?? '',

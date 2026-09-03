@@ -94,6 +94,33 @@ describe('project-lookup', () => {
     });
   });
 
+  describe('target selection', () => {
+    it('reports hasLintTarget for a non-default target name', async () => {
+      await scaffoldProject({ workspaceRoot, relDir: 'packages/pkg-a', name: 'pkg-a', lint: true });
+      await mkdir(join(workspaceRoot, 'packages/pkg-b'), { recursive: true });
+      await writeFile(join(workspaceRoot, 'packages/pkg-b/project.json'), JSON.stringify({ name: 'pkg-b', targets: { oxlint: {} } }));
+
+      const forLint = listProjects(workspaceRoot, 'lint');
+      expect(forLint.find((p) => p.name === 'pkg-a')?.hasLintTarget).toBe(true);
+      expect(forLint.find((p) => p.name === 'pkg-b')?.hasLintTarget).toBe(false);
+
+      const forOxlint = listProjects(workspaceRoot, 'oxlint');
+      expect(forOxlint.find((p) => p.name === 'pkg-a')?.hasLintTarget).toBe(false);
+      expect(forOxlint.find((p) => p.name === 'pkg-b')?.hasLintTarget).toBe(true);
+    });
+
+    it('does not consult the Nx graph unless inferred-target resolution is requested', async () => {
+      await scaffoldProject({ workspaceRoot, relDir: 'packages/pkg-a', name: 'pkg-a', lint: false });
+
+      // No project declares `oxlint`, and the temp dir is not an Nx workspace. Without
+      // opting in, discovery stays purely on-disk rather than shelling out to `nx`.
+      const projects = listProjects(workspaceRoot, 'oxlint');
+
+      expect(projects.map((p) => p.name)).toEqual(['pkg-a']);
+      expect(projects[0].hasLintTarget).toBe(false);
+    });
+  });
+
   describe('findProject', () => {
     it('resolves a project under a non-standard top-level dir (components/)', async () => {
       await scaffoldProject({ workspaceRoot, relDir: 'components/comp-d', name: 'comp-d', lint: true, lintFilePatterns: ['components/comp-d/**/*.ts'] });

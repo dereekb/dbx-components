@@ -47,6 +47,15 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
+    "oxlint-cache": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/packages/dbx-cli/lint-cache/main.js build-many --linter oxlint",
+        "forwardAllArgs": true,
+        "color": true
+      },
+      "dependsOn": ["build-base"]
+    },
     "lint-fix-cache": {
       "executor": "nx:run-commands",
       "options": {

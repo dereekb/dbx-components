@@ -4,10 +4,11 @@ import type { Maybe } from '@dereekb/util';
 
 import { runBuild } from './build';
 import { listProjects, type ProjectInfo } from './project-lookup';
-import type { LintCache } from './types';
+import { DEFAULT_LINT_CACHE_LINTER, indexFileName, LINT_CACHE_LINTER_TARGET_IS_INFERRED, LINT_CACHE_LINTER_TARGET_NAMES, type LintCache, type LintCacheLinter } from './types';
 
 interface LintCacheIndex {
   readonly schemaVersion: 1;
+  readonly linter?: LintCacheLinter;
   readonly generatedAt: string;
   readonly projectCount: number;
   readonly succeeded: number;
@@ -26,6 +27,10 @@ export interface BuildManyOptions {
   readonly continueOnError: boolean;
   readonly nxArgs: Maybe<readonly string[]>;
   readonly fix: boolean;
+  /**
+   * Which engine to run. Defaults to `eslint`.
+   */
+  readonly linter?: LintCacheLinter;
   readonly onProgress: Maybe<(event: BuildManyProgressEvent) => void>;
 }
 
@@ -57,17 +62,21 @@ export interface BuildManyResult {
 }
 
 /**
- * Discovers every Nx project with a `lint` target, filters by include/exclude
- * patterns, and runs `runBuild` for each one with a bounded concurrency pool.
- * After all projects finish, writes an aggregate `index.json` next to the
- * per-project cache files so a downstream agent can pick the project to
+ * Discovers every Nx project with the selected linter's target, filters by
+ * include/exclude patterns, and runs `runBuild` for each one with a bounded
+ * concurrency pool. After all projects finish, writes an aggregate index next to
+ * the per-project cache files so a downstream agent can pick the project to
  * inspect without re-walking the workspace.
  *
- * @param opts - The workspace root, output directory, include/exclude patterns, concurrency, fix flag, and optional progress callback.
+ * Each linter writes its own index (`index.json` / `index.<linter>.json`), so the
+ * two tiers can share a cache directory without one overwriting the other's totals.
+ *
+ * @param opts - The workspace root, output directory, include/exclude patterns, concurrency, linter, fix flag, and optional progress callback.
  * @returns The aggregate index path, per-project results, and workspace-wide error/warning totals.
  */
 export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyResult> {
-  const lintable = listProjects(opts.workspaceRoot).filter((p) => p.hasLintTarget);
+  const linter = opts.linter ?? DEFAULT_LINT_CACHE_LINTER;
+  const lintable = listProjects(opts.workspaceRoot, LINT_CACHE_LINTER_TARGET_NAMES[linter], { resolveInferredTargets: LINT_CACHE_LINTER_TARGET_IS_INFERRED[linter] }).filter((p) => p.hasLintTarget);
   const targets = filterProjects({ projects: lintable, include: opts.include, exclude: opts.exclude });
 
   if (!existsSync(opts.outputDir)) mkdirSync(opts.outputDir, { recursive: true });
@@ -91,6 +100,7 @@ export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyRes
           outputDir: opts.outputDir,
           nxArgs: opts.nxArgs,
           fix: opts.fix,
+          linter,
           updateIndex: false
         });
         results.push(projectResultFromCache({ project: project.name, cachePath, cache }));
@@ -120,12 +130,13 @@ export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyRes
   const totalErrors = results.reduce((acc, r) => acc + (r.errorCount ?? 0), 0);
   const totalWarnings = results.reduce((acc, r) => acc + (r.warningCount ?? 0), 0);
 
-  const indexPath = join(opts.outputDir, 'index.json');
+  const indexPath = join(opts.outputDir, indexFileName(linter));
   writeFileSync(
     indexPath,
     JSON.stringify(
       {
         schemaVersion: 1,
+        linter,
         generatedAt: new Date().toISOString(),
         projectCount: results.length,
         succeeded: results.filter((r) => r.error == null).length,
@@ -232,6 +243,10 @@ export function projectResultFromCache(input: ProjectResultFromCacheInput): Buil
 export interface PatchIndexEntryInput {
   readonly outputDir: string;
   readonly entry: BuildManyProjectResult;
+  /**
+   * Which linter's index to patch. Defaults to `eslint`.
+   */
+  readonly linter?: LintCacheLinter;
 }
 
 /**
@@ -245,11 +260,12 @@ export interface PatchIndexEntryInput {
  * counters but does NOT touch the index-level `generatedAt` — that
  * represents the last full `build-many` run.
  *
- * @param input - The output directory containing `index.json` and the project entry to patch in.
- * @returns `true` if `index.json` existed and was patched; `false` if no index was present.
+ * @param input - The output directory containing the index, the project entry to patch in, and which linter's index to touch.
+ * @returns `true` if the index existed and was patched; `false` if no index was present.
  */
 export function patchIndexEntry(input: PatchIndexEntryInput): boolean {
-  const indexPath = join(input.outputDir, 'index.json');
+  const linter = input.linter ?? DEFAULT_LINT_CACHE_LINTER;
+  const indexPath = join(input.outputDir, indexFileName(linter));
   let patched = false;
   if (existsSync(indexPath)) {
     const index = JSON.parse(readFileSync(indexPath, 'utf8')) as LintCacheIndex;
@@ -264,6 +280,7 @@ export function patchIndexEntry(input: PatchIndexEntryInput): boolean {
 
     const next: LintCacheIndex = {
       schemaVersion: 1,
+      linter,
       generatedAt: index.generatedAt,
       projectCount: projects.length,
       succeeded: projects.filter((p) => p.error == null).length,
