@@ -132,7 +132,7 @@ describe('DbxAuthImpersonationService', () => {
       const details = await firstValueFrom(service.impersonationDetails$);
       expect(details?.userId).toBe(OTHER_USER);
       expect(details?.displayName).toBe(`name:${OTHER_USER}`);
-      expect((details?.raw as { tag: string }).tag).toBe(`raw:${OTHER_USER}`);
+      expect((details!.raw as { tag: string }).tag).toBe(`raw:${OTHER_USER}`);
     });
 
     it('should emit undefined details when not impersonating', async () => {

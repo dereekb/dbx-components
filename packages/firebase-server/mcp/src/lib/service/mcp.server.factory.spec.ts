@@ -520,7 +520,7 @@ describe('McpServerFactoryService toolDetails builder', () => {
     // (with reason enabled the override schema is additionally wrapped — covered by the reason suite).
     const tools = await listToolEntries(makeFactory(apiDetails, { config: { reasonParameter: false } }));
     expect(tools[0]?.inputSchema).toEqual(overrideSchema);
-    expect((tools[0]?.inputSchema as { title?: string }).title).toBeUndefined();
+    expect((tools[0]!.inputSchema as { title?: string }).title).toBeUndefined();
   });
 
   it('falls back to defaults and warns when the builder throws', async () => {
@@ -533,7 +533,7 @@ describe('McpServerFactoryService toolDetails builder', () => {
     try {
       const tools = await listToolEntries(makeFactory(apiDetails));
       expect(tools[0]?.description).toContain('Performs the "read" call');
-      expect((tools[0]?.inputSchema as { title?: string }).title).toBe('widget-read-broken');
+      expect((tools[0]!.inputSchema as { title?: string }).title).toBe('widget-read-broken');
       expect(warnSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('toolDetails builder threw'))).toBe(true);
     } finally {
       warnSpy.mockRestore();

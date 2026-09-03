@@ -2,7 +2,7 @@ import { createVitestConfig } from '../../../vitest.preset.config.mjs';
 
 export default createVitestConfig({
   type: 'firebase',
-  pathFromRoot: __dirname,
+  pathFromRoot: import.meta.dirname,
   projectName: 'firebase-server-test',
   requiresFirebaseEnvironment: true,
   test: {

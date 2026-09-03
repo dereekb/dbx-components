@@ -6,11 +6,11 @@ import { resolve } from 'node:path';
 // alias in `rollup.alias-internal.config.ts`; both expose the same `parseRouteModelTag` grammar.
 const baseConfigFn = createVitestConfig({
   type: 'node',
-  pathFromRoot: __dirname,
+  pathFromRoot: import.meta.dirname,
   projectName: 'dbx-cli-eslint'
 });
 
-const GRAMMAR_ALIAS = { '@dereekb/dbx-cli': resolve(__dirname, '../src/lib/route/route-model-tag.ts') };
+const GRAMMAR_ALIAS = { '@dereekb/dbx-cli': resolve(import.meta.dirname, '../src/lib/route/route-model-tag.ts') };
 
 export default (configEnv: Parameters<typeof baseConfigFn>[0]) => {
   const base = baseConfigFn(configEnv);

@@ -14,7 +14,7 @@ describe('fetchFirestoreSession', () => {
     const result = await fetchFirestoreSession({ apiBaseUrl: 'http://localhost/api', accessToken: 'token-abc', fetcher });
 
     expect(captured.url).toBe(`http://localhost/api${FIRESTORE_SESSION_API_PATH}`);
-    expect((captured.init?.headers as Record<string, string>)['Authorization']).toBe('Bearer token-abc');
+    expect((captured.init!.headers as Record<string, string>)['Authorization']).toBe('Bearer token-abc');
     expect(result).toEqual(SESSION_BODY);
   });
 

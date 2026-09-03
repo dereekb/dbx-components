@@ -112,7 +112,7 @@ describe('fetchUserInfo()', () => {
     const claims = await fetchUserInfo({ userinfoEndpoint: 'https://api.example.com/oidc/me', accessToken: 'at', fetch });
 
     expect(claims).toEqual({ sub: 'user-1' });
-    expect((calls[0].init?.headers as Record<string, string>)['Authorization']).toBe('Bearer at');
+    expect((calls[0].init!.headers as Record<string, string>)['Authorization']).toBe('Bearer at');
   });
 
   it('throws USERINFO_FAILED on a non-OK response', async () => {
