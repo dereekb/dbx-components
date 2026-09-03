@@ -2,7 +2,7 @@ import { Directive, input, type StaticProvider } from '@angular/core';
 import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 import { type DbxValueListItemGroup, type DbxValueListViewGroupDelegate, type DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { map } from 'rxjs';
-import { type Building, type Maybe, type PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
+import { type Building, type Maybe, type PrimativeKey, asArray, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
 import { type DbxListTitleGroupData, type DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxListTitleGroupHeaderComponent, DBX_LIST_TITLE_GROUP_DATA } from './list.view.value.group.title.header.component';
@@ -49,7 +49,7 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
           groups = Array.from(groupsValuesMap.entries()).map(([value, items]) => {
             const data = dataForGroupValue(value as O, items);
             (data as Building<D>).value = value as O;
-            const cssClasses = data.cssClasses ? [...cssClassesForAllGroups, ...data.cssClasses] : cssClassesForAllGroups;
+            const cssClasses = data.cssClasses ? [...asArray(cssClassesForAllGroups), ...asArray(data.cssClasses)] : cssClassesForAllGroups;
 
             const providers: StaticProvider[] = [
               {

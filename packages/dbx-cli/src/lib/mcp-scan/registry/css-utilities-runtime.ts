@@ -201,7 +201,7 @@ function tallyProp(input: TallyPropInput): void {
 
 function scoreAgainstEntry(input: ReadonlyMap<string, string>, entry: ReadonlyMap<string, string>): ScoreResult {
   const tally: PropTally = { matched: [], extraEntry: [], missingInput: [], weightedIntersect: 0, weightedUnion: 0 };
-  const allProps = new Set<string>([...input.keys(), ...entry.keys()]);
+  const allProps = new Set<string>([...Array.from(input.keys()), ...Array.from(entry.keys())]);
   for (const prop of allProps) {
     tallyProp({ tally, prop, inputValue: input.get(prop), entryValue: entry.get(prop) });
   }

@@ -26,7 +26,7 @@
 
   @if (showOpenSourceButtonSignal() && !isDisabled()) {
     <div matSuffix class="dbx-source-select-field-suffix">
-      <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions">
+      <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" dbxActionSnackbarError>
         <dbx-button #button dbxActionButton [fab]="true" [iconOnly]="true" [icon]="selectButtonIconSignal()"></dbx-button>
       </dbx-action>
     </div>

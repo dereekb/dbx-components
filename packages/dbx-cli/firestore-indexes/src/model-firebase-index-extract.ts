@@ -1077,7 +1077,7 @@ function tryTransitiveResolution(input: TryTransitiveResolutionInput): void {
     warnings.push({ kind: 'unannotated-query-helper', severity: 'warning', name: factoryName, callee: calleeName, calleeFilePath, calleeLine, filePath, line: call.getStartLineNumber() });
   }
 
-  const nextVisited = new Set([...visited, calleeKey]);
+  const nextVisited = new Set(visited).add(calleeKey);
   walkBodyInto({
     decl: resolved.decl,
     factoryName,

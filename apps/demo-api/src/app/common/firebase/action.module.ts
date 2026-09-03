@@ -11,7 +11,6 @@ import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase'
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { NotificationExpediteService } from '@dereekb/firebase-server/model';
 
-// eslint-disable-next-line @typescript-eslint/max-params
 const demoFirebaseServerActionsContextFactory = (
   serverEnvironmentService: ServerEnvironmentService,
   collections: DemoFirestoreCollections,

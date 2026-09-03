@@ -3,7 +3,7 @@ import { type WorkUsingObservable, type IsModifiedFunction, type IsValidFunction
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from '../component/action.example.form.component';
-import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxContentContainerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
@@ -14,6 +14,7 @@ import { DocActionFormExampleFormTwoComponent } from '../component/action.exampl
 @Component({
   templateUrl: './form.component.html',
   imports: [
+    DbxActionSnackbarErrorDirective,
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
     DocFeatureExampleComponent,

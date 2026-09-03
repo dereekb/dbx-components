@@ -812,7 +812,7 @@ function collectFromTypeReference(ref: TypeReferenceNode, context: CollectContex
     result = collectFromTypeNode(args[0], { ...context, forceOptional: false }).map((p) => ({ ...p, required: true }));
   } else if (refName === 'Omit' && args.length === 2) {
     const keys = parseKeyUnion(args[1]);
-    const merged = new Set([...context.omit, ...keys]);
+    const merged = new Set([...Array.from(context.omit), ...Array.from(keys)]);
     result = collectFromTypeNode(args[0], { ...context, omit: merged });
   } else if (refName === 'Pick' && args.length === 2) {
     const keys = parseKeyUnion(args[1]);

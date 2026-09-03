@@ -130,7 +130,7 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
       <dbx-button dbxActionButton [allowClickPropagation]="true" [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>
     @if (showPreviewButtonSignal()) {
-      <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue>
+      <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue dbxActionSnackbarError>
         <span class="dbx-button-spacer"></span>
         <dbx-button dbxActionButton [buttonStyle]="previewButtonStyleSignal()" [icon]="previewIconSignal()" [text]="previewTextSignal()"></dbx-button>
       </ng-container>

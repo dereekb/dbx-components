@@ -5,7 +5,7 @@ import { type DbxFirebaseLoginMode, type FirebaseLoginMethodType } from './login
 import { type DbxFirebaseAuthLoginProviderAssets, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxActionModule, DbxButtonModule, type DbxActionConfirmConfig, type DbxButtonStyle, type DbxColorInput } from '@dereekb/dbx-web';
+import { type DbxActionConfirmConfig, DbxActionModule, DbxActionSnackbarErrorDirective, DbxButtonModule, type DbxButtonStyle, type DbxColorInput } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { firebaseAuthErrorToReadableError, type FirebaseAuthError } from '@dereekb/firebase';
@@ -40,7 +40,7 @@ export interface DbxFirebaseLoginButtonConfig {
 @Component({
   selector: 'dbx-firebase-login-button',
   template: `
-    <ng-container dbxAction [dbxActionHandler]="handleAction" [dbxActionSuccessHandler]="onActionSuccess" [dbxActionConfirm]="confirmConfigSignal()" [dbxActionConfirmSkip]="!confirmConfigSignal()">
+    <ng-container dbxAction [dbxActionHandler]="handleAction" [dbxActionSuccessHandler]="onActionSuccess" [dbxActionConfirm]="confirmConfigSignal()" [dbxActionConfirmSkip]="!confirmConfigSignal()" dbxActionSnackbarError>
       <dbx-button dbxActionButton [buttonStyle]="buttonStyleSignal()" [raised]="true" [attr.aria-label]="textSignal()">
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
@@ -59,7 +59,7 @@ export interface DbxFirebaseLoginButtonConfig {
   host: {
     class: 'dbx-firebase-login-button dbx-button-neutral-interaction-color'
   },
-  imports: [MatIconModule, DbxActionModule, DbxButtonModule]
+  imports: [DbxActionSnackbarErrorDirective, MatIconModule, DbxActionModule, DbxButtonModule]
 })
 export class DbxFirebaseLoginButtonComponent {
   readonly config = model<Maybe<DbxFirebaseLoginButtonConfig>>(null);

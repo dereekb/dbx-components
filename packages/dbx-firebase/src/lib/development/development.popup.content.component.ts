@@ -1,6 +1,6 @@
 import { type ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { Component, computed, inject } from '@angular/core';
-import { DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, type DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
+import { DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, type DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { type DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { type WorkUsingContext, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -20,6 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
   imports: [
+    DbxActionSnackbarErrorDirective,
     DbxAnchorComponent,
     DbxTwoColumnFullLeftDirective,
     DbxWidgetViewComponent,

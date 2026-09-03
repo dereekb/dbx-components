@@ -35,7 +35,7 @@ const RESOLVE_GUARD_KEY = 'dbxFileReplacementResolved';
  * Optional source extension, so a specifier written as `./environments/environment`,
  * `…/environment.ts` or `…/environment.js` all reach the resolver.
  */
-const SOURCE_EXTENSION_PATTERN = '(?:\\.[cm]?[jt]sx?)?';
+const SOURCE_EXTENSION_PATTERN = String.raw`(?:\.[cm]?[jt]sx?)?`;
 
 /**
  * Escapes a string for literal use inside a regular expression.
@@ -44,7 +44,7 @@ const SOURCE_EXTENSION_PATTERN = '(?:\\.[cm]?[jt]sx?)?';
  * @returns The escaped string.
  */
 function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -61,7 +61,7 @@ function escapeRegExp(value) {
  */
 function buildReplacementFilter(replacements) {
   const names = replacements.map((replacement) => escapeRegExp(parse(replacement.replace).name));
-  return new RegExp(`(?:^|[\\\\/])(?:${names.join('|')})${SOURCE_EXTENSION_PATTERN}$`);
+  return new RegExp(String.raw`(?:^|[\\/])(?:${names.join('|')})${SOURCE_EXTENSION_PATTERN}$`);
 }
 
 /**
@@ -117,11 +117,11 @@ function fileReplacementsPlugin(replacements) {
 
           if (resolved.errors.length > 0) {
             result = resolved;
-          } else if (replacement != null) {
+          } else if (replacement == null) {
+            result = undefined; // a base-name match that resolved elsewhere; not ours.
+          } else {
             applied.add(resolved.path);
             result = { ...resolved, path: replacement, pluginData: args.pluginData };
-          } else {
-            result = undefined; // a base-name match that resolved elsewhere; not ours.
           }
         }
 

@@ -331,7 +331,7 @@ export default [
       // 'unicorn/prefer-at' (Sonar typescript:S7755) intentionally OMITTED: its autofix rewrites arr[arr.length - 1] → arr.at(-1),
       // but .at() returns `T | undefined` while index access is typed `T` here (no noUncheckedIndexedAccess), so the fix breaks any
       // chained access / non-optional assignment with TS2532. The fixer can't be made null-safe via config, so the rule is left off.
-      'unicorn/consistent-function-scoping': ['warn', { checkArrowFunctions: false }], // Sonar typescript:S7721 — hoist closure-free nested functions to module scope. checkArrowFunctions:false limits it to named function declarations (matches Sonar's examples) and drops the bulk of the noise from inline arrow helpers.
+      'unicorn/consistent-function-scoping': 'off', // disabled: Sonar typescript:S7721 — hoist closure-free nested functions to module scope. We disagree with the premise: a helper defined next to its only caller is more readable than one hoisted to module scope, and "closes over nothing today" is not a reason to move it away from its use site. Even narrowed to named declarations (checkArrowFunctions:false) it produced 139 warnings over 83 files in 24 projects — 27% of every warning in the workspace, and all of it stylistic. Do NOT re-enable without a concrete readability argument that outweighs that.
       'unicorn/prefer-set-has': 'warn', // Sonar typescript:S7776 — repeated Array#includes existence checks → Set#has
       'unicorn/prefer-string-raw': 'warn', // Sonar typescript:S7780 — escaped backslashes in a literal → String.raw
       'unicorn/prefer-type-error': 'warn', // Sonar typescript:S7786 — throw TypeError (not Error) after a failed type check

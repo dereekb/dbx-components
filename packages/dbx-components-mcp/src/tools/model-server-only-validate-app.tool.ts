@@ -147,7 +147,7 @@ async function walkTypeScriptFiles(dir: string): Promise<readonly string[]> {
   try {
     entries = (await readdir(dir)).sort();
   } catch {
-    return out;
+    // unreadable directory — leave `entries` empty so the walk contributes nothing for it
   }
 
   for (const entry of entries) {

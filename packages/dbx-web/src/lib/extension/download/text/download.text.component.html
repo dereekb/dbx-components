@@ -21,7 +21,7 @@
       </dbx-content-pit>
     }
     <div class="dbx-download-text-view-actions">
-      <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
+      <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard" dbxActionSnackbarError></dbx-button>
       @if (showDownloadButton()) {
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>

@@ -73,8 +73,21 @@ export default [
     rules: {
       // Catch a dbxAction that has a trigger but no value source (it would hang in the TRIGGERED state).
       'dereekb-dbx-web/require-action-value-source': 'error',
-      // Encourage an error-presentation directive on actions that run a handler.
-      'dereekb-dbx-web/require-action-error-handler': 'warn'
+      // Require an error-presentation directive on actions that run a handler, so a failed action is
+      // not silently swallowed. Autofixable: it appends `dbxActionSnackbarError` to the action host.
+      // NOTE the fix only completes the template half — also add `DbxActionSnackbarErrorDirective`
+      // from `@dereekb/dbx-web` to the component's `imports`, or the bare attribute matches no
+      // directive and silently does nothing.
+      'dereekb-dbx-web/require-action-error-handler': 'error'
+    }
+  },
+  {
+    // Inline templates of spec files, which the angular-template processor extracts to a virtual
+    // `<spec>.ts/inline-template-*.component.html`. A test fixture has no user to surface an action
+    // failure to, so the error-handler rule is noise there.
+    files: ['**/*.spec.ts/**/*.html'],
+    rules: {
+      'dereekb-dbx-web/require-action-error-handler': 'off'
     }
   }
 ];

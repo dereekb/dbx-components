@@ -1,5 +1,5 @@
 import { Component, inject, type OnInit } from '@angular/core';
-import { AbstractDialogDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxActionModule, DbxButtonModule, type DbxButtonStyle } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxActionModule, DbxActionSnackbarErrorDirective, DbxButtonModule, type DbxButtonStyle, DbxDialogContentCloseComponent, DbxDialogContentDirective } from '@dereekb/dbx-web';
 import { type MatDialog, type MatDialogConfig, type MatDialogRef } from '@angular/material/dialog';
 import { type Maybe } from '@dereekb/util';
 import { asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter, type WorkUsingContext } from '@dereekb/rxjs';
@@ -60,7 +60,7 @@ export interface DbxForgeActionDialogComponentConfig<O> {
  */
 @Component({
   template: `
-    <dbx-dialog-content dbxAction [dbxActionHandler]="handleSubmitValue" class="dbx-dialog-content-with-header">
+    <dbx-dialog-content dbxAction [dbxActionHandler]="handleSubmitValue" class="dbx-dialog-content-with-header" dbxActionSnackbarError>
       <h3 class="dbx-dialog-content-header">{{ header }}</h3>
       <dbx-dialog-content-close (close)="close()"></dbx-dialog-content-close>
       <div>
@@ -70,7 +70,7 @@ export interface DbxForgeActionDialogComponentConfig<O> {
     </dbx-dialog-content>
   `,
   providers: [provideDbxForgeFormContext()],
-  imports: [DbxDialogContentDirective, DbxActionModule, DbxButtonModule, DbxDialogContentCloseComponent, DbxForgeFormComponent, DbxFormSourceDirective, DbxActionFormDirective]
+  imports: [DbxActionSnackbarErrorDirective, DbxDialogContentDirective, DbxActionModule, DbxButtonModule, DbxDialogContentCloseComponent, DbxForgeFormComponent, DbxFormSourceDirective, DbxActionFormDirective]
 })
 export class DbxForgeActionDialogComponent<O> extends AbstractDialogDirective<O, DbxForgeActionDialogComponentConfig<O>> implements OnInit {
   private readonly _configSub = cleanSubscription();

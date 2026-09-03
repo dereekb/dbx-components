@@ -1,6 +1,6 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { MAT_SNACK_BAR_DATA, type MatSnackBar, type MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
-import { type ErrorInput, MS_IN_MINUTE, makeTimer, toggleTimerRunning } from '@dereekb/util';
+import { type ErrorInput, MS_IN_MINUTE, asArray, makeTimer, toggleTimerRunning } from '@dereekb/util';
 import { type NgPopoverRef } from 'ng-overlay-container';
 
 import { MatIconModule } from '@angular/material/icon';
@@ -97,7 +97,7 @@ export class DbxErrorSnackbarComponent {
     matSnackbar.openFromComponent(DbxErrorSnackbarComponent, {
       ...config,
       duration: undefined,
-      panelClass: [...(config?.panelClass ?? []), 'dbx-error-snackbar'],
+      panelClass: [...asArray(config?.panelClass), 'dbx-error-snackbar'],
       data: {
         error,
         duration: config?.duration
