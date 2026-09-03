@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
 import { AbstractDbxSelectionListViewDirective, AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, provideDbxListView, provideDbxListViewWrapper, type DbxSelectionValueListViewConfig, type DbxValueAsListItem } from '@dereekb/dbx-web';
 import { AppFormSpaceTypeConfigService, type DocumentDataWithIdAndKey, type FormSpace, FormSpaceProcessingState, FormSpaceState } from '@dereekb/firebase';
@@ -139,8 +139,7 @@ export function keyForDbxFirebaseFormSpaceListValue(formSpace: DbxFirebaseFormSp
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-firebase-formspace-list'
-  },
-  standalone: true
+  }
 })
 export class DbxFirebaseFormSpaceListComponent extends AbstractDbxSelectionListWrapperDirective<DbxFirebaseFormSpaceListValue> {
   constructor() {
@@ -158,8 +157,7 @@ export class DbxFirebaseFormSpaceListComponent extends AbstractDbxSelectionListW
   selector: 'dbx-firebase-formspace-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseFormSpaceListViewComponent),
-  imports: [DbxSelectionValueListViewComponentImportsModule],
-  standalone: true
+  imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DbxFirebaseFormSpaceListViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseFormSpaceListValue> {
   readonly config: DbxSelectionValueListViewConfig<DbxFirebaseFormSpaceListItem> = {
@@ -201,9 +199,7 @@ export class DbxFirebaseFormSpaceListViewComponent extends AbstractDbxSelectionL
       </div>
     </div>
   `,
-  imports: [NgClass, TimeDistancePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, TimeDistancePipe]
 })
 export class DbxFirebaseFormSpaceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseFormSpaceListValue> {
   /**

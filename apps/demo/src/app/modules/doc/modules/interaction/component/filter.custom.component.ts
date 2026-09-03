@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { type DocInteractionTestFilter } from './filter';
 import { DbxContentContainerDirective, DbxFilterWrapperComponent } from '@dereekb/dbx-web';
@@ -11,8 +11,6 @@ const DEFAULT_FILTER_VALUE: DocInteractionTestFilter = {};
   selector: 'doc-interaction-test-filter-custom-filter',
   templateUrl: './filter.custom.component.html',
   providers: [provideFilterSourceDirective(DocInteractionTestFilterCustomFilterComponent, () => DEFAULT_FILTER_VALUE)],
-  standalone: true,
-  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxFilterWrapperComponent, DocInteractionTestFilterCustomFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestFilterCustomFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {}

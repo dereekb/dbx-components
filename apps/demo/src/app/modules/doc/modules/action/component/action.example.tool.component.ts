@@ -1,7 +1,7 @@
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filterMaybe } from '@dereekb/rxjs';
 import { shareReplay, switchMap } from 'rxjs';
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { provideDbxForgeFormContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, type DbxActionDirective, DbxActionSourceDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -14,8 +14,6 @@ import { JsonPipe } from '@angular/common';
   templateUrl: './action.example.tool.component.html',
   selector: 'doc-action-example-tools',
   providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [DbxActionSourceDirective, MatDivider, FlexModule, DbxErrorComponent, DbxActionErrorDirective, JsonPipe]
 })
 export class DocActionExampleToolsComponent {

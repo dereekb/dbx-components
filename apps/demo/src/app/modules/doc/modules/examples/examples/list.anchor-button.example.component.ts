@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
@@ -22,8 +22,6 @@ import { makeAnchorButtonItemValues, type AnchorButtonItemValue } from '../compo
  */
 @Component({
   selector: 'doc-list-anchor-button-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocAnchorButtonItemListComponent],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Anchor-Button List" hint="Two-line row whose trailing button wraps a per-item ClickableAnchor via dbx-anchor.">

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseAuthLoginService, DbxFirebaseAuthService, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
@@ -9,9 +9,7 @@ import { PrettyJsonPipe } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './firebase.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, MatButton, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent, PrettyJsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, MatButton, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent, PrettyJsonPipe]
 })
 export class DocAuthFirebaseComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);

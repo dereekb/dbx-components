@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { dbxForgeNameField, dbxForgePhoneField, DbxFormSourceDirective, DbxActionFormDirective } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
@@ -11,9 +11,7 @@ import { DocFormForgeExampleComponent } from '../../shared/component/forge.examp
 
 @Component({
   templateUrl: './forms.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxErrorComponent, DbxActionErrorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DocBugsFormsComponent {
   // -- Phone Dirty State --

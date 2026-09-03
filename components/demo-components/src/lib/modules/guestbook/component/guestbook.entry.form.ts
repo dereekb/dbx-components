@@ -34,5 +34,5 @@ export function guestbookEntrySignedField() {
  * @returns A forge toggle field configuration for the published state.
  */
 export function guestbookEntryPublishedField() {
-  return dbxForgeToggleField({ key: 'published', label: 'Public', description: 'If the message shows up in the guestbook publically or not.' });
+  return dbxForgeToggleField({ key: 'published', label: 'Public', hint: 'If the message shows up in the guestbook publically or not.' });
 }

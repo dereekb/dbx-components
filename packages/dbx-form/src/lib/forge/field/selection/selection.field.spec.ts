@@ -12,7 +12,7 @@ import type { ValueSelectionOption } from '../../../field/field.selection';
 describe('DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist', () => {
   type ExpectedKeys =
     // From DbxForgeFieldFunctionDef<DbxForgeValueSelectionFieldDef>
-    'key' | 'label' | 'placeholder' | 'value' | 'required' | 'readonly' | 'disabled' | 'hidden' | 'className' | 'meta' | 'logic' | 'props' | 'hint' | 'description' | 'pattern' | 'minLength' | 'maxLength' | 'min' | 'max' | 'email' | 'validators' | 'validationMessages' | 'derivation' | 'schemas' | 'col' | 'tabIndex' | 'excludeValueIfHidden' | 'excludeValueIfDisabled' | 'excludeValueIfReadonly' | 'wrappers' | 'skipAutoWrappers' | 'skipDefaultWrappers' | 'nullable' | '__fieldDef';
+    'key' | 'label' | 'placeholder' | 'value' | 'required' | 'readonly' | 'disabled' | 'hidden' | 'className' | 'meta' | 'logic' | 'props' | 'hint' | 'pattern' | 'minLength' | 'maxLength' | 'min' | 'max' | 'email' | 'validators' | 'validationMessages' | 'derivation' | 'schemas' | 'col' | 'tabIndex' | 'excludeValueIfHidden' | 'excludeValueIfDisabled' | 'excludeValueIfReadonly' | 'wrappers' | 'skipAutoWrappers' | 'skipDefaultWrappers' | 'nullable' | '__fieldDef';
 
   type ActualKeys = keyof DbxForgeValueSelectionFieldConfig;
 
@@ -147,8 +147,8 @@ describe('dbxForgeValueSelectionField()', () => {
     expect(field.props?.addClearOption).toBe('Reset');
   });
 
-  it('should pass description as hint in props', () => {
-    const field = dbxForgeValueSelectionField({ key: 'color', description: 'Pick a color', props: { options: testOptions } });
+  it('should pass hint as hint in props', () => {
+    const field = dbxForgeValueSelectionField({ key: 'color', hint: 'Pick a color', props: { options: testOptions } });
     expect(field.props?.hint).toBe('Pick a color');
   });
 

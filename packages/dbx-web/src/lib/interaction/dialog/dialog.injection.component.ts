@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type MatDialog, type MatDialogRef, type MatDialogConfig } from '@angular/material/dialog';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDialogDirective } from './abstract.dialog.directive';
@@ -39,9 +39,7 @@ export interface DbxInjectionDialogComponentConfig<T = unknown> extends Omit<Mat
       <dbx-injection [config]="componentConfig"></dbx-injection>
     </dbx-dialog-content>
   `,
-  imports: [DbxInjectionComponent, DbxDialogContentDirective, DbxDialogContentCloseComponent, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, DbxDialogContentDirective, DbxDialogContentCloseComponent, NgClass]
 })
 export class DbxInjectionDialogComponent<T = unknown> extends AbstractDialogDirective<void, DbxInjectionDialogComponentConfig<T>> {
   get showCloseButton() {

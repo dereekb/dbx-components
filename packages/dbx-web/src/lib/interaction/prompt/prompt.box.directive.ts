@@ -15,8 +15,7 @@ import { Directive, input } from '@angular/core';
   host: {
     class: 'd-block dbx-prompt-box',
     '[class.elevate]': 'elevate()'
-  },
-  standalone: true
+  }
 })
 export class DbxPromptBoxDirective {
   readonly elevate = input<boolean>(true);

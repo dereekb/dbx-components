@@ -1,4 +1,4 @@
-import { Component, type OnInit, inject, viewChild, input, effect, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit, inject, viewChild, input, effect, computed } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, type AbstractControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -20,9 +20,7 @@ interface RangeValue {
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
   templateUrl: './calendar.schedule.selection.range.component.html',
-  imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, DbxButtonSpacerDirective, MatDatepickerModule, TimezoneAbbreviationPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, DbxButtonSpacerDirective, MatDatepickerModule, TimezoneAbbreviationPipe]
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   readonly dbxCalendarStore = inject(DbxCalendarStore);

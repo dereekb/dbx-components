@@ -5,8 +5,7 @@ import { GuestbookEntryCollectionStore } from './guestbook.entry.collection.stor
 
 @Directive({
   selector: '[demoGuestbookEntryCollection]',
-  providers: provideDbxFirebaseCollectionWithParentStoreDirective(DemoGuestbookEntryCollectionStoreDirective, GuestbookEntryCollectionStore),
-  standalone: true
+  providers: provideDbxFirebaseCollectionWithParentStoreDirective(DemoGuestbookEntryCollectionStoreDirective, GuestbookEntryCollectionStore)
 })
 export class DemoGuestbookEntryCollectionStoreDirective extends DbxFirebaseCollectionWithParentStoreDirective<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument, GuestbookEntryCollectionStore> {
   constructor() {

@@ -1,7 +1,13 @@
 import type Mailgun from 'mailgun.js';
-import { type MailgunClientOptions } from 'node_modules/mailgun.js/Types/Types/MailgunClient/MailgunClientOptions';
 
-export type MailgunOptions = MailgunClientOptions;
+/**
+ * Options accepted by `Mailgun.client()`.
+ *
+ * Derived from the public surface rather than deep-imported: mailgun.js declares no `exports` map
+ * entry for its `Types/` tree, so a direct import of `MailgunClientOptions` is unresolvable for any
+ * downstream consumer of this package's emitted `.d.ts`.
+ */
+export type MailgunOptions = Parameters<Mailgun['client']>[0];
 export type MailgunClient = ReturnType<Mailgun['client']>;
 export type MailgunMessagesClient = MailgunClient['messages'];
 export type MailgunSuppressionsClient = MailgunClient['suppressions'];

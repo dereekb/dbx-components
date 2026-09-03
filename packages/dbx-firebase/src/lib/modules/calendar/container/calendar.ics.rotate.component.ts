@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { TimeDistanceCountdownPipe } from '@dereekb/dbx-core';
 import { switchMap } from 'rxjs';
@@ -27,9 +27,7 @@ import { DbxFirebaseCalendarIcsRotateButtonComponent } from './calendar.ics.rota
     }
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate' },
-  imports: [DbxFirebaseCalendarIcsRotateButtonComponent, TimeDistanceCountdownPipe],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxFirebaseCalendarIcsRotateButtonComponent, TimeDistanceCountdownPipe]
 })
 export class DbxFirebaseCalendarIcsRotateComponent {
   /**

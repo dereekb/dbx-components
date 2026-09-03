@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, inject, signal } from '@angular/core';
+import { Component, type OnDestroy, type OnInit, inject, signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxForgeFormComponentImportsModule, DbxForgeFormContext, DbxFormSourceDirective, dbxForgeFormComponentProviders, dbxForgeTextField } from '@dereekb/dbx-form';
@@ -26,10 +26,8 @@ type ViewState = 'form' | 'success';
 
 @Component({
   templateUrl: './orphan-field-repro.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxForgeFormComponentImportsModule, DbxFormSourceDirective],
-  providers: [...dbxForgeFormComponentProviders(), DbxCalendarStore, DbxCalendarScheduleSelectionStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [...dbxForgeFormComponentProviders(), DbxCalendarStore, DbxCalendarScheduleSelectionStore]
 })
 export class DocBugsOrphanFieldReproComponent implements OnInit, OnDestroy {
   // TODO: link to production Trello/Zoho ticket once the convention exists.
@@ -38,14 +36,16 @@ export class DocBugsOrphanFieldReproComponent implements OnInit, OnDestroy {
   // Start with a complete value so the form renders correctly on first mount.
   // Subsequent "Emit partial" / "Emit empty" pushes drop the dateScheduleRange
   // slot — exactly the shape that triggers NG01902 under dbxFormSourceMode="always".
-  readonly source$ = completeOnDestroy(new BehaviorSubject<Partial<OrphanReproFormValue>>({
-    n: 'Initial',
-    dateScheduleRange: {
-      start: FILTER_START,
-      end: FILTER_END,
-      w: '8'
-    }
-  }));
+  readonly source$ = completeOnDestroy(
+    new BehaviorSubject<Partial<OrphanReproFormValue>>({
+      n: 'Initial',
+      dateScheduleRange: {
+        start: FILTER_START,
+        end: FILTER_END,
+        w: '8'
+      }
+    })
+  );
 
   readonly formConfig: FormConfig = {
     fields: [dbxForgeTextField({ key: 'n', label: 'Name' }), dbxForgeDateScheduleRangeField({ key: 'dateScheduleRange', required: true, outputTimezone: TIMEZONE })]

@@ -13,7 +13,7 @@ const { server, nest } = initNestServer(app, { environment });
 export const api = onRequest({}, server);
 
 // App Functions
-export const { initUserOnCreate, profileSetUsername, callModel } = allAppFunctions(nest);
+export const { initUserOnCreate, callModel } = allAppFunctions(nest);
 
 // Scheduled Functions
 const allScheduledFunctions = allScheduledAppFunctions(nest);

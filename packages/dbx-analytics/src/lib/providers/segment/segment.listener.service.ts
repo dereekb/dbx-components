@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
 import { AbstractDbxAnalyticsServiceListener, type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, type AnalyticsUser } from '../../analytics';
@@ -28,9 +28,7 @@ import { DbxAnalyticsSegmentApiService } from './segment.service';
  * }
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
   private readonly _segmentApi = inject(DbxAnalyticsSegmentApiService);
 

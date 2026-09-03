@@ -45,6 +45,6 @@ export function cleanLoadingContext<T = unknown, S extends LoadingState<T> = Loa
  * this.listContext.obs = this.items$;
  * ```
  */
-export function cleanListLoadingContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
+export function cleanListLoadingContext<T = unknown, S extends ListLoadingState<T> = ListLoadingState<T>>(input?: ListLoadingStateContextInput<T, S>): MutableListLoadingStateContext<T, S> {
   return clean(listLoadingStateContext(input));
 }

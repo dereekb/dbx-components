@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { UISref } from '@uirouter/angular';
 
@@ -7,8 +7,6 @@ import { UISref } from '@uirouter/angular';
     <div class="dbx-hint">An error occured while logging in.</div>
     <button mat-stroked-button uiSref="demo.auth.login">Log In</button>
   `,
-  standalone: true,
-  imports: [MatButton, UISref],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton, UISref]
 })
 export class DemoAuthErrorComponent {}

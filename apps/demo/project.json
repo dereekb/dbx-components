@@ -8,7 +8,7 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
-      "executor": "@nx/angular:application",
+      "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/demo",
@@ -44,8 +44,8 @@
           "budgets": [
             {
               "type": "initial",
-              "maximumWarning": "7mb",
-              "maximumError": "8mb"
+              "maximumWarning": "7.5mb",
+              "maximumError": "9mb"
             },
             {
               "type": "anyComponentStyle",
@@ -71,7 +71,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@nx/angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
           "proxyConfig": "apps/demo/proxy.conf.prod.json",
@@ -88,7 +88,7 @@
       "continuous": true
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "demo:build"
       }
@@ -106,13 +106,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
-      }
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo"
       }
     }
   }

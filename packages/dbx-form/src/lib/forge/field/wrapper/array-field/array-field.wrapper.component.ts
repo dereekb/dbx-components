@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
 import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapper } from '@ng-forge/dynamic-forms';
 import { type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';
@@ -21,9 +21,7 @@ import { DbxForgeFormContextService } from '../../../form/forge.context.service'
 @Component({
   selector: 'dbx-forge-array-field-wrapper',
   templateUrl: './array-field.wrapper.component.html',
-  imports: [DynamicTextPipe, AsyncPipe, CdkDropList, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DynamicTextPipe, AsyncPipe, CdkDropList, DbxButtonComponent]
 })
 export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

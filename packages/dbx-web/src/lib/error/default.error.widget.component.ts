@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ServerError, type ServerErrorResponseData } from '@dereekb/util';
 import { AbstractDbxErrorWidgetComponent } from './error.widget.directive';
 import { DbxLabelBlockComponent } from '../layout/text/label.block.component';
@@ -23,9 +23,7 @@ import { JsonPipe } from '@angular/common';
   host: {
     class: 'd-block dbx-error-default-error-widget dbx-content-container'
   },
-  imports: [DbxLabelBlockComponent, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxLabelBlockComponent, JsonPipe]
 })
 export class DbxErrorDefaultErrorWidgetComponent extends AbstractDbxErrorWidgetComponent<ServerError> {
   get serverErrorData(): ServerErrorResponseData | undefined {

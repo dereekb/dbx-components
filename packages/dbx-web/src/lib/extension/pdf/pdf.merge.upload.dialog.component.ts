@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type Injector, computed, inject } from '@angular/core';
+import { Component, type Injector, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { type ThemePalette } from '@angular/material/core';
@@ -81,9 +81,7 @@ export interface DbxPdfMergeUploadDialogConfig {
     class: 'dbx-pdf-merge-upload-dialog'
   },
   providers: [provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(true)],
-  standalone: true,
-  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxInjectionComponent, DbxPdfMergeEditorComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxInjectionComponent, DbxPdfMergeEditorComponent, DbxButtonComponent]
 })
 export class DbxPdfMergeUploadDialogComponent extends AbstractDialogDirective<Blob, DbxPdfMergeUploadDialogConfig> {
   readonly store = inject(DbxPdfMergeEditorStore);

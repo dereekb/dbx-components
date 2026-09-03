@@ -24,8 +24,7 @@ import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
  * ```
  */
 @Directive({
-  selector: '[dbxPdfMergeUploadAction]',
-  standalone: true
+  selector: '[dbxPdfMergeUploadAction]'
 })
 export class DbxPdfMergeUploadActionDirective {
   readonly source = inject<DbxActionContextStoreSourceInstance<Blob, unknown>>(DbxActionContextStoreSourceInstance);

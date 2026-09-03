@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, DbxColorDirective, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -8,9 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   templateUrl: './sidenav.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective, DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .dbx-sidenav-demo-container {

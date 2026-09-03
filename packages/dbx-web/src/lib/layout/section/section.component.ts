@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
@@ -42,9 +42,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     '[class]': 'classConfigSignal()',
     '[attr.aria-label]': 'headerConfigSignal().header'
   },
-  imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
   /**

@@ -25,8 +25,7 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFilterMapSourceConnector]',
   exportAs: 'dbxFilterMapSourceConnector',
-  providers: [...provideFilterSource(DbxFilterMapSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)],
-  standalone: true
+  providers: [...provideFilterSource(DbxFilterMapSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)]
 })
 export class DbxFilterMapSourceConnectorDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
   /**

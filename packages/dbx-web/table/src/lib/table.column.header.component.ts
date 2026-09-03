@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { AbstractDbxTableColumnDirective } from './table.column.directive';
@@ -9,8 +9,6 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [DbxInjectionComponent]
 })
 export class DbxTableColumnHeaderComponent<C> extends AbstractDbxTableColumnDirective<C> {

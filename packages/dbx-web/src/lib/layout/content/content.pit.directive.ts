@@ -50,8 +50,7 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
     '[class.dbx-content-pit-scrollable]': 'scrollableHeightSignal() != null',
     '[class.dbx-corners-none]': 'square()',
     '[style.--dbx-content-pit-scrollable-max-height]': 'scrollableMaxHeightSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxContentPitDirective {
   readonly scrollable = input<Maybe<DbxContentPitScrollableInput>>();

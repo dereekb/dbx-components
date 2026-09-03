@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { JsonPipe } from '@angular/common';
@@ -8,9 +8,7 @@ import { map, of, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective]
 })
 export class DemoAppSettingsComponent {
   readonly storageService = inject(DbxFirebaseStorageService);

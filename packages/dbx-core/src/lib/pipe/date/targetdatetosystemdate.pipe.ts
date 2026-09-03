@@ -21,7 +21,6 @@ import { dateTimezoneUtcNormal } from '@dereekb/date';
  */
 @Pipe({
   name: 'targetDateToSystemDate',
-  standalone: true,
   pure: false
 })
 export class TargetDateToSystemDatePipe implements PipeTransform {

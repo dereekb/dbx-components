@@ -1,7 +1,7 @@
 import { DbxDateTimeFieldTimeMode, dbxForgeDateTimeField, dbxForgeNumberField, dbxForgeTextField } from '@dereekb/dbx-form';
 
 /**
- * Example rule shown in the recurrence rule field's description.
+ * Example rule shown in the recurrence rule field's hint.
  */
 export const DEMO_CALENDAR_TEST_EVENT_EXAMPLE_RECURRENCE_RULE = 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=8';
 
@@ -20,7 +20,7 @@ export function demoCalendarTestEventFields() {
  * @returns A forge text field configuration for the event name.
  */
 export function demoCalendarTestEventNameField() {
-  return dbxForgeTextField({ key: 'name', label: 'Name', description: 'Leave empty to let the server generate a name.' });
+  return dbxForgeTextField({ key: 'name', label: 'Name', hint: 'Leave empty to let the server generate a name.' });
 }
 
 /**
@@ -31,7 +31,7 @@ export function demoCalendarTestEventNameField() {
  * @returns A forge date-time field configuration for the event start.
  */
 export function demoCalendarTestEventStartsAtField() {
-  return dbxForgeDateTimeField({ key: 'startsAt', label: 'Starts At', required: true, props: { timeMode: DbxDateTimeFieldTimeMode.REQUIRED }, description: 'The first occurrence of the series. Its time of day is inherited by every later occurrence.' });
+  return dbxForgeDateTimeField({ key: 'startsAt', label: 'Starts At', required: true, props: { timeMode: DbxDateTimeFieldTimeMode.REQUIRED }, hint: 'The first occurrence of the series. Its time of day is inherited by every later occurrence.' });
 }
 
 /**
@@ -40,7 +40,7 @@ export function demoCalendarTestEventStartsAtField() {
  * @returns A forge number field configuration for the event duration in minutes.
  */
 export function demoCalendarTestEventDurationMinutesField() {
-  return dbxForgeNumberField({ key: 'durationMinutes', label: 'Duration (Minutes)', min: 1, description: 'Leave empty to use the server default of 60 minutes.' });
+  return dbxForgeNumberField({ key: 'durationMinutes', label: 'Duration (Minutes)', min: 1, hint: 'Leave empty to use the server default of 60 minutes.' });
 }
 
 /**
@@ -54,5 +54,5 @@ export function demoCalendarTestEventDurationMinutesField() {
 export function demoCalendarTestEventRecurrenceRuleField() {
   // the server always writes a recurring test event as `rfe: true` (never ends), so a series is bounded
   // from inside the rule with COUNT= / UNTIL= rather than by a separate end date
-  return dbxForgeTextField({ key: 'recurrenceRule', label: 'Recurrence Rule', required: true, description: `I.E. "${DEMO_CALENDAR_TEST_EVENT_EXAMPLE_RECURRENCE_RULE}". Bound the series with COUNT= or UNTIL=, as the test event is always written as a never-ending recurrence.` });
+  return dbxForgeTextField({ key: 'recurrenceRule', label: 'Recurrence Rule', required: true, hint: `I.E. "${DEMO_CALENDAR_TEST_EVENT_EXAMPLE_RECURRENCE_RULE}". Bound the series with COUNT= or UNTIL=, as the test event is always written as a never-ending recurrence.` });
 }

@@ -1,4 +1,4 @@
-// Shared helper for reading the dbx.setup.json project manifest written by setup-project.sh.
+// Shared helper for reading the dbx.setup.json project manifest written by dbx-components-cli setup.
 // All per-integration setup scripts (e.g. scripts/zoho/setup-zoho.mjs) read from this.
 
 import { readFile } from 'node:fs/promises';

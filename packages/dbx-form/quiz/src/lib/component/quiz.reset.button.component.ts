@@ -20,8 +20,7 @@ import { type Work } from '@dereekb/rxjs';
       </div>
     </div>
   `,
-  imports: [DbxButtonModule, DbxActionModule],
-  standalone: true
+  imports: [DbxButtonModule, DbxActionModule]
 })
 export class DbxQuizResetButtonComponent {
   readonly quizStore = inject(QuizStore);

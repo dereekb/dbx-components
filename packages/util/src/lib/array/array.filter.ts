@@ -24,8 +24,7 @@ export function filterValuesByDistance<T>(input: T[], minDistance: number, getVa
   // Tag each non-null value with its original index so we can restore order after the distance filter.
   const tagged: [{ readonly item: T; readonly index: number }, number][] = [];
 
-  for (let i = 0, n = input.length; i < n; i += 1) {
-    const item = input[i];
+  for (const [i, item] of input.entries()) {
     const value = getValue(item);
 
     if (value != null) {

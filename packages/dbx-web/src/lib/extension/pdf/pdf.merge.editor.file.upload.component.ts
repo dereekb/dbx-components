@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
+import { Component, computed, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
@@ -178,9 +178,7 @@ const DEFAULT_CLEAR_CONFIRM_CANCEL_TEXT = 'Cancel';
     '[class.dbx-pdf-merge-editor-file-upload--no-file]': 'stateSignal() === "no_file"',
     '[class.dbx-pdf-merge-editor-file-upload--superseded]': 'supersededByEncryptedSignal()'
   },
-  imports: [CdkDropList, MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [CdkDropList, MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxFileUploadButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeEntryComponent, DbxPdfMergePageListComponent]
 })
 export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, DbxPdfMergeEditorFileUploadValidatorSlot {
   readonly store = inject(DbxPdfMergeEditorStore);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, inject } from '@angular/core';
+import { Component, type ElementRef, inject } from '@angular/core';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../../interaction/popover/abstract.popover.directive';
 import { type DbxPopoverKey } from '../../interaction/popover/popover';
@@ -91,9 +91,7 @@ export type DbxHelpViewPopoverConfigWithoutOrigin = Omit<DbxHelpViewPopoverConfi
  */
 @Component({
   templateUrl: './help.view.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxHelpViewListComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxHelpViewListComponent, DbxInjectionComponent]
 })
 export class DbxHelpViewPopoverComponent extends AbstractPopoverDirective<unknown, DbxHelpViewPopoverConfig> {
   private readonly _helpContextService = inject(DbxHelpContextService);

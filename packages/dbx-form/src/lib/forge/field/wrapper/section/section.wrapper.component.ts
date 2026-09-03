@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, input, viewChild, ViewContainerRef } from '@angular/core';
 import { DbxSectionComponent, DbxSubSectionComponent, type DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 import { type FieldWrapper } from '@ng-forge/dynamic-forms';
 
@@ -22,9 +22,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
       </dbx-section>
     }
   `,
-  imports: [DbxSectionComponent, DbxSubSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxSectionComponent, DbxSubSectionComponent]
 })
 export class DbxForgeSectionWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

@@ -38,7 +38,6 @@ type DbxForgeTextFieldConfigKeys =
   | 'logic'
   | 'props'
   | 'hint'
-  | 'description'
   | 'pattern'
   | 'minLength'
   | 'maxLength'

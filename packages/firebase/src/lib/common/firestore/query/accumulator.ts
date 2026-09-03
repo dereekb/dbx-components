@@ -1,4 +1,4 @@
-import { itemAccumulator, type ItemAccumulatorNextPageUntilResultsCountFunction, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration } from '@dereekb/rxjs';
+import { itemAccumulator, type ItemAccumulatorNextPageUntilResultsCountFunction, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration, type PageLoadingState } from '@dereekb/rxjs';
 import { type MapFunction, filterMaybeArrayValues } from '@dereekb/util';
 import { documentDataFunction } from '../accessor';
 import { type DocumentDataWithIdAndKey, type QueryDocumentSnapshotArray } from '../types';
@@ -13,7 +13,7 @@ import { type FirestoreItemPageIterationInstance } from './iterator';
  * @template O - The output type after mapping the query snapshots
  * @template T - The document data type in the snapshots
  */
-export type MappedFirebaseQuerySnapshotAccumulator<O, T> = ItemAccumulatorInstance<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>;
+export type MappedFirebaseQuerySnapshotAccumulator<O, T> = ItemAccumulatorInstance<O, QueryDocumentSnapshotArray<T>, PageItemIteration<PageLoadingState<QueryDocumentSnapshotArray<T>>>>;
 /**
  * An accumulator that collects Firestore query snapshots without custom mapping.
  *
@@ -59,7 +59,7 @@ export type FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T> = I
 export function firebaseQuerySnapshotAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQuerySnapshotAccumulator<T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T> {
-  return itemAccumulator<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>(iteration, mapSnapshots);
+  return itemAccumulator<O, QueryDocumentSnapshotArray<T>, PageItemIteration<PageLoadingState<QueryDocumentSnapshotArray<T>>>>(iteration, mapSnapshots);
 }
 
 /**

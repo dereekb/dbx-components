@@ -1,6 +1,6 @@
 import { failDueToSuccess, callbackTest } from '@dereekb/util/test';
 import { DbxInjectionContextDirective } from './injection.context.directive';
-import { ChangeDetectionStrategy, Component, type OnDestroy, type Type, viewChild } from '@angular/core';
+import { Component, type OnDestroy, type Type, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { waitForMs } from '@dereekb/util';
@@ -14,8 +14,7 @@ const CUSTOM_CONTENT = 'Custom Content';
 // TODO(TEST): add tests showing AbstractForwardDbxInjectionContextDirective usage.
 
 @Component({
-  template: '<span id="custom-content">Custom Content</span>',
-  standalone: true
+  template: '<span id="custom-content">Custom Content</span>'
 })
 class TestInjectionContent implements OnDestroy {
   destroyed = false;
@@ -27,8 +26,7 @@ class TestInjectionContent implements OnDestroy {
 
 @Component({
   selector: 'dbx-test-existing-content',
-  template: '<span id="existing-content">Existing Content</span>',
-  standalone: true
+  template: '<span id="existing-content">Existing Content</span>'
 })
 class TestExistingInjectionContent implements OnDestroy {
   destroyed = false;
@@ -44,8 +42,6 @@ class TestExistingInjectionContent implements OnDestroy {
       <dbx-test-existing-content></dbx-test-existing-content>
     </div>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [DbxInjectionContextDirective, TestExistingInjectionContent]
 })
 class TestInjectionContextDirective<T = any> {

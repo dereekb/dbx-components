@@ -60,10 +60,3 @@ export class TestFirebaseContextFixture<F extends TestFirebaseInstance = TestFir
  * test environment.
  */
 export type TestFirebaseContextFactory = TestContextFactory<TestFirebaseContextFixture>;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use TestFirebaseContextFactory instead.
- */
-export type JestTestFirebaseContextFactory = TestFirebaseContextFactory;

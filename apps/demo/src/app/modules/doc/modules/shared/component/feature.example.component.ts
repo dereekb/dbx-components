@@ -1,11 +1,9 @@
 import { DbxSectionComponent, DbxSectionComponent as DbxSectionComponent_1 } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'doc-feature-example',
   templateUrl: './feature.example.component.html',
-  standalone: true,
-  imports: [DbxSectionComponent_1],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionComponent_1]
 })
 export class DocFeatureExampleComponent extends DbxSectionComponent {}

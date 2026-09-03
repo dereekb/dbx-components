@@ -26,8 +26,7 @@ import { AbstractIfDirective } from '../view/if.directive';
  * @see {@link DbxAuthNotAnyRoleDirective} for excluding users with specified roles.
  */
 @Directive({
-  selector: '[dbxAuthHasAnyRole]',
-  standalone: true
+  selector: '[dbxAuthHasAnyRole]'
 })
 export class DbxAuthHasAnyRoleDirective extends AbstractIfDirective {
   private readonly _authService = inject(DbxAuthService);

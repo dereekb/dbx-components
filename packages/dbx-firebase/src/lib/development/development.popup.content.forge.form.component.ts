@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgePickableChipField, filterPickableItemFieldValuesByLabel, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
@@ -26,9 +26,7 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
   selector: 'dbx-firebase-development-popup-content-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponentImportsModule],
-  providers: dbxForgeFormComponentProviders(),
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  providers: dbxForgeFormComponentProviders()
 })
 export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { type FieldTree } from '@angular/forms/signals';
@@ -27,8 +27,6 @@ import type { DbxForgeInfoButtonFieldProps } from './info.field';
     }
   `,
   imports: [MatIconButton, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     '[class]': 'className()'
   }

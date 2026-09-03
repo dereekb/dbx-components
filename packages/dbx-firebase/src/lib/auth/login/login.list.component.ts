@@ -31,7 +31,6 @@ export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionCompo
     role: 'list',
     '[attr.aria-label]': 'loginModeAriaLabel'
   },
-  standalone: true,
   imports: [DbxInjectionComponent]
 })
 export class DbxFirebaseLoginListComponent {

@@ -53,8 +53,7 @@ const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
  * @see {@link DbxActionAutoModifyDirective} for automatically marking the action as modified.
  */
 @Directive({
-  selector: 'dbxActionAutoTrigger,[dbxActionAutoTrigger]',
-  standalone: true
+  selector: 'dbxActionAutoTrigger,[dbxActionAutoTrigger]'
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

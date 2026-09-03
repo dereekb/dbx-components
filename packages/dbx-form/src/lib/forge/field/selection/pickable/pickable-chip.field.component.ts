@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import { Component, ElementRef, inject } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,9 +18,7 @@ import { setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 @Component({
   selector: 'dbx-forge-pickable-chip-field',
   templateUrl: './pickable-chip.field.component.html',
-  imports: [ReactiveFormsModule, MatChipsModule, MatIconModule, MatDivider, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [ReactiveFormsModule, MatChipsModule, MatIconModule, MatDivider, DbxInjectionComponent]
 })
 export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgePickableItemFieldDirective<T, M, H> {
   private readonly elementRef = inject(ElementRef<HTMLElement>);

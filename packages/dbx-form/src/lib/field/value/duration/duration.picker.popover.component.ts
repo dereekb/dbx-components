@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, signal } from '@angular/core';
+import { Component, type ElementRef, signal } from '@angular/core';
 import { type Milliseconds, type TimeUnit, TIME_UNIT_SHORT_LABEL_MAP, timeUnitToMilliseconds } from '@dereekb/util';
 import { type TimeDurationData, durationDataToMilliseconds, getDurationDataValue, millisecondsToDurationData, setDurationDataValue } from '@dereekb/date';
 import { AbstractPopoverDirective, type DbxPopoverService } from '@dereekb/dbx-web';
@@ -66,9 +66,7 @@ export interface DbxDurationPickerPopoverData {
  */
 @Component({
   templateUrl: 'duration.picker.popover.component.html',
-  imports: [MatIconModule, MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, MatButtonModule]
 })
 export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<TimeDurationData, DbxDurationPickerPopoverData> {
   readonly durationData = signal<TimeDurationData>(this.popover.data?.current ?? {});

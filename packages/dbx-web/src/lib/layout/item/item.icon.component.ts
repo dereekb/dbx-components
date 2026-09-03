@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -33,9 +33,7 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  standalone: true,
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule]
 })
 export class DbxIconItemComponent {
   readonly icon = input<Maybe<string>>();

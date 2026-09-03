@@ -14,7 +14,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/angular:application",
+      "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
@@ -62,6 +62,13 @@
           }],
           "outputHashing": "all"
         },
+        "staging": {
+          "fileReplacements": [{
+            "replace": "ANGULAR_APP_FOLDER/src/environments/environment.ts",
+            "with": "ANGULAR_APP_FOLDER/src/environments/environment.staging.ts"
+          }],
+          "outputHashing": "all"
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,
@@ -72,7 +79,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@nx/angular:dev-server",
+      "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "ANGULAR_APP_NAME:build-base:production",
@@ -88,7 +95,7 @@
       "defaultConfiguration": "development"
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "ANGULAR_APP_NAME:build"
       }
@@ -101,10 +108,10 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "../../coverage/ANGULAR_APP_FOLDER"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "ci-deploy-prod": {
@@ -117,7 +124,7 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run ANGULAR_APP_NAME:build-base:prod"
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:production"
           },
           {
             "command": "npx firebase --project=prod deploy --only hosting:prod"

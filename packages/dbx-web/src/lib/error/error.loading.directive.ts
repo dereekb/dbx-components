@@ -19,8 +19,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  * ```
  */
 @Directive({
-  selector: '[dbxLoadingError]',
-  standalone: true
+  selector: '[dbxLoadingError]'
 })
 export class DbxLoadingErrorDirective {
   readonly error = inject(DbxErrorComponent, { host: true });

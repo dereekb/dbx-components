@@ -8,8 +8,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
  * Directive that synchronizes a map's virtual size with the size of the element.
  */
 @Directive({
-  selector: '[dbxMapboxLayoutVirtualResizeSync]',
-  standalone: true
+  selector: '[dbxMapboxLayoutVirtualResizeSync]'
 })
 export class DbxMapboxLayoutVirtualResizeSyncComponent {
   readonly dbxMapboxLayoutComponent = inject(DbxMapboxLayoutComponent, { host: true });

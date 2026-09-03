@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import {
@@ -37,9 +37,7 @@ import { type WorthKnowingItemValue, type WorthKnowingItemValueWithSelection } f
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-no-item-padding'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocWorthKnowingItemListComponent extends AbstractDbxSelectionListWrapperDirective<WorthKnowingItemValue> {
   constructor() {
@@ -57,9 +55,7 @@ export class DocWorthKnowingItemListComponent extends AbstractDbxSelectionListWr
   providers: provideDbxListView(DocWorthKnowingItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocWorthKnowingItemListViewComponent extends AbstractDbxSelectionListViewDirective<WorthKnowingItemValue> {
   // Drop `icon` (template paints its own tile) and `anchor` (button owns it; row stays non-clickable).
@@ -87,9 +83,7 @@ export class DocWorthKnowingItemListViewComponent extends AbstractDbxSelectionLi
       }
     </div>
   `,
-  imports: [MatButtonModule, DbxColorDirective, DbxIconTileComponent, DbxButtonComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, DbxColorDirective, DbxIconTileComponent, DbxButtonComponent, DbxAnchorComponent]
 })
 export class DocWorthKnowingItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<WorthKnowingItemValue> {
   get icon(): string {

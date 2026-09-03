@@ -48,10 +48,3 @@ export class TestFirebaseStorageContextFixture<F extends TestFirebaseStorageInst
  * Factory type for creating {@link TestFirebaseStorageContextFixture} instances in test suites.
  */
 export type TestFirebaseStorageContextFactory = TestContextFactory<TestFirebaseStorageContextFixture>;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use TestFirebaseStorageContextFactory instead.
- */
-export type JestTestFirebaseStorageContextFactory = TestFirebaseStorageContextFactory;

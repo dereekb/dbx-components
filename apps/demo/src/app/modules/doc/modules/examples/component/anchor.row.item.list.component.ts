@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -18,11 +18,9 @@ import { type AnchorRowItemValue, type AnchorRowItemValueWithSelection } from '.
   selector: 'doc-anchor-row-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-card-items-list'
-  },
-  standalone: true
+  }
 })
 export class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorRowItemValue> {
   constructor() {
@@ -40,9 +38,7 @@ export class DocAnchorRowItemListComponent extends AbstractDbxSelectionListWrapp
   providers: provideDbxListView(DocAnchorRowItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorRowItemValue> {
   readonly config: DbxSelectionValueListViewConfig<AnchorRowItemValueWithSelection> = {
@@ -66,9 +62,7 @@ export class DocAnchorRowItemListViewComponent extends AbstractDbxSelectionListV
       </div>
     </div>
   `,
-  imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent]
 })
 export class DocAnchorRowItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorRowItemValue> {
   get icon(): string {

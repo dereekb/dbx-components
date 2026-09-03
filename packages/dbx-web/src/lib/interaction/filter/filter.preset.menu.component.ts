@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { type FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
@@ -20,9 +20,7 @@ import { NgClass } from '@angular/common';
 @Component({
   selector: 'dbx-preset-filter-menu',
   templateUrl: './filter.preset.menu.component.html',
-  imports: [NgClass, MatButtonModule, MatMenuModule, MatIconModule, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, MatButtonModule, MatMenuModule, MatIconModule, DbxAnchorComponent]
 })
 export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {
   readonly config = input<DbxPresetFilterMenuConfig>({});

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -224,9 +224,7 @@ describe('DbxFirebaseFormSpaceSubmitButtonComponent', () => {
   template: `
     <dbx-firebase-formspace-submit-button text="Submit Form Space" [requireComplete]="requireCompleteSignal()" [disabled]="disabledSignal()" [incompleteHint]="incompleteHintSignal()"></dbx-firebase-formspace-submit-button>
   `,
-  imports: [DbxFirebaseFormSpaceSubmitButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSubmitButtonComponent]
 })
 class TestDbxFirebaseFormSpaceSubmitButtonComponent {
   readonly button = viewChild.required(DbxFirebaseFormSpaceSubmitButtonComponent);

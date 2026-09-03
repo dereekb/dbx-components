@@ -37,10 +37,3 @@ export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestF
  * Factory type for creating {@link TestFirestoreContextFixture} instances in test suites.
  */
 export type TestFirestoreContextFactory = TestContextFactory<TestFirestoreContextFixture>;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use TestFirestoreContextFactory instead.
- */
-export type JestTestFirestoreContextFactory = TestFirestoreContextFactory;

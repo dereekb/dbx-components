@@ -1,5 +1,5 @@
 import { DbxScheduleSelectionCalendarDateDaysComponent } from './calendar.schedule.selection.days.component';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxLabelBlockComponent } from '@dereekb/dbx-web';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.schedule.selection.range.component';
 
@@ -13,8 +13,6 @@ import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.sched
       </dbx-label-block>
     </dbx-content-container>
   `,
-  imports: [DbxContentContainerDirective, DbxScheduleSelectionCalendarDateRangeComponent, DbxLabelBlockComponent, DbxScheduleSelectionCalendarDateDaysComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxContentContainerDirective, DbxScheduleSelectionCalendarDateRangeComponent, DbxLabelBlockComponent, DbxScheduleSelectionCalendarDateDaysComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverContentComponent {}

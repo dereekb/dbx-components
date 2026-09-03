@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { dbxForgeFlexLayout, dbxForgeExpandWrapper, dbxForgeToggleWrapper, dbxForgeNameField, dbxForgeSectionWrapper, dbxForgeSubsectionWrapper, dbxForgeInfoWrapper, dbxForgeStyleWrapper, dbxForgeTextIsAvailableField, dbxForgeNumberSliderField, dbxForgeCityField, dbxForgeStateField, dbxForgeZipCodeField, dbxForgeCountryField, dbxForgeToggleField } from '@dereekb/dbx-form';
 import { Observable } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -10,13 +10,11 @@ import { DocFormForgeExampleComponent } from '../../shared/component/forge.examp
 
 @Component({
   templateUrl: './wrapper.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent]
 })
 export class DocFormWrapperComponent {
   readonly forgeFlexFieldConfig: FormConfig = {
-    fields: [dbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })] })]
+    fields: [dbxForgeFlexLayout({ fields: [dbxForgeCityField({}), dbxForgeStateField({ hint: 'State Description' }), dbxForgeToggleField({ key: 'toggle', label: 'Toggle', hint: 'Toggle Description' })] })]
   };
 
   readonly forgeFlexThreeFieldConfig: FormConfig = {
@@ -129,7 +127,7 @@ export class DocFormWrapperComponent {
       dbxForgeTextIsAvailableField({
         key: 'username',
         label: 'Username',
-        description: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
+        hint: 'Type a value and wait — shows loading bar during async check. Type "taken" to see a validation error.',
         checkValueIsAvailable: (value: string) => {
           return new Observable<boolean>((subscriber) => {
             const timer = setTimeout(() => {
@@ -150,14 +148,14 @@ export class DocFormWrapperComponent {
       dbxForgeNumberSliderField({
         key: 'rating',
         label: 'Rating',
-        description: 'Must be above 50.',
+        hint: 'Must be above 50.',
         min: 0,
         max: 100,
         validators: [{ type: 'custom', expression: 'fieldValue > 50', kind: 'minRating' }],
         validationMessages: { minRating: 'Rating must be above 50.' },
         props: { thumbLabel: true }
       }),
-      dbxForgeNumberSliderField({ key: 'volume', label: 'Volume', description: 'Pick a volume.', min: 0, max: 100, step: 5 })
+      dbxForgeNumberSliderField({ key: 'volume', label: 'Volume', hint: 'Pick a volume.', min: 0, max: 100, step: 5 })
     ]
   };
 }

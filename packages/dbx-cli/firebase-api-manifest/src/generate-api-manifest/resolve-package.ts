@@ -158,7 +158,7 @@ export function locatePackageForPath(workspaceRoot: string, startPath: string): 
  * @returns The workspace-relative path with forward slashes.
  */
 export function relPath(workspaceRoot: string, absolutePath: string): string {
-  return relative(workspaceRoot, absolutePath).split('\\').join('/');
+  return relative(workspaceRoot, absolutePath).replaceAll('\\', '/');
 }
 
 /**

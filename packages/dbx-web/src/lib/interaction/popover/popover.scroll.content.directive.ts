@@ -22,8 +22,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   host: {
     class: 'd-block dbx-popover-scroll-content',
     '[class]': 'sizingClassesSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxPopoverScrollContentDirective {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);

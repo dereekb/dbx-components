@@ -11,7 +11,6 @@ import { Directive } from '@angular/core';
   selector: 'dbx-form-spacer,[dbxFormSpacer],.dbx-form-spacer',
   host: {
     class: 'd-block dbx-form-spacer'
-  },
-  standalone: true
+  }
 })
 export class DbxFormSpacerDirective {}

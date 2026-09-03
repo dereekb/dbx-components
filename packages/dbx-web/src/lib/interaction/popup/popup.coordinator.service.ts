@@ -1,5 +1,5 @@
 import { type DbxPopupKey, type DbxPopupController } from './popup';
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -8,9 +8,7 @@ import { BehaviorSubject } from 'rxjs';
  *
  * When a new popup is added with a key that already exists, the previous popup is closed automatically.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxPopupCoordinatorService {
   private readonly _popups = completeOnDestroy(new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map()));
 

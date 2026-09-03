@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { type Observable, switchMap, first } from 'rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -15,7 +15,7 @@ import { type OAuthInteractionConsentRequest, type OidcInteractionUid, type OAut
  * After successful login/consent submission, the server returns a redirect URL.
  * The component is responsible for navigating to it (e.g., via `window.location.href`).
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DbxFirebaseOidcInteractionService {
   private readonly http = inject(HttpClient);
   private readonly _authService = inject(DbxFirebaseAuthService);

@@ -21,8 +21,7 @@ import { type ResizedEvent, resizeSignal } from './resize';
  * ```
  */
 @Directive({
-  selector: '[dbxResized]',
-  standalone: true
+  selector: '[dbxResized]'
 })
 export class DbxResizedDirective {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);

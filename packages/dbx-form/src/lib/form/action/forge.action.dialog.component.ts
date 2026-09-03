@@ -69,7 +69,6 @@ export interface DbxForgeActionDialogComponentConfig<O> {
       </div>
     </dbx-dialog-content>
   `,
-  standalone: true,
   providers: [provideDbxForgeFormContext()],
   imports: [DbxDialogContentDirective, DbxActionModule, DbxButtonModule, DbxDialogContentCloseComponent, DbxForgeFormComponent, DbxFormSourceDirective, DbxActionFormDirective]
 })

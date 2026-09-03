@@ -42,8 +42,7 @@ export type DbxSetStyleMode = 'both' | 'global' | 'self';
   host: {
     class: 'dbx-style-root',
     '[class]': 'outputStyleClassSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxSetStyleDirective implements OnDestroy {
   private readonly _styleService = inject(DbxStyleService);

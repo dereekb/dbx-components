@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
@@ -34,8 +34,6 @@ interface DbxStyleDemoShapeStep {
  */
 @Component({
   selector: 'dbx-style-demo-shape-scale-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, DbxButtonComponent],
   template: `
     <dbx-docs-ui-example header="Shape Scale" hint="The Material 3 corner-radius scale.">

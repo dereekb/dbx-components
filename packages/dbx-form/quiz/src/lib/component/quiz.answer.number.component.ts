@@ -50,8 +50,7 @@ interface QuizAnswerNumberChoice {
  */
 @Component({
   templateUrl: './quiz.answer.number.component.html',
-  imports: [DbxButtonModule, DbxWindowKeyDownListenerDirective],
-  standalone: true
+  imports: [DbxButtonModule, DbxWindowKeyDownListenerDirective]
 })
 export class QuizAnswerNumberComponent {
   readonly questionAccessor = inject<QuizQuestionAccessor<number>>(QuizQuestionAccessor);

@@ -34,13 +34,13 @@ const rootVersions = {
 // Find all package.json files under packages/
 const packageFiles = glob.sync('packages/**/package.json', {
   cwd: ROOT_DIR,
-  ignore: ['**/node_modules/**'],
+  ignore: ['**/node_modules/**', '**/dist/**'],
   absolute: true
 });
 
 const appPackageFiles = glob.sync('apps/**/package.json', {
   cwd: ROOT_DIR,
-  ignore: ['**/node_modules/**'],
+  ignore: ['**/node_modules/**', '**/dist/**'],
   absolute: true
 });
 

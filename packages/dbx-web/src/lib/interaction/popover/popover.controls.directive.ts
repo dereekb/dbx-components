@@ -20,8 +20,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   selector: 'dbx-popover-controls,[dbxPopoverControls],.dbx-popover-controls',
   host: {
     class: 'd-block dbx-popover-controls'
-  },
-  standalone: true
+  }
 })
 export class DbxPopoverControlsDirective implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });

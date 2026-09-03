@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -13,9 +13,7 @@ import { DemoAuthLoginViewComponent } from '../../../../demo/modules/auth/contai
  */
 @Component({
   templateUrl: './oidc.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DemoAuthLoginViewComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DemoAuthLoginViewComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFirebaseOAuthLoginViewComponent, DbxFirebaseOAuthConsentViewComponent]
 })
 export class DocExtensionOidcComponent {
   /**

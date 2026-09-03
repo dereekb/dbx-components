@@ -1,5 +1,4 @@
 import { demoCallModel } from './function/model/crud.functions';
-import { PROFILE_SET_USERNAME_KEY } from 'demo-firebase';
 import { type NestAppPromiseGetter, nestServerInstance, type NestServerInstanceConfig } from '@dereekb/firebase-server';
 import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, applyOidcAuthMiddleware, applyOidcCorsMiddleware } from '@dereekb/firebase-server/oidc';
@@ -8,7 +7,7 @@ import { CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE }
 import { DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/discord';
 import { ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/zoho';
 import { DemoApiAppModule } from './app.module';
-import { profileSetUsername, initUserOnCreate } from './function';
+import { initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
 import { type INestApplication } from '@nestjs/common';
 
@@ -39,13 +38,7 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     // Auth
     initUserOnCreate: initUserOnCreate(nest),
     // Model
-    [CALL_MODEL_APP_FUNCTION_KEY]: demoCallModel(nest),
-    // ---
-    // API Calls
-    // Profile
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    [PROFILE_SET_USERNAME_KEY]: profileSetUsername(nest)
-    // Guestbook
+    [CALL_MODEL_APP_FUNCTION_KEY]: demoCallModel(nest)
   };
 }
 

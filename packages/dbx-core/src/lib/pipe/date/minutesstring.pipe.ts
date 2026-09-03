@@ -28,7 +28,6 @@ import { type Maybe, type Minutes, MINUTES_IN_DAY, MINUTES_IN_HOUR } from '@dere
  */
 @Pipe({
   name: 'minutesString',
-  standalone: true,
   pure: false
 })
 export class MinutesStringPipe implements PipeTransform {

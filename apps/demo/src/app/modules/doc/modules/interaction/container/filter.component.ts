@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, inject } from '@angular/core';
+import { Component, type OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective } from '@dereekb/dbx-core';
 import { FilterMap, type FilterMapKey } from '@dereekb/rxjs';
@@ -21,8 +21,6 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './filter.component.html',
   providers: [FilterMap],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,

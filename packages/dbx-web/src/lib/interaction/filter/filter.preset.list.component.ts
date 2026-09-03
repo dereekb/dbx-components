@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlist.component';
@@ -16,8 +16,6 @@ import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlis
   template: `
     <dbx-anchor-list [anchors]="presetAnchorsSignal()"></dbx-anchor-list>
   `,
-  imports: [DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxAnchorListComponent]
 })
 export class DbxPresetFilterListComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {}

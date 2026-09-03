@@ -26,7 +26,6 @@ import { Directive } from '@angular/core';
   selector: 'dbx-card-box-container, [dbxCardBoxContainer]',
   host: {
     class: 'd-block dbx-card-box-container'
-  },
-  standalone: true
+  }
 })
 export class DbxCardBoxContainerDirective {}

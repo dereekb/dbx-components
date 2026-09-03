@@ -155,27 +155,3 @@ export function zohoAccessTokenSystemStateDataConverterFactory(config: ZohoAcces
 export function loadZohoAccessTokenSystemState<D extends FirestoreDocument<SystemState<SystemStateStoredData>>>(accessor: FirestoreDocumentAccessor<SystemState<SystemStateStoredData>, D>): SystemStateDocument<ZohoAccessTokenSystemStateData> {
   return accessor.loadDocumentForId(ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE) as unknown as SystemStateDocument<ZohoAccessTokenSystemStateData>;
 }
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated stores the access token in PLAINTEXT. Use
- * {@link zohoAccessTokenSystemStateEmbeddedTokenConverterFactory} instead, which encrypts it at rest.
- */
-export const zohoAccessTokenSystemStateEmbeddedTokenConverter = firestoreSubObject<ZohoAccessTokenSystemStateEmbeddedToken>({
-  objectField: {
-    fields: {
-      key: firestoreString(),
-      accessToken: firestoreString(),
-      scope: firestoreString(),
-      apiDomain: firestoreString(),
-      expiresIn: firestoreNumber({ default: 3600 }),
-      expiresAt: firestoreDate()
-    }
-  }
-});
-
-/**
- * @deprecated stores access tokens in PLAINTEXT. Use {@link zohoAccessTokenSystemStateDataConverterFactory}
- * instead, and register it on a server-only SystemStatePrivate collection.
- */
-export const zohoAccessTokenSystemStateDataConverter: SystemStateStoredDataFieldConverterConfig<ZohoAccessTokenSystemStateData> = zohoAccessTokenSystemStateDataConverterForEmbeddedTokenConverter(zohoAccessTokenSystemStateEmbeddedTokenConverter);

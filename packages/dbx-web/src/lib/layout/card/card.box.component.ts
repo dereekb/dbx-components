@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 /**
@@ -46,9 +46,7 @@ import { MatIconModule } from '@angular/material/icon';
       </div>
     </div>
   `,
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule]
 })
 export class DbxCardBoxComponent {
   readonly header = input<string>();

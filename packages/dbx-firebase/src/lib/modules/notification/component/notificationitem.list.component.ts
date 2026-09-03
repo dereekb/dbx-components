@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, provideDbxListView, type DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule } from '@dereekb/dbx-web';
 import { type NotificationItem } from '@dereekb/firebase';
 import { cachedGetter } from '@dereekb/util';
@@ -19,9 +19,7 @@ export type NotificationItemWithSelection = DbxValueAsListItem<NotificationItem>
   selector: 'dbx-firebase-notificationitem-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent),
-  standalone: true
+  providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent)
 })
 export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelectionListWrapperDirective<NotificationItem> {
   constructor() {
@@ -39,9 +37,7 @@ export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelecti
   selector: 'dbx-firebase-notificationitem-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: provideDbxListView(DbxFirebaseNotificationItemListViewComponent),
-  standalone: true
+  providers: provideDbxListView(DbxFirebaseNotificationItemListViewComponent)
 })
 export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSelectionListViewDirective<NotificationItem> {
   readonly config: DbxSelectionValueListViewConfig<NotificationItemWithSelection> = {
@@ -63,9 +59,7 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
       </div>
     </div>
   `,
-  imports: [DatePipe, CutTextPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DatePipe, CutTextPipe]
 })
 export class DbxFirebaseNotificationItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<NotificationItem> {
   readonly dbxFirebaseNotificationTemplateService = inject(DbxFirebaseNotificationTemplateService);

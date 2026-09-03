@@ -1,4 +1,4 @@
-import { Component, type AfterViewInit, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type AfterViewInit, inject, computed } from '@angular/core';
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { shareReplay, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
@@ -20,9 +20,7 @@ import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
  */
 @Component({
   templateUrl: './action.snackbar.component.html',
-  standalone: true,
-  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgClass, DbxActionSourceDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxSpacerDirective, DbxActionDirective]
 })
 export class DbxActionSnackbarComponent implements AfterViewInit {
   readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);

@@ -22,7 +22,7 @@
           "optional": false
         }
       ],
-      "returns": "`true` if the input is a Firebase {@link HttpsError }.",
+      "returns": "`true` if the input is a Firebase {@link HttpsError}.",
       "tags": [
         "firebase",
         "https",
@@ -56,7 +56,7 @@
           "optional": false
         }
       ],
-      "returns": "`true` if the input is a Firebase Admin {@link admin.FirebaseError }.",
+      "returns": "`true` if the input is a Firebase Admin {@link admin.FirebaseError}.",
       "tags": [
         "firebase",
         "admin",
@@ -89,7 +89,7 @@
           "optional": false
         }
       ],
-      "returns": "Structured {@link FirebaseServerErrorInfo } with classified error details.",
+      "returns": "Structured {@link FirebaseServerErrorInfo} with classified error details.",
       "tags": [
         "firebase",
         "error",
@@ -246,7 +246,7 @@
         {
           "name": "handleFirebaseErrorFn",
           "type": "ThrowErrorFunction<admin.FirebaseError>",
-          "description": "- Handler that receives the typed {@link admin.FirebaseError }.",
+          "description": "- Handler that receives the typed {@link admin.FirebaseError}.",
           "optional": false
         }
       ],

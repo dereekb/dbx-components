@@ -23,7 +23,6 @@ import { UIRouterModule } from '@uirouter/angular';
 
 @Component({
   selector: 'app-shell',
-  standalone: true,
   imports: [DbxSidenavPageComponent, DbxSidenavComponent, DbxContentPageDirective, UIRouterModule],
   template: \`
     <dbx-sidenav-page>
@@ -32,8 +31,7 @@ import { UIRouterModule } from '@uirouter/angular';
         <ui-view></ui-view>
       </div>
     </dbx-sidenav-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class AppShellComponent {
   readonly navAnchors: ClickableAnchor[] = [

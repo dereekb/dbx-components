@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocHeroCardExampleComponent } from '../examples/hero.card.example.component';
@@ -8,8 +8,6 @@ import { DocHorizontalCardExampleComponent } from '../examples/horizontal.card.e
 
 @Component({
   templateUrl: './card.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocHeroCardExampleComponent, DocSupportBannerCardExampleComponent, DocFeedbackSelectionCardExampleComponent, DocHorizontalCardExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocHeroCardExampleComponent, DocSupportBannerCardExampleComponent, DocFeedbackSelectionCardExampleComponent, DocHorizontalCardExampleComponent]
 })
 export class DocExamplesCardComponent {}

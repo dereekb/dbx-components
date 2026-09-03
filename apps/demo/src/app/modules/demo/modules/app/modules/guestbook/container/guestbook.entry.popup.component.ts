@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogModule, DbxErrorComponent } from '@dereekb/dbx-web';
 import { type MatDialog } from '@angular/material/dialog';
 import { type WorkUsingContext, switchMapWhileTrue, type IsEqualFunction } from '@dereekb/rxjs';
@@ -23,9 +23,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
       </div>
     </dbx-dialog-content>
   `,
-  imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent]
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {

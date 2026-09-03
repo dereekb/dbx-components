@@ -26,8 +26,7 @@ import { filterMaybe } from '@dereekb/rxjs';
  * ```
  */
 @Directive({
-  selector: '[dbxActionSnackbarError]',
-  standalone: true
+  selector: '[dbxActionSnackbarError]'
 })
 export class DbxActionSnackbarErrorDirective {
   readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);

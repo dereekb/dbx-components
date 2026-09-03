@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe } from '@dereekb/util';
-import { beginLoading, isLoadingStateLoading, type ListLoadingState, type LoadingState, successResult } from '@dereekb/rxjs';
-import { type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { beginLoading, isLoadingStateLoading, type ListLoadingState, successResult } from '@dereekb/rxjs';
+import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { DbxErrorComponent, DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { DbxFirebaseExternalConnectionListComponent } from '../component/externalconnection.list.component';
@@ -43,10 +43,8 @@ import { DbxFirebaseUserExternalConnectionsStore } from '../store/userexternalco
   host: {
     class: 'd-block dbx-firebase-external-connections'
   },
-  standalone: true,
   imports: [DbxErrorComponent, DbxFirebaseExternalConnectionListComponent, DbxListEmptyContentComponent],
-  providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [UserExternalConnectionDocumentStore, DbxFirebaseUserExternalConnectionsStore]
 })
 export class DbxFirebaseExternalConnectionsComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
@@ -72,7 +70,7 @@ export class DbxFirebaseExternalConnectionsComponent {
   /**
    * THE shared subscription. Every row is computed from this one document read.
    */
-  private readonly _entriesStateSignal = toSignal(this.dbxFirebaseUserExternalConnectionsStore.entriesLoadingState$, { initialValue: beginLoading<UserExternalConnectionEntryMap>() as LoadingState<UserExternalConnectionEntryMap> });
+  private readonly _entriesStateSignal = toSignal(this.dbxFirebaseUserExternalConnectionsStore.entriesLoadingState$, { initialValue: beginLoading() });
 
   readonly signedInSignal = computed(() => this._currentUidSignal() != null);
 

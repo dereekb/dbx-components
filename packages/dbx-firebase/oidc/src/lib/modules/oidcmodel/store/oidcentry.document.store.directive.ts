@@ -8,8 +8,7 @@ import { type OidcEntry, type OidcEntryDocument } from '@dereekb/firebase';
  */
 @Directive({
   selector: '[dbxOidcEntryDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(OidcEntryDocumentStoreDirective, OidcEntryDocumentStore),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreDirective(OidcEntryDocumentStoreDirective, OidcEntryDocumentStore)
 })
 export class OidcEntryDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<OidcEntry, OidcEntryDocument, OidcEntryDocumentStore> {
   constructor() {

@@ -10,7 +10,6 @@ export type DemoCalendarTestEventFormValue = Pick<ProfileCreateTestCalendarEvent
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'demo-calendar-test-event-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule]
 })
 export class DemoCalendarTestEventFormComponent extends AbstractSyncForgeFormDirective<DemoCalendarTestEventFormValue> {

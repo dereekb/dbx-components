@@ -127,8 +127,7 @@ describe('DbxFirebaseStorageFileDownloadButtonComponent public storage path', ()
   template: `
     <dbx-firebase-storagefile-download-button [config]="config" [source]="source()"></dbx-firebase-storagefile-download-button>
   `,
-  imports: [DbxFirebaseStorageFileDownloadButtonComponent],
-  standalone: true
+  imports: [DbxFirebaseStorageFileDownloadButtonComponent]
 })
 class TestDbxFirebaseStorageFileDownloadButtonComponent {
   readonly downloadButton = viewChild.required(DbxFirebaseStorageFileDownloadButtonComponent);

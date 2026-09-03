@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
 import { DbxLoadingComponent } from '../../loading';
 import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
@@ -22,9 +22,7 @@ import { DbxZipBlobPreviewComponent } from './zip.blob.preview.component';
       <dbx-zip-blob-preview [downloadFileName]="downloadFileName()" [blob]="zipFileBlobSignal()"></dbx-zip-blob-preview>
     </dbx-loading>
   `,
-  standalone: true,
-  imports: [DbxLoadingComponent, DbxZipBlobPreviewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLoadingComponent, DbxZipBlobPreviewComponent]
 })
 export class DbxZipPreviewComponent {
   /**

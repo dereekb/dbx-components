@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, computed, input } from '@angular/core';
+import { Component, inject, computed, input } from '@angular/core';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
@@ -13,9 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-button [disabled]="disableButtonSignal()" [buttonDisplay]="buttonDisplaySignal()" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
   readonly disabled = input<Maybe<boolean>>();

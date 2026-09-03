@@ -22,8 +22,7 @@ import { transformEmptyStringInputToUndefined } from '../../../util/input';
  * @see {@link DbxActionIsWorkingDirective} for content shown during the working state.
  */
 @Directive({
-  selector: '[dbxActionTriggered]',
-  standalone: true
+  selector: '[dbxActionTriggered]'
 })
 export class DbxActionTriggeredDirective extends AbstractIfDirective {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);

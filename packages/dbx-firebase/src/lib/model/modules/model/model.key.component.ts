@@ -12,7 +12,6 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-firebase-model-key',
   templateUrl: './model.key.component.html',
-  standalone: true,
   imports: [DbxDetailBlockComponent, DbxButtonComponent, DbxClickToCopyTextComponent, DbxAnchorComponent]
 })
 export class DbxFirebaseModelKeyComponent {

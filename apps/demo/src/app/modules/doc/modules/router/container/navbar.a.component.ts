@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'doc-router-navbar-a',
@@ -6,8 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     <div>
       <p>Page A</p>
     </div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocRouterNavbarAComponent {}

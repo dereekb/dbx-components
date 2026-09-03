@@ -1,4 +1,4 @@
-import { Component, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { type DbxPopupKey, AbstractPopupDirective, DbxPopupService, type PopupPosition, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';
@@ -17,9 +17,7 @@ export interface DocInteractionPopupConfig {
       <doc-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></doc-interaction-example-popup-content>
     </dbx-popup-content>
   `,
-  standalone: true,
-  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent]
 })
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> {
   private readonly popupService = inject(DbxPopupService);

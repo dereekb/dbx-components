@@ -14,7 +14,6 @@ import { DbxLinkComponent } from '@dereekb/dbx-web';
       <dbx-link [anchor]="privacyAnchor">Privacy</dbx-link>
     </div>
   `,
-  standalone: true,
   imports: [DbxLinkComponent]
 })
 export class DbxFirebaseLoginTermsSimpleComponent {

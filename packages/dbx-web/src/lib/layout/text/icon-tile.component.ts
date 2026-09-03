@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 
@@ -58,9 +58,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'dbx-icon-tile',
     '[class.dbx-icon-tile-round]': 'round()'
   },
-  imports: [MatIconModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule]
 })
 export class DbxIconTileComponent {
   readonly icon = input<Maybe<string>>();

@@ -16,8 +16,7 @@ import { DbxActionFormDirective } from '../form.action.directive';
  * @typeParam O - The output value type passed to the action source.
  */
 @Directive({
-  selector: '[dbxActionFormSafety]',
-  standalone: true
+  selector: '[dbxActionFormSafety]'
 })
 export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
   readonly dbxActionForm = inject(DbxActionFormDirective<T>, { host: true });

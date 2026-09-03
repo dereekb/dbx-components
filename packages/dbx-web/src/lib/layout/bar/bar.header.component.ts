@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxBarDirective } from './bar.directive';
@@ -41,9 +41,7 @@ import { DbxBarDirective } from './bar.directive';
   host: {
     class: 'dbx-bar-header dbx-hint'
   },
-  imports: [DbxBarDirective, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxBarDirective, MatIconModule]
 })
 export class DbxBarHeaderComponent {
   readonly text = input<Maybe<string>>();

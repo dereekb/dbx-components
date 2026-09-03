@@ -32,7 +32,6 @@ export const dbxFirebaseDocumentStoreContextModelEntitiesSourceFactory = (storeC
       useFactory: dbxFirebaseDocumentStoreContextModelEntitiesSourceFactory,
       deps: [DbxFirebaseDocumentStoreContextStore]
     }
-  ],
-  standalone: true
+  ]
 })
 export class DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective {}

@@ -1,5 +1,5 @@
 import { incrementingNumberTimer, successResult } from '@dereekb/rxjs';
-import { Component, type OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, type OnInit, inject } from '@angular/core';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
@@ -15,9 +15,7 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directive.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe]
 })
 export class DocFormDirectiveComponent implements OnInit {
   private readonly _sub = cleanSubscription();
@@ -46,7 +44,7 @@ export class DocFormDirectiveComponent implements OnInit {
   } as const satisfies FormConfig;
 
   readonly forgeExampleConfig: FormConfig = {
-    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), dbxForgeEmailField({ key: 'email' }), dbxForgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), dbxForgeToggleField({ key: 'active', label: 'Active', description: 'Toggle active state.' })]
+    fields: [dbxForgeTextField({ key: 'name', label: 'Name', required: true, placeholder: 'Enter a name...' }), dbxForgeEmailField({ key: 'email' }), dbxForgeNumberField({ key: 'age', label: 'Age', min: 0, max: 120 }), dbxForgeToggleField({ key: 'active', label: 'Active', hint: 'Toggle active state.' })]
   };
 
   readonly forgeExampleData = { name: 'Test User', email: 'test@example.com', age: 25, active: true };

@@ -1,5 +1,5 @@
 import { type Observable, shareReplay } from 'rxjs';
-import { Component, ChangeDetectionStrategy, input, computed, signal, type Signal } from '@angular/core';
+import { Component, input, computed, signal, type Signal } from '@angular/core';
 import { type ProgressBarMode } from '@angular/material/progress-bar';
 import { type LoadingContext, type LoadingContextEvent, type MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { type ErrorInput, type Maybe } from '@dereekb/util';
@@ -52,9 +52,7 @@ export interface DbxLoadingComponentState {
       <ng-content errorAction select="[errorAction]"></ng-content>
     </dbx-basic-loading>
   `,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxBasicLoadingComponent]
 })
 export class DbxLoadingComponent {
   private readonly _contextOverrideSignal = signal<MaybeObservableOrValue<LoadingContext>>(undefined);

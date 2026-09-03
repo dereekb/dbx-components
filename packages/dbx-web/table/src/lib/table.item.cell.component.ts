@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { map, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -11,9 +11,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableItemDirective<T, C> {
   readonly column = input<Maybe<DbxTableColumn<C>>>();

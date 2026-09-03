@@ -98,8 +98,7 @@ export abstract class AbstractDbxActionValueGetterDirective<T> {
  */
 @Directive({
   exportAs: 'dbxActionValueGetter',
-  selector: '[dbxActionValueGetter]',
-  standalone: true
+  selector: '[dbxActionValueGetter]'
 })
 export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueGetterDirective<T> {
   readonly dbxActionValueGetter = input<Maybe<DbxActionValueGetterValueGetterFunction<T>>>();

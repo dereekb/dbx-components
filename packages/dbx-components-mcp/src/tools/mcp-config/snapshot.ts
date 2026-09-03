@@ -142,5 +142,5 @@ function relativeOrAbsolute(from: string, target: string): string {
   const rel = relative(from, target);
   if (rel.length === 0) return '.';
   if (rel.startsWith('..')) return target;
-  return rel.split('\\').join('/');
+  return rel.replaceAll('\\', '/');
 }

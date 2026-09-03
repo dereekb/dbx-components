@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import type { FieldDef, FormConfig } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 import { DbxForgeFormComponentImportsModule, dbxForgeFormComponentProviders, dbxForgePickableChipField, type PickableValueFieldValue } from '@dereekb/dbx-form';
@@ -27,10 +27,8 @@ export interface DbxFormStyleDemoPresetsFormValue {
   template: `
     <dbx-forge></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule],
-  providers: dbxForgeFormComponentProviders(),
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: dbxForgeFormComponentProviders()
 })
 export class DbxFormStyleDemoPresetsComponent extends AbstractDbxFormStyleDemoControlsFormDirective<DbxFormStyleDemoPresetsFormValue> {
   readonly formConfig: FormConfig = {

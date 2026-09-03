@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
@@ -21,9 +21,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
       </mat-toolbar>
     </div>
   `,
-  imports: [MatToolbarModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatToolbarModule]
 })
 export class DbxFlagComponent {
   readonly color = input<ThemePalette>('accent');

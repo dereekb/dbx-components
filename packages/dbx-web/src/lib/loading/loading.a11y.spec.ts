@@ -1,14 +1,14 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { type Maybe } from '@dereekb/util';
 
 describe('Loading a11y', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   describe('DbxBasicLoadingComponent', () => {
     let fixture: ComponentFixture<TestBasicLoadingComponent>;
@@ -91,9 +91,7 @@ describe('Loading a11y', () => {
   template: `
     <dbx-basic-loading [loading]="loading()" [error]="error()"><p>Content</p></dbx-basic-loading>
   `,
-  standalone: true,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxBasicLoadingComponent]
 })
 class TestBasicLoadingComponent {
   readonly loading = input<Maybe<boolean>>();

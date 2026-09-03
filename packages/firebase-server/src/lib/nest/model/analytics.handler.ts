@@ -82,15 +82,3 @@ export const ON_CALL_MODEL_ANALYTICS_SERVICE = 'ON_CALL_MODEL_ANALYTICS_SERVICE'
 export function noopOnCallModelAnalyticsService(): OnCallModelAnalyticsService {
   return { handleOnCallAnalyticsEvent: () => undefined };
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link OnCallModelAnalyticsService} instead.
- */
-export type OnCallModelAnalyticsHandler = OnCallModelAnalyticsService;
-
-/**
- * @deprecated Use {@link ON_CALL_MODEL_ANALYTICS_SERVICE} instead.
- */
-export const ON_CALL_MODEL_ANALYTICS_HANDLER = ON_CALL_MODEL_ANALYTICS_SERVICE;

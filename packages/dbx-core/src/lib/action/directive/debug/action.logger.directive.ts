@@ -22,8 +22,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * ```
  */
 @Directive({
-  selector: '[dbxActionLogger],[dbxActionContextLogger]',
-  standalone: true
+  selector: '[dbxActionLogger],[dbxActionContextLogger]'
 })
 export class DbxActionContextLoggerDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });

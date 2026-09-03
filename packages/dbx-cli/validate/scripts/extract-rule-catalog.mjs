@@ -53,7 +53,8 @@ const CLUSTER_TO_SOURCE = {
   'notification-m-validate-folder': 'dbx_notification_m_validate_folder',
   'system-m-validate-folder': 'dbx_system_m_validate_folder',
   'dbx-asset-validate-app': 'dbx_asset_validate_app',
-  'dbx-asset-validate-folder': 'dbx_asset_validate_folder'
+  'dbx-asset-validate-folder': 'dbx_asset_validate_folder',
+  'workspace-validate': 'dbx_workspace_validate'
 };
 
 const REQUIRED_TAGS = ['dbxRuleSeverity', 'dbxRuleApplies', 'dbxRuleNotApplies', 'dbxRuleFix'];

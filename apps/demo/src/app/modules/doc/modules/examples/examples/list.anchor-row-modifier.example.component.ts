@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
@@ -25,8 +25,6 @@ import { ANCHOR_ROW_ITEM_VALUES, type AnchorRowItemValue } from '../component/an
  */
 @Component({
   selector: 'doc-list-anchor-row-modifier-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocAnchorRowItemListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Anchor-Row List With Modifier" hint="Whole-row click target wired by dbxListItemAnchorModifier — the data has no anchor field of its own.">

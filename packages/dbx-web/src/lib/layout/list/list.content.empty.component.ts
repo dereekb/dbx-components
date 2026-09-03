@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * Displays centered placeholder content within an empty list. Projects its content into a styled container.
@@ -27,8 +27,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     <div class="dbx-list-empty-content">
       <ng-content></ng-content>
     </div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DbxListEmptyContentComponent {}

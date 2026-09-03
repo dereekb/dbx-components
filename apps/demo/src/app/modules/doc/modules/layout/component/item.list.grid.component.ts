@@ -1,5 +1,5 @@
 import { LOREM } from '../../shared/lorem';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxListGridViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListGridViewComponentImportsModule } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';
@@ -10,9 +10,7 @@ import { type DocValue, type DocValueWithSelection } from './item.list';
 @Component({
   selector: 'doc-item-list-grid',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<DocValue> {
   constructor() {
@@ -27,9 +25,7 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
   selector: 'doc-item-list-grid-view',
   template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListGridViewComponent),
-  imports: [DbxListGridViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListGridViewComponentImportsModule]
 })
 export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirective<DocValue> {
   readonly config: DbxValueListGridViewConfig<DocValueWithSelection> = {
@@ -44,8 +40,7 @@ export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirecti
       <h5 class="no-margin dbx-p0">{{ name }}</h5>
       <div>{{ lorem }}</div>
     </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocItemListGridViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

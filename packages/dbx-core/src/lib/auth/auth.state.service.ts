@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { fromDbxAppAuth } from './state';
 import { type DbxAppAuthFullState } from './state/state';
@@ -23,9 +23,7 @@ import { type DbxAppAuthFullState } from './state/state';
  * @see {@link DbxAppAuthFullState}
  * @see {@link fromDbxAppAuth.selectDbxAppAuthUser}
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAppAuthStateService {
   /**
    * NgRx store instance typed to the full auth state.

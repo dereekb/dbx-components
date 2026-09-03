@@ -55,8 +55,7 @@ type ConsentDecision = { readonly outcome: 'approved'; readonly value: ConsentFo
         }
       </div>
     }
-  \`,
-  standalone: true
+  \`
 })
 export class ConsentPageComponent {
   readonly defaults$ = this.store.defaults$;

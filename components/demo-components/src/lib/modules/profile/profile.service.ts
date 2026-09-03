@@ -1,11 +1,9 @@
 import { type ProfileDocument, DemoFirestoreCollections, profileWithUsernameQuery } from 'demo-firebase';
 import { map, type Observable, of, switchMap } from 'rxjs';
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DemoProfileService {
   readonly collections = inject(DemoFirestoreCollections);
 

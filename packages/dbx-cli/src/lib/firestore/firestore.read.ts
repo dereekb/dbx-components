@@ -147,7 +147,7 @@ export interface CliReadSource {
  * and retrying it on the API — which authorizes via `roleMapForModel` under the Admin SDK and would
  * often succeed — would silently launder a rules refusal into a read.
  */
-const CAPABILITY_FAILURE_CODES: readonly string[] = ['INVALID_ARGUMENT', 'AUTH_FORBIDDEN', 'NOT_FOUND'];
+const CAPABILITY_FAILURE_CODES: ReadonlySet<string> = new Set(['INVALID_ARGUMENT', 'AUTH_FORBIDDEN', 'NOT_FOUND']);
 
 /**
  * Input for {@link resolveCliReadSource}.
@@ -218,7 +218,7 @@ async function resolveAutoReadSource(context: CliContext, via: CliReadVia): Prom
     const code = e instanceof CliError ? e.code : undefined;
     const message = e instanceof Error ? e.message : String(e);
 
-    if (code != null && CAPABILITY_FAILURE_CODES.includes(code)) {
+    if (code != null && CAPABILITY_FAILURE_CODES.has(code)) {
       verboseLog(`read: --via auto → api (direct-Firestore session unavailable: ${code} ${message})`);
       result = { source: 'api', reason: 'session-unavailable', via, fallbackError: message };
     } else {

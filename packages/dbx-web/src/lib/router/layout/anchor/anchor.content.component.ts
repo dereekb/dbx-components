@@ -1,5 +1,5 @@
 import { combineLatest, map, type Observable, of, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, inject, computed, input } from '@angular/core';
+import { Component, inject, computed, input } from '@angular/core';
 import { type ClickableAnchor, type ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
@@ -22,7 +22,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  */
 @Component({
   selector: 'dbx-anchor-content',
-  standalone: true,
   imports: [MatIconModule],
   template: `
     @if (iconSignal()) {
@@ -32,7 +31,6 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
       <span>{{ titleSignal() }}</span>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-anchor-content'
   }

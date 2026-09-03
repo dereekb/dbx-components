@@ -9,7 +9,7 @@ interface AstNode {
 const MODEL_MARKERS: ReadonlySet<string> = new Set(['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot', 'dbxModelGroup']);
 const EXCLUSIVE_MODEL_MARKERS: ReadonlySet<string> = new Set(['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot']);
 const MODEL_COMPANIONS: readonly string[] = ['Archetype', 'AggregatesFrom', 'CompositeKey', 'Read'];
-const PROPERTY_COMPANIONS: readonly string[] = ['Variable', 'VariableSyncFlag'];
+const PROPERTY_COMPANIONS: ReadonlySet<string> = new Set(['Variable', 'VariableSyncFlag']);
 const DEFAULT_ALLOWED_ENCODINGS: readonly string[] = ['two-way', 'one-way'];
 const ARCHETYPE_SLUG_PATTERN = /^[a-z][a-z0-9-]*$/;
 const ARCHETYPE_AXIS_PATTERN = /^([A-Za-z_$][A-Za-z0-9_$]*)=([^,]+)$/;
@@ -46,7 +46,7 @@ function reportPropertyOnlyTags(ctx: ModelReportContext, companions: ReadonlyMap
 
 function reportUnknownModelCompanions(ctx: ModelReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, knownCompanions: readonly string[]): void {
   for (const [suffix, instances] of companions.entries()) {
-    if (PROPERTY_COMPANIONS.includes(suffix)) continue;
+    if (PROPERTY_COMPANIONS.has(suffix)) continue;
     if (knownCompanions.includes(suffix)) continue;
     for (const tag of instances) {
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxModelTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: ctx.report });

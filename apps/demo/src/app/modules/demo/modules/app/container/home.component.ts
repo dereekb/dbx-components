@@ -1,11 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxAnchorComponent, DbxContentLayoutModule } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',
-  imports: [DbxContentLayoutModule, DbxAnchorComponent, MatButtonModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentLayoutModule, DbxAnchorComponent, MatButtonModule]
 })
 export class DemoAppHomeComponent {}

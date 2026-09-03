@@ -36,7 +36,6 @@ interface Item {
 
 @Component({
   selector: 'app-items-page',
-  standalone: true,
   imports: [DbxSectionPageComponent, DbxListComponent, DbxListEmptyContentComponent, DbxPagebarComponent, DbxButtonComponent, DbxActionDirective],
   template: \`
     <dbx-section-page header="Items" icon="list" scroll="body">
@@ -51,8 +50,7 @@ interface Item {
         </dbx-list-empty-content>
       </dbx-list>
     </dbx-section-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class ItemsPageComponent {
   readonly items$: Observable<ListLoadingState<Item>> = /* ... */ null!;

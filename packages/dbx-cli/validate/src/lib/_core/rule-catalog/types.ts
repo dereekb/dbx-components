@@ -37,7 +37,8 @@ export type RuleSource =
   | 'dbx_notification_m_validate_folder'
   | 'dbx_system_m_validate_folder'
   | 'dbx_asset_validate_app'
-  | 'dbx_asset_validate_folder';
+  | 'dbx_asset_validate_folder'
+  | 'dbx_workspace_validate';
 
 /**
  * Cross-reference target attached to a rule. The `kind` discriminator

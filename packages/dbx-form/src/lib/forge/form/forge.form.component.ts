@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Observable } from 'rxjs';
@@ -14,9 +14,7 @@ import { AbstractConfigAsyncForgeFormDirective } from './forge.directive';
   selector: 'dbx-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxForgeAsyncConfigFormComponent<O = unknown, C extends FormConfig = FormConfig> extends AbstractConfigAsyncForgeFormDirective<O, C> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$;

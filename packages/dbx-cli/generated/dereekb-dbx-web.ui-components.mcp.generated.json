@@ -109,12 +109,6 @@
           "required": false
         },
         {
-          "name": "customButtonColor",
-          "type": "Maybe<string>",
-          "description": "",
-          "required": false
-        },
-        {
           "name": "customTextColor",
           "type": "Maybe<string>",
           "description": "",

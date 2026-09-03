@@ -465,11 +465,3 @@ export class DateRRuleParseUtility {
     }
   }
 }
-
-// COMPAT: Deprecated aliases
-
-/**
- * @deprecated use RRULE_STRING_SPLITTER instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const RRuleStringSplitter = RRULE_STRING_SPLITTER;

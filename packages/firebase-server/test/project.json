@@ -18,10 +18,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "{projectRoot}/../../../coverage/packages/firebase-server/test"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     }
   }

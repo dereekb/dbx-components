@@ -14,8 +14,7 @@ import { DbxFirebaseAuthLoginService } from './login.service';
   host: {
     class: 'dbx-firebase-login-terms d-block'
   },
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxFirebaseLoginTermsComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);

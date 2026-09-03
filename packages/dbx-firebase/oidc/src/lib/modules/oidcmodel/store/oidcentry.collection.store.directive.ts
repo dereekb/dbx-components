@@ -8,8 +8,7 @@ import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreD
  */
 @Directive({
   selector: '[dbxOidcEntryCollection]',
-  providers: provideDbxFirebaseCollectionStoreDirective(OidcEntryCollectionStoreDirective, OidcEntryCollectionStore),
-  standalone: true
+  providers: provideDbxFirebaseCollectionStoreDirective(OidcEntryCollectionStoreDirective, OidcEntryCollectionStore)
 })
 export class OidcEntryCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<OidcEntry, OidcEntryDocument, OidcEntryCollectionStore> {
   constructor() {

@@ -79,10 +79,3 @@ export interface ZohoCrmContext extends ZohoRateLimiterRef {
 export interface ZohoCrmContextRef {
   readonly crmContext: ZohoCrmContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZohoCrmFetchFactoryParams instead.
- */
-export type ZohoCrmFetchFactoryInput = ZohoCrmFetchFactoryParams;

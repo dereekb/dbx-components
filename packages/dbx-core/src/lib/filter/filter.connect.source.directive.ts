@@ -17,8 +17,7 @@ import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
  * ```
  */
 @Directive({
-  selector: '[dbxFilterConnectSource]',
-  standalone: true
+  selector: '[dbxFilterConnectSource]'
 })
 export class DbxFilterConnectSourceDirective<F = unknown> implements OnInit {
   readonly filterSource = inject(FilterSource<F>, { host: true });

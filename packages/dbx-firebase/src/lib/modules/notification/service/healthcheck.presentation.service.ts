@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { type ArrayOrValue, type Maybe, asArray } from '@dereekb/util';
 import { type DbxThemeColor } from '@dereekb/dbx-web';
 import { type NotificationDeliveryMethod, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, NotificationHealthCheckStatus } from '@dereekb/firebase';
@@ -27,9 +27,7 @@ import {
  * Apps extend the table by supplying a {@link DbxFirebaseNotificationHealthCheckPresentationServiceConfig}
  * through `provideDbxFirebaseNotifications({ healthCheckPresentation })`.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxFirebaseNotificationHealthCheckPresentationService {
   private readonly _config = inject(DbxFirebaseNotificationHealthCheckPresentationServiceConfig, { optional: true });
   private readonly _entries = new Map<NotificationHealthCheckIssueCode, DbxFirebaseNotificationHealthCheckPresentationEntry>();

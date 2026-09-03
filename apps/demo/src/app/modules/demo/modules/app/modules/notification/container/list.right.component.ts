@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnDestroy, Component, inject } from '@angular/core';
+import { type OnDestroy, Component, inject } from '@angular/core';
 import { loadingStateContext, loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseNotificationItemStore, DbxFirebaseNotificationItemViewComponent } from '@dereekb/dbx-firebase';
 import { DbxContentContainerDirective, DbxLoadingComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
@@ -6,9 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './list.right.component.html',
-  imports: [DbxTwoColumnRightComponent, DbxFirebaseNotificationItemViewComponent, DbxLoadingComponent, DbxContentContainerDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent, DbxFirebaseNotificationItemViewComponent, DbxLoadingComponent, DbxContentContainerDirective]
 })
 export class DemoNotificationListPageRightComponent implements OnDestroy {
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);

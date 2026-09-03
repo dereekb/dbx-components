@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 import { type DateTimePresetConfiguration } from './datetime';
-import { Injectable, InjectionToken, inject } from '@angular/core';
+import { Service, InjectionToken, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -17,9 +17,7 @@ export const DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN = new InjectionToken('DbxDat
  * Provide default presets via {@link DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN}, or set them
  * dynamically via the `configurations` setter.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxDateTimeFieldMenuPresetsService {
   private readonly _configurations = new BehaviorSubject<DateTimePresetConfiguration[]>(inject<Maybe<DateTimePresetConfiguration[]>>(DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, { optional: true }) ?? []);
 

@@ -1,4 +1,4 @@
-import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, effect, signal, model } from '@angular/core';
+import { Component, viewChild, ElementRef, computed, inject, SecurityContext, effect, signal, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, throttleTime } from 'rxjs';
 import { type ContentTypeMimeType, type Maybe } from '@dereekb/util';
@@ -26,9 +26,7 @@ export type DbxEmbedComponentElement = 'embed' | 'img';
   selector: 'dbx-embed',
   template: `
     <span #root></span>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  `
 })
 export class DbxEmbedComponent {
   private readonly _browserObjectUrlRef = clean(browserObjectUrlRef());

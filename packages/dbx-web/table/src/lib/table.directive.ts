@@ -8,8 +8,7 @@ import { type DbxTableContextDataDelegate, type DbxTableViewDelegate } from './t
  */
 @Directive({
   selector: '[dbxTable]',
-  providers: [DbxTableStore],
-  standalone: true
+  providers: [DbxTableStore]
 })
 export class DbxTableDirective<I, C, T> {
   readonly tableStore = inject(DbxTableStore<I, C, T>);

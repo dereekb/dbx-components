@@ -26,8 +26,7 @@ import { type DbxFlexSize } from './flex';
   selector: '[dbxFlexSize]',
   host: {
     '[class]': 'cssClassSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxFlexSizeDirective {
   /**

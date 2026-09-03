@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatAnchor } from '@angular/material/button';
 import { AnchorUISref, UISref } from '@uirouter/angular';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
@@ -12,8 +12,6 @@ import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
       <a mat-stroked-button uiSref="demo.home">Home</a>
     </div>
   `,
-  standalone: true,
-  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective]
 })
 export class DemoAuthLoggedOutComponent {}

@@ -20,8 +20,7 @@ import { type Maybe } from '@dereekb/util';
  * @param spacing Indent spaces; defaults to `2`.
  */
 @Pipe({
-  name: 'prettyjson',
-  standalone: true
+  name: 'prettyjson'
 })
 export class PrettyJsonPipe implements PipeTransform {
   public static toPrettyJson(input: Maybe<unknown>, spacing: number = 2): Maybe<string> {

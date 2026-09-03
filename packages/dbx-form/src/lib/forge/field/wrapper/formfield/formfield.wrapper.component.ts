@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import type { FieldWrapper, ValidationError } from '@ng-forge/dynamic-forms';
 import { DynamicTextPipe, interpolateParams, type WrapperFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';
@@ -143,8 +143,6 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
     `
   ],
   imports: [DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     // `mat-form-field-animations-enabled` is intentionally retained: it gates
     // the 300ms subscript fade animation via Material's

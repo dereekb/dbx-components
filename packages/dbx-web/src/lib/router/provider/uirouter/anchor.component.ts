@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, viewChild } from '@angular/core';
 import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
 import { type Obj, type StateOrName, type TransitionOptions, UIRouterModule } from '@uirouter/angular';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
@@ -12,9 +12,7 @@ import { overrideClickElementEffect } from '../../../util/click';
  */
 @Component({
   templateUrl: './anchor.component.html',
-  imports: [UIRouterModule, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [UIRouterModule, DbxInjectionComponent]
 })
 export class DbxUIRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {
   private readonly _parentAnchorSignal = toSignal(this.parent.anchor$, { initialValue: undefined });

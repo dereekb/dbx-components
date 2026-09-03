@@ -1,13 +1,11 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ExampleTableData } from './table.item';
 
 @Component({
   template: `
     <div>{{ name }}</div>
     <div class="dbx-small dbx-hint">Item Header</div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocExtensionTableItemHeaderExampleComponent {
   item!: ExampleTableData;

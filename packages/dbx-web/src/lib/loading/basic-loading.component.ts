@@ -1,4 +1,4 @@
-import { Component, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, type Signal } from '@angular/core';
+import { Component, ElementRef, input, computed, viewChild, type Signal } from '@angular/core';
 import { type ProgressBarMode } from '@angular/material/progress-bar';
 import { type ErrorInput, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
@@ -43,9 +43,7 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
 @Component({
   selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html',
-  imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet]
 })
 export class DbxBasicLoadingComponent {
   readonly customError = viewChild<string, Maybe<ElementRef>>('customError', { read: ElementRef });

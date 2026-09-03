@@ -2,12 +2,12 @@
   "name": "@dereekb/dbx-firebase/style-demo",
   "version": "13.43.0",
   "peerDependencies": {
-    "@angular/common": "21.2.11",
-    "@angular/core": "21.2.11",
-    "@angular/material": "^21.2.9",
+    "@angular/common": "22.1.4",
+    "@angular/core": "22.1.4",
+    "@angular/material": "^22.1.4",
     "@dereekb/dbx-firebase": "13.43.0",
     "@dereekb/dbx-web": "13.43.0",
-    "@dereekb/util": "13.16.0",
+    "@dereekb/util": "13.43.0",
     "@dereekb/vitest": "13.43.0"
   }
 }

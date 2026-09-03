@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 
@@ -37,9 +37,7 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
     class: 'dbx-detail-block d-block',
     '[class.dbx-detail-block-big-header]': 'bigHeader()'
   },
-  imports: [DbxDetailBlockHeaderComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDetailBlockHeaderComponent]
 })
 export class DbxDetailBlockComponent {
   readonly icon = input<Maybe<string>>();

@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, inject, type OnInit, viewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, inject, type OnInit, viewChild } from '@angular/core';
 import { filterWithSearchString, type ListLoadingState, mapLoadingStateValueWithOperator, successResult } from '@dereekb/rxjs';
 import { takeFront } from '@dereekb/util';
 import { type Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
 import { type DocValue, makeDocValues } from '../component/item.list';
 import { DbxPopoverService, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent, DbxSpacerDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
+import { DbxForgePresetSearchFormComponent } from '@dereekb/dbx-form';
 import { MatButton } from '@angular/material/button';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 import { DocLayoutSectionPageTwoPopoverComponent } from '../component/section.page.two.popover.component';
@@ -13,9 +13,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './section.page.two.component.html',
-  standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent, DbxContentContainerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxForgePresetSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent, DbxContentContainerDirective]
 })
 export class DocLayoutSectionPageTwoComponent implements OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

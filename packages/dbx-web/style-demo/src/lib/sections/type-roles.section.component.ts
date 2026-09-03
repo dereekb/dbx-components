@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
 
 /**
@@ -21,8 +21,6 @@ interface DbxStyleDemoTypeRole {
  */
 @Component({
   selector: 'dbx-style-demo-type-roles-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent],
   template: `
     <dbx-docs-ui-example header="Type Roles" hint="Material 3 typescale via .dbx-text-* utilities.">

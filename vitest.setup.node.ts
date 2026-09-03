@@ -1,1 +1,1 @@
-import '@dereekb/vitest/setup-node';
+import './packages/vitest/src/setup-node';

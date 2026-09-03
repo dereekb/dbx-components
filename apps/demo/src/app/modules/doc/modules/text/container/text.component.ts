@@ -22,21 +22,20 @@ import {
   type NumberWithLimit,
   DbxNumberWithLimitComponent,
   DbxClickToCopyTextDirective,
+  DbxClickToCopyTextComponent,
   DbxIconTileDirective,
   DbxIconTileComponent,
   DbxButtonComponent
 } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxClickToCopyTextComponent } from 'packages/dbx-web/src/lib/layout/text/copy.text.component';
 import { LOREM } from '../../shared';
 
 @Component({
   templateUrl: './text.component.html',
-  standalone: true,
   imports: [
     DbxButtonComponent,
     DbxContentContainerDirective,
@@ -61,8 +60,7 @@ import { LOREM } from '../../shared';
     DbxIconTileDirective,
     DbxIconTileComponent,
     MatIconModule
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocTextTextComponent {
   private readonly dbxLinkifyService = inject(DbxLinkifyService);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -22,9 +22,7 @@ import { type AnchorButtonItemValue, type AnchorButtonItemValueWithSelection } f
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocAnchorButtonItemListComponent extends AbstractDbxSelectionListWrapperDirective<AnchorButtonItemValue> {
   constructor() {
@@ -42,9 +40,7 @@ export class DocAnchorButtonItemListComponent extends AbstractDbxSelectionListWr
   providers: provideDbxListView(DocAnchorButtonItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionListViewDirective<AnchorButtonItemValue> {
   // Drop `icon` (template paints its own tile) and `anchor` (button owns it; row stays non-clickable).
@@ -71,9 +67,7 @@ export class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionLi
       </div>
     </div>
   `,
-  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent]
 })
 export class DocAnchorButtonItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<AnchorButtonItemValue> {
   get icon(): string {

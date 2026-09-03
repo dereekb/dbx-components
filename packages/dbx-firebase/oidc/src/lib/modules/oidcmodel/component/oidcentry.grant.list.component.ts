@@ -1,5 +1,5 @@
 import { type DocumentDataWithIdAndKey, type OidcEntryGrantPayloadData, type OidcEntry } from '@dereekb/firebase';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
   AbstractDbxSelectionListWrapperDirective,
@@ -32,12 +32,10 @@ import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
   selector: 'dbx-firebase-oidc-grant-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DbxFirebaseOidcEntryGrantListComponent),
-  standalone: true,
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryGrantListComponent extends AbstractDbxSelectionListWrapperDirective<OidcEntry> {
   constructor() {
@@ -52,9 +50,7 @@ export class DbxFirebaseOidcEntryGrantListComponent extends AbstractDbxSelection
   selector: 'dbx-firebase-oidc-grant-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseOidcEntryGrantListViewComponent),
-  standalone: true,
-  imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelectionListViewDirective<OidcEntry> {
   readonly config: DbxSelectionValueListViewConfig<OidcEntry & { key: string; itemValue: OidcEntry }> = {
@@ -95,10 +91,8 @@ export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelec
       </div>
     </div>
   `,
-  standalone: true,
   imports: [DatePipe, DbxSpacerDirective, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
-  providers: [OidcEntryDocumentStore],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [OidcEntryDocumentStore]
 })
 export class DbxFirebaseOidcEntryGrantListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

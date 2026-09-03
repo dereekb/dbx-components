@@ -17,4 +17,17 @@ fi
 # giving each run a value that cannot collide keeps the invocations distinct.
 NX_INVOCATION_ROOT_PID="$$$RANDOM"
 
-docker compose run --rm $USE_PORTS_ARG -e NX_INVOCATION_ROOT_PID="$NX_INVOCATION_ROOT_PID" demo-api-server npx firebase --project=default emulators:exec --only auth,firestore,storage "$RUN_COMMAND"
+# Live-gated specs (the openrouter blocks, and anything else that skips itself without credentials)
+# read their key off the process env, and `docker compose run` starts the container with none of the
+# host's. Pass through the ones a spec gates on when the host has them set, so
+# `npx env-cmd -f .env.local npx nx test <project>` runs a live block here the same way it does for
+# the packages that are not wrapped in docker. Unset variables add nothing, so CI is unaffected.
+PASSTHROUGH_ENV_ARGS=()
+
+for VAR_NAME in OPENROUTER_API_KEY OPENROUTER_TEST_MODEL_ID OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID; do
+  if [[ -n "${!VAR_NAME}" ]]; then
+    PASSTHROUGH_ENV_ARGS+=(-e "$VAR_NAME=${!VAR_NAME}")
+  fi
+done
+
+docker compose run --rm $USE_PORTS_ARG -e NX_INVOCATION_ROOT_PID="$NX_INVOCATION_ROOT_PID" "${PASSTHROUGH_ENV_ARGS[@]}" demo-api-server npx firebase --project=default emulators:exec --only auth,firestore,storage "$RUN_COMMAND"

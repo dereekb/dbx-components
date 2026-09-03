@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
@@ -18,9 +18,7 @@ import { type FirebaseAuthOobCode, firebaseAuthErrorToReadableError } from '@der
 @Component({
   selector: 'dbx-firebase-password-reset',
   templateUrl: './login.password.reset.component.html',
-  imports: [DbxFirebasePasswordResetFormComponent, DbxActionModule, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective, DbxActionFormDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebasePasswordResetFormComponent, DbxActionModule, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective, DbxActionFormDirective]
 })
 export class DbxFirebasePasswordResetComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

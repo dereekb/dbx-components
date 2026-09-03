@@ -28,7 +28,6 @@ describe('DbxForgeNumberFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -102,8 +101,8 @@ describe('dbxForgeNumberField()', () => {
     expect((field.meta as any).step).toBe(5);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeNumberField({ key: 'qty', description: 'Enter quantity' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeNumberField({ key: 'qty', hint: 'Enter quantity' });
     expect(field.props?.hint).toBe('Enter quantity');
   });
 
@@ -218,8 +217,8 @@ describe('dbxForgeDollarAmountField()', () => {
     expect(field.key).toBe('total');
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeDollarAmountField({ key: 'price', description: 'Enter amount in USD' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeDollarAmountField({ key: 'price', hint: 'Enter amount in USD' });
     expect(field.props?.hint).toBe('Enter amount in USD');
   });
 
@@ -324,7 +323,7 @@ describe('scenarios', () => {
       const field = dbxForgeNumberField({
         key: 'pma',
         label: 'Maximum School Automatic Job Day Allocations Per Day',
-        description: 'The maximum number of job days allocated per day for each school in this school group. Is a hard cap that takes priority over all other allocation configurations.',
+        hint: 'The maximum number of job days allocated per day for each school in this school group. Is a hard cap that takes priority over all other allocation configurations.',
         placeholder: undefined,
         step: 1,
         enforceStep: true,

@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, untracked } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes, type DbxButtonEcho } from '@dereekb/dbx-core';
 import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { type DbxProgressButtonConfig } from './progress/button.progress.config';
-import { type DbxColorConfig, type DbxColorInput, type DbxThemeColor, isDbxColorConfig } from '../layout/style/style';
+import { type DbxColorInput, type DbxThemeColor, isDbxColorConfig } from '../layout/style/style';
 import { DbxColorDirective } from '../layout/style/style.color.directive';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
@@ -62,9 +62,7 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
   `,
   providers: provideDbxButton(DbxButtonComponent),
   imports: [DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, NgTemplateOutlet],
-  hostDirectives: [DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  hostDirectives: [DbxColorDirective]
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
   /**
@@ -110,10 +108,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
   readonly color = input<Maybe<ThemePalette | DbxColorInput>>();
   readonly spinnerColor = input<Maybe<ThemePalette | DbxThemeColor>>();
-  /**
-   * @deprecated Use {@link color} with a {@link DbxColorConfig}, e.g. `[color]="{ color: '#ff0066' }"`. The `[dbxColor]` directive applies the background through `.dbx-color-bg`.
-   */
-  readonly customButtonColor = input<Maybe<string>>();
+
   readonly customTextColor = input<Maybe<string>>();
   readonly customSpinnerColor = input<Maybe<string>>();
 
@@ -186,12 +181,6 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     };
 
     const buttonStyle = this.buttonStyle();
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- reads the deprecated customButtonColor input/style for backward compatibility until removed
-    const customButtonColorValue = this.customButtonColor() ?? buttonStyle?.customButtonColor;
-
-    if (customButtonColorValue) {
-      customStyle['background'] = customButtonColorValue;
-    }
 
     const customTextColorValue = this.customTextColor() ?? buttonStyle?.customTextColor;
 

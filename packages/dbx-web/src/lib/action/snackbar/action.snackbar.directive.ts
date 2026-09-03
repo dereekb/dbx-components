@@ -26,8 +26,7 @@ import { type LoadingState, LoadingStateType, loadingStateType } from '@dereekb/
  * ```
  */
 @Directive({
-  selector: '[dbxActionSnackbar]',
-  standalone: true
+  selector: '[dbxActionSnackbar]'
 })
 export class DbxActionSnackbarDirective<T = unknown, O = unknown> implements OnInit {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

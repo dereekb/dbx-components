@@ -134,13 +134,6 @@
       "options": {
         "command": "cd ./dist/packages/dbx-cli && npm publish --access public"
       }
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-cli"
-      }
     }
   }
 }

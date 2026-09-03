@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DbxAnchorListComponent, DbxBarDirective, DbxBarHeaderComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxPagebarComponent } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
@@ -16,8 +16,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
  */
 @Component({
   selector: 'dbx-style-demo-navigation-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxPagebarComponent, DbxBarDirective, DbxBarHeaderComponent, DbxAnchorListComponent, DbxButtonComponent, DbxButtonSpacerDirective],
   template: `
     <dbx-docs-ui-example header="Navigation" hint="Router-free navigation building blocks.">

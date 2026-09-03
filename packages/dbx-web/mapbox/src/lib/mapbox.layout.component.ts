@@ -1,5 +1,5 @@
 import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, type Observable, delay } from 'rxjs';
-import { Component, ElementRef, type OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, type Signal, effect } from '@angular/core';
+import { Component, ElementRef, type OnInit, inject, signal, computed, input, output, viewChild, type Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { DbxMapboxService } from './mapbox.service';
@@ -29,8 +29,6 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   templateUrl: './mapbox.layout.component.html',
   styleUrls: ['./mapbox.layout.component.scss'],
   imports: [DbxResizedDirective, NgClass, DbxMapboxLayoutDrawerComponent, MatDrawer, MatDrawerContainer, MatDrawerContent, MatIconModule, MatIconButton, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     '[style.--mat-sidenav-container-width]': 'dbxMapboxService.drawerWidth'
   }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -182,9 +182,7 @@ describe('DbxFirebaseFormSpaceListComponent', () => {
       <dbx-list-empty-content empty>No form spaces yet.</dbx-list-empty-content>
     </dbx-firebase-formspace-list>
   `,
-  imports: [DbxFirebaseFormSpaceListComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceListComponent, DbxListEmptyContentComponent]
 })
 class TestDbxFirebaseFormSpaceListComponent {
   readonly formSpacesSignal = signal<DbxFirebaseFormSpaceListValue[]>([listValue('a', { n: 'My Draft' }), listValue('b', { s: FormSpaceState.SUBMITTED, ps: FormSpaceProcessingState.SUCCESS, sat: SUBMITTED_AT, cpat: COMPLETED_AT })]);

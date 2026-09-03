@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -98,8 +98,6 @@ const DASHBOARD_STAT_CARDS: readonly DashboardStatCard[] = [
  */
 @Component({
   selector: 'doc-dashboard-overview-layout-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxButtonComponent, DbxDocsUiExampleContentComponent, DbxSectionComponent, DbxAnchorComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxTextColorDirective, DbxContentPitDirective, DocWorthKnowingItemListComponent, MatCardModule, MatButtonModule, MatIconModule, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Dashboard Overview Layout" hint="dbx-section header with actions, dark inverse hero card with dbx-color-border stat pits, accent list card, and a responsive stat-card row.">

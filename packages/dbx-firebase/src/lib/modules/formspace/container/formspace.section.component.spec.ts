@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -178,9 +178,7 @@ describe('DbxFirebaseFormSpaceSectionComponent', () => {
   template: `
     <dbx-firebase-formspace-section [step]="1" [slot]="slotSignal()" header="Cover File" [complete]="completeSignal()"></dbx-firebase-formspace-section>
   `,
-  imports: [DbxFirebaseFormSpaceSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSectionComponent]
 })
 class TestDbxFirebaseFormSpaceSectionComponent {
   readonly section = viewChild.required(DbxFirebaseFormSpaceSectionComponent);

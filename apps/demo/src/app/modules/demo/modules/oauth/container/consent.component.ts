@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxOAuthConsentComponent } from '@dereekb/dbx-firebase/oidc';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.component';
@@ -19,8 +19,6 @@ import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.comp
       </dbx-firebase-oauth-consent>
     </dbx-content-box>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent, DemoAuthLoginViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent, DemoAuthLoginViewComponent]
 })
 export class DemoOAuthConsentComponent {}

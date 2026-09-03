@@ -8,9 +8,9 @@
     "@dereekb/model": "13.43.0",
     "@dereekb/rxjs": "13.43.0",
     "@dereekb/util": "13.43.0",
-    "@firebase/rules-unit-testing": "5.0.0",
+    "@firebase/rules-unit-testing": "5.0.2",
     "date-fns": "^4.1.0",
-    "firebase": "^12.12.1",
+    "firebase": "^12.18.0",
     "rxjs": "^7.8.2"
   }
 }

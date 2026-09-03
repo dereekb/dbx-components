@@ -95,6 +95,18 @@ under your own theme before upgrading, mount the `<dbx-style-demo>` showcase (fr
   `dbx-button`/`dbx-chip` now throws `NG0309` (duplicate directive).
 - **`<dbx-loading>` no longer defaults to `'primary'`** — uncolored loading indicators use the
   Material default indicator color.
+- **Renamed the `@dereekb/dbx-form` preset search form exports** to the `DbxForge*` family they
+  belong to: `DbxFormSearchFormComponent` → `DbxForgePresetSearchFormComponent`,
+  `DbxFormSearchFormFieldsConfig` → `DbxForgePresetSearchFormFieldsConfig`,
+  `DbxFormSearchFormFieldsValue` → `DbxForgePresetSearchFormFieldsValue`, and
+  `dbxFormSearchFormFields` → `dbxForgePresetSearchFormFields`. No deprecated aliases are kept. The
+  `dbx-form-search-form` selector and `.dbx-form-search-form` host class are unchanged.
+- **Removed the deprecated `filter` param** from `ZohoCrmGetRelatedRecordsRequest` and
+  `ZohoRecruitGetRelatedRecordsRequest` in `@dereekb/zoho`. It was a `ZohoPageFilter` that both
+  requests already extend, so set `page` / `per_page` on the request directly instead.
+- **Reshaped the `LoadingState` generics** in `@dereekb/rxjs`, plus removed and re-signed several
+  exports. That one is large enough to have its own walkthrough in the upgrade-info document linked
+  below.
 
 ### Migration Steps
 - **Replace `@include dbx.m2-visual-compat();`** in your theme mixin(s) with one of:
@@ -113,6 +125,11 @@ under your own theme before upgrading, mount the `<dbx-style-demo>` showcase (fr
   removed `color` inputs (rename to `dbxColor`), and `[dbxColor]` on plain painted elements (add
   `dbx-color-bg`), plus the scoped `.dbx-color` SCSS pattern for making your own components respond
   to an external `[dbxColor]`.
+
+Migration/Upgrade info for the tooling changes (Nx 23, Angular 22, zone.js removal, ESM, Vitest) and
+for the `@dereekb/*` API changes listed above is available in the
+[`setup/upgrades/v13-to-v14/v13-to-v14-upgrade-info.md`](setup/upgrades/v13-to-v14/v13-to-v14-upgrade-info.md)
+document, which carries the sed/grep recipes for each rename.
 
 ## Migration of v11.x.x to v12.x.x
 ### Overview

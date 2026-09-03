@@ -74,6 +74,7 @@ export interface NewZohoCrmNoteData extends Pick<ZohoCrmNoteData, 'Note_Title' |
  * Status string for a note. Exact values are not yet fully documented.
  */
 export type ZohoCrmNoteStatus = string; // TODO
+
 /**
  * File size in bytes for any attachment associated with a note.
  */
@@ -88,10 +89,3 @@ export interface ZohoCrmNote extends ZohoCrmNoteData, UniqueModelWithId {}
  * A note associated with a specific CRM record. Currently identical to {@link ZohoCrmNote}.
  */
 export type ZohoCrmRecordNote = ZohoCrmNote;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use NewZohoCrmNewNoteData instead.
- */
-export type NewZohoCrmNewNoteData = NewZohoCrmNoteData;

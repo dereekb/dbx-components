@@ -66,7 +66,6 @@ describe('DbxFileUploadActionSyncDirective', () => {
       <button dbxButton dbxFileUploadActionSync>Upload</button>
     </div>
   `,
-  standalone: true,
   imports: [DbxActionDirective, DbxButtonDirective, DbxFileUploadActionSyncDirective]
 })
 class TestDbxFileUploadActionSyncOnButtonComponent {

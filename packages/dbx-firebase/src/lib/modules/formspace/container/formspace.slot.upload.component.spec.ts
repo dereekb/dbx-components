@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, of } from 'rxjs';
@@ -211,9 +211,7 @@ describe('DbxFirebaseFormSpaceSlotUploadComponent remaining uploads', () => {
   template: `
     <dbx-firebase-formspace-slot-upload slot="cover" label="Cover File" [maxFiles]="maxFilesSignal()" [uploadText]="uploadTextSignal()" [replaceText]="replaceTextSignal()"></dbx-firebase-formspace-slot-upload>
   `,
-  imports: [DbxFirebaseFormSpaceSlotUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceSlotUploadComponent]
 })
 class TestDbxFirebaseFormSpaceSlotUploadComponent {
   readonly slot = viewChild.required(DbxFirebaseFormSpaceSlotUploadComponent);

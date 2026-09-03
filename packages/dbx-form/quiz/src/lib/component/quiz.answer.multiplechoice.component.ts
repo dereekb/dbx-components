@@ -64,8 +64,7 @@ interface QuizAnswerMultipleChoice extends MultipleChoiceAnswer {
  */
 @Component({
   templateUrl: './quiz.answer.multiplechoice.component.html',
-  imports: [DbxButtonModule, DbxWindowKeyDownListenerDirective],
-  standalone: true
+  imports: [DbxButtonModule, DbxWindowKeyDownListenerDirective]
 })
 export class QuizAnswerMultipleChoiceComponent {
   readonly questionAccessor = inject<QuizQuestionAccessor<QuizAnswerMultipleChoice>>(QuizQuestionAccessor);

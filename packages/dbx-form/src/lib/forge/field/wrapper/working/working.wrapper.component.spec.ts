@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { DynamicFormLogger, NoopLogger, type AsyncCustomValidator, type FormConfig } from '@ng-forge/dynamic-forms';
@@ -15,8 +15,7 @@ import { DBX_FORGE_WORKING_WRAPPER_TYPE_NAME } from './working.wrapper';
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestWorkingWrapperHostComponent {
   readonly context = inject(DbxForgeFormContext);

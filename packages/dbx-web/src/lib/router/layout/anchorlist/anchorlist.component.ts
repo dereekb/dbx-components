@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, type Signal } from '@angular/core';
+import { Component, computed, input, type Signal } from '@angular/core';
 import { type ClickableAnchorLinkTree, DbxInjectionComponent, type ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
 import { type Configurable, type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from '../anchor/anchor.component';
@@ -36,9 +36,7 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
 @Component({
   selector: 'dbx-anchor-list',
   templateUrl: './anchorlist.component.html',
-  imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent]
 })
 export class DbxAnchorListComponent {
   readonly anchors = input.required<ClickableAnchorLinkTree[], Maybe<ClickableAnchorLinkTree[]>>({ transform: (x) => x ?? [] });

@@ -1,8 +1,8 @@
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, type Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
-import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { Component, type OnDestroy, ElementRef, HostListener, Directive, inject, input, output, signal, computed } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
-import { type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, type PageLoadingState } from '@dereekb/rxjs';
+import { type ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, loadingStateHasNextPage } from '@dereekb/rxjs';
 import { invertMaybeBoolean, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type DbxListSelectionMode, type DbxListView, type ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -22,8 +22,7 @@ import { DbxLoadingComponent } from '../../loading/loading.component';
   host: {
     class: 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide()'
-  },
-  standalone: true
+  }
 })
 export class DbxListInternalContentDirective {
   private readonly parent = inject(DbxListComponent);
@@ -143,9 +142,7 @@ export const DEFAULT_DBX_LIST_THROTTLE_SCROLL = 50;
     role: 'list',
     '[class.dbx-list-padded]': 'padded()'
   },
-  imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent]
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
   /**
@@ -182,7 +179,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe());
   readonly context = listLoadingStateContext<T, S>({ obs: this.currentState$, showLoadingOnNoValue: false });
 
-  readonly hasMoreFromCurrentState$ = this.currentState$.pipe(map((x) => (x as unknown as PageLoadingState)?.hasNextPage));
+  readonly hasMoreFromCurrentState$ = this.currentState$.pipe(map(loadingStateHasNextPage));
   readonly isEnd$ = combineLatest([this.hasMore$, this.hasMoreFromCurrentState$]).pipe(
     map((x) => invertMaybeBoolean(x[0] ?? x[1])),
     distinctUntilChanged(),

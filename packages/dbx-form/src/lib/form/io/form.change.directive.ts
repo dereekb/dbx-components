@@ -15,8 +15,7 @@ import { DbxForm } from '../form';
  * @typeParam T - The form value type.
  */
 @Directive({
-  selector: '[dbxFormValueChange]',
-  standalone: true
+  selector: '[dbxFormValueChange]'
 })
 export class DbxFormValueChangeDirective<T> implements OnInit {
   readonly form = inject(DbxForm<T>, { host: true });

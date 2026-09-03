@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -23,9 +23,7 @@ import { type Maybe } from '@dereekb/util';
       <ng-content></ng-content>
     </div>
   `,
-  styleUrls: ['./side.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  styleUrls: ['./side.scss']
 })
 export class AppSideNavBarTitleComponent {
   readonly header = input<Maybe<string>>();

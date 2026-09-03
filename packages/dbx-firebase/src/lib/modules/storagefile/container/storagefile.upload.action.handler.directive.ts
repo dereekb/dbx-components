@@ -12,8 +12,7 @@ import { StorageFileUploadFilesError } from './storagefile.upload.error';
  * Connects a DbxFirebaseStorageFileUploadStore to a DbxActionContext, and handles the upload action.
  */
 @Directive({
-  selector: '[dbxFirebaseStorageFileUploadActionHandler]',
-  standalone: true
+  selector: '[dbxFirebaseStorageFileUploadActionHandler]'
 })
 export class DbxFirebaseStorageFileUploadActionHandlerDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance<File[], StorageFileUploadFilesFinalResult>);

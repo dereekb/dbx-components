@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
@@ -78,9 +78,7 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck'
   },
-  standalone: true,
-  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent, DbxFirebaseNotificationHealthCheckMethodComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DatePipe, DbxColorDirective, DbxContentPitDirective, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent, DbxFirebaseNotificationHealthCheckMethodComponent]
 })
 export class DbxFirebaseNotificationHealthCheckComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

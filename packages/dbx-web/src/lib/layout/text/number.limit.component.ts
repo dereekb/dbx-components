@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxColorDirective } from '../style/style.color.directive';
 import { type DbxThemeColor } from '../style/style';
@@ -52,9 +52,7 @@ export interface NumberWithLimit<T extends number = number> {
       <span>{{ suffixSignal() }}</span>
     </span>
   `,
-  imports: [DbxColorDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxColorDirective]
 })
 export class DbxNumberWithLimitComponent<T extends number = number> {
   readonly number = input<NumberWithLimit<T>>();

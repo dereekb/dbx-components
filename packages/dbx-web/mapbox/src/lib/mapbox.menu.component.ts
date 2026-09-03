@@ -1,6 +1,6 @@
 import { filter, switchMap, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, Component, inject, signal, input, effect } from '@angular/core';
+import { Component, inject, signal, input, effect } from '@angular/core';
 import { type Maybe, DestroyFunctionObject, isNotFalse } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';
@@ -19,9 +19,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
     style: 'visibility: hidden; position: fixed',
     '[style.top]': 'posSignal().y',
     '[style.left]': 'posSignal().x'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxMapboxMenuComponent {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

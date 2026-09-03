@@ -13,8 +13,15 @@ import * as twilioModule from 'twilio';
  * present is correct in both worlds.
  *
  * Guarded by `tools/scripts/check-esm-named-imports.mjs`.
+ *
+ * The `unknown` hops are required under TypeScript 6, which rejects a namespace import in a
+ * callable position: twilio's entry is a callable factory, so `typeof twilioModule` carries
+ * call/construct signatures and the bare cast trips `A namespace-style import cannot be called
+ * or constructed`. Widening through `unknown` keeps the runtime unwrap byte-for-byte identical.
  */
-const twilio: typeof twilioModule = (twilioModule as { readonly default?: typeof twilioModule }).default ?? twilioModule;
+type TwilioModule = typeof twilioModule;
+
+const twilio: TwilioModule = (twilioModule as unknown as { readonly default?: TwilioModule }).default ?? (twilioModule as unknown as TwilioModule);
 
 export const { Twilio, validateRequest } = twilio;
 

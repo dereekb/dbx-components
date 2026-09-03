@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithStore, isDbxFirebaseModelEntityWithStore } from './model.entities';
 import { cleanLoadingContext, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';
@@ -19,9 +19,7 @@ import { dbxFirebaseModelEntityWidgetInjectionConfigFactory } from './model.enti
 @Component({
   selector: 'dbx-firebase-model-entities-entity',
   templateUrl: './model.entities.entity.component.html',
-  imports: [DbxInjectionComponent, DbxLoadingComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, DbxLoadingComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, MatIcon]
 })
 export class DbxFirebaseModelEntitiesEntityComponent {
   readonly widgetInjectionConfigFactory = dbxFirebaseModelEntityWidgetInjectionConfigFactory();

@@ -24,8 +24,7 @@ import { type CssClass } from '@dereekb/util';
  * ```
  */
 @Directive({
-  selector: '[dbxStyleBody]',
-  standalone: true
+  selector: '[dbxStyleBody]'
 })
 export class DbxStyleBodyDirective {
   private readonly _styleService = inject(DbxStyleService);

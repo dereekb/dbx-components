@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -35,9 +35,7 @@ import { type ProgressItemValue, type ProgressItemValueWithSelection } from './p
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocProgressItemListComponent extends AbstractDbxSelectionListWrapperDirective<ProgressItemValue> {
   constructor() {
@@ -55,9 +53,7 @@ export class DocProgressItemListComponent extends AbstractDbxSelectionListWrappe
   providers: provideDbxListView(DocProgressItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocProgressItemListViewComponent extends AbstractDbxSelectionListViewDirective<ProgressItemValue> {
   readonly config: DbxSelectionValueListViewConfig<ProgressItemValueWithSelection> = {
@@ -81,9 +77,7 @@ export class DocProgressItemListViewComponent extends AbstractDbxSelectionListVi
       </div>
     </div>
   `,
-  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, MatProgressBar, DbxColorDirective, DbxIconTileComponent]
 })
 export class DocProgressItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ProgressItemValue> {
   get icon(): string {

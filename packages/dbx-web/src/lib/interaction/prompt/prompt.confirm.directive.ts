@@ -54,8 +54,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
  */
 @Directive({
   selector: '[dbxPromptConfirm]',
-  providers: provideDbxPromptConfirm(DbxPromptConfirmDirective),
-  standalone: true
+  providers: provideDbxPromptConfirm(DbxPromptConfirmDirective)
 })
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
   readonly dbxPromptConfirm = input<Maybe<DbxPromptConfirmConfig>>();

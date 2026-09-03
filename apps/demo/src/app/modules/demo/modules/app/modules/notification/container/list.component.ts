@@ -1,20 +1,18 @@
 import { type AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { type NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, clean, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
-import { type LoadingState, type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
+import { type WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
 import { ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [UIView, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule]
 })
 export class DemoNotificationListPageComponent {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
@@ -24,7 +22,7 @@ export class DemoNotificationListPageComponent {
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
   readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
 
-  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
+  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator(map(() => successResult([]))));
 
   private readonly _notificationIdInstance = clean(dbxRouteModelIdParamRedirect(this.dbxRouterService));
 

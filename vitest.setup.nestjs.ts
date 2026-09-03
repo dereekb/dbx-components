@@ -1,1 +1,1 @@
-import '@dereekb/vitest/setup-nestjs';
+import './packages/vitest/src/setup-nestjs';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxSpacerDirective, DbxChipDirective } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
@@ -21,9 +21,7 @@ import { type TwoLineItemValue, type TwoLineItemValueWithSelection } from './two
 @Component({
   selector: 'doc-two-line-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapperDirective<TwoLineItemValue> {
   constructor() {
@@ -38,9 +36,7 @@ export class DocTwoLineItemListComponent extends AbstractDbxSelectionListWrapper
   selector: 'doc-two-line-item-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocTwoLineItemListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  providers: provideDbxListView(DocTwoLineItemListViewComponent)
 })
 export class DocTwoLineItemListViewComponent extends AbstractDbxSelectionListViewDirective<TwoLineItemValue> {
   readonly config: DbxSelectionValueListViewConfig<TwoLineItemValueWithSelection> = {
@@ -78,9 +74,7 @@ const STATUS_COLOR: Record<NonNullable<TwoLineItemValue['status']>, TwoLineItemS
       </div>
     </div>
   `,
-  imports: [DbxSpacerDirective, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxSpacerDirective, DbxChipDirective]
 })
 export class DocTwoLineItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoLineItemValue> {
   get title(): string {

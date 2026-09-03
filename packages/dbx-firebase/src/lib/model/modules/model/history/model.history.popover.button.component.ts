@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxButtonComponent, DbxPopoverService } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelHistoryPopoverComponent, type DbxFirebaseModelHistoryPopoverConfigWithoutOrigin } from './model.history.popover.component';
@@ -11,9 +11,7 @@ export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistory
   template: `
     <dbx-button #button (buttonClick)="showHistoryPopover()" icon="history" iconOnly></dbx-button>
   `,
-  standalone: true,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);

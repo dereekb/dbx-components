@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { first, firstValueFrom, type Observable, of } from 'rxjs';
 import { type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
@@ -53,8 +53,7 @@ describe('DbxFormLoadingSourceDirective with forge form', () => {
       <dbx-test-dbx-form [dbxFormLoadingSource]="source()"></dbx-test-dbx-form>
     </div>
   `,
-  imports: [DbxTestDbxFormComponent, DbxFormLoadingSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTestDbxFormComponent, DbxFormLoadingSourceDirective]
 })
 class TestDbxFormLoadingSourceComponent {
   readonly source = signal<Maybe<Observable<LoadingState<{ text: string }>>>>(undefined);

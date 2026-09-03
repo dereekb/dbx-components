@@ -2,11 +2,11 @@
 
 Generates the NestJS modules, services, and env-var stubs needed to wire `@dereekb/zoho/nestjs` (Recruit / CRM / Sign) into a dbx-components-derived app.
 
-The script reads `dbx.setup.json` (written by `setup-project.sh` at the project root) for the project's app prefix, api app name, and firebase components package — so you don't have to pass them in.
+The script reads `dbx.setup.json` (written to the project root by `dbx-components-cli setup`) for the project's app prefix, api app name, and firebase components package — so you don't have to pass them in.
 
 ## Usage (in a downstream project)
 
-After `setup-project.sh` has run, this folder lives at `<project>/scripts/zoho/`. From the project root:
+After `dbx-components-cli setup` has run, this folder lives at `<project>/scripts/zoho/`. From the project root:
 
 ```bash
 # Interactive — prompts for which products to wire up
@@ -64,19 +64,12 @@ scripts/
 
 ## Editing this folder upstream (in the dbx-components repo)
 
-Source of truth lives at `setup/templates/scripts/zoho/` in the dbx-components repo. Files are copied into a new project by `setup-project.sh` via `curl` — there is no bulk `cp -R`, so any **new** file you add to this folder must also be added to the curl loop in `setup/setup-project.sh`. The relevant block looks like:
+Source of truth lives at `packages/dbx-components-cli/templates/scripts/zoho/` in the dbx-components repo. The CLI's `integrations` module scaffolds the whole `scripts/` subtree out of the bundled template archive, so a **new** file dropped in this folder is picked up with no registration step — just rebuild the CLI (`nx build dbx-components-cli`) so it lands in `templates.zip`.
 
-```bash
-for tmpl in zoho.module.ts.tmpl zoho.service.ts.tmpl ... env.tmpl; do
-  curl -sSf "$SCRIPTS_BASE/zoho/templates/$tmpl" -o "scripts/zoho/templates/$tmpl"
-done
-```
-
-Add the new filename to that list. The same applies to any new `.mjs` files alongside `setup-zoho.mjs`.
+The same applies to any new `.mjs` files alongside `setup-zoho.mjs`.
 
 ## Adding a new integration script (OIDC, Stripe, etc.)
 
-1. Create a sibling folder `setup/templates/scripts/<integration>/` with its own `setup-<integration>.mjs` and (optionally) `templates/`.
+1. Create a sibling folder `packages/dbx-components-cli/templates/scripts/<integration>/` with its own `setup-<integration>.mjs` and (optionally) `templates/`.
 2. Import the shared helper: `import { readDbxSetup } from '../_lib/setup-config.mjs';`
-3. Add a curl block in `setup/setup-project.sh` to copy your new files into the new project.
-4. Add a bullet in `setup/setup-project-readme.md` under "Per-integration Setup Scripts".
+3. Add a bullet in `setup/setup-project-readme.md` under "Per-integration Setup Scripts".

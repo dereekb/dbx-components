@@ -14,8 +14,7 @@ import { MAP_COMPONENT_INITIALIZATION_OPTIONS, MapComponent, MapService } from '
       useFactory: (dbxMapboxService: DbxMapboxService) => dbxMapboxService.initializationOptions(),
       deps: [DbxMapboxService]
     }
-  ],
-  standalone: true
+  ]
 })
 export class DbxMapboxMapDirective {
   readonly mapService = inject(MapService, { host: true });

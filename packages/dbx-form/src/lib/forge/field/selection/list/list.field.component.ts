@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnInit, type Type } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, type OnInit, type Type } from '@angular/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { type Maybe, type PrimativeKey, readKeysFrom, convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
@@ -23,9 +23,7 @@ import { dbxForgeFieldDisabled } from '../../field.util';
 @Component({
   selector: 'dbx-forge-list-selection-field',
   templateUrl: './list.field.component.html',
-  imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule]
 })
 export class DbxForgeListSelectionFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> implements OnInit {
   private readonly elementRef = inject(ElementRef<HTMLElement>);

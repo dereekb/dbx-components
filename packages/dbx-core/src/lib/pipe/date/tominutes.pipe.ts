@@ -21,7 +21,6 @@ import { type Milliseconds, type Minutes, millisecondsToMinutes } from '@dereekb
  */
 @Pipe({
   name: 'toMinutes',
-  standalone: true,
   pure: true
 })
 export class ToMinutesPipe implements PipeTransform {

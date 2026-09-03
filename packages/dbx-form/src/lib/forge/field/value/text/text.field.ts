@@ -2,7 +2,7 @@ import type { BaseValueField, DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
 import { transformStringFunction, type TransformStringFunctionConfig } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeFieldHintOrDescriptionValueRef } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeFieldHintValueRef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { dbxForgeEmailValidator, dbxForgePatternValidator } from '../../field.util.validation';
 
@@ -25,7 +25,7 @@ export interface DbxForgeTextFieldPatternConfig {
 /**
  * We use this for DbxForgeNumberFieldConfig since MatInputField is a union type for both string and number input.
  */
-type DbxForgeStringInputFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: DbxForgeTextFieldInputType }, string> & { type: 'input' } & DbxForgeFieldHintOrDescriptionValueRef<DynamicText>;
+type DbxForgeStringInputFieldDef = BaseValueField<Omit<MatInputProps, 'type'> & { type?: DbxForgeTextFieldInputType }, string> & { type: 'input' } & DbxForgeFieldHintValueRef<DynamicText>;
 
 /**
  * HTML input type for a text field.

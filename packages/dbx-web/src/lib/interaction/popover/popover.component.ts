@@ -1,4 +1,4 @@
-import { Component, type Type, type OnInit, type OnDestroy, type ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type Type, type OnInit, type OnDestroy, type ElementRef, inject } from '@angular/core';
 import { type NgOverlayContainerConfiguration, type NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractTransitionWatcherDirective, DbxInjectionComponent, type DbxInjectionComponentConfig, completeOnDestroy } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
@@ -104,9 +104,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   host: {
     '[class]': 'config.panelClass'
   },
-  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxInjectionComponent]
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
   private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);

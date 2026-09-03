@@ -1,11 +1,11 @@
-import { Component, Directive, type OnInit, inject, signal, computed, ChangeDetectionStrategy, model } from '@angular/core';
+import { Component, Directive, type OnInit, inject, signal, computed, model } from '@angular/core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { type DbxFirebaseLoginMode, type FirebaseLoginMethodType } from './login';
 import { type DbxFirebaseAuthLoginProviderAssets, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxActionModule, DbxButtonModule, type DbxActionConfirmConfig, type DbxColorInput } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule, type DbxActionConfirmConfig, type DbxButtonStyle, type DbxColorInput } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { firebaseAuthErrorToReadableError, type FirebaseAuthError } from '@dereekb/firebase';
@@ -41,7 +41,7 @@ export interface DbxFirebaseLoginButtonConfig {
   selector: 'dbx-firebase-login-button',
   template: `
     <ng-container dbxAction [dbxActionHandler]="handleAction" [dbxActionSuccessHandler]="onActionSuccess" [dbxActionConfirm]="confirmConfigSignal()" [dbxActionConfirmSkip]="!confirmConfigSignal()">
-      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal()" [customButtonColor]="buttonColorSignal()" [raised]="true" [color]="colorSignal()" [attr.aria-label]="textSignal()">
+      <dbx-button dbxActionButton [buttonStyle]="buttonStyleSignal()" [raised]="true" [attr.aria-label]="textSignal()">
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
             @if (iconUrlSignal()) {
@@ -59,9 +59,7 @@ export interface DbxFirebaseLoginButtonConfig {
   host: {
     class: 'dbx-firebase-login-button dbx-button-neutral-interaction-color'
   },
-  standalone: true,
-  imports: [MatIconModule, DbxActionModule, DbxButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, DbxActionModule, DbxButtonModule]
 })
 export class DbxFirebaseLoginButtonComponent {
   readonly config = model<Maybe<DbxFirebaseLoginButtonConfig>>(null);
@@ -70,12 +68,21 @@ export class DbxFirebaseLoginButtonComponent {
   readonly iconSignal = computed(() => this.config()?.icon);
   readonly iconFilterSignal = computed(() => this.config()?.iconFilter);
   readonly textSignal = computed(() => this.config()?.text ?? '');
-  readonly buttonColorSignal = computed(() => {
+  /**
+   * Style passed to the underlying `dbx-button`, carrying the configured button and text colors.
+   *
+   * A raw CSS button color is expressed as a `DbxColorConfig` on {@link DbxButtonStyle.color}, pairing the
+   * background with the text color as its `contrast`. An explicit {@link DbxFirebaseLoginButtonConfig.color}
+   * takes precedence; with neither set the button falls back to a transparent background.
+   */
+  readonly buttonStyleSignal = computed<DbxButtonStyle>(() => {
     const config = this.config();
-    return config?.buttonColor ?? (config?.color ? undefined : 'transparent');
+    const customTextColor = config?.buttonTextColor;
+    const buttonColor = config?.buttonColor ?? (config?.color ? undefined : 'transparent');
+    const color = config?.color ?? (buttonColor ? { color: buttonColor, contrast: customTextColor } : undefined);
+
+    return { color, customTextColor };
   });
-  readonly buttonTextColorSignal = computed(() => this.config()?.buttonTextColor);
-  readonly colorSignal = computed(() => this.config()?.color);
   readonly confirmConfigSignal = computed(() => this.config()?.confirmConfig);
 
   setConfig(config: Maybe<DbxFirebaseLoginButtonConfig>) {
@@ -107,8 +114,7 @@ export class DbxFirebaseLoginButtonComponent {
     <div class="dbx-firebase-login-button-container">
       <ng-content></ng-content>
     </div>
-  `,
-  standalone: true
+  `
 })
 export class DbxFirebaseLoginButtonContainerComponent {}
 
@@ -126,8 +132,7 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
  */
 export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
-  imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent]
 };
 
 /**

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { type SegueRef, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
@@ -12,9 +12,7 @@ import { DocTwoColumnSrefListComponent, type TwoColumnSrefValue } from '../compo
 
 @Component({
   templateUrl: './two.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, MatIconButton, MatIcon, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DocTwoColumnSrefListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, UIView],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, MatIconButton, MatIcon, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DocTwoColumnSrefListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, UIView]
 })
 export class DocLayoutTwoColumnsComponent {
   showRight = true;

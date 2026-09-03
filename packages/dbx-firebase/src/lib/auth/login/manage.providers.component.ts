@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filterMaybeArrayValues } from '@dereekb/util';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
@@ -22,7 +22,6 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
  */
 @Component({
   selector: 'dbx-firebase-manage-auth-providers',
-  standalone: true,
   imports: [DbxFirebaseLoginComponent, DbxSectionComponent],
   template: `
     @if (linkedMethodTypesSignal().length) {
@@ -38,8 +37,7 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
   `,
   host: {
     class: 'd-block dbx-firebase-manage-auth-providers'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseManageAuthProvidersComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

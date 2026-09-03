@@ -18,8 +18,7 @@ import { clean, cleanSubscription, completeOnDestroy, transformEmptyStringInputT
  */
 @Directive({
   selector: 'dbxListItemModifier,[dbxListItemModifier]',
-  providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective),
-  standalone: true
+  providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective)
 })
 export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I> {
   readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>, Maybe<'' | ArrayOrValue<Modifier<I>>>>(undefined, { alias: 'dbxListItemModifier', transform: transformEmptyStringInputToUndefined });

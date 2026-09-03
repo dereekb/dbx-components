@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map } from 'rxjs';
 import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
@@ -13,10 +13,8 @@ import { DBX_FORGE_FORM_COMPONENT_TEMPLATE } from '../../../form';
 // MARK: Test Host
 @Component({
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
-  standalone: true,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestFormFieldWrapperHostComponent {
   readonly context = inject(DbxForgeFormContext);
@@ -102,7 +100,7 @@ describe('DbxForgeFormFieldWrapperComponent', () => {
       context.requireValid = false;
 
       context.config = {
-        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', description: 'Pick a rating', min: 0, max: 10 }) as any]
+        fields: [dbxForgeNumberSliderField({ key: 'rating', label: 'Rating', hint: 'Pick a rating', min: 0, max: 10 }) as any]
       };
 
       await settle(fixture);

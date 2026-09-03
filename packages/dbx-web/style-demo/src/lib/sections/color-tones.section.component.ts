@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxColorTone, type DbxThemeColor, DBX_THEME_COLORS_EXTRA, DBX_THEME_COLORS_MAIN, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
 
@@ -14,8 +14,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
  */
 @Component({
   selector: 'dbx-style-demo-color-tones-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective],
   template: `
     <dbx-docs-ui-example header="Color & Tones" hint="Themed [dbxColor] backgrounds, full and tonal.">

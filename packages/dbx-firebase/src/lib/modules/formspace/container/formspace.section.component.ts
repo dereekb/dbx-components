@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type DbxColorInput } from '@dereekb/dbx-web';
 import { type FormSpaceFileSlot, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker } from '@dereekb/firebase';
@@ -125,9 +125,7 @@ export function dbxFirebaseFormSpaceSectionBlockerHint(status: Maybe<FormSpaceSl
   host: {
     class: 'dbx-firebase-formspace-section d-block'
   },
-  imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceStepBlockComponent]
 })
 export class DbxFirebaseFormSpaceSectionComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

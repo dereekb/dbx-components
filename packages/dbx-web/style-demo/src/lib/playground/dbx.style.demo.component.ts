@@ -1,5 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, type Signal, computed, effect, inject, input, viewChild } from '@angular/core';
+import { Component, ElementRef, type Signal, computed, effect, inject, input, viewChild } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
@@ -59,9 +59,7 @@ import { type DbxStyleDemoConfig } from './dbx.style.demo';
       </div>
     </div>
   `,
-  standalone: true,
-  imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective]
 })
 export class DbxStyleDemoComponent {
   private readonly _registry = inject(DbxStyleDemoSectionRegistry);

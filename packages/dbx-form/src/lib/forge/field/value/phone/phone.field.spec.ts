@@ -23,7 +23,6 @@ describe('DbxForgePhoneFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -108,8 +107,8 @@ describe('dbxForgePhoneField()', () => {
     expect(field.props?.allowExtension).toBe(true);
   });
 
-  it('should set description as hint in props', () => {
-    const field = dbxForgePhoneField({ key: 'phone', description: 'Enter your phone' });
+  it('should set hint in props', () => {
+    const field = dbxForgePhoneField({ key: 'phone', hint: 'Enter your phone' });
     expect(field.props?.hint).toBe('Enter your phone');
   });
 
@@ -119,7 +118,7 @@ describe('dbxForgePhoneField()', () => {
       preferredCountries: ['us'],
       enableSearch: true,
       allowExtension: true,
-      description: 'Phone number'
+      hint: 'Phone number'
     });
     expect(field.props?.preferredCountries).toEqual(['us']);
     expect(field.props?.enableSearch).toBe(true);

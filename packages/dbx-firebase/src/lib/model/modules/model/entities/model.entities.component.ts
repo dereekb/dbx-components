@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { type DbxFirebaseModelEntity, type DbxFirebaseModelEntityWithKeyAndStore, type DbxFirebaseModelEntityWithStore } from './model.entities';
 import { MatAccordion } from '@angular/material/expansion';
 import { DbxButtonComponent, DbxListEmptyContentComponent, DbxLoadingComponent } from '@dereekb/dbx-web';
@@ -44,9 +44,7 @@ interface DbxFirebaseModelEntitiesComponentAllEntities {
       }
     </dbx-loading>
   `,
-  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatAccordion, DbxLoadingComponent, DbxFirebaseModelEntitiesEntityComponent, DbxListEmptyContentComponent, DbxButtonComponent]
 })
 export class DbxFirebaseModelEntitiesComponent {
   readonly entitiesWidgetService = inject(DbxFirebaseModelEntitiesWidgetService);

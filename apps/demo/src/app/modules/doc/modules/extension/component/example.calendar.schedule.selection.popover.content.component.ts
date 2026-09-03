@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxScheduleSelectionCalendarDateDaysComponent } from '@dereekb/dbx-form/calendar';
 
 @Component({
@@ -9,8 +9,6 @@ import { DbxScheduleSelectionCalendarDateDaysComponent } from '@dereekb/dbx-form
       <dbx-schedule-selection-calendar-date-days></dbx-schedule-selection-calendar-date-days>
     </div>
   `,
-  standalone: true,
-  imports: [DbxScheduleSelectionCalendarDateDaysComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxScheduleSelectionCalendarDateDaysComponent]
 })
 export class DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent {}

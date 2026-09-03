@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 /**
@@ -34,8 +34,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
       <ng-content select="[right]"></ng-content>
     </mat-toolbar>
   `,
-  imports: [MatToolbarModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatToolbarModule]
 })
 export class DbxPagebarComponent {}

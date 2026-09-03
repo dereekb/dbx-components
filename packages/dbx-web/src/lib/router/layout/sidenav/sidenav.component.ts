@@ -1,4 +1,4 @@
-import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, type OnInit } from '@angular/core';
+import { Component, input, viewChild, inject, computed, type OnInit } from '@angular/core';
 import { type MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { AbstractTransitionWatcherDirective, cleanSubscription, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
@@ -56,9 +56,7 @@ export interface DbxSidenavSidebarState {
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent]
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit {
   private readonly _sidenavSub = cleanSubscription();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { type ThemePalette } from '@angular/material/core';
 import { type Maybe } from '@dereekb/util';
@@ -27,9 +27,7 @@ export interface DbxDialogContentFooterConfig {
   host: {
     class: 'dbx-dialog-content-footer'
   },
-  standalone: true,
-  imports: [MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButtonModule]
 })
 export class DbxDialogContentFooterComponent {
   readonly config = input<Maybe<DbxDialogContentFooterConfig>>();

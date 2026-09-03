@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
@@ -66,9 +66,7 @@ const UNREADABLE_ICON = 'error';
   host: {
     class: 'dbx-pdf-merge-page-list d-block'
   },
-  imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [CdkDropList, MatIconModule, MatButtonModule, DbxPdfMergePageComponent]
 })
 export class DbxPdfMergePageListComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

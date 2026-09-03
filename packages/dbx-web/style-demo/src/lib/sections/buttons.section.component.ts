@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxThemeColor, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
@@ -21,8 +21,6 @@ type DbxStyleDemoButtonVariant = 'basic' | 'stroked' | 'flat' | 'raised' | 'tona
  */
 @Component({
   selector: 'dbx-style-demo-buttons-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxButtonComponent, DbxButtonSpacerDirective],
   template: `
     <dbx-docs-ui-example header="Buttons" hint="dbx-button appearances across theme colors.">

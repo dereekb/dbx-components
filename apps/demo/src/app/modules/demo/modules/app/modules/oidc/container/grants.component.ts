@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DbxFirebaseOidcEntryGrantListContainerComponent } from '@dereekb/dbx-firebase/oidc';
 
@@ -10,8 +10,6 @@ import { DbxFirebaseOidcEntryGrantListContainerComponent } from '@dereekb/dbx-fi
       <dbx-firebase-oidc-grant-list-container></dbx-firebase-oidc-grant-list-container>
     </dbx-content-container>
   `,
-  standalone: true,
-  imports: [DbxContentContainerDirective, DbxFirebaseOidcEntryGrantListContainerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DbxFirebaseOidcEntryGrantListContainerComponent]
 })
 export class DemoAppOidcGrantListPageComponent {}

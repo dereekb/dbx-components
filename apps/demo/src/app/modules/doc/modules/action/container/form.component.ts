@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type WorkUsingObservable, type IsModifiedFunction, type IsValidFunction, type IsEqualFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
@@ -13,9 +13,7 @@ import { DocActionFormExampleFormTwoComponent } from '../component/action.exampl
 
 @Component({
   templateUrl: './form.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocActionExampleToolsComponent, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxFormSourceDirective, DocActionFormExampleFormTwoComponent, DbxErrorComponent, DbxActionErrorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocActionExampleToolsComponent, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxFormSourceDirective, DocActionFormExampleFormTwoComponent, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DocActionFormComponent {
   readonly defaultValue: DocActionFormExampleValue = {

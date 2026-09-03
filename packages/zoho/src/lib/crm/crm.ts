@@ -370,11 +370,3 @@ export interface ZohoCrmRecordAttachmentMetadata {
    */
   $link_docs: number;
 }
-
-// COMPAT: Deprecated aliases
-/**
- * Update details returned by the server for an updated record.
- *
- * @deprecated use ZohoCrmChangeObjectDetails instead.
- */
-export type ZohoCrmRecordUpdateDetails = ZohoCrmChangeObjectDetails;

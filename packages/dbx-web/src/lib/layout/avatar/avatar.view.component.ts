@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe, nameToInitials, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxAvatarViewService } from './avatar.service';
@@ -52,9 +52,7 @@ import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxCuratedC
     '[class.dbx-avatar-view-tile]': 'avatarTileSignal()'
   },
   imports: [MatIconModule, DbxColorDirective],
-  hostDirectives: [DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  hostDirectives: [DbxColorDirective]
 })
 export class DbxAvatarViewComponent {
   readonly defaultContext: Maybe<DbxAvatarContext> = inject(DBX_AVATAR_CONTEXT_DATA_TOKEN, { optional: true });

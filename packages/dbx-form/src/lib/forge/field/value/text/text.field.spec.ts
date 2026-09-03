@@ -33,7 +33,6 @@ describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -102,10 +101,6 @@ describe('DbxForgeTextFieldConfig - Exhaustive Whitelist', () => {
 
     it('hint', () => {
       expectTypeOf<DbxForgeTextFieldConfig['hint']>().toExtend<DynamicText | undefined>();
-    });
-
-    it('description', () => {
-      expectTypeOf<DbxForgeTextFieldConfig['description']>().toExtend<DynamicText | undefined>();
     });
 
     it('validators', () => {
@@ -280,8 +275,8 @@ describe('dbxForgeTextField()', () => {
     expect(field.props?.type).toBe('text');
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeTextField({ key: 'name', description: 'Enter your name' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeTextField({ key: 'name', hint: 'Enter your name' });
     expect(field.props?.hint).toBe('Enter your name');
   });
 

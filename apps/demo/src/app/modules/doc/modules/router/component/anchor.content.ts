@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { randomNumber } from '@dereekb/util';
 
 @Component({
@@ -8,9 +8,7 @@ import { randomNumber } from '@dereekb/util';
       :
       <span class="dbx-primary">{{ value }}</span>
     </span>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocRouterCustomAnchorContentComponent {
   readonly value = randomNumber(100);

@@ -99,7 +99,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link FirebaseServerError } if the error has structured details, or a generic readable error otherwise.",
+      "returns": "A {@link FirebaseServerError} if the error has structured details, or a generic readable error otherwise.",
       "tags": [
         "firebase",
         "https",
@@ -137,7 +137,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link ReadableError } with a human-readable message suitable for display.",
+      "returns": "A {@link ReadableError} with a human-readable message suitable for display.",
       "tags": [
         "firebase",
         "auth",
@@ -1433,7 +1433,7 @@
           "optional": false
         }
       ],
-      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey }",
+      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey}",
       "tags": [
         "firestore",
         "data",
@@ -1478,7 +1478,7 @@
           "optional": false
         }
       ],
-      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey }",
+      "returns": "The same data object, now typed as {@link DocumentDataWithIdAndKey}",
       "tags": [
         "firestore",
         "data",
@@ -1553,7 +1553,7 @@
       "category": "firestore",
       "module": "@dereekb/firebase",
       "subpath": "common/firestore/accessor/document.utility",
-      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
+      "signature": "useDocumentSnapshotData(): <D extends FirestoreDocument<any>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: any) => Promise<Maybe<O>>",
       "description": "Fetches a document's snapshot data (via `snapshot.data()`) and passes it to a `use` callback.\n\nWraps {@link useDocumentSnapshot} with a mapping step that extracts raw data from the snapshot.\nIf the document doesn't exist (data is `undefined`), the `use` callback is not invoked\nand `defaultValue` is returned instead.",
       "params": [],
       "returns": "The result of `use`, or the default value",
@@ -1798,7 +1798,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link LimitedFirestoreDocumentAccessorSnapshotCache } backed by the given accessor.",
+      "returns": "A {@link LimitedFirestoreDocumentAccessorSnapshotCache} backed by the given accessor.",
       "tags": [
         "firestore",
         "cache",

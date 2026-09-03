@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { type Subscription } from 'rxjs';
@@ -21,9 +21,7 @@ import { type DbxWebPageTitleDetails, type DbxWebPageTitleInfoConfig } from './t
       </div>
     }
   `,
-  standalone: true,
-  imports: [DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWebPageTitleInfoDirective]
 })
 class TestHostComponent {
   readonly showRoot = signal(true);

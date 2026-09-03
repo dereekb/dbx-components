@@ -1,11 +1,10 @@
 import { latLngPoint, latLngString, type LatLngTuple, type Maybe, type Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
-import { Component, type OnInit, inject, ChangeDetectionStrategy, viewChild, computed, signal } from '@angular/core';
+import { Component, type OnInit, inject, viewChild, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeMapboxLatLngField, dbxForgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
-import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { type DbxMapboxLayoutSide, type DbxMapboxMarker, type DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, DbxMapboxInjectionStore, DbxMapboxModule, DbxMapboxInjectionComponent, DbxMapboxLayoutComponent, DbxMapboxLayoutVirtualResizeSyncComponent, DbxMapboxMapDirective, DbxMapboxMapStoreInjectionBlockDirective, DbxMapboxMarkerComponent, DbxMapboxMarkersComponent, DbxMapboxMenuComponent } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxMapStore, type DbxMapboxLayoutSide, type DbxMapboxMarker, type DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, DbxMapboxInjectionStore, DbxMapboxModule, DbxMapboxInjectionComponent, DbxMapboxLayoutComponent, DbxMapboxLayoutVirtualResizeSyncComponent, DbxMapboxMapDirective, DbxMapboxMapStoreInjectionBlockDirective, DbxMapboxMarkerComponent, DbxMapboxMarkersComponent, DbxMapboxMenuComponent } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
@@ -25,7 +24,6 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 @Component({
   templateUrl: './mapbox.component.html',
   providers: [DbxMapboxMapStore, DbxMapboxModule, DbxMapboxInjectionStore, DbxMapboxChangeService],
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
@@ -55,8 +53,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
     DbxMapboxMapStoreInjectionBlockDirective,
     JsonPipe,
     DocFormForgeExampleComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocExtensionMapboxComponent implements OnInit {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

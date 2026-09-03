@@ -8,7 +8,7 @@
  * validation reports any error-severity violation so the CLI works as a CI gate.
  */
 
-import { notificationValidateFolder, storagefileValidateFolder } from '@dereekb/dbx-cli/validate';
+import { notificationValidateFolder, storagefileValidateFolder, workspaceValidate } from '@dereekb/dbx-cli/validate';
 import { type ArgumentsCamelCase, type Argv, type CommandModule } from 'yargs';
 import { resolvePath, runCommand } from '../lib/run.js';
 
@@ -74,12 +74,40 @@ const validateFolderCommand: CommandModule<object, ValidateFolderArgs> = {
     })
 };
 
+const RULE_GROUPS = ['targets', 'deploy'] as const;
+
+interface ValidateWorkspaceArgs {
+  readonly dir: string;
+  readonly group: readonly (typeof RULE_GROUPS)[number][];
+  readonly json: boolean;
+}
+
+const validateWorkspaceCommand: CommandModule<object, ValidateWorkspaceArgs> = {
+  command: 'workspace [dir]',
+  describe: "Audit a workspace's Nx target references and deploy lanes for internal consistency.",
+  builder: (yargs: Argv): Argv<ValidateWorkspaceArgs> =>
+    yargs
+      .positional('dir', { type: 'string', default: '.', describe: 'Workspace root to audit. Defaults to the current directory.' })
+      .option('group', { choices: RULE_GROUPS, array: true, default: [...RULE_GROUPS], describe: 'Rule groups to run. Defaults to all.' })
+      .option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as unknown as Argv<ValidateWorkspaceArgs>,
+  handler: (args: ArgumentsCamelCase<ValidateWorkspaceArgs>): Promise<void> =>
+    runCommand(async () => {
+      const workspaceRoot = resolvePath(args.dir).abs;
+      const inspection = await workspaceValidate.inspectWorkspace({ workspaceRoot });
+      const result = workspaceValidate.validateWorkspace({ inspection, groups: args.group });
+      if (result.errorCount > 0) {
+        process.exitCode = 1;
+      }
+      return args.json ? JSON.stringify(result, null, 2) : workspaceValidate.formatResult(result);
+    })
+};
+
 /**
  * The `validate` command group.
  */
 export const VALIDATE_COMMAND: CommandModule = {
   command: 'validate <command>',
-  describe: 'Run a dbx-components folder-convention validator (folder).',
-  builder: (yargs: Argv): Argv => yargs.command(validateFolderCommand).demandCommand(1, 'Specify a validate subcommand.'),
+  describe: 'Run a dbx-components convention validator (folder, workspace).',
+  builder: (yargs: Argv): Argv => yargs.command(validateFolderCommand).command(validateWorkspaceCommand).demandCommand(1, 'Specify a validate subcommand.'),
   handler: () => undefined
 };

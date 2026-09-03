@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxValueAsListItem, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, provideDbxListViewWrapper, AbstractDbxSelectionListWrapperDirective, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, provideDbxListView, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, AbstractDbxValueListViewItemComponent } from '../../layout';
 import { of } from 'rxjs';
 import { type DbxZipBlobPreviewEntryTreeNode } from './zip.blob';
@@ -37,9 +37,7 @@ export function iconForDbxZipPreviewEntryWithSelection(entry: DbxZipBlobPreviewE
   selector: 'dbx-zip-preview-file-entry-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: provideDbxListViewWrapper(DbxZipPreviewEntryListComponent),
-  standalone: true
+  providers: provideDbxListViewWrapper(DbxZipPreviewEntryListComponent)
 })
 export class DbxZipPreviewEntryListComponent extends AbstractDbxSelectionListWrapperDirective<DbxZipPreviewEntryWithSelection> {
   constructor() {
@@ -57,8 +55,6 @@ export class DbxZipPreviewEntryListComponent extends AbstractDbxSelectionListWra
   selector: 'dbx-zip-preview-file-entry-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   providers: provideDbxListView(DbxZipPreviewEntryListViewComponent)
 })
 export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionListViewDirective<DbxZipPreviewEntryWithSelection> {
@@ -80,8 +76,7 @@ export class DbxZipPreviewEntryListViewComponent extends AbstractDbxSelectionLis
       }
     </dbx-file-list-item>
   `,
-  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent],
-  standalone: true
+  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent]
 })
 export class DbxZipPreviewEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxZipPreviewEntryWithSelection> {
   get name() {

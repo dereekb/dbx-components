@@ -1,4 +1,4 @@
-import { Component, viewChild, ElementRef, ChangeDetectionStrategy, computed, inject, SecurityContext, output, input, model } from '@angular/core';
+import { Component, viewChild, ElementRef, computed, inject, SecurityContext, output, input, model } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { asyncScheduler, combineLatest, delayWhen, map, Subject, switchMap, timer, startWith } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -17,9 +17,7 @@ import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
   selector: 'dbx-iframe',
   template: `
     <iframe #iframe src="about:blank" frameborder="0" [scrolling]="scrolling()" allow="autoplay"></iframe>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  `
 })
 export class DbxIframeComponent {
   readonly sanitizer = inject(DomSanitizer);

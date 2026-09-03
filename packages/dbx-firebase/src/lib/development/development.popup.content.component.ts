@@ -20,8 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
   imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentForgeFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
-  providers: [TwoColumnsContextStore],
-  standalone: true
+  providers: [TwoColumnsContextStore]
 })
 export class DbxFirebaseDevelopmentPopupContentComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

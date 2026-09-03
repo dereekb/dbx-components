@@ -45,8 +45,7 @@ export interface DbxAuthImpersonationQuerySyncConfig {
  * impersonation state and would contend.
  */
 @Directive({
-  selector: '[dbxAuthImpersonationQuerySync]',
-  standalone: true
+  selector: '[dbxAuthImpersonationQuerySync]'
 })
 export class DbxAuthImpersonationQuerySyncDirective {
   private readonly _dbxRouterService = inject(DbxRouterService);

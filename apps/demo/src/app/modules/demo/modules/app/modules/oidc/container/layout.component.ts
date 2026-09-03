@@ -1,13 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
 import { DbxNavbarComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [UIView, DbxNavbarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [UIView, DbxNavbarComponent]
 })
 export class DemoAppOidcLayoutComponent {
   readonly navAnchors: ClickableAnchorLinkSegueRef[] = [

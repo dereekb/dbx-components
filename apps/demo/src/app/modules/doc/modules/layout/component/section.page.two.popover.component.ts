@@ -1,4 +1,4 @@
-import { Component, type ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type ElementRef } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,9 +21,7 @@ export interface DocLayoutSectionPageTwoPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, MatFormFieldModule, MatInputModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, MatFormFieldModule, MatInputModule]
 })
 export class DocLayoutSectionPageTwoPopoverComponent extends AbstractPopoverDirective<void> {
   static openPopover(popoverService: DbxPopoverService, { origin }: DocLayoutSectionPageTwoPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<unknown, void> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatProgressBar, type ProgressBarMode } from '@angular/material/progress-bar';
 import { MatProgressSpinner, type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
@@ -51,9 +51,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
       }
     </div>
   `,
-  imports: [MatProgressBar, MatProgressSpinner, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatProgressBar, MatProgressSpinner, NgClass]
 })
 export class DbxLoadingProgressComponent {
   readonly defaultDiameter = DEFAULT_LOADING_PROGRESS_DIAMETER;

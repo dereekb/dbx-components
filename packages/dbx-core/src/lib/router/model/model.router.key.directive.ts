@@ -30,8 +30,7 @@ import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
  * @see {@link DbxRouteModelIdDirective} for the id-based equivalent
  */
 @Directive({
-  selector: '[dbxRouteModelKey]',
-  standalone: true
+  selector: '[dbxRouteModelKey]'
 })
 export class DbxRouteModelKeyDirective {
   readonly dbxRouterService = inject(DbxRouterService);

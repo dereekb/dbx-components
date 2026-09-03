@@ -7,7 +7,7 @@ import { firstValueFrom, first, of, timeout } from 'rxjs';
 import type { DbxForgeSearchableChipFieldConfig, DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
 import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
@@ -50,7 +50,6 @@ describe('DbxForgeSearchableChipFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -415,10 +414,8 @@ describe('dbxForgeSearchableStringChipField()', () => {
   template: `
     <dbx-forge></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class SearchableChipTestHostComponent {
   readonly context = inject(DbxForgeFormContext);

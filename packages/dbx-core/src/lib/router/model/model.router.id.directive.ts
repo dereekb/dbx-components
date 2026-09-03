@@ -29,8 +29,7 @@ import { clean, cleanSubscription } from '../../rxjs';
  * @see {@link dbxRouteModelIdParamRedirect} for the underlying redirect logic
  */
 @Directive({
-  selector: '[dbxRouteModelId]',
-  standalone: true
+  selector: '[dbxRouteModelId]'
 })
 export class DbxRouteModelIdDirective {
   readonly dbxRouterService = inject(DbxRouterService);

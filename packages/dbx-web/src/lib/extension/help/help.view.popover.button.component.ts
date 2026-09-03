@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { AbstractPopoverRefDirective } from '../../interaction/popover/abstract.popover.ref.directive';
 import { DbxPopoverService } from '../../interaction/popover/popover.service';
@@ -34,9 +34,7 @@ export interface DbxHelpViewPopoverButtonConfig extends DbxHelpViewPopoverConfig
   template: `
     <dbx-button #button (buttonClick)="showHelpPopover()" [buttonStyle]="buttonStyleSignal()" [buttonDisplay]="buttonDisplaySignal()"></dbx-button>
   `,
-  standalone: true,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DbxHelpViewPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);

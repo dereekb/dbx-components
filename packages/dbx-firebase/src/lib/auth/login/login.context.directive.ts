@@ -9,7 +9,6 @@ import { DbxFirebaseLoginContext } from './login.context';
  */
 @Directive({
   selector: '[dbxFirebaseLoginContext]',
-  standalone: true,
   providers: [
     {
       provide: DbxFirebaseLoginContext,

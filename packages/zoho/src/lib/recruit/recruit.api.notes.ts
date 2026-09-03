@@ -223,35 +223,3 @@ export function zohoRecruitCreateNotesForRecord(context: ZohoRecruitContext): Zo
     return createNotesInstance(createNotesRequest);
   };
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use zohoRecruitCreateNotes instead.
- */
-export const createNotes = zohoRecruitCreateNotes;
-
-/**
- * @deprecated Use zohoRecruitDeleteNotes instead.
- */
-export const deleteNotes = zohoRecruitDeleteNotes;
-
-/**
- * @deprecated Use zohoRecruitGetNotesForRecord instead.
- */
-export const getNotesForRecord = zohoRecruitGetNotesForRecord;
-
-/**
- * @deprecated Use zohoRecruitGetNotesForRecordPageFactory instead.
- */
-export const getNotesForRecordPageFactory = zohoRecruitGetNotesForRecordPageFactory;
-
-/**
- * @deprecated Use zohoRecruitCreateNotesForRecord instead.
- */
-export const createNotesForRecord = zohoRecruitCreateNotesForRecord;
-
-/**
- * @deprecated Use ZohoRecruitGetNotesForRecordPageFactory instead.
- */
-export type GetNotesForRecordPageFactory = ZohoRecruitGetNotesForRecordPageFactory;

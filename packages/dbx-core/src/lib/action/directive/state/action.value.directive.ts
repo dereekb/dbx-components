@@ -45,8 +45,7 @@ import { cleanSubscriptionWithLockSet, completeOnDestroy } from '../../../rxjs';
  * @see {@link DbxActionValueStreamDirective} for reactive stream-based values.
  */
 @Directive({
-  selector: 'dbxActionValue,[dbxActionValue]',
-  standalone: true
+  selector: 'dbxActionValue,[dbxActionValue]'
 })
 export class DbxActionValueDirective<T, O> {
   readonly valueOrFunction = input<Maybe<GetterOrValue<T> | ''>>('', { alias: 'dbxActionValue' });

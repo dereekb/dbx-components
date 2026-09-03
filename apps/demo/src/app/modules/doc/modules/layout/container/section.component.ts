@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { LOREM } from '../../shared';
 import { DbxButtonComponent, DbxContentContainerDirective, DbxSectionComponent, DbxSubSectionComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -7,9 +7,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   templateUrl: './section.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSectionComponent, DbxButtonComponent, MatButton, DbxSubSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSectionComponent, DbxButtonComponent, MatButton, DbxSubSectionComponent]
 })
 export class DocLayoutSectionComponent {
   lorem = LOREM;

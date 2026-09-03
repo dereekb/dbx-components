@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { type FieldWrapper } from '@ng-forge/dynamic-forms';
@@ -24,9 +24,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
       </div>
     </div>
   `,
-  imports: [MatIconButton, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconButton, MatIconModule]
 })
 export class DbxForgeInfoWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

@@ -1,6 +1,19 @@
 const { withNx } = require('@nx/rollup/with-nx');
 const applyVisualizer = require('../../../rollup.visualizer.config.cjs');
 
+//
+// `tsconfig.lib.json` deliberately declares an EMPTY `"paths": {}`, and that empty map is
+// load-bearing. It blanks the workspace `paths` inherited from `tsconfig.base.json` so no
+// `@dereekb/*` import can resolve to another package's SOURCE — which is exactly what
+// `buildLibsFromSource: false` exists to prevent (reaching across package roots fails the
+// declaration emit with TS6059). `withNx` then re-adds ONLY this project's graph dependencies,
+// mapped to their `dist/` outputs.
+//
+// It must stay EMPTY rather than naming `dist/...` targets explicitly: `@nx/js`'s
+// `resolvePathsBaseUrl` anchors path values to the first tsconfig in the extends chain that
+// declares a NON-EMPTY `paths`. Any entry here would re-anchor Nx's own workspace-root-relative
+// `dist/...` values to THIS directory and break them, now that the root config no longer sets the
+// `baseUrl` that TypeScript 6 deprecates and TypeScript 7 removes.
 const options = {
   importPath: '@dereekb/dbx-cli/route',
   main: './src/index.ts',

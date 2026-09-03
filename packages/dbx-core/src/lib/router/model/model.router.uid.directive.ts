@@ -32,8 +32,7 @@ import { cleanSubscription } from '../../rxjs';
  * @see {@link DbxAuthImpersonationService} for the impersonation-aware effective user id
  */
 @Directive({
-  selector: '[dbxRouteModelIdFromAuthUserId]',
-  standalone: true
+  selector: '[dbxRouteModelIdFromAuthUserId]'
 })
 export class DbxRouteModelIdFromAuthUserIdDirective {
   readonly dbxAuthService = inject(DbxAuthService);

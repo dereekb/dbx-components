@@ -8,12 +8,17 @@ import { TemporaryBuildTargetGeneratorSchema } from './schema';
 const SCHEMA_TAG = 'x-g-by-btf';
 const TSCONFIG_TAG = 'x-g-by-btf-tsconfig';
 
+/**
+ * Build executors that declare the tsconfig Angular should compile against.
+ */
+const TSCONFIG_BEARING_BUILD_EXECUTORS: ReadonlySet<string> = new Set(['@nx/angular:package', '@nx/angular:application', '@angular/build:application']);
+
 function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remove = false) {
   let tsConfigName = 'tsconfig.json';
 
   // Find the tsconfig used by the build so angular has the proper target
   Object.entries(project.targets ?? {}).forEach(([targetName, value]) => {
-    if ((targetName === 'build' || targetName === 'build-base') && (value.executor === '@nx/angular:package' || value.executor === '@nx/angular:application') && value.options?.tsConfig) {
+    if ((targetName === 'build' || targetName === 'build-base') && value.executor != null && TSCONFIG_BEARING_BUILD_EXECUTORS.has(value.executor) && value.options?.tsConfig) {
       const tsConfigPath = value.options.tsConfig;
       tsConfigName = tsConfigPath.split('/').pop() ?? tsConfigPath;
     }

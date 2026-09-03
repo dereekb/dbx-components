@@ -6,12 +6,12 @@
     "*.css"
   ],
   "peerDependencies": {
-    "@angular/cdk": "^21.2.9",
-    "@angular/common": "21.2.11",
-    "@angular/core": "21.2.11",
-    "@angular/forms": "21.2.11",
-    "@angular/material": "^21.2.9",
-    "@angular/platform-browser": "21.2.11",
+    "@angular/cdk": "^22.1.4",
+    "@angular/common": "22.1.4",
+    "@angular/core": "22.1.4",
+    "@angular/forms": "22.1.4",
+    "@angular/material": "^22.1.4",
+    "@angular/platform-browser": "22.1.4",
     "@cantoo/pdf-lib": "^2.6.5",
     "@dereekb/browser": "13.43.0",
     "@dereekb/date": "13.43.0",
@@ -19,12 +19,12 @@
     "@dereekb/rxjs": "13.43.0",
     "@dereekb/util": "13.43.0",
     "@dereekb/vitest": "13.43.0",
-    "@ngbracket/ngx-layout": "^21.0.0",
-    "@ngrx/component-store": "^21.1.0",
-    "@ngrx/effects": "^21.1.0",
-    "@ngrx/store": "^21.1.0",
+    "@ngbracket/ngx-layout": "^22.0.1",
+    "@ngrx/component-store": "^22.0.0",
+    "@ngrx/effects": "^22.0.0",
+    "@ngrx/store": "^22.0.0",
     "@placemarkio/geo-viewport": "^1.0.2",
-    "@uirouter/angular": "21.0.0",
+    "@uirouter/angular": "22.0.0",
     "@uirouter/core": "^6.1.2",
     "@zip.js/zip.js": "^2.8.26",
     "angular-calendar": "^0.32.2",
@@ -32,8 +32,8 @@
     "date-fns": "^4.1.0",
     "linkify-string": "^4.3.2",
     "mapbox-gl": "^3.22.0",
-    "ng-overlay-container": "^21.0.1",
-    "ngx-infinite-scroll": "^21.0.0",
+    "ng-overlay-container": "^22.0.1",
+    "ngx-infinite-scroll": "^22.0.0",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e",
     "rxjs": "^7.8.2"
   },
@@ -53,7 +53,7 @@
     }
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "8.59.3",
-    "eslint": "10.4.0"
+    "@typescript-eslint/parser": "8.69.0",
+    "eslint": "10.9.1"
   }
 }

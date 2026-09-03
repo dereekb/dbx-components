@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -68,9 +68,7 @@ const ROTATION_VALUES: readonly PdfMergePageRotation[] = [0, 90, 180, 270];
     class: 'dbx-pdf-merge-page d-block',
     '[class.dbx-pdf-merge-page--removed]': 'removedSignal()'
   },
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, DbxChipDirective]
 })
 export class DbxPdfMergePageComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

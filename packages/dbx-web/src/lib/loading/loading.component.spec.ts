@@ -1,5 +1,5 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, Injector, input, runInInjectionContext } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/rxjs';
@@ -12,9 +12,9 @@ import { DbxLoadingComponent } from './loading.component';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxLoadingComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
     const injector = TestBed.inject(Injector);
@@ -143,9 +143,7 @@ const TEST_CONTENT = 'Content';
       </div>
     </dbx-loading>
   `,
-  standalone: true,
-  imports: [DbxLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLoadingComponent]
 })
 class TestLoadingComponent {
   readonly show = input<Maybe<boolean>>();

@@ -5,7 +5,6 @@ export * from './error.component';
 export * from './error.view.component';
 export * from './error.details.component';
 export * from './error.loading.directive';
-export * from './error.module';
 export * from './error.popover.component';
 export * from './error.snackbar.action.directive';
 export * from './error.snackbar.component';

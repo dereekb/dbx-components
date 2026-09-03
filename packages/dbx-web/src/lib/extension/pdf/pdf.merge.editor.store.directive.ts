@@ -35,7 +35,6 @@ export interface DbxPdfMergeEditorSourceConfig {
  */
 @Directive({
   selector: '[dbxPdfMergeEditorStore]',
-  standalone: true,
   providers: [DbxPdfMergeEditorStore],
   exportAs: 'dbxPdfMergeEditorStore'
 })

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, inject, viewChild, ElementRef } from '@angular/core';
+import { Component, input, computed, effect, type Signal, type InputSignal, inject, viewChild, ElementRef } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -80,9 +80,7 @@ export interface DbxForgeTimeDurationFieldComponentProps {
  */
 @Component({
   selector: 'dbx-forge-timeduration-field',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, FormsModule, ReactiveFormsModule, DynamicTextPipe, AsyncPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './duration.field.component.html'
 })
 export class DbxForgeTimeDurationFieldComponent {

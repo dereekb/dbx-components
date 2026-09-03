@@ -17,8 +17,7 @@ import { type Observable } from 'rxjs';
  * ```
  */
 @Pipe({
-  name: 'asObservable',
-  standalone: true
+  name: 'asObservable'
 })
 export class AsObservablePipe implements PipeTransform {
   transform<T>(input: ObservableOrValueGetter<T>): Observable<T> {

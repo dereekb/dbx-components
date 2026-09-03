@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxActionLoadingContextDirective, DbxActionModule, DbxActionSnackbarErrorDirective, type DbxButtonStyle, type DbxFileListItemDetailsDateStyle, DbxFileUploadActionSyncDirective, DbxFileUploadComponent, DbxLabelBlockComponent, DbxLoadingComponent, type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { DEFAULT_FORM_SPACE_FILE_ACCESS, DEFAULT_FORM_SPACE_SLOT_MAX_FILES, type FormSpaceFile, type FormSpaceFileAccess, type FormSpaceFileSlot, FormSpaceFileValidationState, firestoreModelKey, isFormSpaceFileAccessibleWithAccess, type StorageFileKey, storageFileIdentity } from '@dereekb/firebase';
@@ -205,9 +205,7 @@ export interface DbxFirebaseFormSpaceSlotUploadComponentConfig {
     DbxFirebaseStorageFileUploadSyncDirective,
     DbxFirebaseFormSpaceSlotUploadDirective,
     DbxFirebaseFormSpaceUploadInitializeDocumentsDirective
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  ]
 })
 export class DbxFirebaseFormSpaceSlotUploadComponent {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);

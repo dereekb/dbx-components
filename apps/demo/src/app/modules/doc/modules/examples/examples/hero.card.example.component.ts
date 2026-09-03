@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -32,8 +32,6 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
  */
 @Component({
   selector: 'doc-hero-card-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, MatButtonModule, MatIconModule, MatProgressBar, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Hero Card (Onboarding Progress)" hint="Top-of-page hero on an inverse surface with eyebrow, headline, progress, action, and trailing percent.">

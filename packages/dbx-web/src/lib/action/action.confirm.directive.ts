@@ -49,8 +49,7 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
  * ```
  */
 @Directive({
-  selector: '[dbxActionConfirm]',
-  standalone: true
+  selector: '[dbxActionConfirm]'
 })
 export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

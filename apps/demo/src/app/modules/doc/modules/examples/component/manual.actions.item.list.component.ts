@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxAnchorComponent, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -29,9 +29,7 @@ import { type ManualActionItemValue, type ManualActionItemValueWithSelection } f
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-list-auto-height dbx-list-no-hover-effects dbx-list-no-item-padding'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocManualActionsItemListComponent extends AbstractDbxSelectionListWrapperDirective<ManualActionItemValue> {
   constructor() {
@@ -49,9 +47,7 @@ export class DocManualActionsItemListComponent extends AbstractDbxSelectionListW
   providers: provideDbxListView(DocManualActionsItemListViewComponent),
   host: {
     class: 'dbx-list-item-p0'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionListViewDirective<ManualActionItemValue> {
   // Drop `icon` (rows render no tile) and `anchor` (button owns it; row stays non-clickable).
@@ -80,9 +76,7 @@ export class DocManualActionsItemListViewComponent extends AbstractDbxSelectionL
       </div>
     </div>
   `,
-  imports: [MatButtonModule, DbxButtonComponent, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, DbxButtonComponent, DbxAnchorComponent]
 })
 export class DocManualActionsItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ManualActionItemValue> {
   get title(): string {

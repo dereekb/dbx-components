@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type DbxWidgetViewComponentConfig } from './widget';
@@ -36,9 +36,7 @@ import { NgTemplateOutlet } from '@angular/common';
   host: {
     class: 'dbx-widget-view'
   },
-  standalone: true,
-  imports: [DbxInjectionComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent, NgTemplateOutlet]
 })
 export class DbxWidgetViewComponent {
   readonly dbxWidgetService = inject(DbxWidgetService);

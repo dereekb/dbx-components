@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed, effect, type Signal, type InputSignal, DestroyRef, ElementRef, inject, signal, untracked } from '@angular/core';
+import { Component, input, computed, effect, type Signal, type InputSignal, DestroyRef, ElementRef, inject, signal, untracked } from '@angular/core';
 import { type AbstractControl, FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -90,9 +90,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
  */
 @Component({
   selector: 'dbx-forge-datetime-field',
-  standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatDatepickerModule, MatButtonModule, MatIconModule, MatMenuModule, MatDividerModule, ReactiveFormsModule, FormsModule, NgTemplateOutlet, DatePipe, DateDistancePipe, TimeDistancePipe, GetValuePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './datetime.field.component.html',
   styles: `
     .dbx-forge-datetime-field-wrapper {

@@ -1,4 +1,4 @@
-import { type OnInit, Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { type OnInit, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
@@ -29,7 +29,6 @@ export interface TestCalendarEventData extends DateCell {
 @Component({
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
@@ -52,8 +51,7 @@ export interface TestCalendarEventData extends DateCell {
     DatePipe,
     DocFeatureFormTabsComponent,
     DocFormForgeExampleComponent
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);

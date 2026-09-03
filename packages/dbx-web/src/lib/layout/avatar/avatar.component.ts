@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, Injector, input } from '@angular/core';
+import { Component, computed, inject, Injector, input } from '@angular/core';
 import { DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarContext, type DbxAvatarImageFit, type DbxAvatarKey, type DbxAvatarSelector, type DbxAvatarSize, type DbxAvatarStyle } from './avatar';
 import { DbxAvatarViewService } from './avatar.service';
 import { type AuthUserIdentifier, DbxInjectionComponent, type DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';
@@ -50,9 +50,7 @@ import { type DbxColorInput, type DbxColorTone } from '../style/style';
     class: 'dbx-avatar',
     '[class.dbx-avatar-small]': `avatarSize() === 'small'`,
     '[class.dbx-avatar-large]': `avatarSize() === 'large'`
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxAvatarComponent {
   readonly injector = inject(Injector);

@@ -18,8 +18,7 @@ import { cleanSubscriptionWithLockSet, DbxActionContextStoreSourceInstance, DbxA
  * ```
  */
 @Directive({
-  selector: '[dbxFileUploadActionSync]',
-  standalone: true
+  selector: '[dbxFileUploadActionSync]'
 })
 export class DbxFileUploadActionSyncDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance);

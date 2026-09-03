@@ -35,14 +35,13 @@ describe('Date Pipe Test Component', () => {
   template: `
     <div>
       <p>{{ date | dateFormatFromTo: 'h:mm a' : 10 }}</p>
-      <p>{{ date | dateFormatDistance }}</p>
+      <p>{{ date | dateFormatDistance: 'MMM d, y' }}</p>
       <p>{{ 500 | minutesString }}</p>
       <p>{{ date | timeDistance }}</p>
       <p>{{ date | toJsDate }}</p>
       <p>{{ date | toMinutes }}</p>
     </div>
   `,
-  standalone: true,
   imports: [DateFormatFromToPipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistancePipe, ToJsDatePipe, ToMinutesPipe]
 })
 class DatePipesTestComponent {

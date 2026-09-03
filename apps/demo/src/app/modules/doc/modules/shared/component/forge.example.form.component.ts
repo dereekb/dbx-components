@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { dbxForgeFormComponentProviders, AbstractConfigAsyncForgeFormDirective, DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
@@ -29,9 +29,7 @@ import { JsonPipe } from '@angular/common';
   `,
   selector: 'doc-forge-example-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
-  imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe]
 })
 export class DocFormForgeExampleComponent extends AbstractConfigAsyncForgeFormDirective<any, FormConfig> {
   readonly none = input(false);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, viewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,9 +25,7 @@ import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-forge-searchable-text-field',
   templateUrl: './searchable-text.field.component.html',
-  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatOptionModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent]
 })
 export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableTextFieldProps<T, M, H>> {
   private readonly elementRef = inject(ElementRef<HTMLElement>);

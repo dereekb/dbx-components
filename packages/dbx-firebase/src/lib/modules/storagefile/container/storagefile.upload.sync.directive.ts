@@ -8,8 +8,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
  */
 @Directive({
   selector: '[dbxFirebaseStorageFileUploadSync]',
-  exportAs: 'dbxFirebaseStorageFileUploadSync',
-  standalone: true
+  exportAs: 'dbxFirebaseStorageFileUploadSync'
 })
 export class DbxFirebaseStorageFileUploadSyncDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);

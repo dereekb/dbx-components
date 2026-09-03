@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, type DbxValueAsListItem, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule } from '@dereekb/dbx-web';
 
@@ -23,9 +23,7 @@ export type TwoColumnSrefValueWithSelection = DbxValueAsListItem<TwoColumnSrefVa
 @Component({
   selector: 'doc-two-column-sref-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocTwoColumnSrefListComponent extends AbstractDbxSelectionListWrapperDirective<TwoColumnSrefValue> {
   constructor() {
@@ -40,9 +38,7 @@ export class DocTwoColumnSrefListComponent extends AbstractDbxSelectionListWrapp
   selector: 'doc-two-column-sref-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DocTwoColumnSrefListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  providers: provideDbxListView(DocTwoColumnSrefListViewComponent)
 })
 export class DocTwoColumnSrefListViewComponent extends AbstractDbxSelectionListViewDirective<TwoColumnSrefValue> {
   readonly config: DbxSelectionValueListViewConfig<TwoColumnSrefValueWithSelection> = {
@@ -58,9 +54,7 @@ export class DocTwoColumnSrefListViewComponent extends AbstractDbxSelectionListV
         <span>{{ title }}</span>
       </div>
     </div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocTwoColumnSrefListViewItemComponent extends AbstractDbxValueListViewItemComponent<TwoColumnSrefValue> {
   get title() {

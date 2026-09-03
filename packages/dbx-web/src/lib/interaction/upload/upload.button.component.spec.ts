@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type Maybe } from '@dereekb/util';
@@ -93,9 +93,7 @@ describe('DbxFileUploadButtonComponent max files', () => {
   template: `
     <dbx-file-upload-button [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="maxFilesSignal()"></dbx-file-upload-button>
   `,
-  imports: [DbxFileUploadButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFileUploadButtonComponent]
 })
 class TestDbxFileUploadButtonComponent {
   readonly button = viewChild.required(DbxFileUploadButtonComponent);

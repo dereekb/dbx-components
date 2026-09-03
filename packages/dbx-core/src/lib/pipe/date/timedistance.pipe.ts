@@ -25,7 +25,6 @@ import { ToJsDatePipe } from './tojsdate.pipe';
  */
 @Pipe({
   name: 'timeCountdownDistance',
-  standalone: true,
   pure: false
 })
 export class TimeDistanceCountdownPipe implements PipeTransform {
@@ -75,7 +74,6 @@ export class TimeDistanceCountdownPipe implements PipeTransform {
  */
 @Pipe({
   name: 'timeDistance',
-  standalone: true,
   pure: false
 })
 export class TimeDistancePipe implements PipeTransform {

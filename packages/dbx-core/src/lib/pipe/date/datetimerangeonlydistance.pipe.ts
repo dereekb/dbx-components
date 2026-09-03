@@ -26,7 +26,6 @@ import { type DateRange, formatDateRangeDistance, type FormatDateRangeDistanceFu
  */
 @Pipe({
   name: 'dateTimeRangeOnlyDistance',
-  standalone: true,
   pure: true
 })
 export class DateTimeRangeOnlyDistancePipe implements PipeTransform {

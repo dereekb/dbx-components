@@ -16,7 +16,7 @@ dbx-components-cli spec search apps/demo-api/.../guestbook.crud.spec.ts Guestboo
 # Inventory every model-group spec file in an API app
 dbx-components-cli spec list apps/demo-api
 
-# Scaffold a whole dbx-components project (the in-process successor to setup/setup-project.sh)
+# Scaffold a whole dbx-components project
 dbx-components-cli setup init gethapierapp gethapier getHapier 9300 --dir ~/code/gethapier
 
 # Scaffold just one module's template files into an existing project
@@ -62,7 +62,7 @@ dbx-components-cli list actions apps/demo-api
 | `list api <componentDir> [--model <name>]` | List the CRUD / standalone callModel entries declared in a `-firebase` component. |
 | `list models <componentDir> [--api <apiDir>]` | List the Firestore models declared under a `-firebase` component. |
 | `list actions <apiDir>` | List the `*ServerActions` classes an API app exposes and how they are wired. |
-| `setup init [firebaseProjectId] …` | Run the full ordered setup sequence (the in-process port of `setup/setup-project.sh`). |
+| `setup init [firebaseProjectId] …` | Run the full ordered setup sequence: `create-nx-workspace` + every module, in order. |
 | `setup <module> [firebaseProjectId] …` | Run one module — `workspace`, `firebase-components`, `app-components`, `api`, `app`, `root`, `integrations` — through its generate → install → scaffold → configure phases. |
 | `setup validate [--module <id>]` | Validate that the expected scaffolded structure is present (non-zero exit on any missing file). |
 | `setup manifest show\|write …` | Read or derive + write the `dbx.setup.json` project manifest. |
@@ -71,7 +71,7 @@ Every command accepts `--json` for machine-readable output. Validators set a non
 
 ### `setup` — deterministic project scaffolding
 
-`setup` ports `setup/setup-project.sh` into an in-process, module-by-module CLI. All ~200 template files are bundled inside the package as a `templates.zip` (built by `tools/build-templates-archive.mjs`); each module reads its scaffold subtree from that archive (falling back to the on-disk `templates/` directory for source/dev runs).
+`setup` is the supported way to stand up a dbx-components project — an in-process, module-by-module scaffolder. All ~200 template files are bundled inside the package as a `templates.zip` (built by `tools/build-templates-archive.mjs`); each module reads its scaffold subtree from that archive (falling back to the on-disk `templates/` directory for source/dev runs).
 
 - **Modules.** `workspace` (create-nx-workspace + nx.json), `firebase-components`, `app-components`, `api`, `app`, `root` (firebase config, docker, scripts, husky, vitest preset, dependency install, project/tsconfig edits), and `integrations` (zoho scripts + manifest). Each runs four individually-skippable phases — **generate → install → scaffold → configure** (`--skip-generate`, `--skip-install`, `--skip-scaffold`, `--skip-configure`).
 - **Naming** is resolved from explicit positionals **or** an existing `dbx.setup.json`, so a single module can be re-run without re-entering it.
@@ -79,4 +79,4 @@ Every command accepts `--json` for machine-readable output. Validators set a non
 
 The deterministic core (naming derivation, order-sensitive token substitution, the scaffold engine, manifest, json-edits, validation) is fully unit-tested offline; `init`'s generate/install/git phases shell out and are exercised via `--dry-run`.
 
-> **Note:** the templates are duplicated from `setup/templates/**` (plus the scattered repo-root files) into this package's `templates/**`. `setup/setup-project.sh` is intentionally left untouched and keeps working; de-duplicate when the script is retired.
+> **History:** `setup` began as an in-process port of the repo's `setup/setup-project.sh` shell script, which curl'd its templates out of `setup/templates/**` at run time. That script and its template copy have both been deleted — `packages/dbx-components-cli/templates/**` is now the single source of truth, and CircleCI's `test-setup-cli` job exercises this CLI end to end. Provenance comments in `src/lib/setup/**` still cite `setup-project.sh:NNN` line numbers; read them against the file's last revision in git history.

@@ -303,23 +303,3 @@ export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldU
 
   return result;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE instead.
- * @dbxAllowDefaultPrefix
- */
-export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE;
-
-/**
- * @deprecated use DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE instead.
- * @dbxAllowDefaultPrefix
- */
-export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE;
-
-/**
- * @deprecated use DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE instead.
- * @dbxAllowDefaultPrefix
- */
-export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE;

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, input, viewChild } from '@angular/core';
+import { Component, type ElementRef, input, viewChild } from '@angular/core';
 import { DbxClickToCopyTextDirective } from './copy.text.directive';
 import { type Maybe } from '@dereekb/util';
 import { type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig } from '../../util';
@@ -36,9 +36,7 @@ import { MatIcon } from '@angular/material/icon';
   host: {
     class: 'dbx-click-to-copy-text-component'
   },
-  imports: [DbxClickToCopyTextDirective, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxClickToCopyTextDirective, MatIcon]
 })
 export class DbxClickToCopyTextComponent {
   readonly contentElementRef = viewChild<ElementRef<HTMLElement>>('content');

@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({
@@ -9,9 +9,7 @@ import { MatButton } from '@angular/material/button';
       <button mat-raised-button (click)="shouldClose.emit()">Close</button>
     </div>
   `,
-  standalone: true,
-  imports: [MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton]
 })
 export class DocInteractionExamplePopupContentComponent {
   readonly reopen = input<() => void>();

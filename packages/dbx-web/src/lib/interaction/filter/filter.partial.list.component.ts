@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlist.component';
 
@@ -15,8 +15,6 @@ import { DbxAnchorListComponent } from '../../router/layout/anchorlist/anchorlis
   template: `
     <dbx-anchor-list [anchors]="presetAnchorsSignal()"></dbx-anchor-list>
   `,
-  imports: [DbxAnchorListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxAnchorListComponent]
 })
 export class DbxPartialPresetFilterListComponent<F> extends AbstractDbxPartialPresetFilterMenuDirective<F> {}

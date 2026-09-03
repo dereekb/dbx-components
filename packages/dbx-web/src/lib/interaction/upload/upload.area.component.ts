@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, HostListener, input, output, signal } from '@angular/core';
+import { Component, computed, HostListener, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 import { fileArrayAcceptMatchFunction } from './upload.accept';
@@ -58,9 +58,7 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
     '[class.dbx-file-upload-area-drag-over]': '!disabledSignal() && dragOverStateSignal()'
   },
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadAreaComponent),
-  imports: [MatIconModule, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, NgTemplateOutlet]
 })
 export class DbxFileUploadAreaComponent extends AbstractDbxFileUploadComponent {
   readonly icon = input<Maybe<string>>();

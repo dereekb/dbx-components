@@ -1,5 +1,5 @@
 import { type ServerError } from '@dereekb/util';
-import Stripe from 'stripe';
+import { Stripe } from 'stripe';
 import { type Request } from 'express';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { StripeServiceConfig } from './stripe.config';

@@ -732,34 +732,3 @@ export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO860
   const result = parse(dayString, format, new Date());
   return startOfDay(result);
 }
-
-// COMPAT: Deprecated aliases
-
-/**
- * @deprecated Use MONTH_DAY_SLASH_DATE_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const monthDaySlashDateStringFormat = MONTH_DAY_SLASH_DATE_STRING_FORMAT;
-
-/**
- * @deprecated use formatToMonthDaySlashDate instead.
- */
-export const formatToShortDateString = formatToMonthDaySlashDate;
-
-/**
- * @deprecated Use DATE_MONTH_DAY_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateMonthDayStringFormat = DATE_MONTH_DAY_STRING_FORMAT;
-
-/**
- * @deprecated Use DATE_TIME_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateTimeStringFormat = DATE_TIME_STRING_FORMAT;
-
-/**
- * @deprecated Use DATE_SHORT_DATE_AND_TIME_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateShortDateAndTimeStringFormat = DATE_SHORT_DATE_AND_TIME_STRING_FORMAT;

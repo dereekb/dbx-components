@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { AbstractDbxActionHandlerDirective, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,9 +22,7 @@ import { type WorkInstance } from '@dereekb/rxjs';
   selector: 'dbx-filter-wrapper',
   templateUrl: './filter.wrapper.component.html',
   providers: [provideActionStoreSource(null)],
-  standalone: true,
-  imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule]
 })
 export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);

@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from 'date-fns';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarScheduleSelectionStore, type DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { type DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
@@ -47,9 +47,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
     </dbx-content-border>
   `,
   providers: [DbxCalendarScheduleSelectionStore],
-  standalone: true,
-  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

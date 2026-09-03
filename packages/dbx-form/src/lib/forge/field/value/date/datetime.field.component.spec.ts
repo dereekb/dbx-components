@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
@@ -24,10 +24,8 @@ import { type DbxForgeDateTimeRangeRowConfig, dbxForgeDateTimeRangeRow } from '.
       <form [dynamic-form]="config" [(value)]="formValue" [formOptions]="formOptions()"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestForgeDateTimeHostComponent {
   config!: FormConfig;
@@ -88,13 +86,12 @@ async function waitFor(input: { fixture: ComponentFixture<TestForgeDateTimeHostC
  * Convenience helper that accepts component props at the top level (flat config) and
  * restructures them into the `props` slot that the forge runtime expects.
  */
-function createConfig(input: { key: string; label?: string; required?: boolean; hint?: any; description?: any } & Partial<DbxForgeDateTimeFieldComponentProps>): FormConfig {
-  const { key, label, required, hint, description, ...componentProps } = input;
+function createConfig(input: { key: string; label?: string; required?: boolean; hint?: any } & Partial<DbxForgeDateTimeFieldComponentProps>): FormConfig {
+  const { key, label, required, hint, ...componentProps } = input;
   const fieldConfig: any = { key };
   if (label !== undefined) fieldConfig.label = label;
   if (required !== undefined) fieldConfig.required = required;
   if (hint !== undefined) fieldConfig.hint = hint;
-  if (description !== undefined) fieldConfig.description = description;
   if (Object.keys(componentProps).length > 0) fieldConfig.props = componentProps;
   return { fields: [dbxForgeDateTimeField(fieldConfig) as any] };
 }

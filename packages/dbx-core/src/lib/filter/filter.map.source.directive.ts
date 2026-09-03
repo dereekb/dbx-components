@@ -40,8 +40,7 @@ export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbx
 @Directive({
   selector: '[dbxFilterMapSource]',
   exportAs: 'dbxFilterMapSource',
-  providers: [provideFilterSource(DbxFilterMapSourceDirective)],
-  standalone: true
+  providers: [provideFilterSource(DbxFilterMapSourceDirective)]
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSource<F> {
   /**

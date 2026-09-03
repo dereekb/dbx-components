@@ -1,4 +1,4 @@
-import { Component, computed, input, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxSectionHeaderConfig, type DbxSectionHeaderHType } from './section';
 import { MatIconModule } from '@angular/material/icon';
@@ -76,9 +76,7 @@ import { NgTemplateOutlet } from '@angular/common';
       </span>
     </ng-template>
   `,
-  standalone: true,
   imports: [MatIconModule, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.dbx-section-header-full-title]': 'headerConfigSignal().onlyHeader',
     '[class.dbx-section-header-padded]': 'headerConfigSignal().paddedHeader'

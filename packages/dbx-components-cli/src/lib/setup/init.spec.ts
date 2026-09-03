@@ -51,7 +51,7 @@ describe('runSetupInit', () => {
     expect(result.steps).toContain('commit: checkpoint: setup api');
 
     const joined = shell.commands.join('\n');
-    expect(joined).toContain('create-nx-workspace@23.0.0');
+    expect(joined).toContain('create-nx-workspace@23.1.3');
     expect(joined).toContain('@nx/node:app');
     // The api app is generated as a plain esbuild node app, never through `@nx/nest` (see api.module.ts).
     expect(joined).not.toContain('@nx/nest');
@@ -61,7 +61,7 @@ describe('runSetupInit', () => {
     // Late steps: verdaccio cleanup + dependency alignment + a final reconcile install.
     expect(result.steps).toContain('finalize: verdaccio cleanup + dependency alignment');
     expect(result.steps).toContain('install: reconcile node_modules');
-    expect(shell.commands).toContain('npm install --legacy-peer-deps');
+    expect(shell.commands).toContain('npm install --force');
   });
 
   it('skips login + final phases in ci-test mode', async () => {

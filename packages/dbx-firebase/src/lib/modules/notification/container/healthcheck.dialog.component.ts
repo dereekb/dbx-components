@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type Injector } from '@angular/core';
+import { Component, type Injector } from '@angular/core';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxDialogContentDirective } from '@dereekb/dbx-web';
 import { DbxFirebaseNotificationHealthCheckViewComponent } from './healthcheck.view.component';
@@ -26,9 +26,7 @@ export interface DbxFirebaseNotificationHealthCheckDialogComponentConfig {
       <dbx-firebase-notification-healthcheck-view></dbx-firebase-notification-healthcheck-view>
     </dbx-dialog-content>
   `,
-  standalone: true,
-  imports: [DbxDialogContentDirective, DbxFirebaseNotificationHealthCheckViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogContentDirective, DbxFirebaseNotificationHealthCheckViewComponent]
 })
 export class DbxFirebaseNotificationHealthCheckDialogComponent extends AbstractDialogDirective {
   /**

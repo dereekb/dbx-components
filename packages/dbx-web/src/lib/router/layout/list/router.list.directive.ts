@@ -33,8 +33,7 @@ export const DBX_ROUTER_VALUE_LIST_ITEM_MODIFIER_KEY = 'router_anchor';
  * ```
  */
 @Directive({
-  selector: '[dbxListItemAnchorModifier]',
-  standalone: true
+  selector: '[dbxListItemAnchorModifier]'
 })
 export class DbxListItemAnchorModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> {
   readonly anchorForItem = input<Maybe<AnchorForValueFunction<T>>>(undefined, { alias: 'dbxListItemAnchorModifier' });

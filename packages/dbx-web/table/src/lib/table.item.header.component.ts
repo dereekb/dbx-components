@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
@@ -10,9 +10,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableItemHeaderComponent<T> extends AbstractDbxTableItemDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(

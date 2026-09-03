@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, viewChild } from '@angular/core';
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
@@ -30,9 +30,7 @@ import { NgClass, NgStyle } from '@angular/common';
   selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle]
 })
 export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {
   readonly buttonRef = viewChild.required<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });

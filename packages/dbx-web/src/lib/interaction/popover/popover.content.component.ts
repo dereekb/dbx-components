@@ -1,5 +1,5 @@
 import { BehaviorSubject, throttleTime } from 'rxjs';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
@@ -28,9 +28,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
       </div>
     </div>
   `,
-  imports: [DbxResizedDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxResizedDirective]
 })
 export class DbxPopoverContentComponent {
   readonly hasControls = completeOnDestroy(new BehaviorSubject<boolean>(false));

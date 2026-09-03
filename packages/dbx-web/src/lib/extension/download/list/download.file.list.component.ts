@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxListEmptyContentComponent } from '../../../layout';
 import { DbxDownloadBlobButtonComponent } from '../blob/download.blob.button.component';
@@ -35,9 +35,7 @@ import { DbxFileListItemComponent } from './download.file.list.item.component';
   host: {
     class: 'dbx-file-list d-block'
   },
-  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFileListItemComponent, DbxDownloadBlobButtonComponent, DbxListEmptyContentComponent]
 })
 export class DbxFileListComponent<T = unknown> {
   readonly config = input<Maybe<DbxFileListComponentConfig<T>>>();

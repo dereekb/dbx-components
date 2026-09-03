@@ -620,10 +620,6 @@ export interface ZohoCrmGetRelatedRecordsRequest extends ZohoCrmGetRecordByIdInp
    * For example, providing this value will return the Notes with these ids when searching on related Notes for the primary/target record.
    */
   readonly ids?: Maybe<ArrayOrValue<ZohoCrmRecordId>>;
-  /**
-   * @deprecated set variables on request object directly instead of using this filter.
-   */
-  readonly filter?: Maybe<ZohoCrmGetRelatedRecordsPageFilter>;
 }
 
 /**
@@ -668,8 +664,7 @@ export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCr
 export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
-    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
+    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
   };
 }
 
@@ -1322,16 +1317,3 @@ export interface ZohoCrmMultiRecordResultEntry<I, O> {
    */
   readonly result: O;
 }
-
-// MARK: Compat
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use makeUrlSearchParams instead.
- */
-export const zohoCrmUrlSearchParams = makeUrlSearchParams;
-
-/**
- * @deprecated use ZohoCrmGetRelatedRecordsPageFilter instead.
- */
-export type ZohoCrmGetNotesPageFilter = ZohoCrmGetRelatedRecordsPageFilter;

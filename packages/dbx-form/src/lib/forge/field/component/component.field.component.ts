@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
+import { Component, computed, ElementRef, inject, input } from '@angular/core';
 import { type DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages, type BaseValueField } from '@ng-forge/dynamic-forms';
@@ -52,8 +52,6 @@ export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<D
     <div class="dbx-form-component" dbx-injection [config]="configSignal()"></div>
   `,
   imports: [DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     '[class]': 'className()',
     '[class.dbx-forge-disabled]': 'showDisabledStateSignal()'

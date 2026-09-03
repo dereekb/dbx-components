@@ -1,6 +1,6 @@
 import { type DbxActionContextStoreSourceInstance, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { type ComponentFixture, TestBed, waitForAsync, fakeAsync, tick, flush } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, viewChild, signal } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, viewChild, signal } from '@angular/core';
 import { DbxActionConfirmDirective, type DbxActionConfirmConfig } from './action.confirm.directive';
 import { DbxButtonComponent } from '../button/button.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -19,9 +19,7 @@ const AUTO_CONFIRM_READY_VALUE = 'autoConfirmReadyValue';
       <dbx-button dbxActionButton text="Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestConfirmComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
@@ -40,9 +38,7 @@ class TestConfirmComponent {
       <dbx-button dbxActionButton text="Skip Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestConfirmSkipComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
@@ -63,9 +59,7 @@ class TestConfirmSkipComponent {
       <dbx-button dbxActionButton text="Auto Confirm Action"></dbx-button>
     </ng-container>
   `,
-  standalone: true,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionConfirmDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 class TestAutoConfirmComponent {
   readonly dbxActionDirective = viewChild.required(DbxActionDirective);
@@ -80,13 +74,13 @@ class TestAutoConfirmComponent {
 
 // MARK: Tests
 describe('DbxActionConfirmDirective', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [MatDialogModule],
 
       providers: [{ provide: DbxRouterTransitionService, useValue: { transitions$: EMPTY } }]
     });
-  }));
+  });
 
   describe('with confirm config', () => {
     let fixture: ComponentFixture<TestConfirmComponent>;
@@ -107,16 +101,14 @@ describe('DbxActionConfirmDirective', () => {
       fixture.destroy();
     });
 
-    it('should open a confirmation dialog when triggered', fakeAsync(() => {
+    it('should open a confirmation dialog when triggered', async () => {
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(1);
 
       matDialog.closeAll();
-      flush();
-    }));
+    });
   });
 
   describe('with dbxActionConfirmSkip', () => {
@@ -138,34 +130,29 @@ describe('DbxActionConfirmDirective', () => {
       fixture.destroy();
     });
 
-    it('should open dialog when skip is false', fakeAsync(() => {
+    it('should open dialog when skip is false', async () => {
       component.skipConfirm.set(false);
       fixture.detectChanges();
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(1);
 
       matDialog.closeAll();
-      flush();
-    }));
+    });
 
-    it('should not open dialog when skip is true', fakeAsync(() => {
+    it('should not open dialog when skip is true', async () => {
       component.skipConfirm.set(true);
       fixture.detectChanges();
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(0);
+    });
 
-      flush();
-    }));
-
-    it('should pass through readyValue when skip is true', fakeAsync(() => {
+    it('should pass through readyValue when skip is true', async () => {
       component.skipConfirm.set(true);
       fixture.detectChanges();
 
@@ -176,13 +163,10 @@ describe('DbxActionConfirmDirective', () => {
       });
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(wasReady).toBe(true);
-
-      flush();
-    }));
+    });
   });
 
   describe('with autoConfirm config', () => {
@@ -204,7 +188,7 @@ describe('DbxActionConfirmDirective', () => {
       fixture.destroy();
     });
 
-    it('should not open a dialog and should pass through the readyValue', fakeAsync(() => {
+    it('should not open a dialog and should pass through the readyValue', async () => {
       let readyValue: unknown;
 
       sourceInstance.valueReady$.subscribe((value) => {
@@ -212,41 +196,34 @@ describe('DbxActionConfirmDirective', () => {
       });
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(0);
       expect(readyValue).toBe(AUTO_CONFIRM_READY_VALUE);
+    });
 
-      flush();
-    }));
-
-    it('should open a dialog when autoConfirm is false', fakeAsync(() => {
+    it('should open a dialog when autoConfirm is false', async () => {
       component.confirmConfig.set({ autoConfirm: false, title: 'Confirm Test' });
       fixture.detectChanges();
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(1);
 
       matDialog.closeAll();
-      flush();
-    }));
+    });
 
-    it('should open a dialog when the config is undefined', fakeAsync(() => {
+    it('should open a dialog when the config is undefined', async () => {
       component.confirmConfig.set(undefined);
       fixture.detectChanges();
 
       sourceInstance.trigger();
-      tick();
-      fixture.detectChanges();
+      await fixture.whenStable();
 
       expect(matDialog.openDialogs.length).toBe(1);
 
       matDialog.closeAll();
-      flush();
-    }));
+    });
   });
 });

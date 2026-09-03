@@ -44,8 +44,8 @@ describe('dbxForgeDateField()', () => {
     expect(field.startAt).toEqual(startAt);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeDateField({ key: 'startDate', description: 'Pick a date' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeDateField({ key: 'startDate', hint: 'Pick a date' });
     expect(field.props?.hint).toBe('Pick a date');
   });
 

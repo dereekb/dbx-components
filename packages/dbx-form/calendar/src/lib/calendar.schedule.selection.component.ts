@@ -1,4 +1,4 @@
-import { Component, type OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, type OnInit, inject, input, output } from '@angular/core';
 import { type CalendarEvent, type CalendarMonthViewBeforeRenderEvent, type CalendarMonthViewDay, CalendarMonthViewComponent, CalendarDatePipe } from 'angular-calendar';
 import { map, shareReplay, type Subject, first, throttleTime, distinctUntilChanged, type Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { type DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';
@@ -105,9 +105,7 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
   selector: 'dbx-schedule-selection-calendar',
   templateUrl: './calendar.schedule.selection.component.html',
   imports: [NgClass, CalendarMonthViewComponent, CalendarDatePipe, DbxCalendarBaseComponent, DbxInjectionComponent, DbxButtonSpacerDirective, DbxScheduleSelectionCalendarCellComponent, DbxScheduleSelectionCalendarSelectionToggleButtonComponent],
-  providers: [DbxCalendarStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  providers: [DbxCalendarStore]
 })
 export class DbxScheduleSelectionCalendarComponent<T> implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<T>);

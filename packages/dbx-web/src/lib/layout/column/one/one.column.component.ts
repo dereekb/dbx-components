@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { DbxTwoColumnComponent } from '../two/two.column.component';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.column.store';
 
@@ -27,9 +27,7 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.col
   `,
   exportAs: 'columns',
   providers: provideTwoColumnsContext(),
-  imports: [DbxTwoColumnComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxTwoColumnComponent]
 })
 export class DbxOneColumnComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

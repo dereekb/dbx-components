@@ -1,6 +1,6 @@
 import { type PageNumber } from '@dereekb/util';
 import { map, type Observable, type OperatorFunction } from 'rxjs';
-import { type LoadingStateValue, type ListLoadingState, type PageLoadingState } from './loading.state';
+import { type ListLoadingState, type PageLoadingState } from './loading.state';
 import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.state.rxjs';
 
 /**
@@ -18,7 +18,7 @@ import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.st
  * isListLoadingStateWithEmptyValue(beginLoading()); // true (no value)
  * ```
  */
-export function isListLoadingStateWithEmptyValue<T>(listLoadingState: ListLoadingState<T>): boolean {
+export function isListLoadingStateWithEmptyValue(listLoadingState: ListLoadingState): boolean {
   return Boolean(!listLoadingState.value?.length);
 }
 
@@ -55,12 +55,7 @@ export function mapIsListLoadingStateWithEmptyValue<T>(): OperatorFunction<ListL
  * ```
  */
 export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean, page: PageNumber = 0): Observable<PageLoadingState<T>> {
-  return loadingStateFromObs(obs, firstOnly).pipe(
-    map((x) => {
-      (x as PageLoadingState<T>).page = page;
-      return x as PageLoadingState<T>;
-    })
-  );
+  return loadingStateFromObs(obs, firstOnly).pipe(map((x) => ({ ...x, page })));
 }
 
 /**
@@ -82,8 +77,8 @@ export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boole
  * ).subscribe((items) => console.log(items)); // []
  * ```
  */
-export function arrayValueFromFinishedLoadingState<L extends ListLoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
-  return (obs: Observable<L>) => {
-    return obs.pipe(valueFromFinishedLoadingState<L>(() => [] as LoadingStateValue<L>));
+export function arrayValueFromFinishedLoadingState<T>(): OperatorFunction<ListLoadingState<T>, T[]> {
+  return (obs: Observable<ListLoadingState<T>>) => {
+    return obs.pipe(valueFromFinishedLoadingState<T[]>(() => []));
   };
 }

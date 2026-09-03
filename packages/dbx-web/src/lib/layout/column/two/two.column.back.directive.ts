@@ -19,8 +19,7 @@ import { TwoColumnsContextStore } from './two.column.store';
  * ```
  */
 @Directive({
-  selector: '[dbxTwoColumnBack]',
-  standalone: true
+  selector: '[dbxTwoColumnBack]'
 })
 export class DbxTwoColumnBackDirective {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

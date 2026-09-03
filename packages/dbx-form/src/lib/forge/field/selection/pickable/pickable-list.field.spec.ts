@@ -36,7 +36,6 @@ describe('DbxForgePickableListFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -247,18 +246,13 @@ describe('dbxForgePickableListField()', () => {
     expect(inner.readonly).toBe(true);
   });
 
-  // MARK: Hint/description mapping
-  it('should map description to inner field props.hint', () => {
-    const inner = dbxForgePickableListField({ ...minimalConfig(), description: 'Choose categories' });
-    expect(inner.props?.hint).toBe('Choose categories');
-  });
-
+  // MARK: Hint mapping
   it('should map hint to inner field props.hint', () => {
     const inner = dbxForgePickableListField({ ...minimalConfig(), hint: 'Choose categories' });
     expect(inner.props?.hint).toBe('Choose categories');
   });
 
-  it('should not set hint on inner field when neither hint nor description is provided', () => {
+  it('should not set hint on inner field when hint is not provided', () => {
     const inner = dbxForgePickableListField(minimalConfig());
     expect(inner.props?.hint).toBeUndefined();
   });

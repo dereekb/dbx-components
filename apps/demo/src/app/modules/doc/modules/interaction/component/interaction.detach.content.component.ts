@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/dbx-web';
 
@@ -22,9 +22,7 @@ import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/
       }
     `
   ],
-  standalone: true,
-  imports: [MatButton, DbxDetachContentComponent, DbxDetachControlsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton, DbxDetachContentComponent, DbxDetachControlsComponent]
 })
 export class DocInteractionExampleDetachContentComponent {
   counter = 0;

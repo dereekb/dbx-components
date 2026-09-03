@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.component';
 
 /**
@@ -19,9 +19,7 @@ import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.compon
   host: {
     class: 'dbx-popup-controls'
   },
-  imports: [DbxPopupControlButtonsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopupControlButtonsComponent]
 })
 export class DbxPopupControlsComponent {
   readonly header = input<string>();

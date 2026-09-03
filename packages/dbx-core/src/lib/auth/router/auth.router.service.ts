@@ -1,5 +1,5 @@
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, type Observable, startWith } from 'rxjs';
-import { Injectable, type OnDestroy, inject } from '@angular/core';
+import { Service, type OnDestroy, inject } from '@angular/core';
 import { goWithRouter } from '../../router/router/service/router.go';
 import { DbxRouterService } from '../../router/router/service/router.service';
 import { type SegueRefOrSegueRefRouterLink } from '../../router/segue';
@@ -31,9 +31,7 @@ import { DbxAppAuthRoutes } from './auth.router';
  * @see {@link DbxAppAuthRoutes} for the route configuration.
  * @see {@link DbxAppAuthRouterEffects} for automatic navigation on auth state changes.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAppAuthRouterService implements OnDestroy {
   readonly dbxRouterService = inject(DbxRouterService);
   readonly dbxAppAuthRoutes = inject(DbxAppAuthRoutes);

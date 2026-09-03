@@ -8,7 +8,6 @@ export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
   selector: 'demo-guestbook-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DemoGuestbookListComponent),
-  standalone: true,
   imports: [DbxListWrapperComponentImportsModule]
 })
 export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperDirective<Guestbook> {
@@ -24,7 +23,6 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
   selector: 'demo-guestbook-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DemoGuestbookListViewComponent),
-  standalone: true,
   imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListViewDirective<Guestbook> {
@@ -39,8 +37,7 @@ export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListView
     <div>
       <p>{{ name }}</p>
     </div>
-  `,
-  standalone: true
+  `
 })
 export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> {
   readonly name = this.itemValue.name;

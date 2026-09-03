@@ -441,19 +441,3 @@ export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTyp
     };
   };
 }
-
-// COMPAT: Deprecated aliases
-/**
- * Abstract base class for models identified by a unique {@link ModelKey}.
- *
- * Copies the `id` from the provided template during construction.
- *
- * @deprecated Use {@link UniqueModel} instead.
- */
-export abstract class AbstractUniqueModel {
-  id?: ModelKey;
-
-  constructor(template: Partial<UniqueModel>) {
-    this.id = template.id;
-  }
-}
