@@ -31,7 +31,24 @@ import { ComponentStore } from '@ngrx/component-store';
 import { type MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, type Observable, of, type Subscription, startWith, interval, first, combineLatest, EMPTY, type OperatorFunction, throttleTime } from 'rxjs';
 import { LngLatBounds, type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
-import { type DbxMapboxClickEvent, type KnownMapboxStyle, type MapboxBearing, type MapboxEaseTo, type MapboxEventData, type MapboxFitBounds, type MapboxFitPositions, type MapboxFlyTo, type MapboxJumpTo, type MapboxResetNorth, type MapboxResetNorthPitch, type MapboxRotateTo, type MapboxSnapToNorth, type MapboxStyleConfig, type MapboxZoomLevel, type MapboxZoomLevelRange } from './mapbox';
+import {
+  type DbxMapboxClickEvent,
+  type KnownMapboxStyle,
+  type MapboxBearing,
+  type MapboxEaseTo,
+  type MapboxEventData,
+  type MapboxFitBounds,
+  type MapboxFitPositions,
+  type MapboxFlyTo,
+  type MapboxJumpTo,
+  type MapboxResetNorth,
+  type MapboxResetNorthPitch,
+  type MapboxRotateTo,
+  type MapboxSnapToNorth,
+  type MapboxStyleConfig,
+  type MapboxZoomLevel,
+  type MapboxZoomLevelRange
+} from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { mapboxViewportBoundFunction, type MapboxViewportBoundFunction } from './mapbox.util';
@@ -1048,7 +1065,17 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   readonly setUseVirtualBound = this.updater((state, useVirtualBound: boolean) => ({ ...state, useVirtualBound }));
   readonly setBoundRefreshSettings = this.updater((state, boundRefreshSettings: Partial<DbxMapboxStoreBoundRefreshSettings>) => ({ ...state, boundRefreshSettings: { ...state.boundRefreshSettings, ...boundRefreshSettings } }));
 
-  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, drawerContent: state.retainContent ? state.drawerContent : undefined, useVirtualBound: state.useVirtualBound, boundRefreshSettings: state.boundRefreshSettings }));
+  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({
+    mapService,
+    moveState: 'init',
+    lifecycleState: 'init',
+    zoomState: 'init',
+    rotateState: 'init',
+    retainContent: state.retainContent,
+    drawerContent: state.retainContent ? state.drawerContent : undefined,
+    useVirtualBound: state.useVirtualBound,
+    boundRefreshSettings: state.boundRefreshSettings
+  }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));

@@ -28,7 +28,7 @@ const CALLBACK_TEST_IMPORT = "import { callbackTest } from '@dereekb/util/test';
 function findSpecFiles(dir, fileList = []) {
   const files = fs.readdirSync(dir);
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
 
@@ -56,21 +56,16 @@ function hasCallbackTests(content) {
   // - it('...', (done) => {
   // - it("...", (done) => {
   // - it(`...`, (done) => {
-  const patterns = [
-    /\bit\s*\([^,]+,\s*\(done\)\s*=>/,
-    /\btest\s*\([^,]+,\s*\(done\)\s*=>/
-  ];
+  const patterns = [/\bit\s*\([^,]+,\s*\(done\)\s*=>/, /\btest\s*\([^,]+,\s*\(done\)\s*=>/];
 
-  return patterns.some(pattern => pattern.test(content));
+  return patterns.some((pattern) => pattern.test(content));
 }
 
 /**
  * Check if file already has callbackTest import
  */
 function hasCallbackTestImport(content) {
-  return content.includes("import { callbackTest }") ||
-         content.includes("import {callbackTest}") ||
-         (content.includes("from '@dereekb/util/test'") && content.includes("callbackTest"));
+  return content.includes('import { callbackTest }') || content.includes('import {callbackTest}') || (content.includes("from '@dereekb/util/test'") && content.includes('callbackTest'));
 }
 
 /**
@@ -245,7 +240,7 @@ function main() {
   let processedCount = 0;
   let updatedCount = 0;
 
-  specFiles.forEach(file => {
+  specFiles.forEach((file) => {
     processedCount++;
     if (processFile(file)) {
       updatedCount++;

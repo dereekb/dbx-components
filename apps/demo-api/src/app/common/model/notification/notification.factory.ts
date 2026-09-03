@@ -1,5 +1,28 @@
-import { CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, type CalendarEventInviteNotificationData, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, type ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
-import { type NotificationMessageFunctionFactoryConfig, type NotificationMessageInputContext, type NotificationMessageContent, type NotificationMessageEmailContent, type NotificationMessage, type NotificationMessageCalendarAttachmentFactory, type NotificationMessageCalendarAttachmentMethod, calendarEventItemForId, calendarEventItemToInviteIcsString, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
+import {
+  CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE,
+  type CalendarEventInviteNotificationData,
+  EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT,
+  EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT,
+  EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+  type ExampleNotificationData,
+  GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
+  GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+  TEST_NOTIFICATIONS_TEMPLATE_TYPE
+} from 'demo-firebase'; // TODO: rename to demo-firebase
+import {
+  type NotificationMessageFunctionFactoryConfig,
+  type NotificationMessageInputContext,
+  type NotificationMessageContent,
+  type NotificationMessageEmailContent,
+  type NotificationMessage,
+  type NotificationMessageCalendarAttachmentFactory,
+  type NotificationMessageCalendarAttachmentMethod,
+  calendarEventItemForId,
+  calendarEventItemToInviteIcsString,
+  firestoreModelId,
+  NotificationMessageFlag,
+  notificationMessageFunction
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';

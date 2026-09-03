@@ -9,4 +9,4 @@ import { STATES } from './landing.router';
     })
   ]
 })
-export class LandingModule { }
+export class LandingModule {}

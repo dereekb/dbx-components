@@ -142,7 +142,20 @@ function formatSearchResults(input: { readonly query: string; readonly tokens: r
   const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
   for (const hit of hits) {
     const entry = hit.entry;
-    lines.push(`## \`${entry.slug}\` · ${entry.category} · score ${hit.score}`, '', `- **pipe:** \`${entry.pipeName}\``, `- **class:** \`${entry.className}\``, `- **input:** \`${entry.inputType}\``, `- **output:** \`${entry.outputType}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', entry.description, '', `→ \`dbx_pipe_lookup topic="${entry.slug}"\` for full docs.`, '');
+    lines.push(
+      `## \`${entry.slug}\` · ${entry.category} · score ${hit.score}`,
+      '',
+      `- **pipe:** \`${entry.pipeName}\``,
+      `- **class:** \`${entry.className}\``,
+      `- **input:** \`${entry.inputType}\``,
+      `- **output:** \`${entry.outputType}\``,
+      `- **matched:** \`${hit.matchedTokens.join(', ')}\``,
+      '',
+      entry.description,
+      '',
+      `→ \`dbx_pipe_lookup topic="${entry.slug}"\` for full docs.`,
+      ''
+    );
   }
   return lines.join('\n').trimEnd();
 }

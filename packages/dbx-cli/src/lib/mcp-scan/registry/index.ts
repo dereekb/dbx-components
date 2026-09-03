@@ -87,7 +87,18 @@ export type { ReservedModelFolder } from './reserved-model-folders.js';
 
 // MARK: Model Archetypes
 export { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, MODEL_ARCHETYPE_ADDON_SLUGS, getModelArchetypeBySlug, resolveModelArchetype, getModelArchetypesBySyncMode, getModelArchetypesByCollectionKind, getModelArchetypesByAxisValue } from './archetypes.js';
-export type { ModelArchetypeInfo, ModelArchetypeSlug, ModelArchetypeSyncMode, ModelArchetypeDocIdSource, ModelArchetypeParentRelation, ModelArchetypeUserRelation, ModelArchetypeMutability, ModelArchetypeSingleItemSubPurpose, ModelArchetypeDenormalisedAggregateKeying, ModelArchetypeExpectedAnswers } from './archetypes.js';
+export type {
+  ModelArchetypeInfo,
+  ModelArchetypeSlug,
+  ModelArchetypeSyncMode,
+  ModelArchetypeDocIdSource,
+  ModelArchetypeParentRelation,
+  ModelArchetypeUserRelation,
+  ModelArchetypeMutability,
+  ModelArchetypeSingleItemSubPurpose,
+  ModelArchetypeDenormalisedAggregateKeying,
+  ModelArchetypeExpectedAnswers
+} from './archetypes.js';
 
 // MARK: Downstream Firebase Models (runtime)
 export { getDownstreamCatalog, clearDownstreamCatalogCache } from './downstream-models-runtime.js';

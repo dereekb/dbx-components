@@ -13,7 +13,21 @@ import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type 
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, isDate } from '@dereekb/util';
-import { safeToJsDate, dateTimezoneUtcNormal, type DateTimezoneUtcNormalInstance, guessCurrentTimezone, toLocalReadableTimeString, getTimezoneAbbreviation, isSameDateHoursAndMinutes, isSameDateDay, DateTimeMinuteInstance, dateFromLogicalDate, dateTimeMinuteWholeDayDecisionFunction, toJsDayDate, isSameDate } from '@dereekb/date';
+import {
+  safeToJsDate,
+  dateTimezoneUtcNormal,
+  type DateTimezoneUtcNormalInstance,
+  guessCurrentTimezone,
+  toLocalReadableTimeString,
+  getTimezoneAbbreviation,
+  isSameDateHoursAndMinutes,
+  isSameDateDay,
+  DateTimeMinuteInstance,
+  dateFromLogicalDate,
+  dateTimeMinuteWholeDayDecisionFunction,
+  toJsDayDate,
+  isSameDate
+} from '@dereekb/date';
 import { type ObservableOrValueGetter, asObservableFromGetter, switchMapMaybeDefault, filterMaybe, skipAllInitialMaybe } from '@dereekb/rxjs';
 import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval, type Subscription } from 'rxjs';
 import { switchMap, shareReplay, map, startWith, tap, distinctUntilChanged, debounceTime, throttleTime, combineLatestWith, filter, first, skip } from 'rxjs/operators';
@@ -547,7 +561,9 @@ export class DbxForgeDateTimeFieldComponent {
 
       // Use currentDate$ (includes null) so the combineLatest emits even when no date is set.
       // Fall back to timeDate, then today, so presets are always available for time selection.
-      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(map(([selectedDate, config, timeDate]) => filterPresets({ presets: allPresets, selectedDate: selectedDate ?? timeDate ?? startOfDay(new Date()), isFullDay: false, isTimeOnly: false, config })));
+      return combineLatest([this.currentDate$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this.dateTimePickerConfig$, this._timeDate$.pipe(startWith(undefined))]).pipe(
+        map(([selectedDate, config, timeDate]) => filterPresets({ presets: allPresets, selectedDate: selectedDate ?? timeDate ?? startOfDay(new Date()), isFullDay: false, isTimeOnly: false, config }))
+      );
     }),
     shareReplay(1)
   );

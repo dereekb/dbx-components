@@ -19,7 +19,23 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'dbx-firebase-development-popup-content',
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
-  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentForgeFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
+  imports: [
+    DbxAnchorComponent,
+    DbxTwoColumnFullLeftDirective,
+    DbxWidgetViewComponent,
+    DbxTwoColumnComponent,
+    DbxTwoBlockComponent,
+    DbxTwoColumnRightComponent,
+    DbxWidgetViewComponent,
+    DbxFirebaseDevelopmentPopupContentForgeFormComponent,
+    DbxActionDirective,
+    DbxActionEnforceModifiedDirective,
+    DbxActionHandlerDirective,
+    DbxActionFormDirective,
+    DbxFormSourceDirective,
+    DbxActionAutoTriggerDirective,
+    MatButtonModule
+  ],
   providers: [TwoColumnsContextStore]
 })
 export class DbxFirebaseDevelopmentPopupContentComponent {

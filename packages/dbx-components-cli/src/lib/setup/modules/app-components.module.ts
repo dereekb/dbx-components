@@ -32,6 +32,25 @@ export const APP_COMPONENTS_MODULE: SetupModule = {
   generate: async (context) => {
     const { naming, versions, shell, workspaceRoot, dryRun } = context;
     const nx = versions.core.nx;
-    await shell.run('npx', ['-y', `nx@${nx}`, 'g', '@nx/angular:library', `--name=${naming.angularComponentsName}`, `--directory=${naming.angularComponentsFolder}`, '--buildable', '--publishable', '--importPath', naming.angularComponentsName, '--standalone=true', '--changeDetection=OnPush', '--linter=eslint', '--unitTestRunner=vitest-angular'], { cwd: workspaceRoot, dryRun });
+    await shell.run(
+      'npx',
+      [
+        '-y',
+        `nx@${nx}`,
+        'g',
+        '@nx/angular:library',
+        `--name=${naming.angularComponentsName}`,
+        `--directory=${naming.angularComponentsFolder}`,
+        '--buildable',
+        '--publishable',
+        '--importPath',
+        naming.angularComponentsName,
+        '--standalone=true',
+        '--changeDetection=OnPush',
+        '--linter=eslint',
+        '--unitTestRunner=vitest-angular'
+      ],
+      { cwd: workspaceRoot, dryRun }
+    );
   }
 };

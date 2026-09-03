@@ -431,7 +431,10 @@ export function jobApplicationFirestoreCollectionGroup(firestoreContext: Firesto
   });
 
   it('flags MODEL_COLLECTION_FACTORY_TYPE_MISMATCH when alias is SingleItem but factory body uses firestoreCollectionWithParent', () => {
-    const text = MULTI_ITEM_SOURCE.replace('export type JobApplicationFirestoreCollection = FirestoreCollectionWithParent<JobApplication, Job, JobApplicationDocument, JobDocument>;', 'export type JobApplicationFirestoreCollection = SingleItemFirestoreCollection<JobApplication, Job, JobApplicationDocument, JobDocument>;');
+    const text = MULTI_ITEM_SOURCE.replace(
+      'export type JobApplicationFirestoreCollection = FirestoreCollectionWithParent<JobApplication, Job, JobApplicationDocument, JobDocument>;',
+      'export type JobApplicationFirestoreCollection = SingleItemFirestoreCollection<JobApplication, Job, JobApplicationDocument, JobDocument>;'
+    );
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
     const codes = result.violations.map((v) => v.code);
     expectCodes(codes, ['MODEL_COLLECTION_FACTORY_TYPE_MISMATCH']);
@@ -439,7 +442,10 @@ export function jobApplicationFirestoreCollectionGroup(firestoreContext: Firesto
   });
 
   it('flags MODEL_COLLECTION_FACTORY_TYPE_MISMATCH when alias is FirestoreCollectionWithParent but factory body uses singleItemFirestoreCollection', () => {
-    const text = HAPPY_SOURCE.replace('export type ProfilePrivateFirestoreCollection = SingleItemFirestoreCollection<ProfilePrivate, Profile, ProfilePrivateDocument, ProfileDocument>;', 'export type ProfilePrivateFirestoreCollection = FirestoreCollectionWithParent<ProfilePrivate, Profile, ProfilePrivateDocument, ProfileDocument>;');
+    const text = HAPPY_SOURCE.replace(
+      'export type ProfilePrivateFirestoreCollection = SingleItemFirestoreCollection<ProfilePrivate, Profile, ProfilePrivateDocument, ProfileDocument>;',
+      'export type ProfilePrivateFirestoreCollection = FirestoreCollectionWithParent<ProfilePrivate, Profile, ProfilePrivateDocument, ProfileDocument>;'
+    );
     const result = validateFirebaseModelSources([{ name: 'x.ts', text }]);
     const codes = result.violations.map((v) => v.code);
     expectCodes(codes, ['MODEL_COLLECTION_FACTORY_TYPE_MISMATCH']);

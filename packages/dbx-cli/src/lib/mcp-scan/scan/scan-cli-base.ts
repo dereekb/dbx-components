@@ -63,7 +63,12 @@ export interface ScanCliBuildSuccess<TManifest extends ScanCliManifestLike, TWar
  * Failure branches of a `buildManifest` outcome — shape shared verbatim by
  * every domain build-manifest module today.
  */
-export type ScanCliBuildFailure = { readonly kind: 'no-config'; readonly configPath: string } | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string } | { readonly kind: 'no-package'; readonly packagePath: string } | { readonly kind: 'invalid-package'; readonly packagePath: string; readonly error: string } | { readonly kind: 'invalid-manifest'; readonly error: string };
+export type ScanCliBuildFailure =
+  | { readonly kind: 'no-config'; readonly configPath: string }
+  | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string }
+  | { readonly kind: 'no-package'; readonly packagePath: string }
+  | { readonly kind: 'invalid-package'; readonly packagePath: string; readonly error: string }
+  | { readonly kind: 'invalid-manifest'; readonly error: string };
 
 /**
  * Discriminated union returned by a domain's `buildManifest` function.

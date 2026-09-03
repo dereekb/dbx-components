@@ -18,7 +18,13 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_CLAIM_LOOKUP_TOOL: Tool = {
   name: 'dbx_auth_claim_lookup',
-  description: ['Look up a Firebase Auth custom-claim entry by key (`a`, `o`, `fr`) or by `*ApiAuthClaims` interface name (`DemoApiAuthClaims`).', '', 'Returns the claim meaning, value type, role mapping through `authRoleClaimsService`, owning app + interface, and the source path:line where the claim is declared.', '', 'Use the optional `app` parameter (`demo-api`) to scope the lookup when the same claim key exists in multiple apps.'].join('\n'),
+  description: [
+    'Look up a Firebase Auth custom-claim entry by key (`a`, `o`, `fr`) or by `*ApiAuthClaims` interface name (`DemoApiAuthClaims`).',
+    '',
+    'Returns the claim meaning, value type, role mapping through `authRoleClaimsService`, owning app + interface, and the source path:line where the claim is declared.',
+    '',
+    'Use the optional `app` parameter (`demo-api`) to scope the lookup when the same claim key exists in multiple apps.'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

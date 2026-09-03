@@ -48,7 +48,11 @@ export function buildOidcTokens(context: AddonContext): SetupTokenTable {
 function buildOidcScaffoldPlan(context: AddonContext): readonly ScaffoldPlanEntry[] {
   const { workspaceRoot, archive, naming } = context;
   const tokens = buildOidcTokens(context);
-  return [...buildScaffoldPlan({ archive, subtree: 'addons/oidc/components/firebase', destRoot: join(workspaceRoot, naming.firebaseComponentsFolder), tokens }), ...buildScaffoldPlan({ archive, subtree: 'addons/oidc/apps/api', destRoot: join(workspaceRoot, naming.apiAppFolder), tokens }), ...buildScaffoldPlan({ archive, subtree: 'addons/oidc/apps/app', destRoot: join(workspaceRoot, naming.angularAppFolder), tokens })];
+  return [
+    ...buildScaffoldPlan({ archive, subtree: 'addons/oidc/components/firebase', destRoot: join(workspaceRoot, naming.firebaseComponentsFolder), tokens }),
+    ...buildScaffoldPlan({ archive, subtree: 'addons/oidc/apps/api', destRoot: join(workspaceRoot, naming.apiAppFolder), tokens }),
+    ...buildScaffoldPlan({ archive, subtree: 'addons/oidc/apps/app', destRoot: join(workspaceRoot, naming.angularAppFolder), tokens })
+  ];
 }
 
 /**
@@ -110,7 +114,13 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     { filePath: join(fb, 'functions.ts'), fileTag: 'fb-functions', site: 'configmap', snippet: `oidcModelFunctions: [OidcModelFunctions, oidcModelFunctionMap],` },
     { filePath: join(fb, 'functions.ts'), fileTag: 'fb-functions', site: 'getter', snippet: `abstract readonly oidcModelFunctions: FirebaseFunctionGetter<OidcModelFunctions>;` },
     // firebase component — model service
-    { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'imports', multiline: true, snippet: `import { type OidcModelFirestoreCollections, type OidcEntryFirestoreCollection, oidcEntryFirestoreCollection, type OidcModelTypes, type OidcEntry, type OidcEntryDocument, type OidcEntryRoles, firestoreModelKey } from '@dereekb/firebase';\nimport { profileIdentity } from './profile';` },
+    {
+      filePath: join(fb, 'model/service.ts'),
+      fileTag: 'fb-service',
+      site: 'imports',
+      multiline: true,
+      snippet: `import { type OidcModelFirestoreCollections, type OidcEntryFirestoreCollection, oidcEntryFirestoreCollection, type OidcModelTypes, type OidcEntry, type OidcEntryDocument, type OidcEntryRoles, firestoreModelKey } from '@dereekb/firebase';\nimport { profileIdentity } from './profile';`
+    },
     { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'implements', snippet: `, OidcModelFirestoreCollections` },
     { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'abstract', snippet: `abstract readonly oidcEntryCollection: OidcEntryFirestoreCollection;` },
     { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'factory', snippet: `oidcEntryCollection: oidcEntryFirestoreCollection({ firestoreContext }),` },
@@ -124,7 +134,13 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'types-union', snippet: `| OidcModelTypes` },
     { filePath: join(fb, 'model/service.ts'), fileTag: 'fb-service', site: 'factories-map', snippet: `oidcEntry: oidcEntryFirebaseModelServiceFactory,` },
     // api — crud functions
-    { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'imports', multiline: true, snippet: `import { oidcEntryCreateClient } from '../oidc/oidcclient.create';\nimport { oidcEntryUpdateClient, oidcEntryUpdateRotateClientSecret } from '../oidc/oidcclient.update';\nimport { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';\nimport { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';` },
+    {
+      filePath: join(api, 'function/model/crud.functions.ts'),
+      fileTag: 'api-crud',
+      site: 'imports',
+      multiline: true,
+      snippet: `import { oidcEntryCreateClient } from '../oidc/oidcclient.create';\nimport { oidcEntryUpdateClient, oidcEntryUpdateRotateClientSecret } from '../oidc/oidcclient.update';\nimport { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';\nimport { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';`
+    },
     { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'create', snippet: `oidcEntry: onCallSpecifierHandler({ client: oidcEntryCreateClient }),` },
     { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'update', snippet: `oidcEntry: onCallSpecifierHandler({ client: oidcEntryUpdateClient, rotateClientSecret: oidcEntryUpdateRotateClientSecret }),` },
     { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'delete', snippet: `oidcEntry: onCallSpecifierHandler({ client: oidcEntryDeleteClient, token: oidcEntryDeleteToken }),` },
@@ -147,7 +163,13 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     { filePath: join(apiEnv, 'environment.prod.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://example.com/api',` },
     { filePath: join(apiEnv, 'environment.staging.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://staging.example.com/api',` },
     // frontend — root app config
-    { filePath: join(app, 'root.app.config.ts'), fileTag: 'root-config', site: 'imports', snippet: `import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';\nimport { APP_CODE_PREFIX_CAPS_APP_OAUTH_INTERACTION_PATH, APP_CODE_PREFIX_CAPS_OIDC_AVAILABLE_SCOPES, APP_CODE_PREFIX_CAPS_OIDC_TOKEN_ENDPOINT_AUTH_METHODS } from 'FIREBASE_COMPONENTS_NAME';`, multiline: true },
+    {
+      filePath: join(app, 'root.app.config.ts'),
+      fileTag: 'root-config',
+      site: 'imports',
+      snippet: `import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';\nimport { APP_CODE_PREFIX_CAPS_APP_OAUTH_INTERACTION_PATH, APP_CODE_PREFIX_CAPS_OIDC_AVAILABLE_SCOPES, APP_CODE_PREFIX_CAPS_OIDC_TOKEN_ENDPOINT_AUTH_METHODS } from 'FIREBASE_COMPONENTS_NAME';`,
+      multiline: true
+    },
     {
       filePath: join(app, 'root.app.config.ts'),
       fileTag: 'root-config',
@@ -156,7 +178,13 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
       snippet: `    provideDbxFirebaseOidc({\n      appCollectionClass: APP_CODE_PREFIXFirestoreCollections,\n      oidcConfig: {\n        availableScopes: APP_CODE_PREFIX_CAPS_OIDC_AVAILABLE_SCOPES,\n        tokenEndpointAuthMethods: APP_CODE_PREFIX_CAPS_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,\n        oauthInteractionRoute: APP_CODE_PREFIX_CAPS_APP_OAUTH_INTERACTION_PATH\n      }\n    }),`
     },
     // frontend — app router
-    { filePath: join(app, 'app/app.router.ts'), fileTag: 'app-router', site: 'declarations', multiline: true, snippet: `export const appOAuthFutureState: Ng2StateDeclaration = {\n  parent: 'root',\n  name: 'oauth.**',\n  url: '/oauth',\n  loadChildren: () => import('./modules/oauth/oauth.module').then((m) => m.APP_CODE_PREFIXOAuthModule)\n};` },
+    {
+      filePath: join(app, 'app/app.router.ts'),
+      fileTag: 'app-router',
+      site: 'declarations',
+      multiline: true,
+      snippet: `export const appOAuthFutureState: Ng2StateDeclaration = {\n  parent: 'root',\n  name: 'oauth.**',\n  url: '/oauth',\n  loadChildren: () => import('./modules/oauth/oauth.module').then((m) => m.APP_CODE_PREFIXOAuthModule)\n};`
+    },
     { filePath: join(app, 'app/app.router.ts'), fileTag: 'app-router', site: 'states', snippet: `appOAuthFutureState,` }
   ];
 

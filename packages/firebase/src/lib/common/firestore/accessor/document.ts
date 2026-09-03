@@ -5,7 +5,19 @@ import { lazyFrom } from '@dereekb/rxjs';
 import { type Observable, map, tap } from 'rxjs';
 import { type FirestoreCollectionCache, type FirestoreCollectionDocumentCache, firestoreCollectionDocumentCache, noopFirestoreCollectionDocumentCache } from '../cache/cache';
 import { type FirestoreAccessorDriverRef } from '../driver/accessor';
-import { type FirestoreCollectionNameRef, type FirestoreModelId, type FirestoreModelIdentityCollectionName, type FirestoreModelIdentityModelType, type FirestoreModelIdentityRef, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef, type FirestoreModelTypeRef, type FirestoreModelIdentity, type FirestoreModelTypeModelIdentityRef } from './../collection/collection';
+import {
+  type FirestoreCollectionNameRef,
+  type FirestoreModelId,
+  type FirestoreModelIdentityCollectionName,
+  type FirestoreModelIdentityModelType,
+  type FirestoreModelIdentityRef,
+  type FirestoreModelIdRef,
+  type FirestoreModelKey,
+  type FirestoreModelKeyRef,
+  type FirestoreModelTypeRef,
+  type FirestoreModelIdentity,
+  type FirestoreModelTypeModelIdentityRef
+} from './../collection/collection';
 import { type DocumentReference, type CollectionReference, type Transaction, type WriteBatch, type DocumentSnapshot, type SnapshotOptions, type WriteResult, type FirestoreDataConverter } from '../types';
 import { type FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, type FirestoreDocumentDataAccessor, type FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, type FirestoreAccessorStreamMode, snapshotStreamForAccessor, type FirestoreAccessorArrayUpdate } from './accessor';
 import { type CollectionReferenceRef, type DocumentReferenceRef, type FirestoreContextReference, type FirestoreDataConverterRef } from '../reference';
@@ -33,7 +45,8 @@ import { arrayUpdateWithAccessorFunction } from './array';
  * @template T - The document data type
  * @template I - The model identity type (provides modelType and collectionName)
  */
-export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
+export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity>
+  extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly cache: FirestoreCollectionDocumentCache<T>;
   readonly id: FirestoreModelId;

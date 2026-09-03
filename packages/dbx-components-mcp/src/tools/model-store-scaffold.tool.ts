@@ -437,7 +437,14 @@ function rootDocumentStoreBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, '', `@Injectable()`, `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${docType}> {`];
+  const lines: string[] = [
+    `import { Injectable, inject } from '@angular/core';`,
+    `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`,
+    `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`,
+    '',
+    `@Injectable()`,
+    `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${docType}> {`
+  ];
   if (args.functionsClass !== undefined) {
     lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }
@@ -487,11 +494,29 @@ function subDocumentStoreBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, `import { ${parentStore} } from './${parentBaseFile}.document.store';`, '', `@Injectable()`, `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`];
+  const lines: string[] = [
+    `import { Injectable, inject } from '@angular/core';`,
+    `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`,
+    `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`,
+    `import { ${parentStore} } from './${parentBaseFile}.document.store';`,
+    '',
+    `@Injectable()`,
+    `export class ${storeClass} extends ${baseClass}<${args.modelName}, ${parent.name}, ${docType}, ${parent.documentType}> {`
+  ];
   if (args.functionsClass !== undefined) {
     lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }
-  lines.push(`  constructor() {`, `    const collections = inject(${collections});`, `    super({ collectionFactory: collections.${args.factoryAccessor}, firestoreCollectionLike: collections.${args.groupAccessor} });`, `    const parent = inject(${parentStore}, { optional: true });`, '', `    if (parent) {`, `      this.setParentStore(parent);`, `    }`, `  }`);
+  lines.push(
+    `  constructor() {`,
+    `    const collections = inject(${collections});`,
+    `    super({ collectionFactory: collections.${args.factoryAccessor}, firestoreCollectionLike: collections.${args.groupAccessor} });`,
+    `    const parent = inject(${parentStore}, { optional: true });`,
+    '',
+    `    if (parent) {`,
+    `      this.setParentStore(parent);`,
+    `    }`,
+    `  }`
+  );
   const crudLines = renderCrudLines(args, 'this');
   if (crudLines.length > 0) {
     lines.push('', ...crudLines);
@@ -543,7 +568,14 @@ function systemStateAccessorBody(args: ParsedScaffoldArgs): FileBlock {
     packageImports.push(args.functionsClass);
   }
 
-  const lines: string[] = [`import { Injectable, inject } from '@angular/core';`, `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`, `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`, '', `@Injectable()`, `export class ${accessorClass} extends AbstractSystemStateDocumentStoreAccessor<${dataType}> {`];
+  const lines: string[] = [
+    `import { Injectable, inject } from '@angular/core';`,
+    `import { ${joinUnique(dbxFirebaseImports)} } from '@dereekb/dbx-firebase';`,
+    `import { ${joinUnique(packageImports)} } from '${args.firebasePackage}';`,
+    '',
+    `@Injectable()`,
+    `export class ${accessorClass} extends AbstractSystemStateDocumentStoreAccessor<${dataType}> {`
+  ];
   if (args.functionsClass !== undefined) {
     lines.push(`  readonly ${functionsFieldName(args.functionsClass)} = inject(${args.functionsClass});`, '');
   }

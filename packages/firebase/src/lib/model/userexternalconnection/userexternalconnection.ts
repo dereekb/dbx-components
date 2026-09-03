@@ -1,6 +1,24 @@
 import { type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, copyUserRelatedDataAccessorFactoryFunction, type FirestoreCollection, type FirestoreContext, type FirestoreModelData, firestoreDate, firestoreEnum, firestoreEnumArray, firestoreModelIdentity, firestoreObjectMap, firestoreUID, optionalFirestoreArray, optionalFirestoreDate, optionalFirestoreEnum, optionalFirestoreString, snapshotConverterFunctions } from '../../common';
+import {
+  AbstractFirestoreDocument,
+  type CollectionReference,
+  copyUserRelatedDataAccessorFactoryFunction,
+  type FirestoreCollection,
+  type FirestoreContext,
+  type FirestoreModelData,
+  firestoreDate,
+  firestoreEnum,
+  firestoreEnumArray,
+  firestoreModelIdentity,
+  firestoreObjectMap,
+  firestoreUID,
+  optionalFirestoreArray,
+  optionalFirestoreDate,
+  optionalFirestoreEnum,
+  optionalFirestoreString,
+  snapshotConverterFunctions
+} from '../../common';
 import { type UserRelated, type UserRelatedById } from '../user';
 import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionProviderType } from './userexternalconnection.id';
 

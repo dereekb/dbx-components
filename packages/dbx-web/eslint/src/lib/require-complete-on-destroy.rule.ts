@@ -1,4 +1,21 @@
-import { type AstNode, COMPLETE_ON_DESTROY_HELPER, DBX_COMPONENTS_DBX_CORE_MODULE, type ImportRegistry, RXJS_MODULE, SUBJECT_NAMES, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, trackImportDeclaration } from './util';
+import {
+  type AstNode,
+  COMPLETE_ON_DESTROY_HELPER,
+  DBX_COMPONENTS_DBX_CORE_MODULE,
+  type ImportRegistry,
+  RXJS_MODULE,
+  SUBJECT_NAMES,
+  createImportRegistry,
+  ensureNamedImportFix,
+  findAngularComponentDecorator,
+  findNgOnDestroyMethod,
+  getClassMemberName,
+  isCalledIdentifier,
+  isDeclareProperty,
+  isImportedFrom,
+  isStaticProperty,
+  trackImportDeclaration
+} from './util';
 import type { Maybe } from '@dereekb/util';
 import { collectNgOnDestroyRemovalFixes } from './require-clean-subscription.rule';
 

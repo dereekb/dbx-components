@@ -1,4 +1,18 @@
-import { DEMO_EXAMPLE_FORM_SPACE_TYPE, demoGuestbookFormSpaceId, profileIdentity, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, DemoFirestoreCollections, type ProfileDocument, type GuestbookEntryFirestoreCollection, type Profile, type ProfileFirestoreCollection, type InsertGuestbookEntryParams } from 'demo-firebase';
+import {
+  DEMO_EXAMPLE_FORM_SPACE_TYPE,
+  demoGuestbookFormSpaceId,
+  profileIdentity,
+  type Guestbook,
+  type GuestbookDocument,
+  type GuestbookEntry,
+  type GuestbookEntryDocument,
+  DemoFirestoreCollections,
+  type ProfileDocument,
+  type GuestbookEntryFirestoreCollection,
+  type Profile,
+  type ProfileFirestoreCollection,
+  type InsertGuestbookEntryParams
+} from 'demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,
@@ -431,7 +445,10 @@ export const demoApiContextFactory = (buildTests: BuildTestsWithContextFunction<
 };
 
 // MARK: Admin Function
-export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, TestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance>
+  extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, TestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>>
+  implements DemoApiContext
+{
   get storageContext() {
     return this.instance.storageContext;
   }
@@ -683,7 +700,12 @@ export interface DemoAuthorizedUserContextFactoryConfig {
 }
 
 export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextFactoryConfig) =>
-  authorizedUserContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+  authorizedUserContextFactory<
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiAuthorizedUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+  >({
     makeFixture: (f) => new DemoApiAuthorizedUserTestContextFixture(f),
     makeUserDetails: () => ({ claims: { o: params.onboarded === false ? 0 : 1, a: params.demoUserLevel === 'admin' ? 1 : 0, demoUserLevel: params.demoUserLevel ?? 'user' } }),
     makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
@@ -707,7 +729,16 @@ export class DemoApiProfileTestContextFixture<F extends FirebaseAdminFunctionTes
 export class DemoApiProfileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Profile, ProfileDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoProfileContextFactory = () =>
-  modelTestContextFactory<Profile, ProfileDocument, DemoApiProfileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
+  modelTestContextFactory<
+    Profile,
+    ProfileDocument,
+    DemoApiProfileTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    ProfileFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiProfileTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.profileCollection,
     makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, _p) => {
@@ -839,7 +870,16 @@ export class DemoApiCalendarTestContextInstance<F extends FirebaseAdminFunctionT
 }
 
 export const demoCalendarContextFactory = () =>
-  modelTestContextFactory<Calendar, CalendarDocument, DemoApiCalendarTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiCalendarTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiCalendarTestContextFixture<FirebaseAdminFunctionTestContextInstance>, CalendarFirestoreCollection>({
+  modelTestContextFactory<
+    Calendar,
+    CalendarDocument,
+    DemoApiCalendarTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiCalendarTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiCalendarTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    CalendarFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiCalendarTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.calendarCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiCalendarTestContextInstance(delegate, ref, testInstance),
@@ -867,12 +907,26 @@ export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> {
   readonly createdBy?: Maybe<DemoApiAuthorizedUserTestContextFixture>;
 }
 
-export class DemoApiGuestbookTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookTestContextInstance<F>> {}
+export class DemoApiGuestbookTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  Guestbook,
+  GuestbookDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiGuestbookTestContextInstance<F>
+> {}
 
 export class DemoApiGuestbookTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoGuestbookContextFactory = () =>
-  modelTestContextFactory<Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+  modelTestContextFactory<
+    Guestbook,
+    GuestbookDocument,
+    DemoApiGuestbookTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+  >({
     makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.guestbookCollection,
     collectionForDocument: (fi, _doc) => {
@@ -903,7 +957,13 @@ export interface DemoApiGuestbookEntryTestContextParams extends Partial<Guestboo
   readonly g: DemoApiGuestbookTestContextFixture;
 }
 
-export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookEntryTestContextInstance<F>> {
+export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  GuestbookEntry,
+  GuestbookEntryDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiGuestbookEntryTestContextInstance<F>
+> {
   async init(params?: Maybe<Partial<Omit<InsertGuestbookEntryParams, 'guestbook'>>>) {
     return this.instance.init(params);
   }
@@ -945,7 +1005,16 @@ export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFun
 }
 
 export const demoGuestbookEntryContextFactory = () =>
-  modelTestContextFactory<GuestbookEntry, GuestbookEntryDocument, DemoApiGuestbookEntryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, GuestbookEntryFirestoreCollection>({
+  modelTestContextFactory<
+    GuestbookEntry,
+    GuestbookEntryDocument,
+    DemoApiGuestbookEntryTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    GuestbookEntryFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiGuestbookEntryTestContextFixture(f),
     getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.g.document),
     collectionForDocument: (fi, doc) => {
@@ -985,7 +1054,13 @@ export interface DemoApiNotificationUserTestContextParams {
   readonly init?: boolean;
 }
 
-export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationUserTestContextInstance<F>> {
+export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  NotificationUser,
+  NotificationUserDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationUserTestContextInstance<F>
+> {
   async updateNotificationUser(params: Omit<UpdateNotificationUserParams, 'key'>) {
     return this.instance.updateNotificationUser(params);
   }
@@ -1015,7 +1090,16 @@ export class DemoApiNotificationUserTestContextInstance<F extends FirebaseAdminF
 }
 
 export const demoNotificationUserContextFactory = () =>
-  modelTestContextFactory<NotificationUser, NotificationUserDocument, DemoApiNotificationUserTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationUserFirestoreCollection>({
+  modelTestContextFactory<
+    NotificationUser,
+    NotificationUserDocument,
+    DemoApiNotificationUserTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    NotificationUserFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiNotificationUserTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationUserCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationUserTestContextInstance(delegate, ref, testInstance),
@@ -1050,12 +1134,27 @@ export interface DemoApiNotificationSummaryTestContextParams {
   readonly initIfNeeded?: boolean;
 }
 
-export class DemoApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationSummary, NotificationSummaryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationSummaryTestContextInstance<F>> {}
+export class DemoApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  NotificationSummary,
+  NotificationSummaryDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationSummaryTestContextInstance<F>
+> {}
 
 export class DemoApiNotificationSummaryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationSummary, NotificationSummaryDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoNotificationSummaryContextFactory = () =>
-  modelTestContextFactory<NotificationSummary, NotificationSummaryDocument, DemoApiNotificationSummaryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationSummaryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationSummaryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationSummaryFirestoreCollection>({
+  modelTestContextFactory<
+    NotificationSummary,
+    NotificationSummaryDocument,
+    DemoApiNotificationSummaryTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationSummaryTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationSummaryTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    NotificationSummaryFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiNotificationSummaryTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationSummaryCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationSummaryTestContextInstance(delegate, ref, testInstance),
@@ -1106,7 +1205,13 @@ export interface DemoApiNotificationBoxTestContextParams {
   readonly initIfNeeded?: boolean;
 }
 
-export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationBoxTestContextInstance<F>> {
+export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  NotificationBox,
+  NotificationBoxDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationBoxTestContextInstance<F>
+> {
   allNotificationsForNotificationBoxQuery() {
     return this.instance.allNotificationsForNotificationBoxQuery();
   }
@@ -1184,7 +1289,16 @@ export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFu
 }
 
 export const demoNotificationBoxContextFactory = () =>
-  modelTestContextFactory<NotificationBox, NotificationBoxDocument, DemoApiNotificationBoxTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationBoxTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationBoxTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationBoxFirestoreCollection>({
+  modelTestContextFactory<
+    NotificationBox,
+    NotificationBoxDocument,
+    DemoApiNotificationBoxTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationBoxTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationBoxTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    NotificationBoxFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiNotificationBoxTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationBoxCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationBoxTestContextInstance(delegate, ref, testInstance),
@@ -1227,7 +1341,13 @@ export interface DemoApiNotificationTestContextParams {
   readonly template?: Maybe<AsyncGetterOrValue<CreateNotificationTemplate>>;
 }
 
-export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTestContextInstance<F>> {
+export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  Notification,
+  NotificationDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationTestContextInstance<F>
+> {
   async sendAllQueuedNotifications() {
     return this.instance.sendAllQueuedNotifications();
   }
@@ -1276,7 +1396,15 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
 }
 
 export const demoNotificationContextFactory = () =>
-  modelTestContextFactory<Notification, NotificationDocument, DemoApiNotificationTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+  modelTestContextFactory<
+    Notification,
+    NotificationDocument,
+    DemoApiNotificationTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+  >({
     makeFixture: (f) => new DemoApiNotificationTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationCollectionGroup,
     collectionForDocument: (fi, doc) => {
@@ -1314,12 +1442,26 @@ export interface DemoApiNotificationWeekTestContextParams {
   readonly init?: boolean;
 }
 
-export class DemoApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationWeek, NotificationWeekDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationWeekTestContextInstance<F>> {}
+export class DemoApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  NotificationWeek,
+  NotificationWeekDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiNotificationWeekTestContextInstance<F>
+> {}
 
 export class DemoApiNotificationWeekTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationWeek, NotificationWeekDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoNotificationWeekContextFactory = () =>
-  modelTestContextFactory<NotificationWeek, NotificationWeekDocument, DemoApiNotificationWeekTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationWeekTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationWeekTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+  modelTestContextFactory<
+    NotificationWeek,
+    NotificationWeekDocument,
+    DemoApiNotificationWeekTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationWeekTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiNotificationWeekTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+  >({
     makeFixture: (f) => new DemoApiNotificationWeekTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.notificationWeekCollectionGroup,
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationWeekTestContextInstance(delegate, ref, testInstance),
@@ -1372,7 +1514,13 @@ export interface DemoApiFormSpaceTestContextParams {
   readonly g?: Maybe<DemoApiGuestbookTestContextFixture>;
 }
 
-export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<FormSpace, FormSpaceDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiFormSpaceTestContextInstance<F>> {
+export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  FormSpace,
+  FormSpaceDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiFormSpaceTestContextInstance<F>
+> {
   async uploadFileToSlot(input: DemoApiFormSpaceUploadInput): Promise<StoragePath> {
     return this.instance.uploadFileToSlot(input);
   }
@@ -1549,7 +1697,16 @@ export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunction
 }
 
 export const demoFormSpaceContextFactory = () =>
-  modelTestContextFactory<FormSpace, FormSpaceDocument, DemoApiFormSpaceTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiFormSpaceTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFormSpaceTestContextFixture<FirebaseAdminFunctionTestContextInstance>, FormSpaceFirestoreCollection>({
+  modelTestContextFactory<
+    FormSpace,
+    FormSpaceDocument,
+    DemoApiFormSpaceTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFormSpaceTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFormSpaceTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    FormSpaceFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiFormSpaceTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.formSpaceCollection,
     collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.formSpaceCollection,
@@ -1602,7 +1759,13 @@ export interface DemoApiStorageFileTestContextParams {
   readonly processStorageFile?: Maybe<boolean | ProcessStorageFileParams>;
 }
 
-export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileTestContextInstance<F>> {
+export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  StorageFile,
+  StorageFileDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiStorageFileTestContextInstance<F>
+> {
   async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
     return this.instance.process(params);
   }
@@ -1671,7 +1834,16 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
 }
 
 export const demoStorageFileContextFactory = () =>
-  modelTestContextFactory<StorageFile, StorageFileDocument, DemoApiStorageFileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({
+  modelTestContextFactory<
+    StorageFile,
+    StorageFileDocument,
+    DemoApiStorageFileTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    StorageFileFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiStorageFileTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.storageFileCollection,
     collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.storageFileCollection,
@@ -1716,7 +1888,13 @@ export interface DemoApiStorageFileGroupTestContextParams {
   readonly initIfNeeded?: boolean;
 }
 
-export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileGroupTestContextInstance<F>> {
+export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  StorageFileGroup,
+  StorageFileGroupDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiStorageFileGroupTestContextInstance<F>
+> {
   async createStorageFileGroup(): Promise<void> {
     return this.instance.createStorageFileGroup();
   }
@@ -1781,7 +1959,16 @@ export class DemoApiStorageFileGroupTestContextInstance<F extends FirebaseAdminF
 }
 
 export const demoStorageFileGroupContextFactory = () =>
-  modelTestContextFactory<StorageFileGroup, StorageFileGroupDocument, DemoApiStorageFileGroupTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileGroupTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileGroupFirestoreCollection>({
+  modelTestContextFactory<
+    StorageFileGroup,
+    StorageFileGroupDocument,
+    DemoApiStorageFileGroupTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiStorageFileGroupTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiStorageFileGroupTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    StorageFileGroupFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiStorageFileGroupTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.storageFileGroupCollection,
     collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.storageFileGroupCollection,
@@ -1865,7 +2052,13 @@ export interface DemoApiUserExternalConnectionTestContextParams {
   readonly createIfNeeded?: boolean;
 }
 
-export class DemoApiUserExternalConnectionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<UserExternalConnection, UserExternalConnectionDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiUserExternalConnectionTestContextInstance<F>> {
+export class DemoApiUserExternalConnectionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  UserExternalConnection,
+  UserExternalConnectionDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiUserExternalConnectionTestContextInstance<F>
+> {
   async loadUserExternalConnection(): Promise<Maybe<UserExternalConnection>> {
     return this.instance.loadUserExternalConnection();
   }
@@ -2026,7 +2219,13 @@ export interface DemoApiUserExternalConnectionPrivateTestContextParams {
   readonly u: DemoApiAuthorizedUserTestContextFixture;
 }
 
-export class DemoApiUserExternalConnectionPrivateTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<UserExternalConnectionPrivate, UserExternalConnectionPrivateDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiUserExternalConnectionPrivateTestContextInstance<F>> {
+export class DemoApiUserExternalConnectionPrivateTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  UserExternalConnectionPrivate,
+  UserExternalConnectionPrivateDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiUserExternalConnectionPrivateTestContextInstance<F>
+> {
   testReader(config: DemoApiUserExternalConnectionTestReaderConfig = {}): DemoApiUserExternalConnectionTestReader {
     return this.instance.testReader(config);
   }
@@ -2192,7 +2391,13 @@ export interface DemoApiSeedOpenRouterPromptsParams extends SeedOpenRouterPrompt
   readonly definitions?: Maybe<OpenRouterPromptDefinition[]>;
 }
 
-export class DemoApiOpenRouterPromptTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<OpenRouterPrompt, OpenRouterPromptDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiOpenRouterPromptTestContextInstance<F>> {
+export class DemoApiOpenRouterPromptTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  OpenRouterPrompt,
+  OpenRouterPromptDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiOpenRouterPromptTestContextInstance<F>
+> {
   async loadPrompt(): Promise<OpenRouterPrompt> {
     return this.instance.loadPrompt();
   }
@@ -2307,7 +2512,16 @@ export class DemoApiOpenRouterPromptTestContextInstance<F extends FirebaseAdminF
  * @returns The context factory to wrap a spec's tests with.
  */
 export const demoOpenRouterPromptContextFactory = () =>
-  modelTestContextFactory<OpenRouterPrompt, OpenRouterPromptDocument, DemoApiOpenRouterPromptTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiOpenRouterPromptTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiOpenRouterPromptTestContextFixture<FirebaseAdminFunctionTestContextInstance>, OpenRouterPromptFirestoreCollection>({
+  modelTestContextFactory<
+    OpenRouterPrompt,
+    OpenRouterPromptDocument,
+    DemoApiOpenRouterPromptTestContextParams,
+    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiOpenRouterPromptTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+    DemoApiOpenRouterPromptTestContextFixture<FirebaseAdminFunctionTestContextInstance>,
+    OpenRouterPromptFirestoreCollection
+  >({
     makeFixture: (f) => new DemoApiOpenRouterPromptTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.openRouterPromptCollection,
     collectionForDocument: (fi, _doc) => fi.demoFirestoreCollections.openRouterPromptCollection,
@@ -2345,7 +2559,13 @@ export interface DemoApiOpenRouterPromptVersionTestContextParams extends Partial
   readonly version?: Maybe<OpenRouterPromptVersionNumber>;
 }
 
-export class DemoApiOpenRouterPromptVersionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<OpenRouterPromptVersion, OpenRouterPromptVersionDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiOpenRouterPromptVersionTestContextInstance<F>> {
+export class DemoApiOpenRouterPromptVersionTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
+  OpenRouterPromptVersion,
+  OpenRouterPromptVersionDocument,
+  DemoApiFunctionContextFixtureInstance<F>,
+  DemoApiFunctionContextFixture<F>,
+  DemoApiOpenRouterPromptVersionTestContextInstance<F>
+> {
   get version(): OpenRouterPromptVersionNumber {
     return this.instance.version;
   }

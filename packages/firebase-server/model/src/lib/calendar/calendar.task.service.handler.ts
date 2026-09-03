@@ -160,7 +160,10 @@ export function calendarIcsStorageFileProcessingPurposeSubtaskProcessor(config: 
                 // a converted view of the document, and is exactly what turns into an unserializable date.
                 const recurrences = JSON.stringify((calendar.r ?? []).map((x) => ({ id: x.id, rr: x.rr, rex: x.rex, rea: x.rea, rfe: x.rfe })));
 
-                console.error(`calendarIcsStorageFileProcessingPurposeSubtaskProcessor(): failed publishing the ICS for calendar "${calendarId}" (type "${calendar.t}", ${calendar.e?.length ?? 0} events, ${calendar.r?.length ?? 0} recurring, recurrences=${recurrences}) to StorageFile "${storageFileDocument.id}" at "${fileDetailsAccessor.input.bucketId}${fileDetailsAccessor.input.pathString}": `, e);
+                console.error(
+                  `calendarIcsStorageFileProcessingPurposeSubtaskProcessor(): failed publishing the ICS for calendar "${calendarId}" (type "${calendar.t}", ${calendar.e?.length ?? 0} events, ${calendar.r?.length ?? 0} recurring, recurrences=${recurrences}) to StorageFile "${storageFileDocument.id}" at "${fileDetailsAccessor.input.bucketId}${fileDetailsAccessor.input.pathString}": `,
+                  e
+                );
                 throw e;
               }
             } else {

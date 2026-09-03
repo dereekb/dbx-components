@@ -111,7 +111,9 @@ export function completeSubtaskProcessingAndScheduleCleanupTaskResult<D extends 
  * return notificationSubtaskComplete({ canRunNextCheckpoint: true });
  * ```
  */
-export function notificationSubtaskComplete<D extends NotificationTaskSubtaskData>(options?: Maybe<Pick<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>, 'updateMetadata' | 'canRunNextCheckpoint'>>): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
+export function notificationSubtaskComplete<D extends NotificationTaskSubtaskData>(
+  options?: Maybe<Pick<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>, 'updateMetadata' | 'canRunNextCheckpoint'>>
+): NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint> {
   return {
     ...notificationTaskComplete(options?.updateMetadata),
     canRunNextCheckpoint: options?.canRunNextCheckpoint

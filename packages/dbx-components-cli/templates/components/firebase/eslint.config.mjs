@@ -9,7 +9,7 @@ export default [
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
-        project: ["./FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json", "./FIREBASE_COMPONENTS_FOLDER/tsconfig.spec.json"]
+        project: ['./FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json', './FIREBASE_COMPONENTS_FOLDER/tsconfig.spec.json']
       }
     },
     plugins: {

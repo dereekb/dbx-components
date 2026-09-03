@@ -19,7 +19,45 @@ import type { InspectedTargetReference } from './types.js';
  * these is not a project target, so the shorthand `nx <target> <project>`
  * reading does not apply.
  */
-const NX_SUBCOMMANDS: ReadonlySet<string> = new Set(['run', 'run-many', 'affected', 'affected:graph', 'affected:test', 'affected:build', 'graph', 'dep-graph', 'print-affected', 'show', 'list', 'report', 'migrate', 'reset', 'repair', 'generate', 'g', 'add', 'init', 'import', 'sync', 'release', 'format', 'format:check', 'format:write', 'daemon', 'connect', 'login', 'logout', 'view-logs', 'exec', 'watch', 'documentation', 'help', 'register', 'record', 'start-ci-run']);
+const NX_SUBCOMMANDS: ReadonlySet<string> = new Set([
+  'run',
+  'run-many',
+  'affected',
+  'affected:graph',
+  'affected:test',
+  'affected:build',
+  'graph',
+  'dep-graph',
+  'print-affected',
+  'show',
+  'list',
+  'report',
+  'migrate',
+  'reset',
+  'repair',
+  'generate',
+  'g',
+  'add',
+  'init',
+  'import',
+  'sync',
+  'release',
+  'format',
+  'format:check',
+  'format:write',
+  'daemon',
+  'connect',
+  'login',
+  'logout',
+  'view-logs',
+  'exec',
+  'watch',
+  'documentation',
+  'help',
+  'register',
+  'record',
+  'start-ci-run'
+]);
 
 /**
  * Characters that mark a token as shell- or CI-interpolated, and therefore

@@ -1,4 +1,15 @@
-import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntriesQuery, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType, LMS_OIDC_SCOPE } from 'demo-firebase';
+import {
+  type AllPublishedGuestbookEntriesParams,
+  type AllPublishedGuestbookEntriesResult,
+  type AllPublishedGuestbookEntriesMcpResult,
+  allPublishedGuestbookEntriesParamsType,
+  publishedGuestbookEntriesQuery,
+  type GuestbookEntry,
+  type EntryDetailsGuestbookEntryParams,
+  type EntryDetailsGuestbookEntryResult,
+  entryDetailsGuestbookEntryParamsType,
+  LMS_OIDC_SCOPE
+} from 'demo-firebase';
 import { type FirestoreQueryConstraint, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, withApiDetails } from '@dereekb/firebase-server';
 import { type DemoInvokeModelFunction } from '../function.context';

@@ -175,7 +175,12 @@ describe('validateAppNotifications — template metadata rules', () => {
 
   it('flags NOTIF_TEMPLATE_INFO_NOT_IN_RECORD when an info is declared but absent from the aggregator', () => {
     const result = runWith(({ component }) => {
-      replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.ts', from: 'notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, ...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])', to: 'notificationTemplateTypeInfoRecord([...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])' });
+      replaceInFile({
+        files: component,
+        relPath: 'src/lib/model/notification/notification.ts',
+        from: 'notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, ...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])',
+        to: 'notificationTemplateTypeInfoRecord([...ALL_GUESTBOOK_NOTIFICATION_TEMPLATE_TYPE_INFOS])'
+      });
     });
     expectCodes(
       result.violations.map((v) => v.code),
@@ -357,13 +362,23 @@ export interface SecondNotificationTaskData {
 
 function addSecondTaskType(component: InspectedFile[]): void {
   replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: "export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';", to: SECOND_TASK_TYPE_PATCH });
-  replaceInFile({ files: component, relPath: 'src/lib/model/notification/notification.task.ts', from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];', to: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE];' });
+  replaceInFile({
+    files: component,
+    relPath: 'src/lib/model/notification/notification.task.ts',
+    from: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE];',
+    to: 'export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, SECOND_NOTIFICATION_TASK_TYPE];'
+  });
 }
 
 function swapServiceHandlerForFactorySpread(api: InspectedFile[], options: { readonly factoryImport: string; readonly factoryCall: string; readonly spreadVar: string }): void {
   const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
   replaceInFile({ files: api, relPath: servicePath, from: /const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig[\s\S]*?\};/, to: `const ${options.spreadVar} = ${options.factoryCall};` });
-  replaceInFile({ files: api, relPath: servicePath, from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';", to: `import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\n${options.factoryImport}` });
+  replaceInFile({
+    files: api,
+    relPath: servicePath,
+    from: "import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE, type ExampleNotificationTaskData, type ExampleNotificationTaskCheckpoint } from 'demo-firebase';",
+    to: `import { ALL_NOTIFICATION_TASK_TYPES, EXAMPLE_NOTIFICATION_TASK_TYPE } from 'demo-firebase';\n${options.factoryImport}`
+  });
   replaceInFile({ files: api, relPath: servicePath, from: '[exampleNotificationTaskHandler]', to: `[...${options.spreadVar}]` });
 }
 
@@ -625,10 +640,25 @@ describe('validateAppNotifications — warnings', () => {
 describe('validateAppNotifications — trust list', () => {
   it('does not warn NOTIF_TEMPLATE_FACTORY_ORPHAN for a type imported from @dereekb/*', () => {
     const result = runWith(({ api }) => {
-      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.factory.ts', from: "import { TEST_NOTIFICATIONS_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';", to: `import { TEST_NOTIFICATIONS_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';\nimport { STORAGE_FILE_PROCESSING_TEMPLATE_TYPE } from '@dereekb/firebase';` });
-      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.factory.ts', from: 'return [demoTestNotificationFactory(context), demoGuestbookCreatedNotificationFactory(context)];', to: 'return [demoTestNotificationFactory(context), demoGuestbookCreatedNotificationFactory(context), externalFactory(context)];' });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/notification/notification.factory.ts',
+        from: "import { TEST_NOTIFICATIONS_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';",
+        to: `import { TEST_NOTIFICATIONS_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';\nimport { STORAGE_FILE_PROCESSING_TEMPLATE_TYPE } from '@dereekb/firebase';`
+      });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/notification/notification.factory.ts',
+        from: 'return [demoTestNotificationFactory(context), demoGuestbookCreatedNotificationFactory(context)];',
+        to: 'return [demoTestNotificationFactory(context), demoGuestbookCreatedNotificationFactory(context), externalFactory(context)];'
+      });
       // The `externalFactory` call referencing an external template type identifier should not produce an orphan.
-      replaceInFile({ files: api, relPath: 'src/app/common/model/notification/notification.factory.ts', from: 'export function demoGuestbookCreatedNotificationFactory(context) {', to: 'export function externalFactory(context) { return { type: STORAGE_FILE_PROCESSING_TEMPLATE_TYPE, factory: async () => null }; }\nexport function demoGuestbookCreatedNotificationFactory(context) {' });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/notification/notification.factory.ts',
+        from: 'export function demoGuestbookCreatedNotificationFactory(context) {',
+        to: 'export function externalFactory(context) { return { type: STORAGE_FILE_PROCESSING_TEMPLATE_TYPE, factory: async () => null }; }\nexport function demoGuestbookCreatedNotificationFactory(context) {'
+      });
     });
     const orphans = result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_FACTORY_ORPHAN');
     expect(orphans).toHaveLength(0);

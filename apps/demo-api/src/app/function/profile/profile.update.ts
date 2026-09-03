@@ -1,4 +1,19 @@
-import { type FinishOnboardingProfileParams, type ProfileCreateTestCalendarEventParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, finishOnboardingProfileParamsType, profileCreateTestCalendarEventParamsType, profileCreateTestNotificationParamsType, profileIdentity, resetProfilePasswordParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
+import {
+  type FinishOnboardingProfileParams,
+  type ProfileCreateTestCalendarEventParams,
+  type ProfileCreateTestNotificationParams,
+  type ProfileDocument,
+  type ResetProfilePasswordParams,
+  type SetProfileUsernameParams,
+  type UpdateProfileParams,
+  finishOnboardingProfileParamsType,
+  profileCreateTestCalendarEventParamsType,
+  profileCreateTestNotificationParamsType,
+  profileIdentity,
+  resetProfilePasswordParamsType,
+  setProfileUsernameParamsType,
+  updateProfileParamsType
+} from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';

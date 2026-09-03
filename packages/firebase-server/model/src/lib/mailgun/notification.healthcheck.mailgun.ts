@@ -20,7 +20,23 @@
  */
 import { type EmailAddress, type Maybe, type Minutes, type PromiseOrValue } from '@dereekb/util';
 import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, untrackableNotificationHealthCheckProbe, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode } from '@dereekb/firebase';
-import { type MailgunDomainEvent, type MailgunEmailMessageSendResult, type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest, MailgunEventName, MailgunEventSeverity, bareMailgunMessageId, mailgunDomainEventDate, mailgunDomainEventFailureReason, mailgunDomainState, mailgunEventsForMessageId, mailgunRecentEventsForRecipient, mailgunSuppressionsForRecipient, mailgunValidateEmail } from '@dereekb/nestjs/mailgun';
+import {
+  type MailgunDomainEvent,
+  type MailgunEmailMessageSendResult,
+  type MailgunRecipient,
+  type MailgunService,
+  type MailgunTemplateEmailRequest,
+  MailgunEventName,
+  MailgunEventSeverity,
+  bareMailgunMessageId,
+  mailgunDomainEventDate,
+  mailgunDomainEventFailureReason,
+  mailgunDomainState,
+  mailgunEventsForMessageId,
+  mailgunRecentEventsForRecipient,
+  mailgunSuppressionsForRecipient,
+  mailgunValidateEmail
+} from '@dereekb/nestjs/mailgun';
 import { type NotificationEmailSendServiceHealthCheckService, type NotificationSendServiceHealthCheckRequest, type NotificationSendServiceHealthCheckResponse } from '../notification/notification.healthcheck.service';
 
 /**
@@ -146,22 +162,46 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
       if (domainState.unknown) {
         issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.UNKNOWN, { message: 'The email provider could not be reached to confirm the sending domain is healthy.', data: { domain: domainState.domain } }));
       } else if (domainState.disabled || (domainState.state != null && domainState.state !== 'active')) {
-        issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE, NotificationHealthCheckStatus.ERROR, { message: 'The system that sends our email is not currently active, so no email is going out to anyone.', fix: 'This is a system-wide problem. Contact support so it can be escalated.', data: { domain: domainState.domain, state: domainState.state, disabled: domainState.disabled } }));
+        issues.push(
+          notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE, NotificationHealthCheckStatus.ERROR, {
+            message: 'The system that sends our email is not currently active, so no email is going out to anyone.',
+            fix: 'This is a system-wide problem. Contact support so it can be escalated.',
+            data: { domain: domainState.domain, state: domainState.state, disabled: domainState.disabled }
+          })
+        );
       }
 
       // MARK: suppressions
       const { bounce, complaint, unsubscribe } = suppressions;
 
       if (bounce) {
-        issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, NotificationHealthCheckStatus.ERROR, { message: 'Email to this address previously bounced, so our email provider is now blocking every message to it.', fix: 'Contact support to have the block removed. If the address has a typo, correct it on your account first.', data: { address: bounce.address, code: bounce.code, error: bounce.error, createdAt: bounce.created_at } }));
+        issues.push(
+          notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, NotificationHealthCheckStatus.ERROR, {
+            message: 'Email to this address previously bounced, so our email provider is now blocking every message to it.',
+            fix: 'Contact support to have the block removed. If the address has a typo, correct it on your account first.',
+            data: { address: bounce.address, code: bounce.code, error: bounce.error, createdAt: bounce.created_at }
+          })
+        );
       }
 
       if (complaint) {
-        issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT, NotificationHealthCheckStatus.ERROR, { message: 'One of our emails was reported as spam from this address, so our email provider is now blocking every message to it.', fix: 'Contact support to have the block removed.', data: { address: complaint.address, createdAt: complaint.created_at } }));
+        issues.push(
+          notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT, NotificationHealthCheckStatus.ERROR, {
+            message: 'One of our emails was reported as spam from this address, so our email provider is now blocking every message to it.',
+            fix: 'Contact support to have the block removed.',
+            data: { address: complaint.address, createdAt: complaint.created_at }
+          })
+        );
       }
 
       if (unsubscribe) {
-        issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, NotificationHealthCheckStatus.WARNING, { message: 'This address has unsubscribed from our email, so most messages will not be delivered to it.', fix: 'Contact support to resubscribe this address.', data: { address: unsubscribe.address, tags: unsubscribe.tags, createdAt: unsubscribe.created_at } }));
+        issues.push(
+          notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, NotificationHealthCheckStatus.WARNING, {
+            message: 'This address has unsubscribed from our email, so most messages will not be delivered to it.',
+            fix: 'Contact support to resubscribe this address.',
+            data: { address: unsubscribe.address, tags: unsubscribe.tags, createdAt: unsubscribe.created_at }
+          })
+        );
       }
 
       // MARK: recent activity
@@ -170,11 +210,23 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
       // MARK: validation
       if (validation) {
         if (validation.result === 'undeliverable') {
-          issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.ADDRESS_UNDELIVERABLE, NotificationHealthCheckStatus.ERROR, { message: 'This address does not appear to be able to receive email.', fix: 'Check the address for typos and correct it on your account.', data: { address: validation.address, result: validation.result, risk: validation.risk, reason: validation.reason } }));
+          issues.push(
+            notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.ADDRESS_UNDELIVERABLE, NotificationHealthCheckStatus.ERROR, {
+              message: 'This address does not appear to be able to receive email.',
+              fix: 'Check the address for typos and correct it on your account.',
+              data: { address: validation.address, result: validation.result, risk: validation.risk, reason: validation.reason }
+            })
+          );
         }
 
         if (validation.is_disposable_address) {
-          issues.push(notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.ADDRESS_DISPOSABLE, NotificationHealthCheckStatus.WARNING, { message: 'This address belongs to a disposable email service, which often stops accepting mail after a short time.', fix: 'Use a permanent email address for notifications.', data: { address: validation.address } }));
+          issues.push(
+            notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.ADDRESS_DISPOSABLE, NotificationHealthCheckStatus.WARNING, {
+              message: 'This address belongs to a disposable email service, which often stops accepting mail after a short time.',
+              fix: 'Use a permanent email address for notifications.',
+              data: { address: validation.address }
+            })
+          );
         }
       }
 
@@ -224,7 +276,12 @@ function failureReasonSuffix(reason: Maybe<string>): string {
  */
 function recentEventActivityIssues(recentEvents: MailgunDomainEvent[]): NotificationHealthCheckIssue[] {
   if (!recentEvents.length) {
-    return [notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, NotificationHealthCheckStatus.WARNING, { message: 'No email has been sent to this address recently, so the problem is more likely to be in what triggers the notifications than in the email itself.', fix: 'Check the settings above, and contact support if you expected to receive something.' })];
+    return [
+      notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, NotificationHealthCheckStatus.WARNING, {
+        message: 'No email has been sent to this address recently, so the problem is more likely to be in what triggers the notifications than in the email itself.',
+        fix: 'Check the settings above, and contact support if you expected to receive something.'
+      })
+    ];
   }
 
   // events come back newest-first
@@ -237,7 +294,13 @@ function recentEventActivityIssues(recentEvents: MailgunDomainEvent[]): Notifica
   const eventDate = mailgunDomainEventDate(conclusiveEvent);
 
   if (conclusiveEvent.event === MailgunEventName.DELIVERED) {
-    return [notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_SUCCESS, NotificationHealthCheckStatus.OK, { message: 'Our email provider successfully delivered email to this address recently.', fix: 'If you still cannot find it, check your spam or junk folder and any email filters or rules you have set up.', data: { deliveredAt: eventDate } })];
+    return [
+      notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_SUCCESS, NotificationHealthCheckStatus.OK, {
+        message: 'Our email provider successfully delivered email to this address recently.',
+        fix: 'If you still cannot find it, check your spam or junk folder and any email filters or rules you have set up.',
+        data: { deliveredAt: eventDate }
+      })
+    ];
   }
 
   const reason = mailgunDomainEventFailureReason(conclusiveEvent);
@@ -314,24 +377,48 @@ async function resolvePendingProbe(input: ResolveProbeInput, pendingProbe: Notif
 
   if (delivered) {
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DELIVERED, NotificationHealthCheckStatus.OK, { message: 'The test email we sent was delivered successfully.', fix: 'If it is not in your inbox, check your spam or junk folder and any email filters you have set up.', data: { deliveredAt: mailgunDomainEventDate(delivered) } })],
+      issues: [
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DELIVERED, NotificationHealthCheckStatus.OK, {
+          message: 'The test email we sent was delivered successfully.',
+          fix: 'If it is not in your inbox, check your spam or junk folder and any email filters you have set up.',
+          data: { deliveredAt: mailgunDomainEventDate(delivered) }
+        })
+      ],
       probe: { ...pendingProbe, s: NotificationHealthCheckStatus.OK, d: 'Delivered' }
     };
   } else if (failure) {
     const reason = mailgunDomainEventFailureReason(failure);
 
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_FAILED, NotificationHealthCheckStatus.ERROR, { message: `The test email we sent did not get through${failureReasonSuffix(reason)}`, fix: 'Check the address for typos, then contact support with this report.', data: { event: failure.event, severity: failure.severity, reason } })],
+      issues: [
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_FAILED, NotificationHealthCheckStatus.ERROR, {
+          message: `The test email we sent did not get through${failureReasonSuffix(reason)}`,
+          fix: 'Check the address for typos, then contact support with this report.',
+          data: { event: failure.event, severity: failure.severity, reason }
+        })
+      ],
       probe: { ...pendingProbe, s: NotificationHealthCheckStatus.ERROR, d: reason ?? 'Delivery failed' }
     };
   } else if (probeAgeMinutes > probeTimeoutMinutes) {
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_FAILED, NotificationHealthCheckStatus.ERROR, { message: 'The test email we sent never reached a delivery result, which means it did not arrive.', fix: 'Contact support with this report.', data: { dispatchedAt: pendingProbe.at, probeTimeoutMinutes } })],
+      issues: [
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_FAILED, NotificationHealthCheckStatus.ERROR, {
+          message: 'The test email we sent never reached a delivery result, which means it did not arrive.',
+          fix: 'Contact support with this report.',
+          data: { dispatchedAt: pendingProbe.at, probeTimeoutMinutes }
+        })
+      ],
       probe: { ...pendingProbe, s: NotificationHealthCheckStatus.ERROR, d: 'No delivery result recorded' }
     };
   } else {
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We sent a test email and are still waiting to hear whether it arrived.', fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.', data: { dispatchedAt: pendingProbe.at } })],
+      issues: [
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, {
+          message: 'We sent a test email and are still waiting to hear whether it arrived.',
+          fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.',
+          data: { dispatchedAt: pendingProbe.at }
+        })
+      ],
       probe: pendingProbe
     };
   }
@@ -365,7 +452,13 @@ function dispatchWithoutMessageIdResult(sendResult: MailgunEmailMessageSendResul
 
   return {
     issues: accepted
-      ? [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.UNKNOWN, { message: 'Our email provider accepted the test email but did not give us a way to track it, so we cannot confirm whether it arrives.', fix: 'Check your inbox — and your spam or junk folder — for a test email sent just now.', data })]
+      ? [
+          notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.UNKNOWN, {
+            message: 'Our email provider accepted the test email but did not give us a way to track it, so we cannot confirm whether it arrives.',
+            fix: 'Check your inbox — and your spam or junk folder — for a test email sent just now.',
+            data
+          })
+        ]
       : [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, { message: `Our email provider refused to send the test email${failureReasonSuffix(message)}`, fix: 'Contact support with this report.', data })],
     probe: untrackableNotificationHealthCheckProbe({ at: now, s: probeStatus, tg: target, d: accepted ? 'Sent, but not trackable' : (message ?? 'Refused by the email provider') })
   };
@@ -399,7 +492,13 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
 
     result = messageId
       ? {
-          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We just sent a test email to this address, and our email provider accepted it for delivery.', fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.', data: { dispatchedAt: now, status: sendResult.status } })],
+          issues: [
+            notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, {
+              message: 'We just sent a test email to this address, and our email provider accepted it for delivery.',
+              fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.',
+              data: { dispatchedAt: now, status: sendResult.status }
+            })
+          ],
           probe: {
             id: bareMailgunMessageId(messageId),
             at: now,
@@ -412,7 +511,13 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
     // recorded like any other attempt, so the window applies — a provider that is throwing is the last
     // one that should be called again on the user's next click
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, { message: 'The test email could not be sent at all, which points to a problem with our email system rather than your address.', fix: 'Contact support with this report.', data: { error: `${e}` } })],
+      issues: [
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, {
+          message: 'The test email could not be sent at all, which points to a problem with our email system rather than your address.',
+          fix: 'Contact support with this report.',
+          data: { error: `${e}` }
+        })
+      ],
       probe: untrackableNotificationHealthCheckProbe({ at: now, s: NotificationHealthCheckStatus.ERROR, tg: target, d: 'Could not be sent' })
     };
   }

@@ -13,7 +13,14 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_MODEL_ARCHETYPE_LOOKUP_TOOL: Tool = {
   name: 'dbx_model_archetype_lookup',
-  description: ['Look up an archetype in the model-archetype catalog. Accepts:', '  • a slug (`"root-entity"`, `"denormalised-aggregate"`, …);', '  • the literal `"list"` for the full catalog grouped by family.', '', 'Optional inputs:', '  • `axes`: optional axis filter (`{ "subPurpose": "private" }`) — when set, the description shifts to focus on the matched axis.'].join('\n'),
+  description: [
+    'Look up an archetype in the model-archetype catalog. Accepts:',
+    '  • a slug (`"root-entity"`, `"denormalised-aggregate"`, …);',
+    '  • the literal `"list"` for the full catalog grouped by family.',
+    '',
+    'Optional inputs:',
+    '  • `axes`: optional axis filter (`{ "subPurpose": "private" }`) — when set, the description shifts to focus on the matched axis.'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

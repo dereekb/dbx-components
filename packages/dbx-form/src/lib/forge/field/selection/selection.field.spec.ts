@@ -12,7 +12,39 @@ import type { ValueSelectionOption } from '../../../field/field.selection';
 describe('DbxForgeValueSelectionFieldConfig - Exhaustive Whitelist', () => {
   type ExpectedKeys =
     // From DbxForgeFieldFunctionDef<DbxForgeValueSelectionFieldDef>
-    'key' | 'label' | 'placeholder' | 'value' | 'required' | 'readonly' | 'disabled' | 'hidden' | 'className' | 'meta' | 'logic' | 'props' | 'hint' | 'pattern' | 'minLength' | 'maxLength' | 'min' | 'max' | 'email' | 'validators' | 'validationMessages' | 'derivation' | 'schemas' | 'col' | 'tabIndex' | 'excludeValueIfHidden' | 'excludeValueIfDisabled' | 'excludeValueIfReadonly' | 'wrappers' | 'skipAutoWrappers' | 'skipDefaultWrappers' | 'nullable' | '__fieldDef';
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'hint'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
+    | '__fieldDef';
 
   type ActualKeys = keyof DbxForgeValueSelectionFieldConfig;
 

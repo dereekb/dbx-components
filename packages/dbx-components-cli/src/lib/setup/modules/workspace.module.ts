@@ -24,7 +24,28 @@ export const WORKSPACE_MODULE: SetupModule = {
   generate: async (context) => {
     const { naming, versions, shell, workspaceRoot, dryRun } = context;
     // create-nx-workspace runs in the parent dir and creates the project folder named after the project.
-    await shell.run('npx', ['--yes', `create-nx-workspace@${versions.core.nx}`, `--name=${naming.projectName}`, `--appName=${naming.angularAppName}`, '--packageManager=npm', '--useGitHub', '--nxCloud=skip', '--interactive=false', '--style=scss', '--preset=angular-monorepo', '--workspaceType=package-based', '--unitTestRunner=vitest', '--e2eTestRunner=cypress', '--standaloneApi=true', '--ssr=false', '--routing=false'], { cwd: dirname(workspaceRoot), dryRun });
+    await shell.run(
+      'npx',
+      [
+        '--yes',
+        `create-nx-workspace@${versions.core.nx}`,
+        `--name=${naming.projectName}`,
+        `--appName=${naming.angularAppName}`,
+        '--packageManager=npm',
+        '--useGitHub',
+        '--nxCloud=skip',
+        '--interactive=false',
+        '--style=scss',
+        '--preset=angular-monorepo',
+        '--workspaceType=package-based',
+        '--unitTestRunner=vitest',
+        '--e2eTestRunner=cypress',
+        '--standaloneApi=true',
+        '--ssr=false',
+        '--routing=false'
+      ],
+      { cwd: dirname(workspaceRoot), dryRun }
+    );
   },
   configure: async (context) => {
     const { workspaceRoot, naming, dryRun } = context;

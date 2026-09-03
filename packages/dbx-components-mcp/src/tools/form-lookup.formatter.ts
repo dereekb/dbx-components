@@ -26,7 +26,19 @@ function formatBrief(field: FormFieldInfo): string {
   const tierBits = formatTierBits(field);
   const arrayOptional = field.arrayOutput === 'optional' ? ' (single or array)' : '';
   const array = field.arrayOutput === 'yes' ? ' (array)' : arrayOptional;
-  return [`## ${field.factoryName}`, '', `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`, '', field.description, '', '```ts', field.minimalExample, '```', '', `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`].join('\n');
+  return [
+    `## ${field.factoryName}`,
+    '',
+    `**slug:** \`${field.slug}\` · **tier:** \`${field.tier}\` · **produces:** \`${field.produces}\`${array}${tierBits}`,
+    '',
+    field.description,
+    '',
+    '```ts',
+    field.minimalExample,
+    '```',
+    '',
+    `→ Call \`dbx_form_lookup topic="${field.slug}" depth="full"\` for the config table and full example.`
+  ].join('\n');
 }
 
 function formatFull(field: FormFieldInfo): string {

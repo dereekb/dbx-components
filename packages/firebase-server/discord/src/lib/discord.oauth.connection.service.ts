@@ -1,7 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DISCORD_OAUTH_SCOPE_DELIMITER, type DiscordAccessToken, type DiscordOAuthAuthorizeUrlFactory, type DiscordOAuthCurrentUser } from '@dereekb/discord';
 import { DiscordOAuthApi } from '@dereekb/discord/nestjs';
-import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
+import {
+  AbstractUserExternalConnectionOAuthService,
+  UserExternalConnectionAccessor,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionStateCoder,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionOAuthExchangeInput,
+  type UserExternalConnectionOAuthRefreshCredentialsInput,
+  type UserExternalConnectionOAuthState
+} from '@dereekb/firebase-server/model';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { DiscordUserExternalConnectionOAuthServiceConfig } from './discord.oauth.connection.config';
 

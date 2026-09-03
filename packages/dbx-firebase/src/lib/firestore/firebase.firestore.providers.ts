@@ -14,7 +14,9 @@ import { FIREBASE_FIRESTORE_TOKEN } from '../firebase/firebase.tokens';
  */
 export function provideSystemStateFirestoreCollections(appCollection: SystemStateFirestoreCollections): SystemStateFirestoreCollections {
   if (!appCollection.systemStateCollection) {
-    throw new Error(`SystemStateFirestoreCollections could not be provided using the app's app collection. Set provideSystemStateFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement SystemStateFirestoreCollections.`);
+    throw new Error(
+      `SystemStateFirestoreCollections could not be provided using the app's app collection. Set provideSystemStateFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement SystemStateFirestoreCollections.`
+    );
   }
 
   return appCollection;
@@ -29,7 +31,9 @@ export function provideSystemStateFirestoreCollections(appCollection: SystemStat
  */
 export function provideNotificationFirestoreCollections(appCollection: NotificationFirestoreCollections): NotificationFirestoreCollections {
   if (!appCollection.notificationSummaryCollection) {
-    throw new Error(`NotificationFirestoreCollections could not be provided using the app's app collection. Set provideNotificationFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement NotificationFirestoreCollections.`);
+    throw new Error(
+      `NotificationFirestoreCollections could not be provided using the app's app collection. Set provideNotificationFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement NotificationFirestoreCollections.`
+    );
   }
 
   return appCollection;
@@ -44,7 +48,9 @@ export function provideNotificationFirestoreCollections(appCollection: Notificat
  */
 export function provideStorageFileFirestoreCollections(appCollection: StorageFileFirestoreCollections): StorageFileFirestoreCollections {
   if (!appCollection.storageFileCollection) {
-    throw new Error(`StorageFileFirestoreCollections could not be provided using the app's app collection. Set provideStorageFileFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement StorageFileFirestoreCollections.`);
+    throw new Error(
+      `StorageFileFirestoreCollections could not be provided using the app's app collection. Set provideStorageFileFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement StorageFileFirestoreCollections.`
+    );
   }
 
   return appCollection;

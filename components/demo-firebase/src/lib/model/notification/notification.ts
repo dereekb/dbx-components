@@ -1,4 +1,20 @@
-import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, type NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, firestoreModelId, firestoreModelKey, firestoreModelKeyParentKey, readFirestoreModelKey, type ReadFirestoreModelKeyInput, type CalendarEventId, calendarIdentity } from '@dereekb/firebase';
+import {
+  type NotificationTemplateType,
+  type CreateNotificationTemplate,
+  createNotificationTemplate,
+  type FirebaseAuthUserId,
+  type NotificationTemplateTypeInfo,
+  notificationTemplateTypeInfoRecord,
+  type NotificationSummaryIdForUidFunction,
+  notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity,
+  firestoreModelId,
+  firestoreModelKey,
+  firestoreModelKeyParentKey,
+  readFirestoreModelKey,
+  type ReadFirestoreModelKeyInput,
+  type CalendarEventId,
+  calendarIdentity
+} from '@dereekb/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
 import { demoProfileCalendarId } from '../calendar';
 import { type Guestbook, type GuestbookEntry, type GuestbookEntryKey, type GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
@@ -249,6 +265,12 @@ export function calendarEventInviteNotificationTemplate(input: CalendarEventInvi
 }
 
 // MARK: All Notifications
-export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO, CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO]);
+export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([
+  TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO,
+  EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO,
+  GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO,
+  GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO,
+  CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO
+]);
 
 export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

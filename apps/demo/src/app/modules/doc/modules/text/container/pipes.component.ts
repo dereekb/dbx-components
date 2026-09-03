@@ -10,7 +10,22 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { DatePipe } from '@angular/common';
-import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, completeOnDestroy } from '@dereekb/dbx-core';
+import {
+  DateDistancePipe,
+  DateRangeDistancePipe,
+  TargetDateToSystemDatePipe,
+  SystemDateToTargetDatePipe,
+  TimezoneAbbreviationPipe,
+  DateDayRangePipe,
+  DateDayTimeRangePipe,
+  DateTimeRangeOnlyPipe,
+  DateTimeRangePipe,
+  DateTimeRangeOnlyDistancePipe,
+  MinutesStringPipe,
+  TimeDistanceCountdownPipe,
+  TimeDistancePipe,
+  completeOnDestroy
+} from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './pipes.component.html',

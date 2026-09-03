@@ -1,4 +1,4 @@
-import { Injectable , inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseCollectionStore } from '@dereekb/dbx-firebase';
 import { DemoFirestoreCollections, type Profile, type ProfileDocument } from 'demo-firebase';
 

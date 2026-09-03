@@ -108,7 +108,19 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
 /**
  * The Angular framework packages that take {@link DEFAULT_SETUP_CORE_VERSIONS}.`angular` verbatim.
  */
-const DBX_PEER_ALIGNED_ANGULAR_PACKAGES: readonly string[] = ['@angular/animations', '@angular/common', '@angular/compiler', '@angular/compiler-cli', '@angular/core', '@angular/forms', '@angular/language-service', '@angular/material-date-fns-adapter', '@angular/platform-browser', '@angular/platform-server', '@angular/router'];
+const DBX_PEER_ALIGNED_ANGULAR_PACKAGES: readonly string[] = [
+  '@angular/animations',
+  '@angular/common',
+  '@angular/compiler',
+  '@angular/compiler-cli',
+  '@angular/core',
+  '@angular/forms',
+  '@angular/language-service',
+  '@angular/material-date-fns-adapter',
+  '@angular/platform-browser',
+  '@angular/platform-server',
+  '@angular/router'
+];
 
 /**
  * Dependency versions pinned to align a scaffolded project with the `@dereekb/*` peer ranges of the

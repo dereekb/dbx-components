@@ -35,7 +35,12 @@ export const DEMO_RESUME_CHECK_DEFAULT_MODEL_ID = 'openai/gpt-5.6-luna';
  * output is not universally supported. {@link demoResumeCheckVerdictFromOutput} is the tolerant reader
  * that closes the gap.
  */
-export const DEMO_RESUME_CHECK_INSTRUCTIONS = ['You inspect an attached document and decide whether it is a resume (also called a CV).', "A resume lists a single person's work history, education, or skills.", 'Answer with JSON only, in exactly this shape: {"isResume": boolean, "reason": string}.', 'Keep "reason" to one short sentence.'].join(' ');
+export const DEMO_RESUME_CHECK_INSTRUCTIONS = [
+  'You inspect an attached document and decide whether it is a resume (also called a CV).',
+  "A resume lists a single person's work history, education, or skills.",
+  'Answer with JSON only, in exactly this shape: {"isResume": boolean, "reason": string}.',
+  'Keep "reason" to one short sentence.'
+].join(' ');
 
 /**
  * Model config for {@link DEMO_RESUME_CHECK_PROMPT_KEY}.

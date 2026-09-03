@@ -231,7 +231,8 @@ export type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInp
  * Exposes methods for reading and mutating a field definition during construction,
  * including validation, meta, logic, and form config.
  */
-export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any> extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceWrappersBuilder {
+export interface DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C extends DbxForgeFieldFunctionDef<any>, FV = any>
+  extends DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceLogicBuilder<C, FV>, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceFormConfigBuilder, DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceWrappersBuilder {
   /**
    * Returns the current fieldDef.
    */
@@ -411,7 +412,9 @@ export const DEFAULT_TRANSFORM_DEBOUNCE_TIME: Milliseconds = 500;
  *
  * When `reusableDefinition` is false/undefined, `functionName` is optional (auto-generated).
  */
-export type DbxForgeFieldCustomValidatorWithFn = { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown>; readonly kind?: string } | { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown>; readonly kind?: string };
+export type DbxForgeFieldCustomValidatorWithFn =
+  | { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown>; readonly kind?: string }
+  | { readonly type: 'custom'; readonly fn: CustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown>; readonly kind?: string };
 
 /**
  * An async validator config with an inline `fn` for auto-registration.
@@ -421,7 +424,9 @@ export type DbxForgeFieldCustomValidatorWithFn = { readonly type: 'custom'; read
  *
  * When `reusableDefinition` is false/undefined, `functionName` is optional (auto-generated).
  */
-export type DbxForgeFieldAsyncValidatorWithFn = { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown> } | { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown> };
+export type DbxForgeFieldAsyncValidatorWithFn =
+  | { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName: string; readonly reusableDefinition: true; readonly params?: Record<string, unknown> }
+  | { readonly type: 'async'; readonly fn: AsyncCustomValidator; readonly functionName?: string; readonly reusableDefinition?: false; readonly params?: Record<string, unknown> };
 
 /**
  * A validator input that can be a standard {@link ValidatorConfig} or one augmented with an inline `fn`.

@@ -1,7 +1,27 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZOHO_ACCOUNTS_API_URLS, zohoAccountsApiUrlKeyForApiUrl, zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoAccountsApiUrl, type ZohoAccountsAuthorizeUrlFactory, type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse, type ZohoAccountsUserInfoResponse } from '@dereekb/zoho';
+import {
+  ZOHO_ACCOUNTS_API_URLS,
+  zohoAccountsApiUrlKeyForApiUrl,
+  zohoAccountsAuthorizeUrlFactory,
+  zohoAccountsConfigApiUrl,
+  zohoOAuthScopesFromScopeString,
+  type ZohoAccountsApiUrl,
+  type ZohoAccountsAuthorizeUrlFactory,
+  type ZohoAccountsRefreshTokenFromAuthorizationCodeResponse,
+  type ZohoAccountsUserInfoResponse
+} from '@dereekb/zoho';
 import { ZohoAccountsOAuthApi } from '@dereekb/zoho/nestjs';
-import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
+import {
+  AbstractUserExternalConnectionOAuthService,
+  UserExternalConnectionAccessor,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionStateCoder,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionOAuthCallbackQueryValues,
+  type UserExternalConnectionOAuthExchangeInput,
+  type UserExternalConnectionOAuthRefreshCredentialsInput,
+  type UserExternalConnectionOAuthState
+} from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { ZohoUserExternalConnectionOAuthServiceConfig } from './zoho.oauth.connection.config';
 

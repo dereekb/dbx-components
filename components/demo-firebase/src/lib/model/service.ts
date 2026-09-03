@@ -128,12 +128,58 @@ import {
 } from '@dereekb/openrouter/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
-import { type GuestbookTypes, type GuestbookFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, type GuestbookEntryFirestoreCollectionFactory, type GuestbookEntryFirestoreCollectionGroup, type GuestbookEntryRoles, type GuestbookFirestoreCollection, type GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection, isGuestbookOwnershipKeySignedByUser } from './guestbook';
-import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfileFirestoreCollections, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup, profileIdentity } from './profile';
+import {
+  type GuestbookTypes,
+  type GuestbookFirestoreCollections,
+  type Guestbook,
+  type GuestbookDocument,
+  type GuestbookEntry,
+  type GuestbookEntryDocument,
+  type GuestbookEntryFirestoreCollectionFactory,
+  type GuestbookEntryFirestoreCollectionGroup,
+  type GuestbookEntryRoles,
+  type GuestbookFirestoreCollection,
+  type GuestbookRoles,
+  guestbookEntryFirestoreCollectionFactory,
+  guestbookEntryFirestoreCollectionGroup,
+  guestbookFirestoreCollection,
+  isGuestbookOwnershipKeySignedByUser
+} from './guestbook';
+import {
+  type ProfileTypes,
+  type Profile,
+  type ProfileDocument,
+  type ProfileFirestoreCollection,
+  type ProfileFirestoreCollections,
+  type ProfilePrivate,
+  type ProfilePrivateDocument,
+  type ProfilePrivateFirestoreCollectionFactory,
+  type ProfilePrivateFirestoreCollectionGroup,
+  type ProfilePrivateRoles,
+  type ProfileRoles,
+  profileFirestoreCollection,
+  profilePrivateFirestoreCollectionFactory,
+  profilePrivateFirestoreCollectionGroup,
+  profileIdentity
+} from './profile';
 import { DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE } from './formspace/formspace';
 import { demoSystemStateStoredDataConverterMap, type ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections, CalendarFirestoreCollections, FormSpaceFirestoreCollections, OidcModelFirestoreCollections, UserExternalConnectionFirestoreCollections, OpenRouterPromptFirestoreCollections, OpenRouterRunTaskFirestoreCollections {
+export abstract class DemoFirestoreCollections
+  implements
+    FirestoreContextReference,
+    ProfileFirestoreCollections,
+    GuestbookFirestoreCollections,
+    SystemStateFirestoreCollections,
+    NotificationFirestoreCollections,
+    StorageFileFirestoreCollections,
+    CalendarFirestoreCollections,
+    FormSpaceFirestoreCollections,
+    OidcModelFirestoreCollections,
+    UserExternalConnectionFirestoreCollections,
+    OpenRouterPromptFirestoreCollections,
+    OpenRouterRunTaskFirestoreCollections
+{
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;

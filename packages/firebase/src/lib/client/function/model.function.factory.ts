@@ -83,7 +83,9 @@ export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = 
  * Can be `null`/`undefined` (no CRUD functions for this model) or a partial record of
  * create/read/update/delete/query configurations, each optionally with specifiers.
  */
-export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig & ModelFirebaseCrudFunctionQueryTypeConfig & ModelFirebaseCrudFunctionInvokeTypeConfig>;
+export type ModelFirebaseCrudFunctionTypeMapEntry =
+  | MaybeNot
+  | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig & ModelFirebaseCrudFunctionQueryTypeConfig & ModelFirebaseCrudFunctionInvokeTypeConfig>;
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
@@ -160,14 +162,19 @@ export type ModelFirebaseCrudFunctionMapEntry<MODEL extends string, E extends Mo
     };
 
 export type ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
-  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
+  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<
+    M,
+    SPECIFIER,
+    CRUD
+  >;
 };
 
 export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<_MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
-export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig, K extends keyof E, CRUD extends string> = E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
+export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig, K extends keyof E, CRUD extends string> =
+  E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
 /**
  * Combined function map providing both custom functions ({@link FirebaseFunctionMap}) and
  * auto-generated model CRUD functions ({@link ModelFirebaseCrudFunctionMap}).

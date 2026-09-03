@@ -118,7 +118,8 @@ export const UTIL_REQUIRE_NO_SIDE_EFFECTS_RULE: UtilRequireNoSideEffectsRuleDefi
     messages: {
       missingNoSideEffectsJsdoc: 'Factory function "{{name}}" is missing the `@__NO_SIDE_EFFECTS__` annotation in its JSDoc. Add it as the last tag inside the JSDoc block so esbuild can drop unused calls during tree-shaking.',
       missingJsdocForFactory: 'Factory-named function "{{name}}" has no JSDoc block. Add a JSDoc block containing `@__NO_SIDE_EFFECTS__` so esbuild can drop unused calls during tree-shaking.',
-      missingImplAnnotationOverloaded: 'Overloaded factory function "{{name}}" needs `@__NO_SIDE_EFFECTS__` directly on its implementation — TypeScript erases overload signatures during emit, so the JSDoc tag on the first overload is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
+      missingImplAnnotationOverloaded:
+        'Overloaded factory function "{{name}}" needs `@__NO_SIDE_EFFECTS__` directly on its implementation — TypeScript erases overload signatures during emit, so the JSDoc tag on the first overload is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
     },
     schema: [
       {

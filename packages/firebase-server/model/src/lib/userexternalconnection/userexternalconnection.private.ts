@@ -1,6 +1,23 @@
 import { type ISO8601DateString, type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
-import { AbstractFirestoreDocument, type CollectionReference, copyUserRelatedDataAccessorFactoryFunction, type FirebaseAuthUserId, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, firestoreUID, snapshotConverterFunctions, type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, type UserRelated, type UserRelatedById } from '@dereekb/firebase';
+import {
+  AbstractFirestoreDocument,
+  type CollectionReference,
+  copyUserRelatedDataAccessorFactoryFunction,
+  type FirebaseAuthUserId,
+  type FirestoreCollection,
+  type FirestoreContext,
+  firestoreDate,
+  firestoreModelIdentity,
+  firestoreUID,
+  snapshotConverterFunctions,
+  type UserExternalConnectionCapability,
+  type UserExternalConnectionExternalAccountId,
+  type UserExternalConnectionGrantSummary,
+  type UserExternalConnectionProviderType,
+  type UserRelated,
+  type UserRelatedById
+} from '@dereekb/firebase';
 import { firestoreEncryptedField } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecretSource } from '@dereekb/nestjs';
 

@@ -126,7 +126,7 @@ export async function runSetupInit(context: SetupContext, flags: SetupInitFlags)
   runModuleScaffold(ROOT_MODULE, context);
   await commit('checkpoint: added firebase configuration');
 
-  // 8-10. Root installs (husky/commitlint/prettier, vitest, @dereekb + npm deps).
+  // 8-10. Root installs (husky/commitlint/oxfmt, vitest, @dereekb + npm deps).
   if (!flags.templatesOnly && !flags.skipInstall) {
     record('root: install dependencies');
     await runModulePhases(ROOT_MODULE, context, { skipGenerate: true, skipInstall: false, skipScaffold: true, skipConfigure: true });

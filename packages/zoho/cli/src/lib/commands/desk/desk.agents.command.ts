@@ -8,7 +8,8 @@ import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagin
 const agentsListCommand: CommandModule = {
   command: 'list',
   describe: 'List agents',
-  builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { type: 'string', describe: 'Filter by department ID' }).option('status', { type: 'string', describe: 'Filter by status (active, disabled)' }).option('include', { type: 'string', describe: 'Comma-separated includes (e.g. role,profile,departments)' }),
+  builder: (yargs: Argv) =>
+    withDeskPagination(yargs).option('department-id', { type: 'string', describe: 'Filter by department ID' }).option('status', { type: 'string', describe: 'Filter by status (active, disabled)' }).option('include', { type: 'string', describe: 'Comma-separated includes (e.g. role,profile,departments)' }),
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);

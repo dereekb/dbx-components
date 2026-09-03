@@ -65,7 +65,10 @@ export interface AuthorizedUserTestContext {
  * Manages the lifecycle of the authorized user test context within the Jest test fixture hierarchy.
  * Use this as the primary handle in test suites; it is created automatically by {@link authorizedUserContextFactory}.
  */
-export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>> extends AbstractChildTestContextFixture<I, PF> implements AuthorizedUserTestContext {
+export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>>
+  extends AbstractChildTestContextFixture<I, PF>
+  implements AuthorizedUserTestContext
+{
   // MARK: AuthorizedUserTestContext (Forwarded)
   get uid(): FirebaseAuthUserId {
     return this.instance.uid;
@@ -283,7 +286,13 @@ export interface AuthorizedUserTestContextDetailsTemplate {
 /**
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
-export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>> {
+export interface AuthorizedUserTestContextParams<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>,
+  C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>
+> {
   readonly f: PF;
 
   /**
@@ -319,7 +328,12 @@ export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestCon
  * @param config - Test context parameters (parent fixture, optional uid/template, custom factories) used to create the authorized user context.
  * @param buildTests - Callback invoked with the built {@link AuthorizedUserTestContextFixture}; should register `it(...)`/`describe(...)` blocks against it.
  */
-export function authorizedUserContext<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>>(config: AuthorizedUserTestContextParams<PI, PF, I, F>, buildTests: (u: F) => void) {
+export function authorizedUserContext<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+>(config: AuthorizedUserTestContextParams<PI, PF, I, F>, buildTests: (u: F) => void) {
   authorizedUserContextFactory(config)({ f: config.f }, buildTests);
 }
 
@@ -327,7 +341,12 @@ export function authorizedUserContext<PI extends FirebaseAdminTestContext = Fire
  * Configuration for {@link authorizedUserContextFactory}, which is {@link AuthorizedUserTestContextParams}
  * without the fixture reference (`f`). The fixture is provided separately when the factory is invoked.
  */
-export type AuthorizedUserTestContextFactoryConfig<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>> = Omit<AuthorizedUserTestContextParams<PI, PF, I, F>, 'f'>;
+export type AuthorizedUserTestContextFactoryConfig<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+> = Omit<AuthorizedUserTestContextParams<PI, PF, I, F>, 'f'>;
 
 export interface AuthorizedUserTestContextFactoryParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>> {
   readonly f: PF;
@@ -373,9 +392,13 @@ export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFact
  * @param config - Factory configuration: optional uid generator, custom fixture/instance constructors, user-detail builder, and `initUser` hook.
  * @returns Function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
  */
-export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>>(
-  config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>
-): (params: C, buildTests: (u: F) => void) => void {
+export function authorizedUserContextFactory<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>,
+  C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>
+>(config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>): (params: C, buildTests: (u: F) => void) => void {
   const { uid: uidGetter, makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I, makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f), makeUserDetails = () => ({}), initUser } = config;
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 

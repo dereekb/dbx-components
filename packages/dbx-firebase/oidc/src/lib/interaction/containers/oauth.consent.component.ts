@@ -5,7 +5,16 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { tap } from 'rxjs';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY, DEFAULT_OIDC_LOGO_URI_PARAM_KEY, DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY, DEFAULT_OIDC_SCOPES_PARAM_KEY } from '../../service/oidc.configuration.service';
+import {
+  DbxFirebaseOidcConfigService,
+  DEFAULT_OIDC_CLIENT_ID_PARAM_KEY,
+  DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY,
+  DEFAULT_OIDC_CLIENT_URI_PARAM_KEY,
+  DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY,
+  DEFAULT_OIDC_LOGO_URI_PARAM_KEY,
+  DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY,
+  DEFAULT_OIDC_SCOPES_PARAM_KEY
+} from '../../service/oidc.configuration.service';
 import { type OAuthInteractionConsentResponse, type OAuthInteractionLoginDetails, type OidcScope } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseOAuthConsentViewComponent, type OidcConsentStateCase } from '../components/oauth.consent.view.component';

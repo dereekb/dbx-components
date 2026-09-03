@@ -18,7 +18,14 @@
         <!-- These two DO have slots, so their checkmarks come from the same rule the server's submit
              transaction rejects on, and the slot uploads drop their own labels in favor of the step headers. -->
         <dbx-firebase-formspace-section [step]="2" [slot]="coverSlot" header="Cover File" hint="One file. Uploading again replaces what is there.">
-          <dbx-firebase-formspace-slot-upload [slot]="coverSlot" [showLabel]="false" emptyText="A cover file is required before this form space can be submitted." uploadText="Upload Cover" replaceText="Replace Cover" removeText="Remove Cover" fileTypesAccepted="application/pdf,image/png,image/jpeg"></dbx-firebase-formspace-slot-upload>
+          <dbx-firebase-formspace-slot-upload
+            [slot]="coverSlot"
+            [showLabel]="false"
+            emptyText="A cover file is required before this form space can be submitted."
+            uploadText="Upload Cover"
+            replaceText="Replace Cover"
+            removeText="Remove Cover"
+            fileTypesAccepted="application/pdf,image/png,image/jpeg"></dbx-firebase-formspace-slot-upload>
         </dbx-firebase-formspace-section>
         <dbx-firebase-formspace-section [step]="3" [slot]="folderSlot" header="Folder" hint="Uploads accumulate rather than replacing each other.">
           <dbx-firebase-formspace-slot-upload [slot]="folderSlot" [showLabel]="false" [maxFiles]="folderMaxFiles" uploadText="Add Files" fileTypesAccepted="application/pdf,image/png,image/jpeg,text/plain"></dbx-firebase-formspace-slot-upload>

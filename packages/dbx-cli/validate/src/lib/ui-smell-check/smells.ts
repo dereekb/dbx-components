@@ -428,7 +428,10 @@ const hardcodedRadius: SmellDetector = (input) => {
       exact = input.tokenRegistry.findByCssVariable('--mat-sys-corner-full');
     }
     const matchKind = matchKindForRadius(exact, raw);
-    const fix = exact === undefined ? `Hardcoded radius \`${raw}\` doesn't match any design-system corner token. Either wrap it in a project-local SCSS variable or align it with one of \`--mat-sys-corner-extra-small\` (4px), \`-small\` (8px), \`-medium\` (12px), \`-large\` (16px), \`-extra-large\` (28px), or \`-full\` (pill / circle).` : `Replace \`border-radius: ${raw}\` with \`border-radius: var(${exact.cssVariable})\` ${matchKind}`;
+    const fix =
+      exact === undefined
+        ? `Hardcoded radius \`${raw}\` doesn't match any design-system corner token. Either wrap it in a project-local SCSS variable or align it with one of \`--mat-sys-corner-extra-small\` (4px), \`-small\` (8px), \`-medium\` (12px), \`-large\` (16px), \`-extra-large\` (28px), or \`-full\` (pill / circle).`
+        : `Replace \`border-radius: ${raw}\` with \`border-radius: var(${exact.cssVariable})\` ${matchKind}`;
     matches.push({
       id: 'hardcoded-radius',
       severity: 'warn',
@@ -464,7 +467,10 @@ const hardcodedShadow: SmellDetector = (input) => {
     const raw = match[1].trim();
     if (raw.startsWith('var(') || raw === 'none') continue;
     const exact = findExactRoleToken({ registry: input.tokenRegistry, raw, role: 'elevation' });
-    const fix = exact === undefined ? 'Hardcoded `box-shadow:` declarations should map to one of the `--mat-sys-level0..5` elevation tokens, or wrap the surface in `<dbx-content-box [elevate]="true">` so the shadow comes from the design system.' : `Replace this hardcoded shadow with \`box-shadow: var(${exact.cssVariable})\` or use \`<dbx-content-box [elevate]="true">\` to apply the elevation through the wrapper component.`;
+    const fix =
+      exact === undefined
+        ? 'Hardcoded `box-shadow:` declarations should map to one of the `--mat-sys-level0..5` elevation tokens, or wrap the surface in `<dbx-content-box [elevate]="true">` so the shadow comes from the design system.'
+        : `Replace this hardcoded shadow with \`box-shadow: var(${exact.cssVariable})\` or use \`<dbx-content-box [elevate]="true">\` to apply the elevation through the wrapper component.`;
     matches.push({
       id: 'hardcoded-shadow',
       severity: 'warn',
@@ -748,7 +754,10 @@ const mdcTokenOverride: SmellDetector = (input) => {
     seen.add(tokenName);
     const tokenEntry = input.tokenRegistry.findByCssVariable(tokenName);
     const componentScope = tokenEntry?.componentScope;
-    const fix = componentScope === undefined ? `Don't override \`${tokenName}\` directly. Material component tokens should be set via the host component's \`color\` attribute or by a parent theme — direct overrides break dark mode and theme switching.` : `Don't override \`${tokenName}\` directly. Set \`color="primary|accent|warn"\` on the host \`<${componentScope}>\` (or wrap in a thin styled component) so the token resolution flows through Material's theme.`;
+    const fix =
+      componentScope === undefined
+        ? `Don't override \`${tokenName}\` directly. Material component tokens should be set via the host component's \`color\` attribute or by a parent theme — direct overrides break dark mode and theme switching.`
+        : `Don't override \`${tokenName}\` directly. Set \`color="primary|accent|warn"\` on the host \`<${componentScope}>\` (or wrap in a thin styled component) so the token resolution flows through Material's theme.`;
     matches.push({
       id: 'mdc-token-override-instead-of-wrapper',
       severity: 'warn',

@@ -29,7 +29,10 @@ export interface BuildManyOptions {
   readonly onProgress: Maybe<(event: BuildManyProgressEvent) => void>;
 }
 
-export type BuildManyProgressEvent = { readonly kind: 'start'; readonly project: string; readonly index: number; readonly total: number } | { readonly kind: 'done'; readonly project: string; readonly index: number; readonly total: number; readonly cache: LintCache } | { readonly kind: 'error'; readonly project: string; readonly index: number; readonly total: number; readonly error: string };
+export type BuildManyProgressEvent =
+  | { readonly kind: 'start'; readonly project: string; readonly index: number; readonly total: number }
+  | { readonly kind: 'done'; readonly project: string; readonly index: number; readonly total: number; readonly cache: LintCache }
+  | { readonly kind: 'error'; readonly project: string; readonly index: number; readonly total: number; readonly error: string };
 
 export interface BuildManyProjectResult {
   readonly project: string;

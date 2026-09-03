@@ -233,7 +233,12 @@ export interface CreateCliInput extends CliLifecycleHooks {
 export function createCli(input: CreateCliInput): Argv {
   const cliName = input.cliName;
   const defaultEnvs = input.defaultEnvs;
-  const builtInConfigCommands: CommandModule[] = [createAuthCommand({ cliName, defaultEnvs }), createEnvCommand({ cliName, defaultEnvs }), createDoctorCommand({ cliName, checks: input.doctorChecks, defaultEnvs, ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }), createOutputCommand({ cliName })];
+  const builtInConfigCommands: CommandModule[] = [
+    createAuthCommand({ cliName, defaultEnvs }),
+    createEnvCommand({ cliName, defaultEnvs }),
+    createDoctorCommand({ cliName, checks: input.doctorChecks, defaultEnvs, ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }),
+    createOutputCommand({ cliName })
+  ];
 
   if (input.modelManifest && input.disableModelInfo !== true) {
     builtInConfigCommands.push(buildModelInfoCommand(input.modelManifest));

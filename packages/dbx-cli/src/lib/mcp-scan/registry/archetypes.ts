@@ -381,9 +381,12 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     slug: 'composite-key-root',
     family: 'group',
     collectionKind: 'root',
-    description: 'Root collection whose doc id is a flat-encoded model key — either a single source key (e.g. `flatFirestoreModelKey(regionKey)`) or a composite of multiple model keys (e.g. `(group, region)`) — making the encoded scope queryable at the root level. Orthogonal to source-of-truth role: stack with `denormalised-aggregate` when the same doc is also a projection.',
-    whenToUse: 'Root collection keyed by a flat encoding of one or more model keys. Single-source flat keys cover overlays like `WorkerRegion` / `JobDistrict` (doc id = flat-encoded region/district key) and framework models like `NotificationBox` / `NotificationSummary` (doc id = flat key of any source model). Multi-source flat keys cover (parent, secondary-scope) overlays where the collection needs to stay query-addressable at the root.',
-    disambiguation: 'Pick the encoding based on whether the source key(s) must be recoverable from the doc id. `twoWayFlatFirestoreModelKey` (slashes → `_`, round-tripped via `inferKeyFromTwoWayFlatFirestoreModelKey`) lets you recover the source keys when iterating the collection. `flatFirestoreModelKey` (one-way, slashes stripped) is appropriate when the source key is already stored as a field on the doc and the id only needs to be unique.',
+    description:
+      'Root collection whose doc id is a flat-encoded model key — either a single source key (e.g. `flatFirestoreModelKey(regionKey)`) or a composite of multiple model keys (e.g. `(group, region)`) — making the encoded scope queryable at the root level. Orthogonal to source-of-truth role: stack with `denormalised-aggregate` when the same doc is also a projection.',
+    whenToUse:
+      'Root collection keyed by a flat encoding of one or more model keys. Single-source flat keys cover overlays like `WorkerRegion` / `JobDistrict` (doc id = flat-encoded region/district key) and framework models like `NotificationBox` / `NotificationSummary` (doc id = flat key of any source model). Multi-source flat keys cover (parent, secondary-scope) overlays where the collection needs to stay query-addressable at the root.',
+    disambiguation:
+      'Pick the encoding based on whether the source key(s) must be recoverable from the doc id. `twoWayFlatFirestoreModelKey` (slashes → `_`, round-tripped via `inferKeyFromTwoWayFlatFirestoreModelKey`) lets you recover the source keys when iterating the collection. `flatFirestoreModelKey` (one-way, slashes stripped) is appropriate when the source key is already stored as a field on the doc and the id only needs to be unique.',
     expected: {
       docIdSource: ['composite-flat-key'],
       parentRelation: ['composite-key', 'none']

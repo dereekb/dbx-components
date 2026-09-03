@@ -24,7 +24,8 @@ $_shared-density: (
 @function _doc-mat-theme($theme-type) {
   @return mat.define-theme(
     (
-      color: map.merge(
+      color:
+        map.merge(
           $_shared-color,
           (
             theme-type: $theme-type

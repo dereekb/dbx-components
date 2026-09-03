@@ -12,7 +12,15 @@ import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { NotificationExpediteService } from '@dereekb/firebase-server/model';
 
 // eslint-disable-next-line @typescript-eslint/max-params
-const demoFirebaseServerActionsContextFactory = (serverEnvironmentService: ServerEnvironmentService, collections: DemoFirestoreCollections, authService: DemoApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService, notificationExpediteService: NotificationExpediteService, analyticsService: FirebaseServerAnalyticsService): DemoFirebaseServerActionsContext => {
+const demoFirebaseServerActionsContextFactory = (
+  serverEnvironmentService: ServerEnvironmentService,
+  collections: DemoFirestoreCollections,
+  authService: DemoApiAuthService,
+  storageService: FirebaseServerStorageService,
+  mailgunService: MailgunService,
+  notificationExpediteService: NotificationExpediteService,
+  analyticsService: FirebaseServerAnalyticsService
+): DemoFirebaseServerActionsContext => {
   return {
     ...collections,
     ...firebaseServerActionsContext({ logError: serverEnvironmentService.isTestingEnv }),

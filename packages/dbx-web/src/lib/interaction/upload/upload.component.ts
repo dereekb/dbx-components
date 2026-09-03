@@ -57,7 +57,19 @@ export interface DbxFileUploadComponentConfig {
 @Component({
   selector: 'dbx-file-upload',
   template: `
-    <dbx-file-upload-area #area [show]="showAreaSignal()" [hint]="areaHintSignal()" [text]="areaTextSignal()" [icon]="areaIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="uploadMaxFilesSignal()" (filesChanged)="areaFilesChanged($event)" (areaClicked)="areaClicked()" [disabled]="disabledSignal()" [working]="workingSignal()">
+    <dbx-file-upload-area
+      #area
+      [show]="showAreaSignal()"
+      [hint]="areaHintSignal()"
+      [text]="areaTextSignal()"
+      [icon]="areaIconSignal()"
+      [accept]="acceptSignal()"
+      [multiple]="multipleSignal()"
+      [maxFiles]="uploadMaxFilesSignal()"
+      (filesChanged)="areaFilesChanged($event)"
+      (areaClicked)="areaClicked()"
+      [disabled]="disabledSignal()"
+      [working]="workingSignal()">
       <ng-content></ng-content>
       @if (showButtonSignal()) {
         <ng-template [ngTemplateOutlet]="buttonTemplate"></ng-template>
@@ -65,7 +77,17 @@ export interface DbxFileUploadComponentConfig {
     </dbx-file-upload-area>
     <!-- Button Template -->
     <ng-template #buttonTemplate>
-      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" [maxFiles]="uploadMaxFilesSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()" [buttonStyle]="buttonStyle()"></dbx-file-upload-button>
+      <dbx-file-upload-button
+        #button
+        [text]="buttonTextSignal()"
+        [icon]="buttonIconSignal()"
+        [accept]="acceptSignal()"
+        [multiple]="multipleSignal()"
+        [maxFiles]="uploadMaxFilesSignal()"
+        (filesChanged)="buttonFilesChanged($event)"
+        [disabled]="disabledSignal()"
+        [working]="workingSignal()"
+        [buttonStyle]="buttonStyle()"></dbx-file-upload-button>
     </ng-template>
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),

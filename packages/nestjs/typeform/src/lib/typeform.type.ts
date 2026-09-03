@@ -109,7 +109,18 @@ export interface TypeformFormResponseDefinitionSettings {
   readonly partial_responses_to_all_integrations: boolean;
 }
 
-export type TypeformFormResponseAnswer = TypeformFormTextAnswer | TypeformFormEmailAnswer | TypeformFormPhoneNumberAnswer | TypeformFormDateAnswer | TypeformFormNumberAnswer | TypeformFormBooleanAnswer | TypeformFormMultipleChoicesAnswer | TypeformFormChoiceAnswer | TypeformFormUrlAnswer | TypeformFormPaymentAnswer | TypeformFormFileUrlAnswer;
+export type TypeformFormResponseAnswer =
+  | TypeformFormTextAnswer
+  | TypeformFormEmailAnswer
+  | TypeformFormPhoneNumberAnswer
+  | TypeformFormDateAnswer
+  | TypeformFormNumberAnswer
+  | TypeformFormBooleanAnswer
+  | TypeformFormMultipleChoicesAnswer
+  | TypeformFormChoiceAnswer
+  | TypeformFormUrlAnswer
+  | TypeformFormPaymentAnswer
+  | TypeformFormFileUrlAnswer;
 
 export type TypeformFormAnswerFieldType = 'rating' | 'opinion_scale' | 'number' | 'phone_number' | 'ranking' | 'short_text' | 'long_text' | 'dropdown' | 'multiple_choice' | 'picture_choice' | 'email' | 'date' | 'legal' | 'yes_no' | 'website' | 'calendly' | 'file_upload' | 'payment';
 

@@ -15,7 +15,10 @@ import { type FirestoreDocumentSnapshotDataPairWithData } from '../accessor/docu
  * @template T - The document data type
  * @template D - The FirestoreDocument implementation type (defaults to FirestoreDocument<T>)
  */
-export interface LoadAllFirestoreDocumentSnapshotPairsConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Pick<IterateFirestoreDocumentSnapshotPairBatchesConfig<T, unknown, D>, 'documentAccessor' | 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots' | 'limitPerCheckpoint'> {
+export interface LoadAllFirestoreDocumentSnapshotPairsConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Pick<
+  IterateFirestoreDocumentSnapshotPairBatchesConfig<T, unknown, D>,
+  'documentAccessor' | 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots' | 'limitPerCheckpoint'
+> {
   /**
    * Optional callback function to process each batch of snapshot pairs as they are loaded.
    *

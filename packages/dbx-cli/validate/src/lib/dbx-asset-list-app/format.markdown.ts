@@ -11,7 +11,18 @@ import type { AppAssetsReport, AssetReportEntry } from './types.js';
  */
 export function formatReportAsMarkdown(report: AppAssetsReport): string {
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;
-  const lines: string[] = [`# App assets — ${basename}`, '', `Component: \`${report.componentDir}\``, `App: \`${report.apiDir}\``, '', `\`src/lib/assets.ts\`: ${formatBool(report.assetsFileExists)}`, `Barrel re-exports \`./assets\`: ${formatBool(report.barrelReExportsAssets)}`, `\`provideDbxAssetLoader()\` called in \`src/root.app.config.ts\`: ${formatBool(report.providerWiredInApp)}`, '', `## Assets (${report.assets.length})`];
+  const lines: string[] = [
+    `# App assets — ${basename}`,
+    '',
+    `Component: \`${report.componentDir}\``,
+    `App: \`${report.apiDir}\``,
+    '',
+    `\`src/lib/assets.ts\`: ${formatBool(report.assetsFileExists)}`,
+    `Barrel re-exports \`./assets\`: ${formatBool(report.barrelReExportsAssets)}`,
+    `\`provideDbxAssetLoader()\` called in \`src/root.app.config.ts\`: ${formatBool(report.providerWiredInApp)}`,
+    '',
+    `## Assets (${report.assets.length})`
+  ];
   if (report.assets.length === 0) {
     lines.push('', '_None found._');
   } else {

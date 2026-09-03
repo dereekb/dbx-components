@@ -1,6 +1,17 @@
 import { Component } from '@angular/core';
 import { of } from 'rxjs';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, type DbxValueAsListItem, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxSelectionListViewDirective,
+  AbstractDbxValueListViewItemComponent,
+  type DbxSelectionValueListViewConfig,
+  type DbxValueAsListItem,
+  provideDbxListView,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule
+} from '@dereekb/dbx-web';
 
 /**
  * Value for the two-column sref demo list. Each value names a route to segue to; the host

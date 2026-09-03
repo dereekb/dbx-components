@@ -40,7 +40,16 @@ const FALSE_TAG_VALUES: ReadonlySet<string> = new Set(['false', 'no']);
  * Discriminated description of how a companion tag's value should be parsed
  * and validated. The shared checker dispatches on `kind`.
  */
-export type DbxTagFormat = { readonly kind: 'marker' } | { readonly kind: 'kebab-slug' } | { readonly kind: 'enum'; readonly values: readonly string[] } | { readonly kind: 'pascal-identifier' } | { readonly kind: 'comma-list-kebab-slug' } | { readonly kind: 'comma-list-lowercase' } | { readonly kind: 'comma-list-free-text' } | { readonly kind: 'free-text' } | { readonly kind: 'boolean' };
+export type DbxTagFormat =
+  | { readonly kind: 'marker' }
+  | { readonly kind: 'kebab-slug' }
+  | { readonly kind: 'enum'; readonly values: readonly string[] }
+  | { readonly kind: 'pascal-identifier' }
+  | { readonly kind: 'comma-list-kebab-slug' }
+  | { readonly kind: 'comma-list-lowercase' }
+  | { readonly kind: 'comma-list-free-text' }
+  | { readonly kind: 'free-text' }
+  | { readonly kind: 'boolean' };
 
 /**
  * One companion-tag spec entry. `suffix` is appended to the family marker name

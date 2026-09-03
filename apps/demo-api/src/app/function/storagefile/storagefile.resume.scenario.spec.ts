@@ -39,7 +39,21 @@ async function makeTestPdf(lines: string[]): Promise<Buffer> {
   return Buffer.from(await document.save());
 }
 
-const RESUME_PDF_LINES = ['Jane Doe', 'Senior Software Engineer', 'jane.doe@example.com', '', 'EXPERIENCE', 'Acme Corp - Staff Engineer (2021-2026)', 'Globex - Software Engineer (2018-2021)', '', 'EDUCATION', 'B.S. Computer Science, State University, 2018', '', 'SKILLS', 'TypeScript, Node.js, Firebase, Distributed Systems'];
+const RESUME_PDF_LINES = [
+  'Jane Doe',
+  'Senior Software Engineer',
+  'jane.doe@example.com',
+  '',
+  'EXPERIENCE',
+  'Acme Corp - Staff Engineer (2021-2026)',
+  'Globex - Software Engineer (2018-2021)',
+  '',
+  'EDUCATION',
+  'B.S. Computer Science, State University, 2018',
+  '',
+  'SKILLS',
+  'TypeScript, Node.js, Firebase, Distributed Systems'
+];
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.resume', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {

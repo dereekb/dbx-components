@@ -173,7 +173,12 @@ export function formatFirestoreRulesScanReportAsMarkdown(report: FirestoreRulesS
   lines.push('');
 
   if (report.serverOnly.length > 0) {
-    lines.push(`**Server-only (${report.serverOnly.length}):** ${report.serverOnly.map((c) => `\`${c}\``).join(', ')}`, '', 'Each of these must carry `@dbxModelServerOnly` on its model interface AND `serverOnly: true` on its `firebaseModelServiceFactory` config, so the model API refuses the read instead of authorizing it via `roleMapForModel`.', '');
+    lines.push(
+      `**Server-only (${report.serverOnly.length}):** ${report.serverOnly.map((c) => `\`${c}\``).join(', ')}`,
+      '',
+      'Each of these must carry `@dbxModelServerOnly` on its model interface AND `serverOnly: true` on its `firebaseModelServiceFactory` config, so the model API refuses the read instead of authorizing it via `roleMapForModel`.',
+      ''
+    );
   }
 
   if (report.gettableNotListable.length > 0) {

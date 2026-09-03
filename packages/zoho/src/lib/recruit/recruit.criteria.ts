@@ -1,4 +1,13 @@
-import { type ZohoSearchRecordsCriteriaString, type ZohoSearchRecordsCriteriaTree, type ZohoSearchRecordsCriteriaFilterType, type ZohoSearchRecordsCriteriaEntry, zohoSearchRecordsCriteriaString, zohoSearchRecordsCriteriaStringForTree, zohoSearchRecordsCriteriaEntryToCriteriaString, MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA } from '../shared/criteria';
+import {
+  type ZohoSearchRecordsCriteriaString,
+  type ZohoSearchRecordsCriteriaTree,
+  type ZohoSearchRecordsCriteriaFilterType,
+  type ZohoSearchRecordsCriteriaEntry,
+  zohoSearchRecordsCriteriaString,
+  zohoSearchRecordsCriteriaStringForTree,
+  zohoSearchRecordsCriteriaEntryToCriteriaString,
+  MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA
+} from '../shared/criteria';
 
 /**
  * Maximum number of criteria allowed per Recruit search query (10).

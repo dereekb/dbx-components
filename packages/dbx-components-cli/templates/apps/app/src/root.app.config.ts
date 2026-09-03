@@ -15,7 +15,16 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
-import { APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE, APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN, APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG, APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'FIREBASE_COMPONENTS_NAME';
+import {
+  APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE,
+  APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN,
+  APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG,
+  APP_CODE_PREFIXFirebaseFunctionsGetter,
+  APP_CODE_PREFIXFirestoreCollections,
+  makeAPP_CODE_PREFIXFirebaseFunctions,
+  makeAPP_CODE_PREFIXFirestoreCollections,
+  APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD
+} from 'FIREBASE_COMPONENTS_NAME';
 // @dbx-addon:oidc:root-config:imports
 // @dbx-addon:externalconnection:root-config:imports
 

@@ -60,7 +60,9 @@ export type NotificationTaskSubtaskResult<M extends NotificationTaskSubtaskMetad
 /**
  * A NotificationTaskSubtask is a function that handles a specific NotificationTaskSubtaskTarget subtask.
  */
-export type NotificationTaskSubtask<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: I) => Promise<NotificationTaskSubtaskResult<M, S>>;
+export type NotificationTaskSubtask<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
+  input: I
+) => Promise<NotificationTaskSubtaskResult<M, S>>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in NotificationTaskSubtaskProcessorConfig as part of the flow.
@@ -99,7 +101,13 @@ export interface NotificationTaskSubtaskCleanupInstructions {
  *
  * This is called during the cleanup step. It is called even when the processor or target is unknown.
  */
-export type NotificationTaskSubtaskCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>) => PromiseOrValue<CUI>;
+export type NotificationTaskSubtaskCleanupInstructionsFunction<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>) => PromiseOrValue<CUI>;
 
 /**
  * Optional cleanup override function for a NotificationTaskSubtask processor.
@@ -108,30 +116,46 @@ export type NotificationTaskSubtaskCleanupInstructionsFunction<I extends Notific
  *
  * If this function returns null/undefined, then the default cleanup instructions will be used.
  */
-export type NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
-  input: I,
-  defaultCleanupInstructions: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>
-) => Maybe<PromiseOrValue<Maybe<CUI>>>;
+export type NotificationTaskSubtaskProcessorCleanupInstructionsFunction<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = (input: I, defaultCleanupInstructions: NotificationTaskSubtaskCleanupInstructionsFunction<I, CUI, D, M, S>) => Maybe<PromiseOrValue<Maybe<CUI>>>;
 
 /**
  * The actual cleanup function to execute using the input and instructions.
  */
-export type NotificationTaskSubtaskCleanupFunction<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
-  input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>,
-  cleanupInstructions: CUI
-) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>;
+export type NotificationTaskSubtaskCleanupFunction<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = (input: NotificationTaskSubtaskCleanupFunctionInput<I, D, M, S>, cleanupInstructions: CUI) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>;
 
 /**
  * The input function result may not include a target, and the notificationTask, completedSubtasks, and subtaskData properties are ignored.
  */
-export type NotificationTaskSubtaskCleanupFunctionInput<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = Omit<I, 'target' | 'completedSubtasks' | 'subtaskData'> & Partial<Pick<I, 'target'>>;
+export type NotificationTaskSubtaskCleanupFunctionInput<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = Omit<
+  I,
+  'target' | 'completedSubtasks' | 'subtaskData'
+> &
+  Partial<Pick<I, 'target'>>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerConfig, but instead targets a specific NotificationTaskSubtaskTarget.
  *
  * The flows behave the same way.
  */
-export interface NotificationTaskSubtaskProcessorConfig<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
+export interface NotificationTaskSubtaskProcessorConfig<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> {
   /**
    * The target this configuration is for.
    */
@@ -159,24 +183,43 @@ export interface NotificationTaskSubtaskProcessorConfig<I extends NotificationTa
  *
  * Should throw an NotificationTaskSubTaskMissingRequiredDataTermination error if the NotificationTask is missing required data.
  */
-export type NotificationTaskSubtaskNotificationTaskHandlerInputFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (data: D, notificationTask: NotificationTask<D>) => PromiseOrValue<NotificationTaskSubtaskNotificationTaskHandlerInputFunctionResult<I, D, M, S>>;
+export type NotificationTaskSubtaskNotificationTaskHandlerInputFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
+  data: D,
+  notificationTask: NotificationTask<D>
+) => PromiseOrValue<NotificationTaskSubtaskNotificationTaskHandlerInputFunctionResult<I, D, M, S>>;
 
 /**
  * The input function result may not include a target, and the notificationTask, completedSubtasks, and subtaskData properties are ignored.
  */
-export type NotificationTaskSubtaskNotificationTaskHandlerInputFunctionResult<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = Omit<I, 'target' | 'notificationTask' | 'completedSubtasks' | 'subtaskData'> & Partial<Pick<I, 'target'>>;
+export type NotificationTaskSubtaskNotificationTaskHandlerInputFunctionResult<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = Omit<I, 'target' | 'notificationTask' | 'completedSubtasks' | 'subtaskData'> & Partial<Pick<I, 'target'>>;
 
 /**
  * Function that builds the update metadata for a NotificationTaskSubtask.
  *
  * Updates to sfps and sd are ignored, as those should be managed by the processors/flow entries.
  */
-export type NotificationTaskSubtaskNotificationTaskHandlerBuildUpdateMetadataFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (baseUpdateMetadata: D, input: I) => PromiseOrValue<Omit<D, 'sfps' | 'sd'>>;
+export type NotificationTaskSubtaskNotificationTaskHandlerBuildUpdateMetadataFunction<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = (baseUpdateMetadata: D, input: I) => PromiseOrValue<Omit<D, 'sfps' | 'sd'>>;
 
 /**
  * Configuration for notificationTaskSubtaskNotificationTaskHandler().
  */
-export interface NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
+export interface NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> {
   // MARK: Task Handler Config
   /**
    * A name for the subtask handler. Used for logging errors.
@@ -215,14 +258,24 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<I e
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig using the input config.
  */
-export type NotificationTaskSubtaskNotificationTaskHandlerFactory<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
-  config: NotificationTaskSubtaskNotificationTaskHandlerConfig<I, CUI, D, M, S>
-) => NotificationTaskServiceTaskHandlerConfig<D, NotificationTaskSubtaskCheckpoint>;
+export type NotificationTaskSubtaskNotificationTaskHandlerFactory<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> = (config: NotificationTaskSubtaskNotificationTaskHandlerConfig<I, CUI, D, M, S>) => NotificationTaskServiceTaskHandlerConfig<D, NotificationTaskSubtaskCheckpoint>;
 
 /**
  * Configuration for notificationTaskSubtaskNotificationTaskHandler().
  */
-export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
+export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+> {
   /**
    * List of all target values for the app. Used for verifying that all target values are handled.
    */
@@ -283,9 +336,13 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<I extends 
  * });
  * ```
  */
-export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S>, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString>(
-  factoryConfig: NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<I, CUI, D, M, S>
-): NotificationTaskSubtaskNotificationTaskHandlerFactory<I, CUI, D, M, S> {
+export function notificationTaskSubtaskNotificationTaskHandlerFactory<
+  I extends NotificationTaskSubtaskInput<D, M, S>,
+  CUI extends NotificationTaskSubtaskCleanupInstructions,
+  D extends NotificationTaskSubtaskData<M, S>,
+  M extends NotificationTaskSubtaskMetadata = any,
+  S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+>(factoryConfig: NotificationTaskSubtaskNotificationTaskHandlerFactoryConfig<I, CUI, D, M, S>): NotificationTaskSubtaskNotificationTaskHandlerFactory<I, CUI, D, M, S> {
   const { taskType, subtaskHandlerFunctionName: subtaskHandlerName, inputFunction, defaultCleanup, cleanupFunction, buildUpdateMetadata: inputBuildUpdateMetadata } = factoryConfig;
 
   return (subtaskHandlerConfig: NotificationTaskSubtaskNotificationTaskHandlerConfig<I, CUI, D, M, S>) => {
@@ -295,9 +352,17 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
 
     const buildUpdateMetadata = inputBuildUpdateMetadata ?? (() => undefined);
 
-    type NotificationTaskSubtaskProcessorProcessFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S> = any, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (input: I) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>;
+    type NotificationTaskSubtaskProcessorProcessFunction<I extends NotificationTaskSubtaskInput<D, M, S>, D extends NotificationTaskSubtaskData<M, S> = any, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> = (
+      input: I
+    ) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D, NotificationTaskSubtaskCheckpoint>>;
 
-    interface NotificationTaskSubtaskProcessor<I extends NotificationTaskSubtaskInput<D, M, S>, CUI extends NotificationTaskSubtaskCleanupInstructions, D extends NotificationTaskSubtaskData<M, S> = any, M extends NotificationTaskSubtaskMetadata = any, S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString> {
+    interface NotificationTaskSubtaskProcessor<
+      I extends NotificationTaskSubtaskInput<D, M, S>,
+      CUI extends NotificationTaskSubtaskCleanupInstructions,
+      D extends NotificationTaskSubtaskData<M, S> = any,
+      M extends NotificationTaskSubtaskMetadata = any,
+      S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
+    > {
       readonly process: NotificationTaskSubtaskProcessorProcessFunction<I, D, M, S>;
       readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S>;
     }

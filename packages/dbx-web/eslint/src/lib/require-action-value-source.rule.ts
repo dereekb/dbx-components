@@ -45,7 +45,8 @@ export const DBX_WEB_REQUIRE_ACTION_VALUE_SOURCE_RULE: DbxWebRequireActionValueS
       recommended: true
     },
     messages: {
-      missingValueSource: '`dbxAction` has a trigger (`{{trigger}}`) but no value source, so triggering it hangs — the action never reaches VALUE_READY and the handler never runs. Add a value source (`dbxActionValue`, `[dbxActionValue]`, `[dbxActionValueGetter]`, `[dbxActionValueStream]`, or `[dbxActionForm]`), trigger with `triggerWithValue()`, or disable this line if the value is supplied in TypeScript.'
+      missingValueSource:
+        '`dbxAction` has a trigger (`{{trigger}}`) but no value source, so triggering it hangs — the action never reaches VALUE_READY and the handler never runs. Add a value source (`dbxActionValue`, `[dbxActionValue]`, `[dbxActionValueGetter]`, `[dbxActionValueStream]`, or `[dbxActionForm]`), trigger with `triggerWithValue()`, or disable this line if the value is supplied in TypeScript.'
     },
     schema: []
   },

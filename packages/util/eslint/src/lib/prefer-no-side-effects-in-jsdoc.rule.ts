@@ -51,7 +51,8 @@ export const UTIL_PREFER_NO_SIDE_EFFECTS_IN_JSDOC_RULE: UtilPreferNoSideEffectsI
     },
     messages: {
       preferJsdocPlacement: 'Move the `@__NO_SIDE_EFFECTS__` annotation into the JSDoc block of "{{name}}" (as the last tag before the closing) instead of a separate line comment.',
-      missingImplAnnotationOverloaded: '"{{name}}" carries `@__NO_SIDE_EFFECTS__` in its first-overload JSDoc but is overloaded — TypeScript erases overload signatures during emit, so the JSDoc tag is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
+      missingImplAnnotationOverloaded:
+        '"{{name}}" carries `@__NO_SIDE_EFFECTS__` in its first-overload JSDoc but is overloaded — TypeScript erases overload signatures during emit, so the JSDoc tag is dropped from the bundled JavaScript. Add a `// @__NO_SIDE_EFFECTS__` line comment immediately above the implementation declaration.'
     },
     schema: []
   },

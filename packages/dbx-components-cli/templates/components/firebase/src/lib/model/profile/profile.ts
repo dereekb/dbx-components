@@ -1,4 +1,20 @@
-import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, type FirestoreCollection, type UserRelatedById, type FirestoreContext, type SingleItemFirestoreCollection, type CollectionGroup, type FirestoreCollectionGroup, type UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
+import {
+  firestoreModelIdentity,
+  type CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  type FirestoreCollection,
+  type UserRelatedById,
+  type FirestoreContext,
+  type SingleItemFirestoreCollection,
+  type CollectionGroup,
+  type FirestoreCollectionGroup,
+  type UserRelated,
+  copyUserRelatedDataAccessorFactoryFunction,
+  firestoreUID
+} from '@dereekb/firebase';
 import { type GrantedReadRole } from '@dereekb/model';
 
 export interface ProfileFirestoreCollections {

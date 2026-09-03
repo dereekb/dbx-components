@@ -142,7 +142,12 @@ export interface ModelInfoNotFound {
  * returned models reference at least one enum present in the manifest — the default compact modes
  * (`groups`, summary `list`) never carry it.
  */
-export type ModelInfoToolOutput = ({ readonly mode: 'groups'; readonly groups: ReadonlyArray<ModelInfoGroupCount>; readonly totalModels: number; readonly hint: string } | { readonly mode: 'list'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly modelGroup?: string } | { readonly mode: 'single'; readonly model: ModelInfoModelRow } | { readonly mode: 'multiple'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly notFound?: ReadonlyArray<ModelInfoNotFound> }) & {
+export type ModelInfoToolOutput = (
+  | { readonly mode: 'groups'; readonly groups: ReadonlyArray<ModelInfoGroupCount>; readonly totalModels: number; readonly hint: string }
+  | { readonly mode: 'list'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly modelGroup?: string }
+  | { readonly mode: 'single'; readonly model: ModelInfoModelRow }
+  | { readonly mode: 'multiple'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly notFound?: ReadonlyArray<ModelInfoNotFound> }
+) & {
   readonly enums?: ReadonlyArray<McpManifestEnum>;
 };
 
@@ -173,7 +178,10 @@ export function createModelInfoTool(deps: CreateModelInfoToolDeps): McpToolDefin
   const name = MODEL_INFO_TOOL_NAME;
   const count = deps.manifest.length;
   const description =
-    `Browse the Firestore model catalog (${count} model${count === 1 ? '' : 's'}). No args returns model groups + counts (start here). ` + '`model` (a modelType/identityConst/collectionPrefix string, or an array of them) returns full detail per match — misses are reported in `notFound`. ' + '`modelGroup` returns the summary list for that group. `all:true` returns the full catalog summary. ' + '`fields` (boolean) forces or suppresses persisted-field detail in list/multiple modes.';
+    `Browse the Firestore model catalog (${count} model${count === 1 ? '' : 's'}). No args returns model groups + counts (start here). ` +
+    '`model` (a modelType/identityConst/collectionPrefix string, or an array of them) returns full detail per match — misses are reported in `notFound`. ' +
+    '`modelGroup` returns the summary list for that group. `all:true` returns the full catalog summary. ' +
+    '`fields` (boolean) forces or suppresses persisted-field detail in list/multiple modes.';
 
   return buildStaticToolDefinition({
     name,

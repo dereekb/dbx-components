@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { openRouterFileAnnotationMessage, openRouterInputFileDataPart, openRouterInputFilePartsForAttachedFiles, openRouterInputFileUrlPart, openRouterInputImagePart, openRouterInputMessages, openRouterInputTextPart, openRouterMessagesWithFreshFileAttachments, openRouterMessagesWithoutFileAttachmentData, openRouterUnparsedAttachedFiles } from './openrouter.input';
+import {
+  openRouterFileAnnotationMessage,
+  openRouterInputFileDataPart,
+  openRouterInputFilePartsForAttachedFiles,
+  openRouterInputFileUrlPart,
+  openRouterInputImagePart,
+  openRouterInputMessages,
+  openRouterInputTextPart,
+  openRouterMessagesWithFreshFileAttachments,
+  openRouterMessagesWithoutFileAttachmentData,
+  openRouterUnparsedAttachedFiles
+} from './openrouter.input';
 
 describe('openRouterInputMessages()', () => {
   it('should wrap a string as a single user text message', () => {

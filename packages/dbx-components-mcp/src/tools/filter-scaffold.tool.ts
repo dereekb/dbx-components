@@ -185,7 +185,25 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
     lines.push('## Presets', '', '```ts', renderPresetConstants(args), '```', '');
   }
 
-  lines.push('## Template', '', '```html', renderTemplate(args), '```', '', '## Component class', '', '```ts', ...renderImports(args), '', renderClass(args), '```', '', '## Notes', '', '- The outer `[dbxFilterSourceConnector]` provides both `FilterSource` and `FilterSourceConnector`. Children that own the form use `[dbxFilterSource]` + `[dbxFilterConnectSource]` to wire up.');
+  lines.push(
+    '## Template',
+    '',
+    '```html',
+    renderTemplate(args),
+    '```',
+    '',
+    '## Component class',
+    '',
+    '```ts',
+    ...renderImports(args),
+    '',
+    renderClass(args),
+    '```',
+    '',
+    '## Notes',
+    '',
+    '- The outer `[dbxFilterSourceConnector]` provides both `FilterSource` and `FilterSourceConnector`. Children that own the form use `[dbxFilterSource]` + `[dbxFilterConnectSource]` to wire up.'
+  );
   if (args.presetKeys.length > 0) {
     lines.push('- Each `ClickableFilterPreset` listed in the preset array becomes a chip; clicking sets `presetValue` on the filter source.');
   }

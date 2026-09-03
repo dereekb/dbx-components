@@ -1,5 +1,18 @@
 import { type ISO8601DateString, type Maybe, type TimezoneString } from '@dereekb/util';
-import { type ZoomMeetingType, type ZoomRecurrenceInfo, type ZoomMeetingSettings, type ZoomMeetingAgenda, type ZoomMeetingDuration, type ZoomMeetingTrackingField, type ZoomMeetingTemplateId, type ZoomMeetingPassword, type ZoomMeeting, type ZoomMeetingId, type PastZoomMeeting, type ZoomMeetingOccurrenceId } from './zoom.api.meeting.type';
+import {
+  type ZoomMeetingType,
+  type ZoomRecurrenceInfo,
+  type ZoomMeetingSettings,
+  type ZoomMeetingAgenda,
+  type ZoomMeetingDuration,
+  type ZoomMeetingTrackingField,
+  type ZoomMeetingTemplateId,
+  type ZoomMeetingPassword,
+  type ZoomMeeting,
+  type ZoomMeetingId,
+  type PastZoomMeeting,
+  type ZoomMeetingOccurrenceId
+} from './zoom.api.meeting.type';
 import { type ZoomContext } from './zoom.config';
 import { mapToZoomPageResult, zoomFetchPageFactory, type ZoomPageFilter, type ZoomPageResult } from '../zoom.api.page';
 import { type FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';

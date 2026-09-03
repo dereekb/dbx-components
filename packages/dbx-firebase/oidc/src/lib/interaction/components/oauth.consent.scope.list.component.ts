@@ -1,6 +1,16 @@
 import { Component } from '@angular/core';
 import { of } from 'rxjs';
-import { AbstractDbxSelectionListViewDirective, AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, type DbxSelectionValueListViewConfig, provideDbxListView } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListViewDirective,
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxValueListViewItemComponent,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  type DbxSelectionValueListViewConfig,
+  provideDbxListView
+} from '@dereekb/dbx-web';
 import { type OAuthConsentScope } from './oauth.consent.scope';
 
 /**

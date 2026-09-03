@@ -77,7 +77,11 @@ describe('createSemanticTypeSearchTool', () => {
 
   it('ANDs multiple filters', async () => {
     const tool = createSemanticTypeSearchTool({
-      registry: buildRegistry([entryFixture({ name: 'EmailAddress', package: '@dereekb/util', baseType: 'string', topics: ['email'] }), entryFixture({ name: 'PhoneNumber', package: '@dereekb/util', baseType: 'string', topics: ['phone'] }), entryFixture({ name: 'Milliseconds', package: '@dereekb/util', baseType: 'number', topics: ['duration'] })])
+      registry: buildRegistry([
+        entryFixture({ name: 'EmailAddress', package: '@dereekb/util', baseType: 'string', topics: ['email'] }),
+        entryFixture({ name: 'PhoneNumber', package: '@dereekb/util', baseType: 'string', topics: ['phone'] }),
+        entryFixture({ name: 'Milliseconds', package: '@dereekb/util', baseType: 'number', topics: ['duration'] })
+      ])
     });
     const result = await tool.run({ package: '@dereekb/util', baseType: 'string' });
     const text = getText(result);

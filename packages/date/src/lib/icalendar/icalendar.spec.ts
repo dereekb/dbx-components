@@ -33,7 +33,9 @@ wrapDateTests(() => {
       };
 
       it('should produce the expected document.', () => {
-        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART:20260315T140000Z', 'DTEND:20260315T150000Z', 'SUMMARY:Standup', 'END:VEVENT', 'END:VCALENDAR']));
+        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(
+          icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART:20260315T140000Z', 'DTEND:20260315T150000Z', 'SUMMARY:Standup', 'END:VEVENT', 'END:VCALENDAR'])
+        );
       });
     });
 
@@ -51,7 +53,23 @@ wrapDateTests(() => {
 
       it('should produce the expected document.', () => {
         expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(
-          icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'NAME:Team Feed', 'X-WR-CALNAME:Team Feed', 'DESCRIPTION:Everything the team is doing', 'X-WR-CALDESC:Everything the team is doing', 'COLOR:cornflowerblue', 'REFRESH-INTERVAL;VALUE=DURATION:PT12H', 'X-PUBLISHED-TTL:PT12H', 'SOURCE;VALUE=URI:https://example.com/feed.ics', 'URL:https://example.com', 'X-WR-TIMEZONE:America/Denver', 'END:VCALENDAR'])
+          icsDocument([
+            'BEGIN:VCALENDAR',
+            'PRODID:-//dereekb//dbx-components//EN',
+            'VERSION:2.0',
+            'CALSCALE:GREGORIAN',
+            'NAME:Team Feed',
+            'X-WR-CALNAME:Team Feed',
+            'DESCRIPTION:Everything the team is doing',
+            'X-WR-CALDESC:Everything the team is doing',
+            'COLOR:cornflowerblue',
+            'REFRESH-INTERVAL;VALUE=DURATION:PT12H',
+            'X-PUBLISHED-TTL:PT12H',
+            'SOURCE;VALUE=URI:https://example.com/feed.ics',
+            'URL:https://example.com',
+            'X-WR-TIMEZONE:America/Denver',
+            'END:VCALENDAR'
+          ])
         );
       });
     });
@@ -61,7 +79,9 @@ wrapDateTests(() => {
         const uid = iCalendarUidFactory({ domain: 'example.com', prefix: 'day' });
         const event = iCalendarEventForCalendarDate(calendarDate('2026-03-15', 1, 'America/Denver'), { uid: uid('a'), summary: 'Holiday', timezone: 'America/Denver' });
 
-        expect(iCalendarToIcsString({ events: [event] }, TEST_CONFIG)).toBe(icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:day-a@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART;VALUE=DATE:20260315', 'DTEND;VALUE=DATE:20260316', 'SUMMARY:Holiday', 'END:VEVENT', 'END:VCALENDAR']));
+        expect(iCalendarToIcsString({ events: [event] }, TEST_CONFIG)).toBe(
+          icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:day-a@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART;VALUE=DATE:20260315', 'DTEND;VALUE=DATE:20260316', 'SUMMARY:Holiday', 'END:VEVENT', 'END:VCALENDAR'])
+        );
       });
 
       it('should produce an exclusive DTEND for a multi-day event.', () => {
@@ -88,7 +108,24 @@ wrapDateTests(() => {
           ]
         };
 
-        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART:20260315T140000Z', 'DTEND:20260315T150000Z', 'SUMMARY:Standup', 'STATUS:CANCELLED', 'SEQUENCE:2', 'END:VEVENT', 'END:VCALENDAR']));
+        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(
+          icsDocument([
+            'BEGIN:VCALENDAR',
+            'PRODID:-//dereekb//dbx-components//EN',
+            'VERSION:2.0',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VEVENT',
+            'UID:event-1@example.com',
+            'DTSTAMP:20260301T000000Z',
+            'DTSTART:20260315T140000Z',
+            'DTEND:20260315T150000Z',
+            'SUMMARY:Standup',
+            'STATUS:CANCELLED',
+            'SEQUENCE:2',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ])
+        );
       });
     });
 
@@ -106,7 +143,22 @@ wrapDateTests(() => {
         };
 
         expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(
-          icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART:20260315T140000Z', 'ORGANIZER;CN=The Organizer:mailto:organizer@example.com', 'ATTENDEE;CN="Smith, John";ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE:', ' mailto:a@example.com', 'ATTENDEE:mailto:b@example.com', 'END:VEVENT', 'END:VCALENDAR'])
+          icsDocument([
+            'BEGIN:VCALENDAR',
+            'PRODID:-//dereekb//dbx-components//EN',
+            'VERSION:2.0',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VEVENT',
+            'UID:event-1@example.com',
+            'DTSTAMP:20260301T000000Z',
+            'DTSTART:20260315T140000Z',
+            'ORGANIZER;CN=The Organizer:mailto:organizer@example.com',
+            'ATTENDEE;CN="Smith, John";ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE:',
+            ' mailto:a@example.com',
+            'ATTENDEE:mailto:b@example.com',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ])
         );
       });
     });
@@ -123,7 +175,25 @@ wrapDateTests(() => {
           ]
         };
 
-        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART:20260315T140000Z', 'BEGIN:VALARM', 'ACTION:DISPLAY', 'TRIGGER;RELATED=START:-PT15M', 'DESCRIPTION:Starting soon', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR']));
+        expect(iCalendarToIcsString(calendar, TEST_CONFIG)).toBe(
+          icsDocument([
+            'BEGIN:VCALENDAR',
+            'PRODID:-//dereekb//dbx-components//EN',
+            'VERSION:2.0',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VEVENT',
+            'UID:event-1@example.com',
+            'DTSTAMP:20260301T000000Z',
+            'DTSTART:20260315T140000Z',
+            'BEGIN:VALARM',
+            'ACTION:DISPLAY',
+            'TRIGGER;RELATED=START:-PT15M',
+            'DESCRIPTION:Starting soon',
+            'END:VALARM',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ])
+        );
       });
     });
 
@@ -141,7 +211,28 @@ wrapDateTests(() => {
 
         // a narrow window keeps the derived VTIMEZONE to the single observance the event falls inside
         expect(iCalendarToIcsString(iCalendarWithDerivedTimezones(calendar, { padding: 60 }), TEST_CONFIG)).toBe(
-          icsDocument(['BEGIN:VCALENDAR', 'PRODID:-//dereekb//dbx-components//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'BEGIN:VTIMEZONE', 'TZID:America/Denver', 'BEGIN:DAYLIGHT', 'DTSTART:20260615T140000', 'TZOFFSETFROM:-0600', 'TZOFFSETTO:-0600', 'TZNAME:MDT', 'END:DAYLIGHT', 'END:VTIMEZONE', 'BEGIN:VEVENT', 'UID:event-1@example.com', 'DTSTAMP:20260301T000000Z', 'DTSTART;TZID=America/Denver:20260615T090000', 'DTEND;TZID=America/Denver:20260615T100000', 'END:VEVENT', 'END:VCALENDAR'])
+          icsDocument([
+            'BEGIN:VCALENDAR',
+            'PRODID:-//dereekb//dbx-components//EN',
+            'VERSION:2.0',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VTIMEZONE',
+            'TZID:America/Denver',
+            'BEGIN:DAYLIGHT',
+            'DTSTART:20260615T140000',
+            'TZOFFSETFROM:-0600',
+            'TZOFFSETTO:-0600',
+            'TZNAME:MDT',
+            'END:DAYLIGHT',
+            'END:VTIMEZONE',
+            'BEGIN:VEVENT',
+            'UID:event-1@example.com',
+            'DTSTAMP:20260301T000000Z',
+            'DTSTART;TZID=America/Denver:20260615T090000',
+            'DTEND;TZID=America/Denver:20260615T100000',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ])
         );
       });
     });

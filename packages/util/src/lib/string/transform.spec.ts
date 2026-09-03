@@ -1,4 +1,18 @@
-import { stringTrimFunction, stringToUppercaseFunction, stringToLowercaseFunction, transformStringFunctionConfig, transformStringFunction, addPrefix, addPrefixFunction, addSuffix, addSuffixFunction, padStartFunction, sliceStringFunction, type TransformStringFunctionConfig, type TransformStringFunction } from './transform';
+import {
+  stringTrimFunction,
+  stringToUppercaseFunction,
+  stringToLowercaseFunction,
+  transformStringFunctionConfig,
+  transformStringFunction,
+  addPrefix,
+  addPrefixFunction,
+  addSuffix,
+  addSuffixFunction,
+  padStartFunction,
+  sliceStringFunction,
+  type TransformStringFunctionConfig,
+  type TransformStringFunction
+} from './transform';
 
 const HELLO_WORLD = 'hello world';
 const HELLO_WORLD_UPPER = 'HELLO WORLD';

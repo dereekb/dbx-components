@@ -213,7 +213,15 @@ async function handleSuccessOutcome(input: HandleOutcomeInput & { readonly outco
   return result;
 }
 
-async function checkManifest(input: { readonly finalOutPath: string; readonly serialized: string; readonly outcome: Extract<BuildManifestOutcome, { kind: 'success' }>; readonly projectArg: string; readonly readFile: ScanCliReadFile; readonly log: ScanCliLogger; readonly errorLog: ScanCliLogger }): Promise<RunScanCliResult> {
+async function checkManifest(input: {
+  readonly finalOutPath: string;
+  readonly serialized: string;
+  readonly outcome: Extract<BuildManifestOutcome, { kind: 'success' }>;
+  readonly projectArg: string;
+  readonly readFile: ScanCliReadFile;
+  readonly log: ScanCliLogger;
+  readonly errorLog: ScanCliLogger;
+}): Promise<RunScanCliResult> {
   const { finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog } = input;
   let existing: Maybe<string>;
   try {

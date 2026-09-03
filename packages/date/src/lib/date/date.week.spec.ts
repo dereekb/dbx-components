@@ -3,7 +3,20 @@ import { addMinutes, addWeeks, getDay } from 'date-fns';
 import { dateCellTiming, type DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { dateTimezoneUtcNormal } from './date.timezone';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, type YearWeekCode, type YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone, yearWeekCodePair, startOfWeekForYearWeekCode } from './date.week';
+import {
+  yearWeekCodeFactory,
+  yearWeekCode,
+  yearWeekCodeForCalendarMonthFactory,
+  yearWeekCodeIndex,
+  yearWeekCodeDateFactory,
+  yearWeekCodeGroupFactory,
+  type YearWeekCode,
+  type YearWeekCodeString,
+  yearWeekCodeForDateRange,
+  yearWeekCodeForDateRangeInTimezone,
+  yearWeekCodePair,
+  startOfWeekForYearWeekCode
+} from './date.week';
 import { wrapDateTests } from '../../test.spec';
 
 wrapDateTests(() => {

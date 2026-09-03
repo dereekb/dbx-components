@@ -1,4 +1,23 @@
-import { beginLoading, errorResult, mergeLoadingStateWithError, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState, isLoadingStateEqual, loadingStateType, LoadingStateType, idleLoadingState, isLoadingStateWithDefinedValue, isAnyLoadingStateInLoadingState, areAllLoadingStatesFinishedLoading } from './loading.state';
+import {
+  beginLoading,
+  errorResult,
+  mergeLoadingStateWithError,
+  isLoadingStateWithError,
+  isLoadingStateFinishedLoading,
+  isLoadingStateLoading,
+  isPageLoadingStateMetadataEqual,
+  mapLoadingStateResults,
+  mergeLoadingStates,
+  successResult,
+  isLoadingStateInSuccessState,
+  isLoadingStateEqual,
+  loadingStateType,
+  LoadingStateType,
+  idleLoadingState,
+  isLoadingStateWithDefinedValue,
+  isAnyLoadingStateInLoadingState,
+  areAllLoadingStatesFinishedLoading
+} from './loading.state';
 
 describe('isLoadingStateEqual()', () => {
   it('should return true for two equivalent success results', () => {

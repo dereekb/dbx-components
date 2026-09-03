@@ -6,7 +6,16 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build dbx-web" }, { "command": "npx nx run-many -t build --all --exclude=demo-api" }, { "command": "npx nx build demo-api" }],
+        "commands": [
+          { "command": "npx nx build util" },
+          { "command": "npx nx run-many -t build --projects=rxjs,model,date" },
+          { "command": "npx nx build firebase" },
+          { "command": "npx nx build nestjs" },
+          { "command": "npx nx build firebase-server" },
+          { "command": "npx nx build dbx-web" },
+          { "command": "npx nx run-many -t build --all --exclude=demo-api" },
+          { "command": "npx nx build demo-api" }
+        ],
         "parallel": false,
         "color": true
       }
@@ -36,6 +45,18 @@
         "command": "npx nx run dbx-cli-lint-cache:lint-fix-cache",
         "forwardAllArgs": true,
         "color": true
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx oxfmt --write ."
+      }
+    },
+    "format-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx oxfmt --check ."
       }
     },
     "start-release": {
@@ -71,7 +92,14 @@
     "ci-test-firebase-all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{ "command": "npx nx run-all-tests firebase" }, { "command": "npx nx run-all-tests firebase-server" }, { "command": "npx nx run-tests dbx-firebase" }, { "command": "npx nx run-tests demo-api" }, { "command": "npx nx run-tests demo-cli" }, { "command": "npx nx run-tests openrouter-firebase-server" }],
+        "commands": [
+          { "command": "npx nx run-all-tests firebase" },
+          { "command": "npx nx run-all-tests firebase-server" },
+          { "command": "npx nx run-tests dbx-firebase" },
+          { "command": "npx nx run-tests demo-api" },
+          { "command": "npx nx run-tests demo-cli" },
+          { "command": "npx nx run-tests openrouter-firebase-server" }
+        ],
         "parallel": false
       }
     },

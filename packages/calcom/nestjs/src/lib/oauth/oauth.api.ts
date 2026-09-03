@@ -1,5 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type CalcomAccessToken, type CalcomAccessTokenCache, type CalcomAccessTokenCacheKey, type CalcomAccessTokenFactory, type CalcomOAuth, type CalcomOAuthContext, type CalcomOAuthExchangeAuthorizationCodeInput, type CalcomRefreshToken, type CalcomRefreshTokenCredential, calcomAccessTokenFromTokenResponse, calcomAuthCredentialFromValues, calcomOAuthFactory, exchangeAuthorizationCode } from '@dereekb/calcom';
+import {
+  type CalcomAccessToken,
+  type CalcomAccessTokenCache,
+  type CalcomAccessTokenCacheKey,
+  type CalcomAccessTokenFactory,
+  type CalcomOAuth,
+  type CalcomOAuthContext,
+  type CalcomOAuthExchangeAuthorizationCodeInput,
+  type CalcomRefreshToken,
+  type CalcomRefreshTokenCredential,
+  calcomAccessTokenFromTokenResponse,
+  calcomAuthCredentialFromValues,
+  calcomOAuthFactory,
+  exchangeAuthorizationCode
+} from '@dereekb/calcom';
 import { type Maybe } from '@dereekb/util';
 import { CalcomOAuthServiceConfig } from './oauth.config';
 import { CalcomOAuthAccessTokenCacheService } from './oauth.service';

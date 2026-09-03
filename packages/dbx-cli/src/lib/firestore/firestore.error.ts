@@ -69,7 +69,9 @@ export const cliFirestoreErrorMapper: CliErrorMapper = (error: unknown): Maybe<C
         ok: false,
         error: firebaseError.message,
         code: 'FIRESTORE_MISSING_INDEX',
-        suggestion: url ? `Firestore needs an index for this query. Create it: ${url} — then add the query's factory to firestore.indexes.json via \`@dbxModelFirebaseIndex\` so it is not lost on the next deploy.` : 'Firestore needs an index for this query. Tag the query factory with `@dbxModelFirebaseIndex` and regenerate firestore.indexes.json.'
+        suggestion: url
+          ? `Firestore needs an index for this query. Create it: ${url} — then add the query's factory to firestore.indexes.json via \`@dbxModelFirebaseIndex\` so it is not lost on the next deploy.`
+          : 'Firestore needs an index for this query. Tag the query factory with `@dbxModelFirebaseIndex` and regenerate firestore.indexes.json.'
       };
     } else if (bare === 'unauthenticated') {
       result = { ok: false, error: firebaseError.message, code: 'AUTH_UNAUTHORIZED', suggestion: 'The direct-Firestore session is not signed in. Re-run with `--verbose`, or run `doctor` to diagnose the session handshake.' };

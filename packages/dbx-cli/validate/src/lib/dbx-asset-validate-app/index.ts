@@ -50,5 +50,22 @@ export function validateAppAssets(inspection: AppAssetsInspection, options: Vali
 export { extractAppAssets } from './extract.js';
 export { formatResult } from './format.js';
 export { inspectAppAssets } from './inspect.js';
-export type { AppAssetWiringInspection, AppAssetsInspection, AssetBuilderHelper, AssetSourceType, ExtractedAppAssets, ExtractedAssetArrayExport, ExtractedAssetConstant, ExtractedFolderBuilder, ExtractedInvalidRemoteUrl, ExtractedRemoteBaseBuilder, ExtractedUnknownBuilder, InspectedFile, SideInspection, ValidationResult, Violation, ViolationCode } from './types.js';
+export type {
+  AppAssetWiringInspection,
+  AppAssetsInspection,
+  AssetBuilderHelper,
+  AssetSourceType,
+  ExtractedAppAssets,
+  ExtractedAssetArrayExport,
+  ExtractedAssetConstant,
+  ExtractedFolderBuilder,
+  ExtractedInvalidRemoteUrl,
+  ExtractedRemoteBaseBuilder,
+  ExtractedUnknownBuilder,
+  InspectedFile,
+  SideInspection,
+  ValidationResult,
+  Violation,
+  ViolationCode
+} from './types.js';
 export type { ViolationSeverity } from './types.js';

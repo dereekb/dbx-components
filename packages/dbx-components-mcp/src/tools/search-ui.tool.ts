@@ -259,7 +259,19 @@ function formatSearchResults(options: FormatSearchResultsOptions & FormatRelated
   } else {
     const lines: string[] = [`# Search: \`${query}\``, '', `Tokens: \`${tokenDisplay}\`${scopeLabel} · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
     for (const hit of hits) {
-      lines.push(`## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`, '', `- **class:** \`${hit.entry.className}\``, `- **kind:** \`${hit.entry.kind}\``, `- **selector:** \`${hit.entry.selector}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', hit.entry.description, '', `→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`, '');
+      lines.push(
+        `## \`${hit.entry.slug}\` · ${hit.entry.category} · score ${hit.score}`,
+        '',
+        `- **class:** \`${hit.entry.className}\``,
+        `- **kind:** \`${hit.entry.kind}\``,
+        `- **selector:** \`${hit.entry.selector}\``,
+        `- **matched:** \`${hit.matchedTokens.join(', ')}\``,
+        '',
+        hit.entry.description,
+        '',
+        `→ \`dbx_ui_lookup topic="${hit.entry.slug}"\` for full docs.`,
+        ''
+      );
     }
     appendRelatedExamples(lines, hits, examplesRegistry);
     result = lines.join('\n').trimEnd();

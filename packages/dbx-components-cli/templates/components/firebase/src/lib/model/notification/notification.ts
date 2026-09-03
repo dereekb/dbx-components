@@ -1,4 +1,13 @@
-import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, type NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
+import {
+  type NotificationTemplateType,
+  type CreateNotificationTemplate,
+  createNotificationTemplate,
+  type FirebaseAuthUserId,
+  type NotificationTemplateTypeInfo,
+  notificationTemplateTypeInfoRecord,
+  type NotificationSummaryIdForUidFunction,
+  notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity
+} from '@dereekb/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
 import { type Maybe } from '@dereekb/util';
 

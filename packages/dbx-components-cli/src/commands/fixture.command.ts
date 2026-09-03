@@ -38,7 +38,11 @@ interface FixtureLookupArgs {
 const fixtureLookupCommand: CommandModule<object, FixtureLookupArgs> = {
   command: 'lookup <apiDir> <model>',
   describe: 'Show the fixture triplet, params, and forwarders for one model.',
-  builder: (yargs: Argv): Argv<FixtureLookupArgs> => yargs.positional('apiDir', { type: 'string', demandOption: true, describe: 'Relative path to the API app.' }).positional('model', { type: 'string', demandOption: true, describe: 'Bare model name (e.g. Guestbook).' }).option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<FixtureLookupArgs>,
+  builder: (yargs: Argv): Argv<FixtureLookupArgs> =>
+    yargs
+      .positional('apiDir', { type: 'string', demandOption: true, describe: 'Relative path to the API app.' })
+      .positional('model', { type: 'string', demandOption: true, describe: 'Bare model name (e.g. Guestbook).' })
+      .option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<FixtureLookupArgs>,
   handler: (args: ArgumentsCamelCase<FixtureLookupArgs>): Promise<void> =>
     runCommand(async () => {
       const api = resolvePath(args.apiDir);

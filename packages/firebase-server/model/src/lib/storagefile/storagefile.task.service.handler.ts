@@ -36,7 +36,16 @@ import {
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
-import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig, type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
+import {
+  type NotificationTaskSubtaskCleanupInstructions,
+  type NotificationTaskSubtaskFlowEntry,
+  type NotificationTaskSubtaskInput,
+  notificationTaskSubTaskMissingRequiredDataTermination,
+  type NotificationTaskSubtaskNotificationTaskHandlerConfig,
+  notificationTaskSubtaskNotificationTaskHandlerFactory,
+  type NotificationTaskSubtaskProcessorConfig,
+  type NotificationTaskSubtaskResult
+} from '../notification/notification.task.subtask.handler';
 import { ZipArchive, type Archiver, type ArchiverOptions } from 'archiver';
 
 /**
@@ -70,12 +79,19 @@ export type StorageFileProcessingPurposeSubtaskResult<M extends StorageFileProce
 /**
  * A StorageFileProcessingPurposeSubtask is a function that handles a specific StorageFilePurpose subtask.
  */
-export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (input: StorageFileProcessingPurposeSubtaskInput<M>) => Promise<StorageFileProcessingPurposeSubtaskResult<M, S>>;
+export type StorageFileProcessingPurposeSubtask<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = (
+  input: StorageFileProcessingPurposeSubtaskInput<M>
+) => Promise<StorageFileProcessingPurposeSubtaskResult<M, S>>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerFlowEntry, but used in StorageFileProcessingPurposeTaskProcessorConfig as part of the flow.
  */
-export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingNotificationTaskData<M, S>, M, S>;
+export type StorageFileProcessingPurposeSubtaskFlowEntry<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskFlowEntry<
+  StorageFileProcessingPurposeSubtaskInput<M, S>,
+  StorageFileProcessingNotificationTaskData<M, S>,
+  M,
+  S
+>;
 
 /**
  * The output cleanup configuration.
@@ -103,7 +119,11 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput extends Notifi
   readonly flagResyncWithStorageFileGroups?: boolean;
 }
 
-export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<StorageFileProcessingPurposeSubtaskInput<M, S>, StorageFileProcessingPurposeSubtaskCleanupOutput, StorageFileProcessingNotificationTaskData<M, S>>;
+export type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> = NotificationTaskSubtaskProcessorConfig<
+  StorageFileProcessingPurposeSubtaskInput<M, S>,
+  StorageFileProcessingPurposeSubtaskCleanupOutput,
+  StorageFileProcessingNotificationTaskData<M, S>
+>;
 
 /**
  * Similar to NotificationTaskServiceTaskHandlerConfig, but instead targets a specific StorageFilePurpose.
@@ -361,7 +381,9 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
  * @param config - Configuration providing Firestore collections, storage accessor, and ZIP options.
  * @returns A subtask processor config targeting the StorageFileGroup ZIP purpose.
  */
-export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
+export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
+  config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig
+): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
   const { storageFileFirestoreCollections, storageAccessor, zip } = config;
   const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
   const { maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel, zipFileDisplayNameFunctionFactory: inputZipFileDisplayNameFunctionFactory, configureZipInfoJson: inputConfigureZipInfoJson, configureZipArchiverOptions: inputConfigureZipArchiverOptions, finalizeZipArchive } = zip ?? {};

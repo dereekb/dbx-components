@@ -72,7 +72,19 @@ export interface DbxPdfMergeUploadDialogConfig {
       }
       @if (showUploadButtonSignal()) {
         <div class="dbx-pdf-merge-upload-dialog-footer">
-          <dbx-button [icon]="uploadIconSignal()" [text]="uploadTextSignal()" [buttonStyle]="uploadStyleSignal()" [color]="uploadColorSignal()" [raised]="uploadRaisedSignal()" [flat]="uploadFlatSignal()" [stroked]="uploadStrokedSignal()" [tonal]="uploadTonalSignal()" [basic]="uploadBasicSignal()" [working]="uploadWorkingSignal()" [disabled]="uploadDisabledSignal()" (buttonClick)="confirmUpload()"></dbx-button>
+          <dbx-button
+            [icon]="uploadIconSignal()"
+            [text]="uploadTextSignal()"
+            [buttonStyle]="uploadStyleSignal()"
+            [color]="uploadColorSignal()"
+            [raised]="uploadRaisedSignal()"
+            [flat]="uploadFlatSignal()"
+            [stroked]="uploadStrokedSignal()"
+            [tonal]="uploadTonalSignal()"
+            [basic]="uploadBasicSignal()"
+            [working]="uploadWorkingSignal()"
+            [disabled]="uploadDisabledSignal()"
+            (buttonClick)="confirmUpload()"></dbx-button>
         </div>
       }
     </dbx-dialog-content>

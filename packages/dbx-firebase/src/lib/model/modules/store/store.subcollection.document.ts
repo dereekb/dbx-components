@@ -15,7 +15,10 @@ export interface DbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDo
  * Abstract DbxFirebaseDocumentStore that has a parent document from which is derives it's FiresbaseCollection from.
  */
 @Injectable()
-export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>> extends AbstractDbxFirebaseDocumentStore<T, D, C> implements DbxFirebaseDocumentWithParentStore<T, PT, D, PD> {
+export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>>
+  extends AbstractDbxFirebaseDocumentStore<T, D, C>
+  implements DbxFirebaseDocumentWithParentStore<T, PT, D, PD>
+{
   // MARK: Effects
   readonly setParentStore: DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> = setParentStoreEffect(this);
   readonly setParent: DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = this.effect((input: Observable<Maybe<PD>>) => {
@@ -94,7 +97,13 @@ export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends Firesto
 /**
  * AbstractDbxFirebaseDocumentWithParentStore extension for use with SingleItemFirestoreCollection.
  */
-export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>> extends AbstractDbxFirebaseDocumentWithParentStore<T, PT, D, PD, C> {
+export class AbstractSingleItemDbxFirebaseDocument<
+  T,
+  PT,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  PD extends FirestoreDocument<PT> = FirestoreDocument<PT>,
+  C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>
+> extends AbstractDbxFirebaseDocumentWithParentStore<T, PT, D, PD, C> {
   /**
    * Sets the SingleItemFirestoreCollection to use.
    */

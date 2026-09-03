@@ -653,7 +653,14 @@ function appendTaggedSections(lines: string[], tagged: readonly TaggedFactoryUsa
 
 function appendUntaggedSection(lines: string[], untagged: readonly UntaggedCandidate[]): void {
   if (untagged.length === 0) return;
-  lines.push('## Untagged candidates', '', 'Exported functions returning `FirestoreQueryConstraint[]` without an `@dbxModelFirebaseIndex` block. Tag them so the validator can verify their indexes — or annotate with `@dbxModelFirebaseIndexSkip` to record that they were considered.', '', '| Function | File |', '| --- | --- |');
+  lines.push(
+    '## Untagged candidates',
+    '',
+    'Exported functions returning `FirestoreQueryConstraint[]` without an `@dbxModelFirebaseIndex` block. Tag them so the validator can verify their indexes — or annotate with `@dbxModelFirebaseIndexSkip` to record that they were considered.',
+    '',
+    '| Function | File |',
+    '| --- | --- |'
+  );
   for (const candidate of untagged) {
     lines.push(`| \`${candidate.name}\` | \`${candidate.subpath}:${candidate.line}\` |`);
   }

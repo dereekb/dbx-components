@@ -7,6 +7,14 @@
     </div>
   } @else {
     <!-- mirrors the type's own `fileAccess: 'uploader'`: every signer sees the whole album listed and gets download + remove on their OWN photos only -->
-    <dbx-firebase-formspace-slot-upload [slot]="photosSlot" label="Photos" [maxFiles]="photosMaxFiles" emptyText="No photos yet. Add the first one." uploadText="Add Photos" fileAccess="uploader" inaccessibleText="Added by another signer." fileTypesAccepted="image/jpeg,image/png,application/pdf"></dbx-firebase-formspace-slot-upload>
+    <dbx-firebase-formspace-slot-upload
+      [slot]="photosSlot"
+      label="Photos"
+      [maxFiles]="photosMaxFiles"
+      emptyText="No photos yet. Add the first one."
+      uploadText="Add Photos"
+      fileAccess="uploader"
+      inaccessibleText="Added by another signer."
+      fileTypesAccepted="image/jpeg,image/png,application/pdf"></dbx-firebase-formspace-slot-upload>
   }
 </dbx-section>

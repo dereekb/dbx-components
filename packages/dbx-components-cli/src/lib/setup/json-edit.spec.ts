@@ -3,7 +3,23 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deriveSetupNaming } from './naming.js';
-import { alignDbxPeerDependencies, applyApiTsconfigEdits, applyFirebaseJsonEdits, applyMcpFirebaseJsonRewrites, applyMcpProxyEdits, applyNxJsonEdits, applyOidcFirebaseJsonRewrites, applyOidcProxyEdits, applyTsconfigBaseEdits, buildProxyTarget, editJsonFile, editJsonFileStatus, ensureMcpServerEntry, removeVerdaccioFromPackageJson, type JsonObject } from './json-edit.js';
+import {
+  alignDbxPeerDependencies,
+  applyApiTsconfigEdits,
+  applyFirebaseJsonEdits,
+  applyMcpFirebaseJsonRewrites,
+  applyMcpProxyEdits,
+  applyNxJsonEdits,
+  applyOidcFirebaseJsonRewrites,
+  applyOidcProxyEdits,
+  applyTsconfigBaseEdits,
+  buildProxyTarget,
+  editJsonFile,
+  editJsonFileStatus,
+  ensureMcpServerEntry,
+  removeVerdaccioFromPackageJson,
+  type JsonObject
+} from './json-edit.js';
 
 const NAMING = deriveSetupNaming({ firebaseProjectId: 'gethapierapp', projectName: 'gethapier', codePrefix: 'getHapier', emulatorBasePort: 9300 });
 

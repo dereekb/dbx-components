@@ -11,7 +11,7 @@ export type APP_CODE_PREFIXApiAuthClaims = {
    * Onboarded flag
    */
   o?: 1;
-}
+};
 
 export const APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE = authRoleClaimsService<APP_CODE_PREFIXApiAuthClaims>({
   a: {

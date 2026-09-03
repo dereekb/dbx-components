@@ -30,7 +30,10 @@ export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreD
  * Manages the lifecycle of the model test context within the Jest test fixture hierarchy.
  * Use this as the primary handle in test suites; it is created automatically by {@link modelTestContextFactory}.
  */
-export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>> extends AbstractChildTestContextFixture<I, PF> implements ModelTestContext<T, D> {
+export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>>
+  extends AbstractChildTestContextFixture<I, PF>
+  implements ModelTestContext<T, D>
+{
   // MARK: ModelTestContext (Forwarded)
   get documentId(): FirestoreModelId {
     return this.instance.documentId;
@@ -107,7 +110,16 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
  * parent test context. Other hooks allow customizing fixture creation, document reference creation,
  * instance construction, initialization, and cleanup.
  */
-export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>> {
+export interface ModelTestContextFactoryParams<
+  T,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  C = any,
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>,
+  F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>,
+  CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>
+> {
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
@@ -185,9 +197,16 @@ export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext 
  *
  * @see {@link ModelTestContextFactoryParams} for configuration options
  */
-export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(
-  config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>
-): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
+export function modelTestContextFactory<
+  T,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  C = any,
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends TestContextFixture<PI> = TestContextFixture<PI>,
+  I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>,
+  F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>,
+  CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>
+>(config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
   const {
     getCollection,
     collectionForDocument,

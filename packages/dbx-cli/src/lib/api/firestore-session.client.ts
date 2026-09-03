@@ -82,7 +82,10 @@ export async function fetchFirestoreSession(input: FetchFirestoreSessionInput): 
     throw new CliError({
       message: `firestore session request failed: ${extractMessage(body, text, res)}`,
       code: codeForStatus(res.status),
-      suggestion: res.status === 401 || res.status === 403 ? 'The direct-Firestore session endpoint is admin-only and requires the `session.firestore` scope. Run `<cli> auth login` with that scope as an admin user.' : 'Verify the API exposes `/session/firestore` (the firebase-server session module must be registered and `/api/session` added to the OIDC `protectedPaths`).'
+      suggestion:
+        res.status === 401 || res.status === 403
+          ? 'The direct-Firestore session endpoint is admin-only and requires the `session.firestore` scope. Run `<cli> auth login` with that scope as an admin user.'
+          : 'Verify the API exposes `/session/firestore` (the firebase-server session module must be registered and `/api/session` added to the OIDC `protectedPaths`).'
     });
   }
 

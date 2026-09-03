@@ -1,6 +1,24 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreDeleteFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { AppFormSpaceTypeConfigService, type FormSpace, type FormSpaceData, type FormSpaceDocument, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFirestoreCollections, FormSpaceFunctions, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker, type FormSpaceTypeConfig, formSpaceFilesInSlot, formSpaceSlotStatus, formSpaceSubmitBlockers, isFormSpaceEditable, isFormSpaceFullyLocked, isFormSpaceReopenable } from '@dereekb/firebase';
+import {
+  AppFormSpaceTypeConfigService,
+  type FormSpace,
+  type FormSpaceData,
+  type FormSpaceDocument,
+  type FormSpaceFile,
+  type FormSpaceFileSlot,
+  FormSpaceFirestoreCollections,
+  FormSpaceFunctions,
+  type FormSpaceSlotStatus,
+  type FormSpaceSubmitBlocker,
+  type FormSpaceTypeConfig,
+  formSpaceFilesInSlot,
+  formSpaceSlotStatus,
+  formSpaceSubmitBlockers,
+  isFormSpaceEditable,
+  isFormSpaceFullyLocked,
+  isFormSpaceReopenable
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type Observable, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 

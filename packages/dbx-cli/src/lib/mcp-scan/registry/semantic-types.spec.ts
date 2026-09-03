@@ -26,7 +26,11 @@ describe('createSemanticTypeRegistryFromEntries', () => {
 
   it('exposes distinct topics, packages, and baseTypes sorted', () => {
     const registry = createSemanticTypeRegistryFromEntries({
-      entries: [entryFixture({ name: 'EmailAddress', topics: ['email', 'contact'], baseType: 'string', package: '@dereekb/util' }), entryFixture({ name: 'Milliseconds', topics: ['duration', 'time'], baseType: 'number', package: '@dereekb/util' }), entryFixture({ name: 'PercentDecimal', topics: ['percent'], baseType: 'number', package: '@dereekb/model' })],
+      entries: [
+        entryFixture({ name: 'EmailAddress', topics: ['email', 'contact'], baseType: 'string', package: '@dereekb/util' }),
+        entryFixture({ name: 'Milliseconds', topics: ['duration', 'time'], baseType: 'number', package: '@dereekb/util' }),
+        entryFixture({ name: 'PercentDecimal', topics: ['percent'], baseType: 'number', package: '@dereekb/model' })
+      ],
       loadedSources: ['@dereekb/util', '@dereekb/model']
     });
     expect(registry.topics).toEqual(['contact', 'duration', 'email', 'percent', 'time']);

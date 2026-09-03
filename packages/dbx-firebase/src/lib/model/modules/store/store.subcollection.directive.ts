@@ -11,7 +11,13 @@ import { cleanSubscription } from '@dereekb/dbx-core';
  * Abstract directive that contains a DbxFirebaseCollectionWithParentStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseCollectionWithParentStoreDirective<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, S extends DbxFirebaseCollectionWithParentStore<T, PT, D, PD> = DbxFirebaseCollectionWithParentStore<T, PT, D, PD>> extends DbxFirebaseCollectionStoreDirective<T, D, S> {
+export abstract class DbxFirebaseCollectionWithParentStoreDirective<
+  T,
+  PT,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  PD extends FirestoreDocument<PT> = FirestoreDocument<PT>,
+  S extends DbxFirebaseCollectionWithParentStore<T, PT, D, PD> = DbxFirebaseCollectionWithParentStore<T, PT, D, PD>
+> extends DbxFirebaseCollectionStoreDirective<T, D, S> {
   readonly sourceMode = model<Maybe<DbxFirebaseComponentStoreWithParentSourceMode>>(undefined);
 
   private readonly _sourceMode$ = toObservable(this.sourceMode).pipe(skipInitialMaybe());
@@ -45,8 +51,14 @@ export abstract class DbxFirebaseCollectionWithParentStoreDirective<T, PT, D ext
  * @returns Array of Angular providers for the subcollection directive and its parent collection directive.
  */
 export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, any>>(sourceType: Type<S>): Provider[];
-export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStore<any, any, any, any>, C extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S> = DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S>>(sourceType: Type<C>, storeType?: Type<S>): Provider[];
-export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStore<any, any, any, any>, C extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S> = DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S>>(sourceType: Type<C>, storeType?: Type<S>): Provider[] {
+export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStore<any, any, any, any>, C extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S> = DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S>>(
+  sourceType: Type<C>,
+  storeType?: Type<S>
+): Provider[];
+export function provideDbxFirebaseCollectionWithParentStoreDirective<S extends DbxFirebaseCollectionWithParentStore<any, any, any, any>, C extends DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S> = DbxFirebaseCollectionWithParentStoreDirective<any, any, any, any, S>>(
+  sourceType: Type<C>,
+  storeType?: Type<S>
+): Provider[] {
   const providers: Provider[] = [
     ...provideDbxFirebaseCollectionStoreDirective(sourceType, storeType),
     {

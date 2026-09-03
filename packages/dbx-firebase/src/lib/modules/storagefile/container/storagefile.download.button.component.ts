@@ -116,7 +116,16 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
 @Component({
   selector: 'dbx-firebase-storagefile-download-button',
   template: `
-    <dbx-anchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="actionDisabledSignal()" [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
+    <dbx-anchor
+      [anchor]="anchorSignal()"
+      dbxAction
+      [dbxActionAutoTrigger]="preloadSignal()"
+      dbxActionSnackbarError
+      [dbxActionDisabled]="actionDisabledSignal()"
+      [dbxActionValue]="storageFileKeySignal()"
+      [dbxActionHandler]="handleGetDownloadUrl"
+      [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess"
+      [dbxActionErrorHandler]="handleGetDownloadUrlError">
       <!-- allowClickPropagation lets a click on a resolved url reach the anchor, which is what performs the download -->
       <dbx-button dbxActionButton [allowClickPropagation]="true" [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>

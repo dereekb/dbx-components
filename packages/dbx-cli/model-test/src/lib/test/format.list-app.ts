@@ -96,7 +96,17 @@ function appendGroupSection(lines: string[], apiRel: string, group: DiscoveredSp
 function appendFileTable(lines: string[], group: DiscoveredSpecGroup): void {
   lines.push('', '| File | Kind | Subgroups | Canonical | Rename suggestion |', '|---|---|---|---|---|');
   for (const file of group.files) {
-    lines.push('| ' + [code(file.filename), KIND_LABEL[file.classification.kind], file.classification.subgroups.length === 0 ? '—' : code(file.classification.subgroups.join('.')), file.classification.isCanonical ? '✓' : '✗', file.classification.recommendedRename === undefined ? '—' : code(file.classification.recommendedRename)].join(' | ') + ' |');
+    lines.push(
+      '| ' +
+        [
+          code(file.filename),
+          KIND_LABEL[file.classification.kind],
+          file.classification.subgroups.length === 0 ? '—' : code(file.classification.subgroups.join('.')),
+          file.classification.isCanonical ? '✓' : '✗',
+          file.classification.recommendedRename === undefined ? '—' : code(file.classification.recommendedRename)
+        ].join(' | ') +
+        ' |'
+    );
   }
 }
 
@@ -115,7 +125,17 @@ function appendRecommendation(lines: string[], rec: SpecBucketRecommendation, gr
 }
 
 function appendConventionLegend(lines: string[]): void {
-  lines.push('', '## Naming convention', '', '- `<group>.crud.spec.ts` — non-scenario CRUD tests.', '- `<group>.crud.<sub>[.<sub>...].spec.ts` — focused CRUD sub-test.', '- `<group>.scenario.spec.ts` — generic multi-step scenario tests.', '- `<group>.scenario.<sub>[.<sub>...].spec.ts` — focused scenario sub-bucket.', '', 'Drift forms are still parsed but flagged — see the `Rename suggestion` column.');
+  lines.push(
+    '',
+    '## Naming convention',
+    '',
+    '- `<group>.crud.spec.ts` — non-scenario CRUD tests.',
+    '- `<group>.crud.<sub>[.<sub>...].spec.ts` — focused CRUD sub-test.',
+    '- `<group>.scenario.spec.ts` — generic multi-step scenario tests.',
+    '- `<group>.scenario.<sub>[.<sub>...].spec.ts` — focused scenario sub-bucket.',
+    '',
+    'Drift forms are still parsed but flagged — see the `Rename suggestion` column.'
+  );
 }
 
 function appendDriftSummary(lines: string[], catalog: DiscoveredSpecCatalog): void {

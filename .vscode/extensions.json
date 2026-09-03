@@ -1,7 +1,7 @@
 {
   "recommendations": [
     "nrwl.angular-console",
-    "esbenp.prettier-vscode",
+    "oxc.oxc-vscode",
     "dbaeumer.vscode-eslint"
   ]
 }

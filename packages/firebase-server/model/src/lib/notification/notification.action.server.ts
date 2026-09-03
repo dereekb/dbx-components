@@ -103,7 +103,31 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction, type Building, type Minutes, type Seconds } from '@dereekb/util';
+import {
+  UNSET_INDEX_NUMBER,
+  batch,
+  computeNextFreeIndexOnSortedValuesFunction,
+  filterMaybeArrayValues,
+  makeValuesGroupMap,
+  performAsyncTasks,
+  readIndexNumber,
+  type Maybe,
+  makeModelMap,
+  removeValuesAtIndexesFromArrayCopy,
+  takeFront,
+  areEqualPOJOValues,
+  type EmailAddress,
+  type E164PhoneNumber,
+  asArray,
+  dateOrMillisecondsToDate,
+  asPromise,
+  filterOnlyUndefinedValues,
+  iterablesAreSetEquivalent,
+  mapIdentityFunction,
+  type Building,
+  type Minutes,
+  type Seconds
+} from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1159,7 +1183,25 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       // Load the notification document outside of any potential context (transaction, etc.)
       const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
 
-      const { nextSat, throttled, tryRun, isNotificationTask, isLoggedEvent, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
+      const {
+        nextSat,
+        throttled,
+        tryRun,
+        isNotificationTask,
+        isLoggedEvent,
+        notificationTaskHandler,
+        notification,
+        createdBox,
+        notificationBoxNeedsInitialization,
+        notificationBox,
+        notificationBoxModelKey,
+        deletedNotification,
+        templateInstance,
+        isConfiguredTemplateType,
+        isKnownTemplateType,
+        onlySendToExplicitlyEnabledRecipients,
+        onlyTextExplicitlyEnabledRecipients
+      } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 

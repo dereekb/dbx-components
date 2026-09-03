@@ -1,5 +1,19 @@
 import { wrapDateTests } from '../../test.spec';
-import { escapeICalendarText, iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
+import {
+  escapeICalendarText,
+  iCalendarBooleanValue,
+  iCalendarCalAddressValue,
+  iCalendarDateString,
+  iCalendarDurationString,
+  iCalendarFloatingDateTimeString,
+  iCalendarGeoValue,
+  iCalendarIntegerValue,
+  iCalendarParameterValue,
+  iCalendarTextListValue,
+  iCalendarTextValue,
+  iCalendarUtcDateTimeString,
+  iCalendarZonedDateTimeString
+} from './icalendar.value';
 
 wrapDateTests(() => {
   describe('iCalendarTextValue()', () => {

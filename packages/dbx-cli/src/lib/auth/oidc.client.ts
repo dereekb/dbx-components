@@ -1,5 +1,25 @@
-import { type DiscoverOidcMetadataInput, type ExchangeAuthorizationCodeInput, type FetchSessionInfoInput, type FetchUserInfoInput, type OidcDiscoveryMetadata, OidcRelyingPartyError, type OidcRelyingPartyErrorCode, type OidcSessionInfo, type OidcTokenResponse, type RefreshAccessTokenInput, type RevokeTokenInput } from '@dereekb/util';
-import { discoverOidcMetadata as discoverOidcMetadataProtocol, exchangeAuthorizationCode as exchangeAuthorizationCodeProtocol, fetchSessionInfo as fetchSessionInfoProtocol, fetchUserInfo as fetchUserInfoProtocol, type OidcRelyingPartyFetch, refreshAccessToken as refreshAccessTokenProtocol, revokeToken as revokeTokenProtocol } from '@dereekb/util/oidc';
+import {
+  type DiscoverOidcMetadataInput,
+  type ExchangeAuthorizationCodeInput,
+  type FetchSessionInfoInput,
+  type FetchUserInfoInput,
+  type OidcDiscoveryMetadata,
+  OidcRelyingPartyError,
+  type OidcRelyingPartyErrorCode,
+  type OidcSessionInfo,
+  type OidcTokenResponse,
+  type RefreshAccessTokenInput,
+  type RevokeTokenInput
+} from '@dereekb/util';
+import {
+  discoverOidcMetadata as discoverOidcMetadataProtocol,
+  exchangeAuthorizationCode as exchangeAuthorizationCodeProtocol,
+  fetchSessionInfo as fetchSessionInfoProtocol,
+  fetchUserInfo as fetchUserInfoProtocol,
+  type OidcRelyingPartyFetch,
+  refreshAccessToken as refreshAccessTokenProtocol,
+  revokeToken as revokeTokenProtocol
+} from '@dereekb/util/oidc';
 import { CliError, tracedFetch } from '../util/output';
 
 // The CLI's fetch transport: the global `fetch` wrapped with verbose tracing + the configured

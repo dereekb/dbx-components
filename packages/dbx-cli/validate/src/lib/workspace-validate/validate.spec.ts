@@ -248,7 +248,10 @@ describe('validateWorkspace — deploy group', () => {
       projects: [
         buildProject({
           name: 'demo-api',
-          targets: [buildTarget({ name: 'build-base', executor: '@nx/esbuild:esbuild', configurations: [buildConfiguration({ name: 'staging', esbuildConfig: 'apps/demo-api/esbuild.staging.config.js', esbuildConfigExists: true })] }), buildTarget({ name: 'ci-deploy-staging', commands: ['npx nx run demo-api:build-base:staging'] })]
+          targets: [
+            buildTarget({ name: 'build-base', executor: '@nx/esbuild:esbuild', configurations: [buildConfiguration({ name: 'staging', esbuildConfig: 'apps/demo-api/esbuild.staging.config.js', esbuildConfigExists: true })] }),
+            buildTarget({ name: 'ci-deploy-staging', commands: ['npx nx run demo-api:build-base:staging'] })
+          ]
         })
       ],
       references: [buildReference({ project: 'demo-api', target: 'build-base', configuration: 'staging', sourceFile: 'apps/demo-api/project.json', sourceTarget: 'ci-deploy-staging' })]
@@ -336,7 +339,11 @@ describe('validateWorkspace — deploy group', () => {
     // `ci-deploy-firebase-rules-staging` on the root project is a helper, not
     // a lane, and must not make every app look asymmetric.
     const inspection = buildInspection({
-      projects: [buildProject({ name: 'demo', targets: [buildTarget({ name: 'ci-deploy-prod' }), buildTarget({ name: 'ci-deploy-staging' })] }), buildProject({ name: 'demo-api', targets: [buildTarget({ name: 'ci-deploy-prod' }), buildTarget({ name: 'ci-deploy-staging' })] }), buildProject({ name: 'workspace', root: '', targets: [buildTarget({ name: 'ci-deploy-firebase-rules-staging' }), buildTarget({ name: 'ci-deploy-firebase-rules-prod' })] })]
+      projects: [
+        buildProject({ name: 'demo', targets: [buildTarget({ name: 'ci-deploy-prod' }), buildTarget({ name: 'ci-deploy-staging' })] }),
+        buildProject({ name: 'demo-api', targets: [buildTarget({ name: 'ci-deploy-prod' }), buildTarget({ name: 'ci-deploy-staging' })] }),
+        buildProject({ name: 'workspace', root: '', targets: [buildTarget({ name: 'ci-deploy-firebase-rules-staging' }), buildTarget({ name: 'ci-deploy-firebase-rules-prod' })] })
+      ]
     });
     expect(codesOf(inspection, ['deploy'])).toEqual([]);
   });

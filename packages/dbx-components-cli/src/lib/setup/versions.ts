@@ -69,12 +69,11 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'firebase-admin': '^13.0.0',
   'firebase-functions': '^7.0.0',
   'firebase-functions-test': '3.4.1',
-  prettier: '3.8.1',
+  oxfmt: '^0.66.0',
   'conventional-changelog': '^7.2.0',
   'conventional-recommended-bump': '^11.2.0',
   semver: '^7.7.4',
   yargs: '^18.0.0',
-  'pretty-quick': '^4.2.2',
   'eslint-plugin-import-x': '^4.16.2',
   'eslint-plugin-unused-imports': '4.4.1',
   'eslint-config-prettier': '10.1.8',
@@ -105,7 +104,26 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
 /**
  * The `@dereekb/*` packages installed against the dbx-components version.
  */
-export const DEREEKB_PACKAGES: readonly string[] = ['@dereekb/analytics', '@dereekb/browser', '@dereekb/calcom', '@dereekb/date', '@dereekb/dbx-analytics', '@dereekb/dbx-core', '@dereekb/dbx-firebase', '@dereekb/dbx-form', '@dereekb/dbx-web', '@dereekb/firebase', '@dereekb/firebase-server', '@dereekb/model', '@dereekb/zoho', '@dereekb/zoom', '@dereekb/nestjs', '@dereekb/rxjs', '@dereekb/util', '@dereekb/vitest'];
+export const DEREEKB_PACKAGES: readonly string[] = [
+  '@dereekb/analytics',
+  '@dereekb/browser',
+  '@dereekb/calcom',
+  '@dereekb/date',
+  '@dereekb/dbx-analytics',
+  '@dereekb/dbx-core',
+  '@dereekb/dbx-firebase',
+  '@dereekb/dbx-form',
+  '@dereekb/dbx-web',
+  '@dereekb/firebase',
+  '@dereekb/firebase-server',
+  '@dereekb/model',
+  '@dereekb/zoho',
+  '@dereekb/zoom',
+  '@dereekb/nestjs',
+  '@dereekb/rxjs',
+  '@dereekb/util',
+  '@dereekb/vitest'
+];
 
 /**
  * The CI dist path the `--ci-test` mode installs `@dereekb/*` from (script line 169).

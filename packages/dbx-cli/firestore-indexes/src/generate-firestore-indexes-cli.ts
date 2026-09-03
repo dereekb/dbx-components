@@ -391,7 +391,11 @@ interface SummaryInput {
 
 function formatWriteSummary(input: SummaryInput): string {
   const { outputPath, diff, generatedComposites, generatedFieldOverrides } = input;
-  const lines = [`generate-firestore-indexes: wrote ${outputPath}`, `  composites: ${generatedComposites} (added ${diff.added.length}, removed ${diff.removed.length}, unchanged ${diff.unchanged.length})`, `  fieldOverrides: ${generatedFieldOverrides} (added ${diff.fieldOverridesAdded.length}, removed ${diff.fieldOverridesRemoved.length}, unchanged ${diff.fieldOverridesUnchanged.length})`];
+  const lines = [
+    `generate-firestore-indexes: wrote ${outputPath}`,
+    `  composites: ${generatedComposites} (added ${diff.added.length}, removed ${diff.removed.length}, unchanged ${diff.unchanged.length})`,
+    `  fieldOverrides: ${generatedFieldOverrides} (added ${diff.fieldOverridesAdded.length}, removed ${diff.fieldOverridesRemoved.length}, unchanged ${diff.fieldOverridesUnchanged.length})`
+  ];
   return appendDiffSection(lines, diff).join('\n');
 }
 
@@ -402,7 +406,11 @@ interface CheckSummaryInput extends SummaryInput {
 function formatCheckSummary(input: CheckSummaryInput): string {
   const { drift, outputPath, diff, generatedComposites, generatedFieldOverrides } = input;
   const headline = drift ? `generate-firestore-indexes: drift detected against ${outputPath}` : `generate-firestore-indexes: in sync (${outputPath})`;
-  const lines = [headline, `  composites: ${generatedComposites} (added ${diff.added.length}, removed ${diff.removed.length}, unchanged ${diff.unchanged.length})`, `  fieldOverrides: ${generatedFieldOverrides} (added ${diff.fieldOverridesAdded.length}, removed ${diff.fieldOverridesRemoved.length}, unchanged ${diff.fieldOverridesUnchanged.length})`];
+  const lines = [
+    headline,
+    `  composites: ${generatedComposites} (added ${diff.added.length}, removed ${diff.removed.length}, unchanged ${diff.unchanged.length})`,
+    `  fieldOverrides: ${generatedFieldOverrides} (added ${diff.fieldOverridesAdded.length}, removed ${diff.fieldOverridesRemoved.length}, unchanged ${diff.fieldOverridesUnchanged.length})`
+  ];
   return appendDiffSection(lines, diff).join('\n');
 }
 

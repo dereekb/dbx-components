@@ -422,7 +422,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'error',
     title: 'A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file',
     whatItFlags: 'A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file.',
-    whenItApplies: 'Every `@dbxModelFirebaseIndexSpecFilesOnly` factory whose name appears in a `.ts` file under `apps/`, `components/`, or `packages/` that is NOT a `*.spec.ts` / `*.spec.tsx` file. The tag is a contract that the factory exists for tests only; a production caller breaks that contract and would leak a query shape the index generator deliberately skipped.',
+    whenItApplies:
+      'Every `@dbxModelFirebaseIndexSpecFilesOnly` factory whose name appears in a `.ts` file under `apps/`, `components/`, or `packages/` that is NOT a `*.spec.ts` / `*.spec.tsx` file. The tag is a contract that the factory exists for tests only; a production caller breaks that contract and would leak a query shape the index generator deliberately skipped.',
     whenItDoesNotApply: 'Spec-only factories whose references are confined to `*.spec.ts` / `*.spec.tsx` files (the intended state), or factories not tagged `@dbxModelFirebaseIndexSpecFilesOnly`.',
     canonicalFix: 'Either move the production call-site into a tagged, non-spec-only factory (and update its callers), or remove the `@dbxModelFirebaseIndexSpecFilesOnly` tag and ensure the produced composite/fieldOverride is declared so the generator emits the required Firestore index.',
     seeAlso: [
@@ -536,7 +537,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whatItFlags: 'A tagged factory has zero callers anywhere in the workspace.',
     whenItApplies:
       'Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding `*.d.ts`, `node_modules/`, and build outputs). For regular factories only non-spec callers count toward "used" — a factory whose only references are inside `*.spec.ts` files still triggers this warning unless it is opted in via `@dbxModelFirebaseIndexSpecFilesOnly`. The check uses word-boundary text scanning so renames + stale exports surface here.',
-    whenItDoesNotApply: 'Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission), `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites), or `@dbxModelFirebaseIndexSpecFilesOnly` that have at least one `*.spec.ts` caller (the intended state for test-only helpers).',
+    whenItDoesNotApply:
+      'Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission), `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites), or `@dbxModelFirebaseIndexSpecFilesOnly` that have at least one `*.spec.ts` caller (the intended state for test-only helpers).',
     canonicalFix: 'Either delete the factory (and its `*.query.ts` file if empty), wire up a production caller, or — if the factory is intentionally a `*.spec.ts`-only helper — tag it `@dbxModelFirebaseIndexSpecFilesOnly`. `@dbxModelFirebaseIndexSkip` still works for "retain pending a future caller".',
     seeAlso: [
       {
@@ -704,7 +706,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whatItFlags: 'A model carries `serverOnly` but does not appear in the generated CLI model manifest.',
     whenItApplies: 'When a `manifestFile` is supplied and a server-only model type has no entry in it.',
     whenItDoesNotApply: 'Runs without a `manifestFile` — the check is skipped entirely.',
-    canonicalFix: "The runtime gate still covers the model; only the CLI's LOCAL pre-transport refusal is missed, so the read costs a round-trip to an API that refuses it. Either tag the model interface with `@dbxModel` (an untagged interface is never assembled into a manifest entry) or widen the manifest generator's discovery to reach the package that declares the model."
+    canonicalFix:
+      "The runtime gate still covers the model; only the CLI's LOCAL pre-transport refusal is missed, so the read costs a round-trip to an API that refuses it. Either tag the model interface with `@dbxModel` (an untagged interface is never assembled into a manifest entry) or widen the manifest generator's discovery to reach the package that declares the model."
   },
   {
     code: 'MODEL_SERVER_ONLY_RULES_ALLOW_READ',
@@ -773,7 +776,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     source: 'dbx_model_test_validate_app',
     severity: 'warning',
     title: 'Spec filename uses a `crud` / `scenario` segment that is not directly',
-    whatItFlags: 'Spec filename uses a `crud` / `scenario` segment that is not directly\nafter the group name (e.g. `worker.payroll.scenario.spec.ts` or\n`worker.pay.crud.spec.ts`). The canonical form places the bucket\nmarker immediately after the group: `<group>.scenario.<sub>.spec.ts`\nor `<group>.crud.<sub>.spec.ts`.',
+    whatItFlags:
+      'Spec filename uses a `crud` / `scenario` segment that is not directly\nafter the group name (e.g. `worker.payroll.scenario.spec.ts` or\n`worker.pay.crud.spec.ts`). The canonical form places the bucket\nmarker immediately after the group: `<group>.scenario.<sub>.spec.ts`\nor `<group>.crud.<sub>.spec.ts`.',
     whenItApplies: 'Any spec file under `<apiDir>/src/app/function/<group>/` where the `crud` / `scenario` segment is not the first non-group segment.',
     whenItDoesNotApply: 'Canonical subgroup names like `job.crud.requirement.spec.ts` — there `crud` is already first.',
     canonicalFix: 'Rename to the canonical `<group>.<bucket>.<sub>.spec.ts` form. The validator emits the recommended filename as part of the violation message.',
@@ -929,7 +933,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     title: 'The collection type alias uses the wrong generic shape for the model variant',
     whatItFlags: 'The collection type alias uses the wrong generic shape for the model variant.',
     whenItApplies: 'The 4-shape taxonomy: `FirestoreCollection<T, D>` for root, `RootSingleItemFirestoreCollection<T, D>` for root-singleton, `FirestoreCollectionWithParent<T, PT, D, PD>` for sub-collection, `SingleItemFirestoreCollection<T, PT, D, PD>` for singleton-sub.',
-    whenItDoesNotApply: "Multi-document subcollections that should genuinely use `FirestoreCollectionWithParent` — confirm the factory body calls `firestoreContext.firestoreCollectionWithParent({...})`. If yes, this rule is a false-positive (the validator detected `singleItemFirestoreCollection` somewhere it shouldn't have).",
+    whenItDoesNotApply:
+      "Multi-document subcollections that should genuinely use `FirestoreCollectionWithParent` — confirm the factory body calls `firestoreContext.firestoreCollectionWithParent({...})`. If yes, this rule is a false-positive (the validator detected `singleItemFirestoreCollection` somewhere it shouldn't have).",
     canonicalFix: 'Match the type alias\'s generics to the factory body\'s `firestoreContext.*` call. Run `dbx_explain_rule code="MODEL_COLLECTION_TYPE_WRONG_GENERIC"` for the full taxonomy.',
     seeAlso: [
       {
@@ -975,7 +980,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     source: 'dbx_model_validate',
     severity: 'error',
     title: 'A `from=` entry on the `@dbxModelCompositeKey` tag does not resolve to any model in the merged manifest (`@dereekb/firebase` plus every discovered `*-firebase` component). Names are matched case-insensitively against interface name, identity const name (with `Identity` suffix dropped), and `modelType`',
-    whatItFlags: 'A `from=` entry on the `@dbxModelCompositeKey` tag does not resolve to any model in the merged manifest (`@dereekb/firebase` plus every discovered `*-firebase` component). Names are matched case-insensitively against interface name, identity const name (with `Identity` suffix dropped), and `modelType`.',
+    whatItFlags:
+      'A `from=` entry on the `@dbxModelCompositeKey` tag does not resolve to any model in the merged manifest (`@dereekb/firebase` plus every discovered `*-firebase` component). Names are matched case-insensitively against interface name, identity const name (with `Identity` suffix dropped), and `modelType`.',
     whenItApplies: 'Each concrete name in the `from=` list. Skipped entirely when the tag uses `from=*`.',
     whenItDoesNotApply: 'Wildcard tags (`from=*`) since their source set is open by design.',
     canonicalFix: 'Fix the typo, or add the missing model to a component the merged manifest scan picks up. The resolver matches interface name, identity const, and modelType.',
@@ -1084,9 +1090,11 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name)",
     whatItFlags: "A persisted field's `@dbxModelVariable <longName>` tag value matches the field's short name verbatim, defeating the tag's purpose (the long name should be the field's unabbreviated camelCase variable name).",
-    whenItApplies: "Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.",
+    whenItApplies:
+      "Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface where `@dbxModelVariable` is present and its value equals the field's name (e.g. field `h` tagged `@dbxModelVariable h`, field `ub` tagged `@dbxModelVariable ub`). The tag must always carry the unabbreviated form so the catalog and decoder surface a meaningful long name.",
     whenItDoesNotApply: 'Fields whose name is already the unabbreviated camelCase form (e.g. `name`, `email`, `id`, `at`) — add those to `dbx-mcp.config.json` `modelValidate.ignoredFieldNames` to silence the warning workspace-wide.',
-    canonicalFix: "Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`."
+    canonicalFix:
+      "Replace the tag value with the field's unabbreviated camelCase variable name (e.g. `@dbxModelVariable h` → `@dbxModelVariable hours`, `@dbxModelVariable ub` → `@dbxModelVariable usedBudget`). To exempt fields whose long name legitimately equals the short name, add them to `modelValidate.ignoredFieldNames`."
   },
   {
     code: 'MODEL_FIELD_MISSING_JSDOC',
@@ -1104,7 +1112,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     severity: 'warning',
     title: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag',
     whatItFlags: 'A persisted field is missing its `@dbxModelVariable <name>` JSDoc tag.',
-    whenItApplies: 'Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).',
+    whenItApplies:
+      'Every field on a `@dbxModel` interface or on a `@dbxModelSubObject`-tagged embedded sub-object interface — the tag carries the human-readable long name the catalog and decoder use when surfacing the field to operators. The long name is the variable name the field would have unabbreviated, written in camelCase (e.g. `uid` → `userUid`, `n` → `name`, `crAt` → `createdAt`).',
     whenItDoesNotApply: 'Fields on embedded sub-object interfaces that are not tagged with `@dbxModelSubObject` (the tag is opt-in) and fields the project deliberately leaves untagged (rare).',
     canonicalFix: "Append `@dbxModelVariable <longName>` to the field's JSDoc block, where `<longName>` is the field's unabbreviated camelCase variable name."
   },
@@ -1152,7 +1161,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
       "Two `firestoreModelIdentity(...)` declarations share the same `collectionName` (the lowercase Firestore collection segment passed as the `collectionName` arg, surfaced in the manifest as `collectionPrefix`). Collection names must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because Firestore collection-group queries match by collection name regardless of where the collection sits in the document hierarchy, so two collections sharing a name silently bleed into each other's results",
     whatItFlags:
       "Two `firestoreModelIdentity(...)` declarations share the same `collectionName` (the lowercase Firestore collection segment passed as the `collectionName` arg, surfaced in the manifest as `collectionPrefix`). Collection names must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because Firestore collection-group queries match by collection name regardless of where the collection sits in the document hierarchy, so two collections sharing a name silently bleed into each other's results.",
-    whenItApplies: 'Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant — two subcollections under different parents that share a `collectionName` still collide because CollectionGroup queries do not respect parent paths.',
+    whenItApplies:
+      'Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant — two subcollections under different parents that share a `collectionName` still collide because CollectionGroup queries do not respect parent paths.',
     whenItDoesNotApply: 'Identities declared outside the merged manifest scan (e.g. packages the discovery layer does not pick up).',
     canonicalFix: 'Rename one of the conflicting identities so the `collectionName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every Firestore document path / collection-group query that referenced the renamed segment.',
     seeAlso: [
@@ -1166,8 +1176,10 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE',
     source: 'dbx_model_validate',
     severity: 'error',
-    title: 'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models',
-    whatItFlags: 'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models.',
+    title:
+      'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models',
+    whatItFlags:
+      'Two `firestoreModelIdentity(...)` declarations share the same `modelType` (the camelCase model identifier passed as the first string arg). Model types must be globally unique across the merged model manifest — `@dereekb/firebase` upstream plus every discovered `*-firebase` component — because the model registry, fixture lookup, and key-to-identity decoding all resolve by `modelType`, so a duplicate silently masks one of the two models.',
     whenItApplies: 'Every `firestoreModelIdentity(...)` declaration discovered by the manifest scan. Anchored at each duplicate occurrence after the first (the first-seen identity is treated as the incumbent). Applies regardless of root vs. subcollection variant.',
     whenItDoesNotApply: 'Identities declared outside the merged manifest scan.',
     canonicalFix: 'Rename one of the conflicting identities so the `modelName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every downstream reference to the renamed `modelType`.',
@@ -1330,9 +1342,12 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_SUBOBJECT_NOT_TAGGED',
     source: 'dbx_model_validate',
     severity: 'warning',
-    title: "An interface is referenced as the first generic type-argument of a sub-object factory call (`firestoreSubObject<T>(...)`, `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`) but its declaration carries neither `@dbxModel` nor `@dbxModelSubObject`. The interface therefore opts out of the workspace's `@dbxModelVariable` long-name conventions even though its fields are persisted to Firestore",
-    whatItFlags: "An interface is referenced as the first generic type-argument of a sub-object factory call (`firestoreSubObject<T>(...)`, `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`) but its declaration carries neither `@dbxModel` nor `@dbxModelSubObject`. The interface therefore opts out of the workspace's `@dbxModelVariable` long-name conventions even though its fields are persisted to Firestore.",
-    whenItApplies: 'Any interface declared in the validated source set that is the type-arg of at least one sub-object factory call and lacks both `@dbxModel` and `@dbxModelSubObject`. The warning is emitted once per interface (de-duplicated across all call sites) and anchored at the interface declaration line. Unresolved type-args — interfaces declared outside the validated source set, generic parameters, inline types — are silently skipped to avoid false positives.',
+    title:
+      "An interface is referenced as the first generic type-argument of a sub-object factory call (`firestoreSubObject<T>(...)`, `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`) but its declaration carries neither `@dbxModel` nor `@dbxModelSubObject`. The interface therefore opts out of the workspace's `@dbxModelVariable` long-name conventions even though its fields are persisted to Firestore",
+    whatItFlags:
+      "An interface is referenced as the first generic type-argument of a sub-object factory call (`firestoreSubObject<T>(...)`, `firestoreObjectArray<T>(...)`, or `firestoreMap<T>(...)`) but its declaration carries neither `@dbxModel` nor `@dbxModelSubObject`. The interface therefore opts out of the workspace's `@dbxModelVariable` long-name conventions even though its fields are persisted to Firestore.",
+    whenItApplies:
+      'Any interface declared in the validated source set that is the type-arg of at least one sub-object factory call and lacks both `@dbxModel` and `@dbxModelSubObject`. The warning is emitted once per interface (de-duplicated across all call sites) and anchored at the interface declaration line. Unresolved type-args — interfaces declared outside the validated source set, generic parameters, inline types — are silently skipped to avoid false positives.',
     whenItDoesNotApply: 'Interfaces already tagged with `@dbxModel` (top-level models) or `@dbxModelSubObject` (embedded sub-objects), and interfaces referenced only from outside the supplied source set (different package, etc.).',
     canonicalFix: "Add `@dbxModelSubObject` to the interface's JSDoc block so its fields are subject to `@dbxModelVariable` long-name checks. If the interface is actually a top-level Firestore model, declare a matching `firestoreModelIdentity` and tag it `@dbxModel` instead.",
     seeAlso: [
@@ -1346,10 +1361,14 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_SUBOBJECT_PARENT_NOT_TAGGED',
     source: 'dbx_model_validate',
     severity: 'warning',
-    title: "A `@dbxModelSubObject` interface extends a parent interface that is not itself tagged with `@dbxModel` or `@dbxModelSubObject`. The parent's persisted fields flow through the sub-object's converter but never reach the workspace's `@dbxModelVariable` long-name checks. Whether the agent acts depends on whether the parent is owned by this package, but the validator surfaces both classifications so the consuming agent (or developer) can make an informed call",
-    whatItFlags: "A `@dbxModelSubObject` interface extends a parent interface that is not itself tagged with `@dbxModel` or `@dbxModelSubObject`. The parent's persisted fields flow through the sub-object's converter but never reach the workspace's `@dbxModelVariable` long-name checks. Whether the agent acts depends on whether the parent is owned by this package, but the validator surfaces both classifications so the consuming agent (or developer) can make an informed call.",
-    whenItApplies: 'Every `@dbxModelSubObject` interface whose `extends` heritage names an untagged parent. The parent is classified `in-package` when its declaration is found in the validated source set, otherwise `external`. Anchored at the sub-object interface line so the caller sees both the child and the parent in one place.',
-    whenItDoesNotApply: 'Parents already tagged with `@dbxModel` or `@dbxModelSubObject`; parents whose names appear in `modelValidate.ignoredExternalParents` (suppresses external-only warnings — in-package parents are never suppressed). Generic parameters, inline types, and TS utility wrappers (`Partial<T>`, `Pick<T, K>`, `Omit<T, K>`, `Readonly<T>`, `MaybeMap<T>`) are unwrapped to the underlying parent name before resolution.',
+    title:
+      "A `@dbxModelSubObject` interface extends a parent interface that is not itself tagged with `@dbxModel` or `@dbxModelSubObject`. The parent's persisted fields flow through the sub-object's converter but never reach the workspace's `@dbxModelVariable` long-name checks. Whether the agent acts depends on whether the parent is owned by this package, but the validator surfaces both classifications so the consuming agent (or developer) can make an informed call",
+    whatItFlags:
+      "A `@dbxModelSubObject` interface extends a parent interface that is not itself tagged with `@dbxModel` or `@dbxModelSubObject`. The parent's persisted fields flow through the sub-object's converter but never reach the workspace's `@dbxModelVariable` long-name checks. Whether the agent acts depends on whether the parent is owned by this package, but the validator surfaces both classifications so the consuming agent (or developer) can make an informed call.",
+    whenItApplies:
+      'Every `@dbxModelSubObject` interface whose `extends` heritage names an untagged parent. The parent is classified `in-package` when its declaration is found in the validated source set, otherwise `external`. Anchored at the sub-object interface line so the caller sees both the child and the parent in one place.',
+    whenItDoesNotApply:
+      'Parents already tagged with `@dbxModel` or `@dbxModelSubObject`; parents whose names appear in `modelValidate.ignoredExternalParents` (suppresses external-only warnings — in-package parents are never suppressed). Generic parameters, inline types, and TS utility wrappers (`Partial<T>`, `Pick<T, K>`, `Omit<T, K>`, `Readonly<T>`, `MaybeMap<T>`) are unwrapped to the underlying parent name before resolution.',
     canonicalFix:
       "In-package parent: add `@dbxModelSubObject` to the parent interface's JSDoc and tag each persisted field with `@dbxModelVariable <longName>`. Alternative: redeclare the inherited fields directly on the child with their own JSDoc + tag (useful when the parent is a shared shape that shouldn't commit to a single longName). External parent: redeclare the inherited fields on the child with `@dbxModelVariable <longName>` tags when surface long-names are needed, or add the parent name to `modelValidate.ignoredExternalParents` in `dbx-mcp.config.json` when the inherited fields are framework plumbing (e.g. `IndexRef.i`, `DateRange.start/end`).",
     seeAlso: [
@@ -1363,8 +1382,10 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_SUBOBJECT_TAG_CONFLICT',
     source: 'dbx_model_validate',
     severity: 'error',
-    title: "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one",
-    whatItFlags: "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one.",
+    title:
+      "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one",
+    whatItFlags:
+      "An interface declaration carries both `@dbxModel` and `@dbxModelSubObject` JSDoc tags. The two tags model mutually exclusive concepts — `@dbxModel` marks a top-level Firestore model registered in the catalog via `firestoreModelIdentity`, while `@dbxModelSubObject` marks an embedded sub-object interface persisted only as part of a parent model's converter — so an interface must carry at most one.",
     whenItApplies: 'Any interface JSDoc block where both `@dbxModel` and `@dbxModelSubObject` are present.',
     whenItDoesNotApply: 'Interfaces carrying only one of the two tags (or neither).',
     canonicalFix: 'Remove whichever tag does not describe the interface. If the interface has a matching `firestoreModelIdentity` call, keep `@dbxModel`; if it is only embedded inside another model via `firestoreSubObject<T>()`, keep `@dbxModelSubObject`.'
@@ -2980,7 +3001,8 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whatItFlags: 'An `nx run <project>:<target>:<configuration>` reference names a configuration the target does not declare.',
     whenItApplies: "Whenever a reference carries a configuration segment and the target's `configurations` map has no such key.",
     whenItDoesNotApply: 'Targets that declare no `configurations` at all — Nx tolerates a configuration argument there, so it is not reported.',
-    canonicalFix: 'Rename the reference to a declared configuration (a `prod` / `production` mismatch is the usual cause), or add the configuration to the target. Nx does NOT error on an unknown configuration: `create-task-graph.js` silently substitutes `defaultConfiguration`, so a mismatch here ships whatever that default builds — and ships the base options with no configuration merged at all when no default is set.'
+    canonicalFix:
+      'Rename the reference to a declared configuration (a `prod` / `production` mismatch is the usual cause), or add the configuration to the target. Nx does NOT error on an unknown configuration: `create-task-graph.js` silently substitutes `defaultConfiguration`, so a mismatch here ships whatever that default builds — and ships the base options with no configuration merged at all when no default is set.'
   },
   {
     code: 'WORKSPACE_TARGET_REF_PROJECT_MISSING',

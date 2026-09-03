@@ -100,7 +100,9 @@ export async function configureDbxMapboxWorker(inputConfig?: Maybe<DbxMapboxWork
     const available = await isDbxMapboxWorkerAssetAvailable(workerUrl);
 
     if (!available) {
-      console.error(`dbx-web/mapbox: the mapbox-gl web worker asset was not found at "${workerUrl}", so the map will fail to load tiles. Copy it into your app's assets by adding this entry to the build target's "assets" in project.json: { "input": "node_modules/mapbox-gl/dist", "glob": "mapbox-gl-csp-worker.js", "output": "assets/mapbox-gl" }`);
+      console.error(
+        `dbx-web/mapbox: the mapbox-gl web worker asset was not found at "${workerUrl}", so the map will fail to load tiles. Copy it into your app's assets by adding this entry to the build target's "assets" in project.json: { "input": "node_modules/mapbox-gl/dist", "glob": "mapbox-gl-csp-worker.js", "output": "assets/mapbox-gl" }`
+      );
     }
 
     result = { configured: true, workerUrl, available };

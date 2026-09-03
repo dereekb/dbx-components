@@ -1,4 +1,18 @@
 #!/bin/sh
-# https://prettier.io/docs/en/precommit.html
-# run prettier formatter on staged changes
-npx pretty-quick --staged
+# Format staged files with oxfmt (https://oxc.rs/docs/guide/usage/formatter).
+# Replaces the previous `pretty-quick --staged` prettier hook.
+#
+# Only added/copied/modified/renamed paths are considered; deleted paths are
+# skipped so the hook does not resurrect them. Files oxfmt does not handle are
+# filtered out by extension, and anything matched by .oxfmtrc.json's
+# ignorePatterns is skipped by oxfmt itself.
+staged=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(m|c)?[jt]sx?$|\.(json|jsonc|html|css|scss|md|ya?ml)$')
+
+[ -z "$staged" ] && exit 0
+
+# shellcheck disable=SC2086
+echo "$staged" | tr '\n' '\0' | xargs -0 npx --no-install oxfmt --write --no-error-on-unmatched-pattern || exit 1
+
+# Re-stage only the files that were already staged, preserving any unstaged
+# working-tree changes to other files.
+echo "$staged" | tr '\n' '\0' | xargs -0 git add --

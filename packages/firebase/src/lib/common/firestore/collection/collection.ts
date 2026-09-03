@@ -196,7 +196,11 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 export function firestoreModelIdentity<M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName: C): RootFirestoreModelIdentity<M, C>;
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parent: P, modelName: M, collectionName: C): FirestoreModelIdentityWithParent<P, M, C>;
 // @__NO_SIDE_EFFECTS__
-export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, inputCollectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
+export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(
+  parentOrModelName: P | M,
+  collectionNameOrModelName?: M | C,
+  inputCollectionName?: C
+): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
   let result: FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C>;
 
   if (typeof parentOrModelName === 'object') {
@@ -944,13 +948,24 @@ export interface FirestoreModelKeyRef {
  * @template A - The accessor type (limited or full)
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
-  extends FirestoreContextReference, FirestoreModelIdentityRef, QueryLikeReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreQueryFactory<T>, LimitedFirestoreDocumentAccessorFactory<T, D, A>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>, FirestoreCollectionQueryFactory<T, D>, FirestoreCollectionCacheRef<T> {}
+  extends
+    FirestoreContextReference,
+    FirestoreModelIdentityRef,
+    QueryLikeReferenceRef<T>,
+    FirestoreItemPageIterationFactory<T>,
+    FirestoreQueryFactory<T>,
+    LimitedFirestoreDocumentAccessorFactory<T, D, A>,
+    LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, A>,
+    LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, A>,
+    FirestoreCollectionQueryFactory<T, D>,
+    FirestoreCollectionCacheRef<T> {}
 
 // MARK: FirestoreCollection
 /**
  * FirestoreCollection configuration
  */
-export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextReference, FirestoreDrivers, Omit<FirestoreItemPageIterationBaseConfig<T>, 'queryLike'>, Partial<QueryLikeReferenceRef<T>>, FirestoreDocumentAccessorFactoryConfig<T, D>, Partial<FirestoreCollectionCacheConfig> {}
+export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>
+  extends FirestoreContextReference, FirestoreDrivers, Omit<FirestoreItemPageIterationBaseConfig<T>, 'queryLike'>, Partial<QueryLikeReferenceRef<T>>, FirestoreDocumentAccessorFactoryConfig<T, D>, Partial<FirestoreCollectionCacheConfig> {}
 
 /**
  * Full Firestore collection interface with document CRUD, querying, iteration, and context support.
@@ -976,7 +991,8 @@ export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = F
  * @template T - The document data type
  * @template D - The concrete FirestoreDocument subclass
  */
-export interface FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreCollectionLike<T, D, FirestoreDocumentAccessor<T, D>>, CollectionReferenceRef<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {
+export interface FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>
+  extends FirestoreCollectionLike<T, D, FirestoreDocumentAccessor<T, D>>, CollectionReferenceRef<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {
   readonly config: FirestoreCollectionConfig<T, D>;
 }
 

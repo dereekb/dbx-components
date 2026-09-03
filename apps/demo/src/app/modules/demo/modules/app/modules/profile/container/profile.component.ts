@@ -30,7 +30,27 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDis
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
-  imports: [TimeDistancePipe, DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, DbxLoadingComponent, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxFirebaseStorageFileUploadModule, DbxLabelBlockComponent, DbxAvatarComponent, DbxLoadingProgressComponent, DbxFirebaseStorageFileDownloadButtonComponent]
+  imports: [
+    TimeDistancePipe,
+    DbxLoadingProgressComponent,
+    DemoProfileUsernameFormComponent,
+    DemoProfileFormComponent,
+    DbxSectionLayoutModule,
+    DbxActionFormDirective,
+    DbxFormSourceDirective,
+    DbxLoadingComponent,
+    DbxSectionComponent,
+    DemoProfileUsernameFormComponent,
+    DbxButtonModule,
+    DbxActionModule,
+    DbxErrorComponent,
+    DbxActionErrorDirective,
+    DbxFirebaseStorageFileUploadModule,
+    DbxLabelBlockComponent,
+    DbxAvatarComponent,
+    DbxLoadingProgressComponent,
+    DbxFirebaseStorageFileDownloadButtonComponent
+  ]
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly environmentService = inject(DbxAppEnvironmentService);

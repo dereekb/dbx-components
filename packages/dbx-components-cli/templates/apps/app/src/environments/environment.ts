@@ -1,4 +1,4 @@
-import { base, type APP_CODE_PREFIXEnvironment } from "./base";
+import { base, type APP_CODE_PREFIXEnvironment } from './base';
 
 export const environment: APP_CODE_PREFIXEnvironment = {
   ...base,

@@ -15,7 +15,23 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
   templateUrl: './button.component.html',
-  imports: [DbxContentContainerDirective, MatButtonModule, MatFormFieldModule, MatInputModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent]
+  imports: [
+    DbxContentContainerDirective,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxButtonComponent,
+    DbxButtonSpacerDirective,
+    DbxColorDirective,
+    MatIcon,
+    DocFeatureDerivedComponent,
+    DbxProgressSpinnerButtonComponent,
+    DbxProgressBarButtonComponent,
+    DbxContentPitDirective,
+    DbxAnchorComponent
+  ]
 })
 export class DocInteractionButtonComponent {
   private readonly _workingIncreaseSub = cleanSubscription();

@@ -54,7 +54,11 @@ const viewsColumnsCommand: CommandModule = {
 const viewsDeleteCommand: CommandModule = {
   command: 'delete <workspaceId> <viewId>',
   describe: 'Delete a view. This cannot be undone',
-  builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' }).option('dependent-views', { type: 'boolean', default: false, describe: 'Also delete the reports, dashboards and query tables built on this view' }),
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' })
+      .positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' })
+      .option('dependent-views', { type: 'boolean', default: false, describe: 'Also delete the reports, dashboards and query tables built on this view' }),
   handler: async (argv: any) => {
     try {
       const api = getAnalyticsApi(argv);

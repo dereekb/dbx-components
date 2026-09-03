@@ -38,7 +38,11 @@ export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any>
  * @returns The resolved target UID (from request data or auth).
  * @throws {HttpsError} Throws forbidden (403) if the caller is not authorized.
  */
-export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithOptionalAuth<N, I>, requireUid?: boolean, messageOrError?: Maybe<ErrorMessageOrPartialServerError>) {
+export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(
+  request: NestContextCallableRequestWithOptionalAuth<N, I>,
+  requireUid?: boolean,
+  messageOrError?: Maybe<ErrorMessageOrPartialServerError>
+) {
   if (!isAdminOrTargetUserInRequestData(request, requireUid)) {
     throw forbiddenError(messageOrError);
   }

@@ -149,7 +149,7 @@ export function itemAccumulator<O, I, N extends ItemIteration<LoadingState<I>> =
     scanBuildArray((allSuccessfulStates) => {
       const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction<LoadingState<I>, O>(mapItemFunction));
 
-      /* 
+      /*
       Start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
       and subscription to allItems may not have started at the same time.
 

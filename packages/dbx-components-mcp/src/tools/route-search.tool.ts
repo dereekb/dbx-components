@@ -24,7 +24,11 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 // MARK: Tool definition
 const DBX_ROUTE_SEARCH_TOOL: Tool = {
   name: 'dbx_route_search',
-  description: ['Search the UIRouter state tree of a dbx-components app. Matches against state names, full URLs, component class names, resolve keys, and source-file paths. Returns the top 10 results with state name, URL, component, and source location.', '', 'Provide at least one of `sources` / `paths` / `glob` plus a `query`. `scope` narrows to a single axis (`name`, `url`, `component`, `resolve`).'].join('\n'),
+  description: [
+    'Search the UIRouter state tree of a dbx-components app. Matches against state names, full URLs, component class names, resolve keys, and source-file paths. Returns the top 10 results with state name, URL, component, and source location.',
+    '',
+    'Provide at least one of `sources` / `paths` / `glob` plus a `query`. `scope` narrows to a single axis (`name`, `url`, `component`, `resolve`).'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

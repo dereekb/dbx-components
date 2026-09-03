@@ -300,7 +300,27 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
   const examplePattern = relatedExamplePattern(args);
 
   const lines: string[] = [];
-  lines.push(`# Action scaffold — ${args.useCase}`, '', `Trigger: \`${args.trigger}\` · Confirm: \`${args.confirm}\` · Success feedback: \`${args.successFeedback}\` · Context: \`${args.contextProvider}\``, '', '## Template', '', '```html', template, '```', '', '## Component class', '', '```ts', handler, '```', '', '## Imports', '', '```ts');
+  lines.push(
+    `# Action scaffold — ${args.useCase}`,
+    '',
+    `Trigger: \`${args.trigger}\` · Confirm: \`${args.confirm}\` · Success feedback: \`${args.successFeedback}\` · Context: \`${args.contextProvider}\``,
+    '',
+    '## Template',
+    '',
+    '```html',
+    template,
+    '```',
+    '',
+    '## Component class',
+    '',
+    '```ts',
+    handler,
+    '```',
+    '',
+    '## Imports',
+    '',
+    '```ts'
+  );
   for (const line of imports) {
     lines.push(line);
   }

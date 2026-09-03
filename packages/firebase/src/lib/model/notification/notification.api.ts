@@ -467,7 +467,25 @@ export const sendQueuedNotificationsParamsType = /* @__PURE__ */ type({
  */
 export interface SendQueuedNotificationsResult extends Omit<
   SendNotificationResult,
-  'throttled' | 'isNotificationTask' | 'isLoggedEvent' | 'isUniqueNotificationTask' | 'notificationTaskCompletionType' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'
+  | 'throttled'
+  | 'isNotificationTask'
+  | 'isLoggedEvent'
+  | 'isUniqueNotificationTask'
+  | 'notificationTaskCompletionType'
+  | 'uniqueNotificationTaskConflict'
+  | 'isConfiguredTemplateType'
+  | 'isKnownTemplateType'
+  | 'notificationTemplateType'
+  | 'notificationMarkedDone'
+  | 'deletedNotification'
+  | 'createdBox'
+  | 'success'
+  | 'exists'
+  | 'boxExists'
+  | 'notificationBoxNeedsInitialization'
+  | 'tryRun'
+  | 'loadMessageFunctionFailure'
+  | 'buildMessageFailure'
 > {
   readonly excessLoopsDetected: boolean;
   readonly notificationLoopCount: number;

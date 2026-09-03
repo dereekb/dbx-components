@@ -1,6 +1,18 @@
 import { type EmailAddress, type ISO8601DayString, type LatLngPoint, type Maybe, type Minutes, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
 import { type RRuleLineString } from '../rrule/date.rrule.parse';
-import { type ICalendarAlarmAction, type ICalendarAttendeeRole, type ICalendarCalAddress, type ICalendarClassification, type ICalendarEventStatus, type ICalendarMethod, type ICalendarParticipationStatus, type ICalendarProductId, type ICalendarPropertyName, type ICalendarTransparency, type ICalendarUid } from './icalendar';
+import {
+  type ICalendarAlarmAction,
+  type ICalendarAttendeeRole,
+  type ICalendarCalAddress,
+  type ICalendarClassification,
+  type ICalendarEventStatus,
+  type ICalendarMethod,
+  type ICalendarParticipationStatus,
+  type ICalendarProductId,
+  type ICalendarPropertyName,
+  type ICalendarTransparency,
+  type ICalendarUid
+} from './icalendar';
 
 /**
  * A moment in an iCalendar model, discriminated by how it should be serialized.

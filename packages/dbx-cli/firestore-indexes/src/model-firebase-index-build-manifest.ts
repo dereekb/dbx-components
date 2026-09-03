@@ -68,7 +68,15 @@ export interface ModelFirebaseIndexDispatcherSummary {
  * Outcome of one generator run.
  */
 export type BuildModelFirebaseIndexManifestOutcome =
-  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[]; readonly entryFilePathsBySlug: ReadonlyMap<string, string>; readonly dispatcherSummaries: readonly ModelFirebaseIndexDispatcherSummary[] }
+  | {
+      readonly kind: 'success';
+      readonly manifest: ModelFirebaseIndexManifest;
+      readonly outPath: string;
+      readonly scannedFileCount: number;
+      readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[];
+      readonly entryFilePathsBySlug: ReadonlyMap<string, string>;
+      readonly dispatcherSummaries: readonly ModelFirebaseIndexDispatcherSummary[];
+    }
   | { readonly kind: 'no-config'; readonly configPath: string }
   | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string }
   | { readonly kind: 'no-package'; readonly packagePath: string }

@@ -16,7 +16,21 @@ import { publishedGuestbookEntriesQuery } from 'demo-firebase';
 @Component({
   selector: 'app-guestbook-view',
   templateUrl: './guestbook.view.component.html',
-  imports: [AsyncPipe, DbxLoadingModule, DbxContentContainerDirective, DbxTwoBlockComponent, DemoGuestbookEntryDocumentStoreDirective, DbxRouteModelIdFromAuthUserIdDirective, DbxButtonModule, DbxListEmptyContentComponent, DemoGuestbookEntryListComponent, DemoGuestbookEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, MatDividerModule, DemoGuestbookAlbumComponent]
+  imports: [
+    AsyncPipe,
+    DbxLoadingModule,
+    DbxContentContainerDirective,
+    DbxTwoBlockComponent,
+    DemoGuestbookEntryDocumentStoreDirective,
+    DbxRouteModelIdFromAuthUserIdDirective,
+    DbxButtonModule,
+    DbxListEmptyContentComponent,
+    DemoGuestbookEntryListComponent,
+    DemoGuestbookEntryCollectionStoreDirective,
+    DbxFirebaseCollectionListDirective,
+    MatDividerModule,
+    DemoGuestbookAlbumComponent
+  ]
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);

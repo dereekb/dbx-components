@@ -1,7 +1,19 @@
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, type DbxDateTimePickerConfiguration, dbxForgeDateTimeField, dbxForgeDateRangeRow, dbxForgeDateTimeRangeRow, dbxForgeFixedDateRangeField, dbxForgeTimeDurationField, dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import {
+  DbxDateTimeFieldTimeMode,
+  DbxDateTimeValueMode,
+  type DbxDateTimePickerConfiguration,
+  dbxForgeDateTimeField,
+  dbxForgeDateRangeRow,
+  dbxForgeDateTimeRangeRow,
+  dbxForgeFixedDateRangeField,
+  dbxForgeTimeDurationField,
+  dbxForgeTimezoneStringField,
+  DbxFormSourceDirective,
+  DbxFormValueChangeDirective
+} from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, differenceInHours, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, type Observable, combineLatest, delay, interval, map, of } from 'rxjs';
@@ -77,7 +89,12 @@ export class DocFormDateValueComponent {
   readonly forgeDateTimeFieldsConfig: FormConfig = {
     fields: [
       dbxForgeDateTimeField({ label: 'Date Picker', key: 'datePicker', props: { timezone: this.timezone$, allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
-      dbxForgeDateTimeField({ label: 'Day Only W/ String Value', key: 'dayOnlyAsString', hint: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', props: { timezone: this.timezone$, hideDateHint: true, valueMode: DbxDateTimeValueMode.DAY_STRING, hideDatePicker: true } }),
+      dbxForgeDateTimeField({
+        label: 'Day Only W/ String Value',
+        key: 'dayOnlyAsString',
+        hint: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".',
+        props: { timezone: this.timezone$, hideDateHint: true, valueMode: DbxDateTimeValueMode.DAY_STRING, hideDatePicker: true }
+      }),
       dbxForgeDateTimeField({ key: 'date', required: true, hint: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }),
       dbxForgeDateTimeField({ label: 'Date With String Value', key: 'dateAsString', required: true, hint: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING, hideDateHint: true } }),
       dbxForgeDateTimeField({
@@ -148,12 +165,27 @@ export class DocFormDateValueComponent {
         }
       }),
       dbxForgeDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', hint: 'This date field picks a unix timestamp for the system timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, hideDateHint: true } }),
-      dbxForgeDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', hint: 'This date field picks a unix timestamp for a specific timezone.', props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({
+        label: 'Unix Timestamp In New York',
+        key: 'unixTimeStampInNewYork',
+        hint: 'This date field picks a unix timestamp for a specific timezone.',
+        props: { valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, hideDateHint: true, timezone: 'America/New_York' }
+      }),
       dbxForgeDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', hint: 'This date field picks a date and has a locked timezone.', props: { timeMode: DbxDateTimeFieldTimeMode.NONE, timezone: 'Asia/Tokyo' } }),
       dbxForgeDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', hint: 'This date field picks a time and has a locked timezone.', props: { timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
       dbxForgeDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', hint: 'This date field picks a minute of day for the system timezone.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true } }),
-      dbxForgeDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', hint: 'This date field picks a minute of day for America/New_York.', props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
-      dbxForgeDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', hint: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', props: { valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' } }),
+      dbxForgeDateTimeField({
+        label: 'Minute Of Day For New York',
+        key: 'minuteOfDayForNewYork',
+        hint: 'This date field picks a minute of day for America/New_York.',
+        props: { valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' }
+      }),
+      dbxForgeDateTimeField({
+        label: 'System Minute Of Day For New York',
+        key: 'systemMinuteOfDayForNewYork',
+        hint: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.',
+        props: { valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, hideDateHint: true, timezone: 'America/New_York' }
+      }),
       dbxForgeDateTimeField({ label: 'Timezone Day', key: 'timezoneDay', props: { timezone: this.timezone$, valueMode: DbxDateTimeValueMode.DATE_STRING } }),
       dbxForgeDateTimeField({
         key: 'dateWithASchedule',

@@ -122,35 +122,35 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
 @Component({
   selector: 'dbx-anchor, [dbx-anchor]',
   template: `
-  @switch (typeSignal()) {
-    @case ('plain') {
-      <ng-container *ngTemplateOutlet="content"></ng-container>
-    }
-    @case ('clickable') {
-      <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+    @switch (typeSignal()) {
+      @case ('plain') {
         <ng-container *ngTemplateOutlet="content"></ng-container>
-      </a>
+      }
+      @case ('clickable') {
+        <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('sref') {
+        <dbx-injection [config]="srefAnchorConfig">
+          <!-- Injected in child. -->
+        </dbx-injection>
+      }
+      @case ('href') {
+        <a class="dbx-anchor-a dbx-anchor-href" [href]="urlSignal()" [attr.target]="targetSignal()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('disabled') {
+        <a class="dbx-anchor-a dbx-anchor-disabled">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
     }
-    @case ('sref') {
-      <dbx-injection [config]="srefAnchorConfig">
-        <!-- Injected in child. -->
-      </dbx-injection>
-    }
-    @case ('href') {
-      <a class="dbx-anchor-a dbx-anchor-href" [href]="urlSignal()" [attr.target]="targetSignal()">
-        <ng-container *ngTemplateOutlet="content"></ng-container>
-      </a>
-    }
-    @case ('disabled') {
-      <a class="dbx-anchor-a dbx-anchor-disabled">
-        <ng-container *ngTemplateOutlet="content"></ng-container>
-      </a>
-    }
-  }
-  <!-- Template content -->
-  <ng-template #content>
-    <ng-content></ng-content>
-  </ng-template>
+    <!-- Template content -->
+    <ng-template #content>
+      <ng-content></ng-content>
+    </ng-template>
   `,
   standalone: true,
   imports: [NgTemplateOutlet, NgClass, DbxInjectionComponent],
@@ -217,7 +217,6 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
   standalone: true
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
@@ -354,7 +353,6 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
       this._triggerLimit.complete();
     });
   }
-
 }
 
 //// ========== After ==========
@@ -386,7 +384,6 @@ const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
   standalone: true
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
   readonly triggerDebounce = input<Maybe<number>, number>(DEFAULT_DEBOUNCE_MS, { transform: (x) => x ?? DEFAULT_DEBOUNCE_MS });
@@ -490,7 +487,10 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     shareReplay(1)
   );
 
-  readonly isTriggerAllowedToRun$ = this._isTriggerLimited$.pipe(map((x) => x[1]), shareReplay(1));
+  readonly isTriggerAllowedToRun$ = this._isTriggerLimited$.pipe(
+    map((x) => x[1]),
+    shareReplay(1)
+  );
   readonly automaticTrigger$: Observable<void> = this._isTriggerLimited$.pipe(
     filter((x) => x[1]),
     distinctUntilChanged((a, b) => a[0] === b[0]), // Only trigger when the count changes.
@@ -508,7 +508,6 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
       super.ngOnDestroy();
     });
   }
-
 }
 
 //// ───────────────────────────────────────────────────────────────────────────────
@@ -539,14 +538,14 @@ export interface DbxTwoColumnViewState {
 @Component({
   selector: 'dbx-two-column',
   template: `
-  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
-    <div *ngIf="!v.hideLeftColumn && v.reverseSizing" (resized)="onResized($event)"></div>
-    <ng-content select="[left]"></ng-content>
-  </dbx-content-container>
-  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column" *ngIf="v.showRight">
-    <div *ngIf="v.hideLeftColumn || !v.reverseSizing" (resized)="onResized($event)"></div>
-    <ng-content select="[right]"></ng-content>
-  </dbx-content-container>
+    <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
+      <div *ngIf="!v.hideLeftColumn && v.reverseSizing" (resized)="onResized($event)"></div>
+      <ng-content select="[left]"></ng-content>
+    </dbx-content-container>
+    <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column" *ngIf="v.showRight">
+      <div *ngIf="v.hideLeftColumn || !v.reverseSizing" (resized)="onResized($event)"></div>
+      <ng-content select="[right]"></ng-content>
+    </dbx-content-container>
   `,
   exportAs: 'columns',
   host: {
@@ -640,32 +639,31 @@ export interface DbxTwoColumnViewState {
 @Component({
   selector: 'dbx-two-column',
   template: `
-  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
-    @if (viewSignal().hideLeftColumn || !viewSignal().reverseSizing) {
-      <div (resized)="viewResized($event)"></div>
-    }
-    <ng-content select="[left]"></ng-content>
-  </dbx-content-container>
-  @if (viewSignal().showRight) {
-    <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column">
+    <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
       @if (viewSignal().hideLeftColumn || !viewSignal().reverseSizing) {
         <div (resized)="viewResized($event)"></div>
       }
-      <ng-content select="[right]"></ng-content>
+      <ng-content select="[left]"></ng-content>
     </dbx-content-container>
-  }
+    @if (viewSignal().showRight) {
+      <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column">
+        @if (viewSignal().hideLeftColumn || !viewSignal().reverseSizing) {
+          <div (resized)="viewResized($event)"></div>
+        }
+        <ng-content select="[right]"></ng-content>
+      </dbx-content-container>
+    }
   `,
   exportAs: 'columns',
   host: {
     class: 'dbx-two-column',
-    '[class]': "cssClassSignal()"
+    '[class]': 'cssClassSignal()'
   },
   imports: [AngularResizeEventModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private readonly _elementRef = inject(ElementRef);
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
@@ -687,23 +685,21 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   ngOnInit(): void {
     this.twoColumnsContextStore.setReverseSizing(toObservable(this.reverseSizing));
-    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this.reverseSizing$, toObservable(this.inSectionPage)])
-      .subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
-        this.viewSignal.set({
-          showRight,
-          showFullLeft,
-          hideLeftColumn,
-          reverseSizing,
-          inSectionPage
-        });
+    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this.reverseSizing$, toObservable(this.inSectionPage)]).subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
+      this.viewSignal.set({
+        showRight,
+        showFullLeft,
+        hideLeftColumn,
+        reverseSizing,
+        inSectionPage
       });
+    });
   }
 
   onResized(event: ResizedEvent): void {
     const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;
     this.twoColumnsContextStore.setTotalWidth(totalWidth);
   }
-
 }
 
 //// ───────────────────────────────────────────────────────────────────────────────
@@ -724,28 +720,28 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-two-column-right',
   template: `
-  <dbx-two-column-head [block]="block" [full]="full">
-    <!-- Back Buttons -->
-    <ng-container *ngIf="showBack$ | async">
-      <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
-        <mat-icon>navigate_before</mat-icon>
-      </button>
-    </ng-container>
-    <ng-container *ngIf="ref$ | async">
-      <dbx-anchor [anchor]="ref$ | async">
-        <button mat-icon-button class="back-button" aria-label="back button">
+    <dbx-two-column-head [block]="block" [full]="full">
+      <!-- Back Buttons -->
+      <ng-container *ngIf="showBack$ | async">
+        <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
           <mat-icon>navigate_before</mat-icon>
         </button>
-      </dbx-anchor>
-    </ng-container>
-    <span *ngIf="header" class="right-nav-title">{{ header }}</span>
-    <span class="right-nav-spacer"></span>
-    <span class="spacer"></span>
-    <ng-content select="[nav]"></ng-content>
-  </dbx-two-column-head>
-  <div class="dbx-two-column-right-content">
-    <ng-content></ng-content>
-  </div>
+      </ng-container>
+      <ng-container *ngIf="ref$ | async">
+        <dbx-anchor [anchor]="ref$ | async">
+          <button mat-icon-button class="back-button" aria-label="back button">
+            <mat-icon>navigate_before</mat-icon>
+          </button>
+        </dbx-anchor>
+      </ng-container>
+      <span *ngIf="header" class="right-nav-title">{{ header }}</span>
+      <span class="right-nav-spacer"></span>
+      <span class="spacer"></span>
+      <ng-content select="[nav]"></ng-content>
+    </dbx-two-column-head>
+    <div class="dbx-two-column-right-content">
+      <ng-content></ng-content>
+    </div>
   `,
   host: {
     class: 'dbx-two-column-right d-block'
@@ -826,30 +822,30 @@ import { DbxAnchorComponent } from '../../../router';
 @Component({
   selector: 'dbx-two-column-right',
   template: `
-  <dbx-two-column-head [block]="block()" [full]="full()">
-    <!-- Back Buttons -->
-    @if (showBackSignal()) {
-      <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
-        <mat-icon>navigate_before</mat-icon>
-      </button>
-    }
-    @if (refSignal()) {
-      <dbx-anchor [anchor]="refSignal()">
-        <button mat-icon-button class="back-button" aria-label="back button">
+    <dbx-two-column-head [block]="block()" [full]="full()">
+      <!-- Back Buttons -->
+      @if (showBackSignal()) {
+        <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
           <mat-icon>navigate_before</mat-icon>
         </button>
-      </dbx-anchor>
-    }
-    @if (header()) {
-      <span class="right-nav-title">{{ header() }}</span>
-    }
-    <span class="right-nav-spacer"></span>
-    <span class="spacer"></span>
-    <ng-content select="[nav]"></ng-content>
-  </dbx-two-column-head>
-  <div class="dbx-two-column-right-content">
-    <ng-content></ng-content>
-  </div>
+      }
+      @if (refSignal()) {
+        <dbx-anchor [anchor]="refSignal()">
+          <button mat-icon-button class="back-button" aria-label="back button">
+            <mat-icon>navigate_before</mat-icon>
+          </button>
+        </dbx-anchor>
+      }
+      @if (header()) {
+        <span class="right-nav-title">{{ header() }}</span>
+      }
+      <span class="right-nav-spacer"></span>
+      <span class="spacer"></span>
+      <ng-content select="[nav]"></ng-content>
+    </dbx-two-column-head>
+    <div class="dbx-two-column-right-content">
+      <ng-content></ng-content>
+    </div>
   `,
   host: {
     class: 'dbx-two-column-right d-block'
@@ -859,7 +855,6 @@ import { DbxAnchorComponent } from '../../../router';
   standalone: true
 })
 export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
-
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
   readonly full = input<boolean>(false);
@@ -899,7 +894,6 @@ export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
   public backClicked(): void {
     this.twoColumnsContextStore.back();
   }
-
 }
 
 //// ───────────────────────────────────────────────────────────────────────────────
@@ -1038,7 +1032,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   providers: provideDbxButton(DbxButtonDirective),
   standalone: true
 })
-export class DbxButtonDirective extends AbstractDbxButtonDirective { }
+export class DbxButtonDirective extends AbstractDbxButtonDirective {}
 
 //// ========== After =========
 import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
@@ -1053,7 +1047,6 @@ import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive()
 export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
-
   /**
    * Pre-interceptor button click.
    */
@@ -1094,18 +1087,20 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   ngOnInit(): void {
     this.sub = this._buttonClick
-      .pipe(switchMap(() =>
-        this._buttonInterceptor.pipe(
-          switchMap((x) => {
-            if (x) {
-              return x.interceptButtonClick().pipe(first());
-            } else {
-              return of(true);
-            }
-          }),
-          filter((x) => Boolean(x)) // Ignore false values.
+      .pipe(
+        switchMap(() =>
+          this._buttonInterceptor.pipe(
+            switchMap((x) => {
+              if (x) {
+                return x.interceptButtonClick().pipe(first());
+              } else {
+                return of(true);
+              }
+            }),
+            filter((x) => Boolean(x)) // Ignore false values.
+          )
         )
-      ))
+      )
       .subscribe(() => {
         this._forceButtonClicked();
       });
@@ -1151,7 +1146,6 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   protected _forceButtonClicked(): void {
     this.buttonClick.emit();
   }
-
 }
 
 // MARK: Implementation
@@ -1164,8 +1158,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   providers: provideDbxButton(DbxButtonDirective),
   standalone: true
 })
-export class DbxButtonDirective extends AbstractDbxButtonDirective { }
-
+export class DbxButtonDirective extends AbstractDbxButtonDirective {}
 
 //// ───────────────────────────────────────────────────────────────────────────────
 //// DbxLoadingComponent
@@ -1387,4 +1380,3 @@ export class DbxLoadingComponent {
     this._contextOverrideSignal.set(context);
   }
 }
-

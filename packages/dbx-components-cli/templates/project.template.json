@@ -23,10 +23,16 @@
         "command": "./start-release.sh"
       }
     },
-    "prettier": {
+    "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./start-release.sh"
+        "command": "npx oxfmt --write ."
+      }
+    },
+    "format-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx oxfmt --check ."
       }
     },
     "release-dry-run": {
