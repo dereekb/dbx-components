@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injectable, inject, signal, computed } from '@angular/core';
+import { Component, Injectable, inject, signal, computed } from '@angular/core';
 import { type DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
 import { type MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY, MatDatepickerModule } from '@angular/material/datepicker';
@@ -75,8 +75,6 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
       useClass: DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy
     }
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [MatDatepickerModule, ReactiveFormsModule, MatButtonModule]
 })
 export class DbxTableDateRangeDayDistanceInputCellInputComponent {

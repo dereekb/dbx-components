@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnInit, Component, inject } from '@angular/core';
+import { type OnInit, Component, inject } from '@angular/core';
 import { type WorkUsingContext, type IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import {
   DbxFirebaseAuthService,
@@ -16,7 +16,7 @@ import {
 } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
-import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { ProfileResumeState, USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -30,30 +30,7 @@ import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDis
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
-  imports: [
-    TimeDistancePipe,
-    DbxLoadingProgressComponent,
-    DemoProfileUsernameFormComponent,
-    DemoProfileFormComponent,
-    DbxSectionLayoutModule,
-    DbxActionFormDirective,
-    DbxFormSourceDirective,
-    DbxLoadingComponent,
-    DbxContentBoxDirective,
-    DbxSectionComponent,
-    DemoProfileUsernameFormComponent,
-    DbxButtonModule,
-    DbxActionModule,
-    DbxErrorComponent,
-    DbxActionErrorDirective,
-    DbxFirebaseStorageFileUploadModule,
-    DbxLabelBlockComponent,
-    DbxAvatarComponent,
-    DbxLoadingProgressComponent,
-    DbxFirebaseStorageFileDownloadButtonComponent
-  ],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [TimeDistancePipe, DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, DbxLoadingComponent, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxFirebaseStorageFileUploadModule, DbxLabelBlockComponent, DbxAvatarComponent, DbxLoadingProgressComponent, DbxFirebaseStorageFileDownloadButtonComponent]
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly environmentService = inject(DbxAppEnvironmentService);

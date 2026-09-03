@@ -59,9 +59,11 @@ export const formSpaceIdentity = firestoreModelIdentity('formSpace', 'fsp');
 /**
  * Lifecycle state of a {@link FormSpace}.
  *
- * Only DRAFT is editable. The other three are terminal for the owner: SUBMITTED is awaiting or undergoing
- * processing, EXPIRED was retired by the sweep before it was ever submitted, and ARCHIVED is a space kept
- * for the record after its processing concluded.
+ * Only DRAFT is editable. SUBMITTED is awaiting or undergoing processing, and is the one state a space can
+ * come BACK from: a type declaring a reopen policy lets a caller holding the `reopen` role return the space
+ * to DRAFT until it is fully locked. EXPIRED (retired by the sweep before it was ever submitted) and
+ * ARCHIVED (kept for the record after processing concluded) stay terminal — {@link isFormSpaceReopenable}
+ * requires SUBMITTED, so neither is reachable by a reopen.
  */
 export enum FormSpaceState {
   DRAFT = 0,
@@ -344,11 +346,25 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
    */
   uat: Date;
   /**
-   * The date the space was submitted, if it was. Its presence IS the lock.
+   * The date the CURRENT submission was made, if the space is submitted. Its presence IS the lock.
+   *
+   * Cleared by a reopen, which is what hands the space back as an editable draft, so it always describes
+   * the submission in force NOW rather than the history. `fsat` is what remembers the first one.
    *
    * @dbxModelVariable submittedAt
    */
   sat?: Maybe<Date>;
+  /**
+   * The date the space was FIRST submitted, if it ever was.
+   *
+   * Never cleared. Since a reopen clears `sat`, without this the fact that the space was submitted at all —
+   * and when — would be destroyed by the first reopen. It is also the anchor
+   * {@link resolveFormSpaceLocksAt} measures the type's `reopenableUntil` from, which is what stops a
+   * reopen/resubmit round from walking the lock deadline forward.
+   *
+   * @dbxModelVariable firstSubmittedAt
+   */
+  fsat?: Maybe<Date>;
   /**
    * The date processing of the submission concluded, if it has.
    *
@@ -365,6 +381,54 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
    * @dbxModelVariable expiresAt
    */
   eat?: Maybe<Date>;
+  /**
+   * The date reopening stops being possible — the instant the submission becomes FULLY LOCKED.
+   *
+   * Written once, on the first submit, as `fsat + reopenableUntil`, and never moved afterwards; an explicit
+   * lock sets it to that moment instead. Absent means there is no CEILING, not that the space is locked:
+   * the type's `reopenableFor` is the master switch, and a type declaring neither is simply never
+   * reopenable. The same "an absent field is an absent gate" convention `eat` uses.
+   *
+   * Stored as an ISO8601 string like every other date here, which means `firestore.rules` CANNOT compare it
+   * against `request.time` — rules convert only bool/int/float/null to a string, never a timestamp. A
+   * downstream app that needs the lock predicate inside its OWN rules has to denormalize a unix-seconds
+   * mirror onto its own model and compare that. Reading this field over a callable, or over the `get` the
+   * rules already grant, needs no mirror at all.
+   *
+   * @dbxModelVariable locksAt
+   */
+  lat?: Maybe<Date>;
+  /**
+   * The user who locked the submission early, when a caller did rather than the deadline passing.
+   *
+   * @dbxModelVariable lockedBy
+   */
+  lby?: Maybe<FirebaseAuthUserId>;
+  /**
+   * Monotonic count of times this space has been REOPENED after a submission.
+   *
+   * Doubles as the submission-attempt generation. The submission task is keyed by it, so a resubmit gets a
+   * fresh task instead of colliding with the finished one, and a task still carrying a stale count is
+   * fenced off rather than clobbering the attempt in force.
+   *
+   * Monotonic for the same reason `uc` is: it counts rounds that happened, and a counter something can
+   * rewind is not a bound. Capped by the type's `maxReopens`.
+   *
+   * @dbxModelVariable reopenCount
+   */
+  rc: number;
+  /**
+   * The date the space was last reopened, if it ever was.
+   *
+   * @dbxModelVariable reopenedAt
+   */
+  rat?: Maybe<Date>;
+  /**
+   * The user who last reopened the space.
+   *
+   * @dbxModelVariable reopenedBy
+   */
+  rby?: Maybe<FirebaseAuthUserId>;
 }
 
 /**
@@ -384,8 +448,15 @@ export interface FormSpace<T extends FormSpaceData = FormSpaceData> {
  * context to build a role map from — so `uploadFile` is the DECLARATION of who may contribute, and
  * `FormSpaceUploadAuthorizationDelegate` is where the same app policy is actually applied. Grant them
  * together, to the same people.
+ *
+ * `reopen` and `lock` are the two halves of undoing that door, and are separate from each other as much as
+ * from `submit`. `reopen` returns a submitted space to DRAFT; WHETHER it may be reopened at all is the
+ * type's own policy, re-asserted inside the action's transaction, so the role only says who is allowed to
+ * ask. `lock` goes the other way and ends the reopen window early — in a two-party flow that is a
+ * privilege the party who submitted should not automatically hold over the party reviewing, which is
+ * exactly why it is not folded into `reopen`.
  */
-export type FormSpaceRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole | 'submit' | 'uploadFile' | 'removeFile';
+export type FormSpaceRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole | 'submit' | 'uploadFile' | 'removeFile' | 'reopen' | 'lock';
 
 /**
  * Firestore document wrapper for a {@link FormSpace}.
@@ -421,8 +492,14 @@ export const formSpaceConverter = snapshotConverterFunctions<FormSpace>({
     cat: firestoreDate({ saveDefaultAsNow: true }),
     uat: firestoreDate({ saveDefaultAsNow: true }),
     sat: optionalFirestoreDate(),
+    fsat: optionalFirestoreDate(),
     cpat: optionalFirestoreDate(),
-    eat: optionalFirestoreDate()
+    eat: optionalFirestoreDate(),
+    lat: optionalFirestoreDate(),
+    lby: optionalFirestoreUID(),
+    rc: firestoreNumber({ default: 0 }),
+    rat: optionalFirestoreDate(),
+    rby: optionalFirestoreUID()
   }
 });
 

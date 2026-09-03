@@ -1,6 +1,6 @@
 import { type HandlerBindAccessor, type HandlerMappedSetFunction, type Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import type Stripe from 'stripe';
-import '../stripe.type';
+import { type Stripe } from 'stripe';
+import { type StripeTypedEventDataObject } from '../stripe.type';
 
 export enum StripeWebhookEventType {
   CUSTOMER_SUBSCRIPTION_TRIAL_WILL_END = 'customer.subscription.trial_will_end',
@@ -30,7 +30,7 @@ export interface StripeWebhookEvent<T> {
   /**
    * The relevant data associated with this type of event.
    */
-  readonly data: Stripe.TypedEventDataObject<T>;
+  readonly data: StripeTypedEventDataObject<T>;
 }
 
 /**
@@ -61,9 +61,9 @@ export function stripeWebhookEventMapper<T>(mapFn: (object: Stripe.Event.Data.Ob
   });
 }
 
-export type StripeCheckoutSessionEventDataObject = Stripe.TypedEventDataObject<Stripe.Checkout.Session>;
-export type StripeCustomerSubscriptionEventDataObject = Stripe.TypedEventDataObject<Stripe.Subscription>;
-export type StripeSubscriptionScheduleEventDataObject = Stripe.TypedEventDataObject<Stripe.SubscriptionSchedule>;
+export type StripeCheckoutSessionEventDataObject = StripeTypedEventDataObject<Stripe.Checkout.Session>;
+export type StripeCustomerSubscriptionEventDataObject = StripeTypedEventDataObject<Stripe.Subscription>;
+export type StripeSubscriptionScheduleEventDataObject = StripeTypedEventDataObject<Stripe.SubscriptionSchedule>;
 
 // MARK: Handler
 export type StripeEventHandler = Handler<Stripe.Event, string>;

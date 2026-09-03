@@ -46,8 +46,7 @@ export interface DbxPdfMergeUploadButtonConfig {
  * ```
  */
 @Directive({
-  selector: '[dbxPdfMergeUploadButton]',
-  standalone: true
+  selector: '[dbxPdfMergeUploadButton]'
 })
 export class DbxPdfMergeUploadButtonDirective {
   readonly button = inject(DbxButton, { host: true });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import { oidcEntryClientForgeFormFields, type OidcEntryClientFormFieldsConfig } from './oidcentry.forge.form';
 import { type CreateOidcClientParams, type UpdateOidcClientFieldParams } from '@dereekb/firebase';
@@ -31,9 +31,7 @@ export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClient
   selector: 'dbx-firebase-oidc-client-forge-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseOidcModelClientFormValue, DbxFirebaseOidcEntryClientFormComponentConfig> {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);

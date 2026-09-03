@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentContainerDirective, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseOidcEntryClientCreateComponent } from '@dereekb/dbx-firebase/oidc';
 import { type CreateOidcClientResult } from '@dereekb/firebase';
@@ -7,9 +7,7 @@ import { DbxRouterService } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './list.create.component.html',
-  imports: [DbxTwoColumnRightComponent, DbxFirebaseOidcEntryClientCreateComponent, DbxContentContainerDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxTwoColumnRightComponent, DbxFirebaseOidcEntryClientCreateComponent, DbxContentContainerDirective]
 })
 export class DemoAppOidcClientCreatePageComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

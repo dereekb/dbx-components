@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, viewChild, inject } from '@angular/core';
+import { Component, viewChild, inject } from '@angular/core';
 
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map, delay, Subject, BehaviorSubject, filter } from 'rxjs';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
+import { waitForMs } from '@dereekb/util';
 import { provideDbxForgeFormFieldDeclarations } from '../forge.providers';
 import { provideDbxFormConfiguration } from '../../form.providers';
 import { DbxForgeFormComponent } from './forge.component';
@@ -21,10 +22,8 @@ import { dbxForgeTextField } from '../field/value/text/text.field';
       <dbx-forge dbxActionForm [dbxFormSource]="source$ ?? undefined" [dbxActionFormDisabledOnWorking]="disabledOnWorking"></dbx-forge>
     </div>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent, DbxActionFormDirective, DbxFormSourceDirective, DbxCoreActionModule, DbxActionHandlerDirective],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestForgeActionHostComponent {
   readonly context = inject(DbxForgeFormContext);
@@ -41,11 +40,16 @@ const TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormCo
 /**
  * Settles the fixture by running change detection and waiting for stability.
  *
- * No extra delay needed here — the action directive's subscription chains
- * (triggered$, isWorking$, stream$) resolve within a single whenStable() cycle
- * because they operate on BehaviorSubjects that emit synchronously.
+ * A second change-detection cycle behind a short delay is required because
+ * `withMaterialFields()` resolves its field components through dynamic
+ * `import()`s, so the fields are not rendered until those lazy chunks land —
+ * one `whenStable()` only covers the action directive's own subscription
+ * chains (triggered$, isWorking$, stream$), not the field loading behind them.
  */
 async function settle(fixture: ComponentFixture<any>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  await waitForMs(50);
   fixture.detectChanges();
   await fixture.whenStable();
 }

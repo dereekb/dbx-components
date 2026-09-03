@@ -1,1 +1,1 @@
-import '@dereekb/vitest/setup-firebase';
+import './packages/vitest/src/setup-firebase';

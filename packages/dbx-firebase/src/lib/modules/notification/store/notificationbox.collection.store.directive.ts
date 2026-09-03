@@ -8,8 +8,7 @@ import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreD
  */
 @Directive({
   selector: '[dbxFirebaseNotificationBoxCollection]',
-  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseNotificationBoxCollectionStoreDirective, NotificationBoxCollectionStore),
-  standalone: true
+  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseNotificationBoxCollectionStoreDirective, NotificationBoxCollectionStore)
 })
 export class DbxFirebaseNotificationBoxCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<NotificationBox, NotificationBoxDocument, NotificationBoxCollectionStore> {
   constructor() {

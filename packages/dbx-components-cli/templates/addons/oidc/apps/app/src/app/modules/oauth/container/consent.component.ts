@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxOAuthConsentComponent } from '@dereekb/dbx-firebase/oidc';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 
@@ -13,8 +13,6 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
       <dbx-firebase-oauth-consent></dbx-firebase-oauth-consent>
     </dbx-content-box>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxOAuthConsentComponent]
 })
 export class APP_CODE_PREFIXOAuthConsentComponent {}

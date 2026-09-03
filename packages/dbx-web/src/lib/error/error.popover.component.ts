@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef } from '@angular/core';
+import { Component, type ElementRef } from '@angular/core';
 import { type ReadableError } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../interaction/popover/abstract.popover.directive';
 import { type DbxPopoverKey } from '../interaction/popover/popover';
@@ -48,9 +48,7 @@ export interface DbxErrorPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent]
 })
 export class DbxErrorPopoverComponent extends AbstractPopoverDirective<void, ReadableError> {
   readonly error = this.popover.data as ReadableError;

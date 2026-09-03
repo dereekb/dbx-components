@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DemoAuthLoginViewComponent } from './login.view.component';
 
@@ -8,8 +8,6 @@ import { DemoAuthLoginViewComponent } from './login.view.component';
       <app-login-view></app-login-view>
     </dbx-content-box>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective, DemoAuthLoginViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DemoAuthLoginViewComponent]
 })
 export class DemoAuthLoginComponent {}

@@ -3,19 +3,19 @@ import { startWith, map, shareReplay, skipWhile, distinctUntilChanged, filter, f
 import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue, timeoutStartWith } from '../rxjs';
 import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef, type GetterOrValue, asGetter, performTaskLoop, type MapFunction, type PromiseOrValue, asPromise, type PageNumber, type Page } from '@dereekb/util';
 import { type ItemIteration, type PageItemIteration } from './iteration';
-import { type LoadingState, isLoadingStateWithError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
+import { type LoadingState, type PageLoadingState, isLoadingStateWithError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
 /**
  * Function that maps loaded values from their raw iteration type to the accumulator's output type.
  */
-export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
+export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<LoadingState<I>, O>;
 
 /**
  * Accumulates values from an {@link ItemIteration} into a growing collection,
  * optionally mapping each value through a transform function.
  */
-export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> {
+export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>> {
   /**
    * Iteration being accumulated.
    */
@@ -54,17 +54,17 @@ export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<I> = It
 /**
  * An object that accumulates and exposes values from a PageItemIteration.
  */
-export type PageItemAccumulator<O, I = unknown, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<O, I, N>;
+export type PageItemAccumulator<O, I = unknown, N extends PageItemIteration<PageLoadingState<I>> = PageItemIteration<PageLoadingState<I>>> = ItemAccumulator<O, I, N>;
 
 /**
  * An accumulator with no mapping.
  */
-export type MonotypeItemAccumulator<I, N extends ItemIteration<I> = ItemIteration<I>> = ItemAccumulator<I, I, N>;
+export type MonotypeItemAccumulator<I, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>> = ItemAccumulator<I, I, N>;
 
 /**
  * A page accumulator with no mapping.
  */
-export type MonotypePageItemAccumulator<I, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<I, I, N>;
+export type MonotypePageItemAccumulator<I, N extends PageItemIteration<PageLoadingState<I>> = PageItemIteration<PageLoadingState<I>>> = ItemAccumulator<I, I, N>;
 
 /**
  * Value of an item accumulator.
@@ -75,7 +75,7 @@ export interface ItemAccumulatorValuePair<O, I = unknown> extends MapFunctionOut
  * Concrete accumulator instance with additional observables for tracking load progress
  * and successful states.
  */
-export interface ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> extends ItemAccumulator<O, I, N>, Destroyable {
+export interface ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>> extends ItemAccumulator<O, I, N>, Destroyable {
   /**
    * Emits `true` once the first load has completed.
    */
@@ -105,10 +105,11 @@ export interface ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration
  * @param inputMapItem - optional function to transform raw values into the desired output type
  * @returns accumulator instance with observables for all collected items
  */
-export function itemAccumulator<I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
-export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
-export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N, inputMapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
-  const mapItemFunction = inputMapItem ?? ((a: I) => a as unknown as O);
+export function itemAccumulator<I, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
+export function itemAccumulator<O, I, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
+
+export function itemAccumulator<O, I, N extends ItemIteration<LoadingState<I>> = ItemIteration<LoadingState<I>>>(itemIteration: N, inputMapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
+  const mapItemFunction: ItemAccumulatorMapFunction<O, I> = inputMapItem ?? ((a: I) => a as unknown as O);
 
   const hasCompletedInitialLoad$: Observable<boolean> = itemIteration.firstState$.pipe(
     map(() => true),
@@ -146,7 +147,7 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
   // MARK: ItemAccumulator
   const currentAllItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = _allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
-      const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction(mapItemFunction));
+      const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction<LoadingState<I>, O>(mapItemFunction));
 
       /* 
       Start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
@@ -214,7 +215,7 @@ export interface ItemAccumulatorNextPageUntilResultsCountConfig<O> {
   /**
    * The accumulator whose iteration will be advanced.
    */
-  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>;
+  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<PageLoadingState<any>>>;
   /**
    * Target number of results to accumulate before stopping.
    */

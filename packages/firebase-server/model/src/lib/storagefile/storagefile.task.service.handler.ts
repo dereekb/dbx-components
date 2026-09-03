@@ -37,7 +37,7 @@ import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/n
 import { cachedGetter, documentFileExtensionForMimeType, MAP_IDENTITY, MS_IN_HOUR, performAsyncTasks, type PromiseOrValue, pushArrayItemsIntoArray, slashPathDetails, useCallback, ZIP_FILE_MIME_TYPE, type Maybe } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, type StorageFileQueueForDeleteTime } from './storagefile.util';
 import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, notificationTaskSubTaskMissingRequiredDataTermination, type NotificationTaskSubtaskNotificationTaskHandlerConfig, notificationTaskSubtaskNotificationTaskHandlerFactory, type NotificationTaskSubtaskProcessorConfig, type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
-import archiver from 'archiver';
+import { ZipArchive, type Archiver, type ArchiverOptions } from 'archiver';
 
 /**
  * Input for a purpose-specific storage file processing subtask.
@@ -296,10 +296,10 @@ export interface StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput 
   readonly storageFileGroup: StorageFileGroup;
 }
 
-export type StorageFileGroupStorageFileZipConfigureZipArchiverOptionsFunction = (input: StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput) => PromiseOrValue<archiver.ArchiverOptions>;
+export type StorageFileGroupStorageFileZipConfigureZipArchiverOptionsFunction = (input: StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput) => PromiseOrValue<ArchiverOptions>;
 
 export interface StorageFileGroupStorageFileZipFinalizeArchiveInput extends StorageFileGroupStorageFileZipConfigureZipArchiverOptionsInput {
-  readonly archive: archiver.Archiver;
+  readonly archive: Archiver;
 }
 
 export type StorageFileGroupStorageFileZipFinalizeArchiveFunction = (input: StorageFileGroupStorageFileZipFinalizeArchiveInput) => Promise<void>;
@@ -416,7 +416,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 
                 const startedAt = new Date();
                 const archiverOptions = await configureZipArchiverOptions({ input, storageFileGroup });
-                const newArchive = archiver('zip', archiverOptions);
+                const newArchive = new ZipArchive(archiverOptions);
 
                 // pipe the archive to the upload stream
                 newArchive.pipe(uploadStream, { end: true });

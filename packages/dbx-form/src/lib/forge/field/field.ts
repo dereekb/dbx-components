@@ -14,16 +14,6 @@ export type DbxForgeFieldHintValueRef<T> = {
 };
 
 /**
- * A field config that includes an optional hint and description variable.
- */
-export type DbxForgeFieldHintOrDescriptionValueRef<T> = DbxForgeFieldHintValueRef<T> & {
-  /**
-   * @deprecated use hint instead.
-   */
-  description?: T;
-};
-
-/**
  * A field config that includes an optional logic variable.
  */
 export type DbxForgeFieldLogicValueRef<T> = {
@@ -40,7 +30,7 @@ type _DbxForgeFieldFunctionDef<F extends FieldDef<any>> =
   F extends FieldDef<infer TProps, infer _TMeta>
     ? // If the props includes hint,
       TProps extends DbxForgeFieldHintValueRef<infer T>
-      ? Pick<F, 'key'> & Partial<Omit<F, 'key' | 'type'>> & DbxForgeFieldHintOrDescriptionValueRef<T>
+      ? Pick<F, 'key'> & Partial<Omit<F, 'key' | 'type'>> & DbxForgeFieldHintValueRef<T>
       : Pick<F, 'key'> & Partial<Omit<F, 'key' | 'type'>>
     : never;
 
@@ -309,15 +299,15 @@ type DbxForgeFieldLogicWithFn<T> =
   // Branch 1: sync function derivation (has required functionName)
   T extends { type: 'derivation'; functionName: string }
     ? // Allow the original type with an optional fn alongside the required functionName
-        | (Omit<T, 'dependsOn'> & { fn?: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
-        // Or: when fn is provided, make functionName optional (builder auto-generates a name)
-        | (Omit<T, 'functionName' | 'dependsOn'> & { functionName?: string; fn: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
+      | (Omit<T, 'dependsOn'> & { fn?: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
+      // Or: when fn is provided, make functionName optional (builder auto-generates a name)
+      | (Omit<T, 'functionName' | 'dependsOn'> & { functionName?: string; fn: DbxForgeFieldLogicFn } & DbxForgeFieldLogicExtras)
     : // Branch 2: async function derivation (has source: 'asyncFunction' + required asyncFunctionName)
       T extends { type: 'derivation'; source: 'asyncFunction'; asyncFunctionName: string }
       ? // Allow the original type with an optional async fn alongside the required asyncFunctionName
-          | (T & { fn?: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
-          // Or: when fn is provided, make asyncFunctionName optional (builder auto-generates a name)
-          | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; fn: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
+        | (T & { fn?: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
+        // Or: when fn is provided, make asyncFunctionName optional (builder auto-generates a name)
+        | (Omit<T, 'asyncFunctionName' | 'dependsOn'> & { asyncFunctionName?: string; fn: DbxForgeFieldLogicAsyncFn } & DbxForgeFieldLogicExtras)
       : // Branch 3: all other logic types (state, expression, value, http) — pass through unchanged
         T;
 
@@ -1126,10 +1116,10 @@ export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDe
 }
 
 /**
- * Creates a {@link DbxForgeFieldFunctionConfigPropsBuilder} that automatically copies `hint` (or the deprecated `description`)
+ * Creates a {@link DbxForgeFieldFunctionConfigPropsBuilder} that automatically copies `hint`
  * from the top-level field config into `props.hint`.
  *
- * Historically hint/description lived at the base config level. In `@ng-forge/dynamic-forms` hints are
+ * Historically the hint lived at the base config level. In `@ng-forge/dynamic-forms` hints are
  * expected under `props`, so this builder bridges that gap.
  *
  * @param makeProps - Optional delegate that produces additional props; its result is merged before the hint is applied.
@@ -1143,15 +1133,12 @@ export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDe
  * });
  * ```
  */
-export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxForgeFieldFunctionDef<any> & DbxForgeFieldHintOrDescriptionValueRef<any>>(makeProps?: DbxForgeFieldFunctionConfigPropsBuilder<C>): DbxForgeFieldFunctionConfigPropsBuilder<C> {
+export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxForgeFieldFunctionDef<any> & DbxForgeFieldHintValueRef<any>>(makeProps?: DbxForgeFieldFunctionConfigPropsBuilder<C>): DbxForgeFieldFunctionConfigPropsBuilder<C> {
   return (input: C) => {
     const props: Partial<C['props']> = makeProps?.(input) ?? {};
 
     if ('hint' in input) {
       (props as DbxForgeFieldHintValueRef<any>).hint = input.hint;
-    } else if ('description' in input) {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- intentionally accepts the deprecated `description` input as a fallback for `hint`
-      (props as DbxForgeFieldHintValueRef<any>).hint = input.description;
     }
 
     return props;

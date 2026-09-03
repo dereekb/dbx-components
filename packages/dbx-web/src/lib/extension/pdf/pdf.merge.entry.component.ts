@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import type { Maybe } from '@dereekb/util';
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
@@ -60,9 +60,7 @@ const ERROR_ICON = 'error';
     '[class.dbx-pdf-merge-entry--ignored]': 'isIgnoredSignal()',
     '[class.dbx-pdf-merge-entry--encrypted]': 'isEncryptedSignal()'
   },
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective]
 })
 export class DbxPdfMergeEntryComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

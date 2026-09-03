@@ -8,8 +8,7 @@ import { DbxFirebaseNotificationItemContentComponent } from './notificationitem.
 @Component({
   selector: 'dbx-firebase-notificationitem-view-default',
   template: '<dbx-firebase-notificationitem-content [subject]="subject" [message]="message" [date]="date"></dbx-firebase-notificationitem-content>',
-  imports: [DbxFirebaseNotificationItemContentComponent],
-  standalone: true
+  imports: [DbxFirebaseNotificationItemContentComponent]
 })
 export class DbxFirebaseNotificationItemDefaultViewComponent extends AbstractDbxFirebaseNotificationItemWidgetComponent {
   get subject() {

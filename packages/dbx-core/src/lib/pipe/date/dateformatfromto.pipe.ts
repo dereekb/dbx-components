@@ -22,7 +22,6 @@ import { formatToTimeString, toJsDate } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateFormatFromTo',
-  standalone: true,
   pure: true
 })
 export class DateFormatFromToPipe implements PipeTransform {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { type Maybe, separateValues } from '@dereekb/util';
 import { type ClickableAnchor, DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
@@ -68,9 +68,7 @@ const OAUTH_CONSENT_SCOPES_PIT_SCROLLABLE_HEIGHT: DbxContentPitScrollableInput =
       </div>
     </dbx-content-pit>
   `,
-  imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective, DbxContentPitDirective, DbxLinkComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective, DbxContentPitDirective, DbxLinkComponent]
 })
 export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);

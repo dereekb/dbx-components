@@ -6,6 +6,7 @@ import {
   expireAllExpiredFormSpacesParamsType,
   type ExpireAllExpiredFormSpacesResult,
   expireFormSpaceTemplate,
+  type FirebaseAuthUserId,
   type FirestoreContextReference,
   type FormSpace,
   type FormSpaceDocument,
@@ -20,13 +21,20 @@ import {
   formSpacesQueuedForProcessingQuery,
   isFormSpaceEditable,
   isFormSpaceFileAccessibleByUser,
+  isFormSpaceReopenable,
   iterateFirestoreDocumentSnapshotPairs,
+  type LockFormSpaceParams,
+  lockFormSpaceParamsType,
+  lockFormSpaceTemplate,
   type NotificationFirestoreCollections,
   type ProcessAllQueuedFormSpacesParams,
   processAllQueuedFormSpacesParamsType,
   type ProcessAllQueuedFormSpacesResult,
   type RemoveFormSpaceFileParams,
   removeFormSpaceFileParamsType,
+  type ReopenFormSpaceParams,
+  reopenFormSpaceParamsType,
+  reopenFormSpaceTemplate,
   resolveFormSpaceExpiresAt,
   type StorageFileFirestoreCollections,
   storageFilesForFormSpaceQuery,
@@ -46,7 +54,7 @@ import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceRef } from '../notification/notification.expedite.service';
 import { createOrRunUniqueNotificationDocument } from '../notification/notification.create.run';
 import { markStorageFileForDeleteTemplate, queryAndFlagStorageFilesForDelete } from '../storagefile/storagefile.util';
-import { formSpaceAlreadyExistsError, formSpaceFileAccessDeniedError, formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceRequiredSlotMissingError, formSpaceTypeMismatchError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
+import { formSpaceAlreadyExistsError, formSpaceFileAccessDeniedError, formSpaceFileNotFoundError, formSpaceHasInvalidFilesError, formSpaceNotEditableError, formSpaceNotReopenableError, formSpaceNotSubmittedError, formSpaceProcessingInProgressError, formSpaceRequiredSlotMissingError, formSpaceTypeMismatchError, formSpaceTypeNotRegisteredError, formSpaceValidationPendingError } from './formspace.error';
 
 /**
  * NestJS injection token for the {@link BaseFormSpaceServerActionsContext}.
@@ -120,6 +128,28 @@ export interface RemoveFormSpaceFileActionInput {
 }
 
 /**
+ * Extra input for {@link FormSpaceServerActions.reopenFormSpace}, supplied by the callable rather than by the
+ * caller: WHO reopened is recorded on `rby`, so it can never be a value in the request body.
+ */
+export interface ReopenFormSpaceActionInput {
+  /**
+   * The uid of the caller.
+   */
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+}
+
+/**
+ * Extra input for {@link FormSpaceServerActions.lockFormSpace}, on the same terms: `lby` records who made
+ * the submission final.
+ */
+export interface LockFormSpaceActionInput {
+  /**
+   * The uid of the caller.
+   */
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+}
+
+/**
  * The server actions for the FormSpace model.
  *
  * @see {@link formSpaceServerActions} for the concrete implementation factory.
@@ -128,6 +158,8 @@ export abstract class FormSpaceServerActions {
   abstract createFormSpace(params: CreateFormSpaceParams): Promise<TransformAndValidateFunctionResult<CreateFormSpaceParams, (input: CreateFormSpaceActionInput) => Promise<FormSpaceDocument>>>;
   abstract updateFormSpace(params: UpdateFormSpaceParams): Promise<TransformAndValidateFunctionResult<UpdateFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<FormSpaceDocument>>>;
   abstract submitFormSpace(params: SubmitFormSpaceParams): Promise<TransformAndValidateFunctionResult<SubmitFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<SubmitFormSpaceResult>>>;
+  abstract reopenFormSpace(params: ReopenFormSpaceParams): Promise<TransformAndValidateFunctionResult<ReopenFormSpaceParams, (formSpaceDocument: FormSpaceDocument, input: ReopenFormSpaceActionInput) => Promise<FormSpaceDocument>>>;
+  abstract lockFormSpace(params: LockFormSpaceParams): Promise<TransformAndValidateFunctionResult<LockFormSpaceParams, (formSpaceDocument: FormSpaceDocument, input: LockFormSpaceActionInput) => Promise<FormSpaceDocument>>>;
   abstract removeFormSpaceFile(params: RemoveFormSpaceFileParams): Promise<TransformAndValidateFunctionResult<RemoveFormSpaceFileParams, (formSpaceDocument: FormSpaceDocument, input: RemoveFormSpaceFileActionInput) => Promise<FormSpaceDocument>>>;
   abstract deleteFormSpace(params: DeleteFormSpaceParams): Promise<TransformAndValidateFunctionResult<DeleteFormSpaceParams, (formSpaceDocument: FormSpaceDocument) => Promise<void>>>;
   abstract processAllQueuedFormSpaces(params: ProcessAllQueuedFormSpacesParams): Promise<TransformAndValidateFunctionResult<ProcessAllQueuedFormSpacesParams, () => Promise<ProcessAllQueuedFormSpacesResult>>>;
@@ -145,6 +177,8 @@ export function formSpaceServerActions(context: FormSpaceServerActionsContext): 
     createFormSpace: createFormSpaceFactory(context),
     updateFormSpace: updateFormSpaceFactory(context),
     submitFormSpace: submitFormSpaceFactory(context),
+    reopenFormSpace: reopenFormSpaceFactory(context),
+    lockFormSpace: lockFormSpaceFactory(context),
     removeFormSpaceFile: removeFormSpaceFileFactory(context),
     deleteFormSpace: deleteFormSpaceFactory(context),
     processAllQueuedFormSpaces: processAllQueuedFormSpacesFactory(context),
@@ -270,6 +304,11 @@ export function updateFormSpaceFactory(context: FormSpaceServerActionsContext) {
  * would hold the lock across the whole handler. A crash in between leaves the space in
  * QUEUED_FOR_PROCESSING with no task, which {@link processAllQueuedFormSpacesFactory} is the backstop for.
  *
+ * Also serves a RESUBMISSION after a reopen, unchanged: the space is a draft again, so the same editable
+ * check and the same submit blockers apply. The only difference is that the task is keyed by the space's
+ * reopen count, so it gets a document and a checkpoint flow of its own instead of colliding with the
+ * finished task of the attempt before it.
+ *
  * @param context - The FormSpace server actions context.
  * @returns An async transform-and-validate function that submits a FormSpace.
  */
@@ -281,6 +320,10 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
     const { runImmediately } = params;
 
     return async (formSpaceDocument: FormSpaceDocument) => {
+      // read under the lock and carried out, so the task is keyed to the attempt this submission IS rather
+      // than to whatever the count happens to be by the time the task is created outside the transaction
+      let reopenCount = 0;
+
       await firestoreContext.runTransaction(async (transaction) => {
         const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
         const current = await assertSnapshotData(documentInTransaction);
@@ -311,10 +354,103 @@ export function submitFormSpaceFactory(context: FormSpaceServerActionsContext) {
           }
         }
 
-        await documentInTransaction.update(submitFormSpaceTemplate());
+        await documentInTransaction.update(submitFormSpaceTemplate({ formSpace: current, config }));
+        reopenCount = current.rc;
       });
 
-      return queueFormSpaceForProcessing(formSpaceDocument, runImmediately);
+      return queueFormSpaceForProcessing({ formSpaceDocument, reopenCount, runImmediately });
+    };
+  });
+}
+
+/**
+ * Factory for the `reopenFormSpace` action.
+ *
+ * The inverse of `submitFormSpace`, and deliberately NOT a widening of `isFormSpaceEditable`: it restores
+ * every condition that predicate tests instead, so update, upload, `removeFile` and a resubmit all come
+ * back with no further change anywhere.
+ *
+ * The reopen task story is handled by KEYING rather than cleanup. The superseded attempt's task document is
+ * left where it is: it is either already done and waiting for the notification cleanup sweep, or still
+ * pending and about to be fenced off by its own handler, which compares the count it was created with
+ * against the space's. Deleting it here would mean reaching into a Notification subcollection whose parent
+ * this action cannot reconstruct once the task's own cleanup has nulled `pn` — for no gain, since the
+ * resubmission keys a document of its own either way.
+ *
+ * @param context - The FormSpace server actions context.
+ * @returns An async transform-and-validate function that reopens a submitted FormSpace.
+ */
+export function reopenFormSpaceFactory(context: FormSpaceServerActionsContext) {
+  const { firestoreContext, formSpaceCollection, appFormSpaceTypeConfigService, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(reopenFormSpaceParamsType, async (_params) => {
+    return async (formSpaceDocument: FormSpaceDocument, input: ReopenFormSpaceActionInput) => {
+      const { uid } = input;
+
+      await firestoreContext.runTransaction(async (transaction) => {
+        const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
+        const current = await assertSnapshotData(documentInTransaction);
+        const config = appFormSpaceTypeConfigService.configForFormSpaceType(current.t);
+
+        // re-asserted under the lock, so a concurrent double-reopen resolves to one winner and `rc` — which
+        // the next submission's task is keyed by — advances exactly once
+        if (!isFormSpaceReopenable({ formSpace: current, config })) {
+          throw formSpaceNotReopenableError();
+        }
+
+        // Checked AFTER the policy on purpose. Both refusals are true of a space whose window closed while
+        // a processor was running, and "this submission is final" is the answer the caller can act on;
+        // "try again shortly" would be a lie they would act on twice.
+        if (current.ps === FormSpaceProcessingState.PROCESSING) {
+          throw formSpaceProcessingInProgressError();
+        }
+
+        await documentInTransaction.update(reopenFormSpaceTemplate({ formSpace: current, config, uid }));
+      });
+
+      return formSpaceDocument;
+    };
+  });
+}
+
+/**
+ * Factory for the `lockFormSpace` action.
+ *
+ * Not a state transition. The space stays exactly where it is and its processing is untouched; the only
+ * thing that moves is `lat`, brought forward to now so every reopen predicate answers false from here on.
+ *
+ * Accepts a reopened DRAFT as well as a SUBMITTED space — locking a draft that has been submitted before is
+ * how a reviewer says "the next submission is the last one", and it survives the resubmit because
+ * {@link submitFormSpaceTemplate} only writes `lat` for a space that has never been submitted. A space with
+ * no submission at all is the one case refused.
+ *
+ * @param context - The FormSpace server actions context.
+ * @returns An async transform-and-validate function that locks a FormSpace's submission.
+ */
+export function lockFormSpaceFactory(context: FormSpaceServerActionsContext) {
+  const { firestoreContext, formSpaceCollection, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(lockFormSpaceParamsType, async (_params) => {
+    return async (formSpaceDocument: FormSpaceDocument, input: LockFormSpaceActionInput) => {
+      const { uid } = input;
+
+      await firestoreContext.runTransaction(async (transaction) => {
+        const documentInTransaction = formSpaceCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(formSpaceDocument);
+        const current = await assertSnapshotData(documentInTransaction);
+        const now = new Date();
+
+        if (current.fsat == null) {
+          throw formSpaceNotSubmittedError();
+        }
+
+        // Idempotent, and the guard is not tidiness: writing `now` over a `lat` already in the PAST would
+        // move the deadline forward and hand back a window that had closed. A lock can only ever pull it in.
+        if (current.lat == null || current.lat.getTime() > now.getTime()) {
+          await documentInTransaction.update(lockFormSpaceTemplate({ uid, now }));
+        }
+      });
+
+      return formSpaceDocument;
     };
   });
 }
@@ -385,11 +521,26 @@ export function removeFormSpaceFileFactory(context: FormSpaceServerActionsContex
 }
 
 /**
- * Creates (or re-runs) the unique submission task for a FormSpace and records its key on `pn`.
+ * Input for the function {@link _queueFormSpaceForProcessingFactory} returns.
+ */
+export interface QueueFormSpaceForProcessingInput {
+  readonly formSpaceDocument: FormSpaceDocument;
+  /**
+   * The space's reopen count — the submission ATTEMPT to key the task by. Defaults to 0.
+   *
+   * Getting this wrong is not cosmetic: a resubmission keyed to attempt 0 resolves to the finished task of
+   * the first submission, which `createOrRunUniqueNotificationDocument` leaves exactly as it found it.
+   */
+  readonly reopenCount?: Maybe<number>;
+  readonly runImmediately?: Maybe<boolean>;
+}
+
+/**
+ * Creates (or re-runs) the unique submission task for one ATTEMPT of a FormSpace and records its key on `pn`.
  *
  * Shared by `submitFormSpace` and the queued backstop sweep, which is what makes the backstop safe to run
- * against a space whose task already exists: the task is unique per space, so a second attempt resolves to
- * the same document rather than racing a second processor.
+ * against a space whose task already exists: the task is unique per attempt, so a second call for the same
+ * attempt resolves to the same document rather than racing a second processor.
  *
  * @param context - The FormSpace server actions context.
  * @returns Queues one FormSpace, reporting the task key and whether this call created it.
@@ -397,13 +548,14 @@ export function removeFormSpaceFileFactory(context: FormSpaceServerActionsContex
 export function _queueFormSpaceForProcessingFactory(context: FormSpaceServerActionsContext) {
   const { notificationExpediteService } = context;
 
-  return async (formSpaceDocument: FormSpaceDocument, runImmediately?: Maybe<boolean>): Promise<SubmitFormSpaceResult> => {
+  return async (input: QueueFormSpaceForProcessingInput): Promise<SubmitFormSpaceResult> => {
+    const { formSpaceDocument, reopenCount, runImmediately } = input;
     const expediteInstance = runImmediately ? notificationExpediteService.expediteInstance() : undefined;
     expediteInstance?.initialize();
 
     const createResult = await createOrRunUniqueNotificationDocument({
       context,
-      template: formSpaceSubmissionNotificationTaskTemplate({ formSpaceDocument }),
+      template: formSpaceSubmissionNotificationTaskTemplate({ formSpaceDocument, reopenCount }),
       runImmediatelyIfCreated: runImmediately ?? false,
       expediteInstance
     });
@@ -476,7 +628,9 @@ export function processAllQueuedFormSpacesFactory(context: FormSpaceServerAction
         iterateSnapshotPair: async (snapshotPair) => {
           formSpacesVisited++;
 
-          const queued = await queueFormSpaceForProcessing(snapshotPair.document).catch(() => null);
+          // keyed by the attempt the space is CURRENTLY on, so a space whose task creation was lost is
+          // queued against its own attempt rather than the first one
+          const queued = await queueFormSpaceForProcessing({ formSpaceDocument: snapshotPair.document, reopenCount: snapshotPair.data?.rc }).catch(() => null);
 
           if (queued) {
             formSpacesProcessStarted++;

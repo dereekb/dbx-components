@@ -30,8 +30,7 @@ import { type Maybe } from '@dereekb/util';
   host: {
     '[class]': 'cssClassSignal()',
     '[style.--dbx-color-current]': 'colorStyleSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxTextColorDirective {
   private readonly _colorService = inject(DbxColorService, { optional: true });

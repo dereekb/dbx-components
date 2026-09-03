@@ -13,4 +13,3 @@ export * from './list';
 export * from './section';
 export * from './style';
 export * from './text';
-export * from './layout.module';

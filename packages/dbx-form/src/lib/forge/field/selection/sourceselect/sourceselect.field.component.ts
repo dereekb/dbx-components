@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit, viewChild } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
@@ -38,8 +38,6 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
   selector: 'dbx-forge-source-select-field',
   templateUrl: './sourceselect.field.component.html',
   imports: [MatFormField, MatLabel, MatSelect, MatOption, MatOptgroup, MatHint, MatError, MatSuffix, FormField, DynamicTextPipe, AsyncPipe, DbxButtonComponent, DbxActionModule, DbxLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     '[id]': '`${key()}`',
     '[attr.data-testid]': 'key()',

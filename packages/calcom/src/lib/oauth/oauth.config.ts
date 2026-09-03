@@ -170,10 +170,3 @@ export interface CalcomOAuthContext {
 export interface CalcomOAuthContextRef {
   readonly oauthContext: CalcomOAuthContext;
 }
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use {@link CALCOM_OAUTH_API_URL} instead. This was previously used as the fetch base
- * URL while the endpoint path `/oauth/token` was also appended, resolving to a doubly-pathed URL.
- */
-export const CALCOM_OAUTH_TOKEN_URL = `${CALCOM_OAUTH_API_URL}${CALCOM_OAUTH_TOKEN_PATH}`;

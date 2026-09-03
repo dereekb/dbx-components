@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
@@ -12,8 +12,6 @@ import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
     </div>
   `,
   styleUrls: ['./table.item.action.example.scss'],
-  standalone: true,
-  imports: [MatIconButton, MatIcon, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconButton, MatIcon, DbxButtonSpacerDirective]
 })
 export class DocExtensionTableItemActionExampleComponent {}

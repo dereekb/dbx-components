@@ -34,7 +34,6 @@ class TestDbxAuthService implements DbxAuthService {
  */
 @Directive({
   selector: '[dbxTestCaptureModelIdDelegate]',
-  standalone: true,
   providers: provideDbxRouteModelIdDirectiveDelegate(TestCaptureModelIdDelegateDirective)
 })
 class TestCaptureModelIdDelegateDirective extends DbxRouteModelIdDirectiveDelegate {
@@ -49,7 +48,6 @@ class TestCaptureModelIdDelegateDirective extends DbxRouteModelIdDirectiveDelega
   template: `
     <div dbxRouteModelIdFromAuthUserId dbxTestCaptureModelIdDelegate></div>
   `,
-  standalone: true,
   imports: [DbxRouteModelIdFromAuthUserIdDirective, TestCaptureModelIdDelegateDirective]
 })
 class TestHostComponent {}
@@ -58,7 +56,6 @@ class TestHostComponent {}
   template: `
     <div dbxRouteModelIdFromAuthUserId [ignoreAuthImpersonation]="true" dbxTestCaptureModelIdDelegate></div>
   `,
-  standalone: true,
   imports: [DbxRouteModelIdFromAuthUserIdDirective, TestCaptureModelIdDelegateDirective]
 })
 class TestHostIgnoreImpersonationComponent {}

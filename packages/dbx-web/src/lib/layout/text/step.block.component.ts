@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxColorInput } from '../style/style';
 import { DbxColorDirective } from '../style/style.color.directive';
@@ -83,9 +83,7 @@ export interface DbxStepBlockComponentConfig {
     class: 'dbx-step-block d-block',
     '[class.dbx-step-block-center]': 'centerSignal()'
   },
-  imports: [DbxIconTileComponent, DbxColorDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxIconTileComponent, DbxColorDirective]
 })
 export class DbxStepBlockComponent {
   readonly config = input<Maybe<DbxStepBlockComponentConfig>>();

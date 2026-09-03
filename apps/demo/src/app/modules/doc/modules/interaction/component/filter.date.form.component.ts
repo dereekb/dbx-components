@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import type { Maybe } from '@dereekb/util';
 import { AbstractSyncForgeFormDirective, dbxForgeFixedDateRangeField, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
@@ -15,9 +15,7 @@ export type DocInteractionTestDateFilterFormValue = {
   `,
   selector: 'doc-interaction-test-date-filter-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForgeFormDirective<DocInteractionTestFilterFormValue> {
   readonly formConfig: FormConfig = {

@@ -1,4 +1,4 @@
-import { Injectable, type Type } from '@angular/core';
+import { Service, type Type } from '@angular/core';
 import { type Maybe, filterMaybeArrayValues, mapIterable, type StringErrorCode } from '@dereekb/util';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
@@ -20,12 +20,6 @@ export interface DbxErrorWidgetEntry {
    * Error code to respond to.
    */
   readonly code: StringErrorCode;
-  /**
-   * Error widget component class to use.
-   *
-   * @deprecated use `widgetComponentClass` instead.
-   */
-  readonly componentClass?: Maybe<Type<unknown>>;
   /**
    * In-line error widget component class to use.
    *
@@ -59,9 +53,7 @@ export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntr
  *
  * By default the DbxErrorDefaultErrorWidgetComponent is registered to both the default and unknown error entries.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxErrorWidgetService {
   private readonly _entries = new Map<StringErrorCode, DbxErrorWidgetEntry>();
 
@@ -91,11 +83,7 @@ export class DbxErrorWidgetService {
     let registered = false;
 
     if (override || !this._entries.has(entry.code)) {
-      this._entries.set(entry.code, {
-        ...entry,
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        widgetComponentClass: entry.widgetComponentClass ?? entry.componentClass
-      });
+      this._entries.set(entry.code, entry);
       registered = true;
     }
 

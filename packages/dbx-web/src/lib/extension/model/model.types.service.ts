@@ -1,4 +1,4 @@
-import { Injectable, Injector, inject } from '@angular/core';
+import { Service, Injector, inject } from '@angular/core';
 import { capitalCase } from 'change-case-all';
 import { map, shareReplay, type Observable, BehaviorSubject } from 'rxjs';
 import { type ArrayOrValue, type Building, type ModelTypeString, useIterableOrValue } from '@dereekb/util';
@@ -37,9 +37,7 @@ export interface DbxModelIconsMap {
  * modelTypesService.addTypeConfigs({ modelType: 'user', label: 'User', icon: 'person' });
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo> {
   static readonly DEFAULT_ICON = 'help_outline';
 

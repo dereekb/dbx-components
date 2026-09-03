@@ -48,8 +48,7 @@ import { clean } from '../../../rxjs/clean';
 @Directive({
   selector: 'dbx-action,[dbxAction]',
   exportAs: 'action,dbxAction',
-  providers: provideActionStoreSource(DbxActionDirective),
-  standalone: true
+  providers: provideActionStoreSource(DbxActionDirective)
 })
 export class DbxActionDirective<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> {
   constructor() {

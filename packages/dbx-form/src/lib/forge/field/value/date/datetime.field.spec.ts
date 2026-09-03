@@ -80,8 +80,8 @@ describe('dbxForgeDateTimeField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeDateTimeField({ key: 'datetime', description: 'Pick a date and time' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeDateTimeField({ key: 'datetime', hint: 'Pick a date and time' });
     expect(field.props?.hint).toBe('Pick a date and time');
   });
 

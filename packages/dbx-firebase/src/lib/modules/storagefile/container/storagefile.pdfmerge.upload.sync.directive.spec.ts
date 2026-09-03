@@ -75,7 +75,6 @@ describe('DbxFirebaseStoragePdfMergeUploadSyncDirective', () => {
   template: `
     <button dbxButton dbxFirebaseStoragePdfMergeUploadSync>Upload</button>
   `,
-  standalone: true,
   imports: [DbxButtonDirective, DbxFirebaseStoragePdfMergeUploadSyncDirective]
 })
 class TestDbxFirebaseStoragePdfMergeUploadSyncComponent {

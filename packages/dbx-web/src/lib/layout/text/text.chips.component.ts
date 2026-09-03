@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
@@ -50,9 +50,7 @@ export interface TextChip extends LabeledValue<string> {
       </mat-chip-listbox>
     }
   `,
-  imports: [MatChipsModule, MatTooltipModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatChipsModule, MatTooltipModule]
 })
 export class DbxTextChipsComponent {
   private readonly _colorService = inject(DbxColorService, { optional: true });

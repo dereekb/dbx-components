@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
+import { Component, type OnInit, computed, inject, signal, effect, untracked, viewChild } from '@angular/core';
 import { DynamicForm, EventDispatcher, type FormOptions } from '@ng-forge/dynamic-forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxForm, type DbxFormEvent, DbxFormState, DbxMutableForm } from '../../form/form';
@@ -26,9 +26,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
     '[class.dbx-forge-form-disabled]': 'isDisabledSignal()'
   },
   providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
-  imports: [DynamicForm],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DynamicForm]
 })
 export class DbxForgeFormComponent<T extends object = object> implements DbxForgeDynamicFormSignalRef, OnInit {
   private readonly _context = inject(DbxForgeFormContext<T>);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DbxDetachController, DbxDetachWindowState } from './detach';
@@ -26,9 +26,7 @@ import { DbxDetachController, DbxDetachWindowState } from './detach';
   `,
   host: {
     class: 'dbx-detach-content'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxDetachContentComponent {
   private readonly _detachController = inject(DbxDetachController);

@@ -91,13 +91,13 @@ describe('dbxForgeDateRangeRow()', () => {
   it('should allow per-field overrides', () => {
     const pickerConfig = { limits: { isFuture: true } };
     const field = dbxForgeDateRangeRow({
-      start: { key: 'startDate', description: 'Start description', props: { pickerConfig } },
-      end: { key: 'endDate', description: 'End description' }
+      start: { key: 'startDate', hint: 'Start hint', props: { pickerConfig } },
+      end: { key: 'endDate', hint: 'End hint' }
     });
     const children = getChildFields(field);
-    expect(children[0].props?.hint).toBe('Start description');
+    expect(children[0].props?.hint).toBe('Start hint');
     expect(children[0].props?.pickerConfig).toBe(pickerConfig);
-    expect(children[1].props?.hint).toBe('End description');
+    expect(children[1].props?.hint).toBe('End hint');
   });
 
   it('should set dateLabel to Start and End', () => {

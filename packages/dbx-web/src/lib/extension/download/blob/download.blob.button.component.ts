@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
+import { Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
 import { DomSanitizer, type SafeResourceUrl } from '@angular/platform-browser';
 import { clean, type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxButtonComponent } from '../../../button/button.component';
@@ -14,18 +14,6 @@ import { NgClass } from '@angular/common';
  * Configuration for the {@link DbxDownloadBlobButtonComponent} that controls what blob to download and how the button appears.
  */
 export interface DbxDownloadBlobButtonConfig {
-  /**
-   * Button display customization.
-   *
-   * @deprecated use {@link buttonStylePair} instead.
-   */
-  readonly buttonDisplay?: Maybe<DbxButtonDisplay>;
-  /**
-   * Custom button style to use.
-   *
-   * @deprecated use {@link buttonStylePair} instead.
-   */
-  readonly buttonStyle?: Maybe<DbxButtonStyle>;
   /**
    * Custom button style pair to use.
    */
@@ -63,9 +51,7 @@ export interface DbxDownloadBlobButtonConfig {
   template: `
     <a #downloadButton [ngClass]="{ 'pointer-disabled': !downloadReadySignal() }" e [href]="fileUrlSignal()" [attr.download]="fileNameSignal()"><dbx-button [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [working]="!downloadReadySignal()" [disabled]="!downloadReadySignal()"></dbx-button></a>
   `,
-  standalone: true,
-  imports: [NgClass, DbxActionModule, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgClass, DbxActionModule, DbxButtonComponent]
 })
 export class DbxDownloadBlobButtonComponent {
   private readonly _sanitizer = inject(DomSanitizer);
@@ -119,8 +105,7 @@ export class DbxDownloadBlobButtonComponent {
 
   readonly buttonDisplaySignal = computed(() => {
     const config = this.config();
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const buttonDisplay = config?.buttonStylePair?.display ?? config?.buttonDisplay;
+    const buttonDisplay = config?.buttonStylePair?.display;
 
     const display: DbxButtonDisplay = buttonDisplay ?? {
       icon: 'download',
@@ -132,8 +117,7 @@ export class DbxDownloadBlobButtonComponent {
 
   readonly buttonStyleSignal = computed(() => {
     const config = this.config();
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const buttonStyle = config?.buttonStylePair?.style ?? config?.buttonStyle;
+    const buttonStyle = config?.buttonStylePair?.style;
 
     const style: DbxButtonStyle = buttonStyle ?? {
       type: 'raised'

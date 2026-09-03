@@ -1,4 +1,4 @@
-import { InjectionToken, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { InjectionToken, Component, inject } from '@angular/core';
 import { type PrimativeKey } from '@dereekb/util';
 import { type DbxListTitleGroupData } from './list.view.value.group.title';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,11 +51,9 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
     </div>
   `,
   imports: [NgClass, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-title-group-header'
-  },
-  standalone: true
+  }
 })
 export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> extends AbstractDbxListTitleGroupHeaderComponent<O, D> {
   readonly icon = this.data.icon;

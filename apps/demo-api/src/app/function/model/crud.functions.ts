@@ -17,7 +17,7 @@ import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from
 import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { formSpaceCreate } from '../formspace/formspace.create';
-import { formSpaceUpdate, formSpaceSubmit, formSpaceRemoveFile } from '../formspace/formspace.update';
+import { formSpaceUpdate, formSpaceSubmit, formSpaceReopen, formSpaceLock, formSpaceRemoveFile } from '../formspace/formspace.update';
 import { formSpaceDelete } from '../formspace/formspace.delete';
 import { storageFileDownload, storageFileDownloadMultiple, storageFileReadMetadata, storageFileReadMetadataMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
@@ -132,6 +132,8 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   formSpace: onCallSpecifierHandler({
     _: formSpaceUpdate,
     submit: formSpaceSubmit,
+    reopen: formSpaceReopen,
+    lock: formSpaceLock,
     removeFile: formSpaceRemoveFile
   }),
   oidcEntry: onCallSpecifierHandler({

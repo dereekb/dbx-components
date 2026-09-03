@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { Component, ElementRef, input, output, viewChild } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -49,9 +49,7 @@ export interface DbxErrorViewButtonEvent {
   host: {
     class: 'dbx-error dbx-warn dbx-b'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatButtonModule, DbxTextColorDirective],
-  standalone: true
+  imports: [MatIconModule, MatButtonModule, DbxTextColorDirective]
 })
 export class DbxErrorViewComponent {
   readonly icon = input<string>('error');

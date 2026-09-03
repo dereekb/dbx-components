@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxHelpWidgetDirective, DbxButtonComponent, type DbxHelpContextKey } from '@dereekb/dbx-web';
 
 export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
@@ -11,8 +11,6 @@ export const HELP_WIDGET_EXAMPLE_CONTEXT_STRING: DbxHelpContextKey = 'example';
   template: `
     <dbx-button icon="live_help">{{ helpContextKey }}</dbx-button>
   `,
-  standalone: true,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DocExtensionHelpExampleWidgetExampleHeaderComponent extends AbstractDbxHelpWidgetDirective {}

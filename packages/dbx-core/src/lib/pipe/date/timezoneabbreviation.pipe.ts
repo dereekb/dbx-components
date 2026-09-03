@@ -24,7 +24,6 @@ import { getTimezoneAbbreviation } from '@dereekb/date';
  */
 @Pipe({
   name: 'timezoneAbbreviation',
-  standalone: true,
   pure: false
 })
 export class TimezoneAbbreviationPipe implements PipeTransform {

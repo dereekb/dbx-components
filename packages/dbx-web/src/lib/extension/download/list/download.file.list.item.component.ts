@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { DatePipe, NgClass } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { TimeDistancePipe } from '@dereekb/dbx-core';
@@ -58,9 +58,7 @@ import { DEFAULT_DBX_FILE_LIST_ITEM_DETAILS_CLASS, DEFAULT_DBX_FILE_LIST_ITEM_DE
   host: {
     class: 'dbx-file-list-item d-block'
   },
-  imports: [DatePipe, NgClass, MatIconModule, TimeDistancePipe, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DatePipe, NgClass, MatIconModule, TimeDistancePipe, DbxSpacerDirective]
 })
 export class DbxFileListItemComponent {
   readonly config = input<Maybe<DbxFileListItemComponentConfig>>();

@@ -4,7 +4,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseCollectionWithParentStore } from './store.subcollection';
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { callbackTest } from '@dereekb/util/test';
 import { newWithInjector } from '@dereekb/dbx-core';
 
@@ -28,7 +28,7 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
     let parentStore: TestDbxFirebaseDocumentStore;
     let store: TestDbxFirebaseCollectionWithParentStore;
 
-    beforeEach(waitForAsync(() => {
+    beforeEach(() => {
       TestBed.configureTestingModule({
         providers: [
           {
@@ -37,7 +37,7 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           }
         ]
       });
-    }));
+    });
 
     beforeEach(() => {
       const injector = TestBed.inject(Injector);

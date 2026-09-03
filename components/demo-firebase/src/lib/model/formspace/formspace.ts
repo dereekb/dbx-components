@@ -1,5 +1,5 @@
 import { type AppFormSpaceTypeConfigService, appFormSpaceTypeConfigService, type FirestoreModelKey, type FormSpaceData, type FormSpaceFileSlot, type FormSpaceId, formSpaceIdForModel, type FormSpaceType, type FormSpaceTypeConfig, formSpaceTypeConfigRecord } from '@dereekb/firebase';
-import { MS_IN_DAY } from '@dereekb/util';
+import { MS_IN_DAY, MS_IN_HOUR } from '@dereekb/util';
 
 /**
  * The {@link FormSpaceType} of the demo app's example form.
@@ -128,6 +128,10 @@ export function demoGuestbookFormSpaceId(guestbookKey: FirestoreModelKey): FormS
  * with validated uploads ({@link DEMO_EXAMPLE_FORM_SPACE_TYPE}), a single-user form without them
  * ({@link DEMO_TEST_FORM_SPACE_TYPE}), and a SHARED one ({@link DEMO_GUESTBOOK_FORM_SPACE_TYPE}). Adding a
  * fourth is still a data entry rather than a code change.
+ *
+ * Only {@link DEMO_TEST_FORM_SPACE_TYPE} opts into REOPENING. The other two are left as one-way doors on
+ * purpose: reopening is opt-in per type, and a demo where every type allowed it would never exercise the
+ * refusal a downstream app gets by default.
  */
 export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
   {
@@ -186,9 +190,17 @@ export const DEMO_FORM_SPACE_TYPE_CONFIGS: FormSpaceTypeConfig[] = [
         maxFileSizeBytes: 2 * 1024 * 1024
       }
     ],
-    // one superseding cover plus four folder files, with slack for a replaced file
+    // one superseding cover plus four folder files, with slack for a replaced file — and REOPENS replace
+    // files too, since `uc` counts uploads accepted over the whole lifetime and a reopen never refunds it
     maxUploads: 12,
-    expiresIn: 7 * MS_IN_DAY
+    expiresIn: 7 * MS_IN_DAY,
+    // The demo's coverage of reopening, and the only type that opts in. Declaring BOTH durations is the
+    // interesting case: `reopenableFor` would roll from each submission on its own, and `reopenableUntil`
+    // caps the lot from the FIRST one, so a resubmit cannot walk the deadline forward. `maxReopens` bounds
+    // it a third way, which is what a purely rolling window would need on its own.
+    reopenableFor: 2 * MS_IN_HOUR,
+    reopenableUntil: MS_IN_DAY,
+    maxReopens: 3
   },
   {
     formSpaceType: DEMO_GUESTBOOK_FORM_SPACE_TYPE,

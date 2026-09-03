@@ -23,12 +23,6 @@ export abstract class DbxAnalyticsEventEmitterService {
   abstract sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
   abstract sendUserLogoutEvent(data?: AnalyticsEventData): void;
   abstract sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
-  /**
-   * @deprecated When sending an event with no data, use {@link sendEventType} instead.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  abstract sendEventData(name: AnalyticsEventName): void;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   abstract sendEventData(name: AnalyticsEventName, data: AnalyticsEventData): void;
   abstract sendEvent(event: AnalyticsEvent): void;
   abstract sendPageView(page?: string): void;
@@ -347,10 +341,6 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
-  /**
-   * @deprecated When sending an event with no data, use {@link sendEventType} instead.
-   */
-  public sendEventData(name: AnalyticsEventName): void;
   /**
    * Sends a named analytics event with a data payload.
    *

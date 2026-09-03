@@ -5,19 +5,19 @@ import { DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION, type LoadingEventForLo
 import { mapIsListLoadingStateWithEmptyValue, isListLoadingStateWithEmptyValue } from './loading.state.list';
 import { type LoadingContextEvent, type LoadingStateContextEvent } from './loading.context';
 
-export interface ListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends Omit<LoadingStateContext<L[], S>, 'value$' | 'currentValue$' | 'valueAfterLoaded$'> {
+export interface ListLoadingStateContext<T = unknown, S extends ListLoadingState<T> = ListLoadingState<T>> extends Omit<LoadingStateContext<T[], S>, 'value$' | 'currentValue$' | 'valueAfterLoaded$'> {
   /**
    * The current list. Always provided, even while loading.
    */
-  readonly currentList$: Observable<Maybe<L[]>>;
+  readonly currentList$: Observable<Maybe<T[]>>;
   /**
    * The latest list from the most recent loaded state.
    */
-  readonly listAfterLoaded$: Observable<Maybe<L[]>>;
+  readonly listAfterLoaded$: Observable<Maybe<T[]>>;
   /**
    * The latest list from listAfterLoaded$, or a default value if the list was empty.
    */
-  readonly list$: Observable<L[]>;
+  readonly list$: Observable<T[]>;
   /**
    * Whether or not the currentList$ value is empty.
    *
@@ -43,17 +43,17 @@ export interface ListLoadingStateContext<L = unknown, S extends ListLoadingState
 /**
  * A ListLoadingStateContext that can be updated and destroyed.
  */
-export type MutableListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> = ListLoadingStateContext<L, S> & Pick<MutableLoadingStateContext<L[], S>, 'setStateObs' | 'destroy'>;
+export type MutableListLoadingStateContext<T = unknown, S extends ListLoadingState<T> = ListLoadingState<T>> = ListLoadingStateContext<T, S> & Pick<MutableLoadingStateContext<T[], S>, 'setStateObs' | 'destroy'>;
 
 /**
  * Configuration for listLoadingStateContext().
  */
-export type ListLoadingStateContextConfig<L, S extends ListLoadingState<L> = ListLoadingState<L>> = Omit<LoadingStateContextConfig<L[], S>, 'loadingEventForLoadingPair'> & Partial<LimitArrayConfig>;
+export type ListLoadingStateContextConfig<T, S extends ListLoadingState<T> = ListLoadingState<T>> = Omit<LoadingStateContextConfig<T[], S>, 'loadingEventForLoadingPair'> & Partial<LimitArrayConfig>;
 
 /**
  * Input for listLoadingStateContext().
  */
-export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = ListLoadingState<L>> = Omit<LoadingStateContextInput<L[], S>, 'loadingEventForLoadingPair'> | ListLoadingStateContextConfig<L, S>;
+export type ListLoadingStateContextInput<T, S extends ListLoadingState<T> = ListLoadingState<T>> = Omit<LoadingStateContextInput<T[], S>, 'loadingEventForLoadingPair'> | ListLoadingStateContextConfig<T, S>;
 
 /**
  * Creates a {@link MutableListLoadingStateContext} that wraps a {@link ListLoadingState} observable
@@ -83,13 +83,13 @@ export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = List
  * context.destroy();
  * ```
  */
-export function listLoadingStateContext<L, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
+export function listLoadingStateContext<T, S extends ListLoadingState<T> = ListLoadingState<T>>(input?: ListLoadingStateContextInput<T, S>): MutableListLoadingStateContext<T, S> {
   const limitArrayConfig = (typeof input === 'object' ? input : undefined) as Maybe<Partial<LimitArrayConfig>>;
 
-  const loadingState = loadingStateContext<L[], S>({
+  const loadingState = loadingStateContext<T[], S>({
     ...input,
     loadingEventForLoadingPair: (state: S, config: LoadingEventForLoadingPairConfigInput) => {
-      const result = DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION(state, config) as Configurable<LoadingStateContextEvent<L[]>>;
+      const result = DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION(state, config) as Configurable<LoadingStateContextEvent<T[]>>;
       const hasValue = hasNonNullValue(result.value);
 
       if (hasValue) {
@@ -121,7 +121,7 @@ export function listLoadingStateContext<L, S extends ListLoadingState<L> = ListL
     distinctUntilChanged()
   );
 
-  const result: MutableListLoadingStateContext<L, S> = {
+  const result: MutableListLoadingStateContext<T, S> = {
     ...loadingState,
     currentList$,
     listAfterLoaded$,

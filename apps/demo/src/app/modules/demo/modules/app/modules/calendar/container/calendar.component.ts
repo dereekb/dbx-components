@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxCalendarComponent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
@@ -21,9 +21,7 @@ import { DemoCalendarTestEventPopupComponent } from './calendar.test.event.popup
 @Component({
   templateUrl: './calendar.component.html',
   providers: [DbxCalendarStore],
-  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxCalendarComponent, DbxActionModule, DbxButtonModule, DbxFirebaseStorageFileDownloadButtonComponent, TimeDistancePipe]
 })
 export class DemoCalendarViewComponent {
   readonly matDialog = inject(MatDialog);

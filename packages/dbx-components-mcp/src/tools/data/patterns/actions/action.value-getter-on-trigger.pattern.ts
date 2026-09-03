@@ -35,8 +35,7 @@ import { type IsEqualFunction } from '@dereekb/rxjs';
       <my-tag-form #form></my-tag-form>
       <dbx-button text="Save" dbxActionButton></dbx-button>
     </div>
-  \`,
-  standalone: true
+  \`
 })
 export class TagEditorComponent {
   private readonly store = inject(TagCollectionStore);

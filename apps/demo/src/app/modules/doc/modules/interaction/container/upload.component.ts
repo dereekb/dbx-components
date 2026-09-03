@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, type DbxFileUploadAreaFilesChangedEvent, DbxContentPitDirective, DbxFileUploadComponent, type DbxFileUploadButtonFilesChangedEvent, type DbxFileUploadFilesChangedEvent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -11,9 +11,7 @@ function mapFileToString(file: File) {
 
 @Component({
   templateUrl: './upload.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxContentPitDirective, NgTemplateOutlet, DbxFileUploadComponent, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxContentPitDirective, NgTemplateOutlet, DbxFileUploadComponent, DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, JsonPipe]
 })
 export class DocInteractionUploadComponent {
   filesUploaded: Maybe<DbxFileUploadFilesChangedEvent>;

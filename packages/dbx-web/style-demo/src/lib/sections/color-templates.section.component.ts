@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxColorDirective, DbxColorService } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
 
@@ -23,8 +23,6 @@ interface DbxStyleDemoColorTemplate {
  */
 @Component({
   selector: 'dbx-style-demo-color-templates-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxColorDirective],
   template: `
     <dbx-docs-ui-example header="Color Templates" hint="Registered DbxColorService templates.">

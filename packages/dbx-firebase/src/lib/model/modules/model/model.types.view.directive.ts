@@ -11,8 +11,7 @@ import { type Maybe, type ModelKeyTypeNamePair } from '@dereekb/util';
  * Used with a DbxFirebaseDocumentStoreDirective to emit model viewed events.
  */
 @Directive({
-  selector: '[dbxFirebaseModelViewedEvent]',
-  standalone: true
+  selector: '[dbxFirebaseModelViewedEvent]'
 })
 export class DbxFirebaseModelViewedEventDirective {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective);

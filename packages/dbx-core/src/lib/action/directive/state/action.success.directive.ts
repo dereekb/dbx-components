@@ -31,8 +31,7 @@ import { transformEmptyStringInputToUndefined } from '../../../util/input';
  * @see {@link DbxActionSuccessHandlerDirective} for executing a function on success.
  */
 @Directive({
-  selector: '[dbxActionHasSuccess]',
-  standalone: true
+  selector: '[dbxActionHasSuccess]'
 })
 export class DbxActionHasSuccessDirective extends AbstractIfDirective {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);

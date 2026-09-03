@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DbxPopupController, DbxPopupWindowState } from './popup';
@@ -26,9 +26,7 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
   `,
   host: {
     class: 'dbx-popup-content'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxPopupContentComponent {
   private readonly appPopupController = inject(DbxPopupController);

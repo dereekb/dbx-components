@@ -69,9 +69,3 @@ export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) =
     key: config.key || `_component_${++_componentFieldCounter}`
   } as _DbxForgeComponentFieldConfig) as any;
 };
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link DbxForgeComponentFieldFunction} instead.
- */
-export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;

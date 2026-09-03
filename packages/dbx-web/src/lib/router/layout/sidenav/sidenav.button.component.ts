@@ -1,4 +1,4 @@
-import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
@@ -29,9 +29,7 @@ export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
       </button>
     }
   `,
-  imports: [MatIconModule, MatButtonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, MatButtonModule]
 })
 export class DbxSidenavButtonComponent {
   readonly parent = inject(DbxSidenavComponent);

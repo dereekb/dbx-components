@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { type DbxWidgetDataPair } from './widget';
 import { DbxWidgetViewComponent } from './widget.component';
@@ -25,9 +25,7 @@ export type DbxWidgetDataPairWithSelection = DbxValueAsListItem<DbxWidgetDataPai
 @Component({
   selector: 'dbx-widget-grid',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<DbxWidgetDataPair> {
   constructor() {
@@ -45,8 +43,6 @@ export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<
   selector: 'dbx-widget-grid-view',
   template: DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListGridViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   providers: provideDbxListView(DbxWidgetListGridViewComponent)
 })
 export class DbxWidgetListGridViewComponent extends AbstractDbxListGridViewDirective<DbxWidgetDataPair> {
@@ -68,8 +64,6 @@ export class DbxWidgetListGridViewComponent extends AbstractDbxListGridViewDirec
   template: `
     <dbx-widget-view [config]="itemValue"></dbx-widget-view>
   `,
-  imports: [DbxWidgetViewComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWidgetViewComponent]
 })
 export class DbxWidgetListGridViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxWidgetDataPair> {}

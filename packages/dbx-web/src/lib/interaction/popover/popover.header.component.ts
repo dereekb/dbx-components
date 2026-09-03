@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, inject, input } from '@angular/core';
+import { Component, type OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
@@ -31,9 +31,7 @@ import { type Maybe } from '@dereekb/util';
     </div>
     <mat-divider></mat-divider>
   `,
-  imports: [MatIconModule, MatDivider],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, MatDivider]
 })
 export class DbxPopoverHeaderComponent implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });

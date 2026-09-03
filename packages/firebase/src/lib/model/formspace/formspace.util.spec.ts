@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { MS_IN_DAY } from '@dereekb/util';
+import { MS_IN_DAY, MS_IN_HOUR } from '@dereekb/util';
 import { type FormSpace, type FormSpaceFile, FormSpaceFileValidationState, FormSpaceProcessingState, FormSpaceState } from './formspace';
 import { type FormSpaceTypeConfig } from './formspace.type';
-import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceFilesInSlot, formSpaceSlotMaxFiles, formSpaceSlotMinFiles, formSpaceSlotStatus, formSpaceStorageFileGroupId, formSpaceSubmitBlockers, formSpaceTemplate, isFormSpaceEditable, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, submitFormSpaceTemplate } from './formspace.util';
+import { assertFormSpaceUploadAllowed, expireFormSpaceTemplate, formSpaceFilesInSlot, formSpaceSlotMaxFiles, formSpaceSlotMinFiles, formSpaceSlotStatus, formSpaceStorageFileGroupId, formSpaceSubmitBlockers, formSpaceTemplate, isFormSpaceEditable, isFormSpaceFullyLocked, isFormSpaceReopenable, lockFormSpaceTemplate, reopenFormSpaceTemplate, requiredFormSpaceFileSlots, resolveFormSpaceExpiresAt, resolveFormSpaceLocksAt, submitFormSpaceTemplate } from './formspace.util';
 
 const now = new Date('2026-01-02T03:04:05.000Z');
 
@@ -47,11 +47,39 @@ function draft(overrides?: Partial<FormSpace>): FormSpace {
     u: 'user123',
     uc: 0,
     fi: 0,
+    rc: 0,
     f: [],
     cat: now,
     uat: now,
     ...overrides
   };
+}
+
+/**
+ * A type that opts into reopening, bounded all three ways at once — the case where the rolling window, the
+ * absolute ceiling and the count cap can each be shown to bind independently.
+ */
+const reopenableConfig: FormSpaceTypeConfig = {
+  formSpaceType: 'demo_reopenable',
+  expiresIn: 7 * MS_IN_DAY,
+  reopenableFor: 2 * MS_IN_HOUR,
+  reopenableUntil: MS_IN_DAY,
+  maxReopens: 3
+};
+
+/**
+ * A space submitted at `now`, with the lock deadline a first submission at `now` would have produced.
+ */
+function submitted(overrides?: Partial<FormSpace>): FormSpace {
+  return draft({
+    t: 'demo_reopenable',
+    s: FormSpaceState.SUBMITTED,
+    ps: FormSpaceProcessingState.QUEUED_FOR_PROCESSING,
+    sat: now,
+    fsat: now,
+    lat: new Date(now.getTime() + MS_IN_DAY),
+    ...overrides
+  });
 }
 
 describe('formSpaceStorageFileGroupId()', () => {
@@ -88,12 +116,45 @@ describe('formSpaceTemplate()', () => {
 
 describe('submitFormSpaceTemplate()', () => {
   it('should lock the space, queue processing, and clear eat', () => {
-    const template = submitFormSpaceTemplate(now);
+    const template = submitFormSpaceTemplate({ formSpace: draft(), config, now });
 
     expect(template.s).toBe(FormSpaceState.SUBMITTED);
     expect(template.ps).toBe(FormSpaceProcessingState.QUEUED_FOR_PROCESSING);
     expect(template.sat).toBe(now);
     expect(template.eat).toBeNull();
+  });
+
+  it('should stamp fsat and the lock deadline on a first submission', () => {
+    const template = submitFormSpaceTemplate({ formSpace: draft(), config: reopenableConfig, now });
+
+    expect(template.fsat).toBe(now);
+    expect(template.lat?.getTime()).toBe(now.getTime() + MS_IN_DAY);
+  });
+
+  it('should leave lat unwritten on a first submission of a type with no ceiling', () => {
+    const template = submitFormSpaceTemplate({ formSpace: draft(), config: { formSpaceType: 'x', reopenableFor: MS_IN_HOUR }, now });
+
+    expect(template.fsat).toBe(now);
+    expect(template.lat).toBeNull();
+  });
+
+  it('should not touch fsat or lat on a resubmission, so a reopen round cannot walk the deadline forward', () => {
+    const firstSubmittedAt = new Date(now.getTime() - MS_IN_DAY / 2);
+    const resubmit = submitFormSpaceTemplate({ formSpace: draft({ fsat: firstSubmittedAt }), config: reopenableConfig, now });
+
+    expect(resubmit.sat).toBe(now);
+    expect('fsat' in resubmit).toBe(false);
+    expect('lat' in resubmit).toBe(false);
+  });
+});
+
+describe('resolveFormSpaceLocksAt()', () => {
+  it('should offset the FIRST submission by the type reopenableUntil', () => {
+    expect(resolveFormSpaceLocksAt({ config: reopenableConfig, firstSubmittedAt: now })?.getTime()).toBe(now.getTime() + MS_IN_DAY);
+  });
+
+  it('should return null when the type declares no ceiling, so lat is never written', () => {
+    expect(resolveFormSpaceLocksAt({ config, firstSubmittedAt: now })).toBeNull();
   });
 });
 
@@ -126,6 +187,138 @@ describe('isFormSpaceEditable()', () => {
 
   it('should be false for a stamped sat even if the state was not moved', () => {
     expect(isFormSpaceEditable({ formSpace: draft({ sat: now }), now })).toBe(false);
+  });
+});
+
+describe('isFormSpaceReopenable()', () => {
+  it('should be true for a space submitted inside both windows', () => {
+    expect(isFormSpaceReopenable({ formSpace: submitted(), config: reopenableConfig, now })).toBe(true);
+  });
+
+  it('should be false when the type never opted in, which is every existing type', () => {
+    expect(isFormSpaceReopenable({ formSpace: submitted(), config, now })).toBe(false);
+  });
+
+  it('should be false once the rolling window from this submission has passed', () => {
+    const at = new Date(now.getTime() + 2 * MS_IN_HOUR + 1);
+    expect(isFormSpaceReopenable({ formSpace: submitted(), config: reopenableConfig, now: at })).toBe(false);
+  });
+
+  it('should be false once lat has passed even though the rolling window is open', () => {
+    // the shape of a RESUBMISSION: `sat` is recent, so `reopenableFor` alone would still allow a reopen,
+    // and only the deadline anchored to the first submission stops the round repeating forever
+    const resubmitted = submitted({ lat: new Date(now.getTime() - 1), rc: 1 });
+    expect(isFormSpaceReopenable({ formSpace: resubmitted, config: reopenableConfig, now })).toBe(false);
+  });
+
+  it('should be false once maxReopens is spent', () => {
+    expect(isFormSpaceReopenable({ formSpace: submitted({ rc: 3 }), config: reopenableConfig, now })).toBe(false);
+    expect(isFormSpaceReopenable({ formSpace: submitted({ rc: 2 }), config: reopenableConfig, now })).toBe(true);
+  });
+
+  it('should be false for a draft, which has no submission to reopen', () => {
+    expect(isFormSpaceReopenable({ formSpace: draft({ t: 'demo_reopenable' }), config: reopenableConfig, now })).toBe(false);
+  });
+
+  it('should be false for EXPIRED and ARCHIVED, which stay terminal', () => {
+    expect(isFormSpaceReopenable({ formSpace: submitted({ s: FormSpaceState.EXPIRED }), config: reopenableConfig, now })).toBe(false);
+    expect(isFormSpaceReopenable({ formSpace: submitted({ s: FormSpaceState.ARCHIVED }), config: reopenableConfig, now })).toBe(false);
+  });
+
+  it('should ignore ps, which the action refuses on separately and transiently', () => {
+    expect(isFormSpaceReopenable({ formSpace: submitted({ ps: FormSpaceProcessingState.PROCESSING }), config: reopenableConfig, now })).toBe(true);
+  });
+});
+
+describe('isFormSpaceFullyLocked()', () => {
+  it('should be false for an editable draft', () => {
+    expect(isFormSpaceFullyLocked({ formSpace: draft(), config, now })).toBe(false);
+  });
+
+  it('should be false for a submitted space still inside its reopen window', () => {
+    expect(isFormSpaceFullyLocked({ formSpace: submitted(), config: reopenableConfig, now })).toBe(false);
+  });
+
+  it('should be true for a submitted space of a type that never opted in', () => {
+    expect(isFormSpaceFullyLocked({ formSpace: submitted({ t: 'demo_example' }), config, now })).toBe(true);
+  });
+
+  it('should be true once the reopen window has closed', () => {
+    const at = new Date(now.getTime() + 2 * MS_IN_DAY);
+    expect(isFormSpaceFullyLocked({ formSpace: submitted(), config: reopenableConfig, now: at })).toBe(true);
+  });
+
+  it('should be true for an expired draft', () => {
+    expect(isFormSpaceFullyLocked({ formSpace: draft({ eat: new Date(now.getTime() - 1) }), config, now })).toBe(true);
+  });
+});
+
+describe('reopenFormSpaceTemplate()', () => {
+  it('should return the space to an editable draft', () => {
+    const formSpace = submitted({ cpat: now, pn: 'nb/box/nbn/task' });
+    const template = reopenFormSpaceTemplate({ formSpace, config: reopenableConfig, uid: 'coach1', now });
+
+    expect(template.s).toBe(FormSpaceState.DRAFT);
+    expect(template.ps).toBe(FormSpaceProcessingState.INIT_OR_NONE);
+    expect(template.sat).toBeNull();
+    expect(template.cpat).toBeNull();
+    expect(template.pn).toBeNull();
+    expect(isFormSpaceEditable({ formSpace: { ...formSpace, ...template }, now })).toBe(true);
+  });
+
+  it('should record who reopened it, when, and how many times', () => {
+    const template = reopenFormSpaceTemplate({ formSpace: submitted({ rc: 1 }), config: reopenableConfig, uid: 'coach1', now });
+
+    expect(template.rc).toBe(2);
+    expect(template.rat).toBe(now);
+    expect(template.rby).toBe('coach1');
+  });
+
+  it('should not rewind uc, fi, or fsat', () => {
+    const template = reopenFormSpaceTemplate({ formSpace: submitted(), config: reopenableConfig, now });
+
+    expect('uc' in template).toBe(false);
+    expect('fi' in template).toBe(false);
+    expect('fsat' in template).toBe(false);
+  });
+
+  it('should cap the re-armed eat at the lock deadline', () => {
+    // expiresIn is seven days and the ceiling is one, so the draft must not outlive the window it was
+    // reopened inside
+    const template = reopenFormSpaceTemplate({ formSpace: submitted(), config: reopenableConfig, now });
+
+    expect(template.eat?.getTime()).toBe(now.getTime() + MS_IN_DAY);
+  });
+
+  it('should re-arm eat from expiresIn when that is the earlier of the two', () => {
+    const shortLived: FormSpaceTypeConfig = { ...reopenableConfig, expiresIn: MS_IN_HOUR };
+    const template = reopenFormSpaceTemplate({ formSpace: submitted(), config: shortLived, now });
+
+    expect(template.eat?.getTime()).toBe(now.getTime() + MS_IN_HOUR);
+  });
+
+  it('should leave eat null when the type declares neither bound', () => {
+    const template = reopenFormSpaceTemplate({ formSpace: submitted({ lat: null }), config: { formSpaceType: 'x', reopenableFor: MS_IN_HOUR }, now });
+
+    expect(template.eat).toBeNull();
+  });
+});
+
+describe('lockFormSpaceTemplate()', () => {
+  it('should move only the lock deadline and its actor', () => {
+    const template = lockFormSpaceTemplate({ uid: 'coach1', now });
+
+    expect(template.lat).toBe(now);
+    expect(template.lby).toBe('coach1');
+    expect(template.uat).toBe(now);
+    expect('s' in template).toBe(false);
+    expect('ps' in template).toBe(false);
+    expect('sat' in template).toBe(false);
+  });
+
+  it('should make a space that was reopenable fully locked', () => {
+    const formSpace = { ...submitted(), ...lockFormSpaceTemplate({ now }) };
+    expect(isFormSpaceReopenable({ formSpace, config: reopenableConfig, now: new Date(now.getTime() + 1) })).toBe(false);
   });
 });
 

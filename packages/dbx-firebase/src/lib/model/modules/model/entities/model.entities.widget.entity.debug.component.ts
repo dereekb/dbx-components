@@ -13,7 +13,6 @@ import { cleanLoadingContext } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-firebase-model-entities-debug-widget',
   templateUrl: './model.entities.widget.entity.debug.component.html',
-  standalone: true,
   imports: [DbxFirebaseModelKeyComponent, DbxDownloadTextViewComponent, DbxLoadingComponent]
 })
 export class DbxFirebaseModelEntitiesDebugWidgetComponent extends AbstractDbxFirebaseModelEntityWidgetDirective {

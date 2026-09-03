@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal, viewChild } from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
@@ -182,9 +182,7 @@ describe('DbxFirebaseStorageFileListComponent', () => {
       <dbx-list-empty-content empty>Nothing here yet.</dbx-list-empty-content>
     </dbx-firebase-storagefile-list>
   `,
-  imports: [DbxFirebaseStorageFileListComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseStorageFileListComponent, DbxListEmptyContentComponent]
 })
 class TestDbxFirebaseStorageFileListComponent {
   readonly list = viewChild.required(DbxFirebaseStorageFileListComponent);

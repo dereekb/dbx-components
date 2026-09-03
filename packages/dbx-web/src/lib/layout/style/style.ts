@@ -438,15 +438,3 @@ export function dbxThemeColorCssTokenVar(color: Maybe<DbxThemeColor>, returnDefa
 
   return result;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link dbxThemeColorCssToken} instead.
- */
-export const dbxThemeColorCssVariable = dbxThemeColorCssToken;
-
-/**
- * @deprecated Use {@link dbxThemeColorCssTokenVar} instead.
- */
-export const dbxThemeColorCssVariableVar = dbxThemeColorCssTokenVar;

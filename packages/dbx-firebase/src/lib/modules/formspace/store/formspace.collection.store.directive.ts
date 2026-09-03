@@ -6,8 +6,7 @@ import { FormSpaceCollectionStore } from './formspace.collection.store';
 @Directive({
   selector: '[dbxFirebaseFormSpaceCollection]',
   exportAs: 'dbxFirebaseFormSpaceCollection',
-  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseFormSpaceCollectionStoreDirective, FormSpaceCollectionStore),
-  standalone: true
+  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseFormSpaceCollectionStoreDirective, FormSpaceCollectionStore)
 })
 export class DbxFirebaseFormSpaceCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<FormSpace, FormSpaceDocument, FormSpaceCollectionStore> {
   constructor() {

@@ -1,25 +1,23 @@
-import { type DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { type DbxForgePresetSearchFormFieldsConfig, DbxForgePresetSearchFormComponent } from '@dereekb/dbx-form';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 @Component({
   templateUrl: './form.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxForgePresetSearchFormComponent, DbxContentBorderDirective]
 })
 export class DocFormFormComponent {
   searchText = '';
 
-  topSearchFormConfig: DbxFormSearchFormFieldsConfig = {
+  topSearchFormConfig: DbxForgePresetSearchFormFieldsConfig = {
     key: 'test-search',
     label: 'Search Label',
     placeholder: 'Search For Something Cool'
   };
 
-  searchFormConfig: DbxFormSearchFormFieldsConfig = {
+  searchFormConfig: DbxForgePresetSearchFormFieldsConfig = {
     ...this.topSearchFormConfig,
     key: 'test-search'
   };

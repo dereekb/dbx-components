@@ -13,8 +13,7 @@ export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQuery
  * Can specify which changes to appear on.
  */
 @Directive({
-  selector: '[dbxFirebaseCollectionHasChange]',
-  standalone: true
+  selector: '[dbxFirebaseCollectionHasChange]'
 })
 export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective {
   readonly directive = inject(DbxFirebaseCollectionChangeDirective);

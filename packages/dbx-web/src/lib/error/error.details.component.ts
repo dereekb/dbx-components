@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe, type ReadableError } from '@dereekb/util';
 import { DbxErrorWidgetViewComponent } from './error.widget.component';
 
@@ -21,9 +21,7 @@ import { DbxErrorWidgetViewComponent } from './error.widget.component';
   host: {
     class: 'd-block dbx-error-details'
   },
-  imports: [DbxErrorWidgetViewComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxErrorWidgetViewComponent]
 })
 export class DbxErrorDetailsComponent {
   readonly error = input<Maybe<ReadableError>>();

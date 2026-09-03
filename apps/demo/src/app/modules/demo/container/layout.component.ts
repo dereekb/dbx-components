@@ -1,5 +1,5 @@
 import { type ClickableAnchorLinkSegueRef, type ClickableAnchorLink, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { type Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, type DbxFirebaseModelEntitiesPopoverButtonConfig } from '@dereekb/dbx-firebase';
@@ -11,9 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   templateUrl: './layout.component.html',
   styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None,
-  standalone: true,
-  imports: [DbxSidenavComponent, DbxColorDirective, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSidenavComponent, DbxColorDirective, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, DbxFirebaseDocumentStoreContextStoreDirective, DbxFirebaseModelEntitiesPopoverButtonComponent, DbxFirebaseDocumentStoreContextModelEntitiesSourceDirective, DbxWebPageTitleInfoDirective]
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);

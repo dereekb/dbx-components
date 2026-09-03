@@ -48,6 +48,19 @@
                 }
               </div>
             </div>
+            @if (isReopenableSignal()) {
+              <!-- The reopen window is still open. `demo_test` caps it three ways — a rolling window from
+                   this submission, an absolute ceiling from the first one, and a maximum count — and the
+                   store evaluates all three with the same predicate the server rejects on, so this button
+                   disappears exactly when the call would start failing.
+
+                   `dbxActionValue` with no binding is the value source a valueless action needs: without
+                   one the trigger never reaches VALUE_READY and the handler never runs. -->
+              <div dbxAction dbxActionValue [dbxActionHandler]="handleReopenFormSpace">
+                <dbx-button dbxActionButton text="Reopen Form Space"></dbx-button>
+                <dbx-error dbxActionError></dbx-error>
+              </div>
+            }
           }
         </dbx-firebase-formspace-section>
       }

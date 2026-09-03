@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 
@@ -40,9 +40,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'dbx-detail-block-header',
     '[class]': '{ "dbx-detail-block-header-no-icon": !icon(), "dbx-detail-block-header-align": alignHeader() }'
   },
-  imports: [MatIconModule, NgTemplateOutlet],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, NgTemplateOutlet]
 })
 export class DbxDetailBlockHeaderComponent {
   readonly icon = input<Maybe<string>>();

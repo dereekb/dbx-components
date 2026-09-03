@@ -147,7 +147,7 @@ async function maybeLoadModelTypes(modelsInput: string | undefined): Promise<rea
 }
 
 function normalizeName(match: string): string {
-  return match.split('\\').join('/');
+  return match.replaceAll('\\', '/');
 }
 
 function describePatterns(patterns: readonly string[]): string {

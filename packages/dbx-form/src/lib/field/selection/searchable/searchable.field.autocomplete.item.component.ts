@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
+import { Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
 import { type ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { mergeArraysIntoArray } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -23,9 +23,7 @@ export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('Dbx
       <dbx-injection [config]="configSignal()"></dbx-injection>
     </dbx-anchor>
   `,
-  imports: [DbxAnchorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxAnchorComponent, DbxInjectionComponent]
 })
 export class DbxSearchableFieldAutocompleteItemComponent<T> {
   readonly displayValue = input.required<ConfiguredSearchableValueFieldDisplayValue<T>>();
@@ -84,9 +82,7 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
       }
     </div>
   `,
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule]
 })
 export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {
   readonly icon = this.displayValue.icon;

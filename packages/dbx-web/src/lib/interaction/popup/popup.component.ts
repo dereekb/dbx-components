@@ -1,4 +1,4 @@
-import { Component, type Type, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type Type, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { type Maybe, type PixelsString } from '@dereekb/util';
 import { CompactContextStore } from '../../layout/compact/compact.store';
@@ -75,9 +75,7 @@ export interface DbxPopupComponentConfig<O, I, T> {
       provide: CompactContextStore
     }
   ],
-  imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent]
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I> {
   private readonly popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);

@@ -11,8 +11,7 @@ import { DbxFirebaseLoginComponent } from './login.component';
   template: `
     <dbx-firebase-login loginMode="register" [providerTypes]="providerTypes()" [omitProviderTypes]="omitProviderTypes()" [providerCategories]="providerCategories()"></dbx-firebase-login>
   `,
-  imports: [DbxFirebaseLoginComponent],
-  standalone: true
+  imports: [DbxFirebaseLoginComponent]
 })
 export class DbxFirebaseRegisterComponent {
   readonly providerTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();

@@ -26,8 +26,7 @@ import { DbxStyleDemoStyleLoaderService } from './style.loader.service';
   host: {
     '[class]': 'classesSignal()',
     '[style]': 'styleSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxStyleDemoStyleLoaderDirective {
   private readonly _loaderService = inject(DbxStyleDemoStyleLoaderService, { optional: true });

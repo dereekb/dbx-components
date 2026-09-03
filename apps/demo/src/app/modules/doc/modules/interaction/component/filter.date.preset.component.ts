@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
 import { type DocInteractionTestFilter, DOC_INTERACTION_DATE_TEST_PRESETS } from './filter';
 import { isSameDateDayRange } from '@dereekb/date';
@@ -17,9 +17,7 @@ import { DbxPresetFilterListComponent, DbxFilterWrapperComponent } from '@dereek
     </dbx-filter-wrapper>
   `,
   providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
-  standalone: true,
-  imports: [DbxPresetFilterListComponent, DbxFilterWrapperComponent, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPresetFilterListComponent, DbxFilterWrapperComponent, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestDateFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
   readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_DATE_TEST_PRESETS;

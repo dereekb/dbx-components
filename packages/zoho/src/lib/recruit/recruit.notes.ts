@@ -73,10 +73,3 @@ export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId 
  * Alias for a note attached to a specific Zoho Recruit record.
  */
 export type ZohoRecruitRecordNote = ZohoRecruitNote;
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use NewZohoRecruitNewNoteData instead.
- */
-export type NewZohoRecruitNewNoteData = NewZohoRecruitNoteData;

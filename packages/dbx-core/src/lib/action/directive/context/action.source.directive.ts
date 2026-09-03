@@ -32,8 +32,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive({
   selector: '[dbxActionSource]',
-  providers: provideSecondaryActionStoreSource(DbxActionSourceDirective),
-  standalone: true
+  providers: provideSecondaryActionStoreSource(DbxActionSourceDirective)
 })
 export class DbxActionSourceDirective implements SecondaryActionContextStoreSource {
   readonly dbxActionSource = input<Maybe<ActionContextStoreSource>>();

@@ -1,5 +1,5 @@
 import { DbxPopoverController } from './popover';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { delay, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,9 +21,7 @@ import { clean } from '@dereekb/dbx-core';
     @if (showSignal()) {
       <ng-content></ng-content>
     }
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  `
 })
 export class DbxPopoverCoordinatorComponent {
   private readonly _service = inject(DbxPopoverCoordinatorService);

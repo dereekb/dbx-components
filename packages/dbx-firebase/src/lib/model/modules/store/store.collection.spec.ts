@@ -2,7 +2,7 @@ import { authorizedTestWithMockItemCollection, MockItemCollections, type MockIte
 import { first } from 'rxjs';
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';
 import { callbackTest } from '@dereekb/util/test';
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { newWithInjector } from '@dereekb/dbx-core';
 import { inject, Injectable, Injector } from '@angular/core';
 
@@ -17,7 +17,7 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
   authorizedTestWithMockItemCollection((f) => {
     let store: TestDbxFirebaseCollectionStore;
 
-    beforeEach(waitForAsync(() => {
+    beforeEach(() => {
       TestBed.configureTestingModule({
         providers: [
           {
@@ -26,7 +26,7 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
           }
         ]
       });
-    }));
+    });
 
     beforeEach(() => {
       const injector = TestBed.inject(Injector);

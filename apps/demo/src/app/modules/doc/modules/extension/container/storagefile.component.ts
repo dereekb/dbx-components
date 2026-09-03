@@ -1,5 +1,5 @@
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DbxFirebaseStorageService, storageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
@@ -8,9 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './storagefile.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent]
 })
 export class DocExtensionStorageFileComponent {
   readonly storageService = inject(DbxFirebaseStorageService);

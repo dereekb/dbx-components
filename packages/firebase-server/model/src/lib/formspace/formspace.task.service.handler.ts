@@ -29,8 +29,9 @@ export interface FormSpaceSubmissionSubtaskInput<M extends FormSpaceSubmissionSu
   /**
    * Loads the FormSpace, memoized for the duration of one task run.
    *
-   * A getter rather than the value: a processor whose first checkpoint never touches the form data should
-   * not pay for a read, and a processor that touches it in three checkpoints should pay for one.
+   * Still a getter rather than the value, so a processor reads it the same way whether or not the handler
+   * happened to have it already. It resolves the snapshot the run's attempt fence was checked against, so
+   * every checkpoint in one run sees one consistent space.
    */
   readonly loadFormSpace: Getter<Promise<FormSpace>>;
 }
@@ -119,20 +120,35 @@ export function formSpaceSubmissionNotificationTaskHandler(config: FormSpaceSubm
     inputFunction: async (data: FormSpaceSubmissionNotificationTaskData) => {
       const formSpaceDocument = formSpaceDocumentAccessor.loadDocumentForId(data.formSpace);
 
-      const loadFormSpace = cachedGetter(async () => {
-        const formSpace = await getDocumentSnapshotData(formSpaceDocument, true);
+      // Read up front rather than lazily. A task has to be checked against the submission ATTEMPT it was
+      // created for before it is allowed to do anything, and that check needs the document — so `data.t`,
+      // which used to let a later run dispatch without reading at all, is now only the record of the
+      // subtask target rather than a way to avoid the read.
+      const formSpace = await getDocumentSnapshotData(formSpaceDocument, true);
 
-        if (!formSpace) {
-          // the space was deleted out from under the task; terminate rather than retry forever
-          throw notificationTaskSubTaskMissingRequiredDataTermination();
-        }
+      if (!formSpace) {
+        // the space was deleted out from under the task; terminate rather than retry forever
+        throw notificationTaskSubTaskMissingRequiredDataTermination();
+      }
 
-        return formSpace;
-      });
+      // THE ATTEMPT FENCE. A reopen advances `rc`, and the resubmission that follows keys a task document
+      // of its own — which leaves THIS one, created for the superseded attempt, still queued. Allowed to
+      // run it would process the reopened space's new content and its cleanup would write `ps` / `cpat` /
+      // `pn` over the attempt actually in force. Terminating is the honest outcome: there is nothing left
+      // for this task to be about, which is exactly what the missing-required-data termination means.
+      //
+      // Fenced on `rc` alone, never on `s`: a processor is allowed to move the space to ARCHIVED during
+      // its own cleanup checkpoint, so a state check here would abort the very run that archived it. A
+      // task created before attempt-keying existed carries no `rc` and is not fenced, so a task in flight
+      // across the upgrade still completes.
+      if (data.rc != null && data.rc !== formSpace.rc) {
+        throw notificationTaskSubTaskMissingRequiredDataTermination();
+      }
 
-      // the type is the subtask target, and is re-copied onto the metadata by buildUpdateMetadata so a
-      // later run dispatches without re-reading the document
-      const target: FormSpaceType = data.t ?? (await loadFormSpace().then((x) => x.t));
+      const loadFormSpace = cachedGetter(async () => formSpace);
+
+      // the type is the subtask target, and is re-copied onto the metadata by buildUpdateMetadata
+      const target: FormSpaceType = data.t ?? formSpace.t;
 
       return {
         target,

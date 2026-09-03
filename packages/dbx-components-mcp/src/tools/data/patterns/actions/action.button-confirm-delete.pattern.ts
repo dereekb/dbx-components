@@ -31,8 +31,7 @@ import { type Work } from '@dereekb/rxjs';
         icon="delete"
         dbxActionButton></dbx-button>
     </ng-container>
-  \`,
-  standalone: true
+  \`
 })
 export class DeleteAccountButtonComponent {
   private readonly accountStore = inject(AccountDocumentStore);

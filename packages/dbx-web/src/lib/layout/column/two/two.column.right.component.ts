@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { delay, type Observable } from 'rxjs';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
@@ -63,9 +63,7 @@ import { DbxAnchorComponent } from '../../../router';
   host: {
     class: 'dbx-two-column-right d-block'
   },
-  imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent]
 })
 export class DbxTwoColumnRightComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);

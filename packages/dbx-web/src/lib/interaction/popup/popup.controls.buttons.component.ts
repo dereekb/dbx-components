@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DbxPopupController, DbxPopupWindowState } from './popup';
@@ -39,9 +39,7 @@ import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
   host: {
     class: 'dbx-popup-control-buttons'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DbxButtonModule, DbxButtonSpacerDirective],
-  standalone: true
+  imports: [DbxButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxPopupControlButtonsComponent {
   private readonly _appPopupController = inject(DbxPopupController);

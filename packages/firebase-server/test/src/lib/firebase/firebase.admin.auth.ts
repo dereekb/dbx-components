@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally exposes gen 1 wrapped-function overloads for backward-compatible test fixtures */
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomNumberFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildTestContextFixture, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { type FirebaseAdminTestContext } from './firebase.admin';
 import { type CreateRequest, type UserRecord, type DecodedIdToken, type Auth } from 'firebase-admin/auth';
-import { type EventContext } from 'firebase-functions/v1';
 import { decode as decodeJwt } from 'jsonwebtoken';
 import { type CallableContextOptions, type ContextOptions, type WrappedFunction, type WrappedScheduledFunction, type WrappedV2Function } from 'firebase-functions-test/lib/main';
-import { type WrappedBlockingFunction, type WrappedBlockingFunctionWithHandler, type WrappedCallableRequest, type WrappedCallableRequestOutput, type WrappedCallableRequestParams, type WrappedCloudFunction, type WrappedCloudFunctionV1 } from './firebase.function';
+import { type WrappedBlockingFunction, type WrappedBlockingFunctionWithHandler, type WrappedCallableRequest, type WrappedCallableRequestOutput, type WrappedCallableRequestParams, type WrappedCloudFunction } from './firebase.function';
 import { type ScheduledEvent } from 'firebase-functions/scheduler';
 import { type AuthData } from '@dereekb/firebase-server';
 import { type AuthBlockingEvent } from 'firebase-functions/identity';
@@ -15,9 +13,9 @@ import { type AuthBlockingEvent } from 'firebase-functions/identity';
 /**
  * Union of all cloud function wrapper types that can be invoked via {@link AuthorizedUserTestContext.callCloudFunction}.
  *
- * Includes gen 1 wrapped functions, gen 2 wrapped functions, blocking functions, and scheduled functions.
+ * Includes gen 2 wrapped functions, blocking functions, and scheduled functions.
  */
-export type CallCloudFunction = WrappedCloudFunctionV1<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any> | WrappedCloudFunctionV1<any>;
+export type CallCloudFunction = WrappedScheduledFunction | WrappedFunction<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any>;
 
 /**
  * Infers the input parameter type for a given wrapped cloud function type.
@@ -46,7 +44,7 @@ export interface AuthorizedUserTestContext {
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
   callWrappedFunctionWithoutUserContext<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, options?: CallableContextOptions): Promise<WrappedCallableRequestOutput<F>>;
   /**
-   * Used for calling any non-callable gen 2 function (e.g. scheduled functions, cloud functions, blocking functions) or any gen 1 function.
+   * Used for calling any non-callable gen 2 function (e.g. scheduled functions, cloud functions, blocking functions).
    *
    * @param fn
    * @param params
@@ -57,7 +55,6 @@ export interface AuthorizedUserTestContext {
   callCloudFunction<F extends WrappedBlockingFunctionWithHandler<E, O>, E extends object, O>(fn: F, params: E): Promise<O>;
   callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
   callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
-  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
 }
 
@@ -116,7 +113,6 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
   callCloudFunction<F extends WrappedBlockingFunctionWithHandler<E, O>, E extends object, O>(fn: F, params: E): Promise<O>;
   callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
   callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
-  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
     return this.instance.callCloudFunction(fn, params as CallCloudFunctionParams<F>, skipJsonConversion);
@@ -218,7 +214,6 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
   callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
   callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
-  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
     if (params != null && (params as ScheduledEvent).scheduleTime) {
@@ -262,21 +257,6 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     };
 
     return this.callCloudFunction(fn, event, skipJsonConversion);
-  }
-
-  /**
-   * @param fn
-   * @param params
-   * @param contextOptions
-   * @param skipJsonConversion
-   * @returns
-   *
-   * @deprecated gen 1
-   */
-  // eslint-disable-next-line @typescript-eslint/max-params -- deprecated gen 1 signature kept for downstream compatibility
-  callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {
-    const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
-    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, contextOptions ? { ...contextOptions, ...options } : options));
   }
 }
 
@@ -616,12 +596,3 @@ export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): objec
     ...baseClaims
   };
 }
-
-// COMPAT: Deprecated aliases
-/**
- * Partial event context for gen 1 event-triggered cloud functions, with the `auth` field omitted
- * since it is injected automatically by the test context.
- *
- * @deprecated Used only with gen 1 event cloud functions via {@link AuthorizedUserTestContextInstance.callEventCloudFunction}.
- */
-export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;

@@ -1,6 +1,6 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns';
-import { Component, type OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { type DbxTableColumn, type DbxTableContextData, type DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, type DbxTableItemGroup, DbxTableViewComponent, type DbxTableViewDelegate } from '@dereekb/dbx-web/table';
@@ -32,9 +32,7 @@ const _addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ 
 
 @Component({
   templateUrl: './table.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, MatButton]
 })
 export class DocExtensionTableComponent implements OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {

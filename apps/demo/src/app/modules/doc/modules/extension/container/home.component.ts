@@ -1,13 +1,11 @@
 import { DOC_EXTENSION_ROUTES } from '../doc.extension';
 import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
-  imports: [DocFeatureCardListComponent, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DocFeatureCardListComponent, DbxWebPageTitleInfoDirective]
 })
 export class DocExtensionHomeComponent {
   cards: DocFeatureCard[] = DOC_EXTENSION_ROUTES.map((anchor) => ({

@@ -67,8 +67,7 @@ export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
  * ```
  */
 @Directive({
-  selector: '[dbxActionAnalytics]',
-  standalone: true
+  selector: '[dbxActionAnalytics]'
 })
 export class DbxActionAnalyticsDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

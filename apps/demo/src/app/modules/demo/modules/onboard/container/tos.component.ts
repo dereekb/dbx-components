@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 
 @Component({
@@ -7,8 +7,6 @@ import { DbxContentBoxDirective } from '@dereekb/dbx-web';
       <p>Onboard ToS</p>
     </dbx-content-box>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective]
 })
 export class DemoOnboardTosComponent {}

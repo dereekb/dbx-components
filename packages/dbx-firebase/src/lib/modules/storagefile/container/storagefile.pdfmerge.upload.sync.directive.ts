@@ -33,8 +33,7 @@ export const DBX_FIREBASE_STORAGE_PDF_MERGE_UPLOAD_FILE_NAME = 'merged-document.
  * ```
  */
 @Directive({
-  selector: '[dbxFirebaseStoragePdfMergeUploadSync]',
-  standalone: true
+  selector: '[dbxFirebaseStoragePdfMergeUploadSync]'
 })
 export class DbxFirebaseStoragePdfMergeUploadSyncDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);

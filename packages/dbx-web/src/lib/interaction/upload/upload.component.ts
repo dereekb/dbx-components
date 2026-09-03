@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
+import { Component, computed, input, output, viewChild } from '@angular/core';
 import { type FileArrayAcceptMatchConfig } from './upload.accept';
 import { type DbxButtonStyle } from '../../button/button';
 import { type Maybe } from '@dereekb/util';
@@ -69,9 +69,7 @@ export interface DbxFileUploadComponentConfig {
     </ng-template>
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
-  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet]
 })
 export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
   readonly config = input<Maybe<DbxFileUploadComponentConfig>>();

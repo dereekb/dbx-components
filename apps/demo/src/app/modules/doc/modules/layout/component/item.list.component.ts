@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule } from '@dereekb/dbx-web';
 import { type DocValue } from './item.list';
 import { MatListModule } from '@angular/material/list';
@@ -11,9 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'doc-item-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirective<DocValue> {
   constructor() {
@@ -26,9 +24,7 @@ export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirecti
 @Component({
   selector: 'doc-item-list-view',
   templateUrl: './item.list.component.html',
-  imports: [MatListModule, MatIconModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatListModule, MatIconModule]
 })
 export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
   readonly valuesSignal = toSignal(this.values$);

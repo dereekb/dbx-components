@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output } from '@angular/core';
+import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -78,9 +78,7 @@ export type DbxPdfMergeEditorOutputSizeState = 'ok' | 'warn' | 'error';
   host: {
     class: 'dbx-pdf-merge-editor d-block'
   },
-  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, DbxButtonComponent, DbxFileUploadComponent, DbxDownloadBlobButtonComponent, DbxActionDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxPdfMergeListComponent, DbxPdfMergePageListComponent]
 })
 export class DbxPdfMergeEditorComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

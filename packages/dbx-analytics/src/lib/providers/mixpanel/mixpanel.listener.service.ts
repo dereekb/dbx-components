@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { combineLatest } from 'rxjs';
 import { AbstractDbxAnalyticsServiceListener, type DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from '../../analytics';
 import { DbxAnalyticsMixpanelApiService, type MixpanelLike } from './mixpanel.service';
@@ -18,9 +18,7 @@ import { DbxAnalyticsMixpanelApiService, type MixpanelLike } from './mixpanel.se
  * Events are only sent when the Mixpanel configuration is marked as `active`.
  * Provided at root level and registered as a listener via {@link DbxAnalyticsServiceConfiguration.listeners}.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxAnalyticsMixpanelServiceListener extends AbstractDbxAnalyticsServiceListener {
   private readonly _mixpanelApi = inject(DbxAnalyticsMixpanelApiService);
 

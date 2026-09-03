@@ -1,4 +1,4 @@
-import type Stripe from 'stripe';
+import { type Stripe } from 'stripe';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { stripeEventHandlerConfigurerFactory, stripeEventHandlerFactory } from './webhook.stripe';

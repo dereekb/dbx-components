@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { type DbxActionConfirmConfig, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
@@ -31,9 +31,7 @@ import { type CalendarDocumentStore } from '../store/calendar.document.store';
     </div>
   `,
   host: { class: 'dbx-firebase-calendar-ics-rotate-button' },
-  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxActionErrorDirective, DbxButtonComponent, DbxErrorComponent]
 })
 export class DbxFirebaseCalendarIcsRotateButtonComponent {
   /**

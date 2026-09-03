@@ -6,10 +6,3 @@ import { type DbxMapboxConfig } from './mapbox.service';
 export interface DbxMapboxEnvironmentOptions extends DbxMapboxConfig {
   readonly token: string;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use DbxMapboxEnvironmentOptions instead.
- */
-export type DbxMapboxOptions = DbxMapboxEnvironmentOptions;

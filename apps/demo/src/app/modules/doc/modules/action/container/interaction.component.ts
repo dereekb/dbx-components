@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { type DbxActionDialogFunction, DbxPopoverService, type DbxActionPopoverFunction, type DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { DbxActionContextMachine, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective, type DbxActionButtonEchoConfig, completeOnDestroy } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
@@ -15,7 +15,6 @@ import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/d
 
 @Component({
   templateUrl: './interaction.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
@@ -37,8 +36,7 @@ import { DbxForgeActionDialogComponent, dbxForgeTextAreaField } from '@dereekb/d
     DbxActionPopoverDirective,
     DbxActionDialogDirective,
     DbxActionAnalyticsDirective
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocActionInteractionComponent {
   readonly cdRef = inject(ChangeDetectorRef);

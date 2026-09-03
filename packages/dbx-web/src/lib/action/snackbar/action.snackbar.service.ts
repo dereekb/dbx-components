@@ -1,6 +1,6 @@
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
-import { Injectable, InjectionToken, type Type, inject } from '@angular/core';
+import { Service, InjectionToken, type Type, inject } from '@angular/core';
 import { MatSnackBar, type MatSnackBarConfig, type MatSnackBarRef } from '@angular/material/snack-bar';
 import { type Milliseconds, type Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
 import { type DbxActionSnackbarDisplayConfig, type DbxActionSnackbarType } from './action.snackbar';
@@ -61,9 +61,7 @@ export interface DbxActionSnackbarServiceConfig<C = unknown> {
  * service.openSnackbar({ message: 'Item saved!', button: 'Ok' });
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
   readonly matSnackBar = inject(MatSnackBar);
 

@@ -30,8 +30,7 @@ export type QuizPreQuizIntroConfig = Partial<MaybeMap<QuizTitleDetails>>;
  */
 @Component({
   templateUrl: './quiz.prequiz.intro.component.html',
-  imports: [DbxButtonModule],
-  standalone: true
+  imports: [DbxButtonModule]
 })
 export class QuizPreQuizIntroComponent {
   readonly quizStore = inject(QuizStore);

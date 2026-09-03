@@ -1,5 +1,5 @@
 import { cleanSubscription, DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, type ElementRef, type Type, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, type ElementRef, type Type, signal } from '@angular/core';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { type Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
@@ -44,9 +44,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
  */
 @Component({
   templateUrl: './filter.popover.component.html',
-  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {
   readonly config: DbxFilterComponentConfig<F> = this.popover.data as DbxFilterComponentConfig<F>;

@@ -44,12 +44,6 @@
         "command": "./start-release.sh"
       }
     },
-    "prettier": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "./start-release.sh"
-      }
-    },
     "release-dry-run": {
       "executor": "nx:run-commands",
       "options": {

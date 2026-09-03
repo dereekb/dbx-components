@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * Descriptive prose slot inside a `<dbx-docs-ui-example>`.
@@ -20,8 +20,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
         display: block;
       }
     `
-  ],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DbxDocsUiExampleInfoComponent {}

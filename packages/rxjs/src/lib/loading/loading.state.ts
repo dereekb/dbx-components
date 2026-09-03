@@ -1,4 +1,4 @@
-import { type Maybe, type ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, type ReadableDataError, type Page, type FilteredPage, type PageNumber, objectHasKey, type MapFunction, type ErrorInput, toReadableError, mergeObjects, filterMaybeArrayValues, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
+import { type Maybe, type ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, type ReadableDataError, type Page, type PageNumber, objectHasKey, type MapFunction, type ErrorInput, toReadableError, mergeObjects, filterMaybeArrayValues, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
 import { type LoadingProgress } from './loading';
 
 /**
@@ -38,7 +38,7 @@ export interface LoadingErrorPair {
  * isLoadingStateEqual(a, c); // false
  * ```
  */
-export function isLoadingStateEqual<T extends LoadingState>(a: T, b: T): boolean {
+export function isLoadingStateEqual<L extends LoadingState>(a: L, b: L): boolean {
   return a.loading === b.loading && a.loadingProgress === b.loadingProgress && a.error === b.error && a.value === b.value;
 }
 
@@ -58,6 +58,9 @@ export function isLoadingStateMetadataEqual(a: Partial<LoadingErrorPair>, b: Par
 
 /**
  * A value/error pair used in loading situations.
+ *
+ * The `T = unknown` default is deliberate: it makes the bare `LoadingState` the correct top type for
+ * an `L extends LoadingState` constraint, which every shape-preserving helper in this file relies on.
  */
 export interface LoadingState<T = unknown> extends LoadingErrorPair {
   readonly value?: Maybe<T>;
@@ -65,13 +68,36 @@ export interface LoadingState<T = unknown> extends LoadingErrorPair {
 
 /**
  * Returns the value type inferred from the LoadingState type.
+ *
+ * This is a conditional type, and therefore a non-inferable position: a signature that mentions
+ * `LoadingStateValue<L>` in an argument position can never infer `L` from that argument. Use it only
+ * in callback-parameter positions and return types.
+ *
+ * Note that `LoadingStateValue<LoadingState<never>>` resolves to `unknown`, not `never`, because
+ * inferring `Maybe<never>` (which is `null | undefined`) against `Maybe<T>` leaves `T` candidate-less.
+ *
+ * The conditional `infer` body is kept intentionally; a `NonNullable<L['value']>` rewrite is
+ * functionally equivalent and removes no cast.
  */
 export type LoadingStateValue<L extends LoadingState> = L extends LoadingState<infer T> ? T : never;
 
 /**
  * Replaces the value type of the input LoadingState.
+ *
+ * The `L extends LoadingState ? ... : never` wrapper is load-bearing rather than dead code: it makes
+ * the type distribute over a union of state types. `Omit<A | B, K>` collapses a union down to its
+ * common keys, so without distribution a union containing a {@link PageLoadingState} would lose `page`.
  */
 export type LoadingStateWithValueType<L extends LoadingState, T> = L extends LoadingState ? Omit<L, 'value'> & LoadingState<T> : never;
+
+/**
+ * The result of re-deriving a {@link LoadingState} with its `value` and `error` cleared or replaced.
+ *
+ * The `value` and `error` keys are dropped from `S` before the plain {@link LoadingState} shape is
+ * re-added, because the merge helpers may clear a field that `S` itself requires (a
+ * `LoadingStateWithDefinedValue<Foo>` cannot honestly be returned once its value is cleared).
+ */
+export type MergedLoadingState<S extends LoadingState> = Omit<S, 'value' | 'error'> & LoadingState<LoadingStateValue<S>>;
 
 /**
  * Loading state with a value key.
@@ -110,19 +136,9 @@ export interface PageLoadingState<T = unknown> extends LoadingState<T>, Page {
 }
 
 /**
- * PageLoadingState with a filter.
- */
-export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> {}
-
-/**
  * LoadingPageState that has an array of the values and
  */
-export type PageListLoadingState<T> = PageLoadingState<T[]>;
-
-/**
- * PageListLoadingState with a Filter.
- */
-export type FilteredPageListLoadingState<T, F> = FilteredPageLoadingState<T[], F>;
+export type PageListLoadingState<T = unknown> = PageLoadingState<T[]>;
 
 // MARK: Utility
 /**
@@ -170,14 +186,21 @@ export function loadingStateType(loadingState: LoadingState): LoadingStateType {
 
   if (isLoading) {
     type = LoadingStateType.LOADING;
+  } else if (loadingState.error != null) {
+    /**
+     * The error is checked first: a state can legitimately carry both an error and a value (for
+     * instance a state mapped through mapLoadingStateResults, or one merged via
+     * mergeLoadingStateWithError), and an error always wins over a stale value.
+     */
+    type = LoadingStateType.ERROR;
+  } else if (objectHasKey(loadingState, 'value')) {
+    /**
+     * The own-key test is deliberate for `value` (and only for `value`): `value: null` is a
+     * meaningful "loaded, but empty" signal, so key presence rather than nullishness decides success.
+     */
+    type = LoadingStateType.SUCCESS;
   } else {
-    if (objectHasKey(loadingState, 'value')) {
-      type = LoadingStateType.SUCCESS;
-    } else if (objectHasKey(loadingState, 'error')) {
-      type = LoadingStateType.ERROR;
-    } else {
-      type = LoadingStateType.IDLE;
-    }
+    type = LoadingStateType.IDLE;
   }
 
   return type;
@@ -229,7 +252,7 @@ export function isLoadingStateFinishedLoading<L extends LoadingState>(state: May
  * loadingStateType(state); // LoadingStateType.IDLE
  * ```
  */
-export function idleLoadingState<T>(): LoadingState<T> {
+export function idleLoadingState<T = never>(): LoadingState<T> {
   return { loading: false };
 }
 
@@ -248,10 +271,10 @@ export function idleLoadingState<T>(): LoadingState<T> {
  * @param state - optional partial state to merge with the loading flag
  * @returns a loading state with `loading: true`
  */
-export function beginLoading<T>(): LoadingState<T>;
-export function beginLoading<T>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
-export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T>;
-export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T> {
+export function beginLoading<T = never>(): LoadingState<T>;
+export function beginLoading<T = never>(state: Partial<LoadingState<T>> & Page): PageLoadingState<T>;
+export function beginLoading<T = never>(state?: Partial<LoadingState<T>>): LoadingState<T>;
+export function beginLoading<T = never>(state?: Partial<LoadingState<T>>): LoadingState<T> {
   return state ? { ...state, loading: true } : { loading: true };
 }
 
@@ -263,7 +286,7 @@ export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<
  * @returns A page loading state with `loading: true`
  */
 export function beginLoadingPage<T>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
-  return state ? { page, ...state, loading: true } : { page, loading: true };
+  return state ? { ...state, page, loading: true } : { page, loading: true };
 }
 
 /**
@@ -289,7 +312,7 @@ export function successResult<T>(value: T): LoadingStateWithValue<T> {
  * @param value - The loaded value.
  * @returns A page loading state representing success.
  */
-export function successPageResult<T>(page: PageNumber, value: T): PageLoadingState<T> {
+export function successPageResult<T>(page: PageNumber, value: T): PageLoadingState<T> & LoadingStateWithValue<T> {
   return { ...successResult(value), page };
 }
 
@@ -307,7 +330,10 @@ export function successPageResult<T>(page: PageNumber, value: T): PageLoadingSta
  * // { error: { message: 'Not found', ... }, loading: false }
  * ```
  */
-export function errorResult<T>(error?: Maybe<ErrorInput>): LoadingState<T> {
+export function errorResult<T = never>(error: ErrorInput): LoadingStateWithError<T>;
+export function errorResult<T = never>(error?: Maybe<ErrorInput>): LoadingState<T>;
+
+export function errorResult<T = never>(error?: Maybe<ErrorInput>): LoadingState<T> {
   return { error: toReadableError(error), loading: false };
 }
 
@@ -318,7 +344,7 @@ export function errorResult<T>(error?: Maybe<ErrorInput>): LoadingState<T> {
  * @param error - The error to include.
  * @returns A page loading state representing an error.
  */
-export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError | ReadableDataError>): PageLoadingState<T> {
+export function errorPageResult<T = never>(page: PageNumber, error?: Maybe<ErrorInput>): PageLoadingState<T> {
   return { ...errorResult(error), page };
 }
 
@@ -334,7 +360,7 @@ export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError
  * isAnyLoadingStateInLoadingState([successResult(1), successResult(2)]); // false
  * ```
  */
-export function isAnyLoadingStateInLoadingState(states: LoadingState[]): boolean {
+export function isAnyLoadingStateInLoadingState(states: readonly LoadingState[]): boolean {
   return reduceBooleansWithOr(states.map(isLoadingStateLoading), false);
 }
 
@@ -350,7 +376,7 @@ export function isAnyLoadingStateInLoadingState(states: LoadingState[]): boolean
  * areAllLoadingStatesFinishedLoading([successResult(1), beginLoading()]); // false
  * ```
  */
-export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): boolean {
+export function areAllLoadingStatesFinishedLoading(states: readonly LoadingState[]): boolean {
   return reduceBooleansWithAnd(states.map(isLoadingStateFinishedLoading), true);
 }
 
@@ -419,7 +445,7 @@ export const isLoadingStateInErrorState = isLoadingStateWithStateType(LoadingSta
  * isLoadingStateWithDefinedValue(beginLoading()); // false
  * ```
  */
-export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
+export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   return state ? state.value !== undefined : false;
 }
 
@@ -435,7 +461,7 @@ export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Ma
  * isLoadingStateWithError(successResult('ok')); // false
  * ```
  */
-export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
+export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithError<LoadingStateValue<L>> {
   return state ? state.error != null : false;
 }
 
@@ -445,7 +471,7 @@ export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> 
  * @param state - The loading state to check.
  * @returns True if finished loading with a non-undefined value.
  */
-export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
+export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   return state ? isLoadingStateFinishedLoading(state) && state.value !== undefined : false;
 }
 
@@ -455,7 +481,7 @@ export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingS
  * @param state - The loading state to check.
  * @returns True if finished loading with an error.
  */
-export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
+export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L>): state is L & LoadingStateWithError<LoadingStateValue<L>> {
   return state ? isLoadingStateFinishedLoading(state) && state.error != null : false;
 }
 
@@ -485,7 +511,96 @@ export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b:
   return valuesAreBothNullishOrEquivalent(a.page, b.page) && a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
-// TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
+// MARK: Accessors
+/**
+ * Type guard that checks whether the input {@link LoadingState} also carries a {@link Page}.
+ *
+ * `Page` is intentionally kept orthogonal to `LoadingState`, so this is the supported way to ask a
+ * state whether it is paginated without hoisting page keys onto the base type.
+ *
+ * @param state - The loading state to check (may be null/undefined)
+ * @returns True when the state is present and exposes a numeric `page`.
+ *
+ * @example
+ * ```ts
+ * isPageLoadingState(successPageResult(0, 'a')); // true
+ * isPageLoadingState(successResult('a')); // false
+ * ```
+ */
+export function isPageLoadingState<L extends LoadingState>(state: Maybe<L>): state is L & Page {
+  return state != null && typeof (state as Partial<Page>).page === 'number';
+}
+
+/**
+ * Reads the `hasNextPage` flag from the input state, if it carries one.
+ *
+ * @param state - The loading state to read from (may be null/undefined)
+ * @returns The `hasNextPage` value, or null/undefined when the state is absent or not paginated.
+ *
+ * @example
+ * ```ts
+ * loadingStateHasNextPage({ page: 0, loading: false, hasNextPage: true }); // true
+ * loadingStateHasNextPage(successResult('a')); // undefined
+ * ```
+ */
+export function loadingStateHasNextPage(state: Maybe<LoadingState>): Maybe<boolean> {
+  /**
+   * Documented cast: `hasNextPage` lives on {@link PageLoadingState}, which is orthogonal to the
+   * {@link LoadingState} apparent type, so it can only be reached structurally. This is the one place
+   * that does so, instead of every caller writing `x as unknown as PageLoadingState`.
+   */
+  return (state as Maybe<PageLoadingState>)?.hasNextPage;
+}
+
+/**
+ * Reads the value of a generic {@link LoadingState}.
+ *
+ * Reading `state.value` where `state: L` resolves through `L`'s apparent type (its constraint), which
+ * yields `Maybe<unknown>` rather than `Maybe<LoadingStateValue<L>>`. This is the single documented
+ * site that casts that back, so no other function in the library needs to.
+ *
+ * @param state - The loading state to read the value from.
+ * @returns The state's value, typed as the state's value type.
+ *
+ * @example
+ * ```ts
+ * loadingStateValue(successResult('a')); // 'a'
+ * loadingStateValue(beginLoading<string>()); // undefined
+ * ```
+ */
+export function loadingStateValue<L extends LoadingState>(state: L): Maybe<LoadingStateValue<L>> {
+  return state.value as Maybe<LoadingStateValue<L>>;
+}
+
+/**
+ * Copies the input state, replacing only its value, and retypes the result to match.
+ *
+ * Distinct from {@link mergeLoadingStateWithValue}, which additionally forces `loading: false` and
+ * clears any error; this preserves the input state's metadata (including `loading` and `error`)
+ * exactly and swaps the value alone.
+ *
+ * @param state - The state to copy metadata from.
+ * @param value - The replacement value.
+ * @returns The state with its value type replaced.
+ *
+ * @example
+ * ```ts
+ * loadingStateWithValueType(successPageResult(0, 'a'), 1); // { page: 0, loading: false, value: 1 }
+ * ```
+ */
+export function loadingStateWithValueType<L extends LoadingState, T>(state: L, value: Maybe<T>): LoadingStateWithValueType<L, T> {
+  /**
+   * Documented cast: no formulation of {@link LoadingStateWithValueType} lets a spread literal satisfy
+   * it while `L` is still generic (mapped-type and `Omit`-free variants were both checked). The target
+   * is one cast site rather than zero, and this is it.
+   */
+  return { ...state, value } as unknown as LoadingStateWithValueType<L, T>;
+}
+
+/**
+ * Function used by {@link mergeLoadingStatesArray} to merge the values of the input states.
+ */
+export type MergeLoadingStatesArrayFunction<O> = (...values: any[]) => O;
 
 /**
  * Merges multiple {@link LoadingState} instances into a single combined state.
@@ -527,7 +642,7 @@ export function mergeLoadingStates<A extends object, B extends object, C extends
 export function mergeLoadingStates<A extends object, B extends object, C extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, mergeFn: (a: A, b: B, c: C) => O): LoadingState<O>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>): LoadingState<A & B & C & D>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, mergeFn: (a: A, b: B, c: C, d: D) => O): LoadingState<O>;
-export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>): LoadingState<A & B & C & D & E>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>): LoadingState<A & B & C & D & E>;
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
 // eslint-disable-next-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
@@ -576,6 +691,30 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
 }
 
 /**
+ * Merges an array of {@link LoadingState} instances into a single combined state.
+ *
+ * The non-variadic counterpart to {@link mergeLoadingStates}: because the states arrive as one array
+ * argument rather than as rest arguments, the output value type `O` is inferable from `mergeFn` and
+ * the call site needs no cast.
+ *
+ * @param states - The loading states to merge.
+ * @param mergeFn - Optional function merging the states' values; defaults to `mergeObjects`.
+ * @returns The combined loading state.
+ *
+ * @example
+ * ```ts
+ * mergeLoadingStatesArray([successResult({ a: 1 }), successResult({ b: 2 })]);
+ * // { loading: false, value: { a: 1, b: 2 } }
+ *
+ * mergeLoadingStatesArray([successResult(1), successResult(2)], (a: number, b: number) => a + b);
+ * // { loading: false, value: 3 }
+ * ```
+ */
+export function mergeLoadingStatesArray<O>(states: readonly LoadingState[], mergeFn?: MergeLoadingStatesArrayFunction<O>): LoadingState<O> {
+  return mergeLoadingStates<O>(...states, mergeFn);
+}
+
+/**
  * Returns a copy of the state with the value and error cleared, and `loading` set to the given flag.
  *
  * Useful for resetting a state back to loading or idle without losing other metadata (e.g., page).
@@ -584,7 +723,7 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
  * @param loading - Whether to mark as loading (defaults to true)
  * @returns A new state with value/error cleared.
  */
-export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, loading = true): S {
+export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, loading = true): MergedLoadingState<S> {
   return {
     ...state,
     value: undefined,
@@ -600,7 +739,7 @@ export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, l
  * @param value - The new value to set.
  * @returns A new state representing success.
  */
-export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
+export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: Maybe<LoadingStateValue<S>>): MergedLoadingState<S> {
   return {
     ...state,
     value: value ?? undefined,
@@ -616,62 +755,48 @@ export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, val
  * @param error - The error to set.
  * @returns A new state representing an error.
  */
-export function mergeLoadingStateWithError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): S {
+export function mergeLoadingStateWithError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): MergedLoadingState<S> {
+  /**
+   * The spread carries `value` through untouched, which is what the runtime should do — re-assigning
+   * it would add a `value` own-key to a state that had none and flip its {@link LoadingStateType}.
+   * The cast only restores `value`'s type, which the spread widened to `unknown` via `S`'s apparent
+   * type; see {@link loadingStateValue} for the same apparent-type problem stated once.
+   */
   return {
     ...state,
     loading: false,
     error
-  };
-}
-
-export type MapMultipleLoadingStateValuesFn<T, X> = (input: X[]) => T;
-
-export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends LoadingState<X>[], R extends LoadingState<T>> {
-  readonly mapValues?: MapMultipleLoadingStateValuesFn<T, X>;
-  readonly mapState?: (input: L) => R;
+  } as unknown as MergedLoadingState<S>;
 }
 
 /**
- * Maps multiple {@link LoadingState} results into a single state using a value mapping or state mapping function.
+ * Maps an entire input {@link LoadingState} (and its already-mapped value) to the output state.
  *
- * Returns `undefined` if any input is still loading or has an error.
- *
- * @param input - Array of loading states to combine.
- * @param config - Mapping configuration with either `mapValues` or `mapState`
- * @returns The combined loading state, or undefined if inputs are not ready.
- * @throws {Error} When neither `mapValues` nor `mapState` is provided in the config.
+ * State-first, per the family-3 rule: `L` and `B` must resolve before `O`'s default is evaluated.
  */
-export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
-  const { mapValues, mapState } = config;
-  const loading = isAnyLoadingStateInLoadingState(input);
-  const error = input.map((x) => x.error).find(Boolean);
-  let result: Maybe<R>;
+export type MapLoadingStateFn<L extends LoadingState, B, O extends LoadingState = LoadingStateWithValueType<L, B>> = (input: L, value?: B) => O;
 
-  if (!error && !loading) {
-    if (mapValues) {
-      const value: T = mapValues(input.map((x) => x.value) as X[]);
-      result = {
-        loading,
-        value,
-        error
-      } as R;
-    } else if (mapState) {
-      result = mapState(input);
-    } else {
-      throw new Error('Incomplete mapMultipleLoadingStateResults configuration');
-    }
-  }
+/**
+ * Maps the value of an input {@link LoadingState} to the output value type.
+ */
+export type MapLoadingStateValuesFn<L extends LoadingState, B> = (input: LoadingStateValue<L>, state: L) => B;
 
-  return result;
-}
-
-export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L, value?: B) => O;
-export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
-
-export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
+/**
+ * Configuration for {@link mapLoadingStateResults}.
+ *
+ * The type parameter order is load-bearing: the input state `L` comes first so that it (and then `B`,
+ * inferred from `mapValue`'s return) is resolved before `O`'s default is evaluated. Any other order
+ * leaves `O` — and with it the input state's shape, including `page` — degraded.
+ *
+ * `O` is constrained to a bare {@link LoadingState} rather than to `LoadingState<B>`: a caller that
+ * threads its own output state type through (as the mapped-iteration layer does) cannot prove
+ * `M extends LoadingState<LoadingStateValue<M>>` while `M` is still generic. `mapState`'s signature
+ * still ties `O` back to `B`.
+ */
+export interface MapLoadingStateResultsConfiguration<L extends LoadingState, B, O extends LoadingState = LoadingStateWithValueType<L, B>> {
   readonly alwaysMapValue?: boolean;
-  readonly mapValue?: MapLoadingStateValuesFn<A, B, L>;
-  readonly mapState?: MapLoadingStateFn<A, B, L, O>;
+  readonly mapValue?: MapLoadingStateValuesFn<L, B>;
+  readonly mapState?: MapLoadingStateFn<L, B, O>;
 }
 
 /**
@@ -680,6 +805,10 @@ export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingStat
  * Preserves the loading/error metadata while transforming the value via `mapValue` or the entire
  * state via `mapState`. When `alwaysMapValue` is true, maps even when the value is null/undefined.
  *
+ * @param input - The loading state to transform.
+ * @param config - Mapping configuration.
+ * @returns The transformed loading state.
+ *
  * @example
  * ```ts
  * const result = mapLoadingStateResults(successResult(0), {
@@ -687,21 +816,14 @@ export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingStat
  * });
  * // { value: 'Value: 0', loading: false }
  * ```
- *
- * @param input - the loading state to transform
- * @param config - mapping configuration
- * @returns the transformed loading state
  */
-export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
-export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
-export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
-export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O {
+export function mapLoadingStateResults<L extends LoadingState, B, O extends LoadingState = LoadingStateWithValueType<L, B>>(input: L, config: MapLoadingStateResultsConfiguration<L, B, O>): O {
   const { mapValue, mapState, alwaysMapValue = false } = config;
-  const inputValue = input.value;
+  const inputValue = loadingStateValue(input);
   let value: B;
 
   if ((inputValue != null || alwaysMapValue) && mapValue) {
-    value = mapValue(inputValue as A, input);
+    value = mapValue(inputValue as LoadingStateValue<L>, input);
   } else {
     value = inputValue as unknown as B;
   }
@@ -711,17 +833,23 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
   if (mapState) {
     result = mapState(input, value);
   } else {
-    result = {
-      ...input,
-      value
-    } as unknown as O;
+    // `O` may be instantiated more narrowly than its LoadingStateWithValueType<L, B> default, so the
+    // constructed state cannot be proven to be an `O` while both remain generic.
+    result = loadingStateWithValueType(input, value) as unknown as O;
   }
 
   return result;
 }
 
-export type MapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = MapFunction<L, Maybe<O>>;
-export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = (item: I, state: L) => Maybe<O>;
+/**
+ * Extracts and maps the value out of a {@link LoadingState}, or returns undefined when it has none.
+ */
+export type MapLoadingStateValueFunction<L extends LoadingState, O> = MapFunction<L, Maybe<O>>;
+
+/**
+ * Maps a {@link LoadingState}'s non-null value (and the state it came from) to the output type.
+ */
+export type MapLoadingStateValueMapFunction<L extends LoadingState, O> = (item: LoadingStateValue<L>, state: L) => Maybe<O>;
 
 /**
  * Creates a function that extracts and maps the value from a {@link LoadingState}, returning undefined
@@ -732,12 +860,13 @@ export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = Lo
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>>(mapFn: MapLoadingStateValueMapFunction<O, I, L>): MapLoadingStateValueFunction<O, I, L> {
+export function mapLoadingStateValueFunction<L extends LoadingState, O>(mapFn: MapLoadingStateValueMapFunction<L, O>): MapLoadingStateValueFunction<L, O> {
   return (state: L) => {
+    const value = loadingStateValue(state);
     let result: Maybe<O>;
 
-    if (state.value != null) {
-      result = mapFn(state.value, state);
+    if (value != null) {
+      result = mapFn(value, state);
     }
 
     return result;

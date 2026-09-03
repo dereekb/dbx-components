@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally provides gen 1 wrap helpers for NestJS-hosted test fixtures */
 import { type Getter } from '@dereekb/util';
 import { type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
 import { firebaseAdminNestContextWithFixture, type FirebaseAdminNestTestConfig, type FirebaseAdminNestTestContext, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance } from './firebase.admin.nest';
 import { type FirebaseAdminFunctionTestContextInstance, firebaseAdminFunctionTestContextFactory } from './firebase.admin.function';
 import { type NestApplicationBlockingFunctionFactory, type NestApplicationCallableHttpFunctionFactory, type NestApplicationCloudEventFunctionFactory, type NestApplicationScheduleFunctionFactory } from '@dereekb/firebase-server';
-import { type FirebaseAdminCloudFunctionWrapper, type FirebaseAdminCloudFunctionWrapperSource, wrapCallableRequestForTests, wrapCloudFunctionV1ForTests, type WrappedCloudFunctionV1, type WrappedCallableRequest } from './firebase.function';
+import { type FirebaseAdminCloudFunctionWrapper, type FirebaseAdminCloudFunctionWrapperSource, wrapCallableRequestForTests, wrapCloudFunctionTests, type WrappedCloudFunction, type WrappedCallableRequest } from './firebase.function';
 import { type CloudEvent } from 'firebase-functions/v2';
 
 // MARK: Utility
@@ -20,17 +19,17 @@ type WrapCloudFunctionForNestTestsInputNonEventTypes = NestApplicationScheduleFu
 export type WrapCloudFunctionForNestTestsInput<I extends object> = I extends CloudEvent<any> ? NestApplicationCloudEventFunctionFactory<I> | WrapCloudFunctionForNestTestsInputNonEventTypes : WrapCloudFunctionForNestTestsInputNonEventTypes;
 
 /**
- * Creates a lazy getter that wraps a NestJS-hosted Cloud Function (v1) for testing.
+ * Creates a lazy getter that wraps a NestJS-hosted Cloud Function for testing.
  *
  * The returned getter defers wrapping until first invocation, so the NestJS application
  * is resolved at call time rather than at setup time.
  *
  * @param wrapper - The test context providing the function wrapper and NestJS app promise.
  * @param fn - The NestJS application function factory to wrap.
- * @returns A getter that produces a {@link WrappedCloudFunctionV1} on each call.
+ * @returns A getter that produces a {@link WrappedCloudFunction} on each call.
  */
-export function wrapCloudFunctionForNestTestsGetter<I extends object>(wrapper: FirebaseAdminFunctionNestTestContext, fn: WrapCloudFunctionForNestTestsInput<I>): Getter<WrappedCloudFunctionV1<I>> {
-  return wrapCloudFunctionV1ForTests<I>(wrapper.fnWrapper, () => fn(wrapper.nestAppPromiseGetter) as any);
+export function wrapCloudFunctionForNestTestsGetter<I extends object>(wrapper: FirebaseAdminFunctionNestTestContext, fn: WrapCloudFunctionForNestTestsInput<I>): Getter<WrappedCloudFunction<I>> {
+  return wrapCloudFunctionTests<I>(wrapper.fnWrapper, () => fn(wrapper.nestAppPromiseGetter) as any);
 }
 
 /**
@@ -67,16 +66,16 @@ export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestT
  * Fixture that combines NestJS testing module access with Cloud Function wrapping capabilities.
  *
  * Extends {@link FirebaseAdminNestTestContextFixture} and adds convenience methods for wrapping
- * both v1 cloud functions and gen-2 callable requests directly from the fixture, delegating
+ * both cloud functions and gen-2 callable requests directly from the fixture, delegating
  * to the standalone {@link wrapCloudFunctionForNestTestsGetter} and {@link wrapCallableRequestForNestTestsGetter} helpers.
  */
 export class FirebaseAdminFunctionNestTestContextFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>> extends FirebaseAdminNestTestContextFixture<PI, PF, I> implements FirebaseAdminFunctionNestTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
-  wrapCloudFunctionForNestTests<I extends object>(fn: WrapCloudFunctionForNestTestsInput<I>): WrappedCloudFunctionV1<I> {
+  wrapCloudFunctionForNestTests<I extends object>(fn: WrapCloudFunctionForNestTestsInput<I>): WrappedCloudFunction<I> {
     return this.wrapCloudFunctionForNestTestsGetter(fn)();
   }
 
-  wrapCloudFunctionForNestTestsGetter<I extends object>(fn: WrapCloudFunctionForNestTestsInput<I>): Getter<WrappedCloudFunctionV1<I>> {
+  wrapCloudFunctionForNestTestsGetter<I extends object>(fn: WrapCloudFunctionForNestTestsInput<I>): Getter<WrappedCloudFunction<I>> {
     return wrapCloudFunctionForNestTestsGetter(this, fn);
   }
 

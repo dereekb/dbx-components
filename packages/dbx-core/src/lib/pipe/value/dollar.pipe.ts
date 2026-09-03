@@ -22,7 +22,6 @@ import { dollarAmountString, type Maybe } from '@dereekb/util';
  */
 @Pipe({
   name: 'dollarAmount',
-  standalone: true,
   pure: true
 })
 export class DollarAmountPipe implements PipeTransform {

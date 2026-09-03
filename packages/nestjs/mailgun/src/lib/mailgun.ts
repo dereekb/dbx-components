@@ -1,7 +1,24 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
 import { type ArrayOrValue, asArray, type EmailAddress, type EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, type NameEmailPair, overrideInObject, objectIsEmpty, type EmailParticipantString, addToSet, forEachInIterable, type Maybe, MAP_IDENTITY } from '@dereekb/util';
-import { type CustomFile, type CustomFileData, type MailgunMessageData, type MessagesSendResult } from 'node_modules/mailgun.js/Types/Types/Messages/Messages';
-import { type APIResponse } from 'node_modules/mailgun.js/Types/Types/Common/ApiResponse';
+import { type MailgunMessagesClient, type MailgunDomainsClient } from './mailgun.type';
+
+/**
+ * mailgun.js declares no `exports` map entry for its `Types/` tree, so importing these directly
+ * emits a `node_modules/mailgun.js/...` specifier into this package's `.d.ts` that no downstream
+ * consumer can resolve. Each is instead derived from a public client method, matching the
+ * `ReturnType`/`Parameters` convention already used across `mailgun.type.ts`.
+ */
+type MailgunMessageData = Parameters<MailgunMessagesClient['create']>[1];
+type MessagesSendResult = Awaited<ReturnType<MailgunMessagesClient['create']>>;
+/**
+ * The object-with-`data` member of mailgun's `attachment` union — i.e. its `CustomFile`.
+ */
+type CustomFile = Extract<NonNullable<MailgunMessageData['attachment']>, { data: unknown }>;
+type CustomFileData = CustomFile['data'];
+/**
+ * mailgun's generic `{ status, body }` envelope, reached via a method that returns it verbatim.
+ */
+type APIResponse = Awaited<ReturnType<MailgunDomainsClient['assignIp']>>;
 
 export type MailgunSenderDomainString = EmailAddressDomain;
 export type MailgunTemplateKey = string;

@@ -1,18 +1,27 @@
 /// <reference types='vitest' />
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig, type ViteUserConfigFn } from 'vitest/config';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { type loadEnv, type PluginOption } from 'vite';
 import { createRequire } from 'node:module';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 type VitestTestConfig = NonNullable<Awaited<ReturnType<ViteUserConfigFn>>['test']>;
 type SequenceHooks = NonNullable<VitestTestConfig['sequence']>['hooks'];
+type VitestTypecheckConfig = NonNullable<VitestTestConfig['typecheck']>;
 
 export interface DbxComponentsVitestPresetConfigOptions {
   readonly type: 'angular' | 'firebase' | 'nestjs' | 'node';
+
+  /**
+   * The consuming project's directory.
+   *
+   * Either an absolute path (callers typically pass `__dirname`) or a path relative to
+   * the workspace root; both are resolved against the workspace root, so neither depends
+   * on the working directory vitest is launched from.
+   */
   readonly pathFromRoot: string;
+
   readonly projectName: string;
 
   /**
@@ -70,6 +79,16 @@ export interface DbxComponentsVitestPresetConfigOptions {
   };
 
   /**
+   * Enables Vitest's type-level testing for this project.
+   *
+   * Off unless provided. A project opts in when it has `expectTypeOf` assertions worth pinning, since
+   * enabling it adds a `tsc` pass to every run. Pass `true` for the convention default (every
+   * `src/**\/*.types.spec.ts` checked against `tsconfig.spec.json`, ignoring type errors in files
+   * outside that set), or a partial config to override any of it.
+   */
+  readonly typecheck?: boolean | Partial<VitestTypecheckConfig>;
+
+  /**
    * Name of the environment variable used to detect CI.
    *
    * When this env var is `'true'`, isolation defaults to the type-specific value
@@ -106,7 +125,7 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  *
  * @param name - The setup file entry point name (e.g., 'setup-firebase', 'setup-angular').
  * @param rootDir - Absolute path to the workspace root directory.
- * @param pathFromRoot - Relative path from the workspace root to the consuming project.
+ * @param projectRootDir - Absolute path to the consuming project's directory.
  * @returns Absolute or relative file path to the resolved setup file.
  *
  * @example
@@ -116,12 +135,12 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  * //
  * // During workspace development:
  * //   returns '/path/to/workspace/vitest.setup.firebase.ts'
- * resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot);
+ * resolveVitestSetupFile('setup-firebase', rootDir, projectRootDir);
  * ```
  */
-function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: string): string {
+function resolveVitestSetupFile(name: string, rootDir: string, projectRootDir: string): string {
   const _require = createRequire(path.resolve(rootDir, 'noop.js'));
-  const pathToRoot = path.relative(pathFromRoot, rootDir);
+  const pathToRoot = path.relative(projectRootDir, rootDir);
 
   let result: string;
 
@@ -144,6 +163,116 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
 }
 
 /**
+ * Walks up from `startDir` to find the workspace root, identified by an `nx.json`.
+ *
+ * The working directory vitest runs from is not stable: the Nx `@nx/vitest` inferred
+ * target runs it from the project directory, while a direct `vitest` invocation
+ * typically runs from the workspace root. Locating the root explicitly keeps every
+ * derived path correct under both.
+ *
+ * @param startDir - Absolute directory to begin searching from.
+ * @returns Absolute path to the workspace root, or `startDir` when no `nx.json` is found.
+ */
+function findWorkspaceRootDir(startDir: string): string {
+  let dir = startDir;
+  let result = startDir;
+
+  for (;;) {
+    if (existsSync(path.join(dir, 'nx.json'))) {
+      result = dir;
+      break;
+    }
+
+    const parent = path.dirname(dir);
+
+    if (parent === dir) {
+      break;
+    }
+
+    dir = parent;
+  }
+
+  return result;
+}
+
+/**
+ * Packages that must be transformed by vite rather than imported natively by node.
+ *
+ * The angular setup file calls `setupTestBed()`, which initializes the `TestBed` singleton
+ * exported by `@angular/core/testing`, and `@analogjs/vite-plugin-angular` pins the angular
+ * testing bundles to the vite-processed copy (`ssr.noExternal: [/fesm2022(.*?)testing/]`).
+ * When `@dereekb/vitest` is installed from npm its published `package.json` declares
+ * `"type": "module"`, so vitest reads it as a valid native import and externalizes it. The
+ * setup file then runs against a *second* copy of `@angular/core/testing` and initializes a
+ * `TestBed` no spec can ever see, so every angular spec fails on
+ * `Need to call TestBed.initTestEnvironment() first`.
+ *
+ * Inlining the package keeps its setup files in the same module graph as the spec files, which
+ * is what already happens inside this workspace, where `@dereekb/vitest` resolves to source.
+ */
+const ALWAYS_INLINE_DEPS: readonly string[] = ['@dereekb/vitest'];
+
+/**
+ * Name of the workspace-root tsconfig whose `paths` declare every `@dereekb/*` alias.
+ */
+const WORKSPACE_TSCONFIG_FILE_NAME = 'tsconfig.base.json';
+
+/**
+ * A vite `resolve.alias` entry mapping one exact module specifier to a source file.
+ */
+interface WorkspaceSourceAlias {
+  readonly find: RegExp;
+  readonly replacement: string;
+}
+
+/**
+ * Builds `resolve.alias` entries for the workspace `paths` aliases, anchored at the workspace root.
+ *
+ * `resolve.tsconfigPaths` alone is not enough. Vite resolves a path mapping using the tsconfig
+ * nearest the *importing* file, and the three `dbx-cli` entrypoint `tsconfig.lib.json` files
+ * deliberately declare an empty `"paths": {}`. That empty map is load-bearing for the rollup build
+ * — it blanks the inherited workspace `paths` so no `@dereekb/*` import can resolve to another
+ * package's SOURCE (which is what `buildLibsFromSource: false` exists to prevent), after which
+ * `withNx` re-adds only that project's graph dependencies mapped to their `dist/` outputs.
+ *
+ * Vitest never runs that Nx step, so for any file under those packages the blank map was the final
+ * word: `@dereekb/*` imports fell through to bare Node resolution and failed to load with
+ * `Cannot find package '@dereekb/dbx-cli'`, taking 18 `dbx-components-mcp` suites down with them.
+ *
+ * Anchoring the aliases at the workspace root gives every file one consistent mapping regardless of
+ * which tsconfig happens to sit closest to it, which is what this preset always intended to do.
+ *
+ * @param rootDir - Absolute path to the workspace root directory.
+ * @returns Alias entries pointing each mapped specifier at its source entry point, or an empty array
+ * when the workspace tsconfig is absent or unreadable (leaving vite's own resolution in charge).
+ */
+function readWorkspaceSourceAliases(rootDir: string): WorkspaceSourceAlias[] {
+  const configFilePath = path.join(rootDir, WORKSPACE_TSCONFIG_FILE_NAME);
+  let result: WorkspaceSourceAlias[] = [];
+
+  if (existsSync(configFilePath)) {
+    try {
+      const { compilerOptions } = JSON.parse(readFileSync(configFilePath, 'utf8')) as { compilerOptions?: { paths?: Record<string, string[]> } };
+
+      result = Object.entries(compilerOptions?.paths ?? {}).flatMap(([specifier, targets]) => {
+        const target = targets[0];
+        /**
+         * The specifier is matched exactly. A prefix match on `@dereekb/util` would also rewrite an
+         * unmapped subpath such as `@dereekb/util/not-an-alias` and corrupt its resolution, so an
+         * unmapped subpath is left for vite to resolve normally.
+         */
+        const escapedSpecifier = specifier.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+        return target == null ? [] : [{ find: new RegExp(`^${escapedSpecifier}$`), replacement: path.resolve(rootDir, target) }];
+      });
+    } catch (e) {
+      console.warn(`@dereekb/vitest: could not read the "paths" aliases from "${configFilePath}"; falling back to vite's tsconfig resolution. ${e}`);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Creates a complete Vitest configuration tailored for dbx-components projects.
  *
  * Handles environment detection (CI vs local), pool/isolation defaults, setup file
@@ -156,10 +285,33 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
  * @__NO_SIDE_EFFECTS__
  */
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {
-  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, ciEnvVar = 'CI' } = options;
+  const { configureEnv, type, pathFromRoot, projectName, projectSpecificSetupFiles, modelPathIgnorePatterns, test: testConfig, junitConfig, requiresFirebaseEnvironment, printConsoleTrace, typecheck: inputTypecheck, ciEnvVar = 'CI' } = options;
 
-  const rootDir = options.rootDir ?? process.cwd();
-  const pathToRoot = path.relative(pathFromRoot, rootDir);
+  /**
+   * Type-level tests live beside the runtime specs as `*.types.spec.ts`, so they are picked up by the
+   * normal `include` too (where their `expectTypeOf` assertions are inert) and by the typechecker here.
+   * `ignoreSourceErrors` keeps a project's unrelated pre-existing spec type errors from failing the
+   * run — only the opted-in type-level files are asserted on.
+   */
+  const typecheck: VitestTypecheckConfig | undefined = inputTypecheck
+    ? {
+        enabled: true,
+        include: ['src/**/*.types.spec.ts'],
+        tsconfig: 'tsconfig.spec.json',
+        ignoreSourceErrors: true,
+        ...(typeof inputTypecheck === 'object' ? inputTypecheck : undefined)
+      }
+    : undefined;
+
+  const rootDir = options.rootDir ?? findWorkspaceRootDir(process.cwd());
+  /**
+   * Absolute project directory, resolved from the workspace root rather than from
+   * `process.cwd()` so the config works whether vitest is launched from the workspace
+   * root or from the project directory (as the `@nx/vitest` inferred target does).
+   */
+  const projectRootDir = path.resolve(rootDir, pathFromRoot);
+  const pathToRoot = path.relative(projectRootDir, rootDir);
+  const workspaceSourceAliases = readWorkspaceSourceAliases(rootDir);
 
   /**
    * Whether we're running in CI. Used to determine isolation and pool defaults.
@@ -176,7 +328,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   let pool: VitestTestConfig['pool'] | undefined;
   let retry: VitestTestConfig['retry'] | undefined;
 
-  const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
+  const plugins: PluginOption[] = [];
 
   const setupFiles: VitestTestConfig['setupFiles'] = [];
 
@@ -184,7 +336,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
   switch (type) {
     case 'angular':
-      plugins.push(angular(), nxCopyAssetsPlugin(['*.md']));
+      plugins.push(angular());
       // Angular setup must be loaded via a project-local setup file (projectSpecificSetupFiles)
       // due to a limitation in the Angular vitest plugin that prevents setup files outside the
       // project root from being processed correctly.
@@ -197,15 +349,15 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     case 'firebase':
       environment = 'node';
       usesFirebase = true;
-      setupFiles.push(resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-firebase', rootDir, projectRootDir));
       break;
     case 'nestjs':
       environment = 'node';
-      setupFiles.push(resolveVitestSetupFile('setup-nestjs', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-nestjs', rootDir, projectRootDir));
       break;
     case 'node':
       environment = 'node';
-      setupFiles.push(resolveVitestSetupFile('setup-node', rootDir, pathFromRoot));
+      setupFiles.push(resolveVitestSetupFile('setup-node', rootDir, projectRootDir));
       break;
   }
 
@@ -255,11 +407,34 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   }
 
   /**
+   * Type-level test files are collected by the typechecker, not by the runtime runner. They are
+   * named `*.types.spec.ts` rather than vitest's `*.test-d.ts` default so they sit beside the specs
+   * they cover, which means the runtime `include` would otherwise pick them up and fail on their
+   * `declare const` fixtures, which have no runtime value.
+   */
+  if (typecheck?.include?.length) {
+    exclude.push(...typecheck.include);
+  }
+
+  /**
    * Keep Jest behavior of running beforeEach/afterEach in order.
    *
    * See: https://vitest.dev/guide/migration.html#hooks
    */
   const jestSequenceHooksBehavior: SequenceHooks = 'stack';
+
+  /**
+   * {@link ALWAYS_INLINE_DEPS} is about this package's own correctness, so a project's own
+   * `server.deps.inline` patterns are added to it rather than replaced by it.
+   */
+  const configuredInlineDeps = testConfig?.server?.deps?.inline;
+  const server: VitestTestConfig['server'] = {
+    ...testConfig?.server,
+    deps: {
+      ...testConfig?.server?.deps,
+      inline: configuredInlineDeps === true ? true : [...ALWAYS_INLINE_DEPS, ...(configuredInlineDeps ?? [])]
+    }
+  };
 
   return defineConfig(() => {
     const configuredEnv = configureEnv?.();
@@ -281,7 +456,24 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
     const isolate = forceIsolate ?? testConfig?.isolate ?? (process.env['DBX_VITEST_ISOLATE'] == null ? !isCI : process.env['DBX_VITEST_ISOLATE'] === 'true');
 
     return {
-      root: pathFromRoot,
+      root: projectRootDir,
+      /**
+       * Resolves the workspace `@dereekb/*` tsconfig path aliases to their source files.
+       *
+       * Vite's built-in resolution, which replaces `nxViteTsPaths` from `@nx/vite` (Nx
+       * deprecated it for removal in v24). Vite prints a notice recommending this over the
+       * `vite-tsconfig-paths` package, and it needs no equivalent of that package's
+       * `ignoreConfigErrors` — it already tolerates the scaffolding templates' placeholder
+       * `tsconfig.json` files. Marked `@experimental` in vite's types as of vite 8.
+       */
+      resolve: {
+        /**
+         * Root-anchored aliases take precedence so a package that blanks its own inherited `paths`
+         * (see {@link readWorkspaceSourceAliases}) still resolves `@dereekb/*` to source under vitest.
+         */
+        alias: workspaceSourceAliases,
+        tsconfigPaths: true
+      },
       cacheDir: `${pathToRoot}/node_modules/.vite/${projectName}`,
       plugins,
       server: {
@@ -297,7 +489,9 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         pool,
         maxWorkers,
         retry,
+        typecheck,
         ...testConfig,
+        server,
         env,
         name: projectName,
         environment,

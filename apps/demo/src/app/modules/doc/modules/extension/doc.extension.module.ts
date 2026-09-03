@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- demo module aggregates the legacy DbxFormCalendarModule NgModule alongside its provider-based replacement */
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent } from './component/example.calendar.schedule.selection.popover.content.component';
 import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
@@ -20,7 +19,6 @@ import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.co
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 import { DbxCalendarBaseComponent, DbxCalendarComponent } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
-import { DbxFormCalendarModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
 import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionTableItemActionExampleComponent } from './component/table.item.action.example.component';
@@ -45,7 +43,6 @@ import { DocExtensionQuizExampleResultComponent } from './component/quiz.example
   imports: [
     DbxCalendarBaseComponent,
     DbxCalendarComponent,
-    DbxFormCalendarModule,
     DbxDownloadTextViewComponent,
     DbxWidgetViewComponent,
     DbxWidgetListGridComponent,

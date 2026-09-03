@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective, type CopyToClipboardFunctionWithSnackbarMessageSnackbarConfig, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxDialogModule } from '@dereekb/dbx-web';
@@ -42,9 +42,7 @@ export interface DbxFirebaseCalendarSubscribeDialogComponentConfig {
       <dbx-dialog-content-footer (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent, DbxFirebaseCalendarIcsRotateComponent]
 })
 export class DbxFirebaseCalendarSubscribeDialogComponent extends AbstractDialogDirective<unknown, DbxFirebaseCalendarSubscribeDialogComponentConfig> {
   readonly icsUrlSignal = toSignal(this.data.calendarDocumentStore.icsUrl$);

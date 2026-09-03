@@ -624,10 +624,6 @@ export interface ZohoRecruitGetRelatedRecordsRequest extends ZohoRecruitGetRecor
    * For example, providing this value will return the Notes with these ids when searching on related Notes for the primary/target record.
    */
   readonly ids?: Maybe<ArrayOrValue<ZohoRecruitRecordId>>;
-  /**
-   * @deprecated set variables on request object directly instead of using this filter.
-   */
-  readonly filter?: Maybe<ZohoRecruitGetRelatedRecordsPageFilter>;
 }
 
 /**
@@ -674,8 +670,7 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
 export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
   return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Zoho API migration pending
-    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
+    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
   };
 }
 
@@ -1408,116 +1403,3 @@ export interface ZohoRecruitMultiRecordResultEntry<I, O> {
    */
   readonly result: O;
 }
-
-// MARK: Compat
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use makeUrlSearchParams instead.
- */
-export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
-
-/**
- * @deprecated use ZohoRecruitGetRelatedRecordsPageFilter instead.
- */
-export type ZohoRecruitGetNotesPageFilter = ZohoRecruitGetRelatedRecordsPageFilter;
-
-/**
- * @deprecated Use zohoRecruitInsertRecord instead.
- */
-export const insertRecord = zohoRecruitInsertRecord;
-
-/**
- * @deprecated Use zohoRecruitUpdateRecord instead.
- */
-export const updateRecord = zohoRecruitUpdateRecord;
-
-/**
- * @deprecated Use zohoRecruitUpsertRecord instead.
- */
-export const upsertRecord = zohoRecruitUpsertRecord;
-
-/**
- * @deprecated Use zohoRecruitDeleteRecord instead.
- */
-export const deleteRecord = zohoRecruitDeleteRecord;
-
-/**
- * @deprecated Use zohoRecruitGetRecordById instead.
- */
-export const getRecordById = zohoRecruitGetRecordById;
-
-/**
- * @deprecated Use zohoRecruitGetRecords instead.
- */
-export const getRecords = zohoRecruitGetRecords;
-
-/**
- * @deprecated Use zohoRecruitSearchRecords instead.
- */
-export const searchRecords = zohoRecruitSearchRecords;
-
-/**
- * @deprecated Use zohoRecruitSearchRecordsPageFactory instead.
- */
-export const searchRecordsPageFactory = zohoRecruitSearchRecordsPageFactory;
-
-/**
- * @deprecated Use zohoRecruitGetRelatedRecordsFunctionFactory instead.
- */
-export const getRelatedRecordsFunctionFactory = zohoRecruitGetRelatedRecordsFunctionFactory;
-
-/**
- * @deprecated Use zohoRecruitGetEmailsForRecord instead.
- */
-export const getEmailsForRecord = zohoRecruitGetEmailsForRecord;
-
-/**
- * @deprecated Use zohoRecruitGetEmailsForRecordPageFactory instead.
- */
-export const getEmailsForRecordPageFactory = zohoRecruitGetEmailsForRecordPageFactory;
-
-/**
- * @deprecated Use zohoRecruitGetAttachmentsForRecord instead.
- */
-export const getAttachmentsForRecord = zohoRecruitGetAttachmentsForRecord;
-
-/**
- * @deprecated Use zohoRecruitGetAttachmentsForRecordPageFactory instead.
- */
-export const getAttachmentsForRecordPageFactory = zohoRecruitGetAttachmentsForRecordPageFactory;
-
-/**
- * @deprecated Use zohoRecruitUploadAttachmentForRecord instead.
- */
-export const uploadAttachmentForRecord = zohoRecruitUploadAttachmentForRecord;
-
-/**
- * @deprecated Use zohoRecruitDownloadAttachmentForRecord instead.
- */
-export const downloadAttachmentForRecord = zohoRecruitDownloadAttachmentForRecord;
-
-/**
- * @deprecated Use zohoRecruitDeleteAttachmentFromRecord instead.
- */
-export const deleteAttachmentFromRecord = zohoRecruitDeleteAttachmentFromRecord;
-
-/**
- * @deprecated Use zohoRecruitExecuteRestApiFunction instead.
- */
-export const executeRestApiFunction = zohoRecruitExecuteRestApiFunction;
-
-/**
- * @deprecated Use ZohoRecruitSearchRecordsPageFactory instead.
- */
-export type SearchRecordsPageFactory = ZohoRecruitSearchRecordsPageFactory;
-
-/**
- * @deprecated Use ZohoRecruitGetEmailsForRecordPageFactory instead.
- */
-export type GetEmailsForRecordPageFactory = ZohoRecruitGetEmailsForRecordPageFactory;
-
-/**
- * @deprecated Use ZohoRecruitGetAttachmentsForRecordPageFactory instead.
- */
-export type GetAttachmentsForRecordPageFactory = ZohoRecruitGetAttachmentsForRecordPageFactory;

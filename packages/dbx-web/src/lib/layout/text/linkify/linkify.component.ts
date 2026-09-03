@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 import { mergeObjects, type Maybe } from '@dereekb/util';
@@ -37,9 +37,7 @@ export interface DbxLinkifyConfig {
   `,
   host: {
     class: 'dbx-i dbx-linkify'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxLinkifyComponent {
   private readonly sanitizer = inject(DomSanitizer);

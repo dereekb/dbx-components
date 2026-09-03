@@ -313,7 +313,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link BatchCalc } with computed batch counts and remainder.",
+      "returns": "A {@link BatchCalc} with computed batch counts and remainder.",
       "tags": [
         "batch",
         "calculate",
@@ -437,7 +437,7 @@
           "optional": false
         }
       ],
-      "returns": "A {@link SeparateResult } with included and excluded arrays.",
+      "returns": "A {@link SeparateResult} with included and excluded arrays.",
       "tags": [
         "array",
         "separate",
@@ -1002,7 +1002,7 @@
           "optional": false
         }
       ],
-      "returns": "The {@link FunctionType }, or `null` for non-functions.",
+      "returns": "The {@link FunctionType}, or `null` for non-functions.",
       "tags": [
         "type",
         "function",
@@ -2728,7 +2728,7 @@
           "optional": false
         }
       ],
-      "returns": "An {@link AsyncValueCache } that proxies the inner cache with a single-load memoization layer.",
+      "returns": "An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.",
       "tags": [
         "memoize",
         "memo",
@@ -2761,7 +2761,7 @@
           "optional": false
         }
       ],
-      "returns": "An {@link AsyncKeyedValueCache } that proxies the inner cache with a record-level memoization layer.",
+      "returns": "An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.",
       "tags": [
         "memoize",
         "memo",
@@ -7450,7 +7450,7 @@
         {
           "name": "filter",
           "type": "FilterKeyValueTuplesInput<T>",
-          "description": "- A {@link FilterKeyValueTuplesInput } controlling which values match. Required (no default).",
+          "description": "- A {@link FilterKeyValueTuplesInput} controlling which values match. Required (no default).",
           "optional": false
         }
       ],
@@ -7485,7 +7485,7 @@
         {
           "name": "filter",
           "type": "FilterKeyValueTuplesInput<T>",
-          "description": "- A {@link FilterKeyValueTuplesInput } controlling which values are counted. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.",
+          "description": "- A {@link FilterKeyValueTuplesInput} controlling which values are counted. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.",
           "optional": true
         }
       ],
@@ -7591,7 +7591,7 @@
         {
           "name": "filter",
           "type": "FilterKeyValueTuplesInput<I>",
-          "description": "- A {@link FilterKeyValueTuplesInput } controlling which values are included. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.",
+          "description": "- A {@link FilterKeyValueTuplesInput} controlling which values are included. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.",
           "optional": true
         }
       ],
@@ -9778,7 +9778,7 @@
       "signature": "makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any>",
       "description": "Creates a default non-concurrent task key factory that generates unique incrementing number strings.",
       "params": [],
-      "returns": "A {@link StringFactory } that produces unique keys for identifying non-concurrent tasks.",
+      "returns": "A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.",
       "tags": [
         "promise",
         "parallel",
@@ -13155,7 +13155,7 @@
         {
           "name": "valueOrFunction",
           "type": "Maybe<boolean | DecisionFunction<T>>",
-          "description": "- Boolean constant, {@link DecisionFunction }, or undefined to use the default.",
+          "description": "- Boolean constant, {@link DecisionFunction}, or undefined to use the default.",
           "optional": false
         },
         {
@@ -13165,7 +13165,7 @@
           "optional": true
         }
       ],
-      "returns": "A {@link DecisionFunction } derived from the input.",
+      "returns": "A {@link DecisionFunction} derived from the input.",
       "tags": [
         "decision",
         "normalize",
@@ -14615,7 +14615,7 @@
           "optional": false
         }
       ],
-      "returns": "A new {@link Modifier } pairing the key with the modify function.",
+      "returns": "A new {@link Modifier} pairing the key with the modify function.",
       "tags": [
         "modifier",
         "mutate",
@@ -14647,7 +14647,7 @@
           "optional": false
         }
       ],
-      "returns": "A single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER } if empty.",
+      "returns": "A single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER} if empty.",
       "tags": [
         "modifier",
         "map",

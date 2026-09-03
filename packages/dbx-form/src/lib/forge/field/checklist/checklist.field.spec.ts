@@ -23,7 +23,6 @@ describe('DbxForgeChecklistFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -87,8 +86,8 @@ describe('dbxForgeChecklistField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, description: 'Select your skills' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeChecklistField({ key: 'tags', options: testOptions, hint: 'Select your skills' });
     expect(field.props?.hint).toBe('Select your skills');
   });
 

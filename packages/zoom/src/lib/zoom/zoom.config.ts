@@ -67,10 +67,3 @@ export interface ZoomUserContext extends ZoomContext {
 export interface ZoomServerContextRef {
   readonly zoomServerContext: ZoomServerContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZoomFetchFactoryParams instead.
- */
-export type ZoomFetchFactoryInput = ZoomFetchFactoryParams;

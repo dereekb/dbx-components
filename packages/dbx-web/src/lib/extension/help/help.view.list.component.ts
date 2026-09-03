@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { type DbxHelpContextKey } from './help';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { asObservable, distinctUntilHasDifferentValues, type ObservableOrValue } from '@dereekb/rxjs';
@@ -43,9 +43,7 @@ import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereek
   host: {
     class: 'dbx-help-view-list dbx-block'
   },
-  imports: [MatAccordion, DbxHelpViewListEntryComponent, DbxListEmptyContentComponent, DbxInjectionComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatAccordion, DbxHelpViewListEntryComponent, DbxListEmptyContentComponent, DbxInjectionComponent]
 })
 export class DbxHelpViewListComponent {
   readonly helpWidgetService = inject(DbxHelpWidgetService);

@@ -7,8 +7,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
  * Used for providing an id from the twoWayFlatKey$ from a DbxFirebaseDocumentStoreTwoWayKeyProvider.
  */
 @Directive({
-  selector: '[dbxFirebaseDocumentStoreIdFromTwoWayModelKey]',
-  standalone: true
+  selector: '[dbxFirebaseDocumentStoreIdFromTwoWayModelKey]'
 })
 export class DbxFirebaseDocumentStoreIdFromTwoWayModelKeyDirective {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective, { host: true });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
 import { type DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
@@ -27,9 +27,7 @@ export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDeve
       <dbx-firebase-development-scheduler-list [state]="state$"></dbx-firebase-development-scheduler-list>
     </div>
   `,
-  imports: [DbxFirebaseDevelopmentSchedulerListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseDevelopmentSchedulerListComponent]
 })
 export class DbxFirebaseDevelopmentSchedulerWidgetComponent {
   readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);

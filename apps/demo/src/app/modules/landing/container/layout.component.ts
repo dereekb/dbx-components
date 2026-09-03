@@ -1,5 +1,5 @@
 import { type ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 import { DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
@@ -21,9 +21,7 @@ export interface LandingItemChild {
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['../landing.scss'],
-  standalone: true,
-  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent, DbxColorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, DbxAnchorContentComponent, DbxColorDirective]
 })
 export class LandingLayoutComponent {
   readonly docsAnchor: ClickableAnchorLink = {

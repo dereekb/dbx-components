@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent } from '@dereekb/dbx-web';
 import { type ErrorInput, type Maybe, readableError } from '@dereekb/util';
 
@@ -29,7 +29,6 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
  */
 @Component({
   selector: 'dbx-firebase-oauth-login-view',
-  standalone: true,
   imports: [DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent],
   template: `
     <div class="dbx-firebase-oauth-login-view">
@@ -55,8 +54,7 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-login-view'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthLoginViewComponent {
   readonly loginStateCase = input.required<OidcLoginStateCase>();

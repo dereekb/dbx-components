@@ -1,5 +1,5 @@
 import { map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatListModule, MatSelectionList, type MatSelectionListChange } from '@angular/material/list';
 import { type DbxListSelectionMode, type ListSelectionStateItem } from './list.view';
 import { type DbxValueListItem, type AbstractDbxValueListViewConfig } from './list.view.value';
@@ -54,9 +54,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   host: {
     class: 'dbx-list-view dbx-selection-list-view'
   },
-  imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent]
 })
 export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multiple = input<Maybe<boolean>>();
@@ -106,9 +104,7 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   template: `
     <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-selection-list-view-content>
   `,
-  standalone: true,
-  imports: [DbxSelectionValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSelectionValueListViewContentComponent]
 })
 export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewDirective<T, I, V, DbxSelectionValueListViewConfig<T, I, V>> {
   readonly selectionMode$ = (this.dbxListView.selectionMode$ ?? of('select')).pipe(

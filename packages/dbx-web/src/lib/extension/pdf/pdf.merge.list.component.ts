@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
@@ -25,9 +25,7 @@ import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
   host: {
     class: 'dbx-pdf-merge-list'
   },
-  imports: [AsyncPipe, CdkDropList, DbxPdfMergeEntryComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [AsyncPipe, CdkDropList, DbxPdfMergeEntryComponent]
 })
 export class DbxPdfMergeListComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

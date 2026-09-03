@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { DEFAULT_DBX_LINKIFY_STRING_TYPE, type DbxLinkifyStringType, type DbxLinkifyStringOptions } from './linkify';
 import { type ArrayOrValue, type Maybe, useIterableOrValue } from '@dereekb/util';
 
@@ -40,9 +40,7 @@ export abstract class DbxLinkifyServiceConfig {
  * Apps can override the default and register additional types via DbxLinkifyServiceConfig
  * (provided by provideDbxLinkify()) or by calling register()/registerDefaultEntry() directly.
  */
-@Injectable({
-  providedIn: 'root' // does not need to be strictly provided/configured. Works out of the box.
-})
+@Service() // does not need to be strictly provided/configured. Works out of the box.
 export class DbxLinkifyService {
   private readonly _entries = new Map<DbxLinkifyStringType, DbxLinkifyServiceEntry>();
 

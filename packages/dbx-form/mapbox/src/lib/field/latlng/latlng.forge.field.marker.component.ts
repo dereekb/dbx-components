@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { shareReplay, map, type Observable, combineLatest } from 'rxjs';
 import { type DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
 import { DbxForgeMapboxLatLngFieldComponent } from './latlng.forge.field.component';
@@ -9,9 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-mapbox-marker [marker]="markerSignal()"></dbx-mapbox-marker>
   `,
-  imports: [DbxMapboxMarkerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxMapboxMarkerComponent]
 })
 export class DbxForgeMapboxLatLngFieldMarkerComponent {
   readonly fieldComponent = inject(DbxForgeMapboxLatLngFieldComponent);

@@ -85,10 +85,3 @@ export interface ZohoSignContext extends ZohoRateLimiterRef {
 export interface ZohoSignContextRef {
   readonly signContext: ZohoSignContext;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use ZohoSignFetchFactoryParams instead.
- */
-export type ZohoSignFetchFactoryInput = ZohoSignFetchFactoryParams;

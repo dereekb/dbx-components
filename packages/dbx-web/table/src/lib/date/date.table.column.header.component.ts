@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { type DbxInjectionComponentConfig, type DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { type DbxTableColumn } from '../table';
@@ -16,9 +16,7 @@ import { DatePipe } from '@angular/common';
       </div>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
-  standalone: true
+  imports: [DatePipe]
 })
 export class DbxTableDateHeaderComponent {
   readonly left = 'E';

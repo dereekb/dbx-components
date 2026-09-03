@@ -1389,6 +1389,14 @@ export class DemoApiFormSpaceTestContextFixture<F extends FirebaseAdminFunctionT
     return this.instance.submit(params);
   }
 
+  async reopen(uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    return this.instance.reopen(uid);
+  }
+
+  async lock(uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    return this.instance.lock(uid);
+  }
+
   async removeFile(params: Omit<RemoveFormSpaceFileParams, 'key'>, uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
     return this.instance.removeFile(params, uid);
   }
@@ -1467,6 +1475,27 @@ export class DemoApiFormSpaceTestContextInstance<F extends FirebaseAdminFunction
   async submit(params?: Maybe<Omit<SubmitFormSpaceParams, 'key'>>): Promise<SubmitFormSpaceResult> {
     const instance = await this.testContext.formSpaceServerActions.submitFormSpace({ ...params, key: this.documentKey });
     return instance(this.document);
+  }
+
+  /**
+   * Reopens the submitted space back into an editable draft.
+   *
+   * The uid is WHO reopened, recorded on `rby`. Defaults to the space's own `u`, the shape every
+   * single-user spec means.
+   */
+  async reopen(uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    const instance = await this.testContext.formSpaceServerActions.reopenFormSpace({ key: this.documentKey });
+    const formSpace = await assertSnapshotData(this.document);
+    await instance(this.document, { uid: uid ?? formSpace.u });
+  }
+
+  /**
+   * Ends the space's reopen window immediately, recording the acting uid on `lby`.
+   */
+  async lock(uid?: Maybe<FirebaseAuthUserId>): Promise<void> {
+    const instance = await this.testContext.formSpaceServerActions.lockFormSpace({ key: this.documentKey });
+    const formSpace = await assertSnapshotData(this.document);
+    await instance(this.document, { uid: uid ?? formSpace.u });
   }
 
   /**

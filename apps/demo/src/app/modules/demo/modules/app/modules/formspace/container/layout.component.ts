@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DbxContentLayoutModule, DbxSectionPageComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
@@ -8,8 +8,6 @@ import { UIView } from '@uirouter/angular';
  */
 @Component({
   templateUrl: './layout.component.html',
-  imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DbxSectionPageComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [UIView, DbxAppContextStateDirective, DbxContentLayoutModule, DbxSectionPageComponent]
 })
 export class DemoFormSpaceLayoutComponent {}

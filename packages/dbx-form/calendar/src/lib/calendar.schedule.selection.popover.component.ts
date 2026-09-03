@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, type Injector } from '@angular/core';
+import { Component, type ElementRef, type Injector } from '@angular/core';
 import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxScheduleSelectionCalendarDatePopoverContentComponent } from './calendar.schedule.selection.popover.content.component';
@@ -19,9 +19,7 @@ export interface DbxScheduleSelectionCalendarDatePopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverInteractionModule, DbxScheduleSelectionCalendarDatePopoverContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopoverInteractionModule, DbxScheduleSelectionCalendarDatePopoverContentComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverComponent extends AbstractPopoverDirective<void> {
   static openPopover(popoverService: DbxPopoverService, { origin, injector }: DbxScheduleSelectionCalendarDatePopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, number> {

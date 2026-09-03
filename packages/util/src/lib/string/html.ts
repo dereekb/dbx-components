@@ -69,7 +69,6 @@ export function cssTokenVar<T extends CssToken>(cssToken: T): CssTokenVar<T> {
   return `var(${cssToken})`;
 }
 
-// MARK: Compat
 /**
  * Represents a single CSS Style
  *
@@ -145,19 +144,3 @@ export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass>
 
   return result;
 }
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link CssToken} instead.
- */
-export type CssVariable = CssToken;
-
-/**
- * @deprecated Use {@link CssTokenVar} instead.
- */
-export type CssVariableVar<T extends CssToken = CssToken> = CssTokenVar<T>;
-
-/**
- * @deprecated Use {@link cssTokenVar} instead.
- */
-export const cssVariableVar = cssTokenVar;

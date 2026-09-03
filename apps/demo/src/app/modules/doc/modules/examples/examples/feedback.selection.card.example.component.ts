@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxChipDirective, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxIconTileComponent, type DbxThemeColor } from '@dereekb/dbx-web';
@@ -55,8 +55,6 @@ const FEEDBACK_CHOICES: readonly FeedbackChoice[] = [
  */
 @Component({
   selector: 'doc-feedback-selection-card-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatCardModule, MatIconModule, DbxChipDirective, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxIconTileComponent],
   template: `
     <dbx-docs-ui-example header="Feedback Selection Cards" hint="Single-select row of equal-size centered choice cards (dbxFlexGroup) — the selected card gets a tonal [dbxColor] wash, a matching themed border, and a round checkmark badge.">

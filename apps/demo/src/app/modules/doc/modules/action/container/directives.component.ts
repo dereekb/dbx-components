@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';
@@ -34,7 +34,6 @@ import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directives.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
@@ -63,8 +62,7 @@ import { JsonPipe } from '@angular/common';
     DbxActionIsWorkingDirective,
     DbxActionIsModifiedDirective,
     JsonPipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocActionDirectivesComponent {
   successValue: any;

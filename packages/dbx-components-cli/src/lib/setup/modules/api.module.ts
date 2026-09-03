@@ -4,7 +4,8 @@
  * runtime `@nx/nest` would otherwise have brought in, scaffolds the `apps/api`
  * subtree (whose `project.template.json` / `esbuild.config.template.js` /
  * `esbuild.prod.config.template.js` resolve via the per-file token map +
- * `.template` strip), and disables `esModuleInterop` in the generated tsconfig.
+ * `.template` strip), and disables `esModuleInterop` + adds the `tsconfig.spec.json` project
+ * reference in the generated tsconfig.
  *
  * `@nx/nest` is deliberately NOT used. It ships no executors — it is a
  * generators-only wrapper around `@nx/node:application` — and everything it adds

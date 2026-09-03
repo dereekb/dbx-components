@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseFormSpaceModule, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
 import { DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxSectionComponent } from '@dereekb/dbx-web';
@@ -30,9 +30,7 @@ import { map, shareReplay } from 'rxjs';
     DbxErrorComponent,
     DbxSectionComponent,
     DbxFirebaseFormSpaceModule
-  ],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoGuestbookAlbumComponent {
   readonly guestbookStore = inject(GuestbookDocumentStore);

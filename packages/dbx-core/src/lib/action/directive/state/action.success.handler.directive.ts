@@ -35,8 +35,7 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
  * @see {@link DbxActionErrorHandlerDirective} for handling errors.
  */
 @Directive({
-  selector: '[dbxActionSuccessHandler]',
-  standalone: true
+  selector: '[dbxActionSuccessHandler]'
 })
 export class DbxActionSuccessHandlerDirective<T, O> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

@@ -27,8 +27,7 @@ import { type DbxStyleClass } from './style';
   selector: 'dbx-style, [dbxStyle], .dbx-style',
   host: {
     '[class]': 'styleClassNameSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxStyleDirective {
   private readonly _styleService = inject(DbxStyleService);

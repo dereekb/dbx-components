@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipsModule, type MatChipInputEvent } from '@angular/material/chips';
@@ -29,9 +29,7 @@ import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-forge-searchable-chip-field',
   templateUrl: './searchable-chip.field.component.html',
-  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatChipsModule, MatOptionModule, MatIconModule, DbxLoadingModule, DbxSearchableFieldAutocompleteItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatChipsModule, MatOptionModule, MatIconModule, DbxLoadingModule, DbxSearchableFieldAutocompleteItemComponent]
 })
 export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractForgeSearchableFieldDirective<T, M, H, DbxForgeSearchableChipFieldProps<T, M, H>> {
   private readonly elementRef = inject(ElementRef<HTMLElement>);

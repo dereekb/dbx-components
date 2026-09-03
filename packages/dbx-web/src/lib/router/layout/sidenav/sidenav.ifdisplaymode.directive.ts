@@ -18,8 +18,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
  * ```
  */
 @Directive({
-  selector: '[dbxIfSidenavDisplayMode]',
-  standalone: true
+  selector: '[dbxIfSidenavDisplayMode]'
 })
 export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective {
   readonly dbxSidenavComponent = inject(DbxSidenavComponent);

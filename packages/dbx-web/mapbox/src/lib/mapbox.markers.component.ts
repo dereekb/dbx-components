@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type DbxMapboxMarker, type DbxMapboxMarkerFactory } from './mapbox.marker';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 
@@ -13,9 +13,7 @@ import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
       <dbx-mapbox-marker [marker]="marker"></dbx-mapbox-marker>
     }
   `,
-  imports: [DbxMapboxMarkerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxMapboxMarkerComponent]
 })
 export class DbxMapboxMarkersComponent<T> {
   readonly data = input.required<Maybe<T[]>>();

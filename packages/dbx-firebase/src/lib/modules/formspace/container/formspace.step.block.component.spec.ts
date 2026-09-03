@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type Maybe } from '@dereekb/util';
@@ -66,9 +66,7 @@ describe('DbxFirebaseFormSpaceStepBlockComponent badge', () => {
   template: `
     <dbx-firebase-formspace-step-block [step]="2" header="Cover File" [complete]="completeSignal()" [icon]="iconSignal()"></dbx-firebase-formspace-step-block>
   `,
-  imports: [DbxFirebaseFormSpaceStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFirebaseFormSpaceStepBlockComponent]
 })
 class TestDbxFirebaseFormSpaceStepBlockComponent {
   readonly block = viewChild.required(DbxFirebaseFormSpaceStepBlockComponent);

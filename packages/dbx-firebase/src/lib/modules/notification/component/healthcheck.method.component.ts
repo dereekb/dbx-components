@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { type Maybe } from '@dereekb/util';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -104,9 +104,7 @@ export interface DbxFirebaseNotificationHealthCheckMethodProbeActionConfig {
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-method'
   },
-  standalone: true,
-  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxChipDirective, DbxColorDirective, DbxErrorComponent, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxChipDirective, DbxColorDirective, DbxErrorComponent, DbxIconTileComponent, DbxFirebaseNotificationHealthCheckIssueComponent]
 })
 export class DbxFirebaseNotificationHealthCheckMethodComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

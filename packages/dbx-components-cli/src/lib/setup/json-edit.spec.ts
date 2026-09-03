@@ -16,7 +16,8 @@ describe('applyNxJsonEdits', () => {
     expect(targetDefaults['build-base']).toEqual({ cache: true });
     expect(targetDefaults['build']).toEqual({ dependsOn: ['^build'], inputs: ['production', '^production'], cache: true });
     expect(targetDefaults['existing']).toEqual({ cache: false });
-    expect((targetDefaults['@nx/vitest:test'] as JsonObject)['configurations']).toEqual({ ci: { ci: true, codeCoverage: true } });
+    expect(targetDefaults['test']).toEqual({ cache: true, dependsOn: ['^build'], inputs: ['default', '^production', '{workspaceRoot}/vitest.preset.config.mts', '{workspaceRoot}/vitest.setup.*.ts'] });
+    expect(targetDefaults['run-tests']).toEqual(targetDefaults['test']);
     const release = result['release'] as JsonObject;
     expect(release['projects']).toEqual(['*']);
     expect((release['version'] as JsonObject)['git']).toEqual({ commit: false, tag: false, stageChanges: false });
@@ -55,15 +56,15 @@ describe('alignDbxPeerDependencies', () => {
     });
     const deps = result['dependencies'] as JsonObject;
     const dev = result['devDependencies'] as JsonObject;
-    expect(deps['@angular/core']).toBe('21.2.11');
-    expect(deps['@angular/common']).toBe('21.2.11');
+    expect(deps['@angular/core']).toBe('22.1.4');
+    expect(deps['@angular/common']).toBe('22.1.4');
     expect(deps['express']).toBe('^5.2.1');
     expect(deps['@dereekb/util']).toBe('^13.18.0'); // untouched
-    expect(dev['@angular/compiler-cli']).toBe('21.2.11');
+    expect(dev['@angular/compiler-cli']).toBe('22.1.4');
     expect(dev['@types/express']).toBe('^5.0.0');
-    expect(dev['typescript-eslint']).toBe('^8.59.3');
-    expect(dev['@analogjs/vite-plugin-angular']).toBe('~2.5.0');
-    expect(dev['@analogjs/vitest-angular']).toBe('~2.5.0');
+    expect(dev['typescript-eslint']).toBe('8.69.0');
+    expect(dev['@analogjs/vite-plugin-angular']).toBe('~2.7.1');
+    expect(dev['@analogjs/vitest-angular']).toBe('~2.7.1');
   });
 
   it('does not add a package that is not already declared', () => {
@@ -72,8 +73,8 @@ describe('alignDbxPeerDependencies', () => {
   });
 
   it('leaves the Angular build/devkit packages on their own line', () => {
-    const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '21.2.7', '@angular/cli': '21.2.7' } });
-    expect(result['devDependencies']).toEqual({ '@angular/build': '21.2.7', '@angular/cli': '21.2.7' });
+    const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '22.1.6', '@angular/cli': '22.1.6' } });
+    expect(result['devDependencies']).toEqual({ '@angular/build': '22.1.6', '@angular/cli': '22.1.6' });
   });
 });
 
@@ -102,6 +103,22 @@ describe('applyTsconfigBaseEdits / applyApiTsconfigEdits', () => {
     const result = applyApiTsconfigEdits({ compilerOptions: { strict: true } });
     expect((result['compilerOptions'] as JsonObject)['esModuleInterop']).toBe(false);
     expect((result['compilerOptions'] as JsonObject)['strict']).toBe(true);
+  });
+
+  it('adds the spec project reference to the api tsconfig', () => {
+    const result = applyApiTsconfigEdits({ references: [{ path: './tsconfig.app.json' }] });
+    expect(result['references']).toEqual([{ path: './tsconfig.app.json' }, { path: './tsconfig.spec.json' }]);
+  });
+
+  it('adds the spec project reference when the api tsconfig has no references', () => {
+    const result = applyApiTsconfigEdits({});
+    expect(result['references']).toEqual([{ path: './tsconfig.spec.json' }]);
+  });
+
+  it('does not duplicate an existing spec project reference', () => {
+    const references = [{ path: './tsconfig.app.json' }, { path: './tsconfig.spec.json' }];
+    const result = applyApiTsconfigEdits({ references });
+    expect(result['references']).toEqual(references);
   });
 });
 

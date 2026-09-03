@@ -1,5 +1,5 @@
 import { LOREM } from './../../shared/lorem';
-import { type Type, InjectionToken, inject, Component, ChangeDetectionStrategy } from '@angular/core';
+import { type Type, InjectionToken, inject, Component } from '@angular/core';
 import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 
@@ -22,9 +22,7 @@ export interface DocFormExampleComponentFormConfig {
       </dbx-content-box>
     </div>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective, DbxSectionComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxSectionComponent]
 })
 export class DocFormExampleComponentFormTestViewAComponent {
   lorem = LOREM;
@@ -43,8 +41,6 @@ export class DocFormExampleComponentFormTestViewAComponent {
       </p>
     </div>
   `,
-  standalone: true,
-  imports: [DbxLinkComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxLinkComponent]
 })
 export class DocFormExampleComponentFormTestViewBComponent {}

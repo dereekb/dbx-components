@@ -43,9 +43,9 @@ describe('dbxColorSmellCheckTool', () => {
       const originalCwd = process.cwd();
       process.chdir(tmp);
       try {
-        const apiDir = relative(tmp, appDir).split(/[\\/]/).join('/');
-        const tsPath = relative(tmp, join(featureDir, 'thing.ts')).split(/[\\/]/).join('/');
-        const htmlPath = relative(tmp, join(featureDir, 'thing.html')).split(/[\\/]/).join('/');
+        const apiDir = relative(tmp, appDir).replaceAll(/[\\/]/g, '/');
+        const tsPath = relative(tmp, join(featureDir, 'thing.ts')).replaceAll(/[\\/]/g, '/');
+        const htmlPath = relative(tmp, join(featureDir, 'thing.html')).replaceAll(/[\\/]/g, '/');
         const result = await DBX_COLOR_SMELL_CHECK_TOOL.run({ paths: [tsPath, htmlPath], apiDir });
         const text = result.content[0].text;
         expect(text).toContain('# Color smell check');

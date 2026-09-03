@@ -32,10 +32,3 @@ export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>
 
 // MARK: Module Config
 export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxModelFeature, (state: DbxModelState) => state[fromObjectModuleConfig.STATE_FEATURE_KEY]);
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use FEATURE_KEY instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const featureKey = FEATURE_KEY;

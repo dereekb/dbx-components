@@ -1,5 +1,5 @@
 import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.schedule.selection.popover.component';
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
+import { Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,9 +11,7 @@ import { formatToMonthDayString } from '@dereekb/date';
   template: `
     <dbx-button #buttonPopoverOrigin icon="date_range" [disabled]="disabledSignal()" [raised]="true" color="accent" [text]="buttonTextSignal()" (buttonClick)="openPopover()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly injector = inject(Injector);

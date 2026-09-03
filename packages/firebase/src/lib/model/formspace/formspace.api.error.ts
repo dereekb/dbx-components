@@ -19,6 +19,34 @@ export const FORM_SPACE_TYPE_NOT_REGISTERED_ERROR_CODE = 'FORM_SPACE_TYPE_NOT_RE
 export const FORM_SPACE_NOT_EDITABLE_ERROR_CODE = 'FORM_SPACE_NOT_EDITABLE';
 
 /**
+ * Thrown when a FormSpace's submission is locked before the space was ever submitted.
+ *
+ * A lock ends a reopen window early, so there has to be a submission for it to be about. A space that was
+ * submitted and then reopened DOES qualify — locking a reopened draft is how a reviewer says "this next
+ * submission is the last one".
+ */
+export const FORM_SPACE_NOT_SUBMITTED_ERROR_CODE = 'FORM_SPACE_NOT_SUBMITTED';
+
+/**
+ * Thrown when a submitted FormSpace is reopened after it stopped being reopenable.
+ *
+ * TERMINAL, unlike {@link FORM_SPACE_PROCESSING_IN_PROGRESS_ERROR_CODE}: the type never allowed reopening,
+ * the reopen window has closed, `lat` has passed, or `maxReopens` is spent. Retrying cannot help, so the
+ * caller should be told the submission is final rather than asked to wait.
+ */
+export const FORM_SPACE_NOT_REOPENABLE_ERROR_CODE = 'FORM_SPACE_NOT_REOPENABLE';
+
+/**
+ * Thrown when a FormSpace is reopened while its submission is actively being processed.
+ *
+ * Transient by nature — the same reopen succeeds once the processor concludes — which is why it is not
+ * folded into {@link FORM_SPACE_NOT_REOPENABLE_ERROR_CODE}. Reopening under a running processor would race
+ * it: the task's cleanup writes `ps`/`cpat`/`pn` and would land them on a space already handed back as a
+ * draft.
+ */
+export const FORM_SPACE_PROCESSING_IN_PROGRESS_ERROR_CODE = 'FORM_SPACE_PROCESSING_IN_PROGRESS';
+
+/**
  * Thrown when a FormSpace is submitted while one of its type's required slots is still empty.
  */
 export const FORM_SPACE_REQUIRED_SLOT_MISSING_ERROR_CODE = 'FORM_SPACE_REQUIRED_SLOT_MISSING';

@@ -1,6 +1,6 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, runInInjectionContext, signal, viewChild } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, Injector, runInInjectionContext, signal, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { type ErrorInput } from '@dereekb/util';
@@ -10,9 +10,9 @@ import { filter, first } from 'rxjs';
 import { callbackTest } from '@dereekb/util/test';
 
 describe('DbxBasicLoadingComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
     const injector = TestBed.inject(Injector);
@@ -308,9 +308,7 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxBasicLoadingComponent]
 })
 class BasicLoadingWithContentComponent {
   readonly loadingSignal = signal(true);
@@ -327,9 +325,7 @@ class BasicLoadingWithContentComponent {
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxBasicLoadingComponent]
 })
 class BasicLoadingWithCustomErrorComponent {
   readonly errorSignal = signal<ErrorInput | undefined>(undefined);
@@ -345,9 +341,7 @@ class BasicLoadingWithCustomErrorComponent {
       </div>
     </dbx-basic-loading>
   `,
-  standalone: true,
-  imports: [DbxBasicLoadingComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxBasicLoadingComponent]
 })
 class BasicLoadingWithCustomLoadingComponent {
   readonly loadingSignal = signal(true);

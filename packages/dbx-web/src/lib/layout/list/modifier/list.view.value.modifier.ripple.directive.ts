@@ -32,8 +32,7 @@ export const DEFAULT_DBX_LIST_ITEM_DISABLE_FUNCTION: DbxValueListItemDecisionFun
  * ```
  */
 @Directive({
-  selector: 'dbxListItemDisableRippleModifier,[dbxListItemDisableRippleModifier]',
-  standalone: true
+  selector: 'dbxListItemDisableRippleModifier,[dbxListItemDisableRippleModifier]'
 })
 export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> {
   readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<'' | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: transformEmptyStringInputToUndefined });

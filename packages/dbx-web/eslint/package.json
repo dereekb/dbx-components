@@ -1,18 +1,18 @@
 {
   "name": "@dereekb/dbx-web/eslint",
-  "version": "13.43.0",
+  "version": "14.0.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/util": "13.43.0",
-    "@typescript-eslint/utils": "8.59.3"
+    "@dereekb/util": "14.0.0",
+    "@typescript-eslint/utils": "8.69.0"
   },
   "devDependencies": {
-    "@angular-eslint/template-parser": "21.4.0",
-    "@angular/core": "21.2.11",
-    "@dereekb/dbx-core": "13.43.0",
-    "@dereekb/rxjs": "13.43.0",
-    "@typescript-eslint/parser": "8.59.3",
-    "eslint": "10.4.0",
+    "@angular-eslint/template-parser": "22.2.0",
+    "@angular/core": "22.1.4",
+    "@dereekb/dbx-core": "14.0.0",
+    "@dereekb/rxjs": "14.0.0",
+    "@typescript-eslint/parser": "8.69.0",
+    "eslint": "10.9.1",
     "rxjs": "^7.8.2"
   }
 }

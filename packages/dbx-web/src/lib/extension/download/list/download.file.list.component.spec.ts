@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -162,9 +162,7 @@ describe('DbxFileListComponent', () => {
       <span class="test-control">control</span>
     </dbx-file-list-item>
   `,
-  imports: [DbxFileListItemComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFileListItemComponent]
 })
 class TestDbxFileListItemComponent {
   readonly item = viewChild.required(DbxFileListItemComponent);
@@ -181,9 +179,7 @@ class TestDbxFileListItemComponent {
   template: `
     <dbx-file-list [entries]="entriesSignal()" [emptyText]="emptyTextSignal()"></dbx-file-list>
   `,
-  imports: [DbxFileListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFileListComponent]
 })
 class TestDbxFileListComponent {
   readonly list = viewChild.required(DbxFileListComponent);

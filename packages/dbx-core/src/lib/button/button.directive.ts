@@ -168,7 +168,6 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
 @Directive({
   selector: '[dbxButton]',
   exportAs: 'dbxButton',
-  providers: provideDbxButton(DbxButtonDirective),
-  standalone: true
+  providers: provideDbxButton(DbxButtonDirective)
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective {}

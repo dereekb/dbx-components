@@ -10,7 +10,6 @@ export type DemoProfileFormValue = Pick<Profile, 'bio'>;
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   selector: 'demo-profile-form',
   providers: dbxForgeFormComponentProviders(),
-  standalone: true,
   imports: [DbxForgeFormComponentImportsModule]
 })
 export class DemoProfileFormComponent extends AbstractSyncForgeFormDirective<DemoProfileFormValue> {

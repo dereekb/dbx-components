@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocSupportPageLayoutExampleComponent } from '../examples/support.page.layout.example.component';
@@ -7,8 +7,6 @@ import { DocBotStatusLayoutExampleComponent } from '../examples/bot.status.layou
 
 @Component({
   templateUrl: './layout-examples.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocDashboardOverviewLayoutExampleComponent, DocBotStatusLayoutExampleComponent, DocSupportPageLayoutExampleComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocDashboardOverviewLayoutExampleComponent, DocBotStatusLayoutExampleComponent, DocSupportPageLayoutExampleComponent]
 })
 export class DocExamplesLayoutExamplesComponent {}

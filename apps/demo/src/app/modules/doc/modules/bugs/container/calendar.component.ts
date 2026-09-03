@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { combineLatestWith, delay, map, of, type Observable } from 'rxjs';
@@ -39,7 +39,6 @@ const APPLICATION_SELECTED_INDEXES: number[] = [0, 1, 4, 5, 6, 7, 8, 11, 12, 13,
 
 @Component({
   templateUrl: './calendar.component.html',
-  standalone: true,
   imports: [DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateRangeComponent, JsonPipe],
   providers: [DbxCalendarStore, DbxCalendarScheduleSelectionStore],
   styles: [
@@ -49,8 +48,7 @@ const APPLICATION_SELECTED_INDEXES: number[] = [0, 1, 4, 5, 6, 7, 8, 11, 12, 13,
         outline-offset: -2px;
       }
     `
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocBugsCalendarComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

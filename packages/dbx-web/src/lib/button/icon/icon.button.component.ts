@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core';
@@ -50,8 +50,6 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
   host: {
     class: 'dbx-icon-button'
   },
-  imports: [MatButtonModule, MatIconModule, MatIconButton, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatButtonModule, MatIconModule, MatIconButton, NgTemplateOutlet]
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}

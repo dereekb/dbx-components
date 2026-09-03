@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentContainerDirective, DbxContentPitDirective, DbxHelpContextService, type DbxHelpViewPopoverButtonConfig, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -13,9 +13,7 @@ import { HELP_WIDGET_EXAMPLE_CONTEXT_STRING_TWO } from '../component/help.widget
  */
 @Component({
   templateUrl: './help.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent, DbxContentPitDirective, JsonPipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxHelpContextDirective, DbxHelpViewPopoverButtonComponent, DbxHelpViewListComponent, DbxContentPitDirective, JsonPipe]
 })
 export class DocExtensionHelpComponent {
   private readonly _helpContextService = inject(DbxHelpContextService);

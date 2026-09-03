@@ -20,8 +20,7 @@ import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
  * ```
  */
 @Directive({
-  selector: '[dbxPdfMergeEditorFileUploadValidator]',
-  standalone: true
+  selector: '[dbxPdfMergeEditorFileUploadValidator]'
 })
 export class DbxPdfMergeEditorFileUploadValidatorDirective implements OnInit, OnDestroy {
   readonly store = inject(DbxPdfMergeEditorStore);

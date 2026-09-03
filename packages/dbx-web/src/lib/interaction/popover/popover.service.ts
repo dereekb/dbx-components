@@ -1,5 +1,5 @@
 import { DbxPopoverComponent, type DbxPopoverComponentConfig, type FullDbxPopoverComponentConfig } from './popover.component';
-import { Injectable, Injector, inject } from '@angular/core';
+import { Service, Injector, inject } from '@angular/core';
 import { type NgOverlayContainerConfiguration, NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
@@ -29,9 +29,7 @@ export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, 
  * });
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxPopoverService {
   private readonly _overlay = inject(Overlay);
   private readonly _injector = inject(Injector);

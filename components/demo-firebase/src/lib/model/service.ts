@@ -485,7 +485,12 @@ export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<
         //
         // `removeFile` only opens the door — WHICH files it reaches is the type's `fileAccess`, and on the
         // guestbook album that narrows even this branch to the owner's own uploads.
-        rolesForFormSpaceUser: async () => ({ read: true, update: true, uploadFile: true, removeFile: true, submit: true, delete: true }),
+        //
+        // `reopen` and `lock` are granted unconditionally too, and are not a contradiction of `submit`
+        // being the one-way door: WHETHER a space may be reopened at all is the type's own policy, checked
+        // inside the action's transaction, and only `demo_test` declares one. A role map cannot answer that
+        // question anyway — it has no clock and no type registry — so what it grants is permission to ask.
+        rolesForFormSpaceUser: async () => ({ read: true, update: true, uploadFile: true, removeFile: true, submit: true, reopen: true, lock: true, delete: true }),
         // A SHARED space: `o` names a Guestbook rather than a Profile, and anyone who has left an entry on
         // that guestbook may read it, upload into it, and take their OWN uploads back out.
         //
@@ -493,9 +498,12 @@ export const formSpaceFirebaseModelServiceFactory = firebaseModelServiceFactory<
         // gate behind it is the type's `fileAccess`, which this album sets to 'uploader', so the role
         // reaches a signer's own photos and nobody else's.
         //
-        // `update`, `submit` and `delete` are deliberately withheld. They are one-way doors over everyone
-        // else's files, and the branch above already grants them to the space's `u` — which for a shared
-        // space is the guestbook's creator, not whoever happened to open the album first.
+        // `update`, `submit`, `reopen`, `lock` and `delete` are deliberately withheld. They are one-way
+        // doors over everyone else's files, and the branch above already grants them to the space's `u` —
+        // which for a shared space is the guestbook's creator, not whoever happened to open the album
+        // first. `reopen` and `lock` belong in that list for a sharper reason than the rest: on a shared
+        // space they would let any one signer reopen — or finalize — a submission made on behalf of
+        // everybody who contributed to it.
         //
         // A GuestbookEntry's document id IS its author's uid, so "did this caller sign?" is one existence
         // check on a path built from the space's own ownership key — no query, and no membership list to

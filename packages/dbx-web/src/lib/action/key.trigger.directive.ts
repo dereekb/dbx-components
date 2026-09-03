@@ -23,8 +23,7 @@ const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
  * ```
  */
 @Directive({
-  selector: '[dbxActionKeyTrigger]',
-  standalone: true
+  selector: '[dbxActionKeyTrigger]'
 })
 export class DbxActionKeyTriggerDirective<T = unknown, O = unknown> {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

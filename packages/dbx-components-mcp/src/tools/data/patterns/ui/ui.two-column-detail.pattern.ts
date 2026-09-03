@@ -37,7 +37,6 @@ interface Member {
 
 @Component({
   selector: 'app-members-page',
-  standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnRightComponent, DbxListComponent],
   template: \`
     <dbx-section-page header="Members" icon="group" scroll="body">
@@ -49,8 +48,7 @@ interface Member {
         </dbx-two-column-right>
       </dbx-two-column>
     </dbx-section-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class MembersPageComponent {
   readonly members$: Observable<ListLoadingState<Member>> = /* ... */ null!;

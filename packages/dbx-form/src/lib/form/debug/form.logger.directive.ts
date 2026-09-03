@@ -20,8 +20,7 @@ import { combineLatest } from 'rxjs';
  * ```
  */
 @Directive({
-  selector: '[dbxFormLogger],[dbxFormStreamLogger]',
-  standalone: true
+  selector: '[dbxFormLogger],[dbxFormStreamLogger]'
 })
 export class DbxFormLoggerDirective {
   readonly form = inject(DbxForm, { host: true });

@@ -50,8 +50,7 @@ export interface DbxQuizScoreInput {
       }
     </div>
   `,
-  imports: [DbxQuizResetButtonComponent],
-  standalone: true
+  imports: [DbxQuizResetButtonComponent]
 })
 export class DbxQuizScoreComponent {
   readonly input = input<Maybe<DbxQuizScoreInput>>();

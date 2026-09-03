@@ -11,7 +11,6 @@ export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
   selector: 'demo-guestbook-entry-list',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent),
-  standalone: true,
   imports: [DbxListComponent]
 })
 export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWrapperDirective<GuestbookEntry> {
@@ -26,7 +25,6 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
 @Component({
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DemoGuestbookEntryListViewComponent),
-  standalone: true,
   imports: [DbxSelectionValueListViewComponent]
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
@@ -53,7 +51,6 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
     </div>
   `,
   styleUrls: ['./guestbook.scss'],
-  standalone: true,
   imports: [DatePipe, ToJsDatePipe]
 })
 export class DemoGuestbookEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<GuestbookEntry> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type ClickableAnchorLink, type ClickableAnchorLinkTree, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DOC_HOME_ROUTE, DOC_ROUTES } from '../doc';
 import { DbxSidenavComponent, DbxColorDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
@@ -6,9 +6,7 @@ import { UIView } from '@uirouter/angular';
 
 @Component({
   templateUrl: './layout.component.html',
-  standalone: true,
-  imports: [DbxSidenavComponent, DbxColorDirective, DbxAppContextStateDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxWebPageTitleInfoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSidenavComponent, DbxColorDirective, DbxAppContextStateDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxWebPageTitleInfoDirective]
 })
 export class DocLayoutComponent {
   readonly home: ClickableAnchorLink = DOC_HOME_ROUTE;

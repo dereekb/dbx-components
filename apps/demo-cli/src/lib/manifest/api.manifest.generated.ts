@@ -17,6 +17,7 @@ import {
   downloadStorageFileParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
+  lockFormSpaceParamsType,
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
@@ -24,6 +25,7 @@ import {
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   removeFormSpaceFileParamsType,
+  reopenFormSpaceParamsType,
   resyncNotificationUserParamsType,
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
@@ -39,6 +41,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
+import { createOpenRouterPromptVersionParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
   allPublishedGuestbookEntriesParamsType,
   createGuestbookParamsType,
@@ -59,7 +62,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.42.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.43.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -111,6 +114,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'data', typeText: 'Maybe<T>' }
     ]
   },
+  { model: 'formSpace', verb: 'update', specifier: 'lock', paramsTypeName: 'LockFormSpaceParams', paramsValidator: lockFormSpaceParamsType, groupName: 'FormSpace', sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts', paramsTypeDescription: "Parameters for locking a submitted FormSpace's submission immediately." },
   {
     model: 'formSpace',
     verb: 'update',
@@ -124,6 +128,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'slot', typeText: 'FormSpaceFileSlot', description: 'The slot holding the file.' },
       { name: 'storageFileId', typeText: 'Maybe<StorageFileId>', description: 'The StorageFile to remove.\n\nOptional only when the slot holds exactly one file: a folder slot with several files has no unambiguous\n"the" file, so omitting it there is an error rather than a guess.' }
     ]
+  },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: 'reopen',
+    paramsTypeName: 'ReopenFormSpaceParams',
+    paramsValidator: reopenFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: "Parameters for reopening a submitted FormSpace back into an editable draft.\n\nNo options: whether the space may be reopened is the type's policy plus the caller's `reopen` role, and\nneither is anything a client gets to say. The acting user is taken from the request, never the body,\nbecause it is what `rby` records."
   },
   {
     model: 'formSpace',
@@ -416,6 +430,76 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   },
   { model: 'oidcEntry', verb: 'update', specifier: 'client', paramsTypeName: 'UpdateOidcClientParams', paramsValidator: updateOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.' },
   { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', paramsTypeName: 'RotateOidcClientSecretParams', paramsValidator: rotateOidcClientSecretParamsType, resultTypeName: 'RotateOidcClientSecretResult', groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts' },
+  {
+    model: 'openRouterPrompt',
+    verb: 'query',
+    paramsTypeName: 'QueryOpenRouterPromptsParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    paramsTypeDescription: 'Parameters for querying {@link OpenRouterPrompt}s.\n\nThe standard query operation rather than a bespoke list endpoint: it inherits `limit` and\n`cursorDocumentKey` pagination that every client and the callModel MCP already know how to drive,\nand returns the stored documents rather than a hand-maintained projection of them.',
+    paramsFields: [{ name: 'state', typeText: 'Maybe<OpenRouterPromptState>', description: 'Restrict to one lifecycle state. Omit to page through every prompt.\n\nThe only filter axis, deliberately — see {@link openRouterPromptsWithStateQuery}.' }]
+  },
+  {
+    model: 'openRouterPrompt',
+    verb: 'update',
+    paramsTypeName: 'UpdateOpenRouterPromptParams',
+    paramsValidator: updateOpenRouterPromptParamsType,
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    paramsTypeDescription: "Parameters for updating an {@link OpenRouterPrompt}'s metadata and lifecycle state.\n\nNotably absent: anything that would change what a version SAYS. That is the version model's own\nupdate, so the only writes here are to the prompt's metadata and to which version is active.",
+    paramsFields: [
+      { name: 'name', typeText: 'Maybe<string>' },
+      { name: 'description', typeText: 'Maybe<string>' },
+      { name: 'tags', typeText: 'Maybe<string[]>' },
+      { name: 'state', typeText: 'Maybe<OpenRouterPromptState>', description: 'New lifecycle state.' },
+      { name: 'activeVersion', typeText: 'Maybe<OpenRouterPromptVersionNumber>', description: 'Version to serve to unpinned callers.\n\nMust already exist — promoting a version that was never published would leave every unpinned caller\nfailing to resolve.' }
+    ]
+  },
+  {
+    model: 'openRouterPromptVersion',
+    verb: 'create',
+    paramsTypeName: 'CreateOpenRouterPromptVersionParams',
+    paramsValidator: createOpenRouterPromptVersionParamsType,
+    resultTypeName: 'CreateOpenRouterPromptVersionResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    paramsTypeDescription:
+      "Parameters for creating a new {@link OpenRouterPromptVersion}.\n\nA create on the version model rather than an update on its parent: publishing writes a new document,\nwhich is what a create is, and it puts the operation on the model whose document appears. It also locks\nthe version it succeeds — see {@link OpenRouterPromptVersion}.\n\nThe version number is ALLOCATED by the server from the prompt's `lv`, not supplied — two concurrent\ncreates picking the same number would silently overwrite one another. That is also why the parent is\nnamed here rather than inferred: the target of the call is a document that does not exist yet.",
+    paramsFields: [
+      { name: 'prompt', typeText: 'FirestoreModelKey', description: 'Key of the {@link OpenRouterPrompt} the version belongs to.' },
+      { name: 'instructions', typeText: 'Maybe<string>', description: 'System prompt.' },
+      { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
+      { name: 'config', typeText: 'Maybe<Record<string, unknown>>', description: 'Model configuration. Passthrough JSON — validated against `OpenRouterModelConfig` but stored as-is.' },
+      { name: 'notes', typeText: 'Maybe<string>', description: 'Why this version was created.' },
+      { name: 'activate', typeText: 'Maybe<boolean>', description: 'Whether to promote this version to `activeVersion` on creation.\n\nDefaults to false: publishing and promoting are separate acts, so a version can be tested by a\npinned caller before it becomes what everyone gets.' }
+    ],
+    resultTypeDescription: 'Result of creating a version.',
+    resultFields: [
+      { name: 'modelKeys', typeText: '[FirestoreModelKey]', description: 'Key of the created version document.' },
+      { name: 'version', typeText: 'OpenRouterPromptVersionNumber', description: 'The allocated version number.' },
+      { name: 'activated', typeText: 'boolean', description: 'Whether the version was promoted to active.' },
+      { name: 'warnings', typeText: 'string[]', description: 'Config problems that did not prevent the version from being written.\n\nSurfaced rather than swallowed: an unpinned PDF engine or an unpinned provider produces a wrong\nanswer rather than an error, so the warning is the only chance to notice.' }
+    ]
+  },
+  {
+    model: 'openRouterPromptVersion',
+    verb: 'update',
+    paramsTypeName: 'UpdateOpenRouterPromptVersionParams',
+    paramsValidator: updateOpenRouterPromptVersionParamsType,
+    resultTypeName: 'UpdateOpenRouterPromptVersionResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    paramsTypeDescription: 'Parameters for updating the latest {@link OpenRouterPromptVersion} of a prompt.\n\nOnly what a version SAYS is editable, and only while the version is the latest one. Creating the\nnext version locks this one, and a locked version is refused — see {@link OpenRouterPromptVersion}\nfor why. The version number, its creation date and its lock are not caller-writable.',
+    paramsFields: [
+      { name: 'instructions', typeText: 'Maybe<string>', description: 'System prompt.' },
+      { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
+      { name: 'config', typeText: 'Maybe<Record<string, unknown>>', description: 'Model configuration. Passthrough JSON — validated against `OpenRouterModelConfig` but stored as-is.' },
+      { name: 'notes', typeText: 'Maybe<string>', description: 'Why the version says what it says.' }
+    ],
+    resultTypeDescription: 'Result of updating a version.',
+    resultFields: [{ name: 'warnings', typeText: 'string[]', description: 'Config problems that did not prevent the edit from being written.\n\nReturned for the same reason the create returns them: an unpinned PDF engine or an unpinned\nprovider produces a wrong answer rather than an error, so an edit that introduces one has to say so.' }]
+  },
   {
     model: 'profile',
     verb: 'delete',
@@ -849,9 +933,15 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'pat', longName: 'processingAt', tsType: 'Maybe<Date>', optional: true, description: 'The date `ps` was last moved to PROCESSING. Used to detect a stuck task.' },
       { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
-      { name: 'sat', longName: 'submittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was submitted, if it was. Its presence IS the lock.' },
+      { name: 'sat', longName: 'submittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the CURRENT submission was made, if the space is submitted. Its presence IS the lock.' },
+      { name: 'fsat', longName: 'firstSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was FIRST submitted, if it ever was.' },
       { name: 'cpat', longName: 'completedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date processing of the submission concluded, if it has.' },
-      { name: 'eat', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.' }
+      { name: 'eat', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.' },
+      { name: 'lat', longName: 'locksAt', tsType: 'Maybe<Date>', optional: true, description: 'The date reopening stops being possible — the instant the submission becomes FULLY LOCKED.' },
+      { name: 'lby', longName: 'lockedBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'The user who locked the submission early, when a caller did rather than the deadline passing.' },
+      { name: 'rc', longName: 'reopenCount', tsType: 'number', optional: false, description: 'Monotonic count of times this space has been REOPENED after a submission.' },
+      { name: 'rat', longName: 'reopenedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was last reopened, if it ever was.' },
+      { name: 'rby', longName: 'reopenedBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'The user who last reopened the space.' }
     ],
     read: 'owner',
     serviceFactory: { exportName: 'formSpaceFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
@@ -1153,6 +1243,87 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     serviceFactory: { exportName: 'oidcEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
+    modelType: 'openRouterPrompt',
+    modelName: 'OpenRouterPrompt',
+    modelGroup: 'OpenRouterPrompt',
+    identityConst: 'openRouterPromptIdentity',
+    collectionPrefix: 'orp',
+    exampleKey: 'orp/<openRouterPromptId>',
+    description: 'A reusable prompt.',
+    sourcePackage: '@dereekb/openrouter/firebase',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.model.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date this prompt was created at.' },
+      { name: 'uat', longName: 'updatedAt', tsType: 'Maybe<Date>', optional: true, description: 'Date this prompt was last updated at.' },
+      { name: 'n', longName: 'name', tsType: 'string', optional: false, description: 'Human-readable name.' },
+      { name: 'd', longName: 'description', tsType: 'Maybe<string>', optional: true, description: 'What this prompt is for.' },
+      { name: 's', longName: 'state', tsType: 'OpenRouterPromptState', optional: false, description: 'Lifecycle state.', enumRef: 'OpenRouterPromptState' },
+      { name: 'av', longName: 'activeVersion', tsType: 'Maybe<OpenRouterPromptVersionNumber>', optional: true, description: 'Version served when a caller does not pin one.' },
+      { name: 'lv', longName: 'latestVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'Highest version number allocated so far — the allocator for the next one.' },
+      { name: 't', longName: 'tags', tsType: 'Maybe<string[]>', optional: true, description: 'Free-form tags for grouping.' }
+    ],
+    serverOnly: true,
+    serviceFactory: { exportName: 'openRouterPromptFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'openRouterPromptVersion',
+    modelName: 'OpenRouterPromptVersion',
+    modelGroup: 'OpenRouterPrompt',
+    identityConst: 'openRouterPromptVersionIdentity',
+    collectionPrefix: 'orpv',
+    parentIdentityConst: 'openRouterPromptIdentity',
+    exampleKey: 'orp/<openRouterPromptId>/orpv/<openRouterPromptVersionId>',
+    description: 'One version of a prompt.',
+    sourcePackage: '@dereekb/openrouter/firebase',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.model.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date this version was published at.' },
+      { name: 'v', longName: 'version', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'The version number. Matches the (unpadded) document id.' },
+      { name: 'i', longName: 'instructions', tsType: 'Maybe<string>', optional: true, description: 'System prompt.' },
+      { name: 'm', longName: 'messages', tsType: 'Maybe<OpenRouterPromptVersionMessage[]>', optional: true, description: "Static seed messages, emitted before the caller's dynamic input." },
+      { name: 'c', longName: 'config', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: 'Model configuration.' },
+      { name: 'nt', longName: 'notes', tsType: 'Maybe<string>', optional: true, description: 'Why this version was published.' },
+      { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of whoever published it.' },
+      { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' }
+    ],
+    serverOnly: true,
+    serviceFactory: { exportName: 'openRouterPromptVersionFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
+    modelType: 'openRouterRunTask',
+    modelName: 'OpenRouterRunTask',
+    modelGroup: 'OpenRouterRunTask',
+    identityConst: 'openRouterRunTaskIdentity',
+    collectionPrefix: 'orrt',
+    exampleKey: 'orrt/<openRouterRunTaskId>',
+    description: 'One asynchronous OpenRouter run: both the queue entry and the conversation-state backend.',
+    sourcePackage: '@dereekb/openrouter/firebase',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.model.ts',
+    fields: [
+      { name: 's', longName: 'state', tsType: 'OpenRouterRunTaskState', optional: false, description: 'Current state.', enumRef: 'OpenRouterRunTaskState' },
+      { name: 'qat', longName: 'queuedAt', tsType: 'Date', optional: false, description: "Date this task was queued at. The sweep's ONLY sort key." },
+      { name: 'sat', longName: 'startedAt', tsType: 'Maybe<Date>', optional: true, description: 'Date execution most recently started at.' },
+      { name: 'fat', longName: 'finishedAt', tsType: 'Maybe<Date>', optional: true, description: 'Date this task reached a terminal state at.' },
+      { name: 'lat', longName: 'leaseAt', tsType: 'Maybe<Date>', optional: true, description: 'Date the current lease was taken at.' },
+      { name: 'lo', longName: 'leaseOwner', tsType: 'Maybe<string>', optional: true, description: 'Identifier of the sweep that holds the lease. Claiming is transactional, so two overlapping sweeps can never both run one task.' },
+      { name: 'at', longName: 'attempts', tsType: 'number', optional: false, description: 'Number of attempts made.' },
+      { name: 'pk', longName: 'promptKey', tsType: 'OpenRouterPromptKey', optional: false, description: 'Prompt this run uses.' },
+      { name: 'pv', longName: 'promptVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'The resolved prompt version. Recorded rather than re-resolved so a retry cannot silently switch prompt text mid-run.' },
+      { name: 'in', longName: 'input', tsType: 'OpenRouterInputMessage[]', optional: false, description: 'The call input.' },
+      { name: 'fp', longName: 'files', tsType: 'Maybe<OpenRouterFileReference[]>', optional: true, description: 'Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.' },
+      { name: 'fa', longName: 'fileAnnotations', tsType: 'Maybe<OpenRouterFileAnnotation[]>', optional: true, description: 'Cached `file-parser` annotations, resubmitted on retries and chained calls so an already-parsed PDF is not parsed again. See {@link OpenRouterFileAnnotation} for what a re-parse costs.' },
+      { name: 'co', longName: 'configOverrides', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: "Per-run overrides applied on top of the version's config. Passthrough JSON, for the reason {@link OpenRouterModelConfig} states." },
+      { name: 'o', longName: 'outputText', tsType: 'Maybe<string>', optional: true, description: 'The output text.' },
+      { name: 'j', longName: 'outputJson', tsType: 'Maybe<Record<string, unknown>>', optional: true, description: 'The output parsed as JSON, when it parsed as an object.' },
+      { name: 'gi', longName: 'generationIds', tsType: 'Maybe<OpenRouterGenerationId[]>', optional: true, description: 'Generation ids produced, for auditing via `getGeneration` / `listGenerationContent`.' },
+      { name: 'u', longName: 'usage', tsType: 'Maybe<OpenRouterRunUsage>', optional: true, description: 'Token and cost usage.' },
+      { name: 'e', longName: 'error', tsType: 'Maybe<OpenRouterRunError>', optional: true, description: 'Why the run failed.' },
+      { name: 'msg', longName: 'messages', tsType: 'Maybe<OpenRouterInputMessage[]>', optional: true, description: 'Conversation history. This is what replaces `previous_response_id`, which OpenRouter rejects with a 400 — continuing a conversation means resending its history.' },
+      { name: 'ptc', longName: 'pendingToolCalls', tsType: 'Maybe<OpenRouterRunTaskPendingToolCall[]>', optional: true, description: 'Tool calls awaiting a result from another process. Only populated for deferred-tool runs.' },
+      { name: 'utr', longName: 'unsentToolResults', tsType: 'Maybe<OpenRouterRunTaskUnsentToolResult[]>', optional: true, description: 'Tool results recorded but not yet delivered to the model. Only populated for deferred-tool runs.' }
+    ]
+  },
+  {
     modelType: 'profile',
     modelName: 'Profile',
     identityConst: 'profileIdentity',
@@ -1391,6 +1562,26 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'LOGGED_EVENT', value: 4, description: 'A write-only logged event notification.' }
     ],
     description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
+  },
+  OpenRouterPromptState: {
+    name: 'OpenRouterPromptState',
+    values: [
+      { name: 'DRAFT', value: 0, description: 'Created but not yet servable. A caller resolving this prompt gets an error rather than a guess.' },
+      { name: 'ACTIVE', value: 1, description: 'Servable.' },
+      { name: 'ARCHIVED', value: 2, description: 'Retired. Retained so historical runs stay explicable, but no longer servable.' }
+    ],
+    description: 'Lifecycle state of an {@link OpenRouterPrompt}.'
+  },
+  OpenRouterRunTaskState: {
+    name: 'OpenRouterRunTaskState',
+    values: [
+      { name: 'QUEUED', value: 0, description: 'Enqueued and waiting for a sweep to claim it.' },
+      { name: 'RUNNING', value: 1, description: 'Claimed by a sweep and executing.' },
+      { name: 'COMPLETE', value: 2, description: 'Finished successfully. `o` / `j` hold the result.' },
+      { name: 'FAILED', value: 3, description: 'Finished unsuccessfully, with the retry budget spent. `e` holds why.' },
+      { name: 'AWAITING_ASYNC_TOOLS', value: 4, description: 'Paused mid-run waiting on a deferred tool result from another process.' }
+    ],
+    description: 'State of an {@link OpenRouterRunTask}.'
   },
   ProfileResumeState: {
     name: 'ProfileResumeState',

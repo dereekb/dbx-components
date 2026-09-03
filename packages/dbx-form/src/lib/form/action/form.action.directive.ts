@@ -32,8 +32,7 @@ export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrVal
  * @typeParam O - The output value type passed to the action source.
  */
 @Directive({
-  selector: '[dbxActionForm]',
-  standalone: true
+  selector: '[dbxActionForm]'
 })
 export class DbxActionFormDirective<T = object, O = T> implements OnInit {
   readonly form = inject(DbxMutableForm<T>, { host: true });

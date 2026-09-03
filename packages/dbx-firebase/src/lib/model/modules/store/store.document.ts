@@ -177,7 +177,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>> = this.currentDocument$.pipe(
-    switchMap(() => loadingStateFromObs(this.snapshot$).pipe(catchError((error) => of(errorResult(error) as LoadingState<DocumentSnapshot<T>>)))),
+    switchMap(() => loadingStateFromObs(this.snapshot$).pipe(catchError((error) => of(errorResult(error))))),
     shareReplay(1)
   );
 

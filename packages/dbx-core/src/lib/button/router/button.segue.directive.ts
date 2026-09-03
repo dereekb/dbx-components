@@ -24,8 +24,7 @@ import { type SegueRef } from '../../router/segue';
  * ```
  */
 @Directive({
-  selector: '[dbxButtonSegue]',
-  standalone: true
+  selector: '[dbxButtonSegue]'
 })
 export class DbxButtonSegueDirective {
   readonly dbxButton = inject(DbxButton);

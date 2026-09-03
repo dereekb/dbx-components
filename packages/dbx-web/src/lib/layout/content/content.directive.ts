@@ -23,7 +23,6 @@ import { Directive } from '@angular/core';
   selector: 'dbx-content,[dbxContent]',
   host: {
     class: 'd-block dbx-content'
-  },
-  standalone: true
+  }
 })
 export class DbxContentDirective {}

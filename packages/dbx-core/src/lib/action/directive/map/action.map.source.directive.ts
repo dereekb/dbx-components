@@ -23,8 +23,7 @@ import { ActionContextStoreSourceMap, type ActionKey } from './action.map';
  * @see {@link DbxActionFromMapDirective} for consuming registered actions by key.
  */
 @Directive({
-  selector: '[dbxActionMapSource]',
-  standalone: true
+  selector: '[dbxActionMapSource]'
 })
 export class DbxActionMapSourceDirective implements OnDestroy {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);

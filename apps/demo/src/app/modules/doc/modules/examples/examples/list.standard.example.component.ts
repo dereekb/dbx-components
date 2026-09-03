@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
@@ -21,8 +21,6 @@ import { TWO_LINE_ITEM_VALUES, type TwoLineItemValue } from '../component/two.li
  */
 @Component({
   selector: 'doc-list-standard-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DocTwoLineItemListComponent],
   template: `
     <dbx-docs-ui-example header=".dbx-list-two-line-item Standard List With Chip" hint="Two-line row with parent-rendered leading icon, title/details/footnote, and a trailing status chip.">

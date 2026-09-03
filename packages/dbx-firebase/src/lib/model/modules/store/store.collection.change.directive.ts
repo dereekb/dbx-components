@@ -46,8 +46,7 @@ import { clean } from '@dereekb/dbx-core';
  * ```
  */
 @Directive({
-  selector: '[dbxFirebaseCollectionChange]',
-  standalone: true
+  selector: '[dbxFirebaseCollectionChange]'
 })
 export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<S> {
   readonly dbxFirebaseCollectionStoreDirective = inject(DbxFirebaseCollectionStoreDirective<T, D, S>);

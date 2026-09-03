@@ -12,6 +12,37 @@ import { spawnSync } from 'node:child_process';
 import { type Maybe } from '@dereekb/util';
 
 /**
+ * Environment variables `create-nx-workspace` probes to decide it is being driven by an AI coding
+ * agent rather than a person. When any of them is set it silently rewrites the run:
+ * `--preset=angular-monorepo` is remapped to a `git clone` of the `nrwl/angular-template` GitHub
+ * repo (a fixed demo workspace with its own app names and its own pinned nx version),
+ * `--name` / `--appName` / `--style` / `--unitTestRunner` stop being honored, and `--nxCloud=skip`
+ * is overridden to `yes` — the generated `nx.json` comes back with an `nxCloudId` in it.
+ *
+ * A setup run has to produce the same project no matter which editor or terminal it was started
+ * from, so every command the orchestration layer shells out to runs with these unset. `PAGER` is
+ * deliberately left alone: the Cursor probe requires `CURSOR_TRACE_ID` and
+ * `COMPOSER_NO_INTERACTION` alongside it, so dropping those two is enough to fail the check without
+ * changing how child processes page their output.
+ */
+export const AI_AGENT_DETECTION_ENV_KEYS: readonly string[] = ['CLAUDECODE', 'CLAUDE_CODE', 'OPENCODE', 'REPL_ID', 'GEMINI_CLI', 'CURSOR_TRACE_ID', 'COMPOSER_NO_INTERACTION'];
+
+/**
+ * Builds the environment child processes run with: the current environment minus the
+ * {@link AI_AGENT_DETECTION_ENV_KEYS} AI-agent detection variables.
+ *
+ * @param env - The environment to derive from (default: `process.env`).
+ * @returns A copy with every AI-agent detection variable removed.
+ */
+export function shellEnvWithoutAiAgentDetection(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const result: NodeJS.ProcessEnv = { ...env };
+  for (const key of AI_AGENT_DETECTION_ENV_KEYS) {
+    delete result[key];
+  }
+  return result;
+}
+
+/**
  * A single shell command: an executable plus its argument vector.
  */
 export interface ShellCommand {
@@ -67,7 +98,7 @@ export function createShellRunner(logger: (message: string) => void): ShellRunne
         logger(`[dry-run] ${display}`);
       } else {
         logger(`$ ${display}`);
-        const result = spawnSync(command, [...args], { cwd: options.cwd, stdio: 'inherit', shell: false });
+        const result = spawnSync(command, [...args], { cwd: options.cwd, stdio: 'inherit', shell: false, env: shellEnvWithoutAiAgentDetection() });
         if (result.error) {
           throw result.error;
         }

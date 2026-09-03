@@ -23,8 +23,7 @@ const DEFAULT_DBX_FORM_LOADING_SOURCE_DIRECTIVE_MODE: DbxFormSourceDirectiveMode
  * @typeParam T - The form value type (must extend object).
  */
 @Directive({
-  selector: '[dbxFormLoadingSource]',
-  standalone: true
+  selector: '[dbxFormLoadingSource]'
 })
 export class DbxFormLoadingSourceDirective<T extends object = object> {
   readonly form = inject(DbxMutableForm<T>, { host: true });

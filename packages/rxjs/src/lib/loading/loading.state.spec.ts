@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState, isLoadingStateEqual, loadingStateType, LoadingStateType, idleLoadingState, isLoadingStateWithDefinedValue, isAnyLoadingStateInLoadingState, areAllLoadingStatesFinishedLoading } from './loading.state';
+import { beginLoading, errorResult, mergeLoadingStateWithError, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState, isLoadingStateEqual, loadingStateType, LoadingStateType, idleLoadingState, isLoadingStateWithDefinedValue, isAnyLoadingStateInLoadingState, areAllLoadingStatesFinishedLoading } from './loading.state';
 
 describe('isLoadingStateEqual()', () => {
   it('should return true for two equivalent success results', () => {
@@ -30,6 +30,27 @@ describe('loadingStateType()', () => {
 
   it('should return IDLE for a non-loading state with no value or error', () => {
     expect(loadingStateType({ loading: false })).toBe(LoadingStateType.IDLE);
+  });
+
+  it('should return ERROR for a finished state carrying both an error and a value', () => {
+    expect(loadingStateType({ loading: false, value: 'stale', error: { message: 'failed' } })).toBe(LoadingStateType.ERROR);
+  });
+
+  it('should return ERROR for a state mapped over an error state', () => {
+    const mapped = mapLoadingStateResults(errorResult<number>(new Error('failed')), { alwaysMapValue: true, mapValue: (x) => `${x}` });
+    expect(loadingStateType(mapped)).toBe(LoadingStateType.ERROR);
+  });
+
+  it('should return ERROR for a state that had a value and was then merged with an error', () => {
+    expect(loadingStateType(mergeLoadingStateWithError(successResult('hello'), { message: 'failed' }))).toBe(LoadingStateType.ERROR);
+  });
+
+  it('should return SUCCESS for a finished state with a null value and no error', () => {
+    expect(loadingStateType({ loading: false, value: null })).toBe(LoadingStateType.SUCCESS);
+  });
+
+  it('should return IDLE for a finished state whose error key is present but nullish', () => {
+    expect(loadingStateType({ loading: false, error: undefined })).toBe(LoadingStateType.IDLE);
   });
 });
 

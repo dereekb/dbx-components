@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '../../layout/content/content.container.directive';
 
 /**
@@ -23,8 +23,6 @@ import { DbxContentContainerDirective } from '../../layout/content/content.conta
   host: {
     class: 'd-block dbx-prompt-page'
   },
-  imports: [DbxContentContainerDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective]
 })
 export class DbxPromptPageComponent {}

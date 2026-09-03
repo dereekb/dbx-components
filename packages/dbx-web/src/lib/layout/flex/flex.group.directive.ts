@@ -37,8 +37,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
     '[class.dbx-flex-group-break-to-column]': 'breakToColumn()',
     '[class.dbx-flex-group-relative]': 'relative()',
     '[class.dbx-flex-group-small]': 'smallSignal()'
-  },
-  standalone: true
+  }
 })
 export class DbxFlexGroupDirective {
   private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);

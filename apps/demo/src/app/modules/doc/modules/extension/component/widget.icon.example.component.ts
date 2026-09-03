@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxWidgetComponent } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
 
@@ -12,9 +12,7 @@ export interface DocExtensionWidgetIconExampleData {
 @Component({
   templateUrl: './widget.icon.example.component.html',
   styleUrls: ['./widget.icon.example.scss'],
-  standalone: true,
-  imports: [MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIcon]
 })
 export class DocExtensionWidgetIconExampleComponent extends AbstractDbxWidgetComponent<DocExtensionWidgetIconExampleData> {
   get icon() {

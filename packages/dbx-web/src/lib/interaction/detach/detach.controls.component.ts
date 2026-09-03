@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DbxDetachControlButtonsComponent } from './detach.controls.buttons.component';
 
 /**
@@ -19,9 +19,7 @@ import { DbxDetachControlButtonsComponent } from './detach.controls.buttons.comp
   host: {
     class: 'dbx-detach-controls'
   },
-  imports: [DbxDetachControlButtonsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxDetachControlButtonsComponent]
 })
 export class DbxDetachControlsComponent {
   readonly header = input<string>();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DbxSectionComponent } from '@dereekb/dbx-web';
 
 /**
@@ -33,9 +33,7 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
       }
     `
   ],
-  imports: [DbxSectionComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionComponent]
 })
 export class DbxDocsUiExampleComponent {
   readonly header = input.required<string>();

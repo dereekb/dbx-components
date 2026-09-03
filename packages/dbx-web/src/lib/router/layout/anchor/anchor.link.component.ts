@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
@@ -15,14 +15,12 @@ import { DbxAnchorComponent } from './anchor.component';
  */
 @Component({
   selector: 'dbx-link',
-  standalone: true,
   imports: [DbxAnchorComponent],
   template: `
     <dbx-anchor [anchor]="anchorSignal()">
       <ng-content></ng-content>
     </dbx-anchor>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'd-inline dbx-link'
   }

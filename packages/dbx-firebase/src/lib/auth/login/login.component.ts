@@ -1,5 +1,5 @@
 import { type DbxFirebaseLoginMode, type FirebaseLoginMethodCategory, type FirebaseLoginMethodType } from './login';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { DbxInjectionContextDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseLoginListComponent } from './login.list.component';
@@ -10,7 +10,6 @@ import { DbxFirebaseLoginContextDirective } from './login.context.directive';
  */
 @Component({
   selector: 'dbx-firebase-login',
-  standalone: true,
   imports: [DbxInjectionContextDirective, DbxFirebaseLoginContextDirective, DbxFirebaseLoginListComponent],
   template: `
     <ng-container *dbxInjectionContext dbxFirebaseLoginContext>
@@ -20,8 +19,7 @@ import { DbxFirebaseLoginContextDirective } from './login.context.directive';
   host: {
     class: 'd-block dbx-firebase-login',
     '[class]': '{ "dbx-firebase-register": loginMode() === "register", "dbx-firebase-link": loginMode() === "link" }'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseLoginComponent {
   readonly loginMode = input<DbxFirebaseLoginMode>('login');

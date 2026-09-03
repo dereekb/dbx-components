@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { PDF_MIME_TYPE, type Maybe } from '@dereekb/util';
@@ -83,9 +83,7 @@ export interface DbxPdfMergeImportConfig {
     '[class.d-block]': 'activeSignal()',
     '[class.dbx-mb3]': 'activeSignal()'
   },
-  imports: [MatIconModule, DbxFileUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [MatIconModule, DbxFileUploadComponent]
 })
 export class DbxPdfMergeImportComponent {
   readonly store = inject(DbxPdfMergeEditorStore);

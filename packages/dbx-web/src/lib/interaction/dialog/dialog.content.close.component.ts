@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -21,9 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
     class: 'dbx-dialog-content-close',
     '[class.dbx-dialog-content-close-padding]': 'padded()'
   },
-  standalone: true,
-  imports: [MatIconModule, MatIconButton],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule, MatIconButton]
 })
 export class DbxDialogContentCloseComponent {
   readonly padded = input<boolean>(true);

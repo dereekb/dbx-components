@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, map } from 'rxjs';
@@ -29,9 +29,7 @@ const _disabled$ = new BehaviorSubject(false);
   selector: 'doc-feature-form-tabs',
   templateUrl: './feature.formtabs.component.html',
   styleUrls: ['./feature.formtabs.component.scss'],
-  standalone: true,
-  imports: [MatSlideToggle, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatSlideToggle, DbxSpacerDirective]
 })
 export class DocFeatureFormTabsComponent {
   private readonly _breakpointObserver = inject(BreakpointObserver);

@@ -41,7 +41,6 @@ describe('DbxForgeListSelectionFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -218,13 +217,13 @@ describe('dbxForgeListSelectionField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  // MARK: Hint/description
-  it('should map description to field props.hint', () => {
-    const field = dbxForgeListSelectionField({ ...minimalConfig(), description: 'Select items from the list' }) as any;
+  // MARK: Hint
+  it('should map hint to field props.hint', () => {
+    const field = dbxForgeListSelectionField({ ...minimalConfig(), hint: 'Select items from the list' }) as any;
     expect(field.props?.hint).toBe('Select items from the list');
   });
 
-  it('should not set hint on field when description is not provided', () => {
+  it('should not set hint on field when hint is not provided', () => {
     const field = dbxForgeListSelectionField(minimalConfig()) as any;
     expect(field.props?.hint).toBeUndefined();
   });

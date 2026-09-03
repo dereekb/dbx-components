@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import type { FieldDef, FormConfig } from '@ng-forge/dynamic-forms';
 import { AbstractSyncForgeFormDirective, DbxForgeFormComponentImportsModule, dbxForgeCheckboxField, dbxForgeEmailField, dbxForgeFormComponentProviders, dbxForgeNameField, dbxForgeTextAreaField, dbxForgeToggleField, dbxForgeValueSelectionField } from '@dereekb/dbx-form';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
@@ -19,8 +19,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
  */
 @Component({
   selector: 'dbx-form-style-demo-fields-section',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxForgeFormComponentImportsModule],
   providers: dbxForgeFormComponentProviders(),
   template: `

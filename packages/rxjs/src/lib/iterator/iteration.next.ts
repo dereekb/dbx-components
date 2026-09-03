@@ -9,7 +9,7 @@ import { type Maybe, performTaskLoop, type GetterOrValue, asGetter, isMaybeNot, 
  * @param iteration - The iteration to check.
  * @returns Observable that emits `true` when more items can be loaded.
  */
-export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
+export function iterationHasNextAndCanLoadMore(iteration: ItemIteration): Observable<boolean> {
   return iteration.canLoadMore$.pipe(
     switchMap((canLoadMore) => {
       return canLoadMore ? iteration.hasNext$ : of(false);

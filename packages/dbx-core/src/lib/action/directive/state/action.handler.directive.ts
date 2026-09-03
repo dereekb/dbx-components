@@ -55,8 +55,7 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
  * @see {@link DbxActionHandlerValueDirective} for the simpler value/getter variant.
  */
 @Directive({
-  selector: '[dbxActionHandler]',
-  standalone: true
+  selector: '[dbxActionHandler]'
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   readonly handlerFunction = input.required<Maybe<Work<T, O>>>({ alias: 'dbxActionHandler' });
@@ -92,8 +91,7 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
  * @see {@link DbxActionHandlerDirective} for the full work-function variant.
  */
 @Directive({
-  selector: '[dbxActionHandlerValue]',
-  standalone: true
+  selector: '[dbxActionHandlerValue]'
 })
 export class DbxActionHandlerValueDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   readonly handlerValue = input.required<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>({ alias: 'dbxActionHandlerValue' });

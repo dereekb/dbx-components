@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
 import { type WorkUsingObservable, type IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
@@ -15,9 +15,7 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
       <dbx-schedule-selection-calendar-date-days-forge-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormIsModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-forge-form>
     </div>
   `,
-  imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective]
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
   readonly dbxCalendarStore = inject(DbxCalendarStore);

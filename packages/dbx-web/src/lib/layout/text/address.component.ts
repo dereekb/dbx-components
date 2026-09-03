@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
 
 /**
@@ -38,9 +38,7 @@ import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
   `,
   host: {
     class: 'dbx-us-address'
-  },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxUnitedStatesAddressComponent {
 

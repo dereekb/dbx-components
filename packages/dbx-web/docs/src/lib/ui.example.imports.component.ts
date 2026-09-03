@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * Optional `import { … }` block slot inside a `<dbx-docs-ui-example>`.
@@ -11,8 +11,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'dbx-docs-ui-example-imports',
   template: `
     <ng-content></ng-content>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DbxDocsUiExampleImportsComponent {}

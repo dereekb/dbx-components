@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { type ResizedEvent } from '../../screen/resize';
 import { DbxResizedDirective } from '../../screen/resize.directive';
 
@@ -34,9 +34,7 @@ import { DbxResizedDirective } from '../../screen/resize.directive';
     class: 'dbx-two-block d-block',
     '[class]': '{ "dbx-two-block-fixed-top": fixedTop() }'
   },
-  imports: [DbxResizedDirective, NgStyle],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxResizedDirective, NgStyle]
 })
 export class DbxTwoBlockComponent {
   /**

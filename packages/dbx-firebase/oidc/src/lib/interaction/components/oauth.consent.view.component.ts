@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, type Signal } from '@angular/core';
+import { Component, computed, input, type Signal } from '@angular/core';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAvatarComponent, DbxBasicLoadingComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -53,7 +53,6 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent-view',
-  standalone: true,
   imports: [DbxInjectionComponent, DbxAvatarComponent, DbxBasicLoadingComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective, DbxActionSnackbarErrorDirective],
   styleUrls: ['./oauth.consent.view.component.scss'],
   template: `
@@ -103,8 +102,7 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent-view'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthConsentViewComponent {
   readonly details = input<Maybe<OAuthInteractionLoginDetails>>();

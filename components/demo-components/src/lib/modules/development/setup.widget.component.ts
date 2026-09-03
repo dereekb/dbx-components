@@ -11,7 +11,6 @@ import { DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '
 @Component({
   templateUrl: './setup.widget.component.html',
   providers: [ProfileDocumentStore, GuestbookDocumentStore],
-  standalone: true,
   imports: [DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoSetupDevelopmentWidgetComponent implements OnInit {

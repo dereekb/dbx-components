@@ -33,12 +33,6 @@ export interface DbxButtonStyle {
    */
   readonly spinnerColor?: Maybe<ThemePalette | DbxThemeColor>;
   /**
-   * Custom CSS background color for the button.
-   *
-   * @deprecated Use {@link color} with a {@link DbxColorConfig}, e.g. `{ color: '#ff0066' }`. The `[dbxColor]` directive applies the background through `.dbx-color-bg`.
-   */
-  readonly customButtonColor?: Maybe<string>;
-  /**
    * Custom CSS text color for the button label.
    */
   readonly customTextColor?: Maybe<string>;

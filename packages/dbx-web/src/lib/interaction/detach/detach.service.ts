@@ -1,4 +1,4 @@
-import { Injectable, ApplicationRef, type ComponentRef, EnvironmentInjector, Injector, inject, createComponent } from '@angular/core';
+import { Service, ApplicationRef, type ComponentRef, EnvironmentInjector, Injector, inject, createComponent } from '@angular/core';
 import { createInjectorForInjectionComponentConfig, initInjectionComponent } from '@dereekb/dbx-core';
 import { NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
@@ -124,9 +124,7 @@ class DbxDetachInstanceImpl<T = unknown> implements DbxDetachInstance<T> {
  *
  * Multiple simultaneous detached components are supported via unique keys.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxDetachService {
   private readonly _appRef = inject(ApplicationRef);
   private readonly _injector = inject(Injector);

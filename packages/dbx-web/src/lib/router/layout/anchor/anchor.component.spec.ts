@@ -1,5 +1,5 @@
 import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, input, viewChild } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
@@ -13,11 +13,11 @@ import { provideUIRouter } from '@uirouter/angular';
 vi.setConfig({ testTimeout: 1000 });
 
 describe('AnchorComponent', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [provideUIRouter(), provideDbxRouterWebUiRouterProviderConfig(), { provide: APP_BASE_HREF, useValue: '/' }]
     });
-  }));
+  });
 
   let testComponent: TestViewComponent;
   let fixture: ComponentFixture<TestViewComponent>;
@@ -233,7 +233,6 @@ const CUSTOM_CONTENT = 'Custom Content';
       <span id="custom-content">Custom Content</span>
     </dbx-anchor>
   `,
-  standalone: true,
   imports: [DbxAnchorComponent]
 })
 class TestViewComponent {

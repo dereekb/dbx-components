@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, type OnDestroy, type OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Editor, NgxEditorModule } from '@bobbyquantum/ngx-editor';
 import { debounceTime } from 'rxjs';
@@ -57,9 +57,7 @@ export interface DbxForgeTextEditorFieldDef extends BaseValueField<DbxForgeTextE
 @Component({
   selector: 'dbx-forge-texteditor-field',
   templateUrl: './texteditor.field.component.html',
-  imports: [NgClass, NgxEditorModule, FormsModule, ReactiveFormsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, NgxEditorModule, FormsModule, ReactiveFormsModule]
 })
 export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   private readonly _compactContextStore = inject(CompactContextStore, { optional: true });

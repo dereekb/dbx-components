@@ -2,7 +2,7 @@
  * Vitest setup for Angular projects.
  *
  * Importing this file runs the full Angular test setup: firebase setup,
- * Angular compiler + zone.js, a11y matchers, TestBed initialization,
+ * Angular compiler, snapshot serializers, a11y matchers, TestBed initialization,
  * and JSDOM polyfills.
  *
  * Due to a limitation in the Angular vitest plugin, this must be imported
@@ -19,15 +19,21 @@ import { vi } from 'vitest';
 import './setup-firebase.js';
 
 import '@angular/compiler';
-import '@analogjs/vitest-angular/setup-zone';
+import '@analogjs/vitest-angular/setup-snapshots';
 import '@dereekb/vitest/a11y';
 
 import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 
 /**
- * Initialize the Angular test environment with zoneless change detection as the
- * default, matching the zoneless production app. zone.js is still loaded (via the
- * setup-zone import above) so fakeAsync/tick/flush and whenStable() keep working.
+ * Initialize the Angular test environment with zoneless change detection, matching the
+ * zoneless production app.
+ *
+ * zone.js is not loaded at all, so the zone-only test helpers are unavailable: instead of
+ * `fakeAsync`/`tick`/`flush` or `waitForAsync`, await `fixture.whenStable()`, which zoneless
+ * drives off the scheduler and Angular's pending-task tracking.
+ *
+ * `setup-snapshots` is the zoneless half of `@analogjs/vitest-angular/setup-zone`: it installs
+ * the Angular fixture snapshot serializers without pulling zone.js in.
  */
 setupTestBed({ zoneless: true });
 

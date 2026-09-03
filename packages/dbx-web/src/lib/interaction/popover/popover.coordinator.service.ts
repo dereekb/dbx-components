@@ -1,5 +1,5 @@
 import { type DbxPopoverKey, type DbxPopoverController } from './popover';
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -8,9 +8,7 @@ import { BehaviorSubject } from 'rxjs';
  *
  * When a new popover is added with a key that already exists, the previous popover is closed automatically.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxPopoverCoordinatorService {
   private readonly _popovers = completeOnDestroy(new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map()));
 

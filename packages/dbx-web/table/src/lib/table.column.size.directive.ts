@@ -9,8 +9,7 @@ export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;
 
 @Directive({
   exportAs: 'dbxTableColumnSize',
-  selector: '[dbxTableColumnSize]',
-  standalone: true
+  selector: '[dbxTableColumnSize]'
 })
 export class DbxTableColumnSizeDirective {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -94,8 +93,7 @@ export class DbxTableColumnSizeDirective {
  */
 @Directive({
   // eslint-disable-next-line @angular-eslint/directive-selector
-  selector: '[dbx-column-size-column]',
-  standalone: true
+  selector: '[dbx-column-size-column]'
 })
 export class DbxColumnSizeColumnDirective implements OnInit {
   readonly dbxColumnSizeDirective = inject(DbxTableColumnSizeDirective);

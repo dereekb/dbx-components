@@ -7,7 +7,7 @@ import {
   type PageLoadingState,
   beginLoading,
   isLoadingStateFinishedLoading,
-  mergeLoadingStates,
+  mergeLoadingStatesArray,
   mapLoadingStateResults,
   type MapLoadingStateResultsConfiguration,
   type LoadingStateValue,
@@ -18,13 +18,12 @@ import {
   isLoadingStateWithError,
   type LoadingStateWithValueType,
   errorResult,
-  type LoadingStateWithDefinedValue,
   isPageLoadingStateMetadataEqual,
-  type LoadingStateWithError
+  type LoadingStateWithError,
+  loadingStateValue,
+  loadingStateWithValueType
 } from './loading.state';
 import { filterMaybeStrict } from '../rxjs/value';
-
-// TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
 /**
  * Wraps an observable output and maps the value to a {@link LoadingState}.
@@ -90,7 +89,7 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
  * @returns An observable emitting the merged {@link LoadingState}.
  */
 /* eslint-disable @typescript-eslint/max-params -- variadic overload signatures */
-export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
+export function combineLoadingStates<A extends object, B extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
 export function combineLoadingStates<A extends object, B extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn: (a: A, b: B) => O): Observable<LoadingState<O>>;
 export function combineLoadingStates<A extends object, B extends object, C extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>): Observable<LoadingState<A & B & C>>;
 export function combineLoadingStates<A extends object, B extends object, C extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, mergeFn: (a: A, b: B, c: C) => O): Observable<LoadingState<O>>;
@@ -111,11 +110,7 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
     distinctUntilChanged((x, y) => {
       return !x.some((_, i) => x[i] !== y[i]);
     }), // Prevent remerging the same values!
-    map((states: LoadingState<any>[]) => {
-      // TODO(breaking-change): pass O explicitly (mergeLoadingStates<O>(...states, mergeFn)) or restructure the variadic signature so O is inferable without the cast.
-      // TODO: Fix eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- mergeLoadingStates is variadic; the generic O cannot be inferred from the call, so tsc widens the result to LoadingState<unknown> without this cast
-      return mergeLoadingStates(...states, mergeFn) as LoadingState<O>;
-    }),
+    map((states: LoadingState<any>[]) => mergeLoadingStatesArray<O>(states, mergeFn)),
     shareReplay(1) // Share the result.
   );
 }
@@ -143,7 +138,7 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
  * const status$ = combineLoadingStatesStatus([loading$, success$]);
  * ```
  */
-export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
+export function combineLoadingStatesStatus<A extends readonly LoadingState[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
   return combineLatest(sources).pipe(
     map((allLoadingStates) => {
       const firstErrorState = allLoadingStates.find((x) => x.error);
@@ -174,6 +169,9 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
  * Preferred over using both individually, as typing information can get lost when chaining them separately.
  * An optional partial state can be provided to include additional metadata (e.g., page info) in the initial loading state.
  *
+ * @param state - Optional partial loading state to include in the initial emission.
+ * @returns A `MonoTypeOperatorFunction` that prepends a loading state to the observable.
+ *
  * @example
  * ```ts
  * // Emit a loading state immediately before the source observable emits
@@ -193,14 +191,13 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
  *   shareReplay(1)
  * );
  * ```
- *
- * @param state - Optional partial loading state to include in the initial emission.
- * @returns A `MonoTypeOperatorFunction` that prepends a loading state to the observable.
  */
-export function startWithBeginLoading<L extends LoadingState>(): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState>(state?: Partial<LoadingState>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends PageLoadingState>(state?: Partial<PageLoadingState>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>): MonoTypeOperatorFunction<L> {
+export function startWithBeginLoading<L extends LoadingState>(state?: Partial<NoInfer<L>>): MonoTypeOperatorFunction<L> {
+  /**
+   * `NoInfer` is required here: `Partial<L>` is a homomorphic mapped type and therefore an inference
+   * source that outranks the contextual return type, so without it a `FilteredPage` argument would
+   * reverse-infer `L := FilteredPage` instead of taking `L` from the stream being piped.
+   */
   return startWith<L>(beginLoading(state) as unknown as L);
 }
 
@@ -220,9 +217,9 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
  * );
  * ```
  */
-export function currentValueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
-  return (obs: Observable<L>) => {
-    return obs.pipe(map((x) => x.value as Maybe<LoadingStateValue<L>>));
+export function currentValueFromLoadingState<T>(): OperatorFunction<LoadingState<T>, Maybe<T>> {
+  return (obs: Observable<LoadingState<T>>) => {
+    return obs.pipe(map((x) => x.value));
   };
 }
 
@@ -243,10 +240,10 @@ export function currentValueFromLoadingState<L extends LoadingState>(): Operator
  * );
  * ```
  */
-export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, MaybeSoStrict<LoadingStateValue<L>>> {
-  return (obs: Observable<L>) => {
+export function valueFromLoadingState<T>(): OperatorFunction<LoadingState<T>, MaybeSoStrict<T>> {
+  return (obs: Observable<LoadingState<T>>) => {
     return obs.pipe(
-      map((x) => x.value as LoadingStateValue<L>),
+      map((x) => x.value),
       filterMaybeStrict()
     );
   };
@@ -268,11 +265,11 @@ export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>():
  * ).subscribe();
  * ```
  */
-export function errorFromLoadingState<L extends LoadingState>(): OperatorFunction<L, ReadableError> {
-  return (obs: Observable<L>) => {
+export function errorFromLoadingState(): OperatorFunction<LoadingState, ReadableError> {
+  return (obs: Observable<LoadingState>) => {
     return obs.pipe(
       filter(isLoadingStateWithError),
-      map((x) => x.error as ReadableError)
+      map((x) => x.error)
     );
   };
 }
@@ -296,7 +293,7 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
  * );
  * ```
  */
-export function throwErrorFromLoadingStateError<L extends LoadingState>(): OperatorFunction<L, L> {
+export function throwErrorFromLoadingStateError<L extends LoadingState>(): MonoTypeOperatorFunction<L> {
   return (obs: Observable<L>) => {
     return obs.pipe(
       map((x) => {
@@ -334,14 +331,16 @@ export function throwErrorFromLoadingStateError<L extends LoadingState>(): Opera
  * @param defaultValue - Optional default value or getter to use when the finished state has no value.
  * @returns An `OperatorFunction` that emits the value (or default) once loading is finished.
  */
-export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue: GetterOrValue<LoadingStateValue<L>>): OperatorFunction<L, LoadingStateValue<L>>;
-export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue?: Maybe<GetterOrValue<LoadingStateValue<L>>>): OperatorFunction<L, Maybe<LoadingStateValue<L>>>;
-export function valueFromFinishedLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, LoadingStateValue<L>>;
-export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue?: Maybe<GetterOrValue<LoadingStateValue<L>>>): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
-  return (obs: Observable<L>) => {
+export function valueFromFinishedLoadingState<T>(defaultValue: GetterOrValue<NoInfer<T>>): OperatorFunction<LoadingState<T>, T>;
+export function valueFromFinishedLoadingState<T>(defaultValue?: Maybe<GetterOrValue<NoInfer<T>>>): OperatorFunction<LoadingState<T>, Maybe<T>>;
+
+export function valueFromFinishedLoadingState<T>(defaultValue?: Maybe<GetterOrValue<NoInfer<T>>>): OperatorFunction<LoadingState<T>, Maybe<T>> {
+  // `NoInfer` on `defaultValue` is required: argument inference outranks the contextual return type,
+  // so a `() => []` default would otherwise infer `T = never[]` and reject the real stream.
+  return (obs: Observable<LoadingState<T>>) => {
     return obs.pipe(
       filter(isLoadingStateFinishedLoading),
-      map((x) => (x.value as Maybe<LoadingStateValue<L>>) ?? getValueFromGetter(defaultValue))
+      map((x) => x.value ?? getValueFromGetter(defaultValue))
     );
   };
 }
@@ -350,6 +349,10 @@ export function valueFromFinishedLoadingState<L extends LoadingState>(defaultVal
  * Executes a side-effect function when the piped {@link LoadingState} matches the given {@link LoadingStateType}.
  *
  * This is a tap-style operator that does not modify the stream, but calls `fn` when the state matches the specified type.
+ *
+ * @param fn - The side-effect function to call when the state matches.
+ * @param type - The {@link LoadingStateType} to match against.
+ * @returns A `MonoTypeOperatorFunction` that taps on matching states.
  *
  * @example
  * ```ts
@@ -363,14 +366,7 @@ export function valueFromFinishedLoadingState<L extends LoadingState>(defaultVal
  *   tapOnLoadingStateType(() => showSpinner(), LoadingStateType.LOADING)
  * ).subscribe();
  * ```
- *
- * @param fn - The side-effect function to call when the state matches.
- * @param type - The {@link LoadingStateType} to match against.
- * @returns A `MonoTypeOperatorFunction` that taps on matching states.
  */
-export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateType<L extends PageLoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L> {
   let decisionFunction: DecisionFunction<L>;
 
@@ -392,6 +388,9 @@ export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => 
  *
  * This is a convenience wrapper around {@link tapOnLoadingStateType} with {@link LoadingStateType.SUCCESS}.
  *
+ * @param fn - The side-effect function to call on success states.
+ * @returns A `MonoTypeOperatorFunction` that taps on successful states.
+ *
  * @example
  * ```ts
  * // Log the successful value
@@ -399,13 +398,7 @@ export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => 
  *   tapOnLoadingStateSuccess((state) => console.log('Loaded:', state.value))
  * ).subscribe();
  * ```
- *
- * @param fn - The side-effect function to call on success states.
- * @returns A `MonoTypeOperatorFunction` that taps on successful states.
  */
-export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateSuccess<L extends PageLoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L> {
   return tapOnLoadingStateType(fn, LoadingStateType.SUCCESS);
 }
@@ -415,6 +408,9 @@ export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) 
  *
  * Maps the value within a {@link LoadingState} using the provided configuration, preserving the loading/error state metadata.
  *
+ * @param config - Configuration for mapping the loading state value.
+ * @returns An `OperatorFunction` that maps the value within the loading state.
+ *
  * @example
  * ```ts
  * // Map a SystemState<T> loading state to just its data property
@@ -423,15 +419,9 @@ export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) 
  *   shareReplay(1)
  * );
  * ```
- *
- * @param config - Configuration for mapping the loading state value.
- * @returns An `OperatorFunction` that maps the value within the loading state.
  */
-export function mapLoadingState<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
-export function mapLoadingState<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
-export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
-export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O> {
-  return map((state: L) => mapLoadingStateResults(state, config));
+export function mapLoadingState<L extends LoadingState, B, O extends LoadingState = LoadingStateWithValueType<L, B>>(config: MapLoadingStateResultsConfiguration<L, B, O>): OperatorFunction<L, O> {
+  return map((state: L) => mapLoadingStateResults<L, B, O>(state, config));
 }
 
 /**
@@ -442,6 +432,10 @@ export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = P
  * a temporary loading state (with no value) is emitted while waiting.
  *
  * Error and loading states are passed through without invoking the operator.
+ *
+ * @param operator - The RxJS operator to apply to the loading state's value.
+ * @param mapOnUndefined - If true, also applies the operator when the value is undefined (but loading is finished and no error).
+ * @returns An `OperatorFunction` that transforms the value within the loading state.
  *
  * @example
  * ```ts
@@ -466,15 +460,8 @@ export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = P
  *   shareReplay(1)
  * );
  * ```
- *
- * @param operator - The RxJS operator to apply to the loading state's value.
- * @param mapOnUndefined - If true, also applies the operator when the value is undefined (but loading is finished and no error).
- * @returns An `OperatorFunction` that transforms the value within the loading state.
  */
-export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends PageLoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined = false): OperatorFunction<L, LoadingStateWithValueType<L, O>> {
+export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined = false): OperatorFunction<L, LoadingStateWithValueType<L, O>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
       switchMap((state: L) => {
@@ -482,19 +469,19 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
 
         if (isLoadingStateWithDefinedValue(state) || (mapOnUndefined && isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state))) {
           // map the value
-          mappedObs = of((state as LoadingStateWithDefinedValue<LoadingStateValue<L>>).value).pipe(
+          mappedObs = of(loadingStateValue(state) as LoadingStateValue<L>).pipe(
             operator,
-            map((value) => ({ ...state, value }) as unknown as LoadingStateWithValueType<L, O>),
+            map((value) => loadingStateWithValueType<L, O>(state, value)),
             // if the operator does not return nearly instantly, then return the current state, minus a value
-            timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as LoadingStateWithValueType<L, O>, 0)
+            timeoutStartWith(loadingStateWithValueType<L, O>({ ...state, loading: true }, undefined), 0)
           );
         } else {
           // only pass through if there is an error, otherwise show loading.
           if (isLoadingStateWithError(state)) {
-            mappedObs = of({ ...state, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+            mappedObs = of(loadingStateWithValueType<L, O>(state, undefined));
           } else {
             // never pass through the non-mapped state's value as-is.
-            mappedObs = of({ ...state, loading: true, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+            mappedObs = of(loadingStateWithValueType<L, O>({ ...state, loading: true }, undefined));
           }
         }
 
@@ -510,6 +497,9 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
  * Non-error states are passed through unchanged. When an error state is encountered, it is passed through the
  * operator to produce a replacement state. If the operator does not emit immediately, a temporary loading state is emitted.
  *
+ * @param operator - The RxJS operator to apply to the error loading state.
+ * @returns A `MonoTypeOperatorFunction` that catches and transforms error states.
+ *
  * @example
  * ```ts
  * // On error, return an empty list instead of propagating the error
@@ -519,14 +509,11 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
  *   )
  * );
  * ```
- *
- * @param operator - The RxJS operator to apply to the error loading state.
- * @returns A `MonoTypeOperatorFunction` that catches and transforms error states.
  */
-export function catchLoadingStateErrorWithOperator<L extends LoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
-export function catchLoadingStateErrorWithOperator<L extends PageLoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
-export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoadingState>>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
-export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoadingState>>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L> {
+export function catchLoadingStateErrorWithOperator<L extends LoadingState>(operator: OperatorFunction<NoInfer<L> & LoadingStateWithError, NoInfer<L>>): MonoTypeOperatorFunction<L> {
+  // `NoInfer` is required: `operator` mentions `L` directly, and argument inference outranks the
+  // contextual return type, so `map(() => successResult([]))` would otherwise infer
+  // `L := LoadingStateWithValue<never[]>` and reject the stream it is piped into.
   return (obs: Observable<L>) => {
     return obs.pipe(
       switchMap((state: L) => {
@@ -534,12 +521,10 @@ export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoading
 
         if (isLoadingStateWithError(state)) {
           // map the value using the error state
-          mappedObs = of(state as L & LoadingStateWithError).pipe(
+          mappedObs = of(state).pipe(
             operator,
             // if the operator does not return nearly instantly, then return the current state, minus a value
-            // TODO(breaking-change): consider tightening this operator's generic constraints (or accepting Partial<L> for the placeholder) so the structural spread can satisfy L without the double cast.
-            // TODO: Fix eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- L is a generic Partial<PageLoadingState> subtype; the spread literal cannot structurally satisfy that intersection without this cast
-            timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as L, 0)
+            timeoutStartWith(loadingStateWithValueType({ ...state, loading: true }, undefined) as unknown as L, 0)
           );
         } else {
           mappedObs = of(state);
@@ -572,7 +557,7 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
   /**
    * Used for comparing the metadata values of the LoadingState. By default uses isPageLoadingStateMetadataEqual.
    */
-  readonly metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
+  readonly metadataComparator?: EqualityComparatorFunction<Maybe<Partial<PageLoadingState>>>;
 }
 
 /**
@@ -584,6 +569,9 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
  *
  * Accepts either a simple {@link EqualityComparatorFunction} for comparing values, or a full
  * {@link DistinctLoadingStateConfig} for more fine-grained control over comparison behavior.
+ *
+ * @param config - Either a value comparator function or a full {@link DistinctLoadingStateConfig}.
+ * @returns A `MonoTypeOperatorFunction` that filters out duplicate loading states.
  *
  * @example
  * ```ts
@@ -599,17 +587,12 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
  *   })
  * );
  * ```
- *
- * @param config - Either a value comparator function or a full {@link DistinctLoadingStateConfig}.
- * @returns A `MonoTypeOperatorFunction` that filters out duplicate loading states.
  */
-export function distinctLoadingState<L extends LoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
-export function distinctLoadingState<L extends PageLoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
-export function distinctLoadingState<L extends Partial<PageLoadingState>>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
-export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputConfig: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L> {
-  const { compareOnUndefinedValue, valueComparator, metadataComparator: inputMetadataComparator, passRetainedValue: inputPassRetainedValue } = typeof inputConfig === 'function' ? ({ valueComparator: inputConfig } as DistinctLoadingStateConfig<L>) : inputConfig;
+export function distinctLoadingState<L extends LoadingState>(config: NoInfer<EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>>): MonoTypeOperatorFunction<L> {
+  // `NoInfer` for the same reason as catchLoadingStateErrorWithOperator: the config mentions `L`.
+  const { compareOnUndefinedValue, valueComparator, metadataComparator: inputMetadataComparator, passRetainedValue: inputPassRetainedValue } = typeof config === 'function' ? ({ valueComparator: config } as DistinctLoadingStateConfig<L>) : config;
   const passRetainedValue = inputPassRetainedValue ?? ((x) => x !== null);
-  const metadataComparator = inputMetadataComparator ?? (isPageLoadingStateMetadataEqual as EqualityComparatorFunction<Maybe<Partial<L>>>);
+  const metadataComparator = inputMetadataComparator ?? isPageLoadingStateMetadataEqual;
 
   interface DistinctLoadingStateScan<L extends LoadingState> {
     readonly isSameValue: boolean;
@@ -623,7 +606,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
     return obs.pipe(
       scan(
         (acc: DistinctLoadingStateScan<L>, state: L) => {
-          const nextValue = state.value as Maybe<LoadingStateValue<L>>;
+          const nextValue = loadingStateValue(state);
 
           // determine the value change
           let isSameValue = false;

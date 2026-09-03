@@ -27,10 +27,3 @@ export class DbxListAccordionViewComponentImportsModule {}
 export abstract class AbstractDbxListAccordionViewDirective<T> extends AbstractDbxListViewDirective<T> {
   abstract readonly config: DbxValueListAccordionViewConfig<DbxValueAsListItem<T>>;
 }
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dbxListAccordionViewComponentImportsAndExports = DBX_LIST_ACCORDION_VIEW_COMPONENT_IMPORTS_AND_EXPORTS;

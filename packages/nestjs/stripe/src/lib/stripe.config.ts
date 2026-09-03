@@ -1,4 +1,4 @@
-import type Stripe from 'stripe';
+import { type Stripe } from 'stripe';
 
 export interface StripeServiceApiConfig {
   readonly secret: string;

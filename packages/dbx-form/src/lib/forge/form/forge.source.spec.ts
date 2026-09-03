@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { first, firstValueFrom, timeout, catchError, of, map, BehaviorSubject, Subject, delay as delayOp } from 'rxjs';
@@ -26,10 +26,8 @@ interface TestFormValue {
   template: `
     <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent, DbxFormSourceDirective],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class TestForgeSourceHostComponent {
   readonly context = inject(DbxForgeFormContext) as DbxForgeFormContext<TestFormValue>;

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { type DbxTableColumn } from '@dereekb/dbx-web/table';
 import { type ExampleTableData } from './table.item';
 
@@ -9,9 +9,7 @@ import { type ExampleTableData } from './table.item';
       <div class="dbx-small">{{ value }}</div>
       <div class="dbx-small dbx-hint">{{ columnName }}</div>
     </div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DocExtensionTableItemCellExampleComponent {
   item!: ExampleTableData;

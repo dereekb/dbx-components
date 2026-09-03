@@ -101,9 +101,3 @@ export interface DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput
  * Used for previewing a src url and embedMimeType in a dialog.
  */
 export type DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input: DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput) => MatDialogRef<unknown, unknown>;
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated use DbxWebFilePreviewServicePreviewDialogFunction instead.
- */
-export type DbxWebFilePreviewServicePreviewFunction = DbxWebFilePreviewServicePreviewDialogFunction;

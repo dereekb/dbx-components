@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
@@ -45,9 +45,7 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
     class: 'd-block dbx-content-page dbx-section-page',
     '[class]': 'classConfigSignal()'
   },
-  standalone: true,
-  imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSectionPageComponent extends DbxSectionHeaderComponent {
   readonly scroll = input<DbxSectionPageScrollLockedMode>('all');

@@ -22,6 +22,7 @@ import {
   userExternalConnectionFunctionMap,
   UserExternalConnectionFunctions
 } from '@dereekb/firebase';
+import { type OpenRouterPromptFunctionTypeMap, OpenRouterPromptModelFunctions, openRouterPromptModelFunctionMap } from '@dereekb/openrouter/firebase';
 import { type Functions } from 'firebase/functions';
 import { demoDevelopmentFunctionMap, DemoDevelopmentFunctions, type DemoDevelopmentFunctionTypeMap } from './development';
 import { type ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, type GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions, SystemStateFunctions, systemStateFunctionMap, type SystemStateFunctionTypeMap } from './model';
@@ -39,6 +40,7 @@ export type DemoFirebaseFunctionsMap = {
   readonly calendarFunctions: CalendarFunctionTypeMap;
   readonly oidcModelFunctions: OidcModelFunctionTypeMap;
   readonly userExternalConnectionFunctions: UserExternalConnectionFunctionTypeMap;
+  readonly openRouterPromptFunctions: OpenRouterPromptFunctionTypeMap;
   readonly [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
 };
 
@@ -59,7 +61,8 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
   formSpaceFunctions: [FormSpaceFunctions, formSpaceFunctionMap],
   oidcModelFunctions: [OidcModelFunctions, oidcModelFunctionMap],
   userExternalConnectionFunctions: [UserExternalConnectionFunctions, userExternalConnectionFunctionMap],
-  systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
+  systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap],
+  openRouterPromptFunctions: [OpenRouterPromptModelFunctions, openRouterPromptModelFunctionMap]
 };
 
 /**
@@ -78,6 +81,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly oidcModelFunctions: FirebaseFunctionGetter<OidcModelFunctions>;
   abstract readonly userExternalConnectionFunctions: FirebaseFunctionGetter<UserExternalConnectionFunctions>;
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;
+  abstract readonly openRouterPromptFunctions: FirebaseFunctionGetter<OpenRouterPromptModelFunctions>;
 }
 
 /**

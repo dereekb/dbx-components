@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { delay, filter, first, of } from 'rxjs';
 import { SubscriptionObject, type WorkUsingObservable } from '@dereekb/rxjs';
@@ -12,9 +12,7 @@ import { DbxActionSuccessHandlerDirective, type DbxActionSuccessHandlerFunction 
   template: `
     <div dbxAction [dbxActionHandler]="handlerFunctionSignal()" [dbxActionSuccessHandler]="successHandlerSignal()"></div>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxActionDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective]
 })
 class TestDbxActionSuccessHandlerDirectiveComponent {
   readonly directive = viewChild.required(DbxActionDirective);

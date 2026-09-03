@@ -4,7 +4,7 @@ import { type Stripe } from 'stripe';
 import { StripeApi } from './stripe.api';
 import { StripeServiceConfig } from './stripe.config';
 
-export const DEFAULT_STRIPE_API_VERSION: Stripe.LatestApiVersion = '2026-02-25.clover';
+export const DEFAULT_STRIPE_API_VERSION: Stripe.LatestApiVersion = '2026-08-26.dahlia';
 
 /**
  * Factory that creates a StripeServiceConfig from environment variables.

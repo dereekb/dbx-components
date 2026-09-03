@@ -35,10 +35,10 @@
       }
     },
     "run-tests": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/components/demo-firebase"
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
       }
     },
     "test": {

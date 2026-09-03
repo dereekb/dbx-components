@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
 import { map, withLatestFrom } from 'rxjs';
@@ -12,9 +12,7 @@ import { CalendarDatePipe } from 'angular-calendar';
 
 @Component({
   selector: 'dbx-calendar-base',
-  standalone: true,
   imports: [MatButtonModule, MatButtonToggleModule, DbxButtonSpacerDirective, MatIconModule, CalendarDatePipe, FlexLayoutModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './calendar.base.component.html'
 })
 export class DbxCalendarBaseComponent<T> {

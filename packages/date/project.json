@@ -30,17 +30,15 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/date"
-      }
-    },
     "test-skip-build": {
-      "executor": "@nx/vitest:test",
+      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/*.date.junit.xml"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "command": "vitest run",
+        "cwd": "{projectRoot}"
+      }
     },
     "test-timezones-usa": {
       "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/*.date.junit.xml"],

@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 import type { DbxForgeSearchableTextFieldConfig, DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 import { dbxForgeSearchableTextField } from './searchable-text.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
@@ -42,7 +42,6 @@ describe('DbxForgeSearchableTextFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -369,10 +368,8 @@ describe('inputValue$ non-string coercion', () => {
   template: `
     <dbx-forge></dbx-forge>
   `,
-  standalone: true,
   imports: [DbxForgeFormComponent],
-  providers: [provideDbxForgeFormContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxForgeFormContext()]
 })
 class SearchableTextTestHostComponent {
   readonly context = inject(DbxForgeFormContext);

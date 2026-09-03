@@ -1,12 +1,10 @@
 import { type DocFeatureCard, DocFeatureCardListComponent } from './../../shared/component/feature.card.list.component';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DOC_LAYOUT_ROUTES } from '../doc.layout';
 
 @Component({
   templateUrl: './home.component.html',
-  standalone: true,
-  imports: [DocFeatureCardListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DocFeatureCardListComponent]
 })
 export class DocLayoutHomeComponent {
   cards: DocFeatureCard[] = DOC_LAYOUT_ROUTES.map((anchor) => ({

@@ -23,7 +23,6 @@ import { type DateOrDateString, type Maybe } from '@dereekb/util';
  */
 @Pipe({
   name: 'toJsDate',
-  standalone: true,
   pure: true
 })
 export class ToJsDatePipe implements PipeTransform {

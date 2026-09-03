@@ -31,7 +31,6 @@ import { DbxActionConfirmConfig } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'app-danger-zone',
-  standalone: true,
   imports: [DbxCardBoxComponent, DbxBarDirective, DbxButtonComponent, DbxActionDirective, DbxActionConfirmDirective],
   template: \`
     <dbx-card-box header="Danger zone" icon="warning">
@@ -48,8 +47,7 @@ import { DbxActionConfirmConfig } from '@dereekb/dbx-web';
         </dbx-button>
       </dbx-bar>
     </dbx-card-box>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  \`
 })
 export class DangerZoneComponent {
   readonly deleteAccountAction = /* DbxActionContextStoreSourceInstance<...> */ null;

@@ -35,8 +35,7 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | '
   host: {
     class: 'd-block dbx-content-container',
     '[class]': `classConfigSignal()`
-  },
-  standalone: true
+  }
 })
 export class DbxContentContainerDirective {
   readonly grow = input<DbxContentContainerWidth>('wide');

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, type OnInit, Component, inject } from '@angular/core';
+import { type OnInit, Component, inject } from '@angular/core';
 import { type DbxActionSuccessHandlerFunction, DbxRouterService, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -17,9 +17,7 @@ import { DbxContentBoxDirective, DbxButtonComponent, DbxErrorComponent, DbxActio
     </dbx-content-box>
   `,
   providers: [ProfileDocumentStore],
-  standalone: true,
-  imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoOnboardUserComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

@@ -33,8 +33,7 @@ export type DbxDialogContentContainerWidth = 'normal' | 'wide';
   host: {
     class: 'dbx-dialog-content',
     '[class]': `classConfigSignal()`
-  },
-  standalone: true
+  }
 })
 export class DbxDialogContentDirective {
   readonly width = input<DbxDialogContentContainerWidth, Maybe<DbxDialogContentContainerWidth>>('normal', { transform: (x) => x ?? 'normal' });

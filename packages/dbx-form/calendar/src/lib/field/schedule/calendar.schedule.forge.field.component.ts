@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
 import { distinctUntilChanged, skip } from 'rxjs';
 import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
@@ -12,7 +12,7 @@ import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../cal
 import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.schedule.selection.range.component';
 import type { FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { CompactContextStore } from '@dereekb/dbx-web';
 
 /**
@@ -53,9 +53,7 @@ export interface DbxForgeCalendarDateScheduleRangeFieldComponentProps extends Pi
     </div>
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()],
-  imports: [DbxInjectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent]
 })
 export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly compact = inject(CompactContextStore, { optional: true });

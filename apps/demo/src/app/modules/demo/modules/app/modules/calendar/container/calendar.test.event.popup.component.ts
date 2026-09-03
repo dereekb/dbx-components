@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type MatDialog } from '@angular/material/dialog';
 import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogModule, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
@@ -33,9 +33,7 @@ export interface DemoCalendarTestEventPopupComponentConfig {
       </div>
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxActionFormDirective, DbxFormSourceDirective, DemoCalendarTestEventFormComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxActionModule, DbxButtonModule, DbxErrorComponent, DbxActionFormDirective, DbxFormSourceDirective, DemoCalendarTestEventFormComponent]
 })
 export class DemoCalendarTestEventPopupComponent extends AbstractDialogDirective<unknown, DemoCalendarTestEventPopupComponentConfig> {
   readonly defaultValue: DemoCalendarTestEventFormValue = {

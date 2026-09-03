@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/dbx-cli/eslint",
-  "version": "13.43.0",
+  "version": "14.0.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.43.0",
-    "@dereekb/util": "13.43.0",
-    "@typescript-eslint/utils": "8.59.3",
-    "typescript": "5.9.3"
+    "@dereekb/dbx-cli": "14.0.0",
+    "@dereekb/util": "14.0.0",
+    "@typescript-eslint/utils": "8.69.0",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "8.59.3",
-    "eslint": "10.4.0"
+    "@typescript-eslint/parser": "8.69.0",
+    "eslint": "10.9.1"
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, type Signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, type Signal, viewChild } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxButtonComponent, type DbxButtonStyle, DbxPopoverService } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelEntitiesPopoverComponent, type DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin } from './model.entities.popover.component';
@@ -28,9 +28,7 @@ export interface DbxFirebaseModelEntitiesPopoverButtonConfig extends DbxFirebase
   template: `
     <dbx-button #button (buttonClick)="showEntitiesPopover()" [buttonStyle]="buttonStyleSignal()" [buttonDisplay]="buttonDisplaySignal()"></dbx-button>
   `,
-  standalone: true,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxButtonComponent]
 })
 export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);

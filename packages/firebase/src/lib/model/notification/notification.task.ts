@@ -12,7 +12,9 @@
  * 2. Server picks it up via the send queue and routes to the registered handler
  * 3. Handler returns a result indicating completion, partial progress, delay, or failure
  * 4. Server updates the notification document accordingly and re-queues if not done
- * 5. On completion (`true`), the notification document is deleted
+ * 5. On completion (`true`), the notification document is marked done (`d`) — NOT deleted. It stops
+ *    matching the send queue immediately, but the document itself lingers until the cleanup sweep collects
+ *    it, so a caller re-deriving a unique task's id can still find the finished one sitting there.
  */
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type NotificationTaskType } from './notification.id';

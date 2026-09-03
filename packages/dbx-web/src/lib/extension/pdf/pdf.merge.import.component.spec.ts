@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -78,9 +78,7 @@ function filesChangedEvent(file: File): DbxFileUploadFilesChangedEvent {
       }
     </div>
   `,
-  standalone: true,
-  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeImportComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeImportComponent]
 })
 class TestHostComponent {
   readonly showLicense = signal<boolean>(false);
@@ -101,10 +99,8 @@ class TestHostComponent {
   template: `
     <dbx-pdf-merge-editor-file-upload slotId="receipts"></dbx-pdf-merge-editor-file-upload>
   `,
-  standalone: true,
   imports: [DbxPdfMergeEditorFileUploadComponent],
-  providers: [provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(true)],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(true)]
 })
 class PreservingSlotHostComponent {}
 
@@ -116,9 +112,7 @@ class PreservingSlotHostComponent {}
       }
     </div>
   `,
-  standalone: true,
-  imports: [DbxPdfMergeEditorStoreDirective, PreservingSlotHostComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective, PreservingSlotHostComponent]
 })
 class EphemeralHostComponent {
   readonly showDialog = signal<boolean>(false);

@@ -26,8 +26,7 @@ import { DbxActionContextMachine } from '@dereekb/dbx-core';
     <div [dbxActionSource]="actionSource()">
       <child-component></child-component>
     </div>
-  \`,
-  standalone: true
+  \`
 })
 export class ParentComponent {
   readonly machine = new DbxActionContextMachine<MyValue, MyResult>();
@@ -47,8 +46,7 @@ export class ParentComponent {
     <ng-container dbxAction dbxActionValue="hello">
       <dbx-button [raised]="true" text="Submit" dbxActionButton></dbx-button>
     </ng-container>
-  \`,
-  standalone: true
+  \`
 })
 export class ChildComponent {}`
   },

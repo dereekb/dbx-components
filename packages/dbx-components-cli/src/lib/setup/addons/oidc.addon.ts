@@ -130,7 +130,7 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'delete', snippet: `oidcEntry: onCallSpecifierHandler({ client: oidcEntryDeleteClient, token: oidcEntryDeleteToken }),` },
     // api — function context getter
     { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'imports', snippet: `import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';` },
-    { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'getters', multiline: true, snippet: `  get oidcModelServerActions(): OidcModelServerActions {\n    return this.nest.get(OidcModelServerActions);\n  }` },
+    { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'getters', multiline: true, snippet: `  get oidcModelServerActions(): OidcModelServerActions {\n    return this.nestApplication.get(OidcModelServerActions);\n  }` },
     // api — model module
     { filePath: join(api, 'common/model/model.module.ts'), fileTag: 'api-model-module', site: 'imports', snippet: `import { OidcModelModule } from './oidc/oidc.module';` },
     { filePath: join(api, 'common/model/model.module.ts'), fileTag: 'api-model-module', site: 'modules', snippet: `OidcModelModule,` },
@@ -145,6 +145,7 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     // api — environments
     { filePath: join(apiEnv, 'environment.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'http://localhost:${naming.angularAppPort}/api',` },
     { filePath: join(apiEnv, 'environment.prod.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://example.com/api',` },
+    { filePath: join(apiEnv, 'environment.staging.ts'), fileTag: 'api-env', site: 'fields', snippet: `appApiUrl: 'https://staging.example.com/api',` },
     // frontend — root app config
     { filePath: join(app, 'root.app.config.ts'), fileTag: 'root-config', site: 'imports', snippet: `import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';\nimport { APP_CODE_PREFIX_CAPS_APP_OAUTH_INTERACTION_PATH, APP_CODE_PREFIX_CAPS_OIDC_AVAILABLE_SCOPES, APP_CODE_PREFIX_CAPS_OIDC_TOKEN_ENDPOINT_AUTH_METHODS } from 'FIREBASE_COMPONENTS_NAME';`, multiline: true },
     {

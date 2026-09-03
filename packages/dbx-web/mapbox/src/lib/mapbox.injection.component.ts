@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxInjectionArrayComponent } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,9 +11,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   template: `
     <dbx-injection-array [entries]="entriesSignal()"></dbx-injection-array>
   `,
-  imports: [DbxInjectionArrayComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionArrayComponent]
 })
 export class DbxMapboxInjectionComponent {
   readonly dbxMapboxMapKeyInjectionStore = inject(DbxMapboxInjectionStore);

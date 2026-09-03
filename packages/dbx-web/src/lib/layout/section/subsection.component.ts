@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxSectionComponent } from './section.component';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
@@ -36,8 +36,6 @@ import { DbxSectionHeaderComponent } from './section.header.component';
       </div>
     </div>
   `,
-  standalone: true,
-  imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxSectionHeaderComponent]
 })
 export class DbxSubSectionComponent extends DbxSectionComponent {}

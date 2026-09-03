@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { AbstractDbxSelectionListViewDirective, AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, type DbxSelectionValueListViewConfig, provideDbxListView } from '@dereekb/dbx-web';
 import { type OAuthConsentScope } from './oauth.consent.scope';
@@ -32,9 +32,7 @@ import { type OAuthConsentScope } from './oauth.consent.scope';
   host: {
     class: 'dbx-list-no-hover-effects dbx-list-card-items-list'
   },
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelectionListWrapperDirective<OAuthConsentScope> {
   constructor() {
@@ -55,9 +53,7 @@ export class DbxFirebaseOAuthConsentScopeListComponent extends AbstractDbxSelect
   selector: 'dbx-firebase-oauth-consent-scope-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxSelectionValueListViewComponentImportsModule],
-  providers: provideDbxListView(DbxFirebaseOAuthConsentScopeListViewComponent),
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  providers: provideDbxListView(DbxFirebaseOAuthConsentScopeListViewComponent)
 })
 export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSelectionListViewDirective<OAuthConsentScope> {
   readonly config: DbxSelectionValueListViewConfig<OAuthConsentScope> = {
@@ -88,9 +84,7 @@ export class DbxFirebaseOAuthConsentScopeListViewComponent extends AbstractDbxSe
         }
       </div>
     </div>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 export class DbxFirebaseOAuthConsentScopeListItemComponent extends AbstractDbxValueListViewItemComponent<OAuthConsentScope> {
   get name() {

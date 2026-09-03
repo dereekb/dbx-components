@@ -22,7 +22,6 @@ import { type DateRange, formatToDayRangeString } from '@dereekb/date';
  */
 @Pipe({
   name: 'dateDayRange',
-  standalone: true,
   pure: true
 })
 export class DateDayRangePipe implements PipeTransform {

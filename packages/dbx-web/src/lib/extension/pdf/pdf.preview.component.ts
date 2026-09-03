@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, model } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { type Maybe, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxEmbedComponent } from '../../interaction/iframe/embed.component';
 import { PDF_MERGE_RESULT_MIME_TYPE } from './pdf.merge';
@@ -19,9 +19,7 @@ import { PDF_MERGE_RESULT_MIME_TYPE } from './pdf.merge';
   host: {
     class: 'dbx-pdf-preview d-block dbx-w100 dbx-h100'
   },
-  imports: [DbxEmbedComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxEmbedComponent]
 })
 export class DbxPdfPreviewComponent {
   readonly blob = model<Maybe<Blob>>();

@@ -19,8 +19,7 @@ import { isNot } from '@dereekb/rxjs';
  * ```
  */
 @Directive({
-  selector: '[dbxTwoColumnSrefShowRight]',
-  standalone: true
+  selector: '[dbxTwoColumnSrefShowRight]'
 })
 export class DbxTwoColumnSrefShowRightDirective {
   private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);

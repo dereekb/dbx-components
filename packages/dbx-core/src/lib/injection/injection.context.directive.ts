@@ -39,8 +39,7 @@ import { type PromiseOrValue, type PromiseReference, promiseReference, type Mayb
  */
 @Directive({
   selector: '[dbxInjectionContext]',
-  providers: provideDbxInjectionContext(DbxInjectionContextDirective),
-  standalone: true
+  providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
   private readonly _injector = inject(Injector);

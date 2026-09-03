@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type Signal } from '@angular/core';
+import { Component, inject, computed, signal, effect, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -23,7 +23,6 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
  */
 @Component({
   selector: 'dbx-firebase-oauth-login',
-  standalone: true,
   imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
     <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" (retryClick)="retry()">
@@ -32,8 +31,7 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-login'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseOAuthLoginComponent {
   private readonly dbxRouterService = inject(DbxRouterService);

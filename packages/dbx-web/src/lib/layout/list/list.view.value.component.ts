@@ -1,5 +1,5 @@
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { ChangeDetectionStrategy, Component, type Signal, type TrackByFunction, computed, inject, input } from '@angular/core';
+import { Component, type Signal, type TrackByFunction, computed, inject, input } from '@angular/core';
 import { shareReplay, map, type Observable, switchMap, of } from 'rxjs';
 import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
@@ -70,9 +70,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule]
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
@@ -133,9 +131,7 @@ export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackB
     class: 'dbx-list-view',
     '[class.dbx-list-sticky-headers]': 'stickyHeaders()'
   },
-  standalone: true,
-  imports: [MatNavList, DbxValueListViewContentGroupComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatNavList, DbxValueListViewContentGroupComponent]
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxListView = inject(DbxListView<T>);
@@ -196,9 +192,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   template: `
     <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-list-view-content>
   `,
-  standalone: true,
-  imports: [DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxValueListViewContentComponent]
 })
 export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
   readonly emitAllClicksSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.emitAllClicks);

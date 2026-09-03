@@ -23,7 +23,6 @@ describe('DbxForgeTimeDurationFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -85,8 +84,8 @@ describe('dbxForgeTimeDurationField()', () => {
     expect(field.readonly).toBe(true);
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeTimeDurationField({ key: 'timeout', description: 'Enter a duration' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeTimeDurationField({ key: 'timeout', hint: 'Enter a duration' });
     expect(field.props?.hint).toBe('Enter a duration');
   });
 

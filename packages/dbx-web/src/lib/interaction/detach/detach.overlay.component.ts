@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, type AfterViewInit, ElementRef } from '@angular/core';
+import { Component, inject, type AfterViewInit, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxDetachController } from './detach';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
@@ -36,9 +36,7 @@ export interface DbxDetachOverlayData {
   ],
   host: {
     class: 'dbx-detach-overlay-host'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxDetachOverlayComponent implements AfterViewInit {
   private readonly _elementRef = inject(ElementRef);

@@ -30,7 +30,7 @@ describe('DBX_COLOR_TEMPLATE_LIST_APP_TOOL', () => {
       const originalCwd = process.cwd();
       process.chdir(tmp);
       try {
-        const apiDir = relative(tmp, appDir).split(/[\\/]/).join('/');
+        const apiDir = relative(tmp, appDir).replaceAll(/[\\/]/g, '/');
         const result = await DBX_COLOR_TEMPLATE_LIST_APP_TOOL.run({ apiDir });
         const text = result.content[0].text;
         expect(text).toContain('# Color templates');

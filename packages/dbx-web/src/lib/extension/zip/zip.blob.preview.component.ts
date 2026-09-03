@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, type Signal, signal } from '@angular/core';
+import { Component, computed, input, type Signal, signal } from '@angular/core';
 import { cleanLoadingContext } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { ZipReader, BlobReader, type Entry, type FileEntry } from '@zip.js/zip.js';
@@ -41,9 +41,7 @@ export type DbxZipBlobPreviewGroupData = DbxListTitleGroupData<DbxZipBlobPreview
 @Component({
   selector: 'dbx-zip-blob-preview',
   templateUrl: './zip.blob.preview.component.html',
-  standalone: true,
-  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatToolbarModule, DbxButtonSpacerDirective, DbxButtonComponent, DbxBarHeaderComponent, DbxListTitleGroupDirective, DbxZipPreviewEntryListComponent, DbxEmbedComponent, DbxLoadingComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListTitleGroupDirective, DbxDownloadBlobButtonComponent, DbxSpacerDirective]
 })
 export class DbxZipBlobPreviewComponent {
   readonly blob = input<Maybe<Blob>>();

@@ -1,4 +1,4 @@
-import { Component, inject, output, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, output, computed } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { type CalendarEvent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
@@ -12,9 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-calendar',
   templateUrl: './calendar.component.html',
-  imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxCalendarBaseComponent, CalendarMonthViewComponent, CalendarDayViewComponent, CalendarWeekViewComponent, MatButtonToggleModule, NgClass]
 })
 export class DbxCalendarComponent<T> {
   readonly calendarStore = inject(DbxCalendarStore<T>);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injector, inject, input } from '@angular/core';
+import { Component, Injector, inject, input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxScheduleSelectionCalendarDateDialogComponent, type DbxScheduleSelectionCalendarDatePopupContentConfig } from './calendar.schedule.selection.dialog.component';
 import { type Maybe } from '@dereekb/util';
@@ -9,9 +9,7 @@ import { DbxButtonComponent } from '@dereekb/dbx-web';
   template: `
     <dbx-button [raised]="true" color="accent" [text]="buttonText()" [disabled]="disabled()" (buttonClick)="clickCustomize()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
   readonly injector = inject(Injector);

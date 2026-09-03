@@ -12,8 +12,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   host: {
     class: 'dbx-mapbox-layout-drawer'
   },
-  imports: [DbxInjectionComponent],
-  standalone: true
+  imports: [DbxInjectionComponent]
 })
 export class DbxMapboxLayoutDrawerComponent {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

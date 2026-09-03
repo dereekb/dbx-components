@@ -1,5 +1,5 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
+import { Component, type OnDestroy, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { BehaviorSubject, shareReplay, type Observable } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { type ZoomLevel, type Maybe, type LatLngPoint, latLngPoint } from '@dereekb/util';
@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import type { FieldTree } from '@angular/forms/signals';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { completeOnDestroy, cleanSubscription } from '@dereekb/dbx-core';
 
@@ -55,9 +55,7 @@ export interface DbxForgeMapboxZoomFieldComponentProps {
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
   styleUrls: ['../mapbox.field.component.scss'],
-  imports: [NgClass, DbxMapboxModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [NgClass, DbxMapboxModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule]
 })
 export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });

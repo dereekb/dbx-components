@@ -760,15 +760,3 @@ export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDet
 
   return result;
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use {@link OnCallModelTypeApiDetails} instead.
- */
-export type OnCallSpecifierApiDetails = OnCallModelTypeApiDetails;
-
-/**
- * @deprecated Use {@link isOnCallModelTypeApiDetails} instead.
- */
-export const isOnCallSpecifierApiDetails = isOnCallModelTypeApiDetails;

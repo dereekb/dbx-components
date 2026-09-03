@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type Signal } from '@angular/core';
+import { Component, computed, inject, input, type Signal } from '@angular/core';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent } from '@angular/material/expansion';
 import { MatIcon } from '@angular/material/icon';
@@ -17,9 +17,7 @@ import { DbxHelpWidgetService } from './help.widget.service';
 @Component({
   selector: 'dbx-help-view-list-entry',
   templateUrl: './help.view.list.entry.component.html',
-  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxInjectionComponent, MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelDescription, MatExpansionPanelContent, MatIcon]
 })
 export class DbxHelpViewListEntryComponent {
   readonly helpWidgetEntry = input.required<DbxHelpWidgetServiceEntry>();

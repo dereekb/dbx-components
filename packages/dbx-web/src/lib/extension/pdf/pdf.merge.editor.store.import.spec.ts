@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -231,9 +231,7 @@ describe('DbxPdfMergeEditorStore.addFileToSlot()', () => {
   template: `
     <div dbxPdfMergeEditorStore [source]="source()" [sourceConfig]="sourceConfig()"></div>
   `,
-  standalone: true,
-  imports: [DbxPdfMergeEditorStoreDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective]
 })
 class SourceHostComponent {
   readonly source = signal<Maybe<Blob>>(undefined);

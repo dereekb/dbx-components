@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnDestroy, inject } from '@angular/core';
+import { Component, type OnDestroy, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxFirebaseFormSpaceModule, FormSpaceDocumentStore } from '@dereekb/dbx-firebase';
 import { DbxActionModule, DbxButtonModule, DbxContentContainerDirective, DbxErrorComponent, DbxLoadingComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
@@ -14,9 +14,13 @@ import { map, shareReplay } from 'rxjs';
  * Right-column page for one test FormSpace at `/demo/app/formspace/:id`.
  *
  * The store this reads is the one `dbxFirebaseFormSpaceDocument` provides on the list page's `<ui-view>`, so
- * the space on screen is whatever the route names. A space past its one-way door opens READ-ONLY rather than
- * not opening at all — what was submitted is the point of coming back to look at it — which is why every
+ * the space on screen is whatever the route names. A submitted space opens READ-ONLY rather than not
+ * opening at all — what was submitted is the point of coming back to look at it — which is why every
  * control here hangs off `isEditable$` instead of the page deciding whether to render at all.
+ *
+ * `demo_test` declares a reopen policy, so read-only is not necessarily permanent: while the window is open
+ * the submit step offers a reopen instead, and because every control already derives from `isEditable$`, a
+ * successful reopen turns the whole page back on with no template branch of its own.
  *
  * @dbxRouteModel formSpace :id - The form space the page is viewing
  */
@@ -35,9 +39,7 @@ import { map, shareReplay } from 'rxjs';
     DbxFirebaseFormSpaceModule,
     DemoTestFormSpaceFormComponent,
     TimeDistancePipe
-  ],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DemoFormSpaceListPageRightComponent implements OnDestroy {
   readonly formSpaceDocumentStore = inject(FormSpaceDocumentStore);
@@ -52,6 +54,15 @@ export class DemoFormSpaceListPageRightComponent implements OnDestroy {
 
   readonly formSpaceSignal = toSignal(this.formSpaceDocumentStore.currentData$);
   readonly isEditableSignal = toSignal(this.formSpaceDocumentStore.isEditable$, { initialValue: false });
+
+  /**
+   * Whether the submitted space may be handed back as a draft.
+   *
+   * The store's policy predicate rather than anything this page decides — it is the same
+   * `isFormSpaceReopenable()` the server's reopen transaction rejects on, so the button is only offered
+   * when the call would be accepted.
+   */
+  readonly isReopenableSignal = toSignal(this.formSpaceDocumentStore.isReopenable$, { initialValue: false });
   readonly headerSignal = toSignal(this.formSpaceDocumentStore.displayName$.pipe(map((x) => x || 'Form Space')), { initialValue: 'Form Space' });
 
   readonly formData$ = this.formSpaceDocumentStore.formSpaceDataOfType$<DemoTestFormSpaceData>().pipe(
@@ -80,5 +91,9 @@ export class DemoFormSpaceListPageRightComponent implements OnDestroy {
     // the whole object, not a patch: `update:_` REPLACES `d`, which is what makes clearing a field
     // expressible at all
     context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.updateFormSpace({ data }));
+  };
+
+  readonly handleReopenFormSpace: WorkUsingContext = (_, context) => {
+    context.startWorkingWithLoadingStateObservable(this.formSpaceDocumentStore.reopenFormSpace({}));
   };
 }

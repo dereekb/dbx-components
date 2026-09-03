@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
 import { fileAcceptString, fileArrayAcceptMatchFunction, type FileAcceptFunction } from './upload.accept';
 import { DbxButtonComponent } from '../../button/button.component';
 import { type DbxButtonStyle } from '../../button/button';
@@ -31,9 +31,7 @@ const ACCEPT_EVERY_FILE: FileAcceptFunction = () => true;
     <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal()" (change)="fileInputChanged()" />
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadButtonComponent),
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent {
   readonly fileInput = viewChild.required<string, ElementRef<HTMLInputElement>>('fileInput', { read: ElementRef });

@@ -18,16 +18,6 @@ export class MockItemCollectionFixtureInstance {
     return this.mockItemCollection.collection;
   }
 
-  /**
-   * Backwards-compatible alias for {@link MockItemCollectionFixtureInstance.mockItemCollection}.
-   *
-   * @returns The root {@link MockItemFirestoreCollection} from the fixture's underlying {@link MockItemCollections}.
-   * @deprecated Use mockItemCollection instead.
-   */
-  get firestoreCollection(): MockItemFirestoreCollection {
-    return this.collections.mockItemCollection;
-  }
-
   get mockItemCollection(): MockItemFirestoreCollection {
     return this.collections.mockItemCollection;
   }

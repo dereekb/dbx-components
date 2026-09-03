@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal, computed } from '@angular/core';
+import { Component, inject, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -42,9 +42,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
       </div>
     }
   `,
-  standalone: true,
-  imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [CommonModule, DbxFirebaseOidcEntryClientTestForgeFormComponent, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent]
 })
 export class DbxFirebaseOidcEntryClientTestComponent {
   private readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

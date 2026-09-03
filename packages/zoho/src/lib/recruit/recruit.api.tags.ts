@@ -309,35 +309,3 @@ export function zohoRecruitRemoveTagsFromRecords(context: ZohoRecruitContext): Z
     });
   };
 }
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use zohoRecruitCreateTagsForModule instead.
- */
-export const createTagsForModule = zohoRecruitCreateTagsForModule;
-
-/**
- * @deprecated Use zohoRecruitGetTagsForModule instead.
- */
-export const getTagsForModule = zohoRecruitGetTagsForModule;
-
-/**
- * @deprecated Use zohoRecruitGetTagsForModulePageFactory instead.
- */
-export const getTagsForModulePageFactory = zohoRecruitGetTagsForModulePageFactory;
-
-/**
- * @deprecated Use zohoRecruitAddTagsToRecords instead.
- */
-export const addTagsToRecords = zohoRecruitAddTagsToRecords;
-
-/**
- * @deprecated Use zohoRecruitRemoveTagsFromRecords instead.
- */
-export const removeTagsFromRecords = zohoRecruitRemoveTagsFromRecords;
-
-/**
- * @deprecated Use ZohoRecruitGetTagsForModulePageFactory instead.
- */
-export type GetTagsForModulePageFactory = ZohoRecruitGetTagsForModulePageFactory;

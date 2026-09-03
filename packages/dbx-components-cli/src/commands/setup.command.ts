@@ -302,10 +302,10 @@ interface InitArgs extends CommonSetupArgs {
 
 const initCommand: CommandModule<object, InitArgs> = {
   command: 'init [firebaseProjectId] [projectName] [codePrefix] [emulatorPort] [stagingProjectId]',
-  describe: 'Run the full ordered setup sequence (reproduces setup-project.sh).',
+  describe: 'Run the full ordered setup sequence (create-nx-workspace + every module, in order).',
   builder: (yargs: Argv): Argv<InitArgs> =>
     withCommonSetupOptions(yargs)
-      .option('manual', { type: 'boolean', default: true, describe: 'Interactive firebase init prompts (use --no-manual to scaffold rules/config from templates).' })
+      .option('manual', { type: 'boolean', default: true, describe: 'Reserved; currently a no-op. Rules + firebase.json are always scaffolded from templates — run `firebase init` yourself to pull existing remote config down.' })
       .option('templates-only', { type: 'boolean', default: false, describe: 'Run only the deterministic scaffold phases.' })
       .option('skip-install', { type: 'boolean', default: false, describe: 'Skip npm install phases.' })
       .option('skip-generate', { type: 'boolean', default: false, describe: 'Skip nx generate phases.' })

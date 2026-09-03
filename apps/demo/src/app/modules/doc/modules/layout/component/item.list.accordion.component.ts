@@ -1,5 +1,5 @@
 import { LOREM } from '../../shared/lorem';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';
@@ -11,9 +11,7 @@ import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, Mat
 @Component({
   selector: 'doc-item-list-accordion',
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
-  imports: [DbxListWrapperComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirective<DocValue> {
   constructor() {
@@ -28,9 +26,7 @@ export class DocItemListAccordionComponent extends AbstractDbxListWrapperDirecti
   selector: 'doc-item-list-accordion-view',
   template: DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DocItemListAccordionViewComponent),
-  imports: [DbxListAccordionViewComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxListAccordionViewComponentImportsModule]
 })
 export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionViewDirective<DocValue> {
   readonly config: DbxValueListAccordionViewConfig<DocValueWithSelection> = {
@@ -68,9 +64,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
       </ng-template>
     </mat-expansion-panel>
   `,
-  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective]
 })
 export class DocItemListAccordionItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

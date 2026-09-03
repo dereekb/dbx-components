@@ -1,3 +1,4 @@
+import { earliestDate } from '@dereekb/date';
 import { type ContentTypeMimeType, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthOwnershipKey, type FirebaseAuthUserId } from '../../common/auth/auth';
 import { type FirestoreModelKey } from '../../common/firestore/collection/collection';
@@ -114,6 +115,7 @@ export function formSpaceTemplate<T extends FormSpaceData = FormSpaceData>(input
     m: input.targetModelKey,
     uc: 0,
     fi: 0,
+    rc: 0,
     f: [],
     cat: now,
     uat: now,
@@ -122,26 +124,84 @@ export function formSpaceTemplate<T extends FormSpaceData = FormSpaceData>(input
 }
 
 /**
+ * Input for {@link submitFormSpaceTemplate}.
+ */
+export interface SubmitFormSpaceTemplateInput {
+  /**
+   * The space being submitted. Read to tell a FIRST submission from a resubmission after a reopen.
+   */
+  readonly formSpace: Pick<FormSpace, 'fsat'>;
+  readonly config: FormSpaceTypeConfig;
+  /**
+   * The submission instant. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
  * Builds the update template that submits a FormSpace.
  *
  * Clearing `eat` is not tidiness: a submitted space that kept its expiration instant would still match the
  * expiration sweep and be retired out from under the processing task.
  *
- * @param now - The submission instant. Defaults to now.
+ * `fsat` and the lock deadline `lat` are written ONLY on the first submission and are left untouched by a
+ * resubmission. That asymmetry is the whole first-submit anchor: recomputing `lat` here would let a
+ * reopen/resubmit round walk the deadline forward indefinitely, which is precisely what
+ * {@link FormSpaceTypeConfig.reopenableUntil} exists to prevent.
+ *
+ * @param input - The space, its type config, and the submission instant.
  * @returns The update template.
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function submitFormSpaceTemplate(now?: Maybe<Date>): Partial<FormSpace> {
-  const submittedAt = now ?? new Date();
+export function submitFormSpaceTemplate(input: SubmitFormSpaceTemplateInput): Partial<FormSpace> {
+  const { formSpace, config } = input;
+  const submittedAt = input.now ?? new Date();
 
-  return {
+  const template: Partial<FormSpace> = {
     s: FormSpaceState.SUBMITTED,
     ps: FormSpaceProcessingState.QUEUED_FOR_PROCESSING,
     sat: submittedAt,
     uat: submittedAt,
     eat: null
   };
+
+  if (formSpace.fsat == null) {
+    template.fsat = submittedAt;
+    template.lat = resolveFormSpaceLocksAt({ config, firstSubmittedAt: submittedAt });
+  }
+
+  return template;
+}
+
+/**
+ * Input for {@link resolveFormSpaceLocksAt}.
+ */
+export interface ResolveFormSpaceLocksAtInput {
+  readonly config: FormSpaceTypeConfig;
+  /**
+   * The instant the space was first submitted — the anchor the ceiling is measured from.
+   */
+  readonly firstSubmittedAt: Date;
+}
+
+/**
+ * Returns the instant a submitted FormSpace of the given type becomes permanently locked, or null when its
+ * type declares no ceiling.
+ *
+ * The mirror of {@link resolveFormSpaceExpiresAt}, and null is meaningful in the same way: it is what
+ * leaves `lat` unwritten, and an unwritten `lat` is what leaves the type's `reopenableFor` rolling from
+ * each submission rather than capped.
+ *
+ * @param input - The type config and the first-submission instant.
+ * @returns The lock instant, or null when the type declares no ceiling.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function resolveFormSpaceLocksAt(input: ResolveFormSpaceLocksAtInput): Maybe<Date> {
+  const { config, firstSubmittedAt } = input;
+  const reopenableUntil = config.reopenableUntil;
+  return reopenableUntil == null ? null : new Date(firstSubmittedAt.getTime() + reopenableUntil);
 }
 
 /**
@@ -189,6 +249,179 @@ export function isFormSpaceEditable(input: IsFormSpaceEditableInput): boolean {
   const { formSpace, now } = input;
   const at = now ?? new Date();
   return formSpace.s === FormSpaceState.DRAFT && formSpace.sat == null && (formSpace.eat == null || formSpace.eat.getTime() > at.getTime());
+}
+
+/**
+ * Input for {@link isFormSpaceReopenable}.
+ */
+export interface IsFormSpaceReopenableInput {
+  readonly formSpace: Pick<FormSpace, 's' | 'sat' | 'lat' | 'rc'>;
+  readonly config: FormSpaceTypeConfig;
+  /**
+   * The instant to judge against. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Returns true when a submitted FormSpace may still be reopened into an editable draft.
+ *
+ * POLICY ONLY. It answers "does the type still allow this", not "is right now a safe moment" — a space
+ * whose processor is mid-run is reopenable by this predicate and refused by the action, because
+ * `ps === PROCESSING` is transient and telling a user their space is permanently locked while a task
+ * finishes would be a lie. The action owns that check; this owns the window.
+ *
+ * Requires SUBMITTED, which is what keeps EXPIRED and ARCHIVED terminal for free.
+ *
+ * @param input - The space, its type config, and the instant to judge against.
+ * @returns True when the space may be reopened.
+ *
+ * @example
+ * ```ts
+ * const canReopen = isFormSpaceReopenable({ formSpace, config });
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isFormSpaceReopenable(input: IsFormSpaceReopenableInput): boolean {
+  const { formSpace, config, now } = input;
+  const { reopenableFor, maxReopens } = config;
+  const at = (now ?? new Date()).getTime();
+  const submittedAt = formSpace.sat;
+
+  return (
+    formSpace.s === FormSpaceState.SUBMITTED && //
+    submittedAt != null &&
+    reopenableFor != null &&
+    submittedAt.getTime() + reopenableFor > at &&
+    (formSpace.lat == null || formSpace.lat.getTime() > at) &&
+    (maxReopens == null || formSpace.rc < maxReopens)
+  );
+}
+
+/**
+ * Input for {@link isFormSpaceFullyLocked}.
+ */
+export interface IsFormSpaceFullyLockedInput {
+  readonly formSpace: Pick<FormSpace, 's' | 'sat' | 'eat' | 'lat' | 'rc'>;
+  readonly config: FormSpaceTypeConfig;
+  /**
+   * The instant to judge against. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Returns true when nothing further can be done to a FormSpace: it is neither editable nor reopenable.
+ *
+ * Derived from the other two predicates rather than testing the fields itself, so the three answers can
+ * never disagree about one space. There is deliberately no FULLY_LOCKED {@link FormSpaceState} — a new
+ * enum member would fork every `s === SUBMITTED` check in the framework and downstream, to express
+ * something both existing predicates already know.
+ *
+ * @param input - The space, its type config, and the instant to judge against.
+ * @returns True when the space is fully locked.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isFormSpaceFullyLocked(input: IsFormSpaceFullyLockedInput): boolean {
+  const { formSpace, config, now } = input;
+  return !isFormSpaceEditable({ formSpace, now }) && !isFormSpaceReopenable({ formSpace, config, now });
+}
+
+/**
+ * Input for {@link reopenFormSpaceTemplate}.
+ */
+export interface ReopenFormSpaceTemplateInput {
+  readonly formSpace: Pick<FormSpace, 'rc' | 'lat'>;
+  readonly config: FormSpaceTypeConfig;
+  /**
+   * The user reopening the space, recorded on `rby`.
+   */
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+  /**
+   * The reopen instant. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Builds the update template that reopens a submitted FormSpace into an editable draft.
+ *
+ * It has to undo all THREE of {@link isFormSpaceEditable}'s conditions rather than just the state: a
+ * template that moved `s` back to DRAFT while leaving `sat` set, or leaving `eat` at the null submit wrote,
+ * produces a "draft" that either nothing can edit or nothing can ever retire.
+ *
+ * `eat` is re-armed to the EARLIER of a fresh `expiresIn` window and the space's own lock deadline, so the
+ * reopened draft can never outlive the window it was reopened inside. When the type declares neither, `eat`
+ * stays absent and the draft does not expire — the same bargain a type with no `expiresIn` already makes
+ * for a freshly created space.
+ *
+ * `uc` and `fi` are deliberately NOT rewound. `uc` bounds uploads ACCEPTED over the space's lifetime, so
+ * refunding it here would turn `maxUploads` into a bound on files retained that a reopen loop could evade;
+ * `fi` must never hand out an index twice. A type that expects replacement uploads has to budget
+ * `maxUploads` for them. `fsat` is likewise preserved — it is the record a reopen exists to not destroy.
+ *
+ * @param input - The space, its type config, the acting user, and the reopen instant.
+ * @returns The update template.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function reopenFormSpaceTemplate(input: ReopenFormSpaceTemplateInput): Partial<FormSpace> {
+  const { formSpace, config, uid } = input;
+  const reopenedAt = input.now ?? new Date();
+
+  return {
+    s: FormSpaceState.DRAFT,
+    ps: FormSpaceProcessingState.INIT_OR_NONE,
+    sat: null,
+    cpat: null,
+    pn: null, // the attempt this handle pointed at is over; a resubmit keys a new task
+    uat: reopenedAt,
+    rat: reopenedAt,
+    rby: uid,
+    rc: formSpace.rc + 1,
+    eat: earliestDate([resolveFormSpaceExpiresAt({ config, now: reopenedAt }), formSpace.lat]) ?? null
+  };
+}
+
+/**
+ * Input for {@link lockFormSpaceTemplate}.
+ */
+export interface LockFormSpaceTemplateInput {
+  /**
+   * The user locking the space, recorded on `lby`.
+   */
+  readonly uid?: Maybe<FirebaseAuthUserId>;
+  /**
+   * The lock instant. Defaults to now.
+   */
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Builds the update template that locks a submitted FormSpace's submission immediately.
+ *
+ * Only `lat` moves. The lock is not a state transition — the space stays SUBMITTED and its processing is
+ * untouched — it is the end of the reopen window, brought forward from whatever the type's
+ * `reopenableUntil` would have made it. Writing `lat` in the past is what makes every reopen predicate
+ * answer false from this instant on, including for a type whose window was purely rolling and so never
+ * had a `lat` at all.
+ *
+ * @param input - The acting user and the lock instant.
+ * @returns The update template.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function lockFormSpaceTemplate(input: LockFormSpaceTemplateInput): Partial<FormSpace> {
+  const { uid } = input;
+  const lockedAt = input.now ?? new Date();
+
+  return {
+    lat: lockedAt,
+    lby: uid,
+    uat: lockedAt
+  };
 }
 
 /**

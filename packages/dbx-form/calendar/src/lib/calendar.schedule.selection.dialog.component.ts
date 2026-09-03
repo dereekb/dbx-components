@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, InjectionToken, type Injector } from '@angular/core';
+import { Component, InjectionToken, type Injector } from '@angular/core';
 import { type MatDialog } from '@angular/material/dialog';
 import { AbstractDialogDirective, type DbxDialogContentConfig, type DbxDialogContentFooterConfig, DbxDialogModule, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
 import { KeyValueTypleValueFilter, type Maybe, mergeObjects } from '@dereekb/util';
@@ -27,9 +27,7 @@ export interface DbxScheduleSelectionCalendarDatePopupConfig {
       <dbx-dialog-content-footer [config]="closeConfig" (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
   `,
-  standalone: true,
-  imports: [DbxDialogModule, DbxScheduleSelectionCalendarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDialogModule, DbxScheduleSelectionCalendarComponent]
 })
 export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDialogDirective<void, DbxScheduleSelectionCalendarDatePopupConfig> {
   get contentConfig() {

@@ -1,4 +1,4 @@
-import { Injectable, type Signal, inject, signal } from '@angular/core';
+import { Service, type Signal, inject, signal } from '@angular/core';
 import { type DbxStyleDemoSection, type DbxStyleDemoSectionGroup } from './section';
 import { DBX_STYLE_DEMO_SECTION_GROUP } from './section.providers';
 
@@ -8,7 +8,7 @@ import { DBX_STYLE_DEMO_SECTION_GROUP } from './section.providers';
  *
  * Consumed by the `<dbx-style-demo>` playground to determine which sections are available to render.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DbxStyleDemoSectionRegistry {
   /**
    * All registered sections, in library-registration then section-declaration order.

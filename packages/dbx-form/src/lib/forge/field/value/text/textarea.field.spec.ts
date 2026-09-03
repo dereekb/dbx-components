@@ -28,7 +28,6 @@ describe('DbxForgeTextAreaFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -219,8 +218,8 @@ describe('dbxForgeTextAreaField()', () => {
     expect(field.pattern).toBe('^[a-z]+$');
   });
 
-  it('should map description to hint in props', () => {
-    const field = dbxForgeTextAreaField({ key: 'bio', description: 'Tell us about yourself' });
+  it('should map hint to hint in props', () => {
+    const field = dbxForgeTextAreaField({ key: 'bio', hint: 'Tell us about yourself' });
     expect(field.props?.hint).toBe('Tell us about yourself');
   });
 

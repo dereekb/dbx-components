@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -66,8 +66,6 @@ const BANNER_VIEWS: Record<SupportChatBannerKind, SupportChatBannerView> = {
  */
 @Component({
   selector: 'doc-support-banner-card-example',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, MatButtonModule, MatCardModule, DbxButtonComponent, DbxColorDirective, DbxIconTileComponent],
   template: `
     <dbx-docs-ui-example header="Support Chat Banner Card" hint="Outlined mat-card with [dbxColor] tonal background, mat-card-header icon + title, content body, and a footer action row.">

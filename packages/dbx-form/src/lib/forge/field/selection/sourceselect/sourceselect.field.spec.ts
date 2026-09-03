@@ -24,7 +24,6 @@ describe('DbxForgeSourceSelectFieldConfig - Exhaustive Whitelist', () => {
     | 'logic'
     | 'props'
     | 'hint'
-    | 'description'
     | 'pattern'
     | 'minLength'
     | 'maxLength'
@@ -95,12 +94,12 @@ describe('dbxForgeSourceSelectField()', () => {
     expect(field.label).toBeUndefined();
   });
 
-  it('should map description to props.hint', () => {
-    const field = dbxForgeSourceSelectField({ ...minimalConfig(), description: 'A helpful hint' });
+  it('should map hint to props.hint', () => {
+    const field = dbxForgeSourceSelectField({ ...minimalConfig(), hint: 'A helpful hint' });
     expect(field.props?.hint).toBe('A helpful hint');
   });
 
-  it('should not set hint when description is not provided', () => {
+  it('should not set hint when hint is not provided', () => {
     const field = dbxForgeSourceSelectField(minimalConfig());
     expect(field.props?.hint).toBeUndefined();
   });

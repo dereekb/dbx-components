@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { DbxFlagComponent } from './flag.component';
 import { type Maybe } from '@dereekb/util';
@@ -24,9 +24,7 @@ import { type Maybe } from '@dereekb/util';
       <ng-content></ng-content>
     </dbx-flag>
   `,
-  imports: [DbxFlagComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxFlagComponent]
 })
 export class DbxFlagPromptComponent {
   readonly color = input<ThemePalette>('accent');

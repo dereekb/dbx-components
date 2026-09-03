@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
@@ -22,9 +22,7 @@ import { map } from 'rxjs';
       <dbx-button [raised]="true" dbxActionButton text="Save"></dbx-button>
     </div>
   `,
-  standalone: true,
-  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxActionSnackbarErrorDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxButtonComponent, DbxActionButtonDirective, DbxFirebaseOidcEntryClientForgeFormComponent]
 })
 export class DbxFirebaseOidcEntryClientUpdateComponent {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

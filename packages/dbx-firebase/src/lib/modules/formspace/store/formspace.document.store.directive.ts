@@ -9,8 +9,7 @@ import { FormSpaceDocumentStore } from './formspace.document.store';
 @Directive({
   selector: '[dbxFirebaseFormSpaceDocument]',
   exportAs: 'dbxFirebaseFormSpaceDocument',
-  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseFormSpaceDocumentStoreDirective, FormSpaceDocumentStore),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseFormSpaceDocumentStoreDirective, FormSpaceDocumentStore)
 })
 export class DbxFirebaseFormSpaceDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<FormSpace, FormSpaceDocument, FormSpaceDocumentStore> {
   constructor() {

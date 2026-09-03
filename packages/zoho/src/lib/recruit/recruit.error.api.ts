@@ -163,10 +163,3 @@ export const interceptZohoRecruit200StatusWithErrorResponse = interceptZohoError
  * Wraps a fetch client to automatically parse Zoho Recruit error responses, log them, and invoke a custom handler (e.g., for token refresh on authentication failures).
  */
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);
-
-// MARK: Compat
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use assertZohoRecruitRecordDataArrayResultHasContent instead.
- */
-export const assertRecordDataArrayResultHasContent = assertZohoRecruitRecordDataArrayResultHasContent;

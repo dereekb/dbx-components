@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { dbxForgeDateTimeField, dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
@@ -14,7 +14,6 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
 
 @Component({
   templateUrl: './pipes.component.html',
-  standalone: true,
   imports: [
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
@@ -38,8 +37,7 @@ import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, Sy
     MinutesStringPipe,
     TimeDistanceCountdownPipe,
     TimeDistancePipe
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  ]
 })
 export class DocTextPipesComponent {
   // TODO: Should not require a delay to set the value properly
@@ -72,7 +70,7 @@ export class DocTextPipesComponent {
   readonly timezone$ = this._timezone.asObservable();
   readonly timezoneSignal = toSignal(this.timezone$, { initialValue: undefined });
   readonly dateTimezoneConfig: FormConfig = {
-    fields: [dbxForgeDateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }), dbxForgeTimezoneStringField({ required: false })]
+    fields: [dbxForgeDateTimeField({ key: 'date', required: true, hint: 'This is the default date field that requires the user pick a date and time.', props: { timezone: this.timezone$ } }), dbxForgeTimezoneStringField({ required: false })]
   } as FormConfig;
 
   readonly onDateTimezoneChange = (value: { date: Maybe<Date>; timezone: Maybe<TimezoneString> }) => {

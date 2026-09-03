@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
@@ -18,9 +18,7 @@ import { type OAuthConsentScopesFormFieldsConfig, type OAuthConsentScopesFormVal
   selector: 'dbx-firebase-oauth-consent-scope-form',
   template: DBX_FORGE_FORM_COMPONENT_TEMPLATE,
   providers: dbxForgeFormComponentProviders(),
-  imports: [DbxForgeFormComponentImportsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxForgeFormComponentImportsModule]
 })
 export class DbxFirebaseOAuthConsentScopeFormComponent extends AbstractConfigAsyncForgeFormDirective<OAuthConsentScopesFormValue, OAuthConsentScopesFormFieldsConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(map((config) => (config ? oauthConsentScopesFormConfig(config) : undefined)));

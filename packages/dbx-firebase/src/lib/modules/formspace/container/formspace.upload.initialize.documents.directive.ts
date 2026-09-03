@@ -20,8 +20,7 @@ import { DbxFirebaseStorageFileUploadStore } from '../../storagefile/store';
  */
 @Directive({
   selector: '[dbxFirebaseFormSpaceUploadInitializeDocuments]',
-  exportAs: 'dbxFirebaseFormSpaceUploadInitializeDocuments',
-  standalone: true
+  exportAs: 'dbxFirebaseFormSpaceUploadInitializeDocuments'
 })
 export class DbxFirebaseFormSpaceUploadInitializeDocumentsDirective {
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);

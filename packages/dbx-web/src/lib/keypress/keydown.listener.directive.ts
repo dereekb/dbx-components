@@ -19,8 +19,7 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 @Directive({
-  selector: '[dbxWindowKeyDownListener]',
-  standalone: true
+  selector: '[dbxWindowKeyDownListener]'
 })
 export class DbxWindowKeyDownListenerDirective {
   readonly dbxWindowKeyDownListener = output<KeyboardEvent>();

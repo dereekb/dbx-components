@@ -1,11 +1,11 @@
-import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 
 describe('DbxLoadingProgress', () => {
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({});
-  }));
+  });
 
   describe('with spinner', () => {
     let fixture: ComponentFixture<LoadingProgressSpinnerComponent>;
@@ -42,7 +42,6 @@ describe('DbxLoadingProgress', () => {
   template: `
     <dbx-loading-progress [text]="text"></dbx-loading-progress>
   `,
-  standalone: true,
   imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressSpinnerComponent {
@@ -53,7 +52,6 @@ class LoadingProgressSpinnerComponent {
   template: `
     <dbx-loading-progress [linear]="true" [text]="text"></dbx-loading-progress>
   `,
-  standalone: true,
   imports: [DbxLoadingProgressComponent]
 })
 class LoadingProgressLinearComponent {

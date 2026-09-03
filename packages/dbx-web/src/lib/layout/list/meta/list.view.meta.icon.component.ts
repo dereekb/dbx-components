@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, InjectionToken, inject } from '@angular/core';
+import { Component, InjectionToken, inject } from '@angular/core';
 import { DBX_VALUE_LIST_VIEW_ITEM, type DbxValueListItem } from '../list.view.value';
 import { type Maybe } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -32,9 +32,7 @@ export interface DbxListViewMetaIconConfig {
   template: `
     <mat-icon class="dbx-list-view-meta-icon">{{ icon }}</mat-icon>
   `,
-  standalone: true,
-  imports: [MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule]
 })
 export class DbxListViewMetaIconComponent {
   readonly item = inject<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>(DBX_VALUE_LIST_VIEW_ITEM, { optional: true });

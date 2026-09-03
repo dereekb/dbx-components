@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { DbxPromptComponent } from './prompt.component';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
@@ -43,9 +43,7 @@ export interface DbxPromptConfirmConfig {
       </div>
     </dbx-prompt>
   `,
-  standalone: true,
-  imports: [DbxPromptComponent, MatButtonModule, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPromptComponent, MatButtonModule, DbxButtonSpacerDirective]
 })
 export class DbxPromptConfirmComponent {
   readonly config = input<Maybe<DbxPromptConfirmConfig>>({});

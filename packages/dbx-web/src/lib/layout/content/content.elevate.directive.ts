@@ -23,8 +23,7 @@ import { Directive, input } from '@angular/core';
   host: {
     class: 'd-block',
     '[class.dbx-content-elevate]': 'elevate()'
-  },
-  standalone: true
+  }
 })
 export class DbxContentElevateDirective {
   readonly elevate = input<boolean>(true);

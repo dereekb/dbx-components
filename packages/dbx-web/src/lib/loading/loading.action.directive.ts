@@ -25,8 +25,7 @@ import { DbxLoadingComponent } from './loading.component';
  * ```
  */
 @Directive({
-  selector: '[dbxActionLoadingContext]',
-  standalone: true
+  selector: '[dbxActionLoadingContext]'
 })
 export class DbxActionLoadingContextDirective {
   readonly loadingComponent = inject(DbxLoadingComponent, { host: true });

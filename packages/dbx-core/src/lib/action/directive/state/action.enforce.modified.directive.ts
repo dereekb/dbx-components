@@ -39,8 +39,7 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
  * @see {@link DbxActionAutoModifyDirective} for always keeping the action modified.
  */
 @Directive({
-  selector: '[dbxActionEnforceModified]',
-  standalone: true
+  selector: '[dbxActionEnforceModified]'
 })
 export class DbxActionEnforceModifiedDirective {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });

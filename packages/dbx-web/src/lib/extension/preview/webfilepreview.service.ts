@@ -1,4 +1,4 @@
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { inject, Service, InjectionToken } from '@angular/core';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { type MimeTypeWithoutParameters, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type DbxWebFilePreviewServiceEntry, type DbxWebFilePreviewServicePreviewComponentFunction, type DbxWebFilePreviewServicePreviewComponentFunctionInput, type DbxWebFilePreviewServicePreviewDialogFunction, type DbxWebFilePreviewServicePreviewDialogFunctionInput, type DbxWebFilePreviewServicePreviewDialogWithComponentFunction } from './webfilepreview';
@@ -84,9 +84,7 @@ export const DEFAULT_DBX_WEB_FILE_PREVIEW_SERVICE_DIALOG_WITH_COMPONENT_FUNCTION
 /**
  * Service used for previewing files with given mime types.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxWebFilePreviewService {
   readonly matDialog = inject(MatDialog);
 

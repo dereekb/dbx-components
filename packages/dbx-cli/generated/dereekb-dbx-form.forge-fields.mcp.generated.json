@@ -1773,8 +1773,8 @@
           "required": false
         },
         {
-          "name": "description",
-          "type": "string",
+          "name": "hint",
+          "type": "DynamicText",
           "description": "",
           "required": false
         },

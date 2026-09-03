@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type DbxColorInput, DbxStepBlockComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 
@@ -81,9 +81,7 @@ export interface DbxFirebaseFormSpaceStepBlockComponentConfig {
     class: 'dbx-firebase-formspace-step-block d-block',
     '[class.dbx-firebase-formspace-step-block-complete]': 'completeSignal()'
   },
-  imports: [DbxStepBlockComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxStepBlockComponent]
 })
 export class DbxFirebaseFormSpaceStepBlockComponent {
   readonly config = input<Maybe<DbxFirebaseFormSpaceStepBlockComponentConfig>>();

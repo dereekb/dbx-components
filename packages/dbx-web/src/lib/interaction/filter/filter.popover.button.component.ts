@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, input, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, input, viewChild } from '@angular/core';
 import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.directive';
 import { type DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -22,27 +22,15 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   template: `
     <dbx-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplaySignal()" [buttonStyle]="buttonStyleSignal()" [disabled]="disabled()"></dbx-button>
   `,
-  imports: [DbxButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxButtonComponent]
 })
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {
   readonly buttonElement = viewChild<string, Maybe<ElementRef>>('button', { read: ElementRef });
   readonly disabled = input<Maybe<boolean>>();
 
-  /**
-   * @deprecated Use buttonDisplayStyle instead.
-   */
-  readonly buttonDisplay = input<DbxButtonDisplay, Maybe<DbxButtonDisplay>>(DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT, { transform: (x) => x ?? DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT });
   readonly buttonDisplayStyle = input<Maybe<DbxButtonDisplayStylePair>>();
 
-  readonly buttonDisplaySignal = computed(() => {
-    const pairDisplay = this.buttonDisplayStyle()?.display;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- reads the deprecated buttonDisplay input for backward compatibility until removed
-    const directDisplay = this.buttonDisplay();
-    return !pairDisplay && !directDisplay ? undefined : { ...pairDisplay, ...directDisplay };
-  });
-
+  readonly buttonDisplaySignal = computed(() => this.buttonDisplayStyle()?.display ?? DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT);
   readonly buttonStyleSignal = computed(() => this.buttonDisplayStyle()?.style);
 
   showFilterPopover(): void {

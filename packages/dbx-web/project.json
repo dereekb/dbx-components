@@ -56,13 +56,6 @@
       "options": {
         "command": "cd ./dist/packages/dbx-web && npm publish --access public"
       }
-    },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/dbx-web"
-      }
     }
   }
 }

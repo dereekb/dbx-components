@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/dbx-web';
 import { DbxStyleDemoControlsService } from '@dereekb/dbx-web/style-demo';
 import { DbxFormStyleDemoPresetsComponent } from './controls.presets.component';
@@ -25,9 +25,7 @@ import { DbxFormStyleDemoPresetsComponent } from './controls.presets.component';
       </div>
     </dbx-detach-content>
   `,
-  standalone: true,
-  imports: [DbxDetachContentComponent, DbxDetachControlsComponent, DbxFormStyleDemoPresetsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxDetachContentComponent, DbxDetachControlsComponent, DbxFormStyleDemoPresetsComponent]
 })
 export class DbxFormStyleDemoControlsDetachComponent {
   readonly controlsService = inject(DbxStyleDemoControlsService);

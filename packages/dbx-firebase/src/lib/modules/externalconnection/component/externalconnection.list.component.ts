@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { of } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -73,9 +73,7 @@ const AUTO_CONFIRM_CONFIG: DbxActionConfirmConfig = { autoConfirm: true };
   imports: [DbxListWrapperComponentImportsModule],
   host: {
     class: 'dbx-firebase-external-connection-list dbx-list-auto-height dbx-list-card-items-list dbx-list-no-hover-effects'
-  },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseExternalConnectionListComponent extends AbstractDbxListWrapperDirective<DbxFirebaseExternalConnectionListItemValue> {
   constructor() {
@@ -93,9 +91,7 @@ export class DbxFirebaseExternalConnectionListComponent extends AbstractDbxListW
   host: {
     // the item template owns all of its padding, including the leading avatar's inset
     class: 'dbx-list-item-p0'
-  },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxListViewDirective<DbxFirebaseExternalConnectionListItemValue> {
   readonly config: DbxValueListViewConfig<DbxFirebaseExternalConnectionListItem> = {
@@ -156,9 +152,7 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
       }
     </div>
   `,
-  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxAvatarComponent, DbxButtonComponent, DbxChipDirective, DbxErrorComponent],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DatePipe, DbxActionButtonDirective, DbxActionConfirmDirective, DbxActionDirective, DbxActionErrorDirective, DbxActionHandlerDirective, DbxAvatarComponent, DbxButtonComponent, DbxChipDirective, DbxErrorComponent]
 })
 export class DbxFirebaseExternalConnectionListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseExternalConnectionListItemValue> {
   readonly defaultIcon = DEFAULT_CONNECTION_ICON;

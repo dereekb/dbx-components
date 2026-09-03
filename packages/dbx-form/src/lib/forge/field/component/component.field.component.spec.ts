@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal, type Type } from '@angular/core';
+import { Component, signal, type Type } from '@angular/core';
 
 import { type FormConfig, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { type Maybe } from '@dereekb/util';
@@ -15,9 +15,7 @@ const lastLoaded = signal<'a' | 'b' | undefined>(undefined);
 @Component({
   template: `
     <span>A</span>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 class TestViewAComponent {
   constructor() {
@@ -28,9 +26,7 @@ class TestViewAComponent {
 @Component({
   template: `
     <span>B</span>
-  `,
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  `
 })
 class TestViewBComponent {
   constructor() {
@@ -45,10 +41,8 @@ class TestViewBComponent {
       <form [dynamic-form]="config" [(value)]="formValue"></form>
     }
   `,
-  standalone: true,
   imports: [DynamicForm],
-  providers: [EventDispatcher],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  providers: [EventDispatcher]
 })
 class TestHostComponent {
   config: Maybe<FormConfig>;

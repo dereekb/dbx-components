@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, type Injector } from '@angular/core';
+import { Component, type ElementRef, type Injector } from '@angular/core';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, type DbxPopoverConfigSizing, DbxPopoverContentComponent, DbxPopoverHeaderComponent, type DbxPopoverKey, DbxPopoverScrollContentDirective, type DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelEntitiesComponent } from './model.entities.component';
@@ -65,9 +65,7 @@ export const DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY = 'entiti
  */
 @Component({
   templateUrl: './model.entities.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelEntitiesComponent]
 })
 export class DbxFirebaseModelEntitiesPopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseModelEntitiesPopoverConfig> {
   readonly entities$ = this.popover.data?.entities$;

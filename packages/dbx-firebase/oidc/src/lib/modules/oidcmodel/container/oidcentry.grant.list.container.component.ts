@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, type OnInit, viewChild } from '@angular/core';
+import { Component, inject, type OnInit, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseCollectionChangeDirective, DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
@@ -21,9 +21,7 @@ import { DbxFirebaseOidcEntryGrantListComponent } from '../component/oidcentry.g
       <dbx-firebase-oidc-grant-list dbxFirebaseCollectionList></dbx-firebase-oidc-grant-list>
     </div>
   `,
-  standalone: true,
-  imports: [OidcEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseOidcEntryGrantListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [OidcEntryCollectionStoreDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseOidcEntryGrantListComponent]
 })
 export class DbxFirebaseOidcEntryGrantListContainerComponent implements OnInit {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { type DbxWidgetViewComponentConfig, DbxWidgetViewComponent } from '@dereekb/dbx-web';
 import { type NotificationItem, type NotificationItemMetadata } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
@@ -13,9 +13,7 @@ import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotific
   template: `
     <dbx-widget-view [config]="configSignal()"></dbx-widget-view>
   `,
-  standalone: true,
-  imports: [DbxWidgetViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxWidgetViewComponent]
 })
 export class DbxFirebaseNotificationItemViewComponent<D extends NotificationItemMetadata = {}> {
   readonly item = input<Maybe<NotificationItem<D>>>();

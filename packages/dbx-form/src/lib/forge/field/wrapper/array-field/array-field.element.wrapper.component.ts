@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
+import { Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -36,9 +36,7 @@ const DEFAULT_DUPLICATE_BUTTON: DbxButtonDisplayStylePair = {
 @Component({
   selector: 'dbx-forge-array-field-element-wrapper',
   templateUrl: './array-field.element.wrapper.component.html',
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, DbxChipDirective, MatIconModule, MatButtonModule, DbxButtonComponent, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, DbxChipDirective, MatIconModule, MatButtonModule, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });

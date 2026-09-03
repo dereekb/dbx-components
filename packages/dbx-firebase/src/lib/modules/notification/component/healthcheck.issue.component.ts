@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxChipDirective, DbxColorDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
 import { type NotificationDeliveryMethod, type NotificationHealthCheckIssue } from '@dereekb/firebase';
@@ -33,9 +33,7 @@ import { DbxFirebaseNotificationHealthCheckPresentationService } from '../servic
   host: {
     class: 'd-block dbx-firebase-notification-healthcheck-issue'
   },
-  standalone: true,
-  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent]
 })
 export class DbxFirebaseNotificationHealthCheckIssueComponent {
   private readonly _presentationService = inject(DbxFirebaseNotificationHealthCheckPresentationService);

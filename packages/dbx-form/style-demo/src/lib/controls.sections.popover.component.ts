@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AbstractPopoverDirective, DbxPopoverCloseButtonComponent, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { DbxStyleDemoControlsService } from '@dereekb/dbx-web/style-demo';
 import { DbxFormStyleDemoSectionsComponent } from './controls.sections.component';
@@ -27,9 +27,7 @@ import { DbxFormStyleDemoSectionsComponent } from './controls.sections.component
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  standalone: true,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, DbxFormStyleDemoSectionsComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentDirective, DbxFormStyleDemoSectionsComponent]
 })
 export class DbxFormStyleDemoSectionsPopoverComponent extends AbstractPopoverDirective {
   readonly controlsService = inject(DbxStyleDemoControlsService);

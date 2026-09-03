@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DbxFirebasePasswordResetComponent } from '@dereekb/dbx-firebase';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
@@ -26,9 +26,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
       </dbx-firebase-password-reset>
     </dbx-content-box>
   `,
-  standalone: true,
-  imports: [DbxContentBoxDirective, DbxFirebasePasswordResetComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentBoxDirective, DbxFirebasePasswordResetComponent]
 })
 export class DemoAuthResetPasswordComponent {
   private readonly dbxRouterService = inject(DbxRouterService);

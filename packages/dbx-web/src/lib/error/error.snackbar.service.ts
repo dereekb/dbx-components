@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { type ErrorInput, type Maybe } from '@dereekb/util';
 import { DbxErrorSnackbarComponent, type DbxErrorSnackbarConfig } from './error.snackbar.component';
@@ -25,9 +25,7 @@ export const DEFAULT_DBX_ERROR_SNACKBAR_CONFIG: DbxErrorSnackbarConfig = {
  * snackbarService.showSnackbarError(error, { duration: 5000 });
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxErrorSnackbarService {
   readonly matSnackbar = inject(MatSnackBar);
 

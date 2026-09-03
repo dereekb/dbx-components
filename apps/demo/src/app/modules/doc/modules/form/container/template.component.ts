@@ -1,5 +1,5 @@
 import { DbxFormSourceDirective, dbxForgeUsernamePasswordLoginFields, dbxForgeWebsiteUrlField, dbxForgeTimezoneStringField } from '@dereekb/dbx-form';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -10,9 +10,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 
 @Component({
   templateUrl: './template.component.html',
-  standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent]
 })
 export class DocFormTemplateComponent {
   readonly forgeUsernamePasswordLoginConfig: FormConfig = {

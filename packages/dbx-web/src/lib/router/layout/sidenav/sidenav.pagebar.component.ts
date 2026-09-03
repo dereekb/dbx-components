@@ -1,4 +1,4 @@
-import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxPagebarComponent } from '../../../layout/bar/pagebar.component';
 import { DbxSidenavButtonComponent } from './sidenav.button.component';
@@ -31,9 +31,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
       <ng-content right></ng-content>
     </dbx-pagebar>
   `,
-  imports: [DbxPagebarComponent, DbxSidenavButtonComponent, DbxButtonSpacerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxPagebarComponent, DbxSidenavButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxSidenavPagebarComponent extends DbxPagebarComponent {
   /**

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { type FieldTree } from '@angular/forms/signals';
@@ -41,8 +41,6 @@ import type { DbxForgeExpandFieldProps } from './expand.field';
     }
   `,
   imports: [MatButtonModule, MatIconModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   host: {
     '[class]': 'className()'
   }

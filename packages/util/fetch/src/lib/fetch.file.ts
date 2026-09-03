@@ -1,6 +1,5 @@
 import { type ArrayOrValue, asArray, type ContentTypeMimeType, type Maybe, type MimeTypeWithoutParameters, urlWithoutParameters } from '@dereekb/util';
 import { safeParse as parseContentType } from 'fast-content-type-parse';
-import { type FetchMethod } from './fetch.type';
 
 // MARK: Make File
 /**
@@ -144,44 +143,4 @@ export function parseFetchFileResponse(response: Response): FetchFileResponse {
     contentType,
     mimeType: contentType?.type
   };
-}
-
-// COMPAT: Deprecated aliases
-/**
- * @deprecated Use makeFileForFetch() with FormData instead.
- */
-export interface FetchUploadFile {
-  readonly url: string;
-  readonly fetch?: typeof fetch;
-  readonly method?: FetchMethod;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  readonly body: FetchUploadFileBody;
-}
-
-/**
- * @deprecated Use makeFileForFetch() with FormData instead.
- */
-export interface FetchUploadFileBody {
-  readonly mimeType: ContentTypeMimeType;
-  readonly body: BodyInit;
-}
-
-/**
- * @param input - Upload request inputs (target URL, fetch implementation, HTTP method, and file body) used to issue the request.
- * @returns Resolved upload response from the underlying fetch call.
- *
- * @deprecated Use makeFileForFetch() with FormData and context.fetch() instead.
- */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export function fetchUploadFile(input: FetchUploadFile) {
-  const { fetch: inputFetch, url, body: inputBody } = input;
-  const useFetch = inputFetch ?? fetch;
-
-  return useFetch(url, {
-    method: input.method ?? 'POST',
-    body: inputBody.body,
-    headers: {
-      'Content-Type': inputBody.mimeType
-    }
-  });
 }

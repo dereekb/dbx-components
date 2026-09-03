@@ -9,7 +9,7 @@
 import { join } from 'node:path';
 import { archiveScaffoldEntry, buildScaffoldPlan, literalScaffoldEntry, type ScaffoldPlanEntry } from '../scaffold.js';
 import { applyFirebaseJsonEdits, applyTsconfigBaseEdits, editJsonFile } from '../json-edit.js';
-import { DEREEKB_PACKAGES, SETUP_DEPENDENCY_VERSIONS, deriveCiDistVersionMap } from '../versions.js';
+import { DEREEKB_PACKAGES, SETUP_DEPENDENCY_VERSIONS, ciTestInstallFlags, deriveCiDistVersionMap } from '../versions.js';
 import { type SetupContext, type SetupModule } from '../module.js';
 
 /**
@@ -26,7 +26,10 @@ const ROOT_LEVEL_FILES: readonly { readonly archivePath: string; readonly dest: 
   { archivePath: 'project.template.json', dest: 'project.json', noTokens: true },
   { archivePath: 'make-api-package.js', dest: 'make-api-package.js' },
   { archivePath: 'update-dbx-components.sh', dest: 'update-dbx-components.sh' },
-  { archivePath: '.circleci/config.yml', dest: '.circleci/config.yml' }
+  { archivePath: '.circleci/config.yml', dest: '.circleci/config.yml' },
+  // The post-setup task list. The retired setup-project.sh curl'd this from the repo's
+  // setup/ folder as its last step; it ships in the archive so setup works offline.
+  { archivePath: 'getting-started-checklist.md', dest: 'getting-started-checklist.md', noTokens: true }
 ];
 
 /**
@@ -100,11 +103,24 @@ export const ROOT_MODULE: SetupModule = {
     await shell.run('npm', ['install', '-D', dep('conventional-changelog'), dep('conventional-recommended-bump'), dep('semver'), dep('yargs')], { cwd: workspaceRoot, dryRun });
 
     // vitest (script line 473)
-    await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, `@nx/vite@${nx}`, dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
+    // `@nx/vite` was only needed for the nxViteTsPaths/nxCopyAssetsPlugin helpers, both
+    // deprecated for removal in Nx v24. createVitestConfig uses vite's built-in
+    // `resolve.tsconfigPaths` instead, so no path-resolution package is needed.
+    await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
 
     // @dereekb + firebase deps (script line 511). arktype is the runtime validator
     // the scaffolded firebase model files (`*.api.ts`) import.
-    await shell.run('npm', ['install', '--force', dep('mailgun.js'), dep('rxjs'), dep('arktype'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
+    //
+    // `@angular/animations` rides along here because nothing else supplies it:
+    // `create-nx-workspace` does not scaffold it, and no `@dereekb` package declares it as a peer.
+    // `@angular/platform-browser`'s animations entry point imports `@angular/animations` and the
+    // `@dereekb/dbx-web` + `@angular/material` imports pull that entry point in, so the app build
+    // fails on `Could not resolve "@angular/animations/browser"` without it. It tracks the exact
+    // framework version the rest of Angular is pinned to.
+    //
+    // zone.js is deliberately absent: the app is zoneless and `@dereekb/vitest/setup-angular`
+    // initializes the TestBed zonelessly, so nothing in a scaffolded project loads it.
+    await shell.run('npm', ['install', '--force', ...ciTestInstallFlags(versions), dep('mailgun.js'), dep('rxjs'), dep('arktype'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), `@angular/animations@${versions.core.angular}`, ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
 
     // mapbox deps (script line 514)
     await shell.run('npm', ['install', '--force', dep('mapbox-gl'), dep('ngx-mapbox-gl'), dep('@ng-web-apis/geolocation'), dep('@ng-web-apis/common')], { cwd: workspaceRoot, dryRun });

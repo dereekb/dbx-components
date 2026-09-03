@@ -67,8 +67,7 @@ export const DEFAULT_DBX_CHIP_TONE = 18;
     '[class.dbx-color-tonal]': 'isTonalSignal()',
     '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()'
   },
-  hostDirectives: [DbxColorDirective],
-  standalone: true
+  hostDirectives: [DbxColorDirective]
 })
 export class DbxChipDirective {
   private readonly _dbxColorDirective = inject(DbxColorDirective, { self: true });

@@ -20,8 +20,7 @@ import { DbxPdfMergeEditorFileUploadComponent, type DbxPdfMergeEditorFileUploadS
  * ```
  */
 @Directive({
-  selector: '[dbxPdfMergeEditorFileUploadHasState]',
-  standalone: true
+  selector: '[dbxPdfMergeEditorFileUploadHasState]'
 })
 export class DbxPdfMergeEditorFileUploadHasStateDirective extends AbstractIfDirective {
   private readonly _slot = inject(DbxPdfMergeEditorFileUploadComponent);

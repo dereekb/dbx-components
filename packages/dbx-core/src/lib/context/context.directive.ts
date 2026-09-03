@@ -22,8 +22,7 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 @Directive({
-  selector: '[dbxAppContextState]',
-  standalone: true
+  selector: '[dbxAppContextState]'
 })
 export class DbxAppContextStateDirective {
   readonly dbxAppContextStateService = inject(DbxAppContextService);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { delay, first, map, of, tap, throwError, timer } from 'rxjs';
 import { SubscriptionObject, type WorkUsingObservable } from '@dereekb/rxjs';
@@ -11,9 +11,7 @@ import { callbackTest } from '@dereekb/util/test';
   template: `
     <div #action="action" dbxAction [dbxActionHandler]="handlerFunctionSignal()"></div>
   `,
-  imports: [DbxActionDirective, DbxActionHandlerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  imports: [DbxActionDirective, DbxActionHandlerDirective]
 })
 class TestActionContextDirectiveComponent {
   readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);

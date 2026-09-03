@@ -19,8 +19,7 @@ import { AbstractDbxClipboardDirective } from '../../util/clipboard.directive';
   host: {
     class: 'dbx-click-to-copy-text',
     '[class.dbx-click-to-copy-text-highlighted]': 'highlighted()'
-  },
-  standalone: true
+  }
 })
 export class DbxClickToCopyTextDirective extends AbstractDbxClipboardDirective {
   readonly copyTextFromElement = model<ElementRef<HTMLElement>>();

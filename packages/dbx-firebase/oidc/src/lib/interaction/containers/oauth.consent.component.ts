@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, type OnDestroy, type Signal, type Type } from '@angular/core';
+import { Component, computed, inject, input, type OnDestroy, type Signal, type Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxRouteParamReaderInstance, DbxRouterService, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -49,7 +49,6 @@ export interface DbxOAuthConsentComponentConfig {
  */
 @Component({
   selector: 'dbx-firebase-oauth-consent',
-  standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
     <dbx-firebase-oauth-consent-view [details]="resolvedDetailsSignal()" [consentStateCase]="consentStateCaseSignal()" [scopeInjectionConfig]="scopeInjectionConfigSignal()" [requiredScopes]="requiredScopesSignal()" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
@@ -58,8 +57,7 @@ export interface DbxOAuthConsentComponentConfig {
   `,
   host: {
     class: 'd-block dbx-firebase-oauth-consent'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  }
 })
 export class DbxOAuthConsentComponent implements OnDestroy {
   private readonly dbxRouterService = inject(DbxRouterService);

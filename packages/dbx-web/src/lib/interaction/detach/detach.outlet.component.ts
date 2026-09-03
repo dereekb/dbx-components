@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ElementRef, inject, input, type OnInit, type OnDestroy, effect } from '@angular/core';
+import { Component, ElementRef, inject, input, type OnInit, type OnDestroy, effect } from '@angular/core';
 import { DEFAULT_DBX_DETACH_KEY, type DbxDetachKey } from './detach';
 import { DbxDetachService } from './detach.service';
 
@@ -28,9 +28,7 @@ import { DbxDetachService } from './detach.service';
   `,
   host: {
     class: 'dbx-detach-outlet'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true
+  }
 })
 export class DbxDetachOutletComponent implements OnInit, OnDestroy {
   private readonly _detachService = inject(DbxDetachService);

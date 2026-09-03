@@ -1,17 +1,17 @@
 {
   "name": "@dereekb/firebase/eslint",
-  "version": "13.43.0",
+  "version": "14.0.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/util": "13.43.0",
-    "@marcbachmann/cel-js": "^7.6.1",
-    "@typescript-eslint/parser": "8.59.3",
-    "@typescript-eslint/utils": "8.59.3",
-    "typescript": "5.9.3"
+    "@dereekb/util": "14.0.0",
+    "@marcbachmann/cel-js": "^8.0.0",
+    "@typescript-eslint/parser": "8.69.0",
+    "@typescript-eslint/utils": "8.69.0",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@dereekb/firebase": "13.43.0",
-    "eslint": "10.4.0",
-    "firebase": "^12.12.1"
+    "@dereekb/firebase": "14.0.0",
+    "eslint": "10.9.1",
+    "firebase": "^12.18.0"
   }
 }

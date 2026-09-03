@@ -1,4 +1,4 @@
-import { Injectable, type Type } from '@angular/core';
+import { Service, type Type } from '@angular/core';
 import { type Maybe, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { type DbxWidgetType } from './widget';
 
@@ -24,9 +24,7 @@ export interface DbxWidgetEntry {
  * widgetService.register({ type: 'my-widget', componentClass: MyWidgetComponent });
  * ```
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbxWidgetService {
   private readonly _entries = new Map<DbxWidgetType, DbxWidgetEntry>();
 

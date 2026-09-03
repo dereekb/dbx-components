@@ -8,8 +8,7 @@ import { type DbxFirebaseDocumentStoreTwoWayKeyProvider, provideDbxFirebaseDocum
  */
 @Directive({
   selector: '[dbxFirebaseDocumentStoreTwoWayModelKeySource]',
-  providers: provideDbxFirebaseDocumentStoreTwoWayKeyProvider(DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective),
-  standalone: true
+  providers: provideDbxFirebaseDocumentStoreTwoWayKeyProvider(DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective)
 })
 export class DbxFirebaseDocumentStoreTwoWayModelKeySourceDirective implements DbxFirebaseDocumentStoreTwoWayKeyProvider {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective, { host: true });

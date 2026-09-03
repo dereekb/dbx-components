@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -56,9 +56,7 @@ function filesChangedEvent(file: File): DbxFileUploadFilesChangedEvent {
       <dbx-pdf-merge-editor-file-upload slotId="license" [config]="slotConfig()"></dbx-pdf-merge-editor-file-upload>
     </div>
   `,
-  standalone: true,
-  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxPdfMergeEditorStoreDirective, DbxPdfMergeEditorFileUploadComponent]
 })
 class TestHostComponent {
   readonly slotConfig = signal<Maybe<DbxPdfMergeEditorFileUploadConfig>>(undefined);
