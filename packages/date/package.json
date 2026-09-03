@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/date",
-  "version": "13.43.0",
+  "version": "14.0.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/model": "13.43.0",
-    "@dereekb/rxjs": "13.43.0",
-    "@dereekb/util": "13.43.0",
+    "@dereekb/model": "14.0.0",
+    "@dereekb/rxjs": "14.0.0",
+    "@dereekb/util": "14.0.0",
     "@vvo/tzdb": "^6.198.0",
     "arktype": "^2.2.0",
     "date-fns": "^4.1.0",
@@ -16,6 +16,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dereekb/rxjs": "13.43.0"
+    "@dereekb/rxjs": "14.0.0"
   }
 }

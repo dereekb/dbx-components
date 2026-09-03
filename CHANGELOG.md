@@ -1,3 +1,31 @@
+# [14.0.0](https://github.com/dereekb/dbx-components/compare/v13.43.0-dev...v14.0.0) (2026-09-03)
+
+### Bug Fixes
+
+- **demo:** cast doc-module encoded week literals ([878b14b5](https://github.com/dereekb/dbx-components/commit/878b14b544145338f99dadc9b810e424a8df1927))
+- **release:** render changelog with the conventional-changelog@8 writer ([9228ca9f](https://github.com/dereekb/dbx-components/commit/9228ca9fef4b4c21acc56d1c1b04aa45b552b997)), closes [#57](https://github.com/dereekb/dbx-components/issues/57)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([fda1d093](https://github.com/dereekb/dbx-components/commit/fda1d09325f0900877f211b6910e24b06d1017d1))
+
+### Features
+
+- dbx-components v14 ([#57](https://github.com/dereekb/dbx-components/issues/57)) ([be8ca5d8](https://github.com/dereekb/dbx-components/commit/be8ca5d807469920c45ddb758d34ade4debe505f)), closes [#57](https://github.com/dereekb/dbx-components/issues/57) [stripe-node#2619](https://github.com/stripe-node/issues/2619)
+- **formspace:** reopen and lock a submitted FormSpace ([7bb28186](https://github.com/dereekb/dbx-components/commit/7bb281866f2dbe1c256bfde0a9c9af783e83d08c))
+
+### BREAKING CHANGES
+
+- Stripe.TypedEventDataObject / Stripe.TypedEventData /
+  Stripe.TypedEvent are now StripeTypedEventDataObject / StripeTypedEventData /
+  StripeTypedEvent, exported from @dereekb/nestjs/stripe. The namespace-merged
+  names cannot be preserved -- v22 removed the ambient module they relied on.
+- the Firebase API app now builds as ESM. A downstream app must
+  set `"format": ["esm"]` on its build-base target and keep the generated
+  `"type": "module"`. Any dependency that is CommonJS-only must be reached through
+  a namespace-unwrap shim (see rrule.interop.ts / twilio.interop.ts) rather than a
+  named import.
+
 # [13.43.0](https://github.com/dereekb/dbx-components/compare/v13.42.0-dev...v13.43.0) (2026-09-01)
 
 

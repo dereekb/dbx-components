@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/dbx-cli/validate",
-  "version": "13.43.0",
+  "version": "14.0.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.43.0",
-    "@dereekb/util": "13.43.0",
+    "@dereekb/dbx-cli": "14.0.0",
+    "@dereekb/util": "14.0.0",
     "ts-morph": "^28.0.0"
   }
 }
