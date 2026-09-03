@@ -168,7 +168,7 @@ export class DocFormDateValueComponent {
                 max: addDays(new Date(), 14)
               },
               schedule: {
-                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
+                w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek,
                 d: [0, 1, 2, 3, 4, 5, 6]
               }
             };
