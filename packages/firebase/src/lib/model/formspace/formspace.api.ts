@@ -99,6 +99,29 @@ export interface SubmitFormSpaceResult {
   readonly processingTaskCreated: boolean;
 }
 
+// MARK: Reopen
+/**
+ * Parameters for reopening a submitted FormSpace back into an editable draft.
+ *
+ * No options: whether the space may be reopened is the type's policy plus the caller's `reopen` role, and
+ * neither is anything a client gets to say. The acting user is taken from the request, never the body,
+ * because it is what `rby` records.
+ *
+ * @dbxModelApiParams
+ */
+export interface ReopenFormSpaceParams extends TargetModelParams {}
+
+export const reopenFormSpaceParamsType = targetModelParamsType as Type<ReopenFormSpaceParams>;
+
+/**
+ * Parameters for locking a submitted FormSpace's submission immediately.
+ *
+ * @dbxModelApiParams
+ */
+export interface LockFormSpaceParams extends TargetModelParams {}
+
+export const lockFormSpaceParamsType = targetModelParamsType as Type<LockFormSpaceParams>;
+
 // MARK: Remove File
 /**
  * Parameters for removing one uploaded file from a FormSpace slot.
@@ -224,6 +247,8 @@ export type FormSpaceModelCrudFunctionsConfig = {
     update: {
       _: UpdateFormSpaceParams;
       submit: [SubmitFormSpaceParams, SubmitFormSpaceResult];
+      reopen: ReopenFormSpaceParams;
+      lock: LockFormSpaceParams;
       removeFile: RemoveFormSpaceFileParams;
     };
     delete: {
@@ -233,7 +258,7 @@ export type FormSpaceModelCrudFunctionsConfig = {
 };
 
 export const FORM_SPACE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<FormSpaceModelCrudFunctionsConfig, FormSpaceTypes> = {
-  formSpace: ['create:_', 'update:_,submit,removeFile' as any, 'delete:_']
+  formSpace: ['create:_', 'update:_,submit,reopen,lock,removeFile' as any, 'delete:_']
 };
 
 /**
@@ -250,6 +275,8 @@ export abstract class FormSpaceFunctions implements ModelFirebaseFunctionMap<For
     updateFormSpace: {
       update: ModelFirebaseCrudFunction<UpdateFormSpaceParams>;
       submit: ModelFirebaseCrudFunction<SubmitFormSpaceParams, SubmitFormSpaceResult>;
+      reopen: ModelFirebaseCrudFunction<ReopenFormSpaceParams>;
+      lock: ModelFirebaseCrudFunction<LockFormSpaceParams>;
       removeFile: ModelFirebaseCrudFunction<RemoveFormSpaceFileParams>;
     };
     deleteFormSpace: {

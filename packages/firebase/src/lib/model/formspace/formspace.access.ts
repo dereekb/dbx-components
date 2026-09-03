@@ -21,6 +21,13 @@ import { formSpaceFileSlotConfig } from './formspace.util';
  *
  * The distinction only has teeth on a SHARED space. On a single-user form every file was uploaded by the
  * one person who can reach the space, so `'space'` and `'uploader'` agree on every question.
+ *
+ * Nothing here reads the space's STATE — not `s`, not `sat`, not `eat`, not `ps`. That is deliberate and
+ * worth keeping true: submitting, expiring, reopening or locking a space must not silently change who can
+ * read the files already in it, or a downstream app reading a submitted space's attachments would start
+ * failing the moment somebody reopened it. Whether a file may be REMOVED is a different question, gated
+ * before any of this by {@link isFormSpaceEditable} — so a reopen re-enables removal without touching
+ * reads, which is exactly the intended asymmetry.
  */
 
 /**

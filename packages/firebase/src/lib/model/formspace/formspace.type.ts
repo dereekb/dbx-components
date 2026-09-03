@@ -160,6 +160,40 @@ export interface FormSpaceTypeConfig {
    * the sweep's inequality query.
    */
   readonly expiresIn?: Maybe<Milliseconds>;
+  // MARK: reopen
+  /**
+   * How long after EACH submission a space of this type may be reopened, returning it to an editable draft.
+   *
+   * THE MASTER SWITCH. When absent the type is never reopenable and submission stays the one-way door it
+   * has always been — which is what makes the whole reopen feature opt-in, and why no existing type can
+   * acquire resubmit semantics by accident.
+   *
+   * Distinct from {@link expiresIn}, which bounds the lifetime of the DRAFT. This bounds the lifetime of
+   * the SUBMISSION's mutability.
+   *
+   * Rolling by default: absent {@link reopenableUntil}, every submission grants a fresh window measured
+   * from its own `sat`.
+   */
+  readonly reopenableFor?: Maybe<Milliseconds>;
+  /**
+   * A hard ceiling on reopening, measured from the FIRST submission rather than the current one.
+   *
+   * Materialized onto the space as `lat` on its first submit and never moved, so repeated reopen/resubmit
+   * rounds cannot walk the deadline forward the way a purely rolling {@link reopenableFor} lets them. Use
+   * it when "this submission is final N hours after it was first made" has to be a wall-clock guarantee.
+   *
+   * Absent leaves {@link reopenableFor} rolling. Meaningless on its own: {@link reopenableFor} is what
+   * permits a reopen at all, and this only narrows it.
+   */
+  readonly reopenableUntil?: Maybe<Milliseconds>;
+  /**
+   * How many times a space of this type may be reopened. Counted against the space's monotonic `rc`.
+   *
+   * Absent leaves the count unbounded and the windows above the only limit — which is fine for a
+   * {@link reopenableUntil} ceiling, and worth setting deliberately for a purely rolling window, where a
+   * resubmit keeps earning a new one.
+   */
+  readonly maxReopens?: Maybe<number>;
 }
 
 /**

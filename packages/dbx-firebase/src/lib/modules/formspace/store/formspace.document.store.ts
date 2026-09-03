@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreDeleteFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
-import { AppFormSpaceTypeConfigService, type FormSpace, type FormSpaceData, type FormSpaceDocument, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFirestoreCollections, FormSpaceFunctions, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker, type FormSpaceTypeConfig, formSpaceFilesInSlot, formSpaceSlotStatus, formSpaceSubmitBlockers, isFormSpaceEditable } from '@dereekb/firebase';
+import { AppFormSpaceTypeConfigService, type FormSpace, type FormSpaceData, type FormSpaceDocument, type FormSpaceFile, type FormSpaceFileSlot, FormSpaceFirestoreCollections, FormSpaceFunctions, type FormSpaceSlotStatus, type FormSpaceSubmitBlocker, type FormSpaceTypeConfig, formSpaceFilesInSlot, formSpaceSlotStatus, formSpaceSubmitBlockers, isFormSpaceEditable, isFormSpaceFullyLocked, isFormSpaceReopenable } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type Observable, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 
@@ -43,6 +43,21 @@ export class FormSpaceDocumentStore extends AbstractDbxFirebaseDocumentStore<For
    */
   readonly updateFormSpace = firebaseDocumentStoreUpdateFunction(this, this.formSpaceFunctions.formSpace.updateFormSpace.update);
   readonly submitFormSpace = firebaseDocumentStoreUpdateFunction(this, this.formSpaceFunctions.formSpace.updateFormSpace.submit);
+
+  /**
+   * Returns a submitted space to an editable draft, if its type allows it and the window is still open.
+   *
+   * Gate a control on {@link isReopenable$} rather than on the state alone: whether a space may be reopened
+   * is the type's policy, and offering the action to a space the server will refuse is the one thing the
+   * predicate exists to prevent.
+   */
+  readonly reopenFormSpace = firebaseDocumentStoreUpdateFunction(this, this.formSpaceFunctions.formSpace.updateFormSpace.reopen);
+
+  /**
+   * Ends the reopen window immediately, making the submission final.
+   */
+  readonly lockFormSpace = firebaseDocumentStoreUpdateFunction(this, this.formSpaceFunctions.formSpace.updateFormSpace.lock);
+
   readonly removeFormSpaceFile = firebaseDocumentStoreUpdateFunction(this, this.formSpaceFunctions.formSpace.updateFormSpace.removeFile);
 
   readonly deleteFormSpace = firebaseDocumentStoreDeleteFunction(this, this.formSpaceFunctions.formSpace.deleteFormSpace.delete);
@@ -168,6 +183,39 @@ export class FormSpaceDocumentStore extends AbstractDbxFirebaseDocumentStore<For
    */
   readonly isSubmittable$: Observable<boolean> = combineLatest([this.isEditable$, this.isComplete$]).pipe(
     map(([isEditable, isComplete]) => isEditable && isComplete),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  // MARK: reopen
+  /**
+   * Whether the space may be reopened into an editable draft right now.
+   *
+   * Evaluated with the same `isFormSpaceReopenable()` the reopen action rejects on. FALSE while the answer
+   * is unknown — no type registry means no reopen policy to read — for the same reason `isComplete$` is:
+   * a disabled control is recoverable, an enabled one that fails against the server is not.
+   *
+   * Being the policy, it does not know about `ps === PROCESSING`, which the action refuses separately and
+   * transiently. A reopen offered during processing can still come back with
+   * `FORM_SPACE_PROCESSING_IN_PROGRESS`, and that is the right thing to surface — the user should try
+   * again, not be told their submission is final.
+   */
+  readonly isReopenable$: Observable<boolean> = combineLatest([this.currentData$, this.formSpaceTypeConfig$]).pipe(
+    map(([formSpace, config]) => (formSpace != null && config != null ? isFormSpaceReopenable({ formSpace, config }) : false)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether nothing further can be done to the space: neither editable nor reopenable.
+   *
+   * The predicate a "this is final" affordance hangs off, and deliberately not the inverse of
+   * {@link isEditable$} — a submitted space inside its reopen window is neither editable nor final.
+   * Undefined config resolves to the editable answer alone, so an app with no registry still distinguishes
+   * a live draft from a closed submission.
+   */
+  readonly isFullyLocked$: Observable<boolean> = combineLatest([this.currentData$, this.formSpaceTypeConfig$]).pipe(
+    map(([formSpace, config]) => (formSpace == null ? false : isFormSpaceFullyLocked({ formSpace, config: config ?? { formSpaceType: formSpace.t } }))),
     distinctUntilChanged(),
     shareReplay(1)
   );

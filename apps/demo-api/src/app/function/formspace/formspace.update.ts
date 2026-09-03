@@ -1,4 +1,4 @@
-import { type FirebaseAuthUserId, type RemoveFormSpaceFileParams, type SubmitFormSpaceParams, type SubmitFormSpaceResult, type UpdateFormSpaceParams, removeFormSpaceFileParamsType, submitFormSpaceParamsType, updateFormSpaceParamsType } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type LockFormSpaceParams, type RemoveFormSpaceFileParams, type ReopenFormSpaceParams, type SubmitFormSpaceParams, type SubmitFormSpaceResult, type UpdateFormSpaceParams, lockFormSpaceParamsType, removeFormSpaceFileParamsType, reopenFormSpaceParamsType, submitFormSpaceParamsType, updateFormSpaceParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
 import { type DemoUpdateModelFunction } from '../function.context';
 
@@ -39,6 +39,60 @@ export const formSpaceSubmit: DemoUpdateModelFunction<SubmitFormSpaceParams, Sub
     });
 
     return submitFormSpace(formSpaceDocument);
+  }
+});
+
+/**
+ * Reopens a submitted FormSpace back into an editable draft.
+ *
+ * Gated on `reopen` rather than `submit` or `update`: undoing the one-way door is not the same privilege as
+ * walking through it, and in a two-party flow the reviewer may hold this without holding either.
+ *
+ * The role only decides who may ASK. Whether this particular space is still reopenable is the type's
+ * policy, re-asserted inside the action's transaction — a role map has neither a clock nor the type
+ * registry to answer it with.
+ *
+ * The caller's uid comes from the request, never the body: it is what `rby` records.
+ */
+export const formSpaceReopen: DemoUpdateModelFunction<ReopenFormSpaceParams> = withApiDetails({
+  inputType: reopenFormSpaceParamsType,
+  fn: async (request) => {
+    const { nest, data } = request;
+    const uid = request.auth.uid as FirebaseAuthUserId;
+
+    const reopenFormSpace = await nest.formSpaceServerActions.reopenFormSpace(data);
+    const formSpaceDocument = await nest.useModel('formSpace', {
+      request,
+      key: data.key,
+      roles: 'reopen',
+      use: (x) => x.document
+    });
+
+    await reopenFormSpace(formSpaceDocument, { uid });
+  }
+});
+
+/**
+ * Locks a FormSpace's submission immediately, ending its reopen window early.
+ *
+ * Separate from `reopen` on purpose. Making a submission final is the opposite decision from undoing it,
+ * and the party who submitted should not automatically hold it over the party reviewing.
+ */
+export const formSpaceLock: DemoUpdateModelFunction<LockFormSpaceParams> = withApiDetails({
+  inputType: lockFormSpaceParamsType,
+  fn: async (request) => {
+    const { nest, data } = request;
+    const uid = request.auth.uid as FirebaseAuthUserId;
+
+    const lockFormSpace = await nest.formSpaceServerActions.lockFormSpace(data);
+    const formSpaceDocument = await nest.useModel('formSpace', {
+      request,
+      key: data.key,
+      roles: 'lock',
+      use: (x) => x.document
+    });
+
+    await lockFormSpace(formSpaceDocument, { uid });
   }
 });
 

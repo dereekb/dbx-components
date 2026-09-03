@@ -17,6 +17,7 @@ import {
   downloadStorageFileParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
+  lockFormSpaceParamsType,
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
@@ -24,6 +25,7 @@ import {
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
   removeFormSpaceFileParamsType,
+  reopenFormSpaceParamsType,
   resyncNotificationUserParamsType,
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
@@ -112,6 +114,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'data', typeText: 'Maybe<T>' }
     ]
   },
+  { model: 'formSpace', verb: 'update', specifier: 'lock', paramsTypeName: 'LockFormSpaceParams', paramsValidator: lockFormSpaceParamsType, groupName: 'FormSpace', sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts', paramsTypeDescription: "Parameters for locking a submitted FormSpace's submission immediately." },
   {
     model: 'formSpace',
     verb: 'update',
@@ -125,6 +128,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'slot', typeText: 'FormSpaceFileSlot', description: 'The slot holding the file.' },
       { name: 'storageFileId', typeText: 'Maybe<StorageFileId>', description: 'The StorageFile to remove.\n\nOptional only when the slot holds exactly one file: a folder slot with several files has no unambiguous\n"the" file, so omitting it there is an error rather than a guess.' }
     ]
+  },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: 'reopen',
+    paramsTypeName: 'ReopenFormSpaceParams',
+    paramsValidator: reopenFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: "Parameters for reopening a submitted FormSpace back into an editable draft.\n\nNo options: whether the space may be reopened is the type's policy plus the caller's `reopen` role, and\nneither is anything a client gets to say. The acting user is taken from the request, never the body,\nbecause it is what `rby` records."
   },
   {
     model: 'formSpace',
@@ -920,9 +933,15 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'pat', longName: 'processingAt', tsType: 'Maybe<Date>', optional: true, description: 'The date `ps` was last moved to PROCESSING. Used to detect a stuck task.' },
       { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Created at date.' },
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Updated at date. Moves on every content change.' },
-      { name: 'sat', longName: 'submittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was submitted, if it was. Its presence IS the lock.' },
+      { name: 'sat', longName: 'submittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the CURRENT submission was made, if the space is submitted. Its presence IS the lock.' },
+      { name: 'fsat', longName: 'firstSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was FIRST submitted, if it ever was.' },
       { name: 'cpat', longName: 'completedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date processing of the submission concluded, if it has.' },
-      { name: 'eat', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.' }
+      { name: 'eat', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.' },
+      { name: 'lat', longName: 'locksAt', tsType: 'Maybe<Date>', optional: true, description: 'The date reopening stops being possible — the instant the submission becomes FULLY LOCKED.' },
+      { name: 'lby', longName: 'lockedBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'The user who locked the submission early, when a caller did rather than the deadline passing.' },
+      { name: 'rc', longName: 'reopenCount', tsType: 'number', optional: false, description: 'Monotonic count of times this space has been REOPENED after a submission.' },
+      { name: 'rat', longName: 'reopenedAt', tsType: 'Maybe<Date>', optional: true, description: 'The date the space was last reopened, if it ever was.' },
+      { name: 'rby', longName: 'reopenedBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'The user who last reopened the space.' }
     ],
     read: 'owner',
     serviceFactory: { exportName: 'formSpaceFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

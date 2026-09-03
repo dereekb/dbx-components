@@ -5,6 +5,9 @@ import {
   FORM_SPACE_HAS_INVALID_FILES_ERROR_CODE,
   FORM_SPACE_NOT_EDITABLE_ERROR_CODE,
   FORM_SPACE_NOT_FOUND_ERROR_CODE,
+  FORM_SPACE_NOT_REOPENABLE_ERROR_CODE,
+  FORM_SPACE_NOT_SUBMITTED_ERROR_CODE,
+  FORM_SPACE_PROCESSING_IN_PROGRESS_ERROR_CODE,
   FORM_SPACE_REQUIRED_SLOT_MISSING_ERROR_CODE,
   FORM_SPACE_TYPE_MISMATCH_ERROR_CODE,
   FORM_SPACE_TYPE_NOT_REGISTERED_ERROR_CODE,
@@ -41,6 +44,45 @@ export function formSpaceNotEditableError() {
   return preconditionConflictError({
     message: `This FormSpace is no longer editable.`,
     code: FORM_SPACE_NOT_EDITABLE_ERROR_CODE
+  });
+}
+
+/**
+ * Creates an error indicating the FormSpace has never been submitted, so there is no submission to lock.
+ *
+ * @returns A precondition-conflict HttpsError with the FORM_SPACE_NOT_SUBMITTED error code.
+ */
+export function formSpaceNotSubmittedError() {
+  return preconditionConflictError({
+    message: `This FormSpace has not been submitted, so its submission cannot be locked.`,
+    code: FORM_SPACE_NOT_SUBMITTED_ERROR_CODE
+  });
+}
+
+/**
+ * Creates an error indicating the FormSpace's submission is final, so it cannot be reopened.
+ *
+ * @returns A precondition-conflict HttpsError with the FORM_SPACE_NOT_REOPENABLE error code.
+ */
+export function formSpaceNotReopenableError() {
+  return preconditionConflictError({
+    message: `This FormSpace's submission is final and can no longer be reopened.`,
+    code: FORM_SPACE_NOT_REOPENABLE_ERROR_CODE
+  });
+}
+
+/**
+ * Creates an error indicating the FormSpace's submission is being processed right now.
+ *
+ * Deliberately separate from {@link formSpaceNotReopenableError}: this one clears on its own, and telling
+ * a caller their submission is final when the processor is simply mid-run would be wrong.
+ *
+ * @returns A precondition-conflict HttpsError with the FORM_SPACE_PROCESSING_IN_PROGRESS error code.
+ */
+export function formSpaceProcessingInProgressError() {
+  return preconditionConflictError({
+    message: `This FormSpace's submission is currently being processed. Try again once it finishes.`,
+    code: FORM_SPACE_PROCESSING_IN_PROGRESS_ERROR_CODE
   });
 }
 

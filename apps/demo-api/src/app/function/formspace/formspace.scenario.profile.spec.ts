@@ -31,6 +31,17 @@ demoApiFunctionContextFactory((f) => {
         await f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(processingNotificationKey).update({ sat: new Date() });
       }
 
+      /**
+       * Runs one submitted space's task to completion: `demo_test`'s single checkpoint, plus the cleanup
+       * step the subtask framework adds after the flow ends.
+       */
+      async function processSubmission(processingNotificationKey: NotificationKey) {
+        for (let i = 0; i < 3; i += 1) {
+          await clearProcessingTaskThrottle(processingNotificationKey);
+          await runNotificationTasks();
+        }
+      }
+
       demoFormSpaceContext({ f, u, formSpaceType: DEMO_TEST_FORM_SPACE_TYPE, data: { title: 'A Test' } as DemoTestFormSpaceData }, (fsp) => {
         describe('the cover slot', () => {
           it('should be owned by the calling user, not by a target model', async () => {
@@ -209,6 +220,71 @@ demoApiFunctionContextFactory((f) => {
             expect(processed.ps).toBe(FormSpaceProcessingState.SUCCESS);
             expect(processed.cpat).toBeDefined();
             expect(processed.pn).toBeUndefined();
+          });
+        });
+      });
+
+      describe('reopen and resubmission', () => {
+        demoFormSpaceContext({ f, u, formSpaceType: DEMO_TEST_FORM_SPACE_TYPE, data: { title: 'A Test' } as DemoTestFormSpaceData }, (fsp) => {
+          beforeEach(async () => {
+            await fsp.uploadFileToSlot({ slot: DEMO_TEST_FORM_SPACE_COVER_SLOT, filename: 'cover.pdf', content: 'a cover', contentType: 'application/pdf' });
+            await fsp.initializeUploads();
+          });
+
+          it('should run the submission handler AGAIN on a resubmission, against a task of its own', async () => {
+            const firstSubmit = await fsp.submit();
+            await processSubmission(firstSubmit.processingNotificationKey as NotificationKey);
+
+            const processed = await assertSnapshotData(fsp.document);
+            expect(processed.ps).toBe(FormSpaceProcessingState.SUCCESS);
+
+            await fsp.reopen();
+
+            const reopened = await assertSnapshotData(fsp.document);
+            expect(reopened.s).toBe(FormSpaceState.DRAFT);
+            expect(reopened.rc).toBe(1);
+            // cleared: the attempt this handle pointed at is over
+            expect(reopened.pn).toBeUndefined();
+            expect(reopened.cpat).toBeUndefined();
+
+            const updateParams: DemoTestFormSpaceData = { title: 'Revised' };
+            const update = await f.formSpaceServerActions.updateFormSpace({ key: fsp.documentKey, data: updateParams });
+            await update(fsp.document);
+
+            const secondSubmit = await fsp.submit();
+
+            // THE REGRESSION PIN. A unique task's document id is derived and permanent, and a completed
+            // task is only marked done — it lingers until the cleanup sweep. Keyed by the space alone, this
+            // resubmission would resolve to the FINISHED task of the first one, be left exactly as it was
+            // found (`processingTaskCreated: false`), and sit in QUEUED_FOR_PROCESSING pointing at a dead
+            // document forever. Keying by the attempt is what makes this a new task.
+            expect(secondSubmit.processingTaskCreated).toBe(true);
+            expect(secondSubmit.processingNotificationKey).not.toBe(firstSubmit.processingNotificationKey);
+
+            await processSubmission(secondSubmit.processingNotificationKey as NotificationKey);
+
+            const reprocessed = await assertSnapshotData(fsp.document);
+            expect(reprocessed.ps).toBe(FormSpaceProcessingState.SUCCESS);
+            expect(reprocessed.cpat).toBeDefined();
+            expect(reprocessed.pn).toBeUndefined();
+            expect(reprocessed.d).toEqual({ title: 'Revised' });
+            // preserved across both rounds — it is the record the reopen exists in order not to destroy
+            expect(reprocessed.fsat).toBeDefined();
+          });
+
+          it('should fence off the superseded attempt when a space is reopened before its task runs', async () => {
+            const submitResult = await fsp.submit();
+            await fsp.reopen();
+
+            // the first attempt's task is still queued and will be picked up. Left unfenced it would
+            // process the reopened draft and its cleanup would write ps / cpat / pn over it.
+            await processSubmission(submitResult.processingNotificationKey as NotificationKey);
+
+            const reopened = await assertSnapshotData(fsp.document);
+            expect(reopened.s).toBe(FormSpaceState.DRAFT);
+            expect(reopened.ps).toBe(FormSpaceProcessingState.INIT_OR_NONE);
+            expect(reopened.cpat).toBeUndefined();
+            expect(reopened.pn).toBeUndefined();
           });
         });
       });

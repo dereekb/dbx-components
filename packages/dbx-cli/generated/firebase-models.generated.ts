@@ -284,7 +284,15 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         converter: 'optionalFirestoreDate()',
         tsType: 'Maybe<Date>',
         optional: true,
-        description: 'The date the space was submitted, if it was. Its presence IS the lock.'
+        description: 'The date the CURRENT submission was made, if the space is submitted. Its presence IS the lock.'
+      },
+      {
+        name: 'fsat',
+        longName: 'firstSubmittedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date the space was FIRST submitted, if it ever was.'
       },
       {
         name: 'cpat',
@@ -301,6 +309,46 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         tsType: 'Maybe<Date>',
         optional: true,
         description: 'The date this space becomes eligible for the expiration sweep, if it expires at all.'
+      },
+      {
+        name: 'lat',
+        longName: 'locksAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date reopening stops being possible — the instant the submission becomes FULLY LOCKED.'
+      },
+      {
+        name: 'lby',
+        longName: 'lockedBy',
+        converter: 'optionalFirestoreUID()',
+        tsType: 'Maybe<FirebaseAuthUserId>',
+        optional: true,
+        description: 'The user who locked the submission early, when a caller did rather than the deadline passing.'
+      },
+      {
+        name: 'rc',
+        longName: 'reopenCount',
+        converter: 'firestoreNumber({ default: 0 })',
+        tsType: 'number',
+        optional: false,
+        description: 'Monotonic count of times this space has been REOPENED after a submission.'
+      },
+      {
+        name: 'rat',
+        longName: 'reopenedAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The date the space was last reopened, if it ever was.'
+      },
+      {
+        name: 'rby',
+        longName: 'reopenedBy',
+        converter: 'optionalFirestoreUID()',
+        tsType: 'Maybe<FirebaseAuthUserId>',
+        optional: true,
+        description: 'The user who last reopened the space.'
       }
     ],
     enums: [
@@ -357,7 +405,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Processing state of a submitted {@link FormSpace}.'
       }
     ],
-    detectionHints: ['t', 'n', 'ps', 'm', 'uc', 'f', 'pn', 'pat', 'uat', 'sat', 'cpat', 'eat'],
+    detectionHints: ['t', 'n', 'ps', 'm', 'uc', 'f', 'pn', 'pat', 'uat', 'sat', 'fsat', 'cpat', 'eat', 'lat', 'lby', 'rc', 'rat', 'rby'],
     description: 'A type-registered container for a client-side form: its in-progress JSON, its uploads, and its submission state.',
     modelGroup: 'FormSpace',
     collectionKind: 'root',

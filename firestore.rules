@@ -162,7 +162,13 @@ service cloud.firestore {
       // no list use case — because "my outstanding forms" is the screen the model exists for; it is scoped
       // by the SAME ownership predicate, so an unscoped list still fails.
       // Writes stay server-only via the default deny: every state transition carries invariants (the
-      // submit lock, the "eat" clear, the monotonic upload counter) that a client write would bypass.
+      // submit lock, the "eat" clear, the monotonic upload and reopen counters, and the "lat" deadline that
+      // only ever moves EARLIER) that a client write would bypass. Reopening and locking are callables for
+      // that reason and are gated by the model's role map, so there is deliberately nothing to add here.
+      //
+      // A downstream app wanting the "still reopenable" predicate in its OWN rules cannot read it off "lat":
+      // firestoreDate persists an ISO8601 string and rules cannot format request.time into one to compare
+      // against. It has to denormalize a unix-seconds mirror onto its own model and compare that.
       //
       // A guestbook's SHARED space is reachable by everyone who signed that guestbook. Only `get` is
       // widened: a list rule is evaluated per candidate document, so the exists() would be one billed read
