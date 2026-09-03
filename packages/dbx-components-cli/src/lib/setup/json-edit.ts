@@ -8,7 +8,7 @@
  * - nx.json: `workspaceLayout`, `targetDefaults` (build-base / build / vitest), `tui`, `release`
  * - firebase.json: `functions`, `firestore`, `emulators`
  * - tsconfig.base.json: `compilerOptions`
- * - api tsconfig.json: `compilerOptions.esModuleInterop = false`
+ * - api tsconfig.json: `compilerOptions.esModuleInterop = false`, `references` += `tsconfig.spec.json`
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -257,14 +257,31 @@ export function applyTsconfigBaseEdits(tsconfig: JsonObject): JsonObject {
 }
 
 /**
- * Applies the api tsconfig.json `esModuleInterop: false` edit (script line 610).
+ * The api spec tsconfig, referenced from the generated solution-style `tsconfig.json`.
+ */
+const API_SPEC_TSCONFIG_REFERENCE_PATH = './tsconfig.spec.json';
+
+/**
+ * Applies the api tsconfig.json `esModuleInterop: false` edit (script line 610) and adds the
+ * `tsconfig.spec.json` project reference.
  *
  * @param tsconfig - The parsed api tsconfig.json.
- * @returns A new tsconfig object with `esModuleInterop` disabled.
+ * @returns A new tsconfig object with `esModuleInterop` disabled and the spec project referenced.
  */
 export function applyApiTsconfigEdits(tsconfig: JsonObject): JsonObject {
+  const references = (tsconfig['references'] as Maybe<readonly JsonObject[]>) ?? [];
+  const hasSpecReference = references.some((reference) => reference['path'] === API_SPEC_TSCONFIG_REFERENCE_PATH);
+
   return {
     ...tsconfig,
+    // The api app is generated with `--unitTestRunner=none`, so nothing adds the spec project to
+    // the solution-style tsconfig's `references` — but vite resolves a file's compiler options by
+    // walking those references and matching the file against each referenced project's
+    // `include`/`exclude`. `tsconfig.app.json` excludes `src/test/**` and `**/*.spec.ts`, so
+    // without this every spec file and test fixture resolved to NO tsconfig at all, dropping
+    // `experimentalDecorators` — vitest then emitted the fixture's `@Module(…)` untransformed and
+    // every api suite died on `SyntaxError: Invalid or unexpected token`. Matches `apps/demo-api`.
+    references: hasSpecReference ? references : [...references, { path: API_SPEC_TSCONFIG_REFERENCE_PATH }],
     // TypeScript 6 reports `esModuleInterop: false` as a deprecation *error* (TS5107) unless the
     // opt-out is declared, which fails the api build outright. `ignoreDeprecations` keeps the
     // existing behaviour; the option itself stops functioning in TypeScript 7 and has to go then —

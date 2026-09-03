@@ -104,6 +104,22 @@ describe('applyTsconfigBaseEdits / applyApiTsconfigEdits', () => {
     expect((result['compilerOptions'] as JsonObject)['esModuleInterop']).toBe(false);
     expect((result['compilerOptions'] as JsonObject)['strict']).toBe(true);
   });
+
+  it('adds the spec project reference to the api tsconfig', () => {
+    const result = applyApiTsconfigEdits({ references: [{ path: './tsconfig.app.json' }] });
+    expect(result['references']).toEqual([{ path: './tsconfig.app.json' }, { path: './tsconfig.spec.json' }]);
+  });
+
+  it('adds the spec project reference when the api tsconfig has no references', () => {
+    const result = applyApiTsconfigEdits({});
+    expect(result['references']).toEqual([{ path: './tsconfig.spec.json' }]);
+  });
+
+  it('does not duplicate an existing spec project reference', () => {
+    const references = [{ path: './tsconfig.app.json' }, { path: './tsconfig.spec.json' }];
+    const result = applyApiTsconfigEdits({ references });
+    expect(result['references']).toEqual(references);
+  });
 });
 
 describe('editJsonFile', () => {
