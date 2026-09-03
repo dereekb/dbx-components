@@ -207,6 +207,31 @@ export function removeVerdaccioFromPackageJson(pkg: JsonObject): JsonObject {
 }
 
 /**
+ * The `format` / `format-check` npm scripts that front the oxfmt formatter.
+ * Nx's built-in `nx format:write` / `nx format:check` commands are hardwired to
+ * prettier and cannot be pointed at another formatter, so a workspace on oxfmt
+ * needs its own entry points. Mirrors the `format` / `format-check` nx targets
+ * in the root `project.template.json`.
+ */
+export const OXFMT_PACKAGE_JSON_SCRIPTS: Readonly<Record<string, string>> = {
+  format: 'oxfmt --write .',
+  'format-check': 'oxfmt --check .'
+};
+
+/**
+ * Adds the oxfmt `format` / `format-check` scripts to the root package.json,
+ * replacing any prettier-era entries under the same names. Pure.
+ *
+ * @param pkg - The parsed package.json.
+ * @returns A new package.json object with the format scripts declared.
+ */
+export function addOxfmtScriptsToPackageJson(pkg: JsonObject): JsonObject {
+  const scripts = pkg['scripts'];
+  const current: JsonObject = scripts != null && typeof scripts === 'object' ? (scripts as JsonObject) : {};
+  return { ...pkg, scripts: { ...current, ...OXFMT_PACKAGE_JSON_SCRIPTS } };
+}
+
+/**
  * Applies the firebase.json `functions`/`firestore`/`emulators` edits (script
  * lines 340-346). The project-id + dist-folder placeholders are handled
  * separately by the per-file token pass.

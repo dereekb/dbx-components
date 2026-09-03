@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deriveSetupNaming } from './naming.js';
 import {
+  addOxfmtScriptsToPackageJson,
   alignDbxPeerDependencies,
   applyApiTsconfigEdits,
   applyFirebaseJsonEdits,
@@ -61,6 +62,19 @@ describe('removeVerdaccioFromPackageJson', () => {
   it('is a no-op when no verdaccio config is present', () => {
     const result = removeVerdaccioFromPackageJson({ devDependencies: { '@nx/js': '23.0.0' } });
     expect(result['devDependencies']).toEqual({ '@nx/js': '23.0.0' });
+  });
+});
+
+describe('addOxfmtScriptsToPackageJson', () => {
+  it('adds the format / format-check scripts while keeping the existing ones', () => {
+    const result = addOxfmtScriptsToPackageJson({ scripts: { prepare: 'husky', build: 'nx build' } });
+    expect(result['scripts']).toEqual({ prepare: 'husky', build: 'nx build', format: 'oxfmt --write .', 'format-check': 'oxfmt --check .' });
+  });
+
+  it('replaces prettier-era format scripts and works with no scripts block', () => {
+    const replaced = addOxfmtScriptsToPackageJson({ scripts: { format: 'prettier --write .' } });
+    expect((replaced['scripts'] as JsonObject)['format']).toBe('oxfmt --write .');
+    expect(addOxfmtScriptsToPackageJson({ name: 'x' })['scripts']).toEqual({ format: 'oxfmt --write .', 'format-check': 'oxfmt --check .' });
   });
 });
 

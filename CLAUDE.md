@@ -21,3 +21,11 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
+
+# Formatting
+
+This workspace formats with [oxfmt](https://oxc.rs/docs/guide/usage/formatter), not prettier.
+
+- `npm run format` / `npm run format-check` (equivalently `npx nx run workspace:format` / `workspace:format-check`) — config lives in `.oxfmtrc.json`.
+- `nx format`, `nx format:write`, and `nx format:check` DO NOT work: they are Nx built-ins hardwired to prettier, which is no longer installed, and Nx exposes no way to point them at another formatter. They fail with "Prettier is not installed."
+- Staged files are formatted automatically by the husky `pre-commit` hook.
