@@ -27,6 +27,16 @@ const NX_SUBCOMMANDS: ReadonlySet<string> = new Set(['run', 'run-many', 'affecte
  */
 const INTERPOLATION_PATTERN = /[$`{}()*?]|\\\\/;
 
+/**
+ * Quote characters stripped from the head of a token.
+ */
+const TOKEN_LEADING_CHARS = `"'`;
+
+/**
+ * Quote and separator characters stripped from the tail of a token.
+ */
+const TOKEN_TRAILING_CHARS = `"',;`;
+
 const PROJECT_TOKEN_PATTERN = /^[a-zA-Z0-9@][a-zA-Z0-9@/_.-]*$/;
 const TARGET_TOKEN_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/;
 
@@ -51,6 +61,28 @@ function isResolvable(token: string): boolean {
 }
 
 /**
+ * Strips surrounding quotes and trailing separators from one raw token.
+ *
+ * Scanned by index rather than replaced with `/["',;]+$/`: an end-anchored
+ * quantifier retries from every start position, which is quadratic on a token
+ * of repeated quote characters.
+ *
+ * @param raw - One whitespace-delimited token.
+ * @returns The token without its leading quotes or trailing quotes/separators.
+ */
+function trimTokenPunctuation(raw: string): string {
+  let start = 0;
+  let end = raw.length;
+  while (start < end && TOKEN_LEADING_CHARS.includes(raw[start])) {
+    start += 1;
+  }
+  while (end > start && TOKEN_TRAILING_CHARS.includes(raw[end - 1])) {
+    end -= 1;
+  }
+  return raw.slice(start, end);
+}
+
+/**
  * Splits a command line into tokens, dropping quote characters. Good enough
  * for the shapes that appear in `project.json` commands and CI steps; a
  * genuinely ambiguous line simply yields tokens the resolvability check
@@ -62,7 +94,7 @@ function isResolvable(token: string): boolean {
 function tokenize(text: string): readonly string[] {
   const out: string[] = [];
   for (const raw of text.split(/\s+/)) {
-    const token = raw.replace(/^["']+/, '').replace(/["',;]+$/, '');
+    const token = trimTokenPunctuation(raw);
     if (token.length > 0) {
       out.push(token);
     }
@@ -117,13 +149,13 @@ export interface ScanTargetReferencesInput {
   /**
    * The target whose command this is, when the text came from a `project.json`.
    */
-  readonly sourceTarget?: string | undefined;
+  readonly sourceTarget?: string;
   /**
    * Line number to stamp on every reference found. Omit when scanning a
    * single command string pulled out of parsed JSON (the report then reads
    * as file-level).
    */
-  readonly line?: number | undefined;
+  readonly line?: number;
 }
 
 /**

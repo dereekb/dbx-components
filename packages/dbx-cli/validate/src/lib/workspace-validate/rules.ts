@@ -123,7 +123,7 @@ function isExemptTargetName(config: { readonly targetName: string; readonly nx: 
 function substituteOutputTokens(config: { readonly entry: string; readonly options: Readonly<Record<string, unknown>>; readonly projectRoot: string }): string | undefined {
   const { entry, options, projectRoot } = config;
   let unresolved = false;
-  const withOptions = entry.replaceAll(/\{options\.([A-Za-z0-9_]+)\}/g, (_match, key: string) => {
+  const withOptions = entry.replaceAll(/\{options\.(\w+)\}/g, (_match, key: string) => {
     const value = options[key];
     let replacement: string;
     if (typeof value === 'string') {
@@ -472,11 +472,13 @@ function checkDeployLaneSymmetry(config: { readonly inspection: WorkspaceInspect
     if (lanes === undefined) {
       continue;
     }
-    for (const lane of Array.from(allLanes).sort()) {
+    for (const lane of Array.from(allLanes).sort((a, b) => a.localeCompare(b))) {
       if (!lanes.has(lane)) {
         pushViolation(violations, {
           code: 'WORKSPACE_DEPLOY_LANE_ASYMMETRIC',
-          message: `\`${project.name}\` deploys [${Array.from(lanes).sort().join(', ')}] but has no \`${DEPLOY_TARGET_PREFIX}${lane}\`, while a sibling project deploys \`${lane}\`.`,
+          message: `\`${project.name}\` deploys [${Array.from(lanes)
+            .sort((a, b) => a.localeCompare(b))
+            .join(', ')}] but has no \`${DEPLOY_TARGET_PREFIX}${lane}\`, while a sibling project deploys \`${lane}\`.`,
           severity: 'warning',
           group,
           project: project.name,

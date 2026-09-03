@@ -246,7 +246,7 @@ async function collectEnvironmentFiles(config: { readonly workspaceRoot: string;
       collected.push(join(relativeDir, entry.name));
     }
   }
-  return collected.sort();
+  return collected.sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -305,7 +305,7 @@ async function collectReferencedEnvironmentFiles(config: { readonly workspaceRoo
     }
   }
 
-  return Array.from(referenced).sort();
+  return Array.from(referenced).sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -437,7 +437,7 @@ async function collectExtraReferenceSources(workspaceRoot: string): Promise<read
       collected.push(entry.name);
     }
   }
-  return collected.sort();
+  return collected.sort((a, b) => a.localeCompare(b));
 }
 
 /**
@@ -485,7 +485,7 @@ export async function inspectWorkspace(input: InspectWorkspaceInput): Promise<Wo
   const projects: InspectedProject[] = [];
   const references: InspectedTargetReference[] = [];
 
-  for (const configFile of [...configPaths].sort()) {
+  for (const configFile of [...configPaths].sort((a, b) => a.localeCompare(b))) {
     const project = await inspectProject({ workspaceRoot, configFile });
     if (project === undefined) {
       continue;

@@ -15,7 +15,7 @@ export interface ValidateWorkspaceInput {
   /**
    * Rule groups to run. Defaults to every group.
    */
-  readonly groups?: readonly WorkspaceRuleGroup[] | undefined;
+  readonly groups?: readonly WorkspaceRuleGroup[];
 }
 
 /**
