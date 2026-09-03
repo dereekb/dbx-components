@@ -28,6 +28,14 @@ const { releasePublish, releaseVersion } = require('nx/release');
 
 const CHANGELOG_PATH = 'CHANGELOG.md';
 
+// The angular preset's header pattern predates the "!" breaking-change marker, so a "feat!: ..." header
+// does not parse at all - the commit gets no type/scope/subject, lands in an untitled changelog group and
+// does not count toward the bump. Accept the marker and let the parser derive a BREAKING CHANGE note from it.
+const PARSER_OPTIONS = {
+  headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+  breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
+};
+
 // Type labels for the changelog (angular preset discards anything that isn't feat/fix/perf/revert by default)
 const TYPE_LABELS = {
   feat: 'Features',
@@ -118,7 +126,7 @@ if (argv.version) {
 } else {
   console.log('Analyzing commits with conventional-recommended-bump...\n');
 
-  const bumper = new Bumper(process.cwd()).tag(fromTag).loadPreset('angular');
+  const bumper = new Bumper(process.cwd()).tag(fromTag).loadPreset('angular').config({ parser: PARSER_OPTIONS });
   const recommendation = await bumper.bump();
 
   if (!recommendation.releaseType) {
@@ -153,7 +161,7 @@ const changelogChunks = [];
 
 for await (const chunk of new ConventionalChangelog(process.cwd())
   .loadPreset('angular')
-  .commits({ from: fromTag })
+  .commits({ from: fromTag }, PARSER_OPTIONS)
   .context({
     version: nextVersion,
     host: 'https://github.com',
@@ -162,9 +170,6 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
     linkReferences: true
   })
   .writer({
-    // Use "- " instead of "* " for list items
-    commitPartial:
-      '- {{#if scope}}**{{scope}}:** {{/if}}{{#if subject}}{{subject}}{{else}}{{header}}{{/if}} ({{#if @root.linkReferences}}[{{shortHash}}]({{@root.host}}/{{@root.owner}}/{{@root.repository}}/commit/{{hash}}){{else}}{{shortHash}}{{/if}}){{#if references}}, closes{{#each references}} {{#if @root.linkReferences}}[{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}]({{@root.host}}/{{#if this.owner}}{{this.owner}}{{else}}{{@root.owner}}{{/if}}/{{#if this.repository}}{{this.repository}}{{else}}{{@root.repository}}{{/if}}/issues/{{this.issue}}){{else}}{{#if this.owner}}{{this.owner}}/{{/if}}{{this.repository}}#{{this.issue}}{{/if}}{{/each}}{{/if}}\n',
     // Override the angular transform to include all commit types, not just feat/fix/perf/revert
     transform: (commit) => {
       const notes = commit.notes.map((note) => ({
@@ -189,7 +194,9 @@ for await (const chunk of new ConventionalChangelog(process.cwd())
   changelogChunks.push(chunk);
 }
 
-const newEntry = changelogChunks.join('');
+// conventional-changelog@8 renders its templates in JS rather than handlebars, and the list helper the
+// presets build on hardcodes "* " bullets, so rewrite them to the "- " bullets this changelog has always used.
+const newEntry = changelogChunks.join('').replace(/^(\s*)\* /gm, '$1- ');
 
 if (verbose || dryRun) {
   console.log('--- Changelog entry ---');
