@@ -22,7 +22,7 @@ export interface DbxForgePresetSearchFormFieldsConfig {
  * Creates a forge field array for a simple search form with a single text input.
  *
  * @param config - Optional search field configuration with label and placeholder.
- * @returns The forge field defs for the search form
+ * @returns The forge field defs for the search form.
  */
 export function dbxForgePresetSearchFormFields(config: Maybe<DbxForgePresetSearchFormFieldsConfig>) {
   const { key = 'search', label, placeholder = 'Search', props } = config ?? {};
