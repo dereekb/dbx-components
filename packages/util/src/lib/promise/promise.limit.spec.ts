@@ -137,7 +137,7 @@ describe('burstPromiseRateLimiter()', () => {
       const waitTimeA = limiter.getNextWaitTime();
       expect(waitTimeA).toBeLessThanOrEqual(1000);
 
-      await Promise.all([a]);
+      await a;
     });
 
     it('should limit the wait time starting later if startLimitAt is positive', async () => {

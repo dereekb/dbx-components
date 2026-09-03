@@ -355,7 +355,7 @@ function cliVersionOutput(input: CliVersionOutputInput): string {
   let result = version;
 
   if (wantsVersion) {
-    const drift = cliBuildDriftDescription(inspectCliBuildDrift({ ...(manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion }) }));
+    const drift = cliBuildDriftDescription(inspectCliBuildDrift(manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion }));
     result = drift == null ? version : `${version}\n${drift}`;
   }
 

@@ -99,7 +99,7 @@ function isSelfReference(importPath, ownPkgName) {
 /**
  * Tokeniser-style pass that walks the source once and erases:
  *   - line comments (`// ...` to end of line)
- *   - block comments (`/* ... *​/`)
+ *   - block comments (`/* ... *\/`)
  *   - the contents of template literals (preserves outer backticks so later
  *     passes can still see expression boundaries)
  * Single- and double-quoted string literals are passed through unchanged so

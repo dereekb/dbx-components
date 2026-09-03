@@ -386,7 +386,7 @@ function applyArchetypePostPass(models) {
       }
       const existing = m.archetypeAxesBySlug?.['model-tree-node'] || {};
       const nextSlugAxes = { ...existing, treeRole: role };
-      m.archetypeAxesBySlug = { ...(m.archetypeAxesBySlug || {}), 'model-tree-node': nextSlugAxes };
+      m.archetypeAxesBySlug = { ...m.archetypeAxesBySlug, 'model-tree-node': nextSlugAxes };
     }
     if (Array.isArray(m.aggregatesFrom) && m.aggregatesFrom.length > 0 && m.modelGroup) {
       let allSibling = true;

@@ -85,7 +85,18 @@ export default [
       '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
       '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
       '@typescript-eslint/no-empty-interface': 'off', // disabled: empty interfaces are used intentionally for extensibility
-      'no-useless-assignment': 'off' // disabled: conflicts with the workspace's dereekb-util/require-single-return pattern (default-init then conditionally reassign)
+      'no-useless-assignment': 'off', // disabled: conflicts with the workspace's dereekb-util/require-single-return pattern (default-init then conditionally reassign)
+      // Catches `(a?.b).c` — the optional chain short-circuits to undefined and the member access then
+      // throws. Core ESLint rule, no plugin needed. Added after an oxlint `correctness` sweep found 8
+      // such sites (all in specs) that this config was not looking for; see the `adopt-the-nx-oxlint-plugin`
+      // plan for why the sweep was done by hand rather than by adopting oxlint.
+      //
+      // MEASURED LIMIT (2026-09-03): this rule reads the ESTree shape and does NOT see through a TS type
+      // assertion, so `(a?.b as T).c` and `(<T>a?.b).c` — the form all 8 of those sites actually used —
+      // escape it. Only the un-asserted `(a?.b).c` is caught here; the `(a?.b)!.c` form is covered
+      // separately by @typescript-eslint/no-non-null-asserted-optional-chain. oxlint's implementation of
+      // this same rule catches all four forms, which is the one concrete coverage gap favouring oxlint.
+      'no-unsafe-optional-chaining': 'error'
     }
   },
   {
@@ -234,8 +245,10 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
-      'no-unused-vars': 'off',
-      'no-extra-semi': 'error'
+      'no-unused-vars': 'off'
+      // `no-extra-semi: 'error'` used to sit here and was dead: the formatter block at the end of this
+      // array turns it off for `**/*.{ts,...}`, which matches spec files and — being later — wins in flat config.
+      // oxfmt normalizes semicolons anyway, so the rule has nothing left to catch.
     }
   },
   {
@@ -294,7 +307,7 @@ export default [
     }
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     plugins: { unicorn: unicornPlugin },
     rules: {
       'unicorn/prefer-array-find': 'warn',
