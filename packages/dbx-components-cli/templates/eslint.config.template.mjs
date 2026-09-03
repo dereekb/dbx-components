@@ -1,7 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
 import importPlugin from 'eslint-plugin-import-x';
-import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
@@ -218,7 +217,19 @@ export default [
       ]
     }
   },
-  prettierConfig,
+  {
+    // The formatter (oxfmt) owns all formatting, so the two core ESLint rules that
+    // fight formatter-produced output are off. This replaces `eslint-config-prettier`:
+    // of the 358 rules that config disables, these are the only two this workspace
+    // ever had enabled, so the 358-rule dependency was doing exactly this much work.
+    files: ['**/*.{ts,tsx,cts,mts,js,jsx,cjs,mjs}'],
+    rules: {
+      // Conflicts with formatter line-breaking decisions.
+      'no-unexpected-multiline': 'off',
+      // The formatter normalizes semicolons; the rule flags its output.
+      'no-extra-semi': 'off'
+    }
+  },
   // nestjs: require @Inject() on constructor params (emitDecoratorMetadata is disabled)
   {
     files: ['**/*.ts'],

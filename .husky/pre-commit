@@ -1,6 +1,5 @@
 #!/bin/sh
 # Format staged files with oxfmt (https://oxc.rs/docs/guide/usage/formatter).
-# Replaces the previous `pretty-quick --staged` prettier hook.
 #
 # Only added/copied/modified/renamed paths are considered; deleted paths are
 # skipped so the hook does not resurrect them. Files oxfmt does not handle are

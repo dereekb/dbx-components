@@ -26,6 +26,8 @@
 
 This workspace formats with [oxfmt](https://oxc.rs/docs/guide/usage/formatter), not prettier.
 
-- `npm run format` / `npm run format-check` (equivalently `npx nx run workspace:format` / `workspace:format-check`) — config lives in `.oxfmtrc.json`.
-- `nx format`, `nx format:write`, and `nx format:check` DO NOT work: they are Nx built-ins hardwired to prettier, which is no longer installed, and Nx exposes no way to point them at another formatter. They fail with "Prettier is not installed."
+- Use `npm run format` / `npm run format-check` (equivalently `npx nx run workspace:format` / `workspace:format-check`). Config lives in `.oxfmtrc.json`.
+- `nx format` / `nx format:write` / `nx format:check` DO NOT work on the currently pinned Nx (23.1.3) — that version's `format` command imports prettier unconditionally and fails with "Prettier is not installed." Nx *does* support oxfmt in later versions ([docs](https://nx.dev/docs/reference/code-formatting)), selected by detection: a root oxfmt config file wins, so `.oxfmtrc.json` already makes this workspace resolve to oxfmt once Nx is upgraded. Until then, use the commands above.
 - Staged files are formatted automatically by the husky `pre-commit` hook.
+- ESLint does not depend on `eslint-config-prettier`. The two rules that conflict with formatter output (`no-unexpected-multiline`, `no-extra-semi`) are disabled explicitly at the end of `eslint.config.mjs`.
+- Suppress formatting for a statement with `// oxfmt-ignore` (oxfmt also still honors `// prettier-ignore`).

@@ -100,7 +100,7 @@ export const ROOT_MODULE: SetupModule = {
     const nx = versions.core.nx;
 
     // husky / commitlint / oxfmt (script line 451) + husky init (457)
-    await shell.run('npm', ['install', '-D', 'husky', dep('oxfmt'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-config-prettier'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], {
+    await shell.run('npm', ['install', '-D', 'husky', dep('oxfmt'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], {
       cwd: workspaceRoot,
       dryRun
     });

@@ -76,7 +76,6 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   yargs: '^18.0.0',
   'eslint-plugin-import-x': '^4.16.2',
   'eslint-plugin-unused-imports': '4.4.1',
-  'eslint-config-prettier': '10.1.8',
   'eslint-plugin-jsdoc': '^62.9.0',
   'eslint-plugin-sonarjs': '^4.0.3',
   'eslint-plugin-unicorn': '^64.0.0',

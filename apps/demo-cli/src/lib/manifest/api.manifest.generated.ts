@@ -62,7 +62,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '13.43.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.0.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -74,13 +74,19 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'RotateCalendarIcsResult',
     groupName: 'Calendar',
     sourceFile: 'packages/firebase/src/lib/model/calendar/calendar.api.ts',
-    description: "Rotates the calendar's public ICS link, revoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's pointer + url, then re-syncs\nso a fresh StorageFile — and therefore a fresh url — is minted. Existing subscribers to the old url\nbreak by design; that is the revocation.",
+    description:
+      "Rotates the calendar's public ICS link, revoking the previous one.\n\nFlags the current ICS StorageFile for delete and clears the calendar's pointer + url, then re-syncs\nso a fresh StorageFile — and therefore a fresh url — is minted. Existing subscribers to the old url\nbreak by design; that is the revocation.",
     paramsTypeDescription: "Parameters for rotating a Calendar's published ICS link.",
     resultTypeDescription: "Result of rotating a Calendar's published ICS link.",
     resultFields: [
       { name: 'revokedIcsStorageFile', typeText: 'boolean', description: 'True if an existing ICS StorageFile was flagged for delete, revoking the url that named it.\n\nFalse when the calendar had never published one, in which case the rotation is a no-op that still\nqueues a first publish.' },
       { name: 'createdIcsStorageFile', typeText: 'boolean', description: 'True if the immediate re-sync minted the replacement ICS StorageFile.' },
-      { name: 'publishedIcs', typeText: 'boolean', description: 'True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.\n\nFalse means only that the publish did not complete INLINE — the replacement is still queued and the\nregular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this\nas "is the new link ready to show yet", never as a failure.' }
+      {
+        name: 'publishedIcs',
+        typeText: 'boolean',
+        description:
+          'True if the expedited publish finished, meaning the replacement url is already live in `Calendar.iu`.\n\nFalse means only that the publish did not complete INLINE — the replacement is still queued and the\nregular sweep will publish it. Rotation itself has already succeeded either way, so a caller treats this\nas "is the new link ready to show yet", never as a failure.'
+      }
     ]
   },
   {
@@ -99,7 +105,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'data', typeText: 'Maybe<T>', description: 'Initial form data.' }
     ]
   },
-  { model: 'formSpace', verb: 'delete', specifier: '_', paramsTypeName: 'DeleteFormSpaceParams', paramsValidator: deleteFormSpaceParamsType, groupName: 'FormSpace', sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts', paramsTypeDescription: 'Parameters for deleting a FormSpace and flagging its uploaded files for deletion.' },
+  {
+    model: 'formSpace',
+    verb: 'delete',
+    specifier: '_',
+    paramsTypeName: 'DeleteFormSpaceParams',
+    paramsValidator: deleteFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: 'Parameters for deleting a FormSpace and flagging its uploaded files for deletion.'
+  },
   {
     model: 'formSpace',
     verb: 'update',
@@ -114,7 +129,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'data', typeText: 'Maybe<T>' }
     ]
   },
-  { model: 'formSpace', verb: 'update', specifier: 'lock', paramsTypeName: 'LockFormSpaceParams', paramsValidator: lockFormSpaceParamsType, groupName: 'FormSpace', sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts', paramsTypeDescription: "Parameters for locking a submitted FormSpace's submission immediately." },
+  {
+    model: 'formSpace',
+    verb: 'update',
+    specifier: 'lock',
+    paramsTypeName: 'LockFormSpaceParams',
+    paramsValidator: lockFormSpaceParamsType,
+    groupName: 'FormSpace',
+    sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
+    paramsTypeDescription: "Parameters for locking a submitted FormSpace's submission immediately."
+  },
   {
     model: 'formSpace',
     verb: 'update',
@@ -123,7 +147,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: removeFormSpaceFileParamsType,
     groupName: 'FormSpace',
     sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
-    paramsTypeDescription: "Parameters for removing one uploaded file from a FormSpace slot.\n\nThe file is dropped from the space's `f` array and its StorageFile is FLAGGED for deletion, never deleted\ninline — the StorageFile delete sweep owns removing the object, and a second code path that removed it\nhere is how an orphaned object gets left behind.",
+    paramsTypeDescription:
+      "Parameters for removing one uploaded file from a FormSpace slot.\n\nThe file is dropped from the space's `f` array and its StorageFile is FLAGGED for deletion, never deleted\ninline — the StorageFile delete sweep owns removing the object, and a second code path that removed it\nhere is how an orphaned object gets left behind.",
     paramsFields: [
       { name: 'slot', typeText: 'FormSpaceFileSlot', description: 'The slot holding the file.' },
       { name: 'storageFileId', typeText: 'Maybe<StorageFileId>', description: 'The StorageFile to remove.\n\nOptional only when the slot holds exactly one file: a folder slot with several files has no unambiguous\n"the" file, so omitting it there is an error rather than a guess.' }
@@ -137,7 +162,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: reopenFormSpaceParamsType,
     groupName: 'FormSpace',
     sourceFile: 'packages/firebase/src/lib/model/formspace/formspace.api.ts',
-    paramsTypeDescription: "Parameters for reopening a submitted FormSpace back into an editable draft.\n\nNo options: whether the space may be reopened is the type's policy plus the caller's `reopen` role, and\nneither is anything a client gets to say. The acting user is taken from the request, never the body,\nbecause it is what `rby` records."
+    paramsTypeDescription:
+      "Parameters for reopening a submitted FormSpace back into an editable draft.\n\nNo options: whether the space may be reopened is the type's policy plus the caller's `reopen` role, and\nneither is anything a client gets to say. The acting user is taken from the request, never the body,\nbecause it is what `rby` records."
   },
   {
     model: 'formSpace',
@@ -169,8 +195,26 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'cby', typeText: 'Maybe<ProfileId>' }
     ]
   },
-  { model: 'guestbook', verb: 'query', paramsTypeName: 'QueryGuestbooksParams', resultTypeName: 'OnCallQueryModelResult', groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Query parameters for searching guestbooks.', paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all guestbooks.' }] },
-  { model: 'guestbook', verb: 'update', specifier: 'publish', paramsTypeName: 'PublishGuestbookParams', paramsValidator: publishGuestbookParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.' },
+  {
+    model: 'guestbook',
+    verb: 'query',
+    paramsTypeName: 'QueryGuestbooksParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Query parameters for searching guestbooks.',
+    paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all guestbooks.' }]
+  },
+  {
+    model: 'guestbook',
+    verb: 'update',
+    specifier: 'publish',
+    paramsTypeName: 'PublishGuestbookParams',
+    paramsValidator: publishGuestbookParamsType,
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.'
+  },
   { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
   { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
   {
@@ -182,7 +226,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'AllPublishedGuestbookEntriesResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
-    paramsTypeDescription: 'Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.\n\nServer-side equivalent of the client-side\n{@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates\nthe cross-guestbook query internally and returns one aggregate response. Use\nthis when the caller wants a single round trip instead of driving pagination.',
+    paramsTypeDescription:
+      'Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.\n\nServer-side equivalent of the client-side\n{@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates\nthe cross-guestbook query internally and returns one aggregate response. Use\nthis when the caller wants a single round trip instead of driving pagination.',
     paramsFields: [{ name: 'limit', typeText: 'Maybe<number>', description: 'Cap the number of entries returned. The server enforces an additional hard upper bound.' }],
     resultTypeDescription: 'Result of an all-published-entries invoke.',
     resultFields: [
@@ -191,7 +236,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'hitLimit', typeText: 'boolean' }
     ],
     mcpResultTypeName: 'AllPublishedGuestbookEntriesMcpResult',
-    mcpResultTypeDescription: "MCP-mapped projection of {@link AllPublishedGuestbookEntriesResult}.\n\nReturned to MCP clients via the handler's `mapSuccessfulResult` mapper — drops the potentially\nlarge `entries` array (an LLM rarely needs every full entry document) down to the aggregate\ncounts, demonstrating how MCP access can strip unhelpful information from a callModel result.",
+    mcpResultTypeDescription:
+      "MCP-mapped projection of {@link AllPublishedGuestbookEntriesResult}.\n\nReturned to MCP clients via the handler's `mapSuccessfulResult` mapper — drops the potentially\nlarge `entries` array (an LLM rarely needs every full entry document) down to the aggregate\ncounts, demonstrating how MCP access can strip unhelpful information from a callModel result.",
     mcpResultFields: [
       { name: 'count', typeText: 'number', description: 'Number of published entries gathered.' },
       { name: 'hitLimit', typeText: 'boolean', description: 'Whether the server-side hard cap was hit before the collection group was exhausted.' }
@@ -301,7 +347,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'onSendSuccessResult', typeText: 'Maybe<SendNotificationResultOnSendCompleteResult>' }
     ]
   },
-  { model: 'notificationBox', verb: 'update', specifier: '_', paramsTypeName: 'UpdateNotificationBoxParams', paramsValidator: updateNotificationBoxParamsType, groupName: 'NotificationBox', sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts', paramsTypeDescription: 'Used for updating the NotificationBox.' },
+  {
+    model: 'notificationBox',
+    verb: 'update',
+    specifier: '_',
+    paramsTypeName: 'UpdateNotificationBoxParams',
+    paramsValidator: updateNotificationBoxParamsType,
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription: 'Used for updating the NotificationBox.'
+  },
   {
     model: 'notificationBox',
     verb: 'update',
@@ -344,10 +399,15 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'NotificationUserHealthCheckResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
-    paramsTypeDescription: "Used for running a notification delivery health check for a user.\n\nThe check always inspects the user's configuration, their notification box subscriptions, and whatever\nread-only diagnostics each configured delivery method's send service offers. Actually dispatching a\ntest message is opt-in via `sendProbe`, since that delivers real mail/SMS to the user.",
+    paramsTypeDescription:
+      "Used for running a notification delivery health check for a user.\n\nThe check always inspects the user's configuration, their notification box subscriptions, and whatever\nread-only diagnostics each configured delivery method's send service offers. Actually dispatching a\ntest message is opt-in via `sendProbe`, since that delivers real mail/SMS to the user.",
     paramsFields: [
       { name: 'methods', typeText: 'Maybe<NotificationDeliveryMethod[]>', description: 'Restrict the check to these delivery methods. Defaults to every method the server has a send\nservice configured for.' },
-      { name: 'sendProbe', typeText: 'Maybe<boolean>', description: 'Dispatch a real test message through each checked method that supports probing.\n\nDefaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still\npending when the check returns and is resolved by a later {@link verifyPendingProbesOnly} run.' },
+      {
+        name: 'sendProbe',
+        typeText: 'Maybe<boolean>',
+        description: 'Dispatch a real test message through each checked method that supports probing.\n\nDefaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still\npending when the check returns and is resolved by a later {@link verifyPendingProbesOnly} run.'
+      },
       {
         name: 'verifyPendingProbesOnly',
         typeText: 'Maybe<boolean>',
@@ -355,7 +415,11 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
           "Only resolve probes left pending by the previous check, skipping the configuration, history, and\nprovider diagnostics.\n\nDefaults to false. This is the POLL that settles an in-flight test message, and it is deliberately\ncheap enough to be called repeatedly: it consults a provider only for a method that actually has a\nprobe in flight, and touches nothing else. It answers to its own short window rather than the run\nwindow, and advances the stored check's `vat` rather than its `at`, so polling a test message never\nconsumes the user's allowance for running the check itself."
       },
       { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>', description: "The notification template type to evaluate per-template configuration against.\n\nDefaults to the app's default template type." },
-      { name: 'skipSubscriptionChecks', typeText: 'Maybe<boolean>', description: "Skip inspecting the user's notification box subscriptions.\n\nDefaults to false. Skipping avoids a document read per subscription, at the cost of not detecting\na subscription that is broken, still being set up, or out of sync with the user's settings." },
+      {
+        name: 'skipSubscriptionChecks',
+        typeText: 'Maybe<boolean>',
+        description: "Skip inspecting the user's notification box subscriptions.\n\nDefaults to false. Skipping avoids a document read per subscription, at the cost of not detecting\na subscription that is broken, still being set up, or out of sync with the user's settings."
+      },
       {
         name: 'force',
         typeText: 'Maybe<boolean>',
@@ -396,7 +460,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' }
     ]
   },
-  { model: 'notificationUser', verb: 'update', specifier: 'resync', paramsTypeName: 'ResyncNotificationUserParams', paramsValidator: resyncNotificationUserParamsType, resultTypeName: 'ResyncNotificationUserResult', groupName: 'NotificationBox', sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts', resultFields: [{ name: 'notificationBoxesUpdated', typeText: 'number' }] },
+  {
+    model: 'notificationUser',
+    verb: 'update',
+    specifier: 'resync',
+    paramsTypeName: 'ResyncNotificationUserParams',
+    paramsValidator: resyncNotificationUserParamsType,
+    resultTypeName: 'ResyncNotificationUserResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    resultFields: [{ name: 'notificationBoxesUpdated', typeText: 'number' }]
+  },
   {
     model: 'oidcEntry',
     verb: 'create',
@@ -406,15 +480,25 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'CreateOidcClientResult',
     groupName: 'Oidc',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
-    paramsTypeDescription: 'Parameters for registering a new OAuth client for the target entity.\n\nIf no target model is provided, assumes the current user.\n\nThe server generates `client_id` and `client_secret` and creates the adapter entry.\n\nExtends {@link UpdateOidcClientFieldParams} with `token_endpoint_auth_method` which is immutable after creation.',
+    paramsTypeDescription:
+      'Parameters for registering a new OAuth client for the target entity.\n\nIf no target model is provided, assumes the current user.\n\nThe server generates `client_id` and `client_secret` and creates the adapter entry.\n\nExtends {@link UpdateOidcClientFieldParams} with `token_endpoint_auth_method` which is immutable after creation.',
     paramsFields: [
       { name: 'token_endpoint_auth_method', typeText: 'OidcTokenEndpointAuthMethod' },
-      { name: 'jwks_uri', typeText: 'WebsiteUrlWithPrefix', description: "URL where the client's public JSON Web Key Set can be fetched.\n\nUsed with `private_key_jwt` authentication so the provider can retrieve\nthe client's public keys to verify `client_assertion` JWTs.\nThe client manages key rotation at this URL independently." }
+      {
+        name: 'jwks_uri',
+        typeText: 'WebsiteUrlWithPrefix',
+        description: "URL where the client's public JSON Web Key Set can be fetched.\n\nUsed with `private_key_jwt` authentication so the provider can retrieve\nthe client's public keys to verify `client_assertion` JWTs.\nThe client manages key rotation at this URL independently."
+      }
     ],
     resultTypeDescription: 'Result of creating a new OAuth client.\n\nIncludes the generated `client_secret` in plaintext — this is the only time\nit is returned to the caller.',
     resultFields: [
       { name: 'client_id', typeText: 'OidcEntryClientId' },
-      { name: 'client_secret', typeText: 'string', description: 'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the\nsecret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never\nhave a secret to return.' }
+      {
+        name: 'client_secret',
+        typeText: 'string',
+        description:
+          'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the\nsecret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never\nhave a secret to return.'
+      }
     ]
   },
   { model: 'oidcEntry', verb: 'delete', specifier: 'client', paramsTypeName: 'DeleteOidcClientParams', paramsValidator: deleteOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for revoking/deleting an OAuth client.' },
@@ -426,9 +510,19 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: deleteOidcTokenParamsType,
     groupName: 'Oidc',
     sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
-    paramsTypeDescription: "Parameters for revoking a user's own OIDC token entry.\n\nThe target {@link OidcEntry} must be of type `Grant` and have its `uid`\nmatching the authenticated user. Revoking a grant cascades through\noidc-provider's grantable models (`AccessToken`, `RefreshToken`,\n`AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`),\ndeleting all entries that share the grant id."
+    paramsTypeDescription:
+      "Parameters for revoking a user's own OIDC token entry.\n\nThe target {@link OidcEntry} must be of type `Grant` and have its `uid`\nmatching the authenticated user. Revoking a grant cascades through\noidc-provider's grantable models (`AccessToken`, `RefreshToken`,\n`AuthorizationCode`, `DeviceCode`, `BackchannelAuthenticationRequest`),\ndeleting all entries that share the grant id."
   },
-  { model: 'oidcEntry', verb: 'update', specifier: 'client', paramsTypeName: 'UpdateOidcClientParams', paramsValidator: updateOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.' },
+  {
+    model: 'oidcEntry',
+    verb: 'update',
+    specifier: 'client',
+    paramsTypeName: 'UpdateOidcClientParams',
+    paramsValidator: updateOidcClientParamsType,
+    groupName: 'Oidc',
+    sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts',
+    paramsTypeDescription: 'Parameters for updating an existing OAuth client.\n\nUses {@link UpdateOidcClientFieldParams} — `token_endpoint_auth_method` is immutable.'
+  },
   { model: 'oidcEntry', verb: 'update', specifier: 'rotateClientSecret', paramsTypeName: 'RotateOidcClientSecretParams', paramsValidator: rotateOidcClientSecretParamsType, resultTypeName: 'RotateOidcClientSecretResult', groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts' },
   {
     model: 'openRouterPrompt',
@@ -437,7 +531,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'OnCallQueryModelResult',
     groupName: 'OpenRouterPrompt',
     sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
-    paramsTypeDescription: 'Parameters for querying {@link OpenRouterPrompt}s.\n\nThe standard query operation rather than a bespoke list endpoint: it inherits `limit` and\n`cursorDocumentKey` pagination that every client and the callModel MCP already know how to drive,\nand returns the stored documents rather than a hand-maintained projection of them.',
+    paramsTypeDescription:
+      'Parameters for querying {@link OpenRouterPrompt}s.\n\nThe standard query operation rather than a bespoke list endpoint: it inherits `limit` and\n`cursorDocumentKey` pagination that every client and the callModel MCP already know how to drive,\nand returns the stored documents rather than a hand-maintained projection of them.',
     paramsFields: [{ name: 'state', typeText: 'Maybe<OpenRouterPromptState>', description: 'Restrict to one lifecycle state. Omit to page through every prompt.\n\nThe only filter axis, deliberately — see {@link openRouterPromptsWithStateQuery}.' }]
   },
   {
@@ -490,7 +585,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'UpdateOpenRouterPromptVersionResult',
     groupName: 'OpenRouterPrompt',
     sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
-    paramsTypeDescription: 'Parameters for updating the latest {@link OpenRouterPromptVersion} of a prompt.\n\nOnly what a version SAYS is editable, and only while the version is the latest one. Creating the\nnext version locks this one, and a locked version is refused — see {@link OpenRouterPromptVersion}\nfor why. The version number, its creation date and its lock are not caller-writable.',
+    paramsTypeDescription:
+      'Parameters for updating the latest {@link OpenRouterPromptVersion} of a prompt.\n\nOnly what a version SAYS is editable, and only while the version is the latest one. Creating the\nnext version locks this one, and a locked version is refused — see {@link OpenRouterPromptVersion}\nfor why. The version number, its creation date and its lock are not caller-writable.',
     paramsFields: [
       { name: 'instructions', typeText: 'Maybe<string>', description: 'System prompt.' },
       { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
@@ -498,7 +594,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'notes', typeText: 'Maybe<string>', description: 'Why the version says what it says.' }
     ],
     resultTypeDescription: 'Result of updating a version.',
-    resultFields: [{ name: 'warnings', typeText: 'string[]', description: 'Config problems that did not prevent the edit from being written.\n\nReturned for the same reason the create returns them: an unpinned PDF engine or an unpinned\nprovider produces a wrong answer rather than an error, so an edit that introduces one has to say so.' }]
+    resultFields: [
+      {
+        name: 'warnings',
+        typeText: 'string[]',
+        description: 'Config problems that did not prevent the edit from being written.\n\nReturned for the same reason the create returns them: an unpinned PDF engine or an unpinned\nprovider produces a wrong answer rather than an error, so an edit that introduces one has to say so.'
+      }
+    ]
   },
   {
     model: 'profile',
@@ -543,7 +645,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
     description: 'Adds a test event to the current user\'s profile calendar, creating the\ncalendar (`cal/pr_<uid>`) on the first call.\n\nEvery write flags the calendar for sync, so the hourly sweep republishes\nits ".ics" without any further action from the caller.',
-    paramsTypeDescription: "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and\nthere is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its\nown transaction and merges the library's templates.",
+    paramsTypeDescription:
+      "Params for adding a test event to the current user's profile calendar.\n\nThe worked example of the caller-owned Calendar write: the Calendar's only callable is `rotateIcs`, and\nthere is deliberately no Calendar EVENT api, so the profile's own action loads `cal/pr_<uid>` inside its\nown transaction and merges the library's templates.",
     paramsFields: [
       { name: 'name', typeText: 'Maybe<string>', description: 'Display name of the event. Defaults to a generated name.' },
       { name: 'startsAt', typeText: 'Maybe<Date>', description: 'Instant the event starts at. Defaults to now.' },
@@ -566,7 +669,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'expediteSend', typeText: 'Maybe<boolean>', description: 'When true, the notification is sent immediately via the expedite service\nrather than waiting for the regular send window.' }
     ]
   },
-  { model: 'profile', verb: 'update', specifier: 'onboard', paramsTypeName: 'FinishOnboardingProfileParams', paramsValidator: finishOnboardingProfileParamsType, resultTypeName: 'boolean', groupName: 'Profile', sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts', description: 'Marks onboarding complete for the current user.\n\nInitializes the profile document if it does not exist, then grants the\n`onboarded` and `tos-signed` auth roles. Returns `true` on success.' },
+  {
+    model: 'profile',
+    verb: 'update',
+    specifier: 'onboard',
+    paramsTypeName: 'FinishOnboardingProfileParams',
+    paramsValidator: finishOnboardingProfileParamsType,
+    resultTypeName: 'boolean',
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: 'Marks onboarding complete for the current user.\n\nInitializes the profile document if it does not exist, then grants the\n`onboarded` and `tos-signed` auth roles. Returns `true` on success.'
+  },
   {
     model: 'profile',
     verb: 'update',
@@ -576,7 +689,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
     description: 'Initiates or completes a password reset for the current user.\n\nSet `requestReset: true` to start a new reset (generates a temporary\ncode and sends an email). Provide `oobCode` + `newPassword` to\ncomplete the reset by verifying the code and setting the new password.',
-    paramsTypeDescription: "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `oobCode` and `newPassword` to complete the reset by verifying the code and setting the new password.",
+    paramsTypeDescription:
+      "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `oobCode` and `newPassword` to complete the reset by verifying the code and setting the new password.",
     paramsFields: [
       { name: 'requestReset', typeText: 'Maybe<boolean>', description: 'When true, initiates a new password reset and sends the reset email.' },
       { name: 'email', typeText: 'Maybe<string>', description: "Email address identifying the target user for a logged-out forgot-password request.\nOnly consulted when the caller has no authenticated user context; an authenticated\ncaller's `auth.uid` always takes precedence." },
@@ -596,7 +710,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsTypeDescription: "Params for changing the current user's profile username.\n\nUsernames are normalized to lowercase server-side and must be unique across\nall profiles.",
     paramsFields: [{ name: 'username', typeText: 'string', description: 'Desired username. 1-30 characters; case-insensitive and unique. The server\nlowercases the value before persisting and rejects collisions with the\n`usernameAlreadyTaken` error.' }]
   },
-  { model: 'storageFile', verb: 'create', specifier: '_', paramsTypeName: 'CreateStorageFileParams', paramsValidator: createStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsTypeDescription: 'Parameters for directly creating a new StorageFile document (no upload initialization).\n\nTypically used server-side or for testing. Validated with {@link createStorageFileParamsType}.' },
+  {
+    model: 'storageFile',
+    verb: 'create',
+    specifier: '_',
+    paramsTypeName: 'CreateStorageFileParams',
+    paramsValidator: createStorageFileParamsType,
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for directly creating a new StorageFile document (no upload initialization).\n\nTypically used server-side or for testing. Validated with {@link createStorageFileParamsType}.'
+  },
   {
     model: 'storageFile',
     verb: 'create',
@@ -611,7 +734,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'maxFilesToInitialize', typeText: 'Maybe<number>' },
       { name: 'folderPath', typeText: 'Maybe<StorageSlashPath>' },
       { name: 'overrideUploadsFolderPath', typeText: 'Maybe<StorageSlashPath>' },
-      { name: 'expediteProcessing', typeText: 'Maybe<boolean>', description: 'Whether to expedite processing of each initialized file that ends up queued for it.\n\nThe same option {@link InitializeStorageFileFromUploadParams} already offers for a single file. Without\nit a file initialized by this sweep waits for the next `processAllQueuedStorageFiles` pass, which is a\nwhole scheduling tick of latency for a purpose whose processing the uploader is waiting on.' }
+      {
+        name: 'expediteProcessing',
+        typeText: 'Maybe<boolean>',
+        description:
+          'Whether to expedite processing of each initialized file that ends up queued for it.\n\nThe same option {@link InitializeStorageFileFromUploadParams} already offers for a single file. Without\nit a file initialized by this sweep waits for the next `processAllQueuedStorageFiles` pass, which is a\nwhole scheduling tick of latency for a purpose whose processing the uploader is waiting on.'
+      }
     ],
     resultTypeDescription: 'Result of batch upload initialization, reporting visit and success/failure counts.',
     resultFields: [
@@ -628,7 +756,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: initializeStorageFileFromUploadParamsType,
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: 'Parameters for initializing a single StorageFile from an uploaded file at a specific storage path.\n\nThe file is run through the upload type determination pipeline and, if matched,\ncreates a corresponding StorageFile document. Validated with {@link initializeStorageFileFromUploadParamsType}.',
+    paramsTypeDescription:
+      'Parameters for initializing a single StorageFile from an uploaded file at a specific storage path.\n\nThe file is run through the upload type determination pipeline and, if matched,\ncreates a corresponding StorageFile document. Validated with {@link initializeStorageFileFromUploadParamsType}.',
     paramsFields: [
       { name: 'bucketId', typeText: 'Maybe<StorageBucketId>' },
       { name: 'pathString', typeText: 'StorageSlashPath' },
@@ -644,16 +773,26 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'CreateStorageFileSignedUploadUrlResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: "Parameters for creating a short-lived signed PUT URL for a StorageFile upload.\n\nThe resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME\ntype, and file size and lands the bytes inside the authenticated caller's\n`/uploads/u/{uid}/...` namespace. Once uploaded, the existing\n`StorageFileInitializeFromUploadService` flow picks the file up and creates\nthe matching `StorageFile` document.",
+    paramsTypeDescription:
+      "Parameters for creating a short-lived signed PUT URL for a StorageFile upload.\n\nThe resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME\ntype, and file size and lands the bytes inside the authenticated caller's\n`/uploads/u/{uid}/...` namespace. Once uploaded, the existing\n`StorageFileInitializeFromUploadService` flow picks the file up and creates\nthe matching `StorageFile` document.",
     paramsFields: [
       { name: 'purpose', typeText: 'StorageFilePurpose', description: "The {@link StorageFilePurpose} to upload as. Must be supported by the\napp's signed-upload-url policy registry. The chosen policy decides where\nthe file lands and which content-types/sizes are allowed." },
       { name: 'contentType', typeText: 'ContentTypeMimeType', description: "The MIME type the client intends to PUT. Validated against the policy's\n`allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a\ndifferent `Content-Type`." },
-      { name: 'filename', typeText: 'Maybe<SlashPathFile>', description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars." },
+      {
+        name: 'filename',
+        typeText: 'Maybe<SlashPathFile>',
+        description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars."
+      },
       { name: 'fileSizeBytes', typeText: 'number', description: "Client-declared size in bytes for the upload. Validated against the\npolicy's `maxFileSizeBytes` cap. The storage rules independently enforce\nthe same cap via `request.resource.size`." },
-      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}\nwhen omitted.' },
+      {
+        name: 'expiresInMs',
+        typeText: 'Maybe<Milliseconds>',
+        description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}\nwhen omitted.'
+      },
       { name: 'scope', typeText: 'Maybe<StorageFileUploadScope>', description: 'The model, and optionally the slot within it, this upload belongs to. Required when the resolved\npolicy sets `requiresScopeInput: true` (e.g. a FormSpace upload, which is keyed by space and slot\nrather than by the uid alone).' }
     ],
-    resultTypeDescription: 'Result of creating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.\n\n`modelKeys` is intentionally empty — minting the URL does not create a\nStorageFile document; the document is created later by the upload-complete\npipeline.',
+    resultTypeDescription:
+      'Result of creating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.\n\n`modelKeys` is intentionally empty — minting the URL does not create a\nStorageFile document; the document is created later by the upload-complete\npipeline.',
     resultFields: [
       { name: 'modelKeys', typeText: '[]' },
       { name: 'uploadUrl', typeText: 'string', description: 'Short-lived, content-type-pinned PUT URL.' },
@@ -692,7 +831,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'DownloadMultipleStorageFilesResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: 'Parameters for batch-downloading multiple StorageFiles.\n\nTop-level {@link DownloadStorageFileOptions} serve as defaults for all files.\nEach item in `files` can override per-file options (except `asAdmin`, which is root-level only).\nValidated with {@link downloadMultipleStorageFilesParamsType}.',
+    paramsTypeDescription:
+      'Parameters for batch-downloading multiple StorageFiles.\n\nTop-level {@link DownloadStorageFileOptions} serve as defaults for all files.\nEach item in `files` can override per-file options (except `asAdmin`, which is root-level only).\nValidated with {@link downloadMultipleStorageFilesParamsType}.',
     paramsFields: [
       { name: 'files', typeText: 'DownloadMultipleStorageFilesFileParams[]' },
       { name: 'throwOnFirstError', typeText: 'Maybe<boolean>', description: 'When true, throws on the first download failure instead of collecting it in the errors array.' }
@@ -712,7 +852,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'ReadStorageFileMetadataResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: "Parameters for reading the underlying Cloud Storage object metadata of a single StorageFile.\n\nUnlike {@link DownloadStorageFileParams}, no signed URL is minted — only the object's\n{@link StorageMetadata} (size, md5Hash, generation, content headers, custom metadata, etc.) is returned.\n`asAdmin` only selects the read role used for permission gating. Validated with {@link readStorageFileMetadataParamsType}.",
+    paramsTypeDescription:
+      "Parameters for reading the underlying Cloud Storage object metadata of a single StorageFile.\n\nUnlike {@link DownloadStorageFileParams}, no signed URL is minted — only the object's\n{@link StorageMetadata} (size, md5Hash, generation, content headers, custom metadata, etc.) is returned.\n`asAdmin` only selects the read role used for permission gating. Validated with {@link readStorageFileMetadataParamsType}.",
     paramsFields: [{ name: 'asAdmin', typeText: 'Maybe<boolean>' }],
     resultTypeDescription: "Result of reading a StorageFile's underlying Cloud Storage object metadata.\n\nWhen the underlying object does not exist, `exists` is false and `metadata` is omitted\ninstead of the call throwing — useful for polling whether an upload has landed.",
     resultFields: [
@@ -756,7 +897,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Runs the first step of the processing task inline instead of waiting for the scheduled task runner.' },
       { name: 'checkRetryProcessing', typeText: 'Maybe<boolean>', description: 'Checks an in-flight `PROCESSING` task immediately, instead of waiting for it to age past the\nstuck-check throttle.' },
-      { name: 'forceRestartProcessing', typeText: 'Maybe<boolean>', description: "Abandons the file's existing processing task and begins a new one, clearing the completed\ncheckpoints so the flow runs again from the start. For a `PROCESSING` file this is only applied\nonce the retry check runs, so pair it with `checkRetryProcessing` to force a restart while the\nexisting task is still within the stuck-check throttle." },
+      {
+        name: 'forceRestartProcessing',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Abandons the file's existing processing task and begins a new one, clearing the completed\ncheckpoints so the flow runs again from the start. For a `PROCESSING` file this is only applied\nonce the retry check runs, so pair it with `checkRetryProcessing` to force a restart while the\nexisting task is still within the stuck-check throttle."
+      },
       { name: 'processAgainIfSuccessful', typeText: 'Maybe<boolean>', description: 'Allows processing a file that has already finished processing and is in the `SUCCESS` state.' }
     ],
     resultFields: [
@@ -779,7 +925,16 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'storageFilesGroupsUpdated', typeText: 'number' }
     ]
   },
-  { model: 'storageFileGroup', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileGroupParams', paramsValidator: updateStorageFileGroupParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'entries', typeText: 'Maybe<UpdateStorageFileGroupEntryParams[]>' }] },
+  {
+    model: 'storageFileGroup',
+    verb: 'update',
+    specifier: '_',
+    paramsTypeName: 'UpdateStorageFileGroupParams',
+    paramsValidator: updateStorageFileGroupParamsType,
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsFields: [{ name: 'entries', typeText: 'Maybe<UpdateStorageFileGroupEntryParams[]>' }]
+  },
   {
     model: 'storageFileGroup',
     verb: 'update',
@@ -814,7 +969,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: createUserExternalConnectionParamsType,
     groupName: 'UserExternalConnection',
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
-    description: 'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
+    description:
+      'Creates the calling user\'s connection document.\n\nEvery other client-reachable operation asserts a role against this document, so it must exist\nbefore a user can begin a connect. Creating it is its own call — rather than a side effect of\nthe first connect — so that "may this user have external connections at all?" is decided in\none place instead of being folded into the OAuth handoff.\n\nThrows when the document already exists.',
     paramsTypeDescription: "Parameters for creating the calling user's connection document.\n\nDeliberately empty: the document is keyed by uid, so there is nothing to target and nothing to\nseed it with — providers arrive one at a time through the OAuth flow, never at creation."
   },
   {
@@ -829,7 +985,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     description: 'Mints the short-lived `state` that begins an OAuth connect handoff for a provider.\n\nA read rather than an update: it changes nothing, it just proves who is asking. The app\ndecides how the state is signed and how long it lives.',
     paramsTypeDescription: 'Parameters for beginning an OAuth connect handoff for a provider.',
     paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' }],
-    resultTypeDescription: "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
+    resultTypeDescription:
+      "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
     resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
   },
   {
@@ -841,7 +998,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     groupName: 'UserExternalConnection',
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
     description: "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result.",
-    paramsTypeDescription: "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
+    paramsTypeDescription:
+      "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
     paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to disconnect from.' }]
   }
 ];

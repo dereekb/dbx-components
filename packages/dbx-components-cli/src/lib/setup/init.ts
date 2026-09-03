@@ -23,8 +23,8 @@ import { API_MODULE, APP_COMPONENTS_MODULE, APP_MODULE, FIREBASE_COMPONENTS_MODU
  * `.verdaccio/` directory and the `verdaccio` dependency + `local-registry`
  * script), pins the dependency versions to the `@dereekb` peer ranges so the
  * reconcile `npm install` resolves, and declares the oxfmt `format` /
- * `format-check` scripts (Nx's built-in `nx format` is prettier-only). Run late
- * so the generators cannot undo it.
+ * `format-check` scripts (the pinned Nx's built-in `nx format` cannot run
+ * oxfmt). Run late so the generators cannot undo it.
  *
  * @param context - The resolved setup context.
  */

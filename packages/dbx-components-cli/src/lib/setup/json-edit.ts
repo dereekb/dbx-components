@@ -208,10 +208,11 @@ export function removeVerdaccioFromPackageJson(pkg: JsonObject): JsonObject {
 
 /**
  * The `format` / `format-check` npm scripts that front the oxfmt formatter.
- * Nx's built-in `nx format:write` / `nx format:check` commands are hardwired to
- * prettier and cannot be pointed at another formatter, so a workspace on oxfmt
- * needs its own entry points. Mirrors the `format` / `format-check` nx targets
- * in the root `project.template.json`.
+ * Nx only grew oxfmt support after the version this scaffolds onto — there, the
+ * built-in `nx format:write` / `nx format:check` import prettier unconditionally
+ * and fail without it — so a scaffolded oxfmt workspace needs its own entry
+ * points. Mirrors the `format` / `format-check` nx targets in the root
+ * `project.template.json`.
  */
 export const OXFMT_PACKAGE_JSON_SCRIPTS: Readonly<Record<string, string>> = {
   format: 'oxfmt --write .',
@@ -220,7 +221,7 @@ export const OXFMT_PACKAGE_JSON_SCRIPTS: Readonly<Record<string, string>> = {
 
 /**
  * Adds the oxfmt `format` / `format-check` scripts to the root package.json,
- * replacing any prettier-era entries under the same names. Pure.
+ * replacing any pre-existing entries under the same names. Pure.
  *
  * @param pkg - The parsed package.json.
  * @returns A new package.json object with the format scripts declared.

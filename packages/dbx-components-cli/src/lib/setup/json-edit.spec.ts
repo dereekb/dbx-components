@@ -71,8 +71,8 @@ describe('addOxfmtScriptsToPackageJson', () => {
     expect(result['scripts']).toEqual({ prepare: 'husky', build: 'nx build', format: 'oxfmt --write .', 'format-check': 'oxfmt --check .' });
   });
 
-  it('replaces prettier-era format scripts and works with no scripts block', () => {
-    const replaced = addOxfmtScriptsToPackageJson({ scripts: { format: 'prettier --write .' } });
+  it('replaces a pre-existing format script and works with no scripts block', () => {
+    const replaced = addOxfmtScriptsToPackageJson({ scripts: { format: 'some-other-formatter --write .' } });
     expect((replaced['scripts'] as JsonObject)['format']).toBe('oxfmt --write .');
     expect(addOxfmtScriptsToPackageJson({ name: 'x' })['scripts']).toEqual({ format: 'oxfmt --write .', 'format-check': 'oxfmt --check .' });
   });
