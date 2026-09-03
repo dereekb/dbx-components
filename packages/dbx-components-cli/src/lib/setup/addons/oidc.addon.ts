@@ -130,7 +130,7 @@ function buildOidcInjections(context: AddonContext): readonly MarkerInjection[] 
     { filePath: join(api, 'function/model/crud.functions.ts'), fileTag: 'api-crud', site: 'delete', snippet: `oidcEntry: onCallSpecifierHandler({ client: oidcEntryDeleteClient, token: oidcEntryDeleteToken }),` },
     // api — function context getter
     { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'imports', snippet: `import { OidcModelServerActions } from '@dereekb/firebase-server/oidc';` },
-    { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'getters', multiline: true, snippet: `  get oidcModelServerActions(): OidcModelServerActions {\n    return this.nest.get(OidcModelServerActions);\n  }` },
+    { filePath: join(api, 'function/function.ts'), fileTag: 'api-function', site: 'getters', multiline: true, snippet: `  get oidcModelServerActions(): OidcModelServerActions {\n    return this.nestApplication.get(OidcModelServerActions);\n  }` },
     // api — model module
     { filePath: join(api, 'common/model/model.module.ts'), fileTag: 'api-model-module', site: 'imports', snippet: `import { OidcModelModule } from './oidc/oidc.module';` },
     { filePath: join(api, 'common/model/model.module.ts'), fileTag: 'api-model-module', site: 'modules', snippet: `OidcModelModule,` },

@@ -29,39 +29,39 @@ import { runNamedAsyncTasksFunction } from '@dereekb/util';
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
   get actionContext(): APP_CODE_PREFIXFirebaseServerActionsContext {
-    return this.nest.get(APP_CODE_PREFIXFirebaseServerActionsContext);
+    return this.nestApplication.get(APP_CODE_PREFIXFirebaseServerActionsContext);
   }
 
   get authService(): APP_CODE_PREFIXApiAuthService {
-    return this.nest.get(APP_CODE_PREFIXApiAuthService);
+    return this.nestApplication.get(APP_CODE_PREFIXApiAuthService);
   }
 
   get APP_CODE_PREFIX_CAMELFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
-    return this.nest.get(APP_CODE_PREFIXFirestoreCollections);
+    return this.nestApplication.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
   get exampleActions(): ExampleServerActions {
-    return this.nest.get(ExampleServerActions);
+    return this.nestApplication.get(ExampleServerActions);
   }
 
   get notificationInitActions(): NotificationInitServerActions {
-    return this.nest.get(NotificationInitServerActions);
+    return this.nestApplication.get(NotificationInitServerActions);
   }
 
   get notificationActions(): NotificationServerActions {
-    return this.nest.get(NotificationServerActions);
+    return this.nestApplication.get(NotificationServerActions);
   }
 
   get storageFileServerActions(): StorageFileServerActions {
-    return this.nest.get(StorageFileServerActions);
+    return this.nestApplication.get(StorageFileServerActions);
   }
 
   get storageFileInitActions(): StorageFileInitServerActions {
-    return this.nest.get(StorageFileInitServerActions);
+    return this.nestApplication.get(StorageFileInitServerActions);
   }
 
   get profileActions(): ProfileServerActions {
-    return this.nest.get(ProfileServerActions);
+    return this.nestApplication.get(ProfileServerActions);
   }
 
   // @dbx-addon:oidc:api-function:getters
