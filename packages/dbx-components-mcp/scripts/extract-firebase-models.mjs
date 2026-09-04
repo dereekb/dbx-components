@@ -132,7 +132,7 @@ function findTsFiles(dir) {
 }
 
 function extractFromFile(file, content) {
-  const relativePath = relative(WORKSPACE_ROOT, file).split('\\').join('/');
+  const relativePath = relative(WORKSPACE_ROOT, file).replaceAll('\\', '/');
   const identities = findIdentities(content);
   const interfaces = findInterfaces(content);
   const converters = findConverters(content);
@@ -379,10 +379,10 @@ function applyArchetypePostPass(models) {
     const isTreeNode = Array.isArray(m.archetypes) && m.archetypes.includes('model-tree-node');
     if (isTreeNode) {
       let role;
-      if (!m.parentIdentityConst) {
-        role = 'root';
-      } else {
+      if (m.parentIdentityConst) {
         role = referencedAsParent.has(m.identityConst) ? 'intermediate' : 'leaf';
+      } else {
+        role = 'root';
       }
       const existing = m.archetypeAxesBySlug?.['model-tree-node'] || {};
       const nextSlugAxes = { ...existing, treeRole: role };
@@ -807,13 +807,11 @@ function parseJsdocBlock(body) {
       // for the heuristic-driven archetype tag. Repeatable; one occurrence per slug.
       const parsed = parseArchetypeTagValue(value);
       if (parsed) tags.dbxModelArchetypes.push(parsed);
-    } else if (tag === 'dbxModelAggregatesFrom') {
-      // `@dbxModelAggregatesFrom <ModelName>` — repeatable. Captures the upstream
-      // model names whose data this model aggregates from.
-      if (value.length > 0) {
-        const name = value.split(/\s+/)[0];
-        if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) tags.dbxModelAggregatesFrom.push(name);
-      }
+    } else // `@dbxModelAggregatesFrom <ModelName>` — repeatable. Captures the upstream
+    // model names whose data this model aggregates from.
+    if (tag === 'dbxModelAggregatesFrom' && value.length > 0) {
+      const name = value.split(/\s+/)[0];
+      if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) tags.dbxModelAggregatesFrom.push(name);
     }
   }
   return { description: description && description.length > 0 ? description : undefined, tags };

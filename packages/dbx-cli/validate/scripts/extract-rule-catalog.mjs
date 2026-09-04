@@ -278,7 +278,7 @@ async function formatWithOxfmt(source) {
 }
 
 function relPath(p) {
-  return relative(WORKSPACE_ROOT, p).split('\\').join('/');
+  return relative(WORKSPACE_ROOT, p).replaceAll('\\', '/');
 }
 
 try {

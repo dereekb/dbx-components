@@ -98,3 +98,47 @@ This library uses https://github.com/jscutlery/semver to maintain versions. All 
 Commits made should follow the following conventions: 
 
 https://www.conventionalcommits.org/en/v1.0.0/
+
+## Formatting and linting
+
+The workspace formats with [oxfmt](https://oxc.rs/docs/guide/usage/formatter) rather than prettier, and lints with **two tiers** — oxlint and ESLint — which are additive rather than alternatives. The [v13 to v14 upgrade notes](setup/upgrades/v13-to-v14/v13-to-v14-upgrade-info.md#oxfmt-replaces-prettier) cover why each was adopted and how to adopt them downstream; this section is how to run them here.
+
+### Formatting
+
+| Command | Runs |
+| --- | --- |
+| `npm run format` (`npx nx run workspace:format`) | `oxfmt --write .` |
+| `npm run format-check` (`npx nx run workspace:format-check`) | `oxfmt --check .` |
+
+- Config lives in `.oxfmtrc.json`. Its `ignorePatterns` replaces `.prettierignore` — there is no separate ignore file, and the patterns do not apply to oxlint, which reads its own config.
+- `nx format` / `nx format:write` / `nx format:check` **do not work** on the currently pinned Nx (23.1.3): that version's `format` command imports prettier unconditionally and fails with `Prettier is not installed.`. Use the commands above. Nx [does support oxfmt](https://nx.dev/docs/reference/code-formatting) in later versions, selected by detection — a root oxfmt config file wins — so `.oxfmtrc.json` already makes the workspace resolve to oxfmt once Nx is upgraded.
+- Staged files are formatted automatically by the husky `pre-commit` hook.
+- Suppress formatting for one statement with `// oxfmt-ignore` (oxfmt also still honors `// prettier-ignore`).
+- ESLint does not depend on `eslint-config-prettier`. The two rules that conflict with formatter output (`no-unexpected-multiline`, `no-extra-semi`) are disabled explicitly at the end of `eslint.config.mjs`.
+
+### Linting
+
+| Tier | Engine | Target | Owns |
+| --- | --- | --- | --- |
+| Fast | oxlint | `oxlint` (inferred by `@nx/oxlint`) | the `correctness` category on `.ts/.tsx/.js/.mjs/.cjs` |
+| Deep | ESLint | `lint` (explicit, 90 `project.json` files) | everything else: the 5 in-repo plugins, type-aware rules, `.html` templates, `{package,project}.json`, jsdoc/sonarjs/unicorn |
+
+Config: `.oxlintrc.json` (root) and `eslint.config.mjs` + `eslint.config.angular.mjs` + `eslint.config.library.mjs`.
+
+| Command | Runs |
+| --- | --- |
+| `npx nx run workspace:oxlint-all` | oxlint over every project (~2.5 s) |
+| `npx nx run workspace:lint-all` | ESLint over every project (~30 s warm, ~110 s cold) |
+| `npx nx run workspace:oxlint-cache` / `workspace:lint-fix-cache` | the same two through `dbx-cli-lint-cache`, which writes `.tmp/lint-cache/` — `<project>.json` + `index.json` for ESLint, `<project>.oxlint.json` + `index.oxlint.json` for oxlint |
+
+The run immediately after **any** edit to a root ESLint config costs ~1 m 50 s instead of ~25 s, because Nx re-runs plugin inference. Discard one settle run before timing anything, or a no-op change reads as a 4x regression.
+
+`dbx-claude-commit` blocks on both tiers with no configuration: its gate is a single lint run, so an error-severity finding from either engine on a changed file fails it identically. The workspace is at 0 oxlint errors, so this starts green and costs ~2.5 s.
+
+Things that are load-bearing and easy to get wrong:
+
+- **The tier boundary is drawn in `.oxlintrc.json`**, where every rule ESLint also runs is explicitly `"off"`. A missed disable on the oxlint side is a duplicate report (visible); a missed disable on the ESLint side would be a coverage hole (invisible). oxlint hard-errors on an unknown rule name, so that disable list cannot silently rot.
+- **Only the `correctness` category is enabled.** Measured 2026-09-03: adding `suspicious` yields 4,237 findings that are ~90% conflicts with deliberate workspace conventions — 3,066 `no-underscore-dangle` (this workspace prefixes intentionally unused bindings with `_`), 578 `no-shadow`, 300 `no-extraneous-class` (every Angular/NestJS module). Do not enable it without re-measuring.
+- **Never pass `--silent` to oxlint.** It suppresses the diagnostics inside `--format=json` while still reporting the scanned-file count, so a broken run is indistinguishable from a clean one.
+- **Type-aware oxlint rules (`--type-aware` / `oxlint-tsgolint`) and the `jsPlugins` bridge for the in-repo ESLint plugins are deliberately off.** Three of the type-aware first-party rules go silently green under `jsPlugins` rather than erroring, and Angular template rules cannot move at all — oxlint has no `.html` support and no processor concept.
+- **The five in-repo `dereekb-*` plugins stay on ESLint entirely.** Porting them is not pending; it was measured and rejected. 34 of their 56 rule names do run unmodified under `jsPlugins` (byte-identical message and `line:col`), but moving them changes `lint-all` by less than the ±1.5 s run-to-run noise: all 45 active first-party rules cost 101.6 ms of a 2.65 s rule budget on `packages/date`, while ~58% of a lint invocation is startup plus TypeScript program construction and five type-aware/import-graph rules are 75% of rule time. `jsPlugins` is also still alpha as of oxlint 1.81.0. Do not re-open without re-measuring.
