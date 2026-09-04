@@ -1,3 +1,27 @@
+## [14.0.1](https://github.com/dereekb/dbx-components/compare/v14.0.0-dev...v14.0.1) (2026-09-04)
+
+### Build System
+
+- add no-unsafe-optional-chaining, widen unicorn glob to js files ([c7e9ccac](https://github.com/dereekb/dbx-components/commit/c7e9ccac382f4fa43342a012d20b3a48f2f72fb2))
+- add oxfmt format npm scripts (nx format is prettier-only) ([92025f69](https://github.com/dereekb/dbx-components/commit/92025f69890f710fab3cab4920320efce992c7f2))
+- adopt oxlint as a second lint tier alongside ESLint ([20e23ea3](https://github.com/dereekb/dbx-components/commit/20e23ea3a59221b07743e10f630883dce0b6ba21))
+- **ci:** keep the nx cache in the checkout, install eslint 10 ([07bd526c](https://github.com/dereekb/dbx-components/commit/07bd526c05da18282d25ce96d46cc8b0cdebb53b))
+- drop eslint-config-prettier, finish the oxfmt migration ([c390a672](https://github.com/dereekb/dbx-components/commit/c390a6728c7e0d3d01ff4ccb679eed50ad8860fb))
+- enforce action error handlers, drop consistent-function-scoping ([a72a8a5b](https://github.com/dereekb/dbx-components/commit/a72a8a5bebceebb34bf003fb55d530e06be4c91e))
+- replace prettier with oxfmt as the workspace formatter ([e3033549](https://github.com/dereekb/dbx-components/commit/e3033549a2550e8480237f6cd4e75546a660ca7c))
+
+### Checkpoints
+
+- oxfmt/oxlint ([0e339dab](https://github.com/dereekb/dbx-components/commit/0e339dab78eacbc6c6f47ae9c0188faa4a11a8f9))
+
+### Documentation
+
+- **lint:** both tiers now run without configuration ([852fdcfe](https://github.com/dereekb/dbx-components/commit/852fdcfe8f7850f64ee2e75fa604c2e903641ff7))
+- **lint:** document oxlint as an addition to ESLint, enable the gate ([9c59bc8e](https://github.com/dereekb/dbx-components/commit/9c59bc8ef8461cc80f51f5639f0b33349e8fb18d))
+- **lint:** first-party rules stay on ESLint, measured ([7e02ba48](https://github.com/dereekb/dbx-components/commit/7e02ba48240d258585d6576c92c1be71cf698319))
+- move formatting/linting notes out of CLAUDE.md into the README ([9e984b5f](https://github.com/dereekb/dbx-components/commit/9e984b5fa5f6e6c0634ac44c84eb9bc5363980ad))
+- **upgrade:** document the nx 23.2 cache move and eslint 10 floor ([6d01a458](https://github.com/dereekb/dbx-components/commit/6d01a4580c339538d09ca5a717638e15768e9cfd))
+
 # [14.0.0](https://github.com/dereekb/dbx-components/compare/v13.43.0-dev...v14.0.0) (2026-09-03)
 
 ### Bug Fixes

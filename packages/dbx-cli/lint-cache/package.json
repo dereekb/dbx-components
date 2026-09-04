@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli-lint-cache",
-  "version": "14.0.0",
+  "version": "14.0.1",
   "private": true,
   "type": "module",
   "devDependencies": {
@@ -8,7 +8,7 @@
     "eslint": "10.9.1"
   },
   "peerDependencies": {
-    "@dereekb/util": "14.0.0",
+    "@dereekb/util": "14.0.1",
     "yargs": "^18.0.0"
   }
 }
