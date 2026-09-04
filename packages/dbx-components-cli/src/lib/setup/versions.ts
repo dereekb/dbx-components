@@ -74,6 +74,12 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'conventional-recommended-bump': '^11.2.0',
   semver: '^7.7.4',
   yargs: '^18.0.0',
+  // `create-nx-workspace` scaffolds `eslint@^9.8.0`, but the root `eslint.config.mjs` template loads
+  // plugins that have moved past it — `eslint-plugin-unicorn@74` peers `eslint >= 10.4`, so leaving
+  // the v9 line in place fails the plugin install outright with ERESOLVE. Installed alongside the
+  // plugins so npm resolves the upgrade in one pass; every other eslint package the generators add
+  // (`@nx/eslint`, `angular-eslint`, `typescript-eslint`) already peers `^10.0.0`.
+  eslint: '10.9.1',
   'eslint-plugin-import-x': '^4.16.2',
   'eslint-plugin-unused-imports': '4.4.1',
   'eslint-plugin-jsdoc': '^64.3.4',

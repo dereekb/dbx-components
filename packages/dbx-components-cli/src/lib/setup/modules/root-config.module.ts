@@ -100,7 +100,12 @@ export const ROOT_MODULE: SetupModule = {
     const nx = versions.core.nx;
 
     // husky / commitlint / oxfmt (script line 451) + husky init (457)
-    await shell.run('npm', ['install', '-D', 'husky', dep('oxfmt'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], {
+    //
+    // `eslint` rides along with the plugins rather than being installed on its own: the generators
+    // leave the workspace on the `^9.8.0` line `@nx/eslint` scaffolds, and `eslint-plugin-unicorn`
+    // peers `eslint >= 10.4`. Installed separately, this command would resolve against the declared
+    // v9 and fail with ERESOLVE; in the same command npm resolves the upgrade and the plugins together.
+    await shell.run('npm', ['install', '-D', 'husky', dep('oxfmt'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint'), dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], {
       cwd: workspaceRoot,
       dryRun
     });

@@ -7,6 +7,17 @@ defaults: &defaults
   docker:
     - image: cimg/node:24.13
 
+# The Nx environment every job shares, merged into each job's `environment` with `<<: *nx_env`.
+nx_env: &nx_env
+  NX_NO_CLOUD: "true"
+  # Nx 23.2 moved the local cache and the task DB out of the checkout and into a per-user shared
+  # root (`~/.nx/<workspace-id>/{cache,databases}`). Jobs here hand work to one another by
+  # persisting the checkout, so under that layout the build job's cache stayed behind on its own
+  # container and every downstream job re-ran the builds it was supposed to reuse. Setting this
+  # opts the workspace back out of the shared root — cache to `.nx/cache`, DB to
+  # `.nx/workspace-data` — which are exactly the paths `persist_to_workspace` already carries.
+  NX_CACHE_DIRECTORY: .nx/cache
+
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 parameters:
@@ -36,7 +47,7 @@ jobs:
         default: true
     environment:
       CYPRESS_INSTALL_BINARY: 0
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
       # Force the Nx daemon ON. Nx disables the daemon whenever CI=true (CircleCI sets it), so without
       # this every nested `npx nx run <pkg>:build-base` invocation (the multi-package build wrappers:
       # calcom/zoho/zoom/trello/analytics) reconstructs the ENTIRE project graph from scratch. Since the
@@ -108,7 +119,7 @@ jobs:
   test-with-node-basic:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -149,7 +160,7 @@ jobs:
   test-with-node-complex:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -172,7 +183,7 @@ jobs:
   test-with-node-nestjs:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -214,7 +225,7 @@ jobs:
       GCE_METADATA_HOST: 0.0.0.0
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -242,7 +253,7 @@ jobs:
   test-all-cli:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -259,7 +270,7 @@ jobs:
   test-setup-cli:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -330,7 +341,7 @@ jobs:
         type: boolean
         default: false
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       # attach workspace from build job when build was not skipped
@@ -394,7 +405,7 @@ jobs:
     <<: *defaults
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -416,7 +427,7 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: "true"
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
