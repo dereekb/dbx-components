@@ -10,6 +10,8 @@
 - Build the Firebase API app as ESM instead of CommonJS
 - Reshape the `@dereekb/rxjs` `LoadingState` generics — one runtime behavior change, several
   type-parameter reorderings, and five removed exports
+- Pin the Nx cache directory on CI — Nx 23.2 moved the cache out of the checkout
+- Move to ESLint 10, which the v14 lint plugin set now requires
 - Format with oxfmt instead of prettier
 - Add oxlint as a second, fast lint tier **alongside** ESLint — an addition, not a replacement
 
@@ -40,6 +42,38 @@ APIs that dbx-components relied on, all of which are removed in Nx v24:
 Because all three were reached through `@dereekb/vitest`'s `createVitestConfig`, most of this
 is handled for you by upgrading the package. The parts you still have to do yourself are the
 `nx.json` and `project.json` changes described below.
+
+### Nx 23.2 moves the cache out of the checkout
+
+Take Nx 23.2 or later rather than stopping at 23.1.3, but know what 23.2 changed underneath you,
+because it is silent and it is not a code change.
+
+Through 23.1.x the local cache and the task database lived inside the checkout, at
+`<workspaceRoot>/.nx/cache` and `<workspaceRoot>/.nx/workspace-data`. From 23.2 both relocate to a
+per-user shared root keyed by workspace identity:
+
+```
+~/.nx/<first 16 hex chars of sha256(workspace-id)>/cache
+~/.nx/<first 16 hex chars of sha256(workspace-id)>/databases
+```
+
+The identity is the Nx Cloud id when there is one, otherwise a key derived from the git remote — so
+every checkout and every linked worktree of the same repository shares one cache. Locally that is
+the point of the change and it is a straight win.
+
+On CI it breaks the job-to-job handoff. Any pipeline that passes build output between jobs by
+persisting the checkout — CircleCI's `persist_to_workspace` / `attach_workspace`, or a GitHub
+Actions `actions/cache` keyed on `.nx/cache` — is now persisting two directories Nx no longer
+writes to. Downstream jobs attach a workspace whose cache is empty and rebuild everything the
+build job already built.
+
+Nothing errors. The only symptom is duration, plus `nx run <pkg>:build` reappearing in the log of a
+job that was supposed to be reusing it. In this repo the test jobs roughly doubled.
+
+Note that both halves have to move together. The DB's `cache_outputs` rows index the cache
+directory's *contents*, so persisting `.nx/cache` without `.nx/workspace-data` restores artifacts
+nothing can look up — zero cache hits from a cache that is right there on disk. Nx resolves the two
+locations from a single decision for exactly this reason.
 
 ### Angular 22 and TypeScript 6
 
@@ -247,6 +281,36 @@ call using it also appended `filter=%5Bobject+Object%5D` to the query string.
 
 Set `page` / `per_page` on the request directly, which is what the deprecation note already said.
 
+### ESLint 10 is required by the v14 lint config
+
+The v14 root `eslint.config.mjs` loads a plugin set that has moved past ESLint 9. The binding
+constraint is `eslint-plugin-unicorn@74`, whose peer is `eslint >= 10.4`; install it against a v9
+workspace and npm refuses the whole install with `ERESOLVE`, naming the peer.
+
+So the ESLint 10 upgrade is no longer optional for anyone adopting the v14 config. It is written up
+on its own page — [`setup/upgrades/eslint-v10-upgrade.md`](../eslint-v10-upgrade.md) — because it
+predates v14 and stands alone: a `package.json` bump, two edits to `eslint.config.mjs`, and an
+`import/` → `import-x/` rename. Read that page for the mechanics; what v14 adds is the plugin
+floors, which are higher than the ones that guide was written against:
+
+| Package | v14 pin | Peer floor |
+| --- | --- | --- |
+| `eslint` | `10.9.1` | — |
+| `eslint-plugin-unicorn` | `^74.0.0` | `eslint >= 10.4` — the binding constraint |
+| `eslint-plugin-jsdoc` | `^64.3.4` | `^7 \|\| ^8 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-sonarjs` | `^4.0.3` | `^8 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-import-x` | `^4.16.2` | `^8.57 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-unused-imports` | `4.4.1` | `^8 \|\| ^9 \|\| ^10` |
+
+Everything the Nx generators put in the tree — `@nx/eslint`, `angular-eslint` 22.x,
+`typescript-eslint` 8.58+ — already peers `^10.0.0`, so ESLint is the only package that has to move.
+
+One thing to watch afterwards: `@nx/eslint` still *generates* `eslint@^9.8.0` (its version map has
+no entry above 9, so a fresh install resolves to the v9 line). It will not downgrade a declaration
+you have already raised to 10, but a newly generated workspace starts on v9 — which is exactly the
+bug this repo's own scaffolding CLI hit, and it now installs `eslint@10.9.1` alongside the plugins
+in one `npm install` so the two resolve together.
+
 ### oxfmt replaces prettier
 
 The workspace formats with [oxfmt](https://oxc.rs/docs/guide/usage/formatter) rather than prettier.
@@ -255,11 +319,11 @@ the tool, not a reformat of the codebase.
 
 Two things to know before you start:
 
-- **`nx format` does not work on Nx 23.1.3.** That version's `format` command imports prettier
-  unconditionally and fails with `Prettier is not installed.` Nx *does*
-  [support oxfmt](https://nx.dev/docs/reference/code-formatting) in later versions, selected by
-  detection — a root oxfmt config file wins — so adding `.oxfmtrc.json` already makes the workspace
-  resolve to oxfmt once Nx is upgraded. Until then, use the npm scripts.
+- **`nx format` needs Nx 23.2.** Nx 23.1.3's `format` imports prettier unconditionally and fails
+  with `Prettier is not installed.` From 23.2 it
+  [supports oxfmt](https://nx.dev/docs/reference/code-formatting), selected by detection: a root
+  `.oxfmtrc.json` wins, and Nx warns if both an oxfmt and a prettier config are present. So on 23.2
+  adding the config is all `nx format` needs; on 23.1.3, use the npm scripts below.
 - **`eslint-config-prettier` comes out.** Of the 358 rules it disables, this workspace only ever had
   two enabled, so the whole dependency is replaced by two explicit `'off'` entries at the end of
   `eslint.config.mjs`.
@@ -322,6 +386,55 @@ checking the versions against the v14 `package.json` of dbx-components rather th
 generated ranges.
 
 Run `npx nx reset` afterwards if you hit stale-cache issues.
+
+### Pin the Nx cache directory on CI
+
+Only needed once you are on Nx 23.2 or later, and only for CI — leave local machines on the shared
+root, which is where it helps. Set `NX_CACHE_DIRECTORY` in every CI job:
+
+```diff
++# The Nx environment every job shares, merged into each job's `environment` with `<<: *nx_env`.
++nx_env: &nx_env
++  NX_NO_CLOUD: 'true'
++  NX_CACHE_DIRECTORY: .nx/cache
++
+ jobs:
+   build:
+     environment:
+-      NX_NO_CLOUD: 'true'
++      <<: *nx_env
+```
+
+One variable is enough for both directories: setting it opts the workspace out of the shared root
+wholesale, sending the cache to `.nx/cache` and the DB back to `.nx/workspace-data`. Do **not**
+reach for `NX_WORKSPACE_DATA_DIRECTORY` to move the DB separately — the two are meant to stay in
+one scope.
+
+The value is resolved against the workspace root, so the relative `.nx/cache` is also correct for a
+job that runs `nx` somewhere else in the filesystem (a scaffolded throwaway project, say) — each
+root gets its own.
+
+Then confirm the pipeline actually carries both directories between jobs:
+
+```diff
+ - persist_to_workspace:
+     root: ~/code
+     paths:
+       - node_modules
+       - dist
+       - .nx/cache
++      - .nx/workspace-data
+```
+
+To check the setting is doing what you think, print the resolved location — under a correct config
+it is inside the checkout, and without one it is under `~/.nx`:
+
+```
+node -e "console.log(require('nx/src/utils/cache-directory').cacheDir)"
+```
+
+Setting `cacheDirectory` in `nx.json` opts out the same way, but it applies to developer machines
+too, which gives up the shared cache the change was made for. Prefer the CI-only env var.
 
 ### Update dependencies
 
@@ -981,6 +1094,22 @@ finds the call sites. A `filter` passed in an object literal is now an excess pr
 compile, but one assembled into an intermediate un-annotated variable first will pass the excess
 property check and be silently dropped — so run the grep rather than trusting the build.
 
+### Upgrade to ESLint 10
+
+Follow [`setup/upgrades/eslint-v10-upgrade.md`](../eslint-v10-upgrade.md) end to end, then raise the
+plugin pins to the v14 floors:
+
+```
+npm i -D eslint@10.9.1 eslint-plugin-unicorn@^74.0.0 eslint-plugin-jsdoc@^64.3.4 eslint-plugin-sonarjs@^4.0.3 eslint-plugin-import-x@^4.16.2 eslint-plugin-unused-imports@4.4.1
+```
+
+Install `eslint` in the *same* command as the plugins. Bumping the plugins first against a declared
+`eslint@^9.x` fails with `ERESOLVE` on unicorn's `eslint >= 10.4` peer; in one command npm resolves
+the upgrade and the plugins together and there is no conflict to report.
+
+`--force` / `--legacy-peer-deps` would also get the install through, and both are the wrong answer
+here: the peer is accurate, and unicorn 74 genuinely does not run on ESLint 9.
+
 ### Adopt oxfmt
 
 ```
@@ -1008,7 +1137,8 @@ Add a root `.oxfmtrc.json`. Port your prettier settings across — the option na
 `ignorePatterns` replaces `.prettierignore`; there is no separate ignore file. Note that oxfmt's
 patterns do **not** apply to oxlint — the two tools each read their own config.
 
-Then wire the scripts, since `nx format` is unavailable until Nx is upgraded past 23.1.3:
+Wire the npm scripts either way — they are what the husky hook and CI call, and the only option on
+Nx 23.1.3:
 
 ```json
 "scripts": {
