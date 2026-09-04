@@ -1,7 +1,29 @@
-import { type FormSpace, type FormSpaceDocument, type FormSpaceFirestoreCollections, FormSpaceProcessingState, FormSpaceState, type FormSpaceSubmissionNotificationTaskData, type FormSpaceSubmissionSubtask, type FormSpaceSubmissionSubtaskMetadata, type FormSpaceType, FORM_SPACE_SUBMISSION_NOTIFICATION_TASK_TYPE, getDocumentSnapshotData, notificationTaskComplete } from '@dereekb/firebase';
+import {
+  type FormSpace,
+  type FormSpaceDocument,
+  type FormSpaceFirestoreCollections,
+  FormSpaceProcessingState,
+  FormSpaceState,
+  type FormSpaceSubmissionNotificationTaskData,
+  type FormSpaceSubmissionSubtask,
+  type FormSpaceSubmissionSubtaskMetadata,
+  type FormSpaceType,
+  FORM_SPACE_SUBMISSION_NOTIFICATION_TASK_TYPE,
+  getDocumentSnapshotData,
+  notificationTaskComplete
+} from '@dereekb/firebase';
 import { cachedGetter, type Getter, type Maybe } from '@dereekb/util';
 import { type NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
-import { type NotificationTaskSubtaskCleanupInstructions, type NotificationTaskSubtaskFlowEntry, type NotificationTaskSubtaskInput, type NotificationTaskSubtaskResult, type NotificationTaskSubtaskNotificationTaskHandlerConfig, type NotificationTaskSubtaskProcessorConfig, notificationTaskSubTaskMissingRequiredDataTermination, notificationTaskSubtaskNotificationTaskHandlerFactory } from '../notification/notification.task.subtask.handler';
+import {
+  type NotificationTaskSubtaskCleanupInstructions,
+  type NotificationTaskSubtaskFlowEntry,
+  type NotificationTaskSubtaskInput,
+  type NotificationTaskSubtaskResult,
+  type NotificationTaskSubtaskNotificationTaskHandlerConfig,
+  type NotificationTaskSubtaskProcessorConfig,
+  notificationTaskSubTaskMissingRequiredDataTermination,
+  notificationTaskSubtaskNotificationTaskHandlerFactory
+} from '../notification/notification.task.subtask.handler';
 
 /**
  * @module formspace.task.service.handler
@@ -44,7 +66,12 @@ export type FormSpaceSubmissionSubtaskResult<M extends FormSpaceSubmissionSubtas
 /**
  * One entry in a FormSpace submission processor's checkpoint flow.
  */
-export type FormSpaceSubmissionSubtaskFlowEntry<M extends FormSpaceSubmissionSubtaskMetadata = FormSpaceSubmissionSubtaskMetadata, S extends FormSpaceSubmissionSubtask = FormSpaceSubmissionSubtask> = NotificationTaskSubtaskFlowEntry<FormSpaceSubmissionSubtaskInput<M, S>, FormSpaceSubmissionNotificationTaskData<M, S>, M, S>;
+export type FormSpaceSubmissionSubtaskFlowEntry<M extends FormSpaceSubmissionSubtaskMetadata = FormSpaceSubmissionSubtaskMetadata, S extends FormSpaceSubmissionSubtask = FormSpaceSubmissionSubtask> = NotificationTaskSubtaskFlowEntry<
+  FormSpaceSubmissionSubtaskInput<M, S>,
+  FormSpaceSubmissionNotificationTaskData<M, S>,
+  M,
+  S
+>;
 
 /**
  * What a FormSpace submission processor asks the cleanup step to write.
@@ -66,7 +93,13 @@ export interface FormSpaceSubmissionSubtaskCleanupOutput extends NotificationTas
  * @template M - subtask metadata type
  * @template S - subtask checkpoint string type
  */
-export type FormSpaceSubmissionProcessorConfig<M extends FormSpaceSubmissionSubtaskMetadata = FormSpaceSubmissionSubtaskMetadata, S extends FormSpaceSubmissionSubtask = FormSpaceSubmissionSubtask> = NotificationTaskSubtaskProcessorConfig<FormSpaceSubmissionSubtaskInput<M, S>, FormSpaceSubmissionSubtaskCleanupOutput, FormSpaceSubmissionNotificationTaskData<M, S>, M, S>;
+export type FormSpaceSubmissionProcessorConfig<M extends FormSpaceSubmissionSubtaskMetadata = FormSpaceSubmissionSubtaskMetadata, S extends FormSpaceSubmissionSubtask = FormSpaceSubmissionSubtask> = NotificationTaskSubtaskProcessorConfig<
+  FormSpaceSubmissionSubtaskInput<M, S>,
+  FormSpaceSubmissionSubtaskCleanupOutput,
+  FormSpaceSubmissionNotificationTaskData<M, S>,
+  M,
+  S
+>;
 
 /**
  * Configuration for {@link formSpaceSubmissionNotificationTaskHandler}.

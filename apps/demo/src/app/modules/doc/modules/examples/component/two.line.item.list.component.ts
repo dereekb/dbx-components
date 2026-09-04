@@ -1,6 +1,18 @@
 import { Component } from '@angular/core';
 import { of } from 'rxjs';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxSpacerDirective, DbxChipDirective } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxSelectionListViewDirective,
+  AbstractDbxValueListViewItemComponent,
+  type DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  DbxSpacerDirective,
+  DbxChipDirective
+} from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { type TwoLineItemValue, type TwoLineItemValueWithSelection } from './two.line.item.list';
 

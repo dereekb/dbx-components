@@ -1,4 +1,11 @@
-import { type MailgunNotificationEmailSendService, type MailgunNotificationHealthCheckProbeBuilderInput, type MailgunNotificationEmailSendServiceTemplateBuilderInput, mailgunNotificationEmailSendService, mailgunNotificationEmailSendServiceHealthCheckService, mailgunCalendarFileAttachmentForNotificationMessage } from '@dereekb/firebase-server/model';
+import {
+  type MailgunNotificationEmailSendService,
+  type MailgunNotificationHealthCheckProbeBuilderInput,
+  type MailgunNotificationEmailSendServiceTemplateBuilderInput,
+  mailgunNotificationEmailSendService,
+  mailgunNotificationEmailSendServiceHealthCheckService,
+  mailgunCalendarFileAttachmentForNotificationMessage
+} from '@dereekb/firebase-server/model';
 import { expandMailgunRecipientBatchSendTargetRequestFactory, type MailgunRecipient, type MailgunRecipientBatchSendTarget, type MailgunService, type MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { type DemoMailgunBasicTemplateData } from './notification.mailgun';
 

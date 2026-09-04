@@ -1,4 +1,4 @@
-import { type AllDateMatchers, type AxeMatchers  } from '@dereekb/vitest';
+import { type AllDateMatchers, type AxeMatchers } from '@dereekb/vitest';
 
 declare module 'vitest' {
   interface Matchers<T = any> extends AllDateMatchers {}

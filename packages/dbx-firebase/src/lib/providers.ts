@@ -75,7 +75,15 @@ export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseF
     dbxFirebaseModelEntitiesWidgetServiceConfigFactory: () => ({ entries: [] })
   };
 
-  const providers: EnvironmentProviders[] = [provideDbxFirebaseApp(app), providedDbxFirebaseStorage(storage), provideDbxFirebaseAuth(auth), provideDbxFirebaseFunctions(functions), provideDbxFirebaseModelContextService(modelContextService), provideDbxFirebaseModelTypesService(modelTypesService), provideDbxFirebaseModelEntitiesWidgetService(modelEntitiesWidgetServiceConfig)];
+  const providers: EnvironmentProviders[] = [
+    provideDbxFirebaseApp(app),
+    providedDbxFirebaseStorage(storage),
+    provideDbxFirebaseAuth(auth),
+    provideDbxFirebaseFunctions(functions),
+    provideDbxFirebaseModelContextService(modelContextService),
+    provideDbxFirebaseModelTypesService(modelTypesService),
+    provideDbxFirebaseModelEntitiesWidgetService(modelEntitiesWidgetServiceConfig)
+  ];
 
   asArray(firestores).forEach((firestore) => {
     providers.push(provideDbxFirestoreCollection(firestore));

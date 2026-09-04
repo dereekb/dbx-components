@@ -248,7 +248,11 @@ function addonCommand(id: SetupAddonId): CommandModule<object, AddonArgs> {
   return {
     command: `${id} [firebaseProjectId] [projectName] [codePrefix] [emulatorPort] [stagingProjectId]`,
     describe: SETUP_ADDONS[id].title,
-    builder: (yargs: Argv): Argv<AddonArgs> => withCommonSetupOptions(yargs).option('templates-only', { type: 'boolean', default: false, describe: 'Run only the deterministic NEW-file scaffold (skip configure).' }).option('skip-scaffold', { type: 'boolean', default: false, describe: 'Skip the NEW-file scaffold phase.' }).option('skip-configure', { type: 'boolean', default: false, describe: 'Skip the configure (marker-injection + json-edit) phase.' }) as unknown as Argv<AddonArgs>,
+    builder: (yargs: Argv): Argv<AddonArgs> =>
+      withCommonSetupOptions(yargs)
+        .option('templates-only', { type: 'boolean', default: false, describe: 'Run only the deterministic NEW-file scaffold (skip configure).' })
+        .option('skip-scaffold', { type: 'boolean', default: false, describe: 'Skip the NEW-file scaffold phase.' })
+        .option('skip-configure', { type: 'boolean', default: false, describe: 'Skip the configure (marker-injection + json-edit) phase.' }) as unknown as Argv<AddonArgs>,
     handler: (args: ArgumentsCamelCase<AddonArgs>): Promise<void> =>
       runCommand(async () => {
         const context = resolveSetupContext(toResolveInput(args));

@@ -29,7 +29,14 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_ROLE_LOOKUP_TOOL: Tool = {
   name: 'dbx_auth_role_lookup',
-  description: ['Look up auth roles forward (by role string / const name), by tag, or in reverse (model + verb → required roles/scopes).', '', '- `topic="admin"` or `topic="AUTH_ADMIN_ROLE"` → role entry + claims that set it.', '- `tag="privileged"` → every role tagged with `privileged`.', '- `model="StorageFile" verb="read"` → reverse lookup of the roles/scopes the gate would expect.', '- `topic="list"` → catalog.'].join('\n'),
+  description: [
+    'Look up auth roles forward (by role string / const name), by tag, or in reverse (model + verb → required roles/scopes).',
+    '',
+    '- `topic="admin"` or `topic="AUTH_ADMIN_ROLE"` → role entry + claims that set it.',
+    '- `tag="privileged"` → every role tagged with `privileged`.',
+    '- `model="StorageFile" verb="read"` → reverse lookup of the roles/scopes the gate would expect.',
+    '- `topic="list"` → catalog.'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

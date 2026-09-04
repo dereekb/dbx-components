@@ -21,7 +21,13 @@ import { exportMutableNotificationExpediteService, MutableNotificationExpediteSe
  * @returns The assembled {@link NotificationServerActionsContext}
  */
 // eslint-disable-next-line @typescript-eslint/max-params
-export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService, notificationsExpediteService: NotificationExpediteService) {
+export function notificationServerActionsContextFactory(
+  context: BaseNotificationServerActionsContext,
+  notificationTemplateService: NotificationTemplateService,
+  notificationSendService: NotificationSendService,
+  notificationTaskService: NotificationTaskService,
+  notificationsExpediteService: NotificationExpediteService
+) {
   return { ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
 }
 

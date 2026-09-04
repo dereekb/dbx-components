@@ -46,12 +46,17 @@ Replace the following devDependency versions in your root `package.json`. The en
 | `eslint-plugin-jsdoc` | `^62.x` | `^62.9.0` | Peer declares `^10.0.0`; keep |
 | `eslint-plugin-sonarjs` | `^4.x` | `^4.0.3` | Peer declares `^10.0.0`; keep |
 | `eslint-plugin-unused-imports` | `4.x` | `4.4.1` | Peer declares `^10.0.0`; keep |
-| `eslint-config-prettier` | `10.x` | `10.1.8` | Peer is `>=7`; keep |
+| `eslint-config-prettier` | `10.x` | `10.1.8` | Peer is `>=7`; keep (see note below — removed in a later change) |
 | `eslint-plugin-import` | `2.32.0` | — | **Swap** for `eslint-plugin-import-x` |
 | `eslint-plugin-import-x` | — | `^4.16.2` | **Add** |
 | `@eslint/eslintrc` | `3.x` | — | **Remove** — flat-config-only setups never load `FlatCompat` |
 | `eslint-plugin-prettier` | `5.x` | — | **Remove if unused** — most setups rely on `eslint-config-prettier` alone |
 | `eslint-import-resolver-typescript` | `4.x` | — | **Remove if unused** — `import-x` ships its own resolver |
+
+> **Later update:** `eslint-config-prettier` has since been removed entirely, alongside the move
+> from prettier to oxfmt. Auditing its 358 rule-disables against this workspace's effective config
+> showed only two were ever enabled here — `no-unexpected-multiline` and `no-extra-semi` — so both
+> are now switched off directly in `eslint.config.mjs` and the dependency is gone.
 
 Run your package manager and verify there are no peer-dependency warnings:
 

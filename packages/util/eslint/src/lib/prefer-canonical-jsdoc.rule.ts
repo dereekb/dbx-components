@@ -49,7 +49,23 @@ const DEFAULT_WORKSPACE_TAG_PREFIXES: readonly string[] = ['dbxUtil', 'dbxPipe',
  * (needs a user-provided error type) and `descriptionTypeRestating` (needs rewording) are
  * deliberately excluded — they remain report-only.
  */
-const AUTOFIXABLE_MESSAGE_IDS: ReadonlySet<string> = new Set(['descriptionMissingCapital', 'descriptionMissingPeriod', 'descriptionParagraphSeparator', 'paramHyphen', 'paramDescriptionCapital', 'paramDescriptionPeriod', 'paramOrder', 'returnsNoHyphen', 'returnsDescriptionCapital', 'returnsDescriptionPeriod', 'throwsDescriptionCapital', 'throwsDescriptionPeriod', 'tagOrder', 'exampleFence', 'functionShouldBeMultiline']);
+const AUTOFIXABLE_MESSAGE_IDS: ReadonlySet<string> = new Set([
+  'descriptionMissingCapital',
+  'descriptionMissingPeriod',
+  'descriptionParagraphSeparator',
+  'paramHyphen',
+  'paramDescriptionCapital',
+  'paramDescriptionPeriod',
+  'paramOrder',
+  'returnsNoHyphen',
+  'returnsDescriptionCapital',
+  'returnsDescriptionPeriod',
+  'throwsDescriptionCapital',
+  'throwsDescriptionPeriod',
+  'tagOrder',
+  'exampleFence',
+  'functionShouldBeMultiline'
+]);
 
 /**
  * Tag-order rank. Lower ranks must appear first in the JSDoc tag list. Unknown tags fall back to

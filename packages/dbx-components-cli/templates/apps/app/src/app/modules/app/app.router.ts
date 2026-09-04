@@ -7,13 +7,13 @@ export const layoutState: Ng2StateDeclaration = {
   url: '/app',
   name: 'app',
   redirectTo: 'app.home',
-  component: AppLayoutComponent,
+  component: AppLayoutComponent
 };
 
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'app.home',
-  component: AppHomeComponent,
+  component: AppHomeComponent
 };
 
 export const loginState: Ng2StateDeclaration = {
@@ -22,8 +22,4 @@ export const loginState: Ng2StateDeclaration = {
   redirectTo: 'app.auth.login'
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  loginState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, loginState];

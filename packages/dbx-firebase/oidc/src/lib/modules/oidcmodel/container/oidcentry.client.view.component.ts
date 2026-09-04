@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionConfirmDirective, type DbxActionConfirmConfig } from '@dereekb/dbx-web';
+import { type DbxActionConfirmConfig, DbxActionConfirmDirective, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxClickToCopyTextComponent, DbxContentPitDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { OidcEntryDocumentStore } from '../store/oidcentry.document.store';
 import { PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
@@ -37,14 +37,14 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
           } @else {
             <div>
               <div class="dbx-hint dbx-pb3">The client secret was shown once when created. You can invalidate the old one and get a new one.</div>
-              <dbx-button dbxAction [dbxActionHandler]="handleRotateClientSecret" [dbxActionConfirm]="rotateSecretConfirmConfig" dbxActionButton text="Rotate Secret" icon="refresh" color="warn" [raised]="true"></dbx-button>
+              <dbx-button dbxAction [dbxActionHandler]="handleRotateClientSecret" [dbxActionConfirm]="rotateSecretConfirmConfig" dbxActionButton text="Rotate Secret" icon="refresh" color="warn" [raised]="true" dbxActionSnackbarError></dbx-button>
             </div>
           }
         </dbx-detail-block>
       }
     </dbx-content-pit>
   `,
-  imports: [CommonModule, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective]
+  imports: [DbxActionSnackbarErrorDirective, CommonModule, DbxContentPitDirective, DbxDetailBlockComponent, DbxClickToCopyTextComponent, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective]
 })
 export class DbxFirebaseOidcEntryClientViewComponent {
   readonly oidcEntryDocumentStore = inject(OidcEntryDocumentStore);

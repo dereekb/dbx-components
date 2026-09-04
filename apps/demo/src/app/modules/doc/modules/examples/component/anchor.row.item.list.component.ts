@@ -2,7 +2,19 @@ import { Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxColorDirective, DbxIconTileComponent } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxSelectionListViewDirective,
+  AbstractDbxValueListViewItemComponent,
+  type DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  DbxColorDirective,
+  DbxIconTileComponent
+} from '@dereekb/dbx-web';
 import { type AnchorRowItemValue, type AnchorRowItemValueWithSelection } from './anchor.row.item.list';
 
 /**

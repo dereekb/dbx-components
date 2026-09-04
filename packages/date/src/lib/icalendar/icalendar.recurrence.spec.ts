@@ -21,7 +21,7 @@ wrapDateTests(() => {
 
       expect(recurrence.rules).toEqual(['FREQ=DAILY']);
       expect(recurrence.exceptionDates?.length).toBe(1);
-      expect((recurrence.exceptionDates?.[0] as ICalendarUtcDateTime).at.toISOString()).toBe('2026-03-16T14:00:00.000Z');
+      expect((recurrence.exceptionDates![0] as ICalendarUtcDateTime).at.toISOString()).toBe('2026-03-16T14:00:00.000Z');
     });
 
     it('should route RDATE lines to additionalDates rather than rules.', () => {
@@ -29,7 +29,7 @@ wrapDateTests(() => {
 
       expect(recurrence.rules).toEqual(['FREQ=DAILY']);
       expect(recurrence.additionalDates?.length).toBe(1);
-      expect((recurrence.additionalDates?.[0] as ICalendarUtcDateTime).at.toISOString()).toBe('2026-03-17T14:00:00.000Z');
+      expect((recurrence.additionalDates![0] as ICalendarUtcDateTime).at.toISOString()).toBe('2026-03-17T14:00:00.000Z');
     });
 
     it('should emit exception dates in ascending order regardless of input order.', () => {

@@ -71,7 +71,11 @@ function parseLookupUiArgs(raw: unknown): ParsedLookupUiArgs {
 }
 
 // MARK: Resolution
-type LookupUiMatch = { readonly kind: 'single'; readonly entry: UiComponentEntry } | { readonly kind: 'group'; readonly title: string; readonly entries: readonly UiComponentEntry[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly UiComponentEntry[] };
+type LookupUiMatch =
+  | { readonly kind: 'single'; readonly entry: UiComponentEntry }
+  | { readonly kind: 'group'; readonly title: string; readonly entries: readonly UiComponentEntry[] }
+  | { readonly kind: 'catalog' }
+  | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly UiComponentEntry[] };
 
 function isCategory(value: string): value is UiComponentCategoryValue {
   return UI_COMPONENT_CATEGORIES.includes(value as UiComponentCategoryValue);

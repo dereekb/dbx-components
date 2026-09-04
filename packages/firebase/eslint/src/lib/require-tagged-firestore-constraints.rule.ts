@@ -48,11 +48,13 @@ export const FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE: FirebaseRequire
     type: 'problem',
     fixable: undefined,
     docs: {
-      description: 'Disallow `@dereekb/firebase` index-affecting Firestore constraint factory calls (`where`, `orderBy`) outside a `@dbxModelFirebaseIndex`-tagged query factory. Pagination/cursor factories (`limit`, `limitToLast`, `whereDocumentId`, `startAt`/`After`, `endAt`/`Before`) do not affect composite indexes and are not flagged.',
+      description:
+        'Disallow `@dereekb/firebase` index-affecting Firestore constraint factory calls (`where`, `orderBy`) outside a `@dbxModelFirebaseIndex`-tagged query factory. Pagination/cursor factories (`limit`, `limitToLast`, `whereDocumentId`, `startAt`/`After`, `endAt`/`Before`) do not affect composite indexes and are not flagged.',
       recommended: true
     },
     messages: {
-      inlineConstraintOutsideTaggedQuery: '`{{name}}(...)` from `@dereekb/firebase` must be called inside a `@dbxModelFirebaseIndex`-tagged query factory. Extract this constraint into a dedicated `*Query` function tagged with `@dbxModelFirebaseIndex` so dbx-components-mcp can index it, then run `dbx-cli-generate-firestore-indexes --component <dir>` to regenerate `firestore.indexes.json`.'
+      inlineConstraintOutsideTaggedQuery:
+        '`{{name}}(...)` from `@dereekb/firebase` must be called inside a `@dbxModelFirebaseIndex`-tagged query factory. Extract this constraint into a dedicated `*Query` function tagged with `@dbxModelFirebaseIndex` so dbx-components-mcp can index it, then run `dbx-cli-generate-firestore-indexes --component <dir>` to regenerate `firestore.indexes.json`.'
     },
     schema: [
       {

@@ -54,11 +54,11 @@
     '--mat-datepicker-calendar-container-shape': $value,
     '--mat-bottom-sheet-container-shape': $value,
     '--mat-tooltip-container-shape': $value,
-    // dbx component corner tokens that track the system scale.
-    '--dbx-content-pit-rounded-border-radius': $value,
+    '--dbx-content-pit-rounded-border-radius': $value // dbx component corner tokens that track the system scale.
+    ,
     '--dbx-prompt-box-border-radius': $value,
     '--dbx-corners-border-radius': $value,
-    '--dbx-navbar-item-border-radius': $value // single radius; navbar keeps its top-only geometry
+    '--dbx-navbar-item-border-radius': $value
   );
 }
 
@@ -79,8 +79,8 @@
     '--mat-fab-container-shape': $value,
     '--mat-fab-small-container-shape': $value,
     '--mat-list-active-indicator-shape': $value,
-    // list + nav/anchor-list rows (each list type reads its own token)
-    '--dbx-list-item-border-radius': $value,
+    '--dbx-list-item-border-radius': $value // list + nav/anchor-list rows (each list type reads its own token)
+    ,
     '--dbx-anchor-list-item-border-radius': $value
   );
 }
@@ -175,10 +175,10 @@ $dbx-style-demo-templates: (
   'sidenav-corner-extra': -dbx-style-demo-sidenav-shape-map(var(--mat-sys-corner-extra-large)),
   // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
   'surface-tint': (
-      '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),
-      '--mat-sys-surface-container': color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface-container)),
-      '--mat-sys-surface-container-high': color-mix(in srgb, var(--mat-sys-primary) 16%, var(--mat-sys-surface-container-high))
-    )
+    '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),
+    '--mat-sys-surface-container': color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface-container)),
+    '--mat-sys-surface-container-high': color-mix(in srgb, var(--mat-sys-primary) 16%, var(--mat-sys-surface-container-high))
+  )
 );
 
 /// Opt-in mixin that emits the disposable `.dbx-style-demo-template-<key>` debug classes.

@@ -9,4 +9,4 @@ import { STATES } from './app.router';
     })
   ]
 })
-export class AppModule { }
+export class AppModule {}

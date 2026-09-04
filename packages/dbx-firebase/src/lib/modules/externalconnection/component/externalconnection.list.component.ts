@@ -125,7 +125,16 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
   template: `
     <div class="dbx-list-item-padded-thick dbx-firebase-external-connection-item">
       <div class="dbx-flex-bar dbx-pb1">
-        <dbx-avatar class="dbx-icon-spacer dbx-firebase-external-connection-tile" [avatarTile]="true" avatarStyle="square" [avatarUrl]="assets.logoUrl" [avatarIcon]="assets.icon ?? defaultIcon" [avatarImageFilter]="assets.logoFilter" [avatarIgnoreDefaultUrl]="true" [avatarColor]="statusColor" [avatarColorTone]="18"></dbx-avatar>
+        <dbx-avatar
+          class="dbx-icon-spacer dbx-firebase-external-connection-tile"
+          [avatarTile]="true"
+          avatarStyle="square"
+          [avatarUrl]="assets.logoUrl"
+          [avatarIcon]="assets.icon ?? defaultIcon"
+          [avatarImageFilter]="assets.logoFilter"
+          [avatarIgnoreDefaultUrl]="true"
+          [avatarColor]="statusColor"
+          [avatarColorTone]="18"></dbx-avatar>
         <div class="dbx-flex-fill">
           <div class="dbx-text-title-medium">{{ assets.providerName }}</div>
           @if (detail; as detailValue) {

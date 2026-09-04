@@ -1,5 +1,15 @@
 import { Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgePickableChipField, filterPickableItemFieldValuesByLabel, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue } from '@dereekb/dbx-form';
+import {
+  AbstractConfigAsyncForgeFormDirective,
+  DBX_FORGE_FORM_COMPONENT_TEMPLATE,
+  dbxForgeFormComponentProviders,
+  DbxForgeFormComponentImportsModule,
+  dbxForgePickableChipField,
+  filterPickableItemFieldValuesByLabel,
+  type SearchableValueFieldDisplayFn,
+  type SearchableValueFieldDisplayValue,
+  type SearchableValueFieldValue
+} from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable, of } from 'rxjs';

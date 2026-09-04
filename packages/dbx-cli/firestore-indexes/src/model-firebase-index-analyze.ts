@@ -30,7 +30,18 @@
  * companion fieldOverrides).
  */
 
-import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator, DEFAULT_FIRESTORE_INDEX_DENSITY } from './model-firebase-index-schema.js';
+import {
+  type ConstraintSequence,
+  type ConstraintSequenceEntry,
+  type DerivedComposite,
+  type DerivedFieldOverride,
+  type DerivedFieldOverrideVariant,
+  type DerivedIndexField,
+  type FirestoreIndexOrder,
+  type FirestoreQueryScope,
+  type FirestoreWhereOperator,
+  DEFAULT_FIRESTORE_INDEX_DENSITY
+} from './model-firebase-index-schema.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
 
 // MARK: Public types
@@ -132,7 +143,10 @@ interface AnalyzeSequenceInput {
   readonly allowArrayContainsAny: boolean;
 }
 
-type AnalyzeSequenceResult = { readonly kind: 'composite'; readonly composite: DerivedComposite; readonly warnings: readonly AnalyzerWarning[] } | { readonly kind: 'fieldOverride'; readonly fieldOverride: { readonly fieldPath: string; readonly variant: DerivedFieldOverrideVariant }; readonly warnings: readonly AnalyzerWarning[] } | { readonly kind: 'auto'; readonly warnings: readonly AnalyzerWarning[] };
+type AnalyzeSequenceResult =
+  | { readonly kind: 'composite'; readonly composite: DerivedComposite; readonly warnings: readonly AnalyzerWarning[] }
+  | { readonly kind: 'fieldOverride'; readonly fieldOverride: { readonly fieldPath: string; readonly variant: DerivedFieldOverrideVariant }; readonly warnings: readonly AnalyzerWarning[] }
+  | { readonly kind: 'auto'; readonly warnings: readonly AnalyzerWarning[] };
 
 interface BucketedConstraints {
   readonly equalities: readonly ConstraintSequenceEntry[];

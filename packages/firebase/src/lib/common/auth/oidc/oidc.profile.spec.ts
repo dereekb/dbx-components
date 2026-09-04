@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { adminOnlyScopesForOidcProviderProfiles, assignmentOnlyScopesForOidcProviderProfiles, defaultOidcProviderProfiles, defaultUnlockedScopesForOidcProviderProfiles, OIDC_PROVIDER_PROFILE_DEFAULT_DESCRIPTION_SUFFIX, type OidcProviderProfile, oidcProviderProfileDetails, oidcProviderProfilesForClient, oidcProviderProfilesForKeys, requiredScopesForOidcProviderProfiles, scopesForOidcProviderProfiles } from './oidc.profile';
+import {
+  adminOnlyScopesForOidcProviderProfiles,
+  assignmentOnlyScopesForOidcProviderProfiles,
+  defaultOidcProviderProfiles,
+  defaultUnlockedScopesForOidcProviderProfiles,
+  OIDC_PROVIDER_PROFILE_DEFAULT_DESCRIPTION_SUFFIX,
+  type OidcProviderProfile,
+  oidcProviderProfileDetails,
+  oidcProviderProfilesForClient,
+  oidcProviderProfilesForKeys,
+  requiredScopesForOidcProviderProfiles,
+  scopesForOidcProviderProfiles
+} from './oidc.profile';
 
 /**
  * A registry declaring NO default and NO admin-only profile. Every assertion made against it doubles

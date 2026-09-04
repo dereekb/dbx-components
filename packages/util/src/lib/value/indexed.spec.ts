@@ -1,5 +1,21 @@
 import { range } from '../array/array.number';
-import { computeNextFreeIndexFunction, findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, type IndexRange, indexRangeOverlapsIndexRangeFunction, type IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, minAndMaxIndexFunction, minAndMaxIndexItemsFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction, filterUniqueByIndex } from './indexed';
+import {
+  computeNextFreeIndexFunction,
+  findBestIndexMatchFunction,
+  findItemsByIndex,
+  indexDeltaGroupFunction,
+  type IndexRange,
+  indexRangeOverlapsIndexRangeFunction,
+  type IndexRef,
+  isIndexNumberInIndexRangeFunction,
+  isIndexRangeInIndexRangeFunction,
+  minAndMaxIndexFunction,
+  minAndMaxIndexItemsFunction,
+  sortAscendingIndexNumberRefFunction,
+  stepsFromIndexFunction,
+  wrapIndexRangeFunction,
+  filterUniqueByIndex
+} from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {

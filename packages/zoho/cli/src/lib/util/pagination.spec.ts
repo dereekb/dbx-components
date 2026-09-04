@@ -44,19 +44,19 @@ describe('ZOHO_DESK_PAGINATION_ADAPTER', () => {
     });
 
     it('should return undefined when fewer records than limit were returned', () => {
-      const last: ZohoPaginatedResponse = { data: new Array(5).fill(0) };
+      const last: ZohoPaginatedResponse = { data: Array.from({ length: 5 }, () => 0) };
       const result = ZOHO_DESK_PAGINATION_ADAPTER.nextInput({ limit: 10 }, last);
       expect(result).toBeUndefined();
     });
 
     it('should advance by the page limit when the previous page was full', () => {
-      const last: ZohoPaginatedResponse = { data: new Array(10).fill(0) };
+      const last: ZohoPaginatedResponse = { data: Array.from({ length: 10 }, () => 0) };
       const result = ZOHO_DESK_PAGINATION_ADAPTER.nextInput({ limit: 10, from: 1 }, last);
       expect(result).toEqual({ limit: 10, from: 11 });
     });
 
     it('should default `from` to 1 when not provided', () => {
-      const last: ZohoPaginatedResponse = { data: new Array(10).fill(0) };
+      const last: ZohoPaginatedResponse = { data: Array.from({ length: 10 }, () => 0) };
       const result = ZOHO_DESK_PAGINATION_ADAPTER.nextInput({ limit: 10 }, last);
       expect(result.from).toBe(11);
     });
@@ -69,12 +69,12 @@ describe('ZOHO_DESK_PAGINATION_ADAPTER', () => {
     });
 
     it('should return false when records are fewer than the limit', () => {
-      const r: ZohoPaginatedResponse = { data: new Array(5).fill(0) };
+      const r: ZohoPaginatedResponse = { data: Array.from({ length: 5 }, () => 0) };
       expect(ZOHO_DESK_PAGINATION_ADAPTER.hasMorePagesAvailable({ limit: 10 }, r)).toBe(false);
     });
 
     it('should return true when the page is fully populated', () => {
-      const r: ZohoPaginatedResponse = { data: new Array(10).fill(0) };
+      const r: ZohoPaginatedResponse = { data: Array.from({ length: 10 }, () => 0) };
       expect(ZOHO_DESK_PAGINATION_ADAPTER.hasMorePagesAvailable({ limit: 10 }, r)).toBe(true);
     });
   });

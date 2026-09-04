@@ -10,6 +10,10 @@
 - Build the Firebase API app as ESM instead of CommonJS
 - Reshape the `@dereekb/rxjs` `LoadingState` generics — one runtime behavior change, several
   type-parameter reorderings, and five removed exports
+- Pin the Nx cache directory on CI — Nx 23.2 moved the cache out of the checkout
+- Move to ESLint 10, which the v14 lint plugin set now requires
+- Format with oxfmt instead of prettier
+- Add oxlint as a second, fast lint tier **alongside** ESLint — an addition, not a replacement
 
 ## Overview
 
@@ -38,6 +42,38 @@ APIs that dbx-components relied on, all of which are removed in Nx v24:
 Because all three were reached through `@dereekb/vitest`'s `createVitestConfig`, most of this
 is handled for you by upgrading the package. The parts you still have to do yourself are the
 `nx.json` and `project.json` changes described below.
+
+### Nx 23.2 moves the cache out of the checkout
+
+Take Nx 23.2 or later rather than stopping at 23.1.3, but know what 23.2 changed underneath you,
+because it is silent and it is not a code change.
+
+Through 23.1.x the local cache and the task database lived inside the checkout, at
+`<workspaceRoot>/.nx/cache` and `<workspaceRoot>/.nx/workspace-data`. From 23.2 both relocate to a
+per-user shared root keyed by workspace identity:
+
+```
+~/.nx/<first 16 hex chars of sha256(workspace-id)>/cache
+~/.nx/<first 16 hex chars of sha256(workspace-id)>/databases
+```
+
+The identity is the Nx Cloud id when there is one, otherwise a key derived from the git remote — so
+every checkout and every linked worktree of the same repository shares one cache. Locally that is
+the point of the change and it is a straight win.
+
+On CI it breaks the job-to-job handoff. Any pipeline that passes build output between jobs by
+persisting the checkout — CircleCI's `persist_to_workspace` / `attach_workspace`, or a GitHub
+Actions `actions/cache` keyed on `.nx/cache` — is now persisting two directories Nx no longer
+writes to. Downstream jobs attach a workspace whose cache is empty and rebuild everything the
+build job already built.
+
+Nothing errors. The only symptom is duration, plus `nx run <pkg>:build` reappearing in the log of a
+job that was supposed to be reusing it. In this repo the test jobs roughly doubled.
+
+Note that both halves have to move together. The DB's `cache_outputs` rows index the cache
+directory's *contents*, so persisting `.nx/cache` without `.nx/workspace-data` restores artifacts
+nothing can look up — zero cache hits from a cache that is right there on disk. Nx resolves the two
+locations from a single decision for exactly this reason.
 
 ### Angular 22 and TypeScript 6
 
@@ -245,6 +281,97 @@ call using it also appended `filter=%5Bobject+Object%5D` to the query string.
 
 Set `page` / `per_page` on the request directly, which is what the deprecation note already said.
 
+### ESLint 10 is required by the v14 lint config
+
+The v14 root `eslint.config.mjs` loads a plugin set that has moved past ESLint 9. The binding
+constraint is `eslint-plugin-unicorn@74`, whose peer is `eslint >= 10.4`; install it against a v9
+workspace and npm refuses the whole install with `ERESOLVE`, naming the peer.
+
+So the ESLint 10 upgrade is no longer optional for anyone adopting the v14 config. It is written up
+on its own page — [`setup/upgrades/eslint-v10-upgrade.md`](../eslint-v10-upgrade.md) — because it
+predates v14 and stands alone: a `package.json` bump, two edits to `eslint.config.mjs`, and an
+`import/` → `import-x/` rename. Read that page for the mechanics; what v14 adds is the plugin
+floors, which are higher than the ones that guide was written against:
+
+| Package | v14 pin | Peer floor |
+| --- | --- | --- |
+| `eslint` | `10.9.1` | — |
+| `eslint-plugin-unicorn` | `^74.0.0` | `eslint >= 10.4` — the binding constraint |
+| `eslint-plugin-jsdoc` | `^64.3.4` | `^7 \|\| ^8 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-sonarjs` | `^4.0.3` | `^8 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-import-x` | `^4.16.2` | `^8.57 \|\| ^9 \|\| ^10` |
+| `eslint-plugin-unused-imports` | `4.4.1` | `^8 \|\| ^9 \|\| ^10` |
+
+Everything the Nx generators put in the tree — `@nx/eslint`, `angular-eslint` 22.x,
+`typescript-eslint` 8.58+ — already peers `^10.0.0`, so ESLint is the only package that has to move.
+
+One thing to watch afterwards: `@nx/eslint` still *generates* `eslint@^9.8.0` (its version map has
+no entry above 9, so a fresh install resolves to the v9 line). It will not downgrade a declaration
+you have already raised to 10, but a newly generated workspace starts on v9 — which is exactly the
+bug this repo's own scaffolding CLI hit, and it now installs `eslint@10.9.1` alongside the plugins
+in one `npm install` so the two resolve together.
+
+### oxfmt replaces prettier
+
+The workspace formats with [oxfmt](https://oxc.rs/docs/guide/usage/formatter) rather than prettier.
+oxfmt is prettier-compatible in output for the settings dbx-components uses, so this is a swap of
+the tool, not a reformat of the codebase.
+
+Two things to know before you start:
+
+- **`nx format` needs Nx 23.2.** Nx 23.1.3's `format` imports prettier unconditionally and fails
+  with `Prettier is not installed.` From 23.2 it
+  [supports oxfmt](https://nx.dev/docs/reference/code-formatting), selected by detection: a root
+  `.oxfmtrc.json` wins, and Nx warns if both an oxfmt and a prettier config are present. So on 23.2
+  adding the config is all `nx format` needs; on 23.1.3, use the npm scripts below.
+- **`eslint-config-prettier` comes out.** Of the 358 rules it disables, this workspace only ever had
+  two enabled, so the whole dependency is replaced by two explicit `'off'` entries at the end of
+  `eslint.config.mjs`.
+
+### oxlint is an ADDITION to ESLint, not a replacement
+
+This is the most important thing to understand about the oxlint tier, and it is easy to get
+backwards, because oxlint's headline feature is being ~150x faster than ESLint. Faster at *its own*
+work — not at yours.
+
+**oxlint does not run your ESLint rules.** It never reads `eslint.config.mjs`. It reads
+`.oxlintrc.json`, and the rules it runs are oxc's own Rust *reimplementations* of upstream rule
+**names**; where a name overlaps, the implementation differs. The two engines are additive tiers
+covering different ground, and neither one's result substitutes for the other's:
+
+| Tier | Engine | Nx target | Owns |
+| --- | --- | --- | --- |
+| Fast | oxlint | `oxlint` (inferred by `@nx/oxlint`) | the `correctness` category on `.ts/.tsx/.js/.mjs/.cjs` |
+| Deep | ESLint | `lint` (explicit, in `project.json`) | everything else — your own plugins, type-aware rules, `.html` templates, `{package,project}.json`, jsdoc/sonarjs/unicorn |
+
+What **cannot** move to oxlint, all measured:
+
+- **Your own ESLint plugins.** oxlint has a `jsPlugins` bridge that can load them, and it does
+  support rule fixers — but oxlint's own schema calls it "in alpha and not subject to semver", and
+  three of dbx-components' type-aware first-party rules go **silently green** under it rather than
+  erroring. A rule that reports nothing is indistinguishable from a rule that passes, so the bridge
+  is deliberately off and the in-repo plugins stay on ESLint.
+- **Type-aware rules.** oxlint's inferred target carries no type information, so the
+  `@typescript-eslint` type-aware set is immovable in practice.
+- **`.html` Angular templates — structurally impossible.** oxlint has no HTML parser and, more
+  fundamentally, no *processor* concept. This covers inline templates too: ESLint lints a
+  `template:` string only because `angular-eslint`'s `processInlineTemplates` processor extracts it
+  into a virtual `.html` file first. **Moving your views inline does not make them lintable by
+  oxlint** — it relocates the same dependency on the one mechanism oxlint lacks.
+- **`.json`** (the `package.json` / `project.json` rules) and **sonarjs**, which has no oxlint
+  equivalent at all.
+
+So adopting oxlint does not let you delete anything from your ESLint config. The boundary is drawn
+from the *other* side: in `.oxlintrc.json`, every rule ESLint also runs is explicitly `"off"`. A
+missed disable there is a duplicate report (visible); a missed disable on the ESLint side would be a
+coverage hole (invisible) — which is why the disable list lives with oxlint. oxlint hard-errors on an
+unknown rule name, so that list cannot silently rot.
+
+The payoff is real but narrow: `correctness` catches classes of bug an ESLint config typically does
+not enable. In dbx-components it found 8 genuine `no-unsafe-optional-chaining` defects, every one of
+them the `(a?.b as T).c` form that core ESLint's own rule cannot see, because it reads the ESTree
+shape and never unwraps `TSAsExpression`.
+
 ## Migrations
 
 ### Migrate to Nx 23
@@ -259,6 +386,55 @@ checking the versions against the v14 `package.json` of dbx-components rather th
 generated ranges.
 
 Run `npx nx reset` afterwards if you hit stale-cache issues.
+
+### Pin the Nx cache directory on CI
+
+Only needed once you are on Nx 23.2 or later, and only for CI — leave local machines on the shared
+root, which is where it helps. Set `NX_CACHE_DIRECTORY` in every CI job:
+
+```diff
++# The Nx environment every job shares, merged into each job's `environment` with `<<: *nx_env`.
++nx_env: &nx_env
++  NX_NO_CLOUD: 'true'
++  NX_CACHE_DIRECTORY: .nx/cache
++
+ jobs:
+   build:
+     environment:
+-      NX_NO_CLOUD: 'true'
++      <<: *nx_env
+```
+
+One variable is enough for both directories: setting it opts the workspace out of the shared root
+wholesale, sending the cache to `.nx/cache` and the DB back to `.nx/workspace-data`. Do **not**
+reach for `NX_WORKSPACE_DATA_DIRECTORY` to move the DB separately — the two are meant to stay in
+one scope.
+
+The value is resolved against the workspace root, so the relative `.nx/cache` is also correct for a
+job that runs `nx` somewhere else in the filesystem (a scaffolded throwaway project, say) — each
+root gets its own.
+
+Then confirm the pipeline actually carries both directories between jobs:
+
+```diff
+ - persist_to_workspace:
+     root: ~/code
+     paths:
+       - node_modules
+       - dist
+       - .nx/cache
++      - .nx/workspace-data
+```
+
+To check the setting is doing what you think, print the resolved location — under a correct config
+it is inside the checkout, and without one it is under `~/.nx`:
+
+```
+node -e "console.log(require('nx/src/utils/cache-directory').cacheDir)"
+```
+
+Setting `cacheDirectory` in `nx.json` opts out the same way, but it applies to developer machines
+too, which gives up the shared cache the change was made for. Prefer the CI-only env var.
 
 ### Update dependencies
 
@@ -917,6 +1093,159 @@ requests.
 finds the call sites. A `filter` passed in an object literal is now an excess property and fails to
 compile, but one assembled into an intermediate un-annotated variable first will pass the excess
 property check and be silently dropped — so run the grep rather than trusting the build.
+
+### Upgrade to ESLint 10
+
+Follow [`setup/upgrades/eslint-v10-upgrade.md`](../eslint-v10-upgrade.md) end to end, then raise the
+plugin pins to the v14 floors:
+
+```
+npm i -D eslint@10.9.1 eslint-plugin-unicorn@^74.0.0 eslint-plugin-jsdoc@^64.3.4 eslint-plugin-sonarjs@^4.0.3 eslint-plugin-import-x@^4.16.2 eslint-plugin-unused-imports@4.4.1
+```
+
+Install `eslint` in the *same* command as the plugins. Bumping the plugins first against a declared
+`eslint@^9.x` fails with `ERESOLVE` on unicorn's `eslint >= 10.4` peer; in one command npm resolves
+the upgrade and the plugins together and there is no conflict to report.
+
+`--force` / `--legacy-peer-deps` would also get the install through, and both are the wrong answer
+here: the peer is accurate, and unicorn 74 genuinely does not run on ESLint 9.
+
+### Adopt oxfmt
+
+```
+npm i -D oxfmt
+npm uninstall prettier eslint-config-prettier
+```
+
+Add a root `.oxfmtrc.json`. Port your prettier settings across — the option names are the same:
+
+```json
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "arrowParens": "always",
+  "bracketSameLine": true,
+  "singleQuote": true,
+  "trailingComma": "none",
+  "semi": true,
+  "tabWidth": 2,
+  "printWidth": 320,
+  "endOfLine": "lf",
+  "ignorePatterns": ["/dist", "/coverage", "**/*.generated.*", "*.md"]
+}
+```
+
+`ignorePatterns` replaces `.prettierignore`; there is no separate ignore file. Note that oxfmt's
+patterns do **not** apply to oxlint — the two tools each read their own config.
+
+Wire the npm scripts either way — they are what the husky hook and CI call, and the only option on
+Nx 23.1.3:
+
+```json
+"scripts": {
+  "format": "oxfmt --write .",
+  "format-check": "oxfmt --check ."
+}
+```
+
+dbx-components also mirrors these as `workspace:format` / `workspace:format-check` targets in the
+root `project.json`, so they are reachable through `nx run`.
+
+Point the husky `pre-commit` hook at oxfmt so staged files are formatted on the way in — see
+`.husky/pre-commit` in the dbx-components repo for the version that filters to formattable
+extensions, skips deletions, and re-stages only what was already staged.
+
+Finally, disable the two ESLint rules that fight formatter output, replacing `eslint-config-prettier`
+at the end of `eslint.config.mjs`:
+
+```js
+{
+  files: ['**/*.{ts,tsx,cts,mts,js,jsx,cjs,mjs}'],
+  rules: {
+    'no-unexpected-multiline': 'off',
+    'no-extra-semi': 'off'
+  }
+}
+```
+
+Suppress formatting for one statement with `// oxfmt-ignore` (oxfmt also still honors
+`// prettier-ignore`).
+
+### Add oxlint as a second lint tier
+
+Optional. Skip it if you do not want a second linter — nothing else in v14 depends on it. Re-read
+[oxlint is an ADDITION to ESLint](#oxlint-is-an-addition-to-eslint-not-a-replacement) first, because
+the value depends on treating it as additive.
+
+```
+npx nx add @nx/oxlint
+```
+
+That runs the init generator: it registers the plugin, writes a stub `.oxlintrc.json`, and installs
+`oxlint` + `@nx/oxlint`. Then harden it by hand — do not trust the defaults.
+
+**1. Pin the target name in `nx.json`.** The generator's fallback chain starts at `lint`, which your
+`project.json` files already own. It lands on `oxlint` here only by accident of ordering:
+
+```json
+{
+  "plugin": "@nx/oxlint",
+  "options": { "targetName": "oxlint" }
+}
+```
+
+The resulting target is **inferred** — it exists only in the Nx project graph and is never written to
+any `project.json`. Anything that discovers targets by reading files off disk will not see it.
+
+**2. Replace the generated `.oxlintrc.json` stub.** Enable only `correctness`, and explicitly turn
+`"off"` every rule ESLint also runs:
+
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": { "correctness": "error" },
+  "ignorePatterns": ["/dist", "/coverage", "/.nx", "**/*.generated.*"],
+  "rules": {
+    "no-unused-vars": "off",
+    "unicorn/no-empty-file": "off"
+  }
+}
+```
+
+Two things make this list safe to maintain: oxlint hard-errors on an unknown rule name, so it cannot
+silently rot; and a *missed* disable produces a duplicate report you can see, rather than a coverage
+hole you cannot.
+
+Enable `correctness` only. Adding `suspicious` was measured on dbx-components at **4,237 findings,
+~90% of them conflicts with deliberate workspace conventions** — 3,066 `no-underscore-dangle` (the
+`_`-prefix for intentionally unused bindings), 578 `no-shadow`, 300 `no-extraneous-class` (every
+Angular and NestJS module). Re-measure before turning it on.
+
+**3. Add the workspace targets**, alongside the existing `lint-all` rather than replacing it:
+
+```json
+"oxlint-all":     { "executor": "nx:run-commands", "options": { "command": "npx nx run-many --target=oxlint --parallel=6" } },
+"oxlint-fix-all": { "executor": "nx:run-commands", "options": { "command": "npx nx run-many --target=oxlint --parallel=6 --fix" } }
+```
+
+**4. Make sure something actually runs it.** This is the step that is easy to skip and expensive to
+skip. A linter that only fires when a human types `nx run <project>:oxlint` accumulates violations
+invisibly and then blocks whoever finally wires it up. In dbx-components the tier is reachable
+through `dbx-cli-lint-cache --linter oxlint`, which writes `.tmp/lint-cache/<project>.oxlint.json`
+plus `index.oxlint.json` (ESLint's `<project>.json` / `index.json` are untouched), and through the
+`workspace:oxlint-cache` target that drives it.
+
+#### Do not pass `--silent` to oxlint
+
+Worth its own heading, because it produces a **green run that means nothing**.
+
+Nx forwards unrecognized flags straight through to the underlying command. oxlint's `--silent`
+suppresses the diagnostics *inside* `--format=json` while still reporting the scanned-file count — so
+a broken run is indistinguishable from a clean one. If you are adapting an ESLint runner that passes
+`--silent`, make it conditional on the engine.
+
+Also note oxlint has **no `--output-file`**. Its JSON goes to stdout, interleaved with Nx's
+`> nx run …` banner, so a consumer has to extract the JSON object from surrounding text.
 
 ## Notes and gotchas
 

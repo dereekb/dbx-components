@@ -122,7 +122,11 @@ export interface ExtractedCssUtilityEntry {
  * selector) are surfaced as warnings rather than thrown so a single bad
  * annotation does not break the whole scan.
  */
-export type ExtractWarning = { readonly kind: 'unsupported-selector'; readonly file: string; readonly line: number; readonly selector: string } | { readonly kind: 'unknown-role'; readonly file: string; readonly line: number; readonly slug: string; readonly role: string } | { readonly kind: 'unknown-scope'; readonly file: string; readonly line: number; readonly slug: string; readonly scope: string } | { readonly kind: 'orphan-annotation'; readonly file: string; readonly line: number };
+export type ExtractWarning =
+  | { readonly kind: 'unsupported-selector'; readonly file: string; readonly line: number; readonly selector: string }
+  | { readonly kind: 'unknown-role'; readonly file: string; readonly line: number; readonly slug: string; readonly role: string }
+  | { readonly kind: 'unknown-scope'; readonly file: string; readonly line: number; readonly slug: string; readonly scope: string }
+  | { readonly kind: 'orphan-annotation'; readonly file: string; readonly line: number };
 
 /**
  * Input to {@link extractCssUtilityEntries}.

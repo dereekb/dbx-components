@@ -29,7 +29,17 @@ const ForwardArgsType = type({
 
 const TOOL: Tool = {
   name: 'dbx_model_fixture_forward',
-  description: ['Insert the missing Fixture forwarder methods for one model in `<apiDir>/src/test/fixture.ts`. Every public Instance method that lacks a Fixture method gains a thin wrapper:', '', '```ts', 'async <name>(<paramText>): <returnType> {', '  return this.instance.<name>(<args>);', '}', '```', '', "Existing forwarders are left untouched (idempotent). Pass `methods` to limit the run to specific method names; omit to forward everything that's missing."].join('\n'),
+  description: [
+    'Insert the missing Fixture forwarder methods for one model in `<apiDir>/src/test/fixture.ts`. Every public Instance method that lacks a Fixture method gains a thin wrapper:',
+    '',
+    '```ts',
+    'async <name>(<paramText>): <returnType> {',
+    '  return this.instance.<name>(<args>);',
+    '}',
+    '```',
+    '',
+    "Existing forwarders are left untouched (idempotent). Pass `methods` to limit the run to specific method names; omit to forward everything that's missing."
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

@@ -1,6 +1,6 @@
 /**
  * `root` module — everything at the workspace root: firebase config, docker,
- * utility `.sh` scripts, circleci, husky/commitlint/prettier, the vitest preset +
+ * utility `.sh` scripts, circleci, husky/commitlint/oxfmt, the vitest preset +
  * setups, the big `@dereekb`/npm dependency install, and the project.json /
  * tsconfig / firebase.json edits (script lines 311-613, plus the per-project
  * `.env` fan-out at 483-491).
@@ -66,7 +66,11 @@ function buildPlan(context: SetupContext): readonly ScaffoldPlanEntry[] {
 
   const topLevel = ROOT_LEVEL_FILES.map((file) => archiveScaffoldEntry({ archivePath: file.archivePath, destPath: join(workspaceRoot, file.dest), tokens, tokensOverride: file.noTokens ? [] : undefined }));
 
-  const literals: readonly ScaffoldPlanEntry[] = [literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.local'), content: 'SECRETS=\n' }), literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.prod'), content: 'PUBLIC_PROD_VARIABLES_HERE\n' }), literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.staging'), content: 'PUBLIC_STAGING_VARIABLES_HERE\n' })];
+  const literals: readonly ScaffoldPlanEntry[] = [
+    literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.local'), content: 'SECRETS=\n' }),
+    literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.prod'), content: 'PUBLIC_PROD_VARIABLES_HERE\n' }),
+    literalScaffoldEntry({ destPath: join(workspaceRoot, '.env.staging'), content: 'PUBLIC_STAGING_VARIABLES_HERE\n' })
+  ];
 
   return [...rootSubtree, ...topLevel, ...literals, ...buildEnvFanout(context)];
 }
@@ -95,8 +99,16 @@ export const ROOT_MODULE: SetupModule = {
     const dep = (name: keyof typeof SETUP_DEPENDENCY_VERSIONS): string => `${String(name)}@${SETUP_DEPENDENCY_VERSIONS[name]}`;
     const nx = versions.core.nx;
 
-    // husky / commitlint / prettier (script line 451) + husky init (457)
-    await shell.run('npm', ['install', '-D', 'husky', dep('prettier'), dep('pretty-quick'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-config-prettier'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], { cwd: workspaceRoot, dryRun });
+    // husky / commitlint / oxfmt (script line 451) + husky init (457)
+    //
+    // `eslint` rides along with the plugins rather than being installed on its own: the generators
+    // leave the workspace on the `^9.8.0` line `@nx/eslint` scaffolds, and `eslint-plugin-unicorn`
+    // peers `eslint >= 10.4`. Installed separately, this command would resolve against the declared
+    // v9 and fail with ERESOLVE; in the same command npm resolves the upgrade and the plugins together.
+    await shell.run('npm', ['install', '-D', 'husky', dep('oxfmt'), '@commitlint/cli', '@commitlint/config-angular', dep('eslint'), dep('eslint-plugin-import-x'), dep('eslint-plugin-unused-imports'), dep('eslint-plugin-jsdoc'), dep('eslint-plugin-sonarjs'), dep('eslint-plugin-unicorn')], {
+      cwd: workspaceRoot,
+      dryRun
+    });
     await shell.run('npx', ['husky', 'init'], { cwd: workspaceRoot, dryRun });
 
     // tools/scripts/release.mjs imports these directly, so they must be declared

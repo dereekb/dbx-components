@@ -13,6 +13,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../blob/download.blob.button.component';
 import { AbstractDbxClipboardDirective } from '../../../util/clipboard.directive';
 import { DbxContentPitDirective } from '../../../layout/content/content.pit.directive';
+import { DbxActionSnackbarErrorDirective } from '../../../error/error.snackbar.action.directive';
 
 /**
  * Displays a preview of text content with options to copy to clipboard and download as a file. Supports loading states for async content retrieval.
@@ -25,7 +26,7 @@ import { DbxContentPitDirective } from '../../../layout/content/content.pit.dire
 @Component({
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
-  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective]
+  imports: [DbxActionSnackbarErrorDirective, NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxDownloadBlobButtonComponent, DbxContentPitDirective]
 })
 export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective {
   readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });

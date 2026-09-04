@@ -2,7 +2,21 @@ import { Component } from '@angular/core';
 import { of, type Observable } from 'rxjs';
 import { type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { type SegueRef, type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, type AnchorForValueFunction } from '@dereekb/dbx-web';
+import {
+  DbxContentContainerDirective,
+  DbxTwoColumnComponent,
+  DbxTwoColumnContextDirective,
+  DbxTwoBlockComponent,
+  DbxTwoColumnColumnHeadDirective,
+  DbxTwoColumnRightComponent,
+  DbxTwoColumnFullLeftDirective,
+  DbxTwoColumnSrefShowRightDirective,
+  DbxTwoColumnSrefDirective,
+  DbxAnchorListComponent,
+  DbxValueListItemModifierDirective,
+  DbxListItemAnchorModifierDirective,
+  type AnchorForValueFunction
+} from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton, MatIconButton } from '@angular/material/button';
@@ -12,7 +26,27 @@ import { DocTwoColumnSrefListComponent, type TwoColumnSrefValue } from '../compo
 
 @Component({
   templateUrl: './two.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, MatIconButton, MatIcon, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent, DocTwoColumnSrefListComponent, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, UIView]
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    MatButton,
+    DbxTwoColumnComponent,
+    DbxTwoColumnContextDirective,
+    DbxTwoBlockComponent,
+    DbxTwoColumnColumnHeadDirective,
+    DbxTwoColumnRightComponent,
+    MatIconButton,
+    MatIcon,
+    DbxTwoColumnFullLeftDirective,
+    DbxTwoColumnSrefShowRightDirective,
+    DbxTwoColumnSrefDirective,
+    DbxAnchorListComponent,
+    DocTwoColumnSrefListComponent,
+    DbxValueListItemModifierDirective,
+    DbxListItemAnchorModifierDirective,
+    UIView
+  ]
 })
 export class DocLayoutTwoColumnsComponent {
   showRight = true;

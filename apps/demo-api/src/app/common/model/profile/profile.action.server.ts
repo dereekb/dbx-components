@@ -17,7 +17,18 @@ import {
   updateProfileParamsType
 } from 'demo-firebase';
 import { type Maybe } from '@dereekb/util';
-import { type CalendarEventItem, type CalendarFirestoreCollections, type CalendarRecurringEventItem, type NotificationFirestoreCollections, type FirestoreContextReference, calendarIdForModel, calendarTemplate, createNotificationDocument, twoWayFlatFirestoreModelKey, updateCalendarEventsTemplate } from '@dereekb/firebase';
+import {
+  type CalendarEventItem,
+  type CalendarFirestoreCollections,
+  type CalendarRecurringEventItem,
+  type NotificationFirestoreCollections,
+  type FirestoreContextReference,
+  calendarIdForModel,
+  calendarTemplate,
+  createNotificationDocument,
+  twoWayFlatFirestoreModelKey,
+  updateCalendarEventsTemplate
+} from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
 import { type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 

@@ -21,5 +21,13 @@ export class DbxAppAuthImpersonationEffects {
   /**
    * Dispatches the started/stopped impersonation action for each lifecycle event emitted by the service.
    */
-  readonly syncImpersonationState = createEffect(() => this.dbxAuthImpersonationService.events$.pipe(map((event) => (event.type === 'start' ? onDbxAppAuth.DbxAppAuthImpersonationActions.startedImpersonating({ userId: authUserIdentifier(event.impersonatedUserId), previousUserId: event.previousImpersonatedUserId }) : onDbxAppAuth.DbxAppAuthImpersonationActions.stoppedImpersonating({ previousUserId: event.previousImpersonatedUserId })))));
+  readonly syncImpersonationState = createEffect(() =>
+    this.dbxAuthImpersonationService.events$.pipe(
+      map((event) =>
+        event.type === 'start'
+          ? onDbxAppAuth.DbxAppAuthImpersonationActions.startedImpersonating({ userId: authUserIdentifier(event.impersonatedUserId), previousUserId: event.previousImpersonatedUserId })
+          : onDbxAppAuth.DbxAppAuthImpersonationActions.stoppedImpersonating({ previousUserId: event.previousImpersonatedUserId })
+      )
+    )
+  );
 }

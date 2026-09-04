@@ -195,7 +195,16 @@ describe('scanFactoryReferences', () => {
     expect(info?.productionCount).toBe(6);
     expect(info?.specCount).toBe(2);
     const files = (info?.referencedBy ?? []).map((r) => r.file).sort((a, b) => a.localeCompare(b));
-    expect(files).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.ts', 'apps/foo-api/src/lib/run.action.ts', 'components/foo-shared/src/lib/derived.ts', 'components/foo-shared/src/lib/derived.ts', 'packages/util-helpers/src/lib/wrapper.ts', 'packages/util-helpers/src/lib/wrapper.ts']);
+    expect(files).toEqual([
+      'apps/foo-api/src/lib/run.action.spec.ts',
+      'apps/foo-api/src/lib/run.action.spec.ts',
+      'apps/foo-api/src/lib/run.action.ts',
+      'apps/foo-api/src/lib/run.action.ts',
+      'components/foo-shared/src/lib/derived.ts',
+      'components/foo-shared/src/lib/derived.ts',
+      'packages/util-helpers/src/lib/wrapper.ts',
+      'packages/util-helpers/src/lib/wrapper.ts'
+    ]);
     const specSites = (info?.referencedBy ?? []).filter((r) => r.isSpec).map((r) => r.file);
     expect(specSites).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts']);
     const productionSites = (info?.referencedBy ?? [])

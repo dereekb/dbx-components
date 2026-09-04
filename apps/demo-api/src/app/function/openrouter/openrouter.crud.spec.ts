@@ -31,7 +31,10 @@ demoApiFunctionContextFactory((f) => {
       describe('openRouterPromptVersion.create', () => {
         demoOpenRouterPromptContext({ f }, (p) => {
           it('should publish the first version and promote it when asked', async () => {
-            const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown>, activate: true }))) as CreateOpenRouterPromptVersionResult;
+            const result = (await au.callWrappedFunction(
+              demoCallModelWrappedFn,
+              onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown>, activate: true })
+            )) as CreateOpenRouterPromptVersionResult;
 
             expect(result.version).toBe(1);
             expect(result.activated).toBe(true);
@@ -72,13 +75,19 @@ demoApiFunctionContextFactory((f) => {
           demoAuthorizedUserContext({ f }, (u) => {
             itShouldFail('with FORBIDDEN for a non-admin', async () => {
               // A prompt has no owner to relate a role to, so the role map grants a non-admin nothing.
-              await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> })), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              await expectFail(
+                () => u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: p.documentKey, instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> })),
+                expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE)
+              );
             });
           });
         });
 
         itShouldFail('with MODEL_NOT_AVAILABLE for a prompt that does not exist', async () => {
-          await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: firestoreModelKey(openRouterPromptIdentity, 'no-such-prompt'), instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> })), expectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
+          await expectFail(
+            () => au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(openRouterPromptVersionIdentity, { prompt: firestoreModelKey(openRouterPromptIdentity, 'no-such-prompt'), instructions: 'You are a test.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> })),
+            expectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE)
+          );
         });
       });
 

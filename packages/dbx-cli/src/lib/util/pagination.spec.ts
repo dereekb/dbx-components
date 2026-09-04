@@ -218,7 +218,7 @@ describe('runPaginatedList', () => {
     });
 
     expect(errorSpy).toHaveBeenCalled();
-    expect((errorSpy.mock.calls[0]?.[0] as string).toLowerCase()).toContain('--multiple-pages');
+    expect((errorSpy.mock.calls[0]![0] as string).toLowerCase()).toContain('--multiple-pages');
   });
 
   it('dump-merge=replace truncates the dump file each iteration (last page survives)', async () => {

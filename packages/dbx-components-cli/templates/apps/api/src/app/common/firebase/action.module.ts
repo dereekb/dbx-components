@@ -11,7 +11,14 @@ import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase'
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { NotificationExpediteService } from '@dereekb/firebase-server/model';
 
-const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (serverEnvironmentService: ServerEnvironmentService, collections: APP_CODE_PREFIXFirestoreCollections, authService: APP_CODE_PREFIXApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService, notificationExpediteService: NotificationExpediteService): APP_CODE_PREFIXFirebaseServerActionsContext => {
+const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (
+  serverEnvironmentService: ServerEnvironmentService,
+  collections: APP_CODE_PREFIXFirestoreCollections,
+  authService: APP_CODE_PREFIXApiAuthService,
+  storageService: FirebaseServerStorageService,
+  mailgunService: MailgunService,
+  notificationExpediteService: NotificationExpediteService
+): APP_CODE_PREFIXFirebaseServerActionsContext => {
   return {
     ...collections,
     ...firebaseServerActionsContext({ logError: serverEnvironmentService.isTestingEnv }),

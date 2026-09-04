@@ -94,7 +94,7 @@
 */
 @mixin nested-content-height($headers: 1, $additionalOffset: 0) {
   @if $headers < 1 {
-    @error "Headers count #{$headers} must be greater than 1.";
+    @error 'Headers count #{$headers} must be greater than 1.';
   }
 
   @include content-height($additionalOffset, $headers);

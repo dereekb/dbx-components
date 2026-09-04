@@ -1,6 +1,16 @@
 import { LOREM } from '../../shared/lorem';
 import { Component } from '@angular/core';
-import { AbstractDbxListGridViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListGridViewComponentImportsModule } from '@dereekb/dbx-web';
+import {
+  AbstractDbxListGridViewDirective,
+  AbstractDbxValueListViewItemComponent,
+  provideDbxListView,
+  AbstractDbxListWrapperDirective,
+  type DbxValueListGridViewConfig,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DEFAULT_DBX_LIST_GRID_VIEW_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListGridViewComponentImportsModule
+} from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';
 

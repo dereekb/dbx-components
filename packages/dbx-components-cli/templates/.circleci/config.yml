@@ -1,6 +1,17 @@
 # Derived from https://github.com/dereekb/dbx-components/blob/main/.circleci/config.yml
 # SETUP REQUIRED - Visit all sections marked SETUP REQUIRED to finish up configuration. This requires changes on CircleCI's portal.
 version: 2.1
+# The Nx environment every job shares, merged into each job's `environment` with `<<: *nx_env`.
+nx_env: &nx_env
+  NX_NO_CLOUD: 'true'
+  # Nx 23.2+ moves the local cache and the task DB out of the checkout and into a per-user shared
+  # root (`~/.nx/<workspace-id>/{cache,databases}`). Jobs here hand work to one another by
+  # persisting the checkout, so under that layout the build job's cache stays behind on its own
+  # container and every downstream job re-runs the builds it was supposed to reuse. Setting this
+  # opts the workspace back out of the shared root — cache to `.nx/cache`, DB to
+  # `.nx/workspace-data` — which are the paths `persist_to_workspace` carries below.
+  NX_CACHE_DIRECTORY: .nx/cache
+
 defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
@@ -32,7 +43,7 @@ jobs:
         default: false # flag true if you want to scan for vulnerabilities with snyk
     environment:
       CYPRESS_INSTALL_BINARY: 0
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
     steps:
       - checkout
       # install node packages
@@ -62,11 +73,14 @@ jobs:
                   - node_modules
                   - dist
                   - .nx/cache
+                  # The task DB indexes the cache directory's contents — a restored `.nx/cache`
+                  # without it resolves to no hits at all.
+                  - .nx/workspace-data
   # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -84,7 +98,7 @@ jobs:
       GCE_METADATA_HOST: 0.0.0.0
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:
@@ -122,7 +136,7 @@ jobs:
         type: boolean
         default: false
     environment:
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
       # SETUP REQUIRED - Set the git username and email to the desired values
       GIT_USER_EMAIL: CI_GIT_USER_EMAIL
       GIT_USER_NAME: CI_GIT_USER_NAME
@@ -180,7 +194,7 @@ jobs:
   deploy-to-firebase-staging:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -202,7 +216,7 @@ jobs:
   deploy-to-firebase-prod:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -226,7 +240,7 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_NO_CLOUD: 'true'
+      <<: *nx_env
     steps:
       - checkout
       - attach_workspace:

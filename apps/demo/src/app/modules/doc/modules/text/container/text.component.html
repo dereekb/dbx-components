@@ -248,7 +248,9 @@
       <p class="text-left">Text left aligned.</p>
     </doc-feature-example>
     <h4>Icon Tile</h4>
-    <doc-feature-example header="dbx-icon-tile" hint="Rounded, padded leading-icon tile. Use <dbx-icon-tile [icon]='...' [dbxColor]='...'> for the component form (primary), or .dbx-icon-tile / [dbxIconTile] to apply the same tile styling to an existing element. The tile sets layout only — pair with [dbxColor] (optionally [dbxColorTone]) for a tonal or full-color background.">
+    <doc-feature-example
+      header="dbx-icon-tile"
+      hint="Rounded, padded leading-icon tile. Use <dbx-icon-tile [icon]='...' [dbxColor]='...'> for the component form (primary), or .dbx-icon-tile / [dbxIconTile] to apply the same tile styling to an existing element. The tile sets layout only — pair with [dbxColor] (optionally [dbxColorTone]) for a tonal or full-color background.">
       <p>Component form. Takes an [icon] input and renders the mat-icon for you. Drop [dbxColor] directly on the tag.</p>
       <div style="display: flex; gap: 8px; flex-wrap: wrap">
         <dbx-icon-tile [icon]="'check'" dbxColor="primary"></dbx-icon-tile>
@@ -337,7 +339,10 @@
         is built by setting these variables — see the Step Block section above.
       </p>
       <h4>Host-class form: .dbx-icon-tile / [dbxIconTile]</h4>
-      <p>Applies the same tile styling to an existing element. Use when a slot (e.g. a list row's .item-icon div) needs the tile presentation without a wrapping &lt;dbx-icon-tile&gt;, or when the host already has another component on it. Without a color, the tile has no background of its own — the dashed outline below traces the box so its shape (12px radius, 8px padding) is visible.</p>
+      <p>
+        Applies the same tile styling to an existing element. Use when a slot (e.g. a list row's .item-icon div) needs the tile presentation without a wrapping &lt;dbx-icon-tile&gt;, or when the host already has another component on it. Without a color, the tile has no background of its own — the dashed outline below
+        traces the box so its shape (12px radius, 8px padding) is visible.
+      </p>
       <div style="display: flex; gap: 16px; align-items: center">
         <div class="dbx-icon-tile" style="outline: 1px dashed var(--mat-sys-outline)">
           <mat-icon>star</mat-icon>

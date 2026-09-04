@@ -5,7 +5,10 @@ import { type SetIncludesMode, type IterableOrValue, type ModelKey } from '@dere
 import { map, type Observable, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { type DbxFirebaseInContextFirebaseModelInfoServiceInstance } from './model.context';
 
-export type DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> = <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(type: S extends InContextFirebaseModelsService<infer Y> ? (Y extends FirebaseModelsService<infer X, infer C> ? keyof X : never) : never, keyObs: ObservableOrValue<ModelKey>) => DbxFirebaseInContextFirebaseModelServiceInstance<D, R, C>;
+export type DbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extends InContextFirebaseModelsService<any>, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> = <D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole>(
+  type: S extends InContextFirebaseModelsService<infer Y> ? (Y extends FirebaseModelsService<infer X, infer C> ? keyof X : never) : never,
+  keyObs: ObservableOrValue<ModelKey>
+) => DbxFirebaseInContextFirebaseModelServiceInstance<D, R, C>;
 
 /**
  * Factory function that creates typed model service instance accessors from an observable context.

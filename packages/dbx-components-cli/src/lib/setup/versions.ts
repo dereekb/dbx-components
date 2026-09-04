@@ -69,18 +69,22 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'firebase-admin': '^13.0.0',
   'firebase-functions': '^7.0.0',
   'firebase-functions-test': '3.4.1',
-  prettier: '3.8.1',
+  oxfmt: '^0.66.0',
   'conventional-changelog': '^7.2.0',
   'conventional-recommended-bump': '^11.2.0',
   semver: '^7.7.4',
   yargs: '^18.0.0',
-  'pretty-quick': '^4.2.2',
+  // `create-nx-workspace` scaffolds `eslint@^9.8.0`, but the root `eslint.config.mjs` template loads
+  // plugins that have moved past it — `eslint-plugin-unicorn@74` peers `eslint >= 10.4`, so leaving
+  // the v9 line in place fails the plugin install outright with ERESOLVE. Installed alongside the
+  // plugins so npm resolves the upgrade in one pass; every other eslint package the generators add
+  // (`@nx/eslint`, `angular-eslint`, `typescript-eslint`) already peers `^10.0.0`.
+  eslint: '10.9.1',
   'eslint-plugin-import-x': '^4.16.2',
   'eslint-plugin-unused-imports': '4.4.1',
-  'eslint-config-prettier': '10.1.8',
-  'eslint-plugin-jsdoc': '^62.9.0',
+  'eslint-plugin-jsdoc': '^64.3.4',
   'eslint-plugin-sonarjs': '^4.0.3',
-  'eslint-plugin-unicorn': '^64.0.0',
+  'eslint-plugin-unicorn': '^74.0.0',
   'mailgun.js': '^14.0.0',
   rxjs: '^7.8.0',
   arktype: '^2.2.0',
@@ -105,7 +109,26 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
 /**
  * The `@dereekb/*` packages installed against the dbx-components version.
  */
-export const DEREEKB_PACKAGES: readonly string[] = ['@dereekb/analytics', '@dereekb/browser', '@dereekb/calcom', '@dereekb/date', '@dereekb/dbx-analytics', '@dereekb/dbx-core', '@dereekb/dbx-firebase', '@dereekb/dbx-form', '@dereekb/dbx-web', '@dereekb/firebase', '@dereekb/firebase-server', '@dereekb/model', '@dereekb/zoho', '@dereekb/zoom', '@dereekb/nestjs', '@dereekb/rxjs', '@dereekb/util', '@dereekb/vitest'];
+export const DEREEKB_PACKAGES: readonly string[] = [
+  '@dereekb/analytics',
+  '@dereekb/browser',
+  '@dereekb/calcom',
+  '@dereekb/date',
+  '@dereekb/dbx-analytics',
+  '@dereekb/dbx-core',
+  '@dereekb/dbx-firebase',
+  '@dereekb/dbx-form',
+  '@dereekb/dbx-web',
+  '@dereekb/firebase',
+  '@dereekb/firebase-server',
+  '@dereekb/model',
+  '@dereekb/zoho',
+  '@dereekb/zoom',
+  '@dereekb/nestjs',
+  '@dereekb/rxjs',
+  '@dereekb/util',
+  '@dereekb/vitest'
+];
 
 /**
  * The CI dist path the `--ci-test` mode installs `@dereekb/*` from (script line 169).

@@ -14,7 +14,18 @@ import { DbxFileUploadComponent } from '../../interaction/upload/upload.componen
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_DBX_PDF_MERGE_PAGE_EDITING, DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR, DEFAULT_DBX_PDF_MERGE_SIDECAR, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import {
+  DBX_PDF_MERGE_EDITOR_CONFIG,
+  DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING,
+  DEFAULT_DBX_PDF_MERGE_PAGE_EDITING,
+  DEFAULT_DBX_PDF_MERGE_RESTORE_IMPORT_ON_CLEAR,
+  DEFAULT_DBX_PDF_MERGE_SIDECAR,
+  DEFAULT_PDF_MERGE_ACCEPT,
+  type DbxPdfMergeEditorConfig,
+  type DbxPdfMergeEncryptedHandling,
+  type DbxPdfMergeOutputSizeLimitsConfig,
+  type PdfMergeEntry
+} from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore, type DbxPdfMergeEditorClearEntriesResult } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';

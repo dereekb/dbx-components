@@ -76,7 +76,21 @@ import {
 import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, type GrantedRoleMap } from '@dereekb/model';
 import { type PromiseOrValue } from '@dereekb/util';
 import { type Example, type ExampleDocument, type ExampleRoles, type ExampleTypes, exampleFirestoreCollection, type ExampleFirestoreCollection, type ExampleFirestoreCollections } from './example';
-import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfilePrivate, type ProfilePrivateDocument, type ProfilePrivateFirestoreCollectionFactory, type ProfilePrivateFirestoreCollectionGroup, type ProfilePrivateRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateFirestoreCollectionFactory, profilePrivateFirestoreCollectionGroup } from './profile';
+import {
+  type ProfileTypes,
+  type Profile,
+  type ProfileDocument,
+  type ProfileFirestoreCollection,
+  type ProfilePrivate,
+  type ProfilePrivateDocument,
+  type ProfilePrivateFirestoreCollectionFactory,
+  type ProfilePrivateFirestoreCollectionGroup,
+  type ProfilePrivateRoles,
+  type ProfileRoles,
+  profileFirestoreCollection,
+  profilePrivateFirestoreCollectionFactory,
+  profilePrivateFirestoreCollectionGroup
+} from './profile';
 import { APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap } from './system';
 // @dbx-addon:oidc:fb-service:imports
 

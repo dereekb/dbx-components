@@ -8,7 +8,19 @@
  * {@link EmittedFile.status} based on `fs.access` results.
  */
 
-import { applyTokens, NOTIFICATION_TASK_COMPONENT_TEMPLATE, NOTIFICATION_TASK_HANDLER_TEMPLATE, NOTIFICATION_TASK_WIRING_SNIPPET, NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, NOTIFICATION_TEMPLATE_WIRING_SNIPPET, STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE, STORAGEFILE_PURPOSE_HANDLER_TEMPLATE, STORAGEFILE_PURPOSE_WIRING_SNIPPET, type TemplateContext } from './templates.js';
+import {
+  applyTokens,
+  NOTIFICATION_TASK_COMPONENT_TEMPLATE,
+  NOTIFICATION_TASK_HANDLER_TEMPLATE,
+  NOTIFICATION_TASK_WIRING_SNIPPET,
+  NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE,
+  NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE,
+  NOTIFICATION_TEMPLATE_WIRING_SNIPPET,
+  STORAGEFILE_PURPOSE_COMPONENT_TEMPLATE,
+  STORAGEFILE_PURPOSE_HANDLER_TEMPLATE,
+  STORAGEFILE_PURPOSE_WIRING_SNIPPET,
+  type TemplateContext
+} from './templates.js';
 import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, WiringStep } from './types.js';
 
 /**
@@ -68,7 +80,10 @@ function renderStorageFilePurpose(input: ScaffoldArtifactInput, ctx: TemplateCon
     tokens: ctx.tokens,
     files: [componentFile, handlerFile],
     wiring,
-    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_PURPOSE\` storage-file purpose end-to-end: component-side constants + path helpers (append to \`storagefile.ts\`) and an API-side upload-initializer factory in \`handlers/\`. After applying, run \`dbx_validate_app_storagefiles\` and \`dbx_validate_storagefile_folder\` against your project — both should PASS.`, ctx)
+    summary: applyTokens(
+      `Scaffolds a new \`<<SCREAMING>>_PURPOSE\` storage-file purpose end-to-end: component-side constants + path helpers (append to \`storagefile.ts\`) and an API-side upload-initializer factory in \`handlers/\`. After applying, run \`dbx_validate_app_storagefiles\` and \`dbx_validate_storagefile_folder\` against your project — both should PASS.`,
+      ctx
+    )
   };
   return result;
 }
@@ -78,21 +93,30 @@ function renderNotificationTemplate(input: ScaffoldArtifactInput, ctx: TemplateC
   const componentFile: EmittedFile = {
     status: 'append',
     path: applyTokens('<<componentDir>>/src/lib/model/notification/notification.ts', ctx),
-    description: applyTokens(`Append the \`<<Pascal>>\` notification block to \`notification.ts\`: type constant + info + data interface + template factory. Reuses the file's existing imports — no new top-level imports required as long as \`NotificationTemplateType\`, \`NotificationTemplateTypeInfo\`, \`CreateNotificationTemplate\`, \`createNotificationTemplate\`, \`FirebaseAuthUserId\`, \`profileIdentity\`, and \`ProfileDocument\` are already in scope.`, ctx),
+    description: applyTokens(
+      `Append the \`<<Pascal>>\` notification block to \`notification.ts\`: type constant + info + data interface + template factory. Reuses the file's existing imports — no new top-level imports required as long as \`NotificationTemplateType\`, \`NotificationTemplateTypeInfo\`, \`CreateNotificationTemplate\`, \`createNotificationTemplate\`, \`FirebaseAuthUserId\`, \`profileIdentity\`, and \`ProfileDocument\` are already in scope.`,
+      ctx
+    ),
     content: applyTokens(NOTIFICATION_TEMPLATE_COMPONENT_TEMPLATE, ctx)
   };
 
   const factoryFile: EmittedFile = {
     status: 'append',
     path: applyTokens('<<apiDir>>/src/app/common/model/notification/notification.factory.ts', ctx),
-    description: applyTokens(`Append the \`<<appCamel>><<Pascal>>NotificationFactory\` to \`notification.factory.ts\`. Reuses the file's existing imports for \`NotificationMessageFunctionFactoryConfig\`, \`NotificationMessageInputContext\`, \`NotificationMessageContent\`, \`NotificationMessage\`, \`notificationMessageFunction\`, and \`NotificationTemplateServiceTypeConfig\`.`, ctx),
+    description: applyTokens(
+      `Append the \`<<appCamel>><<Pascal>>NotificationFactory\` to \`notification.factory.ts\`. Reuses the file's existing imports for \`NotificationMessageFunctionFactoryConfig\`, \`NotificationMessageInputContext\`, \`NotificationMessageContent\`, \`NotificationMessage\`, \`notificationMessageFunction\`, and \`NotificationTemplateServiceTypeConfig\`.`,
+      ctx
+    ),
     content: applyTokens(NOTIFICATION_TEMPLATE_FACTORY_TEMPLATE, ctx)
   };
 
   const wiring: WiringStep[] = [
     {
       file: applyTokens('<<apiDir>>/src/app/common/model/notification/notification.factory.ts', ctx),
-      description: applyTokens(`Two registrations are required: (1) add a call to \`<<appCamel>><<Pascal>>NotificationFactory(context)\` in the existing configs-array factory return list (so the handler is reachable through the template service); (2) add \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO\` to the \`*_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD\` aggregator in \`notification.ts\` so the metadata path is wired.`, ctx),
+      description: applyTokens(
+        `Two registrations are required: (1) add a call to \`<<appCamel>><<Pascal>>NotificationFactory(context)\` in the existing configs-array factory return list (so the handler is reachable through the template service); (2) add \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO\` to the \`*_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD\` aggregator in \`notification.ts\` so the metadata path is wired.`,
+        ctx
+      ),
       snippet: applyTokens(NOTIFICATION_TEMPLATE_WIRING_SNIPPET, ctx)
     }
   ];
@@ -102,7 +126,10 @@ function renderNotificationTemplate(input: ScaffoldArtifactInput, ctx: TemplateC
     tokens: ctx.tokens,
     files: [componentFile, factoryFile],
     wiring,
-    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE\` end-to-end: component-side type + info + data + template factory (append to \`notification.ts\`) and an API-side template-service factory (append to \`notification.factory.ts\`). After applying the wiring, run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`, ctx)
+    summary: applyTokens(
+      `Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE\` end-to-end: component-side type + info + data + template factory (append to \`notification.ts\`) and an API-side template-service factory (append to \`notification.factory.ts\`). After applying the wiring, run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`,
+      ctx
+    )
   };
   return result;
 }
@@ -132,7 +159,10 @@ function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateConte
   const wiring: WiringStep[] = [
     {
       file: applyTokens('<<apiDir>>/src/app/common/model/notification/notification.task.service.ts', ctx),
-      description: applyTokens(`Import the new factory, instantiate it bound to \`<<camel>>Handler\`, push that name into the existing \`handlers\` array, and add \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` to the \`ALL_NOTIFICATION_TASK_TYPES\` aggregate in the component package's \`notification.task.ts\` so the validate-vs-handler parity check stays consistent.`, ctx),
+      description: applyTokens(
+        `Import the new factory, instantiate it bound to \`<<camel>>Handler\`, push that name into the existing \`handlers\` array, and add \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` to the \`ALL_NOTIFICATION_TASK_TYPES\` aggregate in the component package's \`notification.task.ts\` so the validate-vs-handler parity check stays consistent.`,
+        ctx
+      ),
       snippet: applyTokens(NOTIFICATION_TASK_WIRING_SNIPPET, ctx)
     }
   ];
@@ -142,7 +172,10 @@ function renderNotificationTask(input: ScaffoldArtifactInput, ctx: TemplateConte
     tokens: ctx.tokens,
     files: [componentFile, handlerFile],
     wiring,
-    summary: applyTokens(`Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`, ctx)
+    summary: applyTokens(
+      `Scaffolds a new \`<<SCREAMING>>_NOTIFICATION_TASK_TYPE\` end-to-end: component-side type + checkpoint alias + data + template factory (append to \`notification.task.ts\`) and an API-side handler factory in \`handlers/\`. After applying the wiring (handlers array + ALL_NOTIFICATION_TASK_TYPES), run \`dbx_notification_m_validate_app\` and \`dbx_notification_m_validate_folder\` against your project — both should PASS.`,
+      ctx
+    )
   };
   return result;
 }

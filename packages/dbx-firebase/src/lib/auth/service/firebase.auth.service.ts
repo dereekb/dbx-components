@@ -1,7 +1,29 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier, type DbxAuthImpersonationDetails } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, reauthenticateWithRedirect, type User, type IdTokenResult, type ParsedToken, signInWithPopup, signInWithRedirect, getRedirectResult, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithRedirect, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
+import {
+  reauthenticateWithPopup,
+  reauthenticateWithRedirect,
+  type User,
+  type IdTokenResult,
+  type ParsedToken,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  type AuthProvider,
+  type PopupRedirectResolver,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  type UserCredential,
+  createUserWithEmailAndPassword,
+  linkWithPopup,
+  linkWithRedirect,
+  linkWithCredential,
+  unlink,
+  type AuthCredential,
+  sendPasswordResetEmail,
+  confirmPasswordReset
+} from 'firebase/auth';
 import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
 import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';

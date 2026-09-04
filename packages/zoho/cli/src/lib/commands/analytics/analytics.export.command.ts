@@ -34,7 +34,11 @@ async function handleExportBody(response: Response, out: Maybe<string>): Promise
  * @returns The builder with the shared export options applied.
  */
 function withExportOptions(yargs: Argv): Argv {
-  return yargs.option('format', { type: 'string', choices: EXPORT_FORMATS, default: 'csv', describe: 'Format of the exported data' }).option('out', { alias: 'o', type: 'string', describe: 'Write the export to this file instead of printing it' }).option('criteria', { type: 'string', describe: `Filter expression, e.g. "Sales"."Region"='West'` }).option('columns', { type: 'string', describe: 'Comma-separated columns to export' });
+  return yargs
+    .option('format', { type: 'string', choices: EXPORT_FORMATS, default: 'csv', describe: 'Format of the exported data' })
+    .option('out', { alias: 'o', type: 'string', describe: 'Write the export to this file instead of printing it' })
+    .option('criteria', { type: 'string', describe: `Filter expression, e.g. "Sales"."Region"='West'` })
+    .option('columns', { type: 'string', describe: 'Comma-separated columns to export' });
 }
 
 /**
@@ -69,7 +73,11 @@ export function exportConfigFromArgv(argv: any) {
 const exportDataCommand: CommandModule = {
   command: 'data <workspaceId> <viewId>',
   describe: 'Export the data of a view',
-  builder: (yargs: Argv) => withExportOptions(yargs).positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' }).option('async', { type: 'boolean', default: false, describe: 'Queue the export as a job and poll it. Required for dashboards, query tables, and tables over a million rows' }),
+  builder: (yargs: Argv) =>
+    withExportOptions(yargs)
+      .positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' })
+      .positional('viewId', { type: 'string', demandOption: true, describe: 'View ID' })
+      .option('async', { type: 'boolean', default: false, describe: 'Queue the export as a job and poll it. Required for dashboards, query tables, and tables over a million rows' }),
   handler: async (argv: any) => {
     try {
       const api = getAnalyticsApi(argv);
@@ -118,7 +126,12 @@ const exportQueryCommand: CommandModule = {
 const exportJobCommand: CommandModule = {
   command: 'job <workspaceId> <jobId>',
   describe: 'Get the status of an asynchronous export job',
-  builder: (yargs: Argv) => yargs.positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' }).positional('jobId', { type: 'string', demandOption: true, describe: 'Export job ID' }).option('download', { type: 'boolean', default: false, describe: 'Download the export when the job has completed' }).option('out', { alias: 'o', type: 'string', describe: 'Write the download to this file instead of printing it' }),
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('workspaceId', { type: 'string', demandOption: true, describe: 'Workspace ID' })
+      .positional('jobId', { type: 'string', demandOption: true, describe: 'Export job ID' })
+      .option('download', { type: 'boolean', default: false, describe: 'Download the export when the job has completed' })
+      .option('out', { alias: 'o', type: 'string', describe: 'Write the download to this file instead of printing it' }),
   handler: async (argv: any) => {
     try {
       const api = getAnalyticsApi(argv);

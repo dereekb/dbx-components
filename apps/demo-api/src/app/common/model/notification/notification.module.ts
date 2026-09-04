@@ -1,5 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AbstractAppNotificationModule, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, type NotificationUserHealthCheckServerConfig, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import {
+  AbstractAppNotificationModule,
+  BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN,
+  NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN,
+  NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN,
+  NotificationSendService,
+  NotificationTaskService,
+  NotificationTemplateService,
+  type NotificationUserHealthCheckServerConfig,
+  appNotificationModuleMetadata
+} from '@dereekb/firebase-server/model';
 import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS } from 'demo-firebase';
 import { DemoFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
@@ -25,7 +35,13 @@ export const DEMO_NOTIFICATION_USER_HEALTH_CHECK_CONFIG: NotificationUserHealthC
 };
 
 // eslint-disable-next-line @typescript-eslint/max-params
-export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({ ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationUserHealthCheckConfig: DEMO_NOTIFICATION_USER_HEALTH_CHECK_CONFIG });
+export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({
+  ...context,
+  notificationTemplateService,
+  notificationSendService,
+  notificationTaskService,
+  notificationUserHealthCheckConfig: DEMO_NOTIFICATION_USER_HEALTH_CHECK_CONFIG
+});
 
 /**
  * Dependencies for the NotificationModule

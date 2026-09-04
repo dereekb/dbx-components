@@ -162,7 +162,7 @@ export function generateSampleModel(input: GenerateSampleModelInput): GeneratedS
       case 'objectArray': {
         const nested = resolveNested(field, path);
         const count = arrayCountAt(path);
-        result = nested ? Array.from({ length: count }, (_unused, index) => generateFromConverter(nested, `${path}[]`, index)) : new Array(count).fill({});
+        result = nested ? Array.from({ length: count }, (_unused, index) => generateFromConverter(nested, `${path}[]`, index)) : Array.from({ length: count }, () => ({}));
         break;
       }
       default:

@@ -105,7 +105,8 @@ export interface ModelRolesToolInput {
 export function createModelRolesTool(deps: CreateModelRolesToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => modelRolesToolHandler(args, ctx, deps);
   const name = MODEL_ROLES_TOOL_NAME;
-  const description = 'Resolve which roles the current user (or, with "uid", another user) is granted on one or more model keys — the same permission computation the API runs, returned instead of enforced. Use to answer "why was this forbidden?" and to tell a missing document (exists:false) apart from one you cannot access (exists:true, roles:[]). Admin full-access short-circuits report fullAccess:true. Targeting another uid requires elevated access.';
+  const description =
+    'Resolve which roles the current user (or, with "uid", another user) is granted on one or more model keys — the same permission computation the API runs, returned instead of enforced. Use to answer "why was this forbidden?" and to tell a missing document (exists:false) apart from one you cannot access (exists:true, roles:[]). Admin full-access short-circuits report fullAccess:true. Targeting another uid requires elevated access.';
 
   return buildStaticToolDefinition({
     name,

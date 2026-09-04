@@ -1,6 +1,17 @@
 import { wrapDateTests } from '../../test.spec';
 import { DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
-import { type ICalendarComponent, type ICalendarContentLine, DEFAULT_ICALENDAR_ALARM_DESCRIPTION, iCalendarAlarmToComponent, iCalendarAttendeeContentLine, iCalendarDateTimeContentLine, iCalendarEventToComponent, iCalendarExtraPropertyContentLine, iCalendarTimezoneToComponent, iCalendarToComponent } from './icalendar.component';
+import {
+  type ICalendarComponent,
+  type ICalendarContentLine,
+  DEFAULT_ICALENDAR_ALARM_DESCRIPTION,
+  iCalendarAlarmToComponent,
+  iCalendarAttendeeContentLine,
+  iCalendarDateTimeContentLine,
+  iCalendarEventToComponent,
+  iCalendarExtraPropertyContentLine,
+  iCalendarTimezoneToComponent,
+  iCalendarToComponent
+} from './icalendar.component';
 import { type ICalendar, type ICalendarEvent } from './icalendar.model';
 
 const TEST_NOW = new Date('2026-03-01T00:00:00Z');

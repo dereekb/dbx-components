@@ -23,7 +23,7 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveConfig, format } from 'prettier';
+import { format } from 'oxfmt';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = resolve(SCRIPT_DIR, '..', '..', '..');
@@ -89,21 +89,32 @@ async function main() {
   modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
   const raw = emit(models, modelGroups);
-  const formatted = await formatWithPrettier(raw);
+  const formatted = await formatWithOxfmt(raw);
   writeFileSync(OUTPUT_FILE, formatted);
   console.log(`Wrote ${models.length} Firebase models and ${modelGroups.length} model groups to ${relative(WORKSPACE_ROOT, OUTPUT_FILE)}`);
 }
 
 /**
- * Runs the workspace's Prettier config against the generated source so the
- * output matches what `prettier --write` would produce on the committed file.
- * Without this step the script's serializer and Prettier disagree on quote
+ * Runs the workspace's oxfmt config against the generated source so the
+ * output matches what `oxfmt --write` would produce on the committed file.
+ * Without this step the script's serializer and oxfmt disagree on quote
  * style and short-array formatting, which dirties the working tree on every run.
+ *
+ * oxfmt's programmatic `format` does not discover config files the way the CLI
+ * does, so the workspace `.oxfmtrc.json` is loaded explicitly.
  */
-async function formatWithPrettier(source) {
-  const config = await resolveConfig(OUTPUT_FILE);
-  const result = await format(source, { ...config, filepath: OUTPUT_FILE });
-  return result;
+async function formatWithOxfmt(source) {
+  const config = JSON.parse(readFileSync(join(WORKSPACE_ROOT, '.oxfmtrc.json'), 'utf8'));
+  delete config['$schema'];
+  delete config.ignorePatterns;
+
+  const { code, errors } = await format(OUTPUT_FILE, source, config);
+
+  if (errors.length > 0) {
+    throw new Error(`oxfmt failed to format ${relative(WORKSPACE_ROOT, OUTPUT_FILE)}: ${errors.map((x) => x.message).join(', ')}`);
+  }
+
+  return code;
 }
 
 function findTsFiles(dir) {
@@ -121,7 +132,7 @@ function findTsFiles(dir) {
 }
 
 function extractFromFile(file, content) {
-  const relativePath = relative(WORKSPACE_ROOT, file).split('\\').join('/');
+  const relativePath = relative(WORKSPACE_ROOT, file).replaceAll('\\', '/');
   const identities = findIdentities(content);
   const interfaces = findInterfaces(content);
   const converters = findConverters(content);
@@ -368,14 +379,14 @@ function applyArchetypePostPass(models) {
     const isTreeNode = Array.isArray(m.archetypes) && m.archetypes.includes('model-tree-node');
     if (isTreeNode) {
       let role;
-      if (!m.parentIdentityConst) {
-        role = 'root';
-      } else {
+      if (m.parentIdentityConst) {
         role = referencedAsParent.has(m.identityConst) ? 'intermediate' : 'leaf';
+      } else {
+        role = 'root';
       }
       const existing = m.archetypeAxesBySlug?.['model-tree-node'] || {};
       const nextSlugAxes = { ...existing, treeRole: role };
-      m.archetypeAxesBySlug = { ...(m.archetypeAxesBySlug || {}), 'model-tree-node': nextSlugAxes };
+      m.archetypeAxesBySlug = { ...m.archetypeAxesBySlug, 'model-tree-node': nextSlugAxes };
     }
     if (Array.isArray(m.aggregatesFrom) && m.aggregatesFrom.length > 0 && m.modelGroup) {
       let allSibling = true;
@@ -796,13 +807,11 @@ function parseJsdocBlock(body) {
       // for the heuristic-driven archetype tag. Repeatable; one occurrence per slug.
       const parsed = parseArchetypeTagValue(value);
       if (parsed) tags.dbxModelArchetypes.push(parsed);
-    } else if (tag === 'dbxModelAggregatesFrom') {
-      // `@dbxModelAggregatesFrom <ModelName>` — repeatable. Captures the upstream
-      // model names whose data this model aggregates from.
-      if (value.length > 0) {
-        const name = value.split(/\s+/)[0];
-        if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) tags.dbxModelAggregatesFrom.push(name);
-      }
+    } else // `@dbxModelAggregatesFrom <ModelName>` — repeatable. Captures the upstream
+    // model names whose data this model aggregates from.
+    if (tag === 'dbxModelAggregatesFrom' && value.length > 0) {
+      const name = value.split(/\s+/)[0];
+      if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) tags.dbxModelAggregatesFrom.push(name);
     }
   }
   return { description: description && description.length > 0 ? description : undefined, tags };

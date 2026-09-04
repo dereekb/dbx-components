@@ -12,7 +12,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate {
+export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>>
+  implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate
+{
   readonly storeName = model<Maybe<string>>(undefined);
   readonly documentId = model<Maybe<FirestoreModelId>>(undefined);
   readonly key = model<Maybe<FirestoreModelKey>>(undefined);

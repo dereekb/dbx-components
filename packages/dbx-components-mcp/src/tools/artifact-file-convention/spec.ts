@@ -77,7 +77,11 @@ const STORAGEFILE_PURPOSE: FileConventionSpec = {
       heading: 'API upload handler',
       path: '<apiDir>/src/app/common/model/storagefile/handlers/upload.<name>.ts',
       altPaths: ['Inline in `<apiDir>/src/app/common/model/storagefile/storagefile.upload.service.ts` for tiny workspaces.'],
-      body: ['**Required export:** `<camelName>StorageFileUploadInitializers(context): StorageFileInitializeFromUploadServiceInitializer[]`.', '', '**Wire into:** `<apiDir>/src/app/common/model/storagefile/storagefile.upload.service.ts` — spread into the `initializer: [...]` array passed to `storageFileInitializeFromUploadService({ initializer })`.'].join('\n')
+      body: [
+        '**Required export:** `<camelName>StorageFileUploadInitializers(context): StorageFileInitializeFromUploadServiceInitializer[]`.',
+        '',
+        '**Wire into:** `<apiDir>/src/app/common/model/storagefile/storagefile.upload.service.ts` — spread into the `initializer: [...]` array passed to `storageFileInitializeFromUploadService({ initializer })`.'
+      ].join('\n')
     },
     {
       heading: 'API processor (only if subtasks declared)',
@@ -141,12 +145,27 @@ const STORAGEFILE_PROCESSOR: FileConventionSpec = {
     {
       heading: 'API processor handler',
       path: '<apiDir>/src/app/common/model/notification/handlers/storagefile/task.handler.storagefile.<name>.ts',
-      body: ['**Required shape:**', '```ts', 'export function <camelName>ProcessingNotificationTaskHandler(context): StorageFileProcessingPurposeSubtaskProcessorConfig<<Name>SubtaskMetadata, <Name>ProcessingSubtask> {', '  const config: StorageFileProcessingPurposeSubtaskProcessorConfig<...> = {', '    target: <NAME>_PURPOSE,', '    flow: [', '      { subtask: <NAME>_PURPOSE_<DESC>_SUBTASK, fn: async (input) => ... }', '    ]', '  };', '  return config;', '}', '```'].join('\n')
+      body: [
+        '**Required shape:**',
+        '```ts',
+        'export function <camelName>ProcessingNotificationTaskHandler(context): StorageFileProcessingPurposeSubtaskProcessorConfig<<Name>SubtaskMetadata, <Name>ProcessingSubtask> {',
+        '  const config: StorageFileProcessingPurposeSubtaskProcessorConfig<...> = {',
+        '    target: <NAME>_PURPOSE,',
+        '    flow: [',
+        '      { subtask: <NAME>_PURPOSE_<DESC>_SUBTASK, fn: async (input) => ... }',
+        '    ]',
+        '  };',
+        '  return config;',
+        '}',
+        '```'
+      ].join('\n')
     },
     {
       heading: 'Wire into processing handler',
       path: '<apiDir>/src/app/common/model/notification/handlers/task.handler.storagefile.ts',
-      body: ['Push the new processor config into the `processors: [...]` array passed to `storageFileProcessingNotificationTaskHandler({ processors })`. The surrounding handler is itself wired into `notificationTaskService({ handlers })` — already covered by the notification-task plumbing, so no further wiring needed here.'].join('\n')
+      body: [
+        'Push the new processor config into the `processors: [...]` array passed to `storageFileProcessingNotificationTaskHandler({ processors })`. The surrounding handler is itself wired into `notificationTaskService({ handlers })` — already covered by the notification-task plumbing, so no further wiring needed here.'
+      ].join('\n')
     }
   ],
   seeAlso: ['storagefile-purpose', 'storagefile-processor-subtask', 'notification-task'],
@@ -161,7 +180,12 @@ const STORAGEFILE_PROCESSOR_SUBTASK: FileConventionSpec = {
     {
       heading: 'Component declarations',
       path: '<componentDir>/src/lib/model/storagefile/storagefile.<name>.ts (the file that already declares the purpose)',
-      body: ['**Add:**', "- `<NAME>_PURPOSE_<DESC>_SUBTASK: StorageFileProcessingSubtask = '<descriptor>'` — the new subtask constant.", '- Extend the `<Name>ProcessingSubtask` union alias: `typeof <NAME>_PURPOSE_<DESC>_SUBTASK | ...existing`.', '- Optional: extend `<Name>ProcessingSubtaskMetadata` with any new fields the new subtask needs.'].join('\n')
+      body: [
+        '**Add:**',
+        "- `<NAME>_PURPOSE_<DESC>_SUBTASK: StorageFileProcessingSubtask = '<descriptor>'` — the new subtask constant.",
+        '- Extend the `<Name>ProcessingSubtask` union alias: `typeof <NAME>_PURPOSE_<DESC>_SUBTASK | ...existing`.',
+        '- Optional: extend `<Name>ProcessingSubtaskMetadata` with any new fields the new subtask needs.'
+      ].join('\n')
     },
     {
       heading: 'API processor flow',
@@ -194,13 +218,19 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
     {
       heading: 'Component aggregator',
       path: '<componentDir>/src/lib/model/notification/notification.ts',
-      body: ['Add the new info to the call to `notificationTemplateTypeInfoRecord([...])` — either as a direct entry (`<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO`) or via a spread of the module aggregate (`...ALL_<MODULE>_NOTIFICATION_TEMPLATE_TYPE_INFOS`). The result constant is typically `<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD`.'].join('\n')
+      body: [
+        'Add the new info to the call to `notificationTemplateTypeInfoRecord([...])` — either as a direct entry (`<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO`) or via a spread of the module aggregate (`...ALL_<MODULE>_NOTIFICATION_TEMPLATE_TYPE_INFOS`). The result constant is typically `<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD`.'
+      ].join('\n')
     },
     {
       heading: 'API handler factory',
       path: '<apiDir>/src/app/common/model/notification/notification.factory.ts',
       altPaths: ['<apiDir>/src/app/common/model/notification/notification.factory.<name>.ts (split per-template for larger workspaces)'],
-      body: ['**Required export:** A factory function returning a `NotificationTemplateServiceTypeConfig` with `{ type: <NAME>_NOTIFICATION_TEMPLATE_TYPE, factory: async (...) => ... }`.', '', '**Wire into:** the top-level `<app>NotificationTemplateServiceConfigsArrayFactory(context)` — call the new factory inside its returned array. The configs-array factory is itself bound via `NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN` in the notification module.'].join('\n')
+      body: [
+        '**Required export:** A factory function returning a `NotificationTemplateServiceTypeConfig` with `{ type: <NAME>_NOTIFICATION_TEMPLATE_TYPE, factory: async (...) => ... }`.',
+        '',
+        '**Wire into:** the top-level `<app>NotificationTemplateServiceConfigsArrayFactory(context)` — call the new factory inside its returned array. The configs-array factory is itself bound via `NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN` in the notification module.'
+      ].join('\n')
     }
   ],
   seeAlso: ['notification-task'],
@@ -230,7 +260,17 @@ const NOTIFICATION_TASK: FileConventionSpec = {
       heading: 'API handler config',
       path: '<apiDir>/src/app/common/model/notification/notification.task.service.ts',
       altPaths: ['<apiDir>/src/app/common/model/notification/handlers/task.handler.<name>.ts (per-task split for larger workspaces)'],
-      body: ['**Required shape:**', '```ts', 'const <camelName>NotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<<Name>NotificationTaskData, <Name>NotificationTaskCheckpoint> = {', '  type: <NAME>_NOTIFICATION_TASK_TYPE,', '  flow: [', "    { checkpoint: 'part_a', fn: async (notificationTask) => ... }", '  ]', '};', '```'].join('\n')
+      body: [
+        '**Required shape:**',
+        '```ts',
+        'const <camelName>NotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<<Name>NotificationTaskData, <Name>NotificationTaskCheckpoint> = {',
+        '  type: <NAME>_NOTIFICATION_TASK_TYPE,',
+        '  flow: [',
+        "    { checkpoint: 'part_a', fn: async (notificationTask) => ... }",
+        '  ]',
+        '};',
+        '```'
+      ].join('\n')
     },
     {
       heading: 'Wire into task service',

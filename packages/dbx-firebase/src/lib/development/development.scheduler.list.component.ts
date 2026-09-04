@@ -12,7 +12,8 @@ import {
   DbxListWrapperComponentImportsModule,
   DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   DbxSelectionValueListViewComponentImportsModule,
-  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxActionSnackbarErrorDirective
 } from '@dereekb/dbx-web';
 import { from, of } from 'rxjs';
 import { type ScheduledFunctionDevelopmentFirebaseFunctionListEntry } from '@dereekb/firebase';
@@ -52,12 +53,12 @@ export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDb
 
 @Component({
   template: `
-    <div dbxAction dbxActionValue useFastTriggerPreset [dbxActionHandler]="handleRun">
+    <div dbxAction dbxActionValue useFastTriggerPreset [dbxActionHandler]="handleRun" dbxActionSnackbarError>
       <dbx-button dbxActionButton [text]="'Run ' + name"></dbx-button>
       <div *dbxActionHasSuccess="3000" class="dbx-success">Success</div>
     </div>
   `,
-  imports: [DbxActionModule, DbxButtonComponent, DbxActionButtonDirective]
+  imports: [DbxActionSnackbarErrorDirective, DbxActionModule, DbxButtonComponent, DbxActionButtonDirective]
 })
 export class DbxFirebaseDevelopmentSchedulerListViewItemComponent extends AbstractDbxValueListViewItemComponent<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
   readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);

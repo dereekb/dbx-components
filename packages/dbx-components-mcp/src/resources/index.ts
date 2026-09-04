@@ -123,5 +123,5 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
     registerAuthResource(server, { registry: options.authRegistry });
   }
   // unconditional: there is no pre-loaded catalog to gate on — the rules file is read at request time
-  registerFirestoreRulesResource(server, { ...(options.cwd === undefined ? {} : { cwd: options.cwd }) });
+  registerFirestoreRulesResource(server, options.cwd === undefined ? {} : { cwd: options.cwd });
 }

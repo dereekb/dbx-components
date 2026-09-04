@@ -16,7 +16,14 @@ import type { AppFixturesExtraction, FixtureEntry, FixtureMethod } from './types
  * @returns The markdown body.
  */
 export function formatListAsMarkdown(extraction: AppFixturesExtraction): string {
-  const lines: string[] = [`# App fixtures — ${extraction.fixturePath}`, '', `Detected workspace prefix: \`${extraction.prefix ?? '(none)'}\``, `Identity imports: ${extraction.identityImports.length === 0 ? '_None._' : extraction.identityImports.map((s) => '`' + s + '`').join(', ')}`, '', `## Fixtures (${extraction.entries.length})`];
+  const lines: string[] = [
+    `# App fixtures — ${extraction.fixturePath}`,
+    '',
+    `Detected workspace prefix: \`${extraction.prefix ?? '(none)'}\``,
+    `Identity imports: ${extraction.identityImports.length === 0 ? '_None._' : extraction.identityImports.map((s) => '`' + s + '`').join(', ')}`,
+    '',
+    `## Fixtures (${extraction.entries.length})`
+  ];
   if (extraction.entries.length === 0) {
     lines.push('', '_No model fixtures found._');
   } else {
@@ -84,7 +91,15 @@ function nonModelDescription(entry: FixtureEntry): string {
 }
 
 function appendLookupTriplet(lines: string[], entry: FixtureEntry): void {
-  lines.push('## Triplet', '', `- Fixture: \`${entry.fixtureClassName}\` (lines ${entry.fixtureLine}-${entry.fixtureEndLine})`, `- Instance: \`${entry.instanceClassName}\` (lines ${entry.instanceLine}-${entry.instanceEndLine})`, `- Params: \`${entry.paramsTypeName}\``, `- Factory: \`${entry.factoryName ?? '—'}\``, `- Singleton: \`${entry.singletonName ?? '—'}\``);
+  lines.push(
+    '## Triplet',
+    '',
+    `- Fixture: \`${entry.fixtureClassName}\` (lines ${entry.fixtureLine}-${entry.fixtureEndLine})`,
+    `- Instance: \`${entry.instanceClassName}\` (lines ${entry.instanceLine}-${entry.instanceEndLine})`,
+    `- Params: \`${entry.paramsTypeName}\``,
+    `- Factory: \`${entry.factoryName ?? '—'}\``,
+    `- Singleton: \`${entry.singletonName ?? '—'}\``
+  );
 }
 
 function appendLookupGenerics(lines: string[], entry: FixtureEntry): void {

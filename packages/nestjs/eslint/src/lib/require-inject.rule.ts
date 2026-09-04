@@ -271,8 +271,8 @@ export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
   },
   create(context) {
     const options = context.options[0] || {};
-    const classDecorators = new Set([...NESTJS_CLASS_DECORATORS, ...(options.additionalClassDecorators || [])]);
-    const paramDecorators = new Set([...VALID_PARAM_DECORATORS, ...(options.additionalParamDecorators || [])]);
+    const classDecorators = new Set([...Array.from(NESTJS_CLASS_DECORATORS), ...(options.additionalClassDecorators || [])]);
+    const paramDecorators = new Set([...Array.from(VALID_PARAM_DECORATORS), ...(options.additionalParamDecorators || [])]);
 
     /**
      * Tracks identifiers imported from '@nestjs/common'.

@@ -32,7 +32,15 @@ function formatPercent(fraction: number): string {
 export function formatModelSizeReport(report: ModelSizeReport): string {
   const lines: string[] = [];
 
-  lines.push(`Snapshot size — ${report.exportName}`, `  source: ${report.sourceFile}`, '', `  stringified size : ${formatBytes(report.bytes)}  [headline]`, `  limit            : ${formatBytes(report.limitBytes)}`, `  used             : ${formatPercent(report.percentOfLimit)}  ${report.withinLimit ? 'OK — within limit' : 'OVER LIMIT'}`, `  firestore approx : ${formatBytes(report.firestoreApproxBytes)}  [secondary — ignores doc name/path + indexes]`);
+  lines.push(
+    `Snapshot size — ${report.exportName}`,
+    `  source: ${report.sourceFile}`,
+    '',
+    `  stringified size : ${formatBytes(report.bytes)}  [headline]`,
+    `  limit            : ${formatBytes(report.limitBytes)}`,
+    `  used             : ${formatPercent(report.percentOfLimit)}  ${report.withinLimit ? 'OK — within limit' : 'OVER LIMIT'}`,
+    `  firestore approx : ${formatBytes(report.firestoreApproxBytes)}  [secondary — ignores doc name/path + indexes]`
+  );
 
   if (report.breakdown.length > 0) {
     const keyWidth = Math.min(32, Math.max(...report.breakdown.map((entry) => entry.key.length)));

@@ -310,7 +310,7 @@ export type StringOrder<S extends string, SEPARATOR extends string> =
       ? Exclude<S, SELF> extends never
         ? SELF
         : // This works because the values of S are always sorted and interpreted in an ascending order
-            `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
+          `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
       : never
     : never;
 
@@ -434,8 +434,18 @@ export type StringConcatenationMany<S extends string, SEPARATOR extends string> 
     : never;
 
 export type StringConcatinateTwo<LEFT extends string, SELF extends string, SEPARATOR extends string> = `${LEFT}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${LEFT}`;
-export type StringConcatinateThree<LEFT extends string, RIGHT extends string, SELF extends string, SEPARATOR extends string> = `${LEFT}${SEPARATOR}${SELF}${SEPARATOR}${RIGHT}` | `${LEFT}${SEPARATOR}${RIGHT}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${RIGHT}${SEPARATOR}${LEFT}` | `${SELF}${SEPARATOR}${LEFT}${SEPARATOR}${RIGHT}` | `${RIGHT}${SEPARATOR}${LEFT}${SEPARATOR}${SELF}` | `${RIGHT}${SEPARATOR}${SELF}${SEPARATOR}${LEFT}`;
-export type StringConcatinateFour<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, SEPARATOR extends string> = `${StringConcatinateThree<ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}` | `${StringConcatinateThree<TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${ONE}` | `${StringConcatinateThree<THREE, FOUR, ONE, SEPARATOR>}${SEPARATOR}${TWO}` | `${StringConcatinateThree<FOUR, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`;
+export type StringConcatinateThree<LEFT extends string, RIGHT extends string, SELF extends string, SEPARATOR extends string> =
+  | `${LEFT}${SEPARATOR}${SELF}${SEPARATOR}${RIGHT}`
+  | `${LEFT}${SEPARATOR}${RIGHT}${SEPARATOR}${SELF}`
+  | `${SELF}${SEPARATOR}${RIGHT}${SEPARATOR}${LEFT}`
+  | `${SELF}${SEPARATOR}${LEFT}${SEPARATOR}${RIGHT}`
+  | `${RIGHT}${SEPARATOR}${LEFT}${SEPARATOR}${SELF}`
+  | `${RIGHT}${SEPARATOR}${SELF}${SEPARATOR}${LEFT}`;
+export type StringConcatinateFour<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, SEPARATOR extends string> =
+  | `${StringConcatinateThree<ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}`
+  | `${StringConcatinateThree<TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${ONE}`
+  | `${StringConcatinateThree<THREE, FOUR, ONE, SEPARATOR>}${SEPARATOR}${TWO}`
+  | `${StringConcatinateThree<FOUR, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`;
 export type StringConcatinateFive<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, FIVE extends string, SEPARATOR extends string> =
   | `${StringConcatinateFour<ONE, TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${FIVE}`
   | `${StringConcatinateFour<TWO, THREE, FOUR, FIVE, SEPARATOR>}${SEPARATOR}${ONE}`

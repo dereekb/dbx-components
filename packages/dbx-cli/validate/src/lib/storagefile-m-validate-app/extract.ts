@@ -11,9 +11,36 @@
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type VariableDeclaration } from 'ts-morph';
-import { apiRelPath, asObjectLiteral, buildInMemoryProject, collectTrustedExternalIdentifiers, collectTypeofReferences, componentRelPath, findLocalVariable, findReturnExpression, getPropertyInitializer, readIdentifierProperty, readStringLiteralInitializer, typeAnnotationText, unwrapAsExpressions } from '../_core/_validate/ast.js';
+import {
+  apiRelPath,
+  asObjectLiteral,
+  buildInMemoryProject,
+  collectTrustedExternalIdentifiers,
+  collectTypeofReferences,
+  componentRelPath,
+  findLocalVariable,
+  findReturnExpression,
+  getPropertyInitializer,
+  readIdentifierProperty,
+  readStringLiteralInitializer,
+  typeAnnotationText,
+  unwrapAsExpressions
+} from '../_core/_validate/ast.js';
 import { GROUP_IDS_FUNCTION_SUFFIXES } from './group-ids.js';
-import type { AppStorageFilesInspection, ExtractedAppStorageFiles, ExtractedGroupIdsFunction, ExtractedProcessingConfig, ExtractedProcessingHandlerCall, ExtractedProcessingSubtaskAlias, ExtractedProcessingSubtaskConstant, ExtractedPurposeConstant, ExtractedUploadInitializerEntry, ExtractedUploadServiceCall, ExtractedUploadServiceWiring, ExtractedUploadedFileTypeIdentifierConstant } from './types.js';
+import type {
+  AppStorageFilesInspection,
+  ExtractedAppStorageFiles,
+  ExtractedGroupIdsFunction,
+  ExtractedProcessingConfig,
+  ExtractedProcessingHandlerCall,
+  ExtractedProcessingSubtaskAlias,
+  ExtractedProcessingSubtaskConstant,
+  ExtractedPurposeConstant,
+  ExtractedUploadInitializerEntry,
+  ExtractedUploadServiceCall,
+  ExtractedUploadServiceWiring,
+  ExtractedUploadedFileTypeIdentifierConstant
+} from './types.js';
 
 const STORAGEFILE_PURPOSE_TYPE = 'StorageFilePurpose';
 const UPLOADED_FILE_TYPE_IDENTIFIER_TYPE = 'UploadedFileTypeIdentifier';

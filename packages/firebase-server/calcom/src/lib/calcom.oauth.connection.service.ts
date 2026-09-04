@@ -1,7 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CALCOM_OAUTH_SCOPE_DELIMITER, type CalcomAccessToken, type CalcomOAuthAuthorizeUrlFactory, calcomAccessTokenFromTokenResponse, calcomOAuthAuthorizeUrlFactory, refreshAccessToken } from '@dereekb/calcom';
 import { CalcomOAuthApi } from '@dereekb/calcom/nestjs';
-import { AbstractUserExternalConnectionOAuthService, UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthRefreshCredentialsInput, type UserExternalConnectionOAuthState } from '@dereekb/firebase-server/model';
+import {
+  AbstractUserExternalConnectionOAuthService,
+  UserExternalConnectionAccessor,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionStateCoder,
+  type UserExternalConnectionCredentials,
+  type UserExternalConnectionOAuthExchangeInput,
+  type UserExternalConnectionOAuthRefreshCredentialsInput,
+  type UserExternalConnectionOAuthState
+} from '@dereekb/firebase-server/model';
 import { type WebsiteUrl } from '@dereekb/util';
 import { CalcomUserExternalConnectionOAuthServiceConfig } from './calcom.oauth.connection.config';
 

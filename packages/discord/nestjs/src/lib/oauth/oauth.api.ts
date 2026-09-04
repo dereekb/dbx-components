@@ -1,5 +1,20 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type DiscordAccessToken, type DiscordOAuth, type DiscordOAuthAuthorizeUrlFactory, type DiscordOAuthAuthorizeUrlFactoryConfig, type DiscordOAuthClientId, type DiscordOAuthContext, type DiscordOAuthExchangeAuthorizationCodeInput, type DiscordOAuthRefreshTokenInput, discordAccessTokenFromTokenResponse, discordOAuthAuthorizeUrlFactory, discordOAuthFactory, exchangeAuthorizationCode, readCurrentUser, refreshAccessToken } from '@dereekb/discord';
+import {
+  type DiscordAccessToken,
+  type DiscordOAuth,
+  type DiscordOAuthAuthorizeUrlFactory,
+  type DiscordOAuthAuthorizeUrlFactoryConfig,
+  type DiscordOAuthClientId,
+  type DiscordOAuthContext,
+  type DiscordOAuthExchangeAuthorizationCodeInput,
+  type DiscordOAuthRefreshTokenInput,
+  discordAccessTokenFromTokenResponse,
+  discordOAuthAuthorizeUrlFactory,
+  discordOAuthFactory,
+  exchangeAuthorizationCode,
+  readCurrentUser,
+  refreshAccessToken
+} from '@dereekb/discord';
 import { DiscordOAuthServiceConfig } from './oauth.config';
 
 /**

@@ -1,4 +1,22 @@
-import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, isNotBlankString, joinStrings, joinStringsInstance, joinStringsWithSpaces, nameToInitials, nameToInitialsFactory, normalizeLineBreaks, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
+import {
+  COMMA_STRING_SPLIT_JOIN,
+  DEFAULT_CUT_STRING_END_TEXT,
+  SPACE_STRING_SPLIT_JOIN,
+  cutStringFunction,
+  flattenWhitespace,
+  isNotBlankString,
+  joinStrings,
+  joinStringsInstance,
+  joinStringsWithSpaces,
+  nameToInitials,
+  nameToInitialsFactory,
+  normalizeLineBreaks,
+  repeatString,
+  simplifyWhitespace,
+  splitJoinNameString,
+  splitJoinRemainder,
+  stringSplitJoinInstance
+} from './string';
 
 describe('nameToInitials()', () => {
   it('should use the first letter of the first two words for a multi-word name', () => {

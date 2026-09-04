@@ -3,54 +3,54 @@
     <!-- Examples -->
     <h3>Button</h3>
     <doc-feature-example header="dbxActionButton" hint="Used to link a dbx-button to an action. The button will be disabled when the action is disabled, be in a loading/working state when the action is in a working state, and trigger the action when the button is clicked.">
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </doc-action-example-tools>
 
       <h4>Disabled Example</h4>
       <!-- Permanently disabled ([dbxActionDisabled]="true"), so it never triggers and cannot hang; no value source needed. -->
       <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -->
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Disabled Action"></dbx-button>
       </doc-action-example-tools>
 
       <h4>Echo Config</h4>
       <p>The dbxActionButton directive automatically shows a visual echo on success and error. The echo config can be customized per-instance or globally via the DBX_ACTION_BUTTON_ECHO_CONFIG injection token.</p>
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Default Echo" raised></dbx-button>
       </doc-action-example-tools>
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionSnackbarError>
         <dbx-button [bar]="true" dbxActionButton [dbxActionButtonEcho]="customEchoConfig" text="Custom Echo" raised></dbx-button>
       </doc-action-example-tools>
-      <doc-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError">
+      <doc-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Error Echo" raised></dbx-button>
       </doc-action-example-tools>
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionSnackbarError>
         <dbx-button dbxActionButton [dbxActionButtonEcho]="noEchoConfig" text="No Echo" raised></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionButtonTrigger" hint="Used to link a dbx-button to an action and only responds to click events, ignoring the working state, unlike .">
-      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionSnackbarError>
         <dbx-button dbxActionButtonTrigger text="Action Button Trigger"></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>
 
     <doc-feature-example header="dbxActionConfirm" hint="Used to add a confirmation dialog to an action.">
-      <doc-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Action Button Trigger"></dbx-button>
       </doc-action-example-tools>
 
       <h4>dbxActionConfirmSkip</h4>
       <p>Use dbxActionConfirmSkip to conditionally skip the confirmation dialog. This is useful when the same template renders both confirmed and unconfirmed actions.</p>
-      <doc-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionConfirmSkip]="skipConfirm" dbxActionValue [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionConfirmSkip]="skipConfirm" dbxActionValue [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton [text]="skipConfirm ? 'Skip Confirm (No Dialog)' : 'With Confirm (Shows Dialog)'"></dbx-button>
         <dbx-button [text]="skipConfirm ? 'Enable Confirm' : 'Disable Confirm'" (dbxButtonClick)="toggleSkipConfirm()"></dbx-button>
       </doc-action-example-tools>
 
       <h4>autoConfirm</h4>
       <p>A config with autoConfirm marks the action ready immediately instead of showing the dialog. Use it when the config itself is computed, so an action with nothing to confirm can be bound to the same input as one that prompts.</p>
-      <doc-action-example-tools dbxAction [dbxActionConfirm]="autoConfirmConfig" [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionConfirm]="autoConfirmConfig" [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Auto Confirm (No Dialog)"></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>
@@ -95,26 +95,26 @@
 
     <h3>Popover, Popup</h3>
     <doc-feature-example header="dbxActionPopover" hint="Used to display a popover action when trigger is called. Use this directive for popup values, as they have the same return type as Popover.">
-      <doc-action-example-tools dbxAction [dbxActionPopover]="handleOpenPopover" [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionPopover]="handleOpenPopover" [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Open Popover Action"></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>
 
     <h3>Dialog</h3>
     <doc-feature-example header="dbxActionDialog" hint="Used to display a dialog when trigger is called, and passes the return value.">
-      <doc-action-example-tools dbxAction [dbxActionDialog]="handleOpenDialog" [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionDialog]="handleOpenDialog" [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Open Dialog Action"></dbx-button>
       </doc-action-example-tools>
 
       <p>You can use the DbxFormActionDialogComponent to display a dialog with a form.</p>
-      <doc-action-example-tools dbxAction [dbxActionDialog]="handleOpenFormDialog" [dbxActionHandler]="handleAction">
+      <doc-action-example-tools dbxAction [dbxActionDialog]="handleOpenFormDialog" [dbxActionHandler]="handleAction" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Open Dialog Action"></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>
 
     <h3>Analytics</h3>
     <doc-feature-example header="dbxActionAnalytics" hint="Used to connect analytics to an action. Can listen to trigger, read, success, and error events from the action and send relevant analytics events.">
-      <doc-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleAction" [dbxActionAnalytics]="analyticsConfig">
+      <doc-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleAction" [dbxActionAnalytics]="analyticsConfig" dbxActionSnackbarError>
         <dbx-button dbxActionButton text="Open Action Value"></dbx-button>
       </doc-action-example-tools>
     </doc-feature-example>

@@ -47,7 +47,12 @@ const crmGetCommand: CommandModule = {
 const crmSearchCommand: CommandModule = {
   command: 'search',
   describe: 'Search records in a module',
-  builder: (yargs: Argv) => withPagination(withModule(yargs)).option('criteria', { type: 'string', describe: 'Search criteria string, e.g. (First_Name:equals:John)' }).option('word', { type: 'string', describe: 'Keyword search' }).option('email', { type: 'string', describe: 'Search by email' }).option('phone', { type: 'string', describe: 'Search by phone' }),
+  builder: (yargs: Argv) =>
+    withPagination(withModule(yargs))
+      .option('criteria', { type: 'string', describe: 'Search criteria string, e.g. (First_Name:equals:John)' })
+      .option('word', { type: 'string', describe: 'Keyword search' })
+      .option('email', { type: 'string', describe: 'Search by email' })
+      .option('phone', { type: 'string', describe: 'Search by phone' }),
   handler: async (argv: any) => {
     try {
       const crmApi = getCrmApi(argv);

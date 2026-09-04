@@ -11,4 +11,4 @@ import { CommonModule } from '@angular/common';
     })
   ]
 })
-export class RootAppModule { }
+export class RootAppModule {}

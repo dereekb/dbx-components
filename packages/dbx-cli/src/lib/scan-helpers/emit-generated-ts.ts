@@ -3,7 +3,7 @@
  *
  * Every generator ends the same way: group the runtime imports it needs by
  * package, render a banner + module source, format it with the workspace
- * prettier config so the output matches a `prettier --write` of the committed
+ * oxfmt config so the output matches an `oxfmt --write` of the committed
  * file, then skip the write when the bytes are unchanged so incremental builds
  * see a preserved mtime. That tail lives here once instead of being copied
  * into each `<generator>/src/emit.ts`.
@@ -11,8 +11,8 @@
 
 import { compareStrings } from '@dereekb/util';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { format, resolveConfig } from 'prettier';
+import { dirname, join, parse } from 'node:path';
+import { format, type FormatConfig } from 'oxfmt';
 
 // MARK: Types
 /**
@@ -81,17 +81,74 @@ export function renderGroupedImportLines(imports: readonly GeneratedTsImport[]):
 }
 
 /**
- * Formats generated TypeScript source with the workspace prettier config
+ * Name of the oxfmt configuration file searched for by {@link resolveOxfmtConfig}.
+ */
+const OXFMT_CONFIG_FILENAME = '.oxfmtrc.json';
+
+/**
+ * Keys present in `.oxfmtrc.json` that are not formatting options and must be
+ * stripped before the config is handed to oxfmt's `format`.
+ *
+ * `$schema` is editor metadata and `ignorePatterns` only applies to the CLI's
+ * file discovery — `format` is always called on an explicit source string.
+ */
+const OXFMT_NON_FORMAT_CONFIG_KEYS = ['$schema', 'ignorePatterns'] as const;
+
+/**
+ * Resolves the nearest `.oxfmtrc.json` by walking up from `fromFile`.
+ *
+ * oxfmt's programmatic `format` does not perform the config-file discovery the
+ * CLI does, so generators have to load the workspace config themselves for
+ * emitted bytes to match an `oxfmt --write` of the committed file.
+ *
+ * @param fromFile - Path to start the upward search from.
+ * @returns The parsed formatting options, or an empty object when no config file is found.
+ */
+export function resolveOxfmtConfig(fromFile: string): FormatConfig {
+  const { root } = parse(fromFile);
+  let directory = dirname(fromFile);
+  let config: FormatConfig = {};
+
+  for (;;) {
+    const candidate = join(directory, OXFMT_CONFIG_FILENAME);
+
+    if (existsSync(candidate)) {
+      const parsed = JSON.parse(readFileSync(candidate, 'utf8')) as Record<string, unknown>;
+      for (const key of OXFMT_NON_FORMAT_CONFIG_KEYS) {
+        delete parsed[key];
+      }
+      config = parsed as FormatConfig;
+      break;
+    }
+
+    if (directory === root) {
+      break;
+    }
+
+    directory = dirname(directory);
+  }
+
+  return config;
+}
+
+/**
+ * Formats generated TypeScript source with the workspace oxfmt config
  * resolved for `outputFile`, so the emitted bytes match what
- * `prettier --write` would produce on the committed file.
+ * `oxfmt --write` would produce on the committed file.
  *
  * @param source - The unformatted module source.
- * @param outputFile - Path the source will be written to; selects the prettier config and parser.
+ * @param outputFile - Path the source will be written to; selects the oxfmt config and parser.
  * @returns The formatted source.
  */
 export async function formatGeneratedTs(source: string, outputFile: string): Promise<string> {
-  const config = await resolveConfig(outputFile);
-  return format(source, { ...config, filepath: outputFile });
+  const config = resolveOxfmtConfig(outputFile);
+  const { code, errors } = await format(outputFile, source, config);
+
+  if (errors.length > 0) {
+    throw new Error(`formatGeneratedTs(): oxfmt failed to format "${outputFile}": ${errors.map((x) => x.message).join(', ')}`);
+  }
+
+  return code;
 }
 
 /**

@@ -421,7 +421,12 @@ class SearchableChipTestHostComponent {
   readonly context = inject(DbxForgeFormContext);
 }
 
-const SEARCHABLE_CHIP_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterWebProviderConfig, useValue: { anchorSegueRefComponent: { componentClass: SearchableChipTestHostComponent } } as DbxRouterWebProviderConfig }];
+const SEARCHABLE_CHIP_TEST_PROVIDERS = [
+  provideDbxForgeFormFieldDeclarations(),
+  provideDbxFormConfiguration(),
+  { provide: DynamicFormLogger, useClass: NoopLogger },
+  { provide: DbxRouterWebProviderConfig, useValue: { anchorSegueRefComponent: { componentClass: SearchableChipTestHostComponent } } as DbxRouterWebProviderConfig }
+];
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();

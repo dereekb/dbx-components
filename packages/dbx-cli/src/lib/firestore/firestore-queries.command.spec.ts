@@ -18,7 +18,11 @@ function buildEntry(input: Partial<CliFirestoreQueryManifestEntry> & { readonly 
   } as CliFirestoreQueryManifestEntry;
 }
 
-const MANIFEST: CliFirestoreQueryManifest = [buildEntry({ slug: 'published-guestbooks', name: 'publishedGuestbooksQuery', category: 'listing', tags: ['guestbook'] }), buildEntry({ slug: 'published-guestbook-entries', name: 'publishedGuestbookEntriesQuery', model: 'GuestbookEntry', collection: 'gbe', isNested: true, scope: 'COLLECTION_GROUP', category: 'listing' }), buildEntry({ slug: 'internal-scan', name: 'internalScanQuery', factory: undefined })];
+const MANIFEST: CliFirestoreQueryManifest = [
+  buildEntry({ slug: 'published-guestbooks', name: 'publishedGuestbooksQuery', category: 'listing', tags: ['guestbook'] }),
+  buildEntry({ slug: 'published-guestbook-entries', name: 'publishedGuestbookEntriesQuery', model: 'GuestbookEntry', collection: 'gbe', isNested: true, scope: 'COLLECTION_GROUP', category: 'listing' }),
+  buildEntry({ slug: 'internal-scan', name: 'internalScanQuery', factory: undefined })
+];
 
 async function runQueries(argv: readonly string[]): Promise<void> {
   await yargs([...argv])

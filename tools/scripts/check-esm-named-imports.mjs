@@ -37,7 +37,12 @@ const DIST_DIRS = process.argv.slice(2).length ? process.argv.slice(2) : ['dist/
  * Keep this list short and justified. An entry here is a promise that no plain-Node consumer
  * can ever load the importing bundle.
  */
-const EXEMPT = new Map([['mapbox-gl', 'Imported only by @dereekb/dbx-web/mapbox, an ng-packagr Angular package that can never load in bare Node regardless (its Angular peer dependencies cannot). mapbox-gl also declares a `default` whose type is a strict subset of its namespace, so the interop unwrap used elsewhere would be a type lie in TypeScript.']]);
+const EXEMPT = new Map([
+  [
+    'mapbox-gl',
+    'Imported only by @dereekb/dbx-web/mapbox, an ng-packagr Angular package that can never load in bare Node regardless (its Angular peer dependencies cannot). mapbox-gl also declares a `default` whose type is a strict subset of its namespace, so the interop unwrap used elsewhere would be a type lie in TypeScript.'
+  ]
+]);
 
 /**
  * The entry of an esm-only `@nx/esbuild` app bundle, or `undefined` when `dir` is not one.

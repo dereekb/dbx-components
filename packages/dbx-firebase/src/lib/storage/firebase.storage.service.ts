@@ -1,5 +1,16 @@
 import { Service, inject } from '@angular/core';
-import { type FirebaseStorageContext, type FirebaseStorageAccessor, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, GOOGLE_CLOUD_STORAGE_PUBLIC_URL_API_ENDPOINT, type StorageDownloadUrl, type StoragePath, type StoragePathInput, type StoragePublicUrlApiEndpoint, storagePublicDownloadUrl } from '@dereekb/firebase';
+import {
+  type FirebaseStorageContext,
+  type FirebaseStorageAccessor,
+  type FirebaseStorageAccessorFile,
+  type FirebaseStorageAccessorFolder,
+  GOOGLE_CLOUD_STORAGE_PUBLIC_URL_API_ENDPOINT,
+  type StorageDownloadUrl,
+  type StoragePath,
+  type StoragePathInput,
+  type StoragePublicUrlApiEndpoint,
+  storagePublicDownloadUrl
+} from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
 

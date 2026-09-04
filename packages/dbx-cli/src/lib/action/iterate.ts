@@ -33,7 +33,14 @@ export type IterateDbxCliCallModelItemFn<TItem, TItemResult> = (input: { readonl
  * Per-page callback signature for {@link iterateDbxCliCallModel}. Invoked after
  * {@link IterateDbxCliCallModelItemFn} (when both are configured).
  */
-export type IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult> = (input: { readonly context: CliContext; readonly page: TRaw; readonly items: ReadonlyArray<TItem>; readonly keys: ReadonlyArray<string>; readonly pageIndex: number; readonly pageItemResults?: ReadonlyArray<TItemResult> }) => Promise<TPageResult>;
+export type IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult> = (input: {
+  readonly context: CliContext;
+  readonly page: TRaw;
+  readonly items: ReadonlyArray<TItem>;
+  readonly keys: ReadonlyArray<string>;
+  readonly pageIndex: number;
+  readonly pageItemResults?: ReadonlyArray<TItemResult>;
+}) => Promise<TPageResult>;
 
 /**
  * Adapter that maps an arbitrary `callModel` response shape into the pieces
@@ -215,7 +222,15 @@ interface PageProcessingResult<TItem, TItemResult, TPageResult> {
   readonly hasMore: boolean;
 }
 
-async function _runItemTasks<TItem, TItemResult>(input: { readonly context: CliContext; readonly items: ReadonlyArray<TItem>; readonly keys: ReadonlyArray<string>; readonly pageIndex: number; readonly iterateItem: IterateDbxCliCallModelItemFn<TItem, TItemResult>; readonly itemPerformTasksConfig: Maybe<Partial<PerformAsyncTasksConfig<TItem>>>; readonly maxParallelPerPage: Maybe<number> }): Promise<ReadonlyArray<TItemResult>> {
+async function _runItemTasks<TItem, TItemResult>(input: {
+  readonly context: CliContext;
+  readonly items: ReadonlyArray<TItem>;
+  readonly keys: ReadonlyArray<string>;
+  readonly pageIndex: number;
+  readonly iterateItem: IterateDbxCliCallModelItemFn<TItem, TItemResult>;
+  readonly itemPerformTasksConfig: Maybe<Partial<PerformAsyncTasksConfig<TItem>>>;
+  readonly maxParallelPerPage: Maybe<number>;
+}): Promise<ReadonlyArray<TItemResult>> {
   interface IndexedItem {
     readonly item: TItem;
     readonly key: string;
@@ -331,7 +346,25 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  * ```
  */
 export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryModelResult<TItem>, TItemResult = void, TPageResult = void>(config: IterateDbxCliCallModelConfig<TParams, TItem, TRaw, TItemResult, TPageResult>): Promise<IterateDbxCliCallModelResult<TItem, TItemResult, TPageResult>> {
-  const { context, modelType, call, specifier, params, buildRequestData = _defaultBuildRequestData<TParams>, responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>, limitPerPage, totalItemsLimit, maxPages, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage, collectItems = true, collectItemResults = iterateItem != null, collectPageResults = iteratePage != null } = config;
+  const {
+    context,
+    modelType,
+    call,
+    specifier,
+    params,
+    buildRequestData = _defaultBuildRequestData<TParams>,
+    responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>,
+    limitPerPage,
+    totalItemsLimit,
+    maxPages,
+    iterateItem,
+    iteratePage,
+    itemPerformTasksConfig,
+    maxParallelPerPage,
+    collectItems = true,
+    collectItemResults = iterateItem != null,
+    collectPageResults = iteratePage != null
+  } = config;
 
   const allItems: TItem[] = [];
   const allItemResults: TItemResult[] = [];

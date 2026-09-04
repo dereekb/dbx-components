@@ -1,6 +1,6 @@
 import { type ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { Component, computed, inject } from '@angular/core';
-import { DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, type DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
+import { DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, type DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { type DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { type WorkUsingContext, type IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -19,7 +19,24 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'dbx-firebase-development-popup-content',
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
-  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentForgeFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
+  imports: [
+    DbxActionSnackbarErrorDirective,
+    DbxAnchorComponent,
+    DbxTwoColumnFullLeftDirective,
+    DbxWidgetViewComponent,
+    DbxTwoColumnComponent,
+    DbxTwoBlockComponent,
+    DbxTwoColumnRightComponent,
+    DbxWidgetViewComponent,
+    DbxFirebaseDevelopmentPopupContentForgeFormComponent,
+    DbxActionDirective,
+    DbxActionEnforceModifiedDirective,
+    DbxActionHandlerDirective,
+    DbxActionFormDirective,
+    DbxFormSourceDirective,
+    DbxActionAutoTriggerDirective,
+    MatButtonModule
+  ],
   providers: [TwoColumnsContextStore]
 })
 export class DbxFirebaseDevelopmentPopupContentComponent {

@@ -218,7 +218,9 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // A verify-only run carries the previous findings forward. The stale probe findings are only
           // dropped when the provider is actually going to replace them — otherwise the method would
           // lose its probe explanation while still reporting the probe itself.
-          const issues: NotificationHealthCheckIssue[] = verifyPendingProbesOnly ? (previousMethodResult?.is ?? []).filter((x) => !(willConsultProvider && isProbeIssueCode(x.c))) : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType }), ...(disabledMethodsByBox.get(method) ?? [])];
+          const issues: NotificationHealthCheckIssue[] = verifyPendingProbesOnly
+            ? (previousMethodResult?.is ?? []).filter((x) => !(willConsultProvider && isProbeIssueCode(x.c)))
+            : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType }), ...(disabledMethodsByBox.get(method) ?? [])];
 
           // keep any previously resolved probe visible unless the provider supplies a newer one
           let probe: Maybe<NotificationHealthCheckProbe> = previousProbe;
@@ -250,7 +252,13 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
                 }
               }
             } catch (e) {
-              issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.UNKNOWN, { message: `The ${label.toLowerCase()} provider could not be reached, so its delivery status is unknown.`, fix: 'Try again in a few minutes. If this keeps happening, the delivery provider may be having an outage.', data: { error: `${e}` } }));
+              issues.push(
+                notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.UNKNOWN, {
+                  message: `The ${label.toLowerCase()} provider could not be reached, so its delivery status is unknown.`,
+                  fix: 'Try again in a few minutes. If this keeps happening, the delivery provider may be having an outage.',
+                  data: { error: `${e}` }
+                })
+              );
             }
           } else if (sendServiceConfigured && !healthCheckService && !verifyPendingProbesOnly && target != null) {
             issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.SKIPPED, { message: `${label} delivery could not be verified with the provider, so only your settings were checked.`, data: { method } }));
@@ -444,11 +452,22 @@ function notificationUserAccountIssues(input: NotificationUserAccountIssuesInput
   });
 
   if (!b.length) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NO_NOTIFICATION_BOXES, NotificationHealthCheckStatus.WARNING, { message: 'You are not subscribed to notifications for anything yet, so there is nothing to notify you about.', fix: 'This usually resolves itself once you are added to a group or record that sends notifications.' }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NO_NOTIFICATION_BOXES, NotificationHealthCheckStatus.WARNING, {
+        message: 'You are not subscribed to notifications for anything yet, so there is nothing to notify you about.',
+        fix: 'This usually resolves itself once you are added to a group or record that sends notifications.'
+      })
+    );
   }
 
   if (x.length) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NOTIFICATION_BOX_EXCLUSIONS, NotificationHealthCheckStatus.WARNING, { message: `Notifications from ${x.length} subscription${x.length === 1 ? '' : 's'} are being suppressed for your account.`, fix: 'Contact support if you expect notifications from one of these.', data: { exclusions: takeFront(x, 10) } }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NOTIFICATION_BOX_EXCLUSIONS, NotificationHealthCheckStatus.WARNING, {
+        message: `Notifications from ${x.length} subscription${x.length === 1 ? '' : 's'} are being suppressed for your account.`,
+        fix: 'Contact support if you expect notifications from one of these.',
+        data: { exclusions: takeFront(x, 10) }
+      })
+    );
   }
 
   return issues;
@@ -484,7 +503,13 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
   }
 
   if (target == null) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET, NotificationHealthCheckStatus.ERROR, { message: `There is no ${label.toLowerCase()} destination on your account, so nothing can be delivered.`, fix: method === NotificationDeliveryMethod.EMAIL ? 'Add an email address to your account.' : 'Add a phone number to your notification settings.', data: { method } }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET, NotificationHealthCheckStatus.ERROR, {
+        message: `There is no ${label.toLowerCase()} destination on your account, so nothing can be delivered.`,
+        fix: method === NotificationDeliveryMethod.EMAIL ? 'Add an email address to your account.' : 'Add a phone number to your notification settings.',
+        data: { method }
+      })
+    );
 
     return issues; // every remaining check is about a destination that does not exist
   }
@@ -494,11 +519,29 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
   const defaultTemplateFlag = readEffectiveTemplateConfigFlag(dc.c?.[notificationTemplateType], readTemplateConfigFlag);
 
   if (globalTemplateFlag === false) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.ERROR, { message: `${label} is switched off for you across every notification, which overrides all other settings.`, fix: `Turn ${label.toLowerCase()} back on in your notification settings.`, data: { method, notificationTemplateType, scope: 'global' } }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.ERROR, {
+        message: `${label} is switched off for you across every notification, which overrides all other settings.`,
+        fix: `Turn ${label.toLowerCase()} back on in your notification settings.`,
+        data: { method, notificationTemplateType, scope: 'global' }
+      })
+    );
   } else if (defaultTemplateFlag === false) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, { message: `${label} is switched off in your default settings for this kind of notification.`, fix: `Turn ${label.toLowerCase()} back on for this notification type.`, data: { method, notificationTemplateType, scope: 'default' } }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
+        message: `${label} is switched off in your default settings for this kind of notification.`,
+        fix: `Turn ${label.toLowerCase()} back on for this notification type.`,
+        data: { method, notificationTemplateType, scope: 'default' }
+      })
+    );
   } else if (requiresExplicitOptIn && globalTemplateFlag !== true && defaultTemplateFlag !== true) {
-    issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, { message: `${label} is only sent to people who have turned it on, and you have not turned it on.`, fix: `Turn ${label.toLowerCase()} on in your notification settings.`, data: { method, notificationTemplateType, requiresExplicitOptIn: true } }));
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
+        message: `${label} is only sent to people who have turned it on, and you have not turned it on.`,
+        fix: `Turn ${label.toLowerCase()} on in your notification settings.`,
+        data: { method, notificationTemplateType, requiresExplicitOptIn: true }
+      })
+    );
   }
 
   return issues;
@@ -602,19 +645,43 @@ async function inspectNotificationUserSubscriptions(input: InspectNotificationUs
   });
 
   if (invalidBoxIds.length) {
-    sharedIssues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_BROKEN, NotificationHealthCheckStatus.ERROR, { message: `${invalidBoxIds.length} of your subscriptions are broken and will not send notifications.`, fix: 'Contact support with this report so the subscription can be repaired.', data: { notificationBoxIds: invalidBoxIds } }));
+    sharedIssues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_BROKEN, NotificationHealthCheckStatus.ERROR, {
+        message: `${invalidBoxIds.length} of your subscriptions are broken and will not send notifications.`,
+        fix: 'Contact support with this report so the subscription can be repaired.',
+        data: { notificationBoxIds: invalidBoxIds }
+      })
+    );
   }
 
   if (uninitializedBoxIds.length) {
-    sharedIssues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_NOT_READY, NotificationHealthCheckStatus.WARNING, { message: `${uninitializedBoxIds.length} of your subscriptions are still being set up, so their notifications are delayed.`, fix: 'This usually clears itself within a few minutes.', data: { notificationBoxIds: uninitializedBoxIds } }));
+    sharedIssues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SUBSCRIPTION_NOT_READY, NotificationHealthCheckStatus.WARNING, {
+        message: `${uninitializedBoxIds.length} of your subscriptions are still being set up, so their notifications are delayed.`,
+        fix: 'This usually clears itself within a few minutes.',
+        data: { notificationBoxIds: uninitializedBoxIds }
+      })
+    );
   }
 
   if (unsyncedBoxIds.length) {
-    sharedIssues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NEEDS_CONFIG_SYNC, NotificationHealthCheckStatus.WARNING, { message: `Your settings for ${unsyncedBoxIds.length} subscription${unsyncedBoxIds.length === 1 ? '' : 's'} have not been applied yet.`, fix: 'Re-run this check in a few minutes. If it persists, contact support with this report.', data: { notificationBoxIds: unsyncedBoxIds } }));
+    sharedIssues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.NEEDS_CONFIG_SYNC, NotificationHealthCheckStatus.WARNING, {
+        message: `Your settings for ${unsyncedBoxIds.length} subscription${unsyncedBoxIds.length === 1 ? '' : 's'} have not been applied yet.`,
+        fix: 'Re-run this check in a few minutes. If it persists, contact support with this report.',
+        data: { notificationBoxIds: unsyncedBoxIds }
+      })
+    );
   }
 
   disabledBoxIdsByMethod.forEach((notificationBoxIds, method) => {
-    issuesByMethod.set(method, [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX, NotificationHealthCheckStatus.WARNING, { message: `This delivery method is switched off for ${notificationBoxIds.length} of your subscriptions.`, fix: 'Check the per-subscription settings in your notification settings.', data: { method, notificationBoxIds } })]);
+    issuesByMethod.set(method, [
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX, NotificationHealthCheckStatus.WARNING, {
+        message: `This delivery method is switched off for ${notificationBoxIds.length} of your subscriptions.`,
+        fix: 'Check the per-subscription settings in your notification settings.',
+        data: { method, notificationBoxIds }
+      })
+    ]);
   });
 
   return { sharedIssues, issuesByMethod };

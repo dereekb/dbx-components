@@ -1,4 +1,14 @@
-import { type ZohoSearchRecordsCriteriaString, type ZohoSearchRecordsCriteriaTree, type ZohoSearchRecordsCriteriaFilterType, type ZohoSearchRecordsCriteriaEntry, zohoSearchRecordsCriteriaString, zohoSearchRecordsCriteriaStringForTree, zohoSearchRecordsCriteriaEntryToCriteriaString, escapeZohoFieldValueForCriteriaString, MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA } from '../shared/criteria';
+import {
+  type ZohoSearchRecordsCriteriaString,
+  type ZohoSearchRecordsCriteriaTree,
+  type ZohoSearchRecordsCriteriaFilterType,
+  type ZohoSearchRecordsCriteriaEntry,
+  zohoSearchRecordsCriteriaString,
+  zohoSearchRecordsCriteriaStringForTree,
+  zohoSearchRecordsCriteriaEntryToCriteriaString,
+  escapeZohoFieldValueForCriteriaString,
+  MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA
+} from '../shared/criteria';
 
 /**
  * Maximum number of criteria allowed per CRM search query (10).

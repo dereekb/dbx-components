@@ -66,7 +66,10 @@ export interface ExtractedUiEntry {
  * into a structured warning array so missing/invalid tag combinations
  * surface during generation rather than silently dropping entries.
  */
-export type ExtractWarning = { readonly kind: 'missing-required-tag'; readonly className: string; readonly tag: string; readonly filePath: string; readonly line: number } | { readonly kind: 'unknown-category'; readonly className: string; readonly category: string; readonly filePath: string; readonly line: number } | { readonly kind: 'unknown-kind'; readonly className: string; readonly kindValue: string; readonly filePath: string; readonly line: number };
+export type ExtractWarning =
+  | { readonly kind: 'missing-required-tag'; readonly className: string; readonly tag: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-category'; readonly className: string; readonly category: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-kind'; readonly className: string; readonly kindValue: string; readonly filePath: string; readonly line: number };
 
 /**
  * Input to {@link extractUiEntries}. The caller is responsible for adding

@@ -16,11 +16,9 @@ describe('discordFetchMessagePageFactory()', () => {
   it('should fetch a single page when fewer results than limit are returned', async () => {
     const messages = makeMessages(5);
 
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
-        data: messages
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
 
     const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ limit: 10 });
@@ -78,11 +76,9 @@ describe('discordFetchMessagePageFactory()', () => {
   it('should clear after and around when paginating forward with before', async () => {
     const messages = makeMessages(10, 100);
 
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
-        data: messages
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
 
     const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ after: '50', limit: 10 });
@@ -112,11 +108,9 @@ describe('discordFetchMessagePageFactory()', () => {
       { id: '2', snowflake: 'sf-99' }
     ];
 
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<CustomMessage>> => ({
-        data: messages
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<CustomMessage>> => ({
+      data: messages
+    }));
 
     const factory = discordFetchMessagePageFactory({
       fetch,
@@ -131,11 +125,9 @@ describe('discordFetchMessagePageFactory()', () => {
   });
 
   it('should handle empty results', async () => {
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
-        data: []
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: []
+    }));
 
     const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({ limit: 10 });
@@ -148,11 +140,9 @@ describe('discordFetchMessagePageFactory()', () => {
   it('should use DEFAULT_DISCORD_MESSAGES_PER_PAGE when no limit is specified', async () => {
     const messages = makeMessages(DEFAULT_DISCORD_MESSAGES_PER_PAGE, 200);
 
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
-        data: messages
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
 
     const factory = discordFetchMessagePageFactory({ fetch });
     const page = factory({});
@@ -168,11 +158,9 @@ describe('discordFetchMessagePageFactory()', () => {
   it('should respect maxPage from factory defaults', async () => {
     const messages = makeMessages(10, 100);
 
-    const fetch = vi.fn(
-      async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
-        data: messages
-      })
-    );
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
 
     // fetchPageFactory uses 0-indexed pages (FIRST_PAGE = 0).
     // maxPage: 2 allows pages 0, 1, and 2 to be fetched. Page 2 has isAtMaxPage: true,

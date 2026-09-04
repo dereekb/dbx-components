@@ -22,7 +22,18 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
   {
     title: 'Lorem Basics',
     icon: 'sentiment_satisfied',
-    links: [{ label: 'Quid est lorem ipsum?' }, { label: 'Cur dolor sit amet?' }, { label: 'Consectetur adipiscing elit?' }, { label: 'Sed do eiusmod tempor?' }, { label: 'Incididunt ut labore?' }, { label: 'Et dolore magna aliqua?' }, { label: 'Ut enim ad minim veniam?' }, { label: 'Quis nostrud exercitation?' }, { label: 'Ullamco laboris nisi?' }, { label: 'Aliquip ex ea commodo?' }]
+    links: [
+      { label: 'Quid est lorem ipsum?' },
+      { label: 'Cur dolor sit amet?' },
+      { label: 'Consectetur adipiscing elit?' },
+      { label: 'Sed do eiusmod tempor?' },
+      { label: 'Incididunt ut labore?' },
+      { label: 'Et dolore magna aliqua?' },
+      { label: 'Ut enim ad minim veniam?' },
+      { label: 'Quis nostrud exercitation?' },
+      { label: 'Ullamco laboris nisi?' },
+      { label: 'Aliquip ex ea commodo?' }
+    ]
   },
   {
     title: 'Dolor & Pay',

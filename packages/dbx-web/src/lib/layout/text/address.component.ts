@@ -9,7 +9,7 @@ import { type Maybe, type UnitedStatesAddressWithContact } from '@dereekb/util';
  * <dbx-us-address [address]="{ name: 'John', line1: '123 Main St', city: 'Austin', state: 'TX', zip: '78701' }"></dbx-us-address>
  * ```
  */
-// prettier-ignore
+// oxfmt-ignore
 @Component({
   selector: 'dbx-us-address',
   template: `

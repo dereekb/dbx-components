@@ -384,7 +384,25 @@ export async function loadServerContext(options: CreateServerOptions = {}): Prom
 
   const context: DbxComponentsMcpServerContext = {
     resources: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry, cwd },
-    tools: { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd, logSearchConfig }
+    tools: {
+      semanticTypeRegistry: registry,
+      forgeFieldRegistry: forgeRegistry,
+      pipeRegistry,
+      utilRegistry,
+      modelSnapshotFieldRegistry,
+      modelFirebaseIndexRegistry,
+      uiComponentRegistry: uiRegistry,
+      dbxDocsUiExamplesRegistry,
+      actionRegistry,
+      filterRegistry,
+      tokenRegistry,
+      cssUtilityRegistry,
+      fixtureModelRegistry,
+      modelValidateRuleOptions,
+      authRegistry,
+      cwd,
+      logSearchConfig
+    }
   };
 
   return context;
@@ -631,7 +649,14 @@ async function resolveAuthRegistry(input: ResolveAuthRegistryInput): Promise<Aut
  */
 function reportAuthLoaderResult(result: LoadAuthRegistryResult): void {
   const { registry, scannedFiles, fileWarnings, extractWarnings, extractedAppCount, extractedClaimCount } = result;
-  const summary = [`[dbx-components-mcp] auth registry loaded`, `  sources: ${registry.loadedSources.join(', ') || '(none)'}`, `  scanned-files: ${scannedFiles.length}`, `  apps: ${registry.apps.length} (extracted: ${extractedAppCount})`, `  claims: ${registry.claims.length} (extracted: ${extractedClaimCount})`, `  warnings: ${fileWarnings.length + extractWarnings.length}`].join('\n');
+  const summary = [
+    `[dbx-components-mcp] auth registry loaded`,
+    `  sources: ${registry.loadedSources.join(', ') || '(none)'}`,
+    `  scanned-files: ${scannedFiles.length}`,
+    `  apps: ${registry.apps.length} (extracted: ${extractedAppCount})`,
+    `  claims: ${registry.claims.length} (extracted: ${extractedClaimCount})`,
+    `  warnings: ${fileWarnings.length + extractWarnings.length}`
+  ].join('\n');
   process.stderr.write(`${summary}\n`);
   for (const warning of fileWarnings) {
     process.stderr.write(`[dbx-components-mcp] auth-file-warning: ${warning.kind} ${warning.relPath} ${warning.error}\n`);

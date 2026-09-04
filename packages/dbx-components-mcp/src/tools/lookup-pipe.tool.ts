@@ -63,7 +63,20 @@ function formatArgsTable(args: readonly { readonly name: string; readonly type: 
 }
 
 function formatEntry(entry: PipeEntryInfo, depth: LookupDepth): string {
-  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('pipe', `\`${entry.pipeName}\``), bullet('category', `\`${entry.category}\``), bullet('purity', `\`${entry.purity}\``), bullet('input', `\`${entry.inputType}\``), bullet('output', `\`${entry.outputType}\``), bullet('module', `\`${entry.module}\``), ''];
+  const lines: string[] = [
+    `# ${entry.className}`,
+    '',
+    entry.description,
+    '',
+    bullet('slug', `\`${entry.slug}\``),
+    bullet('pipe', `\`${entry.pipeName}\``),
+    bullet('category', `\`${entry.category}\``),
+    bullet('purity', `\`${entry.purity}\``),
+    bullet('input', `\`${entry.inputType}\``),
+    bullet('output', `\`${entry.outputType}\``),
+    bullet('module', `\`${entry.module}\``),
+    ''
+  ];
 
   if (depth === 'full') {
     if (entry.args.length > 0) {

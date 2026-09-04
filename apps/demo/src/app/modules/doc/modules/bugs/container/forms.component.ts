@@ -11,7 +11,21 @@ import { DocFormForgeExampleComponent } from '../../shared/component/forge.examp
 
 @Component({
   templateUrl: './forms.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxActionDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxErrorComponent, DbxActionErrorDirective]
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocFormForgeExampleComponent,
+    DbxFormSourceDirective,
+    DbxActionDirective,
+    DbxActionHandlerDirective,
+    DbxActionFormDirective,
+    DbxButtonComponent,
+    DbxActionButtonDirective,
+    DbxActionEnforceModifiedDirective,
+    DbxErrorComponent,
+    DbxActionErrorDirective
+  ]
 })
 export class DocBugsFormsComponent {
   // -- Phone Dirty State --

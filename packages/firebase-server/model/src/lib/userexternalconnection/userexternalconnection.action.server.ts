@@ -1,5 +1,17 @@
 import { type Maybe } from '@dereekb/util';
-import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type FirebaseAuthUserId, type FirestoreContextReference, type UserExternalConnectionDocument, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionGrantSummary, type UserExternalConnectionProviderType, userExternalConnectionEntryForOutcome } from '@dereekb/firebase';
+import {
+  applyUserExternalConnectionEntry,
+  emptyUserExternalConnection,
+  type FirebaseAuthUserId,
+  type FirestoreContextReference,
+  type UserExternalConnectionDocument,
+  type UserExternalConnectionEntryStatus,
+  type UserExternalConnectionErrorCode,
+  type UserExternalConnectionFirestoreCollections,
+  type UserExternalConnectionGrantSummary,
+  type UserExternalConnectionProviderType,
+  userExternalConnectionEntryForOutcome
+} from '@dereekb/firebase';
 import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections, userExternalConnectionGrantSummaryFromCredentials } from './userexternalconnection.private';
 import { userExternalConnectionAlreadyExistsError } from './userexternalconnection.error';
 

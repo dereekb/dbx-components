@@ -181,7 +181,16 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
  * @throws {Error} When no subject is configured and `useSubjectFromRecipientUserVariables` is false, or when `throwOnUnresolvedEntityKeys` is set and the base request or a recipient carries an entity key that no configured lookup can resolve.
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
-  const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients, overrideAttachmentsWithRecipientAttachments, throwOnUnresolvedEntityKeys } = config;
+  const {
+    request: inputBaseRequest,
+    useSubjectFromRecipientUserVariables,
+    allowSingleRecipientBatchSendRequests,
+    recipientVariablesConfig,
+    mailgunRecipientBatchSendTargetEntityKeyRecipientLookup,
+    overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients,
+    overrideAttachmentsWithRecipientAttachments,
+    throwOnUnresolvedEntityKeys
+  } = config;
   const defaultSubject = inputBaseRequest.subject;
 
   if (!defaultSubject && !useSubjectFromRecipientUserVariables) {

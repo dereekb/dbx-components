@@ -20,7 +20,13 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 // MARK: Tool definition
 const DBX_ROUTE_LOOKUP_TOOL: Tool = {
   name: 'dbx_route_lookup',
-  description: ["Look up a single UIRouter state by name, full URL, or component class name. Returns the state's URL, component, parent chain, params, resolves, siblings, and children.", '', 'Provide at least one of `sources` / `paths` / `glob` to point the tool at the source set, plus a `topic`.', '', 'Resolution order: exact state name → URL path → component class name → fuzzy substring (returns up to 5 candidates).'].join('\n'),
+  description: [
+    "Look up a single UIRouter state by name, full URL, or component class name. Returns the state's URL, component, parent chain, params, resolves, siblings, and children.",
+    '',
+    'Provide at least one of `sources` / `paths` / `glob` to point the tool at the source set, plus a `topic`.',
+    '',
+    'Resolution order: exact state name → URL path → component class name → fuzzy substring (returns up to 5 candidates).'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

@@ -70,5 +70,6 @@ export class ContentToolbarComponent {
   };
 }`
   },
-  notes: 'Each `[dbxActionDisabled]` adds the `dbx_action_disabled` key on its action store. Multiple sources can disable the same action under different keys — only when ALL keys are released does the action re-enable. Use `[dbxActionContextMap]` + `[dbxActionMapSource]` when sibling actions need to look each other up by name.'
+  notes:
+    'Each `[dbxActionDisabled]` adds the `dbx_action_disabled` key on its action store. Multiple sources can disable the same action under different keys — only when ALL keys are released does the action re-enable. Use `[dbxActionContextMap]` + `[dbxActionMapSource]` when sibling actions need to look each other up by name.'
 };

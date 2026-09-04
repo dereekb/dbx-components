@@ -7,7 +7,7 @@ const timezoneKey = timezone.toLowerCase().replace('/', '-');
 
 export default createVitestConfig({
   type: 'node',
-  pathFromRoot: __dirname,
+  pathFromRoot: import.meta.dirname,
   projectName: 'date',
   configureEnv: () => ({
     TZ: timezone

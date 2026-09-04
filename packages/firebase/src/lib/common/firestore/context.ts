@@ -213,7 +213,8 @@ export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D ex
  * @template D - The FirestoreDocument implementation type for subcollection documents
  * @template PD - The FirestoreDocument implementation type for the parent document
  */
-export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
+export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>
+  extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
 
 /**
  * Configuration for creating a PagedItemFirestoreCollection through a FirestoreContext.
@@ -231,7 +232,10 @@ export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D ex
  * @template D - The page document type
  * @template PD - The parent FirestoreDocument implementation type
  */
-export interface FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends Omit<FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>, 'converter'> {
+export interface FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends Omit<
+  FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>,
+  'converter'
+> {
   readonly converter?: FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>['converter'];
   readonly indexDocumentId?: string;
   readonly distributionScheme?: PagedItemDistributionScheme<T>;
@@ -286,7 +290,9 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
   return (firestore: F, params?: FirestoreContextFactoryParams) => {
     const contextCache: FirestoreContextCache = params?.firestoreContextCacheFactory?.() ?? noopFirestoreContextCache();
 
-    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => {
+    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(
+      config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>
+    ) => {
       const collection = (config as Partial<FirestoreContextFirestoreCollectionConfig<T, D>>).collection;
       const queryLike = collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike;
 

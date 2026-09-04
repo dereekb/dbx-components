@@ -34,7 +34,20 @@ type DocActionFormWithSecondaryDecision = { readonly outcome: 'approved'; readon
  */
 @Component({
   selector: 'doc-action-form-with-secondary-example',
-  imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionButtonDirective, DbxActionSnackbarErrorDirective, DbxActionFormDirective, DbxButtonComponent, DbxButtonSpacerDirective, DocActionFormWithSecondaryFormComponent],
+  imports: [
+    DbxDocsUiExampleComponent,
+    DbxDocsUiExampleInfoComponent,
+    DbxDocsUiExampleContentComponent,
+    DbxActionDirective,
+    DbxActionHandlerDirective,
+    DbxActionValueDirective,
+    DbxActionButtonDirective,
+    DbxActionSnackbarErrorDirective,
+    DbxActionFormDirective,
+    DbxButtonComponent,
+    DbxButtonSpacerDirective,
+    DocActionFormWithSecondaryFormComponent
+  ],
   template: `
     <dbx-docs-ui-example header="Form Action With Secondary Button" hint="dbxActionForm + Approve, plus a nested dbxAction context for Deny.">
       <dbx-docs-ui-example-info>

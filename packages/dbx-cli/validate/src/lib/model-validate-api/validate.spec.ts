@@ -247,7 +247,10 @@ describe('validateModelApiSources', () => {
   });
 
   it('warns when the validator is not adjacent to its paired interface', () => {
-    const text = HAPPY_SOURCE.replace('export const createWidgetParamsType = type({\n  n: `string > 0 & string <= ${WIDGET_NAME_MAX_LENGTH}`\n}) as Type<CreateWidgetParams>;', "export interface SomeOtherParams {\n  readonly x: string;\n}\n\nexport const someOtherParamsType = type({ x: 'string' }) as Type<SomeOtherParams>;\n\nexport const createWidgetParamsType = type({\n  n: `string > 0 & string <= ${WIDGET_NAME_MAX_LENGTH}`\n}) as Type<CreateWidgetParams>;");
+    const text = HAPPY_SOURCE.replace(
+      'export const createWidgetParamsType = type({\n  n: `string > 0 & string <= ${WIDGET_NAME_MAX_LENGTH}`\n}) as Type<CreateWidgetParams>;',
+      "export interface SomeOtherParams {\n  readonly x: string;\n}\n\nexport const someOtherParamsType = type({ x: 'string' }) as Type<SomeOtherParams>;\n\nexport const createWidgetParamsType = type({\n  n: `string > 0 & string <= ${WIDGET_NAME_MAX_LENGTH}`\n}) as Type<CreateWidgetParams>;"
+    );
     const result = validateModelApiSources([{ name: 'widget.api.ts', text }]);
     const adjacency = result.violations.filter((v) => v.code === 'PARAMS_VALIDATOR_NOT_ADJACENT');
     expect(adjacency.length).toBeGreaterThan(0);

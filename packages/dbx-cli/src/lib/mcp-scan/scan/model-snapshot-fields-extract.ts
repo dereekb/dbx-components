@@ -73,7 +73,10 @@ export interface ExtractedModelSnapshotFieldEntry {
  * warning array so missing/invalid tag combinations surface during
  * generation rather than silently dropping entries.
  */
-export type ModelSnapshotFieldExtractWarning = { readonly kind: 'unsupported-kind-override'; readonly name: string; readonly override: string; readonly filePath: string; readonly line: number } | { readonly kind: 'missing-name'; readonly filePath: string; readonly line: number } | { readonly kind: 'duplicate-slug'; readonly name: string; readonly slug: string; readonly previousName: string; readonly filePath: string; readonly line: number };
+export type ModelSnapshotFieldExtractWarning =
+  | { readonly kind: 'unsupported-kind-override'; readonly name: string; readonly override: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'missing-name'; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'duplicate-slug'; readonly name: string; readonly slug: string; readonly previousName: string; readonly filePath: string; readonly line: number };
 
 /**
  * Input to {@link extractModelSnapshotFieldEntries}. The caller is

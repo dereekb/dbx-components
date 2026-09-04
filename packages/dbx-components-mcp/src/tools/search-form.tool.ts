@@ -152,7 +152,19 @@ function formatSearchResults(input: { readonly query: string; readonly tokens: r
     const field = hit.entry;
     const optionalArray = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
     const array = field.arrayOutput === 'yes' ? ' *(array)*' : optionalArray;
-    lines.push(`## \`${field.slug}\` · form · score ${hit.score}`, '', `- **factory:** \`${field.factoryName}\``, `- **tier:** \`${field.tier}\``, `- **produces:** \`${field.produces}\`${array}`, `- **matched:** \`${hit.matchedTokens.join(', ')}\``, '', field.description, '', `→ \`dbx_form_lookup topic="${field.slug}"\` for full docs.`, '');
+    lines.push(
+      `## \`${field.slug}\` · form · score ${hit.score}`,
+      '',
+      `- **factory:** \`${field.factoryName}\``,
+      `- **tier:** \`${field.tier}\``,
+      `- **produces:** \`${field.produces}\`${array}`,
+      `- **matched:** \`${hit.matchedTokens.join(', ')}\``,
+      '',
+      field.description,
+      '',
+      `→ \`dbx_form_lookup topic="${field.slug}"\` for full docs.`,
+      ''
+    );
   }
   return lines.join('\n').trimEnd();
 }

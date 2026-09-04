@@ -27,7 +27,10 @@ describe('checkManifestIdentityDuplicates', () => {
   });
 
   it('flags a single MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE for two identities sharing a collectionPrefix across packages', () => {
-    const models: FirebaseModel[] = [makeModel({ name: 'Profile', identityConst: 'profileIdentity', modelType: 'profile', collectionPrefix: 'u', sourcePackage: '@dereekb/firebase' }), makeModel({ name: 'User', identityConst: 'userIdentity', modelType: 'user', collectionPrefix: 'u', sourcePackage: 'demo-firebase', sourceFile: 'components/demo-firebase/src/lib/model/user.ts' })];
+    const models: FirebaseModel[] = [
+      makeModel({ name: 'Profile', identityConst: 'profileIdentity', modelType: 'profile', collectionPrefix: 'u', sourcePackage: '@dereekb/firebase' }),
+      makeModel({ name: 'User', identityConst: 'userIdentity', modelType: 'user', collectionPrefix: 'u', sourcePackage: 'demo-firebase', sourceFile: 'components/demo-firebase/src/lib/model/user.ts' })
+    ];
     const result = checkManifestIdentityDuplicates(models);
     expect(result.map((v) => v.code)).toEqual(['MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE']);
     const [violation] = result;
@@ -63,7 +66,10 @@ describe('checkManifestIdentityDuplicates', () => {
   });
 
   it('flags collisions regardless of root vs. subcollection variant', () => {
-    const models: FirebaseModel[] = [makeModel({ name: 'Profile', identityConst: 'profileIdentity', modelType: 'profile', collectionPrefix: 'pr', collectionKind: 'root' }), makeModel({ name: 'NestedProfile', identityConst: 'nestedProfileIdentity', modelType: 'nestedProfile', collectionPrefix: 'pr', parentIdentityConst: 'userIdentity', collectionKind: 'sub-collection' })];
+    const models: FirebaseModel[] = [
+      makeModel({ name: 'Profile', identityConst: 'profileIdentity', modelType: 'profile', collectionPrefix: 'pr', collectionKind: 'root' }),
+      makeModel({ name: 'NestedProfile', identityConst: 'nestedProfileIdentity', modelType: 'nestedProfile', collectionPrefix: 'pr', parentIdentityConst: 'userIdentity', collectionKind: 'sub-collection' })
+    ];
     const result = checkManifestIdentityDuplicates(models);
     expect(result.map((v) => v.code)).toEqual(['MODEL_IDENTITY_COLLECTION_NAME_DUPLICATE']);
   });

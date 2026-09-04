@@ -273,7 +273,9 @@ export function cliFirestoreWiringError(input: CliFirestoreWiringErrorInput): Er
     result = new CliError({
       message,
       code: report.ok ? FIRESTORE_COLLECTION_UNRESOLVABLE_CODE : FIRESTORE_SDK_INSTANCE_MISMATCH_CODE,
-      suggestion: cliFirestoreSdkIdentitySuggestion(report) ?? `The Firestore handle itself checked out (driver "${report.firestoreDriverIdentifier ?? 'unknown'}", @firebase/firestore ${report.sdkFromDbxCli.version ?? 'unknown'} at ${report.sdkFromDbxCli.packageDir ?? 'unknown'}), so the rejected argument is the path, not the SDK. Check the --parent key and the app's collection factory for this model.`
+      suggestion:
+        cliFirestoreSdkIdentitySuggestion(report) ??
+        `The Firestore handle itself checked out (driver "${report.firestoreDriverIdentifier ?? 'unknown'}", @firebase/firestore ${report.sdkFromDbxCli.version ?? 'unknown'} at ${report.sdkFromDbxCli.packageDir ?? 'unknown'}), so the rejected argument is the path, not the SDK. Check the --parent key and the app's collection factory for this model.`
     });
   }
 

@@ -18,7 +18,11 @@ import { type SetupContext, type SetupModule } from '../module.js';
 function buildPlan(context: SetupContext): readonly ScaffoldPlanEntry[] {
   const { workspaceRoot, naming, archive, tokens } = context;
   const destRoot = join(workspaceRoot, naming.firebaseComponentsFolder);
-  return [...buildScaffoldPlan({ archive, subtree: 'components/firebase', destRoot, tokens }), literalScaffoldEntry({ destPath: join(destRoot, 'src/index.ts'), content: "export * from './lib'\n" }), literalScaffoldEntry({ destPath: join(destRoot, 'src/test-setup.ts'), content: "import '@dereekb/vitest/setup-firebase'\n" })];
+  return [
+    ...buildScaffoldPlan({ archive, subtree: 'components/firebase', destRoot, tokens }),
+    literalScaffoldEntry({ destPath: join(destRoot, 'src/index.ts'), content: "export * from './lib'\n" }),
+    literalScaffoldEntry({ destPath: join(destRoot, 'src/test-setup.ts'), content: "import '@dereekb/vitest/setup-firebase'\n" })
+  ];
 }
 
 /**

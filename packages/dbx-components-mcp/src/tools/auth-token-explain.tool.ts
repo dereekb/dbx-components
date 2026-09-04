@@ -22,7 +22,11 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_TOKEN_EXPLAIN_TOOL: Tool = {
   name: 'dbx_auth_token_explain',
-  description: ['Decode a JWT or claims object and annotate each claim with the catalogued meaning, role mapping, and source path:line.', '', 'Pass `token` (raw JWT string) **or** `claims` (decoded JSON object). Reserved JWT claims (`iss`/`aud`/`exp`/`iat`/`sub`/`scope`) are listed separately. Flags expired tokens and unknown wrong-issuer claims.'].join('\n'),
+  description: [
+    'Decode a JWT or claims object and annotate each claim with the catalogued meaning, role mapping, and source path:line.',
+    '',
+    'Pass `token` (raw JWT string) **or** `claims` (decoded JSON object). Reserved JWT claims (`iss`/`aud`/`exp`/`iat`/`sub`/`scope`) are listed separately. Flags expired tokens and unknown wrong-issuer claims.'
+  ].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {

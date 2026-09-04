@@ -1368,7 +1368,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
           {
             name: 'LOGGED_EVENT',
             value: 4,
-            description: 'A write-only logged event notification. Persisted with `d=true` and `NO_TRY` channel states from creation, so the send loop never visits it. Cleanup archives the notification item into {@link NotificationLoggedEventDay} (a paged, day-keyed subcollection of {@link NotificationBox}) instead of {@link NotificationWeek}, then deletes the source.'
+            description:
+              'A write-only logged event notification. Persisted with `d=true` and `NO_TRY` channel states from creation, so the send loop never visits it. Cleanup archives the notification item into {@link NotificationLoggedEventDay} (a paged, day-keyed subcollection of {@link NotificationBox}) instead of {@link NotificationWeek}, then deletes the source.'
           }
         ],
         description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'

@@ -1,5 +1,5 @@
 import { type GrantedReadRole } from '@dereekb/model';
-import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument,snapshotConverterFunctions, firestoreString, type FirestoreCollection, type UserRelatedById, type FirestoreContext } from "@dereekb/firebase";
+import { firestoreModelIdentity, type CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, type FirestoreCollection, type UserRelatedById, type FirestoreContext } from '@dereekb/firebase';
 
 export interface ExampleFirestoreCollections {
   exampleCollection: ExampleFirestoreCollection;

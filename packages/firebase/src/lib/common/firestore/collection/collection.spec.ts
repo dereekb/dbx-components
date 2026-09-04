@@ -1,4 +1,20 @@
-import { childFirestoreModelKeys, firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, type FirestoreModelCollectionAndIdPair, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyParentKey, firestoreModelKeyParentKeyPartPairs, firestoreModelKeyPart, firestoreModelKeyPartPairs, firestoreModelKeyPartPairsKeyPath, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
+import {
+  childFirestoreModelKeys,
+  firestoreIdentityTypeArray,
+  firestoreIdentityTypeArrayName,
+  type FirestoreModelCollectionAndIdPair,
+  firestoreModelIdsFromKey,
+  firestoreModelKeyCollectionTypeArray,
+  firestoreModelKeyCollectionTypeArrayName,
+  firestoreModelKeyParentKey,
+  firestoreModelKeyParentKeyPartPairs,
+  firestoreModelKeyPart,
+  firestoreModelKeyPartPairs,
+  firestoreModelKeyPartPairsKeyPath,
+  flatFirestoreModelKey,
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  twoWayFlatFirestoreModelKey
+} from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {

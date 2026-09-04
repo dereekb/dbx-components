@@ -30,7 +30,14 @@
           "target": "build"
         }
       ],
-      "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/firestore-query-manifest/main.js", "{workspaceRoot}/components/demo-firebase/dbx-mcp.scan.json", "{workspaceRoot}/components/demo-firebase/package.json", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.query.ts", "{workspaceRoot}/components/demo-firebase/src/lib/**/*.ts", "{workspaceRoot}/firestore.rules"],
+      "inputs": [
+        "{workspaceRoot}/dist/packages/dbx-cli/firestore-query-manifest/main.js",
+        "{workspaceRoot}/components/demo-firebase/dbx-mcp.scan.json",
+        "{workspaceRoot}/components/demo-firebase/package.json",
+        "{workspaceRoot}/components/demo-firebase/src/lib/**/*.query.ts",
+        "{workspaceRoot}/components/demo-firebase/src/lib/**/*.ts",
+        "{workspaceRoot}/firestore.rules"
+      ],
       "options": {
         "command": "node dist/packages/dbx-cli/firestore-query-manifest/main.js --project=demo-cli --component=components/demo-firebase --output=apps/demo-cli/src/lib/manifest/query.manifest.generated.ts --rules=firestore.rules",
         "cwd": "{workspaceRoot}"

@@ -284,7 +284,20 @@ export function formatCatalogHit<TEntry extends CatalogHitEntry>(input: { readon
     .join(', ');
   const tagDisplay = entry.tags.length > 0 ? `\n- **tags:** ${tagBadges}` : '';
   const badge = options.headerBadge ?? '';
-  return [`## \`${entry.slug}\` · \`${entry.name}\` · ${entry.kind}${badge} · score ${hit.score}`, '', `- **module:** \`${entry.module}\``, `- **category:** \`${entry.category}\``, `- **subpath:** \`${entry.subpath}\``, `- **signature:** \`${entry.signature}\``, `- **matched:** \`${hit.matchedTokens.join(', ')}\`${tagDisplay}`, '', entry.description.split('\n')[0], '', `→ \`${options.lookupTool} topic="${entry.slug}"\` for full docs.`, ''];
+  return [
+    `## \`${entry.slug}\` · \`${entry.name}\` · ${entry.kind}${badge} · score ${hit.score}`,
+    '',
+    `- **module:** \`${entry.module}\``,
+    `- **category:** \`${entry.category}\``,
+    `- **subpath:** \`${entry.subpath}\``,
+    `- **signature:** \`${entry.signature}\``,
+    `- **matched:** \`${hit.matchedTokens.join(', ')}\`${tagDisplay}`,
+    '',
+    entry.description.split('\n')[0],
+    '',
+    `→ \`${options.lookupTool} topic="${entry.slug}"\` for full docs.`,
+    ''
+  ];
 }
 
 /**

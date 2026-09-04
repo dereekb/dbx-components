@@ -108,7 +108,11 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   readonly configSignal = toSignal(this.config$);
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentConfig<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(
+    popupService: DbxPopoverService,
+    { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentConfig<F>,
+    popoverKey?: DbxPopoverKey
+  ): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,

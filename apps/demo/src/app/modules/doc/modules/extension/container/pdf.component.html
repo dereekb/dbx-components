@@ -23,19 +23,24 @@
       <doc-pdf-merge-editor-slots-example></doc-pdf-merge-editor-slots-example>
     </doc-feature-example>
     <doc-feature-example header="dbx-pdf-merge-editor with max 3 files upload slot" hint="A single slot configured with multiple=true and maxFiles=3. Add is offered until three files are in; remove one to add a different file.">
-      <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Both add affordances are gated on it: the `dbx-file-upload` drop area stands in while the slot is empty, the header `Add` button takes over once it owns something, and at capacity neither is offered — the user must remove an existing entry, or `Clear` the slot, before adding more.</p>
+      <p>
+        Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Both add affordances are gated on it: the `dbx-file-upload` drop area stands in while the slot is empty, the header `Add` button takes over once it owns something, and at capacity neither is offered — the user must remove an
+        existing entry, or `Clear` the slot, before adding more.
+      </p>
       <doc-pdf-merge-editor-max-files-example></doc-pdf-merge-editor-max-files-example>
     </doc-feature-example>
     <doc-feature-example header="dbx-pdf-merge-editor with a single config object" hint="Drop large phone photos to see them downscale on upload. PNGs are converted to JPEG. Cross the 2 MB warn or 8 MB error threshold to see the banner.">
       <p>
         A single
         <code>[config]</code>
-        object (`DbxPdfMergeEditorConfig`) drives the whole editor: `imageCompression` to downscale and (optionally) convert images on upload, `outputSizeLimits` to surface warn/error banners, plus the display options (`fileName`, `showPreviewButton`, `showDownloadButton`, `showAddFiles`, `showFileList`, `accept`, `multiple`, `downloadButton`). Any individual input still overrides the matching config field. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each
-        compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.
+        object (`DbxPdfMergeEditorConfig`) drives the whole editor: `imageCompression` to downscale and (optionally) convert images on upload, `outputSizeLimits` to surface warn/error banners, plus the display options (`fileName`, `showPreviewButton`, `showDownloadButton`, `showAddFiles`, `showFileList`, `accept`,
+        `multiple`, `downloadButton`). Any individual input still overrides the matching config field. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.
       </p>
       <doc-pdf-merge-editor-config-example></doc-pdf-merge-editor-config-example>
     </doc-feature-example>
-    <doc-feature-example header="dbxPdfMergeUploadButton directive" hint="Compose dbxPdfMergeUploadButton on a stock dbx-button alongside dbxActionButton. The directive intercepts the click to open the editor in a dialog; on confirm it pre-sets the action's readyValue with the merged Blob and lets dbxActionButton's trigger flow run as usual.">
+    <doc-feature-example
+      header="dbxPdfMergeUploadButton directive"
+      hint="Compose dbxPdfMergeUploadButton on a stock dbx-button alongside dbxActionButton. The directive intercepts the click to open the editor in a dialog; on confirm it pre-sets the action's readyValue with the merged Blob and lets dbxActionButton's trigger flow run as usual.">
       <p>
         Wrap the trigger in
         <code>[dbxPdfMergeEditorStore]</code>
@@ -64,7 +69,9 @@
       </p>
       <doc-pdf-merge-upload-button-default-example></doc-pdf-merge-upload-button-default-example>
     </doc-feature-example>
-    <doc-feature-example header="dbxPdfMergeUploadButton with custom dialog content + themed footer button" hint="Set customDialogContent on the directive's config to render a tailored merge editor inside the dialog, and uploadButtonConfig to fully restyle the dialog's footer Upload button (text/icon/color/raised/variant).">
+    <doc-feature-example
+      header="dbxPdfMergeUploadButton with custom dialog content + themed footer button"
+      hint="Set customDialogContent on the directive's config to render a tailored merge editor inside the dialog, and uploadButtonConfig to fully restyle the dialog's footer Upload button (text/icon/color/raised/variant).">
       <p>
         Pass a
         <code>DbxPdfMergeUploadButtonConfig</code>
@@ -84,11 +91,13 @@
       <p>
         With
         <code>pageEditing</code>
-        enabled, each uploaded PDF expands into its individual pages. Pages can be reordered, rotated, and marked for deletion, and the Preview and Download buttons follow those edits live. Reordering is confined to a single slot — each group is its own drop list, so a page cannot be dragged from one document into another.
+        enabled, each uploaded PDF expands into its individual pages. Pages can be reordered, rotated, and marked for deletion, and the Preview and Download buttons follow those edits live. Reordering is confined to a single slot — each group is its own drop list, so a page cannot be dragged from one document into
+        another.
       </p>
       <p>
         <code>sidecar</code>
-        additionally embeds a JSON manifest and tags every output page, so a later reader can find a specific document's pages. Membership is recorded as page tags rather than positions: tags travel with their page through any subsequent reordering, while recorded indices would go stale. The block below is that manifest read back out of the merged blob with
+        additionally embeds a JSON manifest and tags every output page, so a later reader can find a specific document's pages. Membership is recorded as page tags rather than positions: tags travel with their page through any subsequent reordering, while recorded indices would go stale. The block below is that
+        manifest read back out of the merged blob with
         <code>readPdfMergeSidecar()</code>
         — edit the pages and watch it update.
       </p>
@@ -125,7 +134,8 @@
       <p>
         The same editor with
         <code>pageEditing</code>
-        bound to a checkbox. Add a multi-page PDF and toggle it: off renders the original file list with whole-file reordering, on renders the page list. Page edits are held in the store while the mode is off, so switching back restores them. With the mode off no source document is parsed at all — the page machinery is never instantiated.
+        bound to a checkbox. Add a multi-page PDF and toggle it: off renders the original file list with whole-file reordering, on renders the page list. Page edits are held in the store while the mode is off, so switching back restores them. With the mode off no source document is parsed at all — the page machinery is
+        never instantiated.
       </p>
       <doc-pdf-merge-page-editing-toggle-example></doc-pdf-merge-page-editing-toggle-example>
     </doc-feature-example>
@@ -192,7 +202,8 @@
         <code>dbx-pdf-merge-import</code>
         carries no such weight — it is marked
         <code>origin: 'user'</code>
-        and is never made the baseline. Clearing it removes the entries and the import record together, so the "Imported N section(s)" notice, any missing-section warning, and the manifest block below all go with it. With a baseline present, a user's pick sits on top of it and Clear returns to the baseline. The block below is driven by
+        and is never made the baseline. Clearing it removes the entries and the import record together, so the "Imported N section(s)" notice, any missing-section warning, and the manifest block below all go with it. With a baseline present, a user's pick sits on top of it and Clear returns to the baseline. The block
+        below is driven by
         <code>importState$</code>
         rather than the picker's
         <code>imported</code>

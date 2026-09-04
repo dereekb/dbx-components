@@ -1,6 +1,6 @@
 import { type DocActionFormExampleValue, DocActionFormExampleFormComponent } from './action.example.form.component';
 import { Component, type ElementRef } from '@angular/core';
-import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxContentContainerDirective, DbxPopoverContentComponent, DbxPopoverHeaderComponent, type DbxPopoverKey, type DbxPopoverService } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of } from 'rxjs';
@@ -18,14 +18,14 @@ export interface DocInteractionPopoverConfig {
     <dbx-popover-content>
       <dbx-popover-header icon="home" header="Header"></dbx-popover-header>
       <dbx-content-container style="margin-top: 12px">
-        <dbx-action [dbxActionHandler]="handleSubmitForm">
+        <dbx-action [dbxActionHandler]="handleSubmitForm" dbxActionSnackbarError>
           <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
           <dbx-button dbxActionButton text="Submit"></dbx-button>
         </dbx-action>
       </dbx-content-container>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective]
+  imports: [DbxActionSnackbarErrorDirective, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxContentContainerDirective, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective]
 })
 export class DocActionExamplePopoverComponent extends AbstractPopoverDirective<DocActionFormExampleValue> {
   static openPopover(popoverService: DbxPopoverService, { origin }: DocInteractionPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, DocActionFormExampleValue> {

@@ -192,7 +192,12 @@ export function makeUserAvatarUploadInitializer(): StorageFileInitializeFromUplo
       // Drop the inline avatar initializer; replace it with a factory-returned one whose
       // inner variable name (`wrongName`) does not match the call-site binding (`userAvatarInitializer`).
       replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: /const userAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = \{[\s\S]*?\};\s*/, to: 'const userAvatarInitializer = makeUserAvatarUploadInitializer();\n' });
-      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { makeUserAvatarUploadInitializer } from './handlers/upload.user.avatar';" });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts',
+        from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';",
+        to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { makeUserAvatarUploadInitializer } from './handlers/upload.user.avatar';"
+      });
       api.push({ relPath: 'src/app/common/model/storagefile/handlers/upload.user.avatar.ts', text: HANDLER_FILE });
     });
     const codes = result.violations.map((v) => v.code);
@@ -314,7 +319,12 @@ describe('validateAppStorageFiles — duplicate / convention warnings', () => {
 describe('validateAppStorageFiles — trust list', () => {
   it('does not flag STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN for an identifier imported from @dereekb/*', () => {
     const result = runWith(({ api }) => {
-      replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';", to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER } from '@dereekb/firebase';" });
+      replaceInFile({
+        files: api,
+        relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts',
+        from: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';",
+        to: "import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';\nimport { EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER } from '@dereekb/firebase';"
+      });
       replaceInFile({ files: api, relPath: 'src/app/common/model/storagefile/storagefile.upload.service.ts', from: 'type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,', to: 'type: EXTERNAL_UPLOADED_FILE_TYPE_IDENTIFIER,' });
     });
     const orphans = result.violations.filter((v) => v.code === 'STORAGEFILE_UPLOAD_INITIALIZER_ORPHAN');

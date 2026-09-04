@@ -466,7 +466,11 @@ const URL_MODELS_INPUT_SCHEMA = {
     models: { type: 'array', items: { type: 'string' }, description: 'Restrict the output to these model types.' },
     keysOnly: { type: 'boolean', description: 'Return only the resolved keys (no descriptions or documents). Cannot combine with "load".' },
     load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' },
-    currentUserUid: { type: 'string', minLength: 1, description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. A `?imp=<uid>` query on the url takes precedence over this. `load` still reads via the calling user's permissions." }
+    currentUserUid: {
+      type: 'string',
+      minLength: 1,
+      description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. A `?imp=<uid>` query on the url takes precedence over this. `load` still reads via the calling user's permissions."
+    }
   },
   additionalProperties: false
 } as const;

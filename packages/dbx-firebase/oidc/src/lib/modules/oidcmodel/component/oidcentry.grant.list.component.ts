@@ -15,7 +15,8 @@ import {
   DbxButtonComponent,
   DbxActionConfirmDirective,
   type DbxActionConfirmConfig,
-  DbxSpacerDirective
+  DbxSpacerDirective,
+  DbxActionSnackbarErrorDirective
 } from '@dereekb/dbx-web';
 import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -87,11 +88,11 @@ export class DbxFirebaseOidcEntryGrantListViewComponent extends AbstractDbxSelec
       </div>
       <dbx-spacer></dbx-spacer>
       <div class="item-right">
-        <dbx-button dbxAction [dbxActionHandler]="handleRevoke" [dbxActionConfirm]="revokeConfirmConfig" dbxActionButton text="Revoke" icon="block" color="warn" [raised]="true"></dbx-button>
+        <dbx-button dbxAction [dbxActionHandler]="handleRevoke" [dbxActionConfirm]="revokeConfirmConfig" dbxActionButton text="Revoke" icon="block" color="warn" [raised]="true" dbxActionSnackbarError></dbx-button>
       </div>
     </div>
   `,
-  imports: [DatePipe, DbxSpacerDirective, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
+  imports: [DbxActionSnackbarErrorDirective, DatePipe, DbxSpacerDirective, DbxButtonComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionConfirmDirective],
   providers: [OidcEntryDocumentStore]
 })
 export class DbxFirebaseOidcEntryGrantListViewItemComponent extends AbstractDbxValueListViewItemComponent<OidcEntry> {

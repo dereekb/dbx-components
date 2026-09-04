@@ -17,7 +17,20 @@
 
 import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/dbx-cli';
 import { Node, SyntaxKind, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
-import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory, ModelExtractionSingleItemCollection, ModelExtractionStringConstant } from './types';
+import type {
+  ModelExtraction,
+  ModelExtractionConverter,
+  ModelExtractionConverterField,
+  ModelExtractionEnum,
+  ModelExtractionEnumValue,
+  ModelExtractionGroup,
+  ModelExtractionIdentity,
+  ModelExtractionInterface,
+  ModelExtractionInterfaceProp,
+  ModelExtractionServiceFactory,
+  ModelExtractionSingleItemCollection,
+  ModelExtractionStringConstant
+} from './types';
 
 const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
 const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';

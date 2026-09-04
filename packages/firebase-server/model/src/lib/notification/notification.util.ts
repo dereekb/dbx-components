@@ -203,7 +203,17 @@ export interface ExpandNotificationRecipientsResult {
  * @returns Channel-specific recipient lists (email, text, notification summary) ready for delivery.
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
-  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
+  const {
+    notificationUserAccessor,
+    authService,
+    notification,
+    notificationBox,
+    globalRecipients: inputGlobalRecipients,
+    recipientFlagOverride,
+    notificationSummaryIdForUid: inputNotificationSummaryIdForUid,
+    onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients,
+    onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients
+  } = input;
 
   const notificationBoxId = notificationBox?.id;
   const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);

@@ -2,7 +2,20 @@ import { type DateRange, dateRange, type DateRangeInput } from '@dereekb/date';
 import { type StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
 import { type RootFirestoreModelIdentity } from '../collection/collection';
 import { type DocumentReference, type FieldPathOrStringPath, type FieldPathOrStringPathOf } from '../types';
-import { endAtValue, type EndAtValueQueryConstraintData, type FirestoreQueryConstraint, orderByDocumentId, type OrderByDocumentIdQueryConstraintData, type OrderByQueryConstraintData, startAtValue, type StartAtValueQueryConstraintData, orderBy, type OrderByDirection, where, type WhereQueryConstraintData } from './constraint';
+import {
+  endAtValue,
+  type EndAtValueQueryConstraintData,
+  type FirestoreQueryConstraint,
+  orderByDocumentId,
+  type OrderByDocumentIdQueryConstraintData,
+  type OrderByQueryConstraintData,
+  startAtValue,
+  type StartAtValueQueryConstraintData,
+  orderBy,
+  type OrderByDirection,
+  where,
+  type WhereQueryConstraintData
+} from './constraint';
 
 // MARK: Tuple types
 /**

@@ -81,7 +81,11 @@ function parseLookupActionArgs(raw: unknown): ParsedLookupActionArgs {
 }
 
 // MARK: Resolution
-type LookupActionMatch = { readonly kind: 'single'; readonly entry: ActionEntryInfo } | { readonly kind: 'group'; readonly title: string; readonly entries: readonly ActionEntryInfo[] } | { readonly kind: 'catalog' } | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ActionEntryInfo[] };
+type LookupActionMatch =
+  | { readonly kind: 'single'; readonly entry: ActionEntryInfo }
+  | { readonly kind: 'group'; readonly title: string; readonly entries: readonly ActionEntryInfo[] }
+  | { readonly kind: 'catalog' }
+  | { readonly kind: 'not-found'; readonly normalized: string; readonly candidates: readonly ActionEntryInfo[] };
 
 const ROLE_TITLES: Record<ActionEntryRole, string> = {
   directive: 'Action directives',
@@ -182,7 +186,18 @@ function formatStateInteraction(entry: ActionDirectiveInfo): string {
 }
 
 function formatDirectiveEntry(entry: ActionDirectiveInfo, depth: 'brief' | 'full'): string {
-  const lines: string[] = [`# ${entry.className}`, '', entry.description, '', bullet('selector', `\`${entry.selector}\``), bullet('module', `\`${entry.module}\``), bullet('slug', `\`${entry.slug}\``), bullet('produces context', entry.producesContext ? 'yes (provides `ActionContextStore` via DI)' : 'no'), bullet('consumes context', entry.consumesContext ? 'yes (injects `DbxActionContextStoreSourceInstance`)' : 'no'), ''];
+  const lines: string[] = [
+    `# ${entry.className}`,
+    '',
+    entry.description,
+    '',
+    bullet('selector', `\`${entry.selector}\``),
+    bullet('module', `\`${entry.module}\``),
+    bullet('slug', `\`${entry.slug}\``),
+    bullet('produces context', entry.producesContext ? 'yes (provides `ActionContextStore` via DI)' : 'no'),
+    bullet('consumes context', entry.consumesContext ? 'yes (injects `DbxActionContextStoreSourceInstance`)' : 'no'),
+    ''
+  ];
 
   if (depth === 'full') {
     lines.push('## Inputs', '', entry.inputs.length > 0 ? formatInputsTable(entry.inputs) : '_No inputs._', '');

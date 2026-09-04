@@ -1,6 +1,18 @@
 import { LOREM } from '../../shared/lorem';
 import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxSpacerDirective, DbxChipDirective } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxValueListViewItemComponent,
+  AbstractDbxSelectionListViewDirective,
+  type DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxSpacerDirective,
+  DbxChipDirective
+} from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';
 

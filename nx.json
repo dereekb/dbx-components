@@ -3,7 +3,18 @@
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/package-lock.json"],
-    "production": ["default", "!{projectRoot}/eslint.config.mjs", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/vitest.config.mts", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s", "!{projectRoot}/cypress/**/*", "!{projectRoot}/**/*.cy.[jt]s?(x)", "!{projectRoot}/cypress.config.[jt]s"]
+    "production": [
+      "default",
+      "!{projectRoot}/eslint.config.mjs",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/vitest.config.mts",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/cypress/**/*",
+      "!{projectRoot}/**/*.cy.[jt]s?(x)",
+      "!{projectRoot}/cypress.config.[jt]s"
+    ]
   },
   "tui": {
     "enabled": false
@@ -63,7 +74,7 @@
     },
     "@nx/eslint:lint": {
       "cache": false,
-      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs", "{workspaceRoot}/eslint.config.angular.mjs", "{workspaceRoot}/eslint.config.library.mjs"],
       "options": {
         "cache": true,
         "cacheLocation": ".cache/eslint",
@@ -172,6 +183,13 @@
       "options": {
         "testTargetName": "test",
         "testMode": "run"
+      }
+    },
+    {
+      "comment": "targetName is pinned rather than left to @nx/oxlint's fallback chain ('lint' -> 'oxlint' -> ...): 'lint' is taken by 90 project.json files, so the generator would land on 'oxlint' anyway, but only by accident of ordering.",
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "oxlint"
       }
     }
   ],

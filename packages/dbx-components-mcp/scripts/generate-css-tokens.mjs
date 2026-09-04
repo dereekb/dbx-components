@@ -626,7 +626,7 @@ function resolveScssInValue(value, scssLiterals) {
     const resolved = scssLiterals.get(name);
     return resolved !== undefined && !resolved.includes('$') ? resolved : full;
   };
-  return value.replace(/#\{(\$[A-Za-z0-9_-]+)\}/g, resolveName).replace(/(?<![\w.])(\$[A-Za-z0-9_-]+)(?![\w-])/g, resolveName);
+  return value.replaceAll(/#\{(\$[A-Za-z0-9_-]+)\}/g, resolveName).replaceAll(/(?<![\w.])(\$[A-Za-z0-9_-]+)(?![\w-])/g, resolveName);
 }
 
 function defaultComponentDescription(item) {

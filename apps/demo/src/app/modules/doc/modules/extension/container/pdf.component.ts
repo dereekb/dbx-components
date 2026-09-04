@@ -25,7 +25,8 @@ import {
   DbxPdfMergeUploadButtonDirective,
   type DbxPdfMergeUploadButtonConfig,
   DbxPdfMergeUploadActionDirective,
-  DbxContentPitDirective
+  DbxContentPitDirective,
+  DbxActionSnackbarErrorDirective
 } from '@dereekb/dbx-web';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
@@ -208,7 +209,7 @@ export class DocPdfMergeUploadButtonCustomContentComponent {
   selector: 'doc-pdf-merge-upload-button-default-example',
   template: `
     <dbx-content-border>
-      <div dbxAction [dbxActionHandler]="handleUpload">
+      <div dbxAction [dbxActionHandler]="handleUpload" dbxActionSnackbarError>
         <div dbxPdfMergeEditorStore [config]="storeConfig">
           <dbx-button text="Upload PDF" icon="picture_as_pdf" raised color="primary" dbxActionButton dbxPdfMergeUploadAction dbxPdfMergeUploadButton></dbx-button>
         </div>
@@ -221,7 +222,7 @@ export class DocPdfMergeUploadButtonCustomContentComponent {
       </dbx-content-pit>
     }
   `,
-  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
+  imports: [DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
 })
 export class DocPdfMergeUploadButtonDefaultExampleComponent {
   readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
@@ -253,7 +254,7 @@ export class DocPdfMergeUploadButtonDefaultExampleComponent {
   selector: 'doc-pdf-merge-upload-button-custom-example',
   template: `
     <dbx-content-border>
-      <div dbxAction [dbxActionHandler]="handleUpload">
+      <div dbxAction [dbxActionHandler]="handleUpload" dbxActionSnackbarError>
         <div dbxPdfMergeEditorStore [config]="storeConfig">
           <dbx-button text="Upload Receipts" icon="cloud_upload" raised color="primary" dbxActionButton dbxPdfMergeUploadAction [dbxPdfMergeUploadButton]="buttonConfig"></dbx-button>
         </div>
@@ -266,7 +267,7 @@ export class DocPdfMergeUploadButtonDefaultExampleComponent {
       </dbx-content-pit>
     }
   `,
-  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
+  imports: [DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe]
 })
 export class DocPdfMergeUploadButtonCustomExampleComponent {
   readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;

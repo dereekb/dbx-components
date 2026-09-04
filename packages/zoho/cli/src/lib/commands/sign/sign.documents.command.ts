@@ -93,7 +93,11 @@ const documentsFormDataCommand: CommandModule = {
 const documentsCreateCommand: CommandModule = {
   command: 'create',
   describe: 'Create a draft sign request from a local file',
-  builder: (yargs: Argv) => yargs.option('file', { type: 'string', demandOption: true, describe: 'Path to the local document to upload' }).option('data', { type: 'string', demandOption: true, describe: 'JSON request data (ZohoSignRequestData: request_name, is_sequential, actions, ...)' }).option('content-type', { type: 'string', default: 'application/pdf', describe: 'MIME type of the uploaded file' }),
+  builder: (yargs: Argv) =>
+    yargs
+      .option('file', { type: 'string', demandOption: true, describe: 'Path to the local document to upload' })
+      .option('data', { type: 'string', demandOption: true, describe: 'JSON request data (ZohoSignRequestData: request_name, is_sequential, actions, ...)' })
+      .option('content-type', { type: 'string', default: 'application/pdf', describe: 'MIME type of the uploaded file' }),
   handler: async (argv: any) => {
     try {
       const signApi = getSignApi(argv);
@@ -112,7 +116,11 @@ const documentsCreateCommand: CommandModule = {
 const documentsCreateFromTemplateCommand: CommandModule = {
   command: 'create-from-template',
   describe: 'Create a sign request from a template',
-  builder: (yargs: Argv) => yargs.option('template-id', { type: 'string', demandOption: true, describe: 'Template ID' }).option('data', { type: 'string', demandOption: true, describe: 'JSON template data (ZohoSignCreateDocumentFromTemplateData: request_name, actions, field_data, ...)' }).option('quick-send', { type: 'boolean', default: true, describe: 'Send immediately (true) or leave as a draft (false)' }),
+  builder: (yargs: Argv) =>
+    yargs
+      .option('template-id', { type: 'string', demandOption: true, describe: 'Template ID' })
+      .option('data', { type: 'string', demandOption: true, describe: 'JSON template data (ZohoSignCreateDocumentFromTemplateData: request_name, actions, field_data, ...)' })
+      .option('quick-send', { type: 'boolean', default: true, describe: 'Send immediately (true) or leave as a draft (false)' }),
   handler: async (argv: any) => {
     try {
       const signApi = getSignApi(argv);
@@ -179,7 +187,8 @@ const documentsExtendCommand: CommandModule = {
 const documentsDeleteCommand: CommandModule = {
   command: 'delete <requestId>',
   describe: 'Delete a request (optionally recalling an in-progress one)',
-  builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('recall-inprogress', { type: 'boolean', describe: 'Recall an in-progress request before deleting' }).option('reason', { type: 'string', describe: 'Reason for recalling/deleting' }),
+  builder: (yargs: Argv) =>
+    yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('recall-inprogress', { type: 'boolean', describe: 'Recall an in-progress request before deleting' }).option('reason', { type: 'string', describe: 'Reason for recalling/deleting' }),
   handler: async (argv: any) => {
     try {
       const signApi = getSignApi(argv);
@@ -196,7 +205,12 @@ const documentsDownloadCommand: CommandModule = {
   command: 'download <requestId>',
   describe: 'Download the signed PDF (or ZIP) for a request to a local file',
   builder: (yargs: Argv) =>
-    yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).option('output', { type: 'string', demandOption: true, describe: 'Path to write the downloaded file to' }).option('with-coc', { type: 'boolean', describe: 'Include the completion certificate' }).option('merge', { type: 'boolean', describe: 'Merge all signed documents into one file' }).option('password', { type: 'string', describe: 'Password for protected documents' }),
+    yargs
+      .positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' })
+      .option('output', { type: 'string', demandOption: true, describe: 'Path to write the downloaded file to' })
+      .option('with-coc', { type: 'boolean', describe: 'Include the completion certificate' })
+      .option('merge', { type: 'boolean', describe: 'Merge all signed documents into one file' })
+      .option('password', { type: 'string', describe: 'Password for protected documents' }),
   handler: async (argv: any) => {
     try {
       const signApi = getSignApi(argv);
@@ -242,7 +256,11 @@ const documentsCertificateCommand: CommandModule = {
 const documentsEmbedUrlCommand: CommandModule = {
   command: 'embed-url <requestId> <actionId>',
   describe: 'Generate an embedded signing URL for a recipient action',
-  builder: (yargs: Argv) => yargs.positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' }).positional('actionId', { type: 'string', demandOption: true, describe: 'Recipient action ID' }).option('host', { type: 'string', demandOption: true, describe: 'Hosting origin embedded in the token (https required in production)' }),
+  builder: (yargs: Argv) =>
+    yargs
+      .positional('requestId', { type: 'string', demandOption: true, describe: 'Request (envelope) ID' })
+      .positional('actionId', { type: 'string', demandOption: true, describe: 'Recipient action ID' })
+      .option('host', { type: 'string', demandOption: true, describe: 'Hosting origin embedded in the token (https required in production)' }),
   handler: async (argv: any) => {
     try {
       const signApi = getSignApi(argv);

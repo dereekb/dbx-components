@@ -9,7 +9,22 @@
  */
 
 import { Node, Project, SyntaxKind, type ClassDeclaration, type InterfaceDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeAliasDeclaration, type TypeNode, type VariableStatement } from 'ts-morph';
-import type { ExtractedCrudConfigConst, ExtractedCrudConfigType, ExtractedField, ExtractedFile, ExtractedFunctionMap, ExtractedFunctionsClass, ExtractedParamsDecl, ExtractedParamsValidator, ExtractedResultDecl, ExtractedTypeAlias, ExtractedValidatorProperty, ExtractedVariable, MarkComment, ValidatorSource } from './types.js';
+import type {
+  ExtractedCrudConfigConst,
+  ExtractedCrudConfigType,
+  ExtractedField,
+  ExtractedFile,
+  ExtractedFunctionMap,
+  ExtractedFunctionsClass,
+  ExtractedParamsDecl,
+  ExtractedParamsValidator,
+  ExtractedResultDecl,
+  ExtractedTypeAlias,
+  ExtractedValidatorProperty,
+  ExtractedVariable,
+  MarkComment,
+  ValidatorSource
+} from './types.js';
 
 // MARK: Entry
 /**
@@ -101,7 +116,14 @@ interface GroupCandidate {
   readonly pascal: string;
 }
 
-function inferGroupName(parts: { readonly functionTypeMap: ExtractedTypeAlias | undefined; readonly functionTypeConfigMap: ExtractedVariable | undefined; readonly crudConfigType: ExtractedCrudConfigType | undefined; readonly crudConfigConst: ExtractedCrudConfigConst | undefined; readonly functionMap: ExtractedFunctionMap | undefined; readonly functionsClass: ExtractedFunctionsClass | undefined }): string | undefined {
+function inferGroupName(parts: {
+  readonly functionTypeMap: ExtractedTypeAlias | undefined;
+  readonly functionTypeConfigMap: ExtractedVariable | undefined;
+  readonly crudConfigType: ExtractedCrudConfigType | undefined;
+  readonly crudConfigConst: ExtractedCrudConfigConst | undefined;
+  readonly functionMap: ExtractedFunctionMap | undefined;
+  readonly functionsClass: ExtractedFunctionsClass | undefined;
+}): string | undefined {
   const candidates = collectGroupCandidates(parts);
   let result: string | undefined;
   if (candidates.length > 0) {
@@ -110,7 +132,14 @@ function inferGroupName(parts: { readonly functionTypeMap: ExtractedTypeAlias | 
   return result;
 }
 
-function collectGroupCandidates(parts: { readonly functionTypeMap: ExtractedTypeAlias | undefined; readonly functionTypeConfigMap: ExtractedVariable | undefined; readonly crudConfigType: ExtractedCrudConfigType | undefined; readonly crudConfigConst: ExtractedCrudConfigConst | undefined; readonly functionMap: ExtractedFunctionMap | undefined; readonly functionsClass: ExtractedFunctionsClass | undefined }): readonly GroupCandidate[] {
+function collectGroupCandidates(parts: {
+  readonly functionTypeMap: ExtractedTypeAlias | undefined;
+  readonly functionTypeConfigMap: ExtractedVariable | undefined;
+  readonly crudConfigType: ExtractedCrudConfigType | undefined;
+  readonly crudConfigConst: ExtractedCrudConfigConst | undefined;
+  readonly functionMap: ExtractedFunctionMap | undefined;
+  readonly functionsClass: ExtractedFunctionsClass | undefined;
+}): readonly GroupCandidate[] {
   const candidates: GroupCandidate[] = [];
   pushPascalCandidate(candidates, parts.functionTypeMap, 'FunctionTypeMap');
   pushCamelCandidate(candidates, parts.functionTypeConfigMap, 'FunctionTypeConfigMap');
@@ -659,7 +688,14 @@ function findArktypeObjectLiteral(initializer: Node): ObjectLiteralExpression | 
 }
 
 // MARK: Line collection helpers
-function collectFunctionsBlockLines(parts: { readonly functionTypeMap: ExtractedTypeAlias | undefined; readonly functionTypeConfigMap: ExtractedVariable | undefined; readonly crudConfigType: ExtractedCrudConfigType | undefined; readonly crudConfigConst: ExtractedCrudConfigConst | undefined; readonly functionMap: ExtractedFunctionMap | undefined; readonly functionsClass: ExtractedFunctionsClass | undefined }): readonly number[] {
+function collectFunctionsBlockLines(parts: {
+  readonly functionTypeMap: ExtractedTypeAlias | undefined;
+  readonly functionTypeConfigMap: ExtractedVariable | undefined;
+  readonly crudConfigType: ExtractedCrudConfigType | undefined;
+  readonly crudConfigConst: ExtractedCrudConfigConst | undefined;
+  readonly functionMap: ExtractedFunctionMap | undefined;
+  readonly functionsClass: ExtractedFunctionsClass | undefined;
+}): readonly number[] {
   const lines: number[] = [];
   if (parts.functionTypeMap) lines.push(parts.functionTypeMap.line);
   if (parts.functionTypeConfigMap) lines.push(parts.functionTypeConfigMap.line);

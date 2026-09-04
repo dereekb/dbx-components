@@ -5,7 +5,14 @@
  * Used by the server action service when processing user config update requests.
  */
 import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
-import { type NotificationBoxRecipientTemplateConfigRecord, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig, notificationBoxRecipientTemplateConfigArrayToRecord, notificationBoxRecipientTemplateConfigRecordToArray, updateNotificationRecipient } from './notification.config';
+import {
+  type NotificationBoxRecipientTemplateConfigRecord,
+  type NotificationUserDefaultNotificationBoxRecipientConfig,
+  type NotificationUserNotificationBoxRecipientConfig,
+  notificationBoxRecipientTemplateConfigArrayToRecord,
+  notificationBoxRecipientTemplateConfigRecordToArray,
+  updateNotificationRecipient
+} from './notification.config';
 import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
@@ -49,7 +56,11 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
  * @param limitToAllowedConfigTypes - When provided, filters config types to only allowed template types.
  * @returns The updated default recipient config.
  */
-export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationUserDefaultNotificationBoxRecipientConfig {
+export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
+  a: NotificationUserDefaultNotificationBoxRecipientConfig,
+  b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams,
+  limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>
+): NotificationUserDefaultNotificationBoxRecipientConfig {
   const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk } = b;
   const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
 

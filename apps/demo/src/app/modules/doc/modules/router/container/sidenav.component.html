@@ -28,7 +28,9 @@
       a mix of flush rows and floating pills. Every anchor targets this page, so all rows render as the
       active route, keeping the accent treatment. No modifier class is needed — this is the default.
     -->
-    <doc-feature-example header="Mixed Element Types" hint="A sidenav renders all three element-creation methods — root anchors, nested child anchors, and a separate dbx-anchor-list in the bottom slot — with one consistent treatment by default: every row is flush-left with matching right-only corners, nested children drop their depth-shade, and content aligns. Every anchor targets this page so all render active.">
+    <doc-feature-example
+      header="Mixed Element Types"
+      hint="A sidenav renders all three element-creation methods — root anchors, nested child anchors, and a separate dbx-anchor-list in the bottom slot — with one consistent treatment by default: every row is flush-left with matching right-only corners, nested children drop their depth-shade, and content aligns. Every anchor targets this page so all render active.">
       <div class="dbx-sidenav-demo-container" style="height: 520px">
         <dbx-sidenav [anchors]="mixedAnchors" dbxColor="primary">
           <div top>

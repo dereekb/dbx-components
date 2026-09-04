@@ -198,7 +198,20 @@ import { createAuthScopeLookupTool } from './auth-scope-lookup.tool.js';
 import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';
 import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
 import { createAuthListAppTool } from './auth-list-app.tool.js';
-import { type ActionRegistry, type AuthRegistry, type FilterRegistry, type ForgeFieldRegistry, type PipeRegistry, type UtilRegistry, type ModelSnapshotFieldRegistry, type SemanticTypeRegistry, type TokenRegistry, type CssUtilityRegistry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
+import {
+  type ActionRegistry,
+  type AuthRegistry,
+  type FilterRegistry,
+  type ForgeFieldRegistry,
+  type PipeRegistry,
+  type UtilRegistry,
+  type ModelSnapshotFieldRegistry,
+  type SemanticTypeRegistry,
+  type TokenRegistry,
+  type CssUtilityRegistry,
+  type UiComponentRegistry,
+  type DbxDocsUiExamplesRegistry
+} from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { toCallToolResult, toolError, type DbxTool } from './types.js';
 
@@ -387,7 +400,13 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }), createLogSearchTool(options.logSearchConfig));
+  tools.push(
+    createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }),
+    createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }),
+    createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }),
+    createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }),
+    createLogSearchTool(options.logSearchConfig)
+  );
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }

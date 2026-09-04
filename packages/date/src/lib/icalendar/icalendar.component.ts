@@ -1,7 +1,20 @@
 import { isDate, isNotBlankString, type Maybe, utcOffsetString } from '@dereekb/util';
 import { type ICalendarComponentName, type ICalendarParameterName, type ICalendarParameterValue, type ICalendarPropertyName, type ICalendarValue, DEFAULT_ICALENDAR_PRODUCT_ID, ICALENDAR_VERSION_2_0 } from './icalendar';
 import { type ICalendar, type ICalendarAlarm, type ICalendarAttendee, type ICalendarDateTimeValue, type ICalendarEvent, type ICalendarExtraProperty, type ICalendarOrganizer, type ICalendarSerializeConfig, type ICalendarTimezone, type ICalendarTimezoneTransition } from './icalendar.model';
-import { iCalendarBooleanValue, iCalendarCalAddressValue, iCalendarDateString, iCalendarDurationString, iCalendarFloatingDateTimeString, iCalendarGeoValue, iCalendarIntegerValue, iCalendarParameterValue, iCalendarTextListValue, iCalendarTextValue, iCalendarUtcDateTimeString, iCalendarZonedDateTimeString } from './icalendar.value';
+import {
+  iCalendarBooleanValue,
+  iCalendarCalAddressValue,
+  iCalendarDateString,
+  iCalendarDurationString,
+  iCalendarFloatingDateTimeString,
+  iCalendarGeoValue,
+  iCalendarIntegerValue,
+  iCalendarParameterValue,
+  iCalendarTextListValue,
+  iCalendarTextValue,
+  iCalendarUtcDateTimeString,
+  iCalendarZonedDateTimeString
+} from './icalendar.value';
 
 /**
  * A single already-encoded parameter on a content line.

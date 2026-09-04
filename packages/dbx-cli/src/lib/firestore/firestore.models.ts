@@ -1,4 +1,16 @@
-import { type FirebaseAppModelContext, type FirebaseModelServiceGetter, type FirebaseModelsService, type FirebaseModelsServiceTypes, type FirestoreCollectionLike, type FirestoreContext, type FirestoreDocument, type FirestoreModelKey, type FirestoreModelType, type InContextFirebaseModelCollectionLoader, type InContextFirebaseModelLoader } from '@dereekb/firebase';
+import {
+  type FirebaseAppModelContext,
+  type FirebaseModelServiceGetter,
+  type FirebaseModelsService,
+  type FirebaseModelsServiceTypes,
+  type FirestoreCollectionLike,
+  type FirestoreContext,
+  type FirestoreDocument,
+  type FirestoreModelKey,
+  type FirestoreModelType,
+  type InContextFirebaseModelCollectionLoader,
+  type InContextFirebaseModelLoader
+} from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type CliContext } from '../context/cli.context';
 import { CliError } from '../util/output';
@@ -144,7 +156,8 @@ export type CliErasedFirebaseModelsService = FirebaseModelsService<Record<Firest
  * @template Y - The app's `<app>FirebaseModelServices` type.
  * @template K - The registered model type to resolve.
  */
-export type CliFirestoreModelServiceForType<Y extends FirebaseModelsService<any, any>, K extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (K extends keyof X ? (X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, any> ? InContextFirebaseModelLoader<T, D> & InContextFirebaseModelCollectionLoader<T, D> : never) : never) : never;
+export type CliFirestoreModelServiceForType<Y extends FirebaseModelsService<any, any>, K extends FirebaseModelsServiceTypes<Y>> =
+  Y extends FirebaseModelsService<infer X, infer C> ? (K extends keyof X ? (X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, any> ? InContextFirebaseModelLoader<T, D> & InContextFirebaseModelCollectionLoader<T, D> : never) : never) : never;
 
 /**
  * The per-invocation, session-bound view of an app's models over a direct Firestore connection.

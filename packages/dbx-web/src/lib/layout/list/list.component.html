@@ -1,5 +1,14 @@
 <dbx-loading [context]="context" [linear]="true"></dbx-loading>
-<div dbxListInternalContent [hide]="hideContentSignal()" infinite-scroll [infiniteScrollDistance]="infiniteScrollDistanceSignal()" [infiniteScrollUpDistance]="infiniteScrollDistanceSignal()" [infiniteScrollThrottle]="infiniteScrollThrottleSignal()" [scrollWindow]="false" (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
+<div
+  dbxListInternalContent
+  [hide]="hideContentSignal()"
+  infinite-scroll
+  [infiniteScrollDistance]="infiniteScrollDistanceSignal()"
+  [infiniteScrollUpDistance]="infiniteScrollDistanceSignal()"
+  [infiniteScrollThrottle]="infiniteScrollThrottleSignal()"
+  [scrollWindow]="false"
+  (scrolled)="onScrollDown()"
+  (scrolledUp)="onScrollUp()">
   <ng-content select="[top]"></ng-content>
   <dbx-injection [config]="injectedComponentConfigSignal()"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>

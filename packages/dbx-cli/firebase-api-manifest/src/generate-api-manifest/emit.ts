@@ -1,7 +1,7 @@
 /**
  * Renders the final manifest TS module — banner + grouped imports + the
- * `<NAMESPACE>` array literal. Formatted with the workspace prettier config
- * so the output matches what `prettier --write` would produce on the
+ * `<NAMESPACE>` array literal. Formatted with the workspace oxfmt config
+ * so the output matches what `oxfmt --write` would produce on the
  * committed file.
  *
  * The reusable `CliApiManifest` type is imported from `@dereekb/dbx-cli` so
@@ -57,12 +57,12 @@ export interface RenderManifestInput {
 
 /**
  * Renders the manifest TS source for a CLI app and formats it with the
- * workspace prettier config so the output matches a `prettier --write` of the
+ * workspace oxfmt config so the output matches a `oxfmt --write` of the
  * committed file.
  *
  * @param input - Output file path, collected entries, project name (banner),
  *   and the manifest namespace identifier.
- * @returns Prettier-formatted TypeScript source.
+ * @returns Formatted TypeScript source.
  */
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
   const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, enumEntries, enumNamespace, emitConverters = false, generatorVersion } = input;

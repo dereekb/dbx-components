@@ -78,7 +78,9 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
                 period: 1000,
                 maxEmissionsPerPeriod: 50,
                 onError: () => {
-                  console.error('dbxFormSourceObservableFromStream: Error thrown due to too many emissions. There may be an unintentional loop being triggered by dbxFormSource. Typically this can occur in cases where the dbxFormSource directive is used at the same time as dbxFormValueChange directive and the same value is being pushed.');
+                  console.error(
+                    'dbxFormSourceObservableFromStream: Error thrown due to too many emissions. There may be an unintentional loop being triggered by dbxFormSource. Typically this can occur in cases where the dbxFormSource directive is used at the same time as dbxFormValueChange directive and the same value is being pushed.'
+                  );
                 }
               })
             );

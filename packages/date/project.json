@@ -65,7 +65,16 @@
       }
     },
     "test-timezones-world": {
-      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/vitest/utc.date.junit.xml", "{projectRoot}/.reports/vitest/asia-tokyo.date.junit.xml", "{projectRoot}/.reports/vitest/asia-singapore.date.junit.xml", "{projectRoot}/.reports/vitest/europe-dublin.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-auckland.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-kiritimati.date.junit.xml", "{projectRoot}/.reports/vitest/pacific-niue.date.junit.xml"],
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/date",
+        "{projectRoot}/.reports/vitest/utc.date.junit.xml",
+        "{projectRoot}/.reports/vitest/asia-tokyo.date.junit.xml",
+        "{projectRoot}/.reports/vitest/asia-singapore.date.junit.xml",
+        "{projectRoot}/.reports/vitest/europe-dublin.date.junit.xml",
+        "{projectRoot}/.reports/vitest/pacific-auckland.date.junit.xml",
+        "{projectRoot}/.reports/vitest/pacific-kiritimati.date.junit.xml",
+        "{projectRoot}/.reports/vitest/pacific-niue.date.junit.xml"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [

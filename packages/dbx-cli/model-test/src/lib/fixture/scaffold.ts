@@ -198,7 +198,11 @@ interface RenderInstanceBlockInput {
  */
 function renderInstanceBlock(input: RenderInstanceBlockInput): string {
   input.todos.push(`Add instance methods to \`${input.instanceClassName}\`.`);
-  return [`export class ${input.instanceClassName}<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<${input.model}, ${input.modelDocumentTypeName}, ${input.prefix}FunctionContextFixtureInstance<F>> {`, '  // TODO: implement instance-side methods (these own the real logic).', '}'].join('\n');
+  return [
+    `export class ${input.instanceClassName}<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<${input.model}, ${input.modelDocumentTypeName}, ${input.prefix}FunctionContextFixtureInstance<F>> {`,
+    '  // TODO: implement instance-side methods (these own the real logic).',
+    '}'
+  ].join('\n');
 }
 
 interface RenderFixtureBlockInput {
@@ -218,7 +222,11 @@ interface RenderFixtureBlockInput {
  */
 function renderFixtureBlock(input: RenderFixtureBlockInput): string {
   input.todos.push(`Add forwarder methods to \`${input.fixtureClassName}\` after defining instance methods.`);
-  return [`export class ${input.fixtureClassName}<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<${input.model}, ${input.modelDocumentTypeName}, ${input.prefix}FunctionContextFixtureInstance<F>, ${input.prefix}FunctionContextFixture<F>, ${input.instanceClassName}<F>> {`, '  // TODO: forward instance methods. Run `dbx_model_fixture_forward` after adding instance methods.', '}'].join('\n');
+  return [
+    `export class ${input.fixtureClassName}<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<${input.model}, ${input.modelDocumentTypeName}, ${input.prefix}FunctionContextFixtureInstance<F>, ${input.prefix}FunctionContextFixture<F>, ${input.instanceClassName}<F>> {`,
+    '  // TODO: forward instance methods. Run `dbx_model_fixture_forward` after adding instance methods.',
+    '}'
+  ].join('\n');
 }
 
 interface RenderFactoryBlockInput {
@@ -256,7 +264,15 @@ function renderFactoryBlock(input: RenderFactoryBlockInput): string {
 }
 
 function renderFactoryGenerics(input: RenderFactoryBlockInput): readonly string[] {
-  const baseGenerics = [input.model, input.modelDocumentTypeName, input.paramsTypeName, `${input.prefix}FunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>`, `${input.prefix}FunctionContextFixture<FirebaseAdminFunctionTestContextInstance>`, `${input.instanceClassName}<FirebaseAdminFunctionTestContextInstance>`, `${input.fixtureClassName}<FirebaseAdminFunctionTestContextInstance>`];
+  const baseGenerics = [
+    input.model,
+    input.modelDocumentTypeName,
+    input.paramsTypeName,
+    `${input.prefix}FunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>`,
+    `${input.prefix}FunctionContextFixture<FirebaseAdminFunctionTestContextInstance>`,
+    `${input.instanceClassName}<FirebaseAdminFunctionTestContextInstance>`,
+    `${input.fixtureClassName}<FirebaseAdminFunctionTestContextInstance>`
+  ];
   if (input.collectionGenericArg) {
     return [...baseGenerics, input.collectionGenericArg];
   }
@@ -279,7 +295,10 @@ function renderFactoryCallbacks(input: RenderFactoryBlockInput): readonly string
   } else {
     callbacks.push(`getCollection: (fi) => fi.${defaultCollectionsAccessor(input.prefix)}.${camelInitial(input.model)}Collection`);
   }
-  callbacks.push(`makeInstance: (delegate, ref, testInstance) => new ${input.instanceClassName}(delegate, ref, testInstance)`, `makeRef: async (collection, params, _p) => {\n      // TODO: choose the correct ref strategy (auto id vs deterministic id).\n      return collection.documentAccessor().newDocument().documentRef;\n    }`);
+  callbacks.push(
+    `makeInstance: (delegate, ref, testInstance) => new ${input.instanceClassName}(delegate, ref, testInstance)`,
+    `makeRef: async (collection, params, _p) => {\n      // TODO: choose the correct ref strategy (auto id vs deterministic id).\n      return collection.documentAccessor().newDocument().documentRef;\n    }`
+  );
   if (input.withInitDocument) {
     callbacks.push(`initDocument: async (instance, params) => {\n      // TODO: seed the new document with sensible defaults from \`params\`.\n    }`);
   }

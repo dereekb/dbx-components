@@ -8,7 +8,18 @@ import { map, of, switchMap } from 'rxjs';
 
 @Component({
   templateUrl: './settings.component.html',
-  imports: [JsonPipe, DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, DbxLabelBlockComponent, DbxButtonComponent, DbxFirebaseExternalConnectionsComponent, DbxFirebaseManageAuthProvidersComponent, DbxFirebaseNotificationHealthCheckDialogButtonComponent, DbxFirebaseNotificationUserDocumentStoreDirective]
+  imports: [
+    JsonPipe,
+    DbxContentLayoutModule,
+    DbxSectionPageComponent,
+    DbxSectionComponent,
+    DbxLabelBlockComponent,
+    DbxButtonComponent,
+    DbxFirebaseExternalConnectionsComponent,
+    DbxFirebaseManageAuthProvidersComponent,
+    DbxFirebaseNotificationHealthCheckDialogButtonComponent,
+    DbxFirebaseNotificationUserDocumentStoreDirective
+  ]
 })
 export class DemoAppSettingsComponent {
   readonly storageService = inject(DbxFirebaseStorageService);

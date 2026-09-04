@@ -17,7 +17,27 @@
  * concurrency (`maxParallelCheckpoints`), rate limiting (`waitBetweenCheckpoints`),
  * snapshot filtering, and repeat cursor detection.
  */
-import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter, type ReadKeyFunction } from '@dereekb/util';
+import {
+  type GetterOrValue,
+  type PromiseOrValue,
+  type IndexRef,
+  type Maybe,
+  asGetter,
+  lastValue,
+  type PerformAsyncTasksConfig,
+  performAsyncTasks,
+  batch,
+  type IndexNumber,
+  type PerformAsyncTasksResult,
+  type FactoryWithRequiredInput,
+  performTasksFromFactoryInParallelFunction,
+  getValueFromGetter,
+  type Milliseconds,
+  mapIdentityFunction,
+  type AllowValueOnceFilter,
+  allowValueOnceFilter,
+  type ReadKeyFunction
+} from '@dereekb/util';
 import { type FirestoreDocument, type LimitedFirestoreDocumentAccessor, firestoreDocumentSnapshotPairsLoaderInstance, type FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
 import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
 import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
@@ -652,7 +672,19 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
  * ```
  */
 export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
-  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint: inputLimitPerCheckpoint, totalSnapshotsLimit: inputTotalSnapshotsLimit } = config;
+  const {
+    iterateCheckpoint,
+    filterCheckpointSnapshots: inputFilterCheckpointSnapshot,
+    handleRepeatCursor: inputHandleRepeatCursor,
+    waitBetweenCheckpoints,
+    useCheckpointResult,
+    constraintsFactory: inputConstraintsFactory,
+    dynamicConstraints: inputDynamicConstraints,
+    queryFactory,
+    maxParallelCheckpoints = 1,
+    limitPerCheckpoint: inputLimitPerCheckpoint,
+    totalSnapshotsLimit: inputTotalSnapshotsLimit
+  } = config;
   const constraintsInputIsFactory = typeof inputConstraintsFactory === 'function';
   const constraintsFactory = constraintsInputIsFactory && inputDynamicConstraints !== false ? inputConstraintsFactory : asGetter(getValueFromGetter(inputConstraintsFactory));
 

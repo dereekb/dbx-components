@@ -192,7 +192,10 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}, 
  * @param force - When true, overrides any existing `canRunNextCheckpoint` value.
  * @returns A copy of the result with `canRunNextCheckpoint` set to true.
  */
-export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(result: NotificationTaskServiceHandleNotificationTaskResult<D, S>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
+export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(
+  result: NotificationTaskServiceHandleNotificationTaskResult<D, S>,
+  force?: Maybe<boolean>
+): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   if (force || result.canRunNextCheckpoint == null) {
     result = {
       ...result,

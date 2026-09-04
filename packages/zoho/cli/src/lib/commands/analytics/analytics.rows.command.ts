@@ -34,7 +34,11 @@ const rowsUpdateCommand: CommandModule = {
   command: 'update <workspaceId> <viewId>',
   describe: 'Update the rows of a table matching a criteria expression',
   builder: (yargs: Argv) =>
-    withRowTarget(yargs).option('columns', { type: 'string', demandOption: true, describe: 'New values as a JSON object of column name to value' }).option('criteria', { type: 'string', describe: `Filter expression, e.g. "Sales"."Region"='West'` }).option('all-rows', { type: 'boolean', default: false, describe: 'Update every row. Required when no --criteria is given' }).option('add-if-not-exist', { type: 'boolean', default: false, describe: 'Insert a row when the criteria matches nothing' }),
+    withRowTarget(yargs)
+      .option('columns', { type: 'string', demandOption: true, describe: 'New values as a JSON object of column name to value' })
+      .option('criteria', { type: 'string', describe: `Filter expression, e.g. "Sales"."Region"='West'` })
+      .option('all-rows', { type: 'boolean', default: false, describe: 'Update every row. Required when no --criteria is given' })
+      .option('add-if-not-exist', { type: 'boolean', default: false, describe: 'Insert a row when the criteria matches nothing' }),
   handler: async (argv: any) => {
     try {
       const api = getAnalyticsApi(argv);

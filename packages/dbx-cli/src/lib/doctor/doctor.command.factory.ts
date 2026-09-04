@@ -49,7 +49,7 @@ export interface DefaultDoctorChecksInput {
  */
 export function defaultDoctorChecks(input: DefaultDoctorChecksInput = {}): DoctorCheck[] {
   return [
-    createCliBuildDriftDoctorCheck({ ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }),
+    createCliBuildDriftDoctorCheck(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }),
     async ({ config }) => ({ name: 'config-file-present', ok: !!config, ...(config ? {} : { suggestion: 'Run `<cli> auth setup --env <name>`.' }) }),
     async ({ envName, env }) => ({ name: 'active-env-resolved', ok: !!envName && !!env, detail: { envName }, ...(envName && env ? {} : { suggestion: 'Run `<cli> env add <name>` and `<cli> env use <name>`, or pass `--env <name>`.' }) }),
     async ({ env }) => {
@@ -173,7 +173,7 @@ export interface CreateDoctorCommandInput {
  */
 export function createDoctorCommand(input: CreateDoctorCommandInput): CommandModule {
   const cliName = input.cliName;
-  const checks: DoctorCheck[] = [...defaultDoctorChecks({ ...(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }) }), ...(input.checks ?? [])];
+  const checks: DoctorCheck[] = [...defaultDoctorChecks(input.manifestGeneratorVersion == null ? {} : { manifestGeneratorVersion: input.manifestGeneratorVersion }), ...(input.checks ?? [])];
   const defaultEnvs = input.defaultEnvs;
 
   const paths = buildCliPaths({ cliName });

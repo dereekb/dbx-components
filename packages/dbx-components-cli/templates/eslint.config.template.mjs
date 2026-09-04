@@ -1,7 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
 import importPlugin from 'eslint-plugin-import-x';
-import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
@@ -96,7 +95,12 @@ export default [
       '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
       '@typescript-eslint/no-empty-interface': 'off', // disabled: empty interfaces are used intentionally for extensibility
       '@typescript-eslint/no-deprecated': 'off', // disabled: many deprecated items from third-party libs we can't update right now
-      'no-useless-assignment': 'off' // disabled: conflicts with the workspace's dereekb-util/require-single-return pattern (default-init then conditionally reassign)
+      'no-useless-assignment': 'off', // disabled: conflicts with the workspace's dereekb-util/require-single-return pattern (default-init then conditionally reassign)
+      // Catches `(a?.b).c` — the optional chain short-circuits to undefined and the member access then
+      // throws. Core ESLint rule, no plugin needed. Note it reads the ESTree shape and does NOT see
+      // through a TS type assertion, so `(a?.b as T).c` escapes it; the `(a?.b)!.c` form is covered
+      // separately by @typescript-eslint/no-non-null-asserted-optional-chain.
+      'no-unsafe-optional-chaining': 'error'
     }
   },
   {
@@ -106,8 +110,10 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
-      'no-unused-vars': 'off',
-      'no-extra-semi': 'error'
+      'no-unused-vars': 'off'
+      // `no-extra-semi: 'error'` used to sit here and was dead: the formatter block at the end of this
+      // array turns it off for `**/*.{ts,...}`, which matches spec files and — being later — wins in flat config.
+      // oxfmt normalizes semicolons anyway, so the rule has nothing left to catch.
     }
   },
   {
@@ -186,7 +192,7 @@ export default [
     }
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     plugins: { unicorn: unicornPlugin },
     rules: {
       'unicorn/prefer-array-find': 'warn',
@@ -218,7 +224,19 @@ export default [
       ]
     }
   },
-  prettierConfig,
+  {
+    // The formatter (oxfmt) owns all formatting, so the two core ESLint rules that
+    // fight formatter-produced output are off. This replaces `eslint-config-prettier`:
+    // of the 358 rules that config disables, these are the only two this workspace
+    // ever had enabled, so the 358-rule dependency was doing exactly this much work.
+    files: ['**/*.{ts,tsx,cts,mts,js,jsx,cjs,mjs}'],
+    rules: {
+      // Conflicts with formatter line-breaking decisions.
+      'no-unexpected-multiline': 'off',
+      // The formatter normalizes semicolons; the rule flags its output.
+      'no-extra-semi': 'off'
+    }
+  },
   // nestjs: require @Inject() on constructor params (emitDecoratorMetadata is disabled)
   {
     files: ['**/*.ts'],

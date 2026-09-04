@@ -116,12 +116,21 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
 @Component({
   selector: 'dbx-firebase-storagefile-download-button',
   template: `
-    <dbx-anchor [anchor]="anchorSignal()" dbxAction [dbxActionAutoTrigger]="preloadSignal()" dbxActionSnackbarError [dbxActionDisabled]="actionDisabledSignal()" [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleGetDownloadUrl" [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess" [dbxActionErrorHandler]="handleGetDownloadUrlError">
+    <dbx-anchor
+      [anchor]="anchorSignal()"
+      dbxAction
+      [dbxActionAutoTrigger]="preloadSignal()"
+      dbxActionSnackbarError
+      [dbxActionDisabled]="actionDisabledSignal()"
+      [dbxActionValue]="storageFileKeySignal()"
+      [dbxActionHandler]="handleGetDownloadUrl"
+      [dbxActionSuccessHandler]="handleGetDownloadUrlSuccess"
+      [dbxActionErrorHandler]="handleGetDownloadUrlError">
       <!-- allowClickPropagation lets a click on a resolved url reach the anchor, which is what performs the download -->
       <dbx-button dbxActionButton [allowClickPropagation]="true" [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>
     @if (showPreviewButtonSignal()) {
-      <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue>
+      <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue dbxActionSnackbarError>
         <span class="dbx-button-spacer"></span>
         <dbx-button dbxActionButton [buttonStyle]="previewButtonStyleSignal()" [icon]="previewIconSignal()" [text]="previewTextSignal()"></dbx-button>
       </ng-container>

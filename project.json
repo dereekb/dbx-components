@@ -6,7 +6,16 @@
     "build-all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build dbx-web" }, { "command": "npx nx run-many -t build --all --exclude=demo-api" }, { "command": "npx nx build demo-api" }],
+        "commands": [
+          { "command": "npx nx build util" },
+          { "command": "npx nx run-many -t build --projects=rxjs,model,date" },
+          { "command": "npx nx build firebase" },
+          { "command": "npx nx build nestjs" },
+          { "command": "npx nx build firebase-server" },
+          { "command": "npx nx build dbx-web" },
+          { "command": "npx nx run-many -t build --all --exclude=demo-api" },
+          { "command": "npx nx build demo-api" }
+        ],
         "parallel": false,
         "color": true
       }
@@ -27,6 +36,34 @@
         "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=lint --fix"
       }
     },
+    "oxlint-all": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "metadata": {
+        "description": "Runs the fast oxlint tier over every project (the `oxlint` target inferred by @nx/oxlint). Complements lint-all rather than replacing it — see the adopt-the-nx-oxlint-plugin plan for the tier split."
+      },
+      "options": {
+        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=oxlint"
+      }
+    },
+    "oxlint-fix-all": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=oxlint --fix"
+      }
+    },
+    "oxlint-cache": {
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Lint every project with oxlint via dbx-cli-lint-cache, writing grouped JSON caches to .tmp/lint-cache/*.oxlint.json (plus index.oxlint.json). This is what makes the oxlint tier visible to dbx-claude-lint-read; without it an oxlint target is a linter nothing runs."
+      },
+      "options": {
+        "command": "npx nx run dbx-cli-lint-cache:oxlint-cache",
+        "forwardAllArgs": true,
+        "color": true
+      }
+    },
     "lint-fix-cache": {
       "executor": "nx:run-commands",
       "metadata": {
@@ -36,6 +73,18 @@
         "command": "npx nx run dbx-cli-lint-cache:lint-fix-cache",
         "forwardAllArgs": true,
         "color": true
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx oxfmt --write ."
+      }
+    },
+    "format-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx oxfmt --check ."
       }
     },
     "start-release": {
@@ -71,7 +120,14 @@
     "ci-test-firebase-all": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{ "command": "npx nx run-all-tests firebase" }, { "command": "npx nx run-all-tests firebase-server" }, { "command": "npx nx run-tests dbx-firebase" }, { "command": "npx nx run-tests demo-api" }, { "command": "npx nx run-tests demo-cli" }, { "command": "npx nx run-tests openrouter-firebase-server" }],
+        "commands": [
+          { "command": "npx nx run-all-tests firebase" },
+          { "command": "npx nx run-all-tests firebase-server" },
+          { "command": "npx nx run-tests dbx-firebase" },
+          { "command": "npx nx run-tests demo-api" },
+          { "command": "npx nx run-tests demo-cli" },
+          { "command": "npx nx run-tests openrouter-firebase-server" }
+        ],
         "parallel": false
       }
     },

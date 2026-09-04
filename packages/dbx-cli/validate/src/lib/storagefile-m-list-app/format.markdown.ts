@@ -11,7 +11,18 @@ import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.j
 export function formatReportAsMarkdown(report: AppStorageFilesReport): string {
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;
   const uploadServiceFactoryText = report.uploadServiceFactoryName ? code(report.uploadServiceFactoryName) : '_Not defined._';
-  const lines: string[] = [`# App storagefiles — ${basename}`, '', `Component: \`${report.componentDir}\``, `API: \`${report.apiDir}\``, '', `Upload service factory: ${uploadServiceFactoryText}`, `Wired via \`StorageFileInitializeFromUploadService\` provider: ${formatBool(report.uploadServiceWiredInApi)}`, `Processing handler call present: ${formatBool(report.processingHandlerWiredInApi)}`, '', `## Purposes (${report.purposes.length})`];
+  const lines: string[] = [
+    `# App storagefiles — ${basename}`,
+    '',
+    `Component: \`${report.componentDir}\``,
+    `API: \`${report.apiDir}\``,
+    '',
+    `Upload service factory: ${uploadServiceFactoryText}`,
+    `Wired via \`StorageFileInitializeFromUploadService\` provider: ${formatBool(report.uploadServiceWiredInApi)}`,
+    `Processing handler call present: ${formatBool(report.processingHandlerWiredInApi)}`,
+    '',
+    `## Purposes (${report.purposes.length})`
+  ];
   if (report.purposes.length === 0) {
     lines.push('', '_None found._');
   } else {

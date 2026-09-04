@@ -113,7 +113,13 @@ export interface FirestoreSessionDoctorReadRouting {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function buildFirestoreSessionDoctorReadRouting(input: { readonly firestore?: CliFirestoreBinding; readonly modelManifest?: CliModelManifest; readonly firestoreQueryManifest?: CliFirestoreQueryManifest; readonly firebaseConfigComplete: boolean; readonly sessionOpened: boolean }): FirestoreSessionDoctorReadRouting {
+export function buildFirestoreSessionDoctorReadRouting(input: {
+  readonly firestore?: CliFirestoreBinding;
+  readonly modelManifest?: CliModelManifest;
+  readonly firestoreQueryManifest?: CliFirestoreQueryManifest;
+  readonly firebaseConfigComplete: boolean;
+  readonly sessionOpened: boolean;
+}): FirestoreSessionDoctorReadRouting {
   const getFirestoreModels = input.firestore != null;
   let reason: CliReadSourceReason;
 
@@ -297,7 +303,9 @@ async function runFirestoreSessionProbe(input: RunFirestoreSessionProbeInput): P
           name: FIRESTORE_SESSION_DOCTOR_CHECK_NAME,
           ok: false,
           detail: { ...baseDetail, stage: 'rules-protected-read', probe: probeName, error: e instanceof Error ? e.message : String(e) },
-          suggestion: appCheckUsed ? 'Signed in, but the rules-protected read failed. Either the signed-in user lacks the claims the rules require, or the App Check token was rejected — verify the API mints for the same registered web app this env targets.' : 'Signed in without an App Check attestation. If the project enforces App Check on Firestore, configure `appCheckAppId` on the API session module.'
+          suggestion: appCheckUsed
+            ? 'Signed in, but the rules-protected read failed. Either the signed-in user lacks the claims the rules require, or the App Check token was rejected — verify the API mints for the same registered web app this env targets.'
+            : 'Signed in without an App Check attestation. If the project enforces App Check on Firestore, configure `appCheckAppId` on the API session module.'
         };
       }
     } else {

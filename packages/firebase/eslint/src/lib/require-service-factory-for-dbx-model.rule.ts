@@ -105,7 +105,8 @@ export const FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE: FirebaseRequir
       recommended: true
     },
     messages: {
-      modelHasNoServiceFactory: '`@dbxModel`-marked interface `{{interfaceName}}` has no matching `@dbxModelServiceFactory {{expectedModelType}}` declaration in the workspace. Add the tag to its `firebaseModelServiceFactory(...)` export, or list `{{interfaceName}}` in `ignoreModels` if the model is intentionally factory-less.'
+      modelHasNoServiceFactory:
+        '`@dbxModel`-marked interface `{{interfaceName}}` has no matching `@dbxModelServiceFactory {{expectedModelType}}` declaration in the workspace. Add the tag to its `firebaseModelServiceFactory(...)` export, or list `{{interfaceName}}` in `ignoreModels` if the model is intentionally factory-less.'
     },
     schema: [
       {

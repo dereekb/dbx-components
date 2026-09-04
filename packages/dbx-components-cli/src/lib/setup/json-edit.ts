@@ -108,7 +108,19 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
 /**
  * The Angular framework packages that take {@link DEFAULT_SETUP_CORE_VERSIONS}.`angular` verbatim.
  */
-const DBX_PEER_ALIGNED_ANGULAR_PACKAGES: readonly string[] = ['@angular/animations', '@angular/common', '@angular/compiler', '@angular/compiler-cli', '@angular/core', '@angular/forms', '@angular/language-service', '@angular/material-date-fns-adapter', '@angular/platform-browser', '@angular/platform-server', '@angular/router'];
+const DBX_PEER_ALIGNED_ANGULAR_PACKAGES: readonly string[] = [
+  '@angular/animations',
+  '@angular/common',
+  '@angular/compiler',
+  '@angular/compiler-cli',
+  '@angular/core',
+  '@angular/forms',
+  '@angular/language-service',
+  '@angular/material-date-fns-adapter',
+  '@angular/platform-browser',
+  '@angular/platform-server',
+  '@angular/router'
+];
 
 /**
  * Dependency versions pinned to align a scaffolded project with the `@dereekb/*` peer ranges of the
@@ -192,6 +204,32 @@ export function removeVerdaccioFromPackageJson(pkg: JsonObject): JsonObject {
     next['scripts'] = withoutKeys(scripts as JsonObject, ['local-registry']);
   }
   return next;
+}
+
+/**
+ * The `format` / `format-check` npm scripts that front the oxfmt formatter.
+ * Nx only grew oxfmt support after the version this scaffolds onto — there, the
+ * built-in `nx format:write` / `nx format:check` import prettier unconditionally
+ * and fail without it — so a scaffolded oxfmt workspace needs its own entry
+ * points. Mirrors the `format` / `format-check` nx targets in the root
+ * `project.template.json`.
+ */
+export const OXFMT_PACKAGE_JSON_SCRIPTS: Readonly<Record<string, string>> = {
+  format: 'oxfmt --write .',
+  'format-check': 'oxfmt --check .'
+};
+
+/**
+ * Adds the oxfmt `format` / `format-check` scripts to the root package.json,
+ * replacing any pre-existing entries under the same names. Pure.
+ *
+ * @param pkg - The parsed package.json.
+ * @returns A new package.json object with the format scripts declared.
+ */
+export function addOxfmtScriptsToPackageJson(pkg: JsonObject): JsonObject {
+  const scripts = pkg['scripts'];
+  const current: JsonObject = scripts != null && typeof scripts === 'object' ? (scripts as JsonObject) : {};
+  return { ...pkg, scripts: { ...current, ...OXFMT_PACKAGE_JSON_SCRIPTS } };
 }
 
 /**

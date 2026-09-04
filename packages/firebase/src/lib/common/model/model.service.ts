@@ -248,7 +248,8 @@ export type FirebaseModelsServiceTypesAccessor = {
  * Call with a model type key and context to get an {@link InContextFirebaseModelService} for that model.
  * This is the top-level entry point for permission-checked model operations in server-side code.
  */
-export type FirebaseModelsService<X extends FirebaseModelsServiceFactory<C>, C extends FirebaseModelServiceContext> = (<K extends keyof X>(type: K, context: C) => X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InContextFirebaseModelService<C, T, D, R> : never) & FirebaseModelsServiceTypesAccessor;
+export type FirebaseModelsService<X extends FirebaseModelsServiceFactory<C>, C extends FirebaseModelServiceContext> = (<K extends keyof X>(type: K, context: C) => X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InContextFirebaseModelService<C, T, D, R> : never) &
+  FirebaseModelsServiceTypesAccessor;
 
 /**
  * Extracts the union of model type keys from a {@link FirebaseModelsService}.
@@ -325,8 +326,10 @@ export function inContextFirebaseModelsServiceFactory<X extends FirebaseModelsSe
  * Selection parameters for accessing a specific model by type and key (without role requirements).
  */
 export type FirebaseModelsServiceSelection<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'roles' | 'rolesSetIncludes'>;
-export type FirebaseModelsServiceSelectionResult<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InModelContextFirebaseModelService<C, T, D, R> : never) : never) : never;
-export type FirebaseModelsServiceSelectionResultRolesReader<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? ContextGrantedModelRolesReader<C, T, D, R> : never) : never) : never;
+export type FirebaseModelsServiceSelectionResult<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> =
+  Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InModelContextFirebaseModelService<C, T, D, R> : never) : never) : never;
+export type FirebaseModelsServiceSelectionResultRolesReader<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> =
+  Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? ContextGrantedModelRolesReader<C, T, D, R> : never) : never) : never;
 export type FirebaseModelsServiceSelectionResultDocumentType<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D> ? D : never) : never) : never;
 
 export type UseFirebaseModelsServiceSelection<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> =
@@ -341,8 +344,10 @@ export type UseFirebaseModelsServiceSelection<Y extends FirebaseModelsService<an
       : never
     : never;
 
-export type UseFirebaseModelsServiceSelectionResult<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>> : never) : never) : never;
-export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UseAsync<ContextGrantedModelRolesReader<C, T, D, R>, O> : never) : never) : never;
+export type UseFirebaseModelsServiceSelectionResult<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> =
+  Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>> : never) : never) : never;
+export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> =
+  Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UseAsync<ContextGrantedModelRolesReader<C, T, D, R>, O> : never) : never) : never;
 
 /**
  * Selects a model-bound service instance from a multi-model service by type and key.

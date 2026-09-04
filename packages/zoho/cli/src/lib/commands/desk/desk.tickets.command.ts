@@ -8,7 +8,12 @@ import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagin
 const ticketsListCommand: CommandModule = {
   command: 'list',
   describe: 'List tickets',
-  builder: (yargs: Argv) => withDeskPagination(yargs).option('department-id', { type: 'string', describe: 'Filter by department ID' }).option('status', { type: 'string', describe: 'Filter by status' }).option('sort-by', { type: 'string', describe: 'Field to sort by' }).option('include', { type: 'string', describe: 'Comma-separated includes (e.g. contacts,assignee,departments,team,isRead)' }),
+  builder: (yargs: Argv) =>
+    withDeskPagination(yargs)
+      .option('department-id', { type: 'string', describe: 'Filter by department ID' })
+      .option('status', { type: 'string', describe: 'Filter by status' })
+      .option('sort-by', { type: 'string', describe: 'Field to sort by' })
+      .option('include', { type: 'string', describe: 'Comma-separated includes (e.g. contacts,assignee,departments,team,isRead)' }),
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);
@@ -52,7 +57,14 @@ const ticketsGetCommand: CommandModule = {
 const ticketsSearchCommand: CommandModule = {
   command: 'search',
   describe: 'Search tickets',
-  builder: (yargs: Argv) => withDeskPagination(yargs).option('subject', { type: 'string', describe: 'Search by subject' }).option('status', { type: 'string', describe: 'Filter by status' }).option('email', { type: 'string', describe: 'Filter by email' }).option('department-id', { type: 'string', describe: 'Filter by department ID' }).option('channel', { type: 'string', describe: 'Filter by channel' }).option('priority', { type: 'string', describe: 'Filter by priority' }),
+  builder: (yargs: Argv) =>
+    withDeskPagination(yargs)
+      .option('subject', { type: 'string', describe: 'Search by subject' })
+      .option('status', { type: 'string', describe: 'Filter by status' })
+      .option('email', { type: 'string', describe: 'Filter by email' })
+      .option('department-id', { type: 'string', describe: 'Filter by department ID' })
+      .option('channel', { type: 'string', describe: 'Filter by channel' })
+      .option('priority', { type: 'string', describe: 'Filter by priority' }),
   handler: async (argv: any) => {
     try {
       const api = getDeskApi(argv);

@@ -322,7 +322,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     error?: Maybe<unknown>;
   }
 
-  const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = new Array(allFiles.length);
+  const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = Array.from({ length: allFiles.length });
   const allFilesAndDetails: FileUploadDetails[] = allFiles.map((file) => ({ file }));
   const overallProgressPerCompletedFile: PercentDecimal = 1 / allFilesAndLatestProgress.length;
 

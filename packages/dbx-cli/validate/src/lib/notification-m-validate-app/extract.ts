@@ -11,7 +11,22 @@
  */
 
 import { Node, SyntaxKind, type ArrayLiteralExpression, type ArrowFunction, type FunctionDeclaration, type FunctionExpression, type ObjectLiteralExpression, type SourceFile, type TypeNode, type VariableDeclaration } from 'ts-morph';
-import { apiRelPath, asArrayLiteral, asObjectLiteral, buildInMemoryProject, collectTrustedExternalIdentifiers, componentRelPath, findLocalVariable, findReturnExpression, getPropertyInitializer, readIdentifierProperty, readStringLiteralInitializer, readStringProperty, typeAnnotationText, unwrapAsExpressions } from '../_core/_validate/ast.js';
+import {
+  apiRelPath,
+  asArrayLiteral,
+  asObjectLiteral,
+  buildInMemoryProject,
+  collectTrustedExternalIdentifiers,
+  componentRelPath,
+  findLocalVariable,
+  findReturnExpression,
+  getPropertyInitializer,
+  readIdentifierProperty,
+  readStringLiteralInitializer,
+  readStringProperty,
+  typeAnnotationText,
+  unwrapAsExpressions
+} from '../_core/_validate/ast.js';
 import type {
   AppNotificationsInspection,
   ExtractedAppNotifications,
@@ -301,7 +316,13 @@ function extractTaskDataInterfaces(sources: readonly SourceFile[]): readonly Ext
 }
 
 // MARK: Template info record
-function buildComponentAggregateIndex(parts: { readonly templateTypeConstants: readonly ExtractedTemplateTypeConstant[]; readonly templateTypeInfos: readonly ExtractedTemplateTypeInfo[]; readonly templateInfoAggregates: readonly ExtractedTemplateInfoAggregateArray[]; readonly taskTypeConstants: readonly ExtractedTaskTypeConstant[]; readonly taskAllTypesAggregates: readonly ExtractedTaskTypeAggregateArray[] }): ComponentAggregateIndex {
+function buildComponentAggregateIndex(parts: {
+  readonly templateTypeConstants: readonly ExtractedTemplateTypeConstant[];
+  readonly templateTypeInfos: readonly ExtractedTemplateTypeInfo[];
+  readonly templateInfoAggregates: readonly ExtractedTemplateInfoAggregateArray[];
+  readonly taskTypeConstants: readonly ExtractedTaskTypeConstant[];
+  readonly taskAllTypesAggregates: readonly ExtractedTaskTypeAggregateArray[];
+}): ComponentAggregateIndex {
   const infoMap = new Map<string, ExtractedTemplateTypeInfo>();
   for (const info of parts.templateTypeInfos) infoMap.set(info.symbolName, info);
   const aggMap = new Map<string, ExtractedTemplateInfoAggregateArray>();

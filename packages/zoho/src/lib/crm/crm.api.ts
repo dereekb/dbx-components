@@ -664,7 +664,8 @@ export type ZohoCrmGetRelatedRecordsFunction<T = ZohoCrmRecord> = (input: ZohoCr
 export function zohoCrmGetRelatedRecordsFunctionFactory(context: ZohoCrmContext): ZohoCrmGetRelatedRecordsFunctionFactory {
   return <T = ZohoCrmRecord>(config: ZohoCrmGetRelatedRecordsFunctionConfig) => {
     const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
-    return (input: ZohoCrmGetRelatedRecordsRequest) => context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
+    return (input: ZohoCrmGetRelatedRecordsRequest) =>
+      context.fetchJson<ZohoCrmGetRelatedRecordsResponse<T>>(`/v8/${input.module}/${input.id}/${targetModule}?${zohoCrmUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull === false ? x : emptyZohoPageResult<T>()));
   };
 }
 

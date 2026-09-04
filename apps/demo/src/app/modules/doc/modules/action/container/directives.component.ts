@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { of, delay, BehaviorSubject } from 'rxjs';
-import { DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
@@ -35,6 +35,7 @@ import { JsonPipe } from '@angular/common';
 @Component({
   templateUrl: './directives.component.html',
   imports: [
+    DbxActionSnackbarErrorDirective,
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
     DocFeatureExampleComponent,

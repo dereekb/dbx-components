@@ -78,4 +78,4 @@ The Firebase model registry (`src/registry/firebase-models.generated.ts`) is pro
 npx nx run dbx-components-mcp:generate-firebase-models
 ```
 
-The script formats output through Prettier so regenerating produces a byte-equal file when source models haven't changed.
+The script formats output through oxfmt so regenerating produces a byte-equal file when source models haven't changed.

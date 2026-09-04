@@ -1,4 +1,14 @@
-import { type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, type ModelFirebaseUpdateFunction, type OnCallCreateModelResult, type TargetModelParams, type InferredTargetModelParams, type ModelFirebaseCrudFunction, type ModelFirebaseReadFunction, type ModelFirebaseInvokeFunction } from '@dereekb/firebase';
+import {
+  type ModelFirebaseCreateFunction,
+  type ModelFirebaseDeleteFunction,
+  type ModelFirebaseUpdateFunction,
+  type OnCallCreateModelResult,
+  type TargetModelParams,
+  type InferredTargetModelParams,
+  type ModelFirebaseCrudFunction,
+  type ModelFirebaseReadFunction,
+  type ModelFirebaseInvokeFunction
+} from '@dereekb/firebase';
 import { lazyFrom, type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, type PartialOnKeys } from '@dereekb/util';
 import { shareReplay, exhaustMap, first, from, type Observable } from 'rxjs';
@@ -103,7 +113,11 @@ export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentS
  * @returns Executes the update with the store's key injected.
  * @__NO_SIDE_EFFECTS__
  */
-export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(
+  store: DbxFirebaseDocumentStore<any, any>,
+  fn: ModelFirebaseUpdateFunction<I, O>,
+  config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>
+): DbxFirebaseDocumentStoreFunction<I, O> {
   return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>
     loadingStateFromObs(
       store.key$.pipe(
@@ -137,7 +151,11 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
  * @returns Executes the invoke with the store's key injected.
  * @__NO_SIDE_EFFECTS__
  */
-export function firebaseDocumentStoreInvokeFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseInvokeFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+export function firebaseDocumentStoreInvokeFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(
+  store: DbxFirebaseDocumentStore<any, any>,
+  fn: ModelFirebaseInvokeFunction<I, O>,
+  config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>
+): DbxFirebaseDocumentStoreFunction<I, O> {
   return firebaseDocumentStoreUpdateFunction(store, fn, config);
 }
 

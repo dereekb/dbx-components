@@ -143,7 +143,11 @@ function bucketSummary(group: string, bucket: 'crud' | 'scenario'): string {
   return 'Multi-step scenarios using fixture chains (mirrors real workflows). Add focused buckets as `' + group + '.scenario.<sub>.spec.ts` (chain subgroups freely, e.g. `.scenario.requirement.worker.spec.ts`).';
 }
 
-const DRIFT_RULES: readonly string[] = ['`<group>.<sub>.crud.spec.ts` → rename to `<group>.crud.<sub>.spec.ts` (`crud` belongs directly after the group name).', '`<group>.<sub>.scenario.spec.ts` → rename to `<group>.scenario.<sub>.spec.ts` (`scenario` belongs directly after the group name).', '`<group>.<rest>.spec.ts` with no `crud` / `scenario` segment → add one (default to `scenario` when in doubt).'];
+const DRIFT_RULES: readonly string[] = [
+  '`<group>.<sub>.crud.spec.ts` → rename to `<group>.crud.<sub>.spec.ts` (`crud` belongs directly after the group name).',
+  '`<group>.<sub>.scenario.spec.ts` → rename to `<group>.scenario.<sub>.spec.ts` (`scenario` belongs directly after the group name).',
+  '`<group>.<rest>.spec.ts` with no `crud` / `scenario` segment → add one (default to `scenario` when in doubt).'
+];
 
 function formatMarkdown(report: ConventionReport): string {
   const lines: string[] = [];

@@ -6,7 +6,10 @@ import { type TransformAndValidateFunctionResultFactory, type TransformAndValida
 import { type MailgunService, type MailgunServiceRef } from '@dereekb/nestjs/mailgun';
 import { type NotificationExpediteService, type NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
-export abstract class DemoFirebaseServerActionsContext extends DemoFirestoreCollections implements FirebaseServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef<DemoApiAuthService>, FirebaseServerStorageServiceRef, MailgunServiceRef, NotificationExpediteServiceRef, FirebaseServerAnalyticsServiceRef {
+export abstract class DemoFirebaseServerActionsContext
+  extends DemoFirestoreCollections
+  implements FirebaseServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef<DemoApiAuthService>, FirebaseServerStorageServiceRef, MailgunServiceRef, NotificationExpediteServiceRef, FirebaseServerAnalyticsServiceRef
+{
   abstract readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
   abstract readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
   abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<any>;

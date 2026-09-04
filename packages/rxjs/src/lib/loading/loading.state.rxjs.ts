@@ -94,9 +94,28 @@ export function combineLoadingStates<A extends object, B extends object, O>(obsA
 export function combineLoadingStates<A extends object, B extends object, C extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>): Observable<LoadingState<A & B & C>>;
 export function combineLoadingStates<A extends object, B extends object, C extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, mergeFn: (a: A, b: B, c: C) => O): Observable<LoadingState<O>>;
 export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>): Observable<LoadingState<A & B & C & D>>;
-export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, mergeFn: (a: A, b: B, c: C, d: D) => O): Observable<LoadingState<O>>;
-export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>): Observable<LoadingState<A & B & C & D & E>>;
-export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): Observable<LoadingState<O>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, O>(
+  obsA: Observable<LoadingState<A>>,
+  obsB: Observable<LoadingState<B>>,
+  obsC: Observable<LoadingState<C>>,
+  obsD: Observable<LoadingState<D>>,
+  mergeFn: (a: A, b: B, c: C, d: D) => O
+): Observable<LoadingState<O>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object>(
+  obsA: Observable<LoadingState<A>>,
+  obsB: Observable<LoadingState<B>>,
+  obsC: Observable<LoadingState<C>>,
+  obsD: Observable<LoadingState<D>>,
+  obsE: Observable<LoadingState<E>>
+): Observable<LoadingState<A & B & C & D & E>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(
+  obsA: Observable<LoadingState<A>>,
+  obsB: Observable<LoadingState<B>>,
+  obsC: Observable<LoadingState<C>>,
+  obsD: Observable<LoadingState<D>>,
+  obsE: Observable<LoadingState<E>>,
+  mergeFn: (a: A, b: B, c: C, d: D, e: E) => O
+): Observable<LoadingState<O>>;
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>>;
 // eslint-disable-next-line jsdoc/require-jsdoc -- JSDoc is on the overload signatures above
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>> {

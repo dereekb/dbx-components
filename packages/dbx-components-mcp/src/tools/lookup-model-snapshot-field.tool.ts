@@ -101,7 +101,20 @@ function appendFullEntrySections(lines: string[], entry: ModelSnapshotFieldEntry
 
 function formatEntry(entry: ModelSnapshotFieldEntryInfo, depth: LookupDepth): string {
   const heading = `# ${entry.name}`;
-  const lines: string[] = [heading, '', entry.description, '', bullet('slug', `\`${entry.slug}\``), bullet('kind', `\`${entry.kind}\``), bullet('category', `\`${entry.category}\``), bullet('module', `\`${entry.module}\``), bullet('subpath', `\`${entry.subpath}\``), bullet('optional', entry.optional ? 'yes (use this for `Maybe<T>` fields)' : 'no (required)'), bullet('signature', `\`${entry.signature}\``), ''];
+  const lines: string[] = [
+    heading,
+    '',
+    entry.description,
+    '',
+    bullet('slug', `\`${entry.slug}\``),
+    bullet('kind', `\`${entry.kind}\``),
+    bullet('category', `\`${entry.category}\``),
+    bullet('module', `\`${entry.module}\``),
+    bullet('subpath', `\`${entry.subpath}\``),
+    bullet('optional', entry.optional ? 'yes (use this for `Maybe<T>` fields)' : 'no (required)'),
+    bullet('signature', `\`${entry.signature}\``),
+    ''
+  ];
 
   appendDeprecationNotice(lines, entry);
 

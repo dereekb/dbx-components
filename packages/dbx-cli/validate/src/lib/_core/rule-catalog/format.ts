@@ -16,7 +16,31 @@ import type { RuleEntry, RuleSeeAlso } from './types.js';
  * @returns The formatted markdown text.
  */
 export function formatRuleAsMarkdown(entry: RuleEntry): string {
-  const lines: string[] = [`# \`${entry.code}\``, '', `**${entry.title}**`, '', `- **Severity:** \`${entry.severity}\``, `- **Source tool:** \`${entry.source}\``, '', '## What it flags', '', entry.whatItFlags, '', '## When it applies', '', entry.whenItApplies, '', '## When it does NOT apply', '', entry.whenItDoesNotApply, '', '## Canonical fix', '', entry.canonicalFix, ''];
+  const lines: string[] = [
+    `# \`${entry.code}\``,
+    '',
+    `**${entry.title}**`,
+    '',
+    `- **Severity:** \`${entry.severity}\``,
+    `- **Source tool:** \`${entry.source}\``,
+    '',
+    '## What it flags',
+    '',
+    entry.whatItFlags,
+    '',
+    '## When it applies',
+    '',
+    entry.whenItApplies,
+    '',
+    '## When it does NOT apply',
+    '',
+    entry.whenItDoesNotApply,
+    '',
+    '## Canonical fix',
+    '',
+    entry.canonicalFix,
+    ''
+  ];
   if (entry.canonicalFixTemplate) {
     lines.push('## Fix template', '', entry.canonicalFixTemplate, '');
   }

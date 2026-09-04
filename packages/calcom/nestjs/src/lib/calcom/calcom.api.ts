@@ -1,6 +1,32 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CalcomServiceConfig } from './calcom.config';
-import { type Calcom, type CalcomContext, type CalcomServerContext, type CalcomUserContext, type CalcomRefreshTokenCredential, calcomFactory, getMe, getSchedules, getAvailableSlots, createBooking, getBooking, getBookings, cancelBooking, getEventTypes, createEventType, updateEventType, deleteEventType, getCalendars, getBusyTimes, getBusyTimesForConnectedCalendars, createWebhook, getWebhooks, getWebhook, updateWebhook, deleteWebhook } from '@dereekb/calcom';
+import {
+  type Calcom,
+  type CalcomContext,
+  type CalcomServerContext,
+  type CalcomUserContext,
+  type CalcomRefreshTokenCredential,
+  calcomFactory,
+  getMe,
+  getSchedules,
+  getAvailableSlots,
+  createBooking,
+  getBooking,
+  getBookings,
+  cancelBooking,
+  getEventTypes,
+  createEventType,
+  updateEventType,
+  deleteEventType,
+  getCalendars,
+  getBusyTimes,
+  getBusyTimesForConnectedCalendars,
+  createWebhook,
+  getWebhooks,
+  getWebhook,
+  updateWebhook,
+  deleteWebhook
+} from '@dereekb/calcom';
 import { cachedGetter } from '@dereekb/util';
 import { CalcomOAuthApi } from '../oauth';
 

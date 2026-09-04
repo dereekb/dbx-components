@@ -5,17 +5,17 @@ import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { map, shareReplay, type Observable, of } from 'rxjs';
 import { DbxScheduleSelectionCalendarDateDaysForgeFormComponent, type DbxScheduleSelectionCalendarDateDaysForgeFormValue } from './field/selection/calendar.schedule.selection.days.forge.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
-import { DbxActionModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-days',
   template: `
-    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [useInstantTriggerPreset]="true" [dbxActionHandler]="updateScheduleDays">
+    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [useInstantTriggerPreset]="true" [dbxActionHandler]="updateScheduleDays" dbxActionSnackbarError>
       <dbx-schedule-selection-calendar-date-days-forge-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormIsModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-forge-form>
     </div>
   `,
-  imports: [DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective]
+  imports: [DbxActionSnackbarErrorDirective, DbxScheduleSelectionCalendarDateDaysForgeFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective]
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
   readonly dbxCalendarStore = inject(DbxCalendarStore);

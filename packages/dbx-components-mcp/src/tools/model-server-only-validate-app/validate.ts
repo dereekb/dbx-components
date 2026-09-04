@@ -106,7 +106,15 @@ export function validateModelServerOnly(input: ValidateModelServerOnlyInput): Mo
   // service loop because the interface may not be reachable from any registered service at all
   for (const iface of input.interfaces) {
     if (iface.serverOnly && !iface.hasModelTag) {
-      violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_TAG_WITHOUT_MODEL_TAG, severity: 'warning', modelType: undefined, file: iface.file, message: `Interface \`${iface.name}\` carries \`@dbxModelServerOnly\` but no \`@dbxModel\` tag, so the model extractor skips it and \`serverOnly\` never lands on the generated model manifest.` }));
+      violations.push(
+        buildViolation({
+          code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_TAG_WITHOUT_MODEL_TAG,
+          severity: 'warning',
+          modelType: undefined,
+          file: iface.file,
+          message: `Interface \`${iface.name}\` carries \`@dbxModelServerOnly\` but no \`@dbxModel\` tag, so the model extractor skips it and \`serverOnly\` never lands on the generated model manifest.`
+        })
+      );
     }
   }
 
@@ -146,25 +154,81 @@ function appendServiceViolations(input: AppendServiceViolationsInput): void {
   const declared = tag === true || flag;
 
   if (collection == null) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_UNRESOLVED_IDENTITY, severity: 'warning', modelType, file: service.exportName, message: `No \`firestoreModelIdentity(...)\` for model type \`${modelType}\` was found in the scanned dirs, so its collection name — and therefore the rules leg of the reconciliation — could not be resolved.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_UNRESOLVED_IDENTITY,
+        severity: 'warning',
+        modelType,
+        file: service.exportName,
+        message: `No \`firestoreModelIdentity(...)\` for model type \`${modelType}\` was found in the scanned dirs, so its collection name — and therefore the rules leg of the reconciliation — could not be resolved.`
+      })
+    );
   } else if (rules === true && !flag) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_MISSING_RUNTIME_FLAG, severity: 'error', modelType, file: service.exportName, message: `\`${collection}\` has no client read grant in the rules (get=${reconciliation.rulesGet}, list=${reconciliation.rulesList}) but \`${service.exportName}\` does not set \`serverOnly: true\`, so the model API will hand a client a document the rules would refuse.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_MISSING_RUNTIME_FLAG,
+        severity: 'error',
+        modelType,
+        file: service.exportName,
+        message: `\`${collection}\` has no client read grant in the rules (get=${reconciliation.rulesGet}, list=${reconciliation.rulesList}) but \`${service.exportName}\` does not set \`serverOnly: true\`, so the model API will hand a client a document the rules would refuse.`
+      })
+    );
   } else if (rules === false && declared) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_RULES_ALLOW_READ, severity: 'error', modelType, file: service.exportName, message: `\`${modelType}\` declares server-only (${describeDeclarations(tag, flag)}) but \`${collection}\` IS client-readable in the rules (get=${reconciliation.rulesGet}, list=${reconciliation.rulesList}).` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_RULES_ALLOW_READ,
+        severity: 'error',
+        modelType,
+        file: service.exportName,
+        message: `\`${modelType}\` declares server-only (${describeDeclarations(tag, flag)}) but \`${collection}\` IS client-readable in the rules (get=${reconciliation.rulesGet}, list=${reconciliation.rulesList}).`
+      })
+    );
   }
 
   if (rules === true && iface != null && !iface.serverOnly) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_MISSING_TAG, severity: 'warning', modelType, file: iface.file, message: `\`${collection}\` has no client read grant in the rules but interface \`${iface.name}\` has no \`@dbxModelServerOnly\` tag, so the CLI cannot refuse the read locally.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_MISSING_TAG,
+        severity: 'warning',
+        modelType,
+        file: iface.file,
+        message: `\`${collection}\` has no client read grant in the rules but interface \`${iface.name}\` has no \`@dbxModelServerOnly\` tag, so the CLI cannot refuse the read locally.`
+      })
+    );
   }
 
   if (iface == null && flag) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_NO_INTERFACE, severity: 'warning', modelType, file: service.exportName, message: `\`${modelType}\` sets \`serverOnly: true\` but its data type \`${service.modelName ?? '(unknown)'}\` resolves to no interface in the scanned dirs, so there is nothing to carry \`@dbxModelServerOnly\`.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_NO_INTERFACE,
+        severity: 'warning',
+        modelType,
+        file: service.exportName,
+        message: `\`${modelType}\` sets \`serverOnly: true\` but its data type \`${service.modelName ?? '(unknown)'}\` resolves to no interface in the scanned dirs, so there is nothing to carry \`@dbxModelServerOnly\`.`
+      })
+    );
   } else if (iface != null && tag !== flag) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_TAG_FLAG_MISMATCH, severity: 'error', modelType, file: iface.file, message: `\`${modelType}\`: interface \`${iface.name}\` ${tag === true ? 'carries' : 'does NOT carry'} \`@dbxModelServerOnly\` while \`${service.exportName}\` ${flag ? 'DOES' : 'does not'} set \`serverOnly: true\`.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_TAG_FLAG_MISMATCH,
+        severity: 'error',
+        modelType,
+        file: iface.file,
+        message: `\`${modelType}\`: interface \`${iface.name}\` ${tag === true ? 'carries' : 'does NOT carry'} \`@dbxModelServerOnly\` while \`${service.exportName}\` ${flag ? 'DOES' : 'does not'} set \`serverOnly: true\`.`
+      })
+    );
   }
 
   if (manifestModelTypes != null && declared && !manifestModelTypes.has(modelType)) {
-    violations.push(buildViolation({ code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_NOT_IN_MANIFEST, severity: 'warning', modelType, file: manifestFile, message: `\`${modelType}\` is server-only but has no entry in the generated model manifest, so the CLI's local pre-transport refusal cannot fire for it — the read costs a round-trip to an API that refuses it.` }));
+    violations.push(
+      buildViolation({
+        code: ModelServerOnlyValidateAppCode.MODEL_SERVER_ONLY_NOT_IN_MANIFEST,
+        severity: 'warning',
+        modelType,
+        file: manifestFile,
+        message: `\`${modelType}\` is server-only but has no entry in the generated model manifest, so the CLI's local pre-transport refusal cannot fire for it — the read costs a round-trip to an API that refuses it.`
+      })
+    );
   }
 }
 

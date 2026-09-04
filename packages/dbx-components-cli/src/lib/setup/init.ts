@@ -12,7 +12,7 @@
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { runModuleScaffold, runModulePhases, type SetupContext } from './module.js';
-import { alignDbxPeerDependencies, editJsonFile, removeVerdaccioFromPackageJson } from './json-edit.js';
+import { addOxfmtScriptsToPackageJson, alignDbxPeerDependencies, editJsonFile, removeVerdaccioFromPackageJson } from './json-edit.js';
 import { ciTestInstallFlags } from './versions.js';
 import { API_MODULE, APP_COMPONENTS_MODULE, APP_MODULE, FIREBASE_COMPONENTS_MODULE, INTEGRATIONS_MODULE, ROOT_MODULE, WORKSPACE_MODULE } from './modules/index.js';
 
@@ -21,14 +21,16 @@ import { API_MODULE, APP_COMPONENTS_MODULE, APP_MODULE, FIREBASE_COMPONENTS_MODU
  * removes the verdaccio local-registry config the publishable-library generators
  * (`@nx/angular:library` / `@nx/node:library --publishable`) re-add (the
  * `.verdaccio/` directory and the `verdaccio` dependency + `local-registry`
- * script), and pins the dependency versions to the `@dereekb` peer ranges so the
- * reconcile `npm install` resolves. Run late so the generators cannot undo it.
+ * script), pins the dependency versions to the `@dereekb` peer ranges so the
+ * reconcile `npm install` resolves, and declares the oxfmt `format` /
+ * `format-check` scripts (the pinned Nx's built-in `nx format` cannot run
+ * oxfmt). Run late so the generators cannot undo it.
  *
  * @param context - The resolved setup context.
  */
 function finalizeProjectConfig(context: SetupContext): void {
   const { workspaceRoot, dryRun } = context;
-  editJsonFile(join(workspaceRoot, 'package.json'), (pkg) => alignDbxPeerDependencies(removeVerdaccioFromPackageJson(pkg)), { dryRun });
+  editJsonFile(join(workspaceRoot, 'package.json'), (pkg) => addOxfmtScriptsToPackageJson(alignDbxPeerDependencies(removeVerdaccioFromPackageJson(pkg))), { dryRun });
   if (!dryRun) {
     rmSync(join(workspaceRoot, '.verdaccio'), { recursive: true, force: true });
   }
@@ -126,7 +128,7 @@ export async function runSetupInit(context: SetupContext, flags: SetupInitFlags)
   runModuleScaffold(ROOT_MODULE, context);
   await commit('checkpoint: added firebase configuration');
 
-  // 8-10. Root installs (husky/commitlint/prettier, vitest, @dereekb + npm deps).
+  // 8-10. Root installs (husky/commitlint/oxfmt, vitest, @dereekb + npm deps).
   if (!flags.templatesOnly && !flags.skipInstall) {
     record('root: install dependencies');
     await runModulePhases(ROOT_MODULE, context, { skipGenerate: true, skipInstall: false, skipScaffold: true, skipConfigure: true });

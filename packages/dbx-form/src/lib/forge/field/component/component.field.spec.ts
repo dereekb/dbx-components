@@ -9,7 +9,38 @@ import type { LogicConfig } from '@ng-forge/dynamic-forms';
 describe('DbxForgeComponentFieldConfig - Exhaustive Whitelist', () => {
   type ExpectedKeys =
     // From DbxForgeFieldFunctionDef<DbxForgeComponentFieldDef> (no hint — props lacks hint)
-    'key' | 'label' | 'placeholder' | 'value' | 'required' | 'readonly' | 'disabled' | 'hidden' | 'className' | 'meta' | 'logic' | 'props' | 'pattern' | 'minLength' | 'maxLength' | 'min' | 'max' | 'email' | 'validators' | 'validationMessages' | 'derivation' | 'schemas' | 'col' | 'tabIndex' | 'excludeValueIfHidden' | 'excludeValueIfDisabled' | 'excludeValueIfReadonly' | 'wrappers' | 'skipAutoWrappers' | 'skipDefaultWrappers' | 'nullable' | '__fieldDef';
+    | 'key'
+    | 'label'
+    | 'placeholder'
+    | 'value'
+    | 'required'
+    | 'readonly'
+    | 'disabled'
+    | 'hidden'
+    | 'className'
+    | 'meta'
+    | 'logic'
+    | 'props'
+    | 'pattern'
+    | 'minLength'
+    | 'maxLength'
+    | 'min'
+    | 'max'
+    | 'email'
+    | 'validators'
+    | 'validationMessages'
+    | 'derivation'
+    | 'schemas'
+    | 'col'
+    | 'tabIndex'
+    | 'excludeValueIfHidden'
+    | 'excludeValueIfDisabled'
+    | 'excludeValueIfReadonly'
+    | 'wrappers'
+    | 'skipAutoWrappers'
+    | 'skipDefaultWrappers'
+    | 'nullable'
+    | '__fieldDef';
 
   type ActualKeys = keyof DbxForgeComponentFieldConfig;
 

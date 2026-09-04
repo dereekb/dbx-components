@@ -1528,7 +1528,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
            * can inspect or continue the flow as needed.
            */
           // eslint-disable-next-line @typescript-eslint/max-params -- mirrors performAuthCodeFlow shape
-          async function performAuthCodeFlowToConsent(server: ReturnType<INestApplication['getHttpServer']>, clientId: string, consentBody: Record<string, unknown>, scope = 'openid email demo', extraAuthParams: Record<string, string | number> = {}, initialCookieHeader = ''): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
+          async function performAuthCodeFlowToConsent(
+            server: ReturnType<INestApplication['getHttpServer']>,
+            clientId: string,
+            consentBody: Record<string, unknown>,
+            scope = 'openid email demo',
+            extraAuthParams: Record<string, string | number> = {},
+            initialCookieHeader = ''
+          ): Promise<{ consentResponse: request.Response; cookieHeader: string; codeVerifier: string; idToken: string }> {
             const cookieJar = new Map<string, string>();
 
             // Pre-seed cookies so a follow-up flow can reuse the prior flow's session (carrying

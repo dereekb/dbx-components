@@ -11,7 +11,6 @@ import { type APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelSe
  */
 @Injectable()
 export class APP_CODE_PREFIXFirebaseContextService implements DbxFirebaseModelContextService {
-
   readonly APP_CODE_PREFIX_CAMELFirestoreCollections = inject(APP_CODE_PREFIXFirestoreCollections);
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
@@ -36,5 +35,4 @@ export class APP_CODE_PREFIXFirebaseContextService implements DbxFirebaseModelCo
   profile(key$: ObservableOrValue<ModelKey>) {
     return this.modelService('profile', key$) as DbxFirebaseInContextFirebaseModelServiceInstance<ProfileDocument, ProfileRoles>;
   }
-
 }

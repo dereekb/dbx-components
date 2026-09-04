@@ -1,4 +1,15 @@
-import { E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX, type E164PhoneNumber, type E164PhoneNumberWithExtension, type PhoneNumber, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, isE164PhoneNumberWithExtension, isValidPhoneExtensionNumber, removeExtensionFromPhoneNumber, tryConvertToE164PhoneNumber } from './phone';
+import {
+  E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX,
+  type E164PhoneNumber,
+  type E164PhoneNumberWithExtension,
+  type PhoneNumber,
+  e164PhoneNumberExtensionPair,
+  e164PhoneNumberFromE164PhoneNumberExtensionPair,
+  isE164PhoneNumberWithExtension,
+  isValidPhoneExtensionNumber,
+  removeExtensionFromPhoneNumber,
+  tryConvertToE164PhoneNumber
+} from './phone';
 
 const validPhoneNumber: PhoneNumber = '234-567-8910';
 const validE164PhoneNumber: E164PhoneNumber = '+12345678910';

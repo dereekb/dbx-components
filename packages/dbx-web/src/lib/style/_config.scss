@@ -5,12 +5,7 @@
 
 // convenience
 @function quick-define-dbx-config-via-banners($top-banner: 0px, $bottom-banner: 0px) {
-  @return (
-    'layout': (
-      'top-banner-height': $top-banner,
-      'bottom-banner-height': $bottom-banner
-    )
-  );
+  @return ('layout': ('top-banner-height': $top-banner, 'bottom-banner-height': $bottom-banner));
 }
 
 // theme

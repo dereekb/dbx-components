@@ -63,7 +63,17 @@ function textHasModelMarker(text: string): boolean {
   // model's fixed document id), or exported enums (a converter one file over may reference them)
   // are the ones we care about. Helper/utility files mentioning none of these are skipped to keep
   // the ts-morph parse off the hot path.
-  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('@dbxModelServiceFactory') || text.includes('singleItemFirestoreCollection') || text.includes('rootSingleItemFirestoreCollection') || text.includes('export enum ');
+  return (
+    text.includes('firestoreModelIdentity(') ||
+    text.includes('@dbxModelGroup') ||
+    text.includes('snapshotConverterFunctions') ||
+    text.includes('firestoreSubObject') ||
+    text.includes('firestoreObjectArray') ||
+    text.includes('@dbxModelServiceFactory') ||
+    text.includes('singleItemFirestoreCollection') ||
+    text.includes('rootSingleItemFirestoreCollection') ||
+    text.includes('export enum ')
+  );
 }
 
 /**

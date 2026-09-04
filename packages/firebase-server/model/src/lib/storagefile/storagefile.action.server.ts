@@ -1727,7 +1727,7 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
 
         const existingZipStorageFileDocument = zsf ? storageFileDocumentAccessor.loadDocumentForId(zsf) : undefined;
 
-        const [existingZipStorageFilePair] = await Promise.all([existingZipStorageFileDocument ? getDocumentSnapshotDataPair(existingZipStorageFileDocument) : undefined]);
+        const existingZipStorageFilePair = existingZipStorageFileDocument ? await getDocumentSnapshotDataPair(existingZipStorageFileDocument) : undefined;
 
         let contentStorageFilesFlaggedForProcessing = 0;
 

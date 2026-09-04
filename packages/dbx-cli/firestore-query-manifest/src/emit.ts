@@ -30,8 +30,8 @@ export interface RenderQueryManifestInput {
 }
 
 /**
- * Renders the query-manifest TS source, prettier-formatted against the workspace config so the
- * output matches a `prettier --write` of the committed file.
+ * Renders the query-manifest TS source, oxfmt-formatted against the workspace config so the
+ * output matches a `oxfmt --write` of the committed file.
  *
  * @param input - The output path, bound entries, project name, constant identifier, and generator version.
  * @returns The formatted module source.
@@ -90,7 +90,12 @@ function renderEntry({ entry, bound }: BoundQueryEntry): string {
 }
 
 function renderRules(rules: NonNullable<CollectedQueryEntry['rules']>): string {
-  const parts: (string | undefined)[] = [`list: ${JSON.stringify(rules.list)}`, `collectionGroup: ${rules.collectionGroup ? 'true' : 'false'}`, rules.reason ? `reason: ${JSON.stringify(rules.reason)}` : undefined, rules.parentPaths && rules.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(rules.parentPaths)}` : undefined];
+  const parts: (string | undefined)[] = [
+    `list: ${JSON.stringify(rules.list)}`,
+    `collectionGroup: ${rules.collectionGroup ? 'true' : 'false'}`,
+    rules.reason ? `reason: ${JSON.stringify(rules.reason)}` : undefined,
+    rules.parentPaths && rules.parentPaths.length > 0 ? `parentPaths: ${JSON.stringify(rules.parentPaths)}` : undefined
+  ];
 
   return `{ ${parts.filter(Boolean).join(', ')} }`;
 }

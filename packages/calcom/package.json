@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/calcom",
-  "version": "14.0.0",
+  "version": "14.0.1",
   "type": "module",
   "exports": {
     "./nestjs": {
@@ -10,9 +10,9 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/nestjs": "14.0.0",
-    "@dereekb/rxjs": "14.0.0",
-    "@dereekb/util": "14.0.0",
+    "@dereekb/nestjs": "14.0.1",
+    "@dereekb/rxjs": "14.0.1",
+    "@dereekb/util": "14.0.1",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.0",
     "express": "^5.2.1",

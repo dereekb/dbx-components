@@ -15,7 +15,8 @@ export type DbxFirebaseComponentStoreSetParentEffectFunction<PD> = (parent: Obse
 export type DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = (observableOrValue: ObservableOrValue<Maybe<PD>>) => Subscription;
 export type DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> = (observableOrValue: ObservableOrValue<DbxFirebaseDocumentStore<PT, PD>>) => Subscription;
 
-export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, A extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>> extends LockSetComponentStore<object>, Pick<ComponentStore<DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD>>, 'effect'> {
+export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, A extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>
+  extends LockSetComponentStore<object>, Pick<ComponentStore<DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD>>, 'effect'> {
   readonly currentParent$: Observable<Maybe<PD>>;
   readonly parent$: Observable<PD>;
   readonly currentCollectionFactory$: Observable<Maybe<FirestoreCollectionWithParentFactory<T, PT, D, PD>>>;
@@ -31,7 +32,9 @@ export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreD
  * @param store - The subcollection component store to connect to a parent store.
  * @returns An effect function that accepts an observable parent document store and manages the subscription lifecycle.
  */
-export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, A extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD, A>): DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> {
+export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, A extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(
+  store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD, A>
+): DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> {
   return store.effect((input: Observable<Maybe<DbxFirebaseDocumentStore<PT, PD>>>) => {
     return input.pipe(
       map((parentStore) => {

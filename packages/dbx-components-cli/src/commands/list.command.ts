@@ -20,7 +20,11 @@ interface ListApiArgs {
 const listApiCommand: CommandModule<object, ListApiArgs> = {
   command: 'api <componentDir>',
   describe: 'List the CRUD / standalone callModel entries declared in a -firebase component.',
-  builder: (yargs: Argv): Argv<ListApiArgs> => yargs.positional('componentDir', { type: 'string', demandOption: true, describe: 'Relative path to the `-firebase` component package (e.g. components/demo-firebase).' }).option('model', { type: 'string', describe: 'Restrict the output to a single model name.' }).option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<ListApiArgs>,
+  builder: (yargs: Argv): Argv<ListApiArgs> =>
+    yargs
+      .positional('componentDir', { type: 'string', demandOption: true, describe: 'Relative path to the `-firebase` component package (e.g. components/demo-firebase).' })
+      .option('model', { type: 'string', describe: 'Restrict the output to a single model name.' })
+      .option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<ListApiArgs>,
   handler: (args: ArgumentsCamelCase<ListApiArgs>): Promise<void> =>
     runCommand(async () => {
       const component = resolvePath(args.componentDir);
@@ -38,7 +42,11 @@ interface ListModelsArgs {
 const listModelsCommand: CommandModule<object, ListModelsArgs> = {
   command: 'models <componentDir>',
   describe: "List the Firestore models declared under a -firebase component's src/lib/model.",
-  builder: (yargs: Argv): Argv<ListModelsArgs> => yargs.positional('componentDir', { type: 'string', demandOption: true, describe: 'Relative path to the `-firebase` component package (e.g. components/demo-firebase).' }).option('api', { type: 'string', describe: 'Relative path to the API app, to cross-reference fixture coverage.' }).option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<ListModelsArgs>,
+  builder: (yargs: Argv): Argv<ListModelsArgs> =>
+    yargs
+      .positional('componentDir', { type: 'string', demandOption: true, describe: 'Relative path to the `-firebase` component package (e.g. components/demo-firebase).' })
+      .option('api', { type: 'string', describe: 'Relative path to the API app, to cross-reference fixture coverage.' })
+      .option('json', { type: 'boolean', default: false, describe: 'Emit JSON instead of markdown.' }) as Argv<ListModelsArgs>,
   handler: (args: ArgumentsCamelCase<ListModelsArgs>): Promise<void> =>
     runCommand(async () => {
       const component = resolvePath(args.componentDir);

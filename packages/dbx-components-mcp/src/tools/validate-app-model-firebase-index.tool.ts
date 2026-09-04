@@ -581,7 +581,14 @@ function formatReportAsMarkdown(report: ModelFirebaseIndexValidateAppReport): st
   } else {
     lines.push('## ✅ In sync', '');
   }
-  lines.push(`- generated composites: ${report.generatedComposites}`, `- existing composites: ${report.existingComposites}`, `- generated fieldOverrides: ${report.generatedFieldOverrides}`, `- existing fieldOverrides: ${report.existingFieldOverrides}`, `- ${report.errorCount} error(s), ${report.warningCount} warning(s)`, '');
+  lines.push(
+    `- generated composites: ${report.generatedComposites}`,
+    `- existing composites: ${report.existingComposites}`,
+    `- generated fieldOverrides: ${report.generatedFieldOverrides}`,
+    `- existing fieldOverrides: ${report.existingFieldOverrides}`,
+    `- ${report.errorCount} error(s), ${report.warningCount} warning(s)`,
+    ''
+  );
 
   if (report.violations.length > 0) {
     appendViolationSection(
