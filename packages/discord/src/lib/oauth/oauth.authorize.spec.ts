@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_DISCORD_OAUTH_SCOPES, DISCORD_OAUTH_SCOPE_DELIMITER, discordOAuthAuthorizeUrlFactory, isDiscordOAuthScope, type DiscordOAuthScope } from './oauth.authorize';
+import { ALL_DISCORD_OAUTH_SCOPES, DISCORD_OAUTH_AUTHORIZE_CODE_CHALLENGE_METHOD, DISCORD_OAUTH_SCOPE_DELIMITER, discordOAuthAuthorizeUrlFactory, isDiscordOAuthScope, type DiscordOAuthScope } from './oauth.authorize';
 import { DISCORD_OAUTH_AUTHORIZE_URL } from './oauth.config';
 
 const TEST_CLIENT_ID = 'test-client-id';
@@ -24,8 +24,8 @@ describe('DISCORD_OAUTH_AUTHORIZE_URL', () => {
 });
 
 describe('ALL_DISCORD_OAUTH_SCOPES', () => {
-  it('should model only the scopes an account connect can ask for', () => {
-    expect([...ALL_DISCORD_OAUTH_SCOPES]).toEqual(['identify', 'email', 'guilds', 'connections']);
+  it('should model only the scopes an account connect or sign-in can ask for', () => {
+    expect([...ALL_DISCORD_OAUTH_SCOPES]).toEqual(['openid', 'identify', 'email', 'guilds', 'connections']);
   });
 
   it('should recognize every modeled scope', () => {
@@ -91,5 +91,28 @@ describe('discordOAuthAuthorizeUrlFactory()', () => {
     const factory = discordOAuthAuthorizeUrlFactory({ clientId: TEST_CLIENT_ID, redirectUri: TEST_REDIRECT_URI, scopes: TEST_SCOPES, authorizeUrl });
 
     expect(new URL(factory()).origin).toBe('https://canary.discord.com');
+  });
+});
+
+describe('discordOAuthAuthorizeUrlFactory() PKCE', () => {
+  it('should emit the code challenge with the S256 method when one is given', () => {
+    const url = new URL(authorizeUrlFactory({ state: 'signed-state', codeChallenge: 'a-challenge' }));
+
+    expect(url.searchParams.get('code_challenge')).toBe('a-challenge');
+    expect(url.searchParams.get('code_challenge_method')).toBe(DISCORD_OAUTH_AUTHORIZE_CODE_CHALLENGE_METHOD);
+  });
+
+  it('should never offer the plain challenge method', () => {
+    // `plain` gives no protection against an attacker who can read the authorization request
+    expect(DISCORD_OAUTH_AUTHORIZE_CODE_CHALLENGE_METHOD).toBe('S256');
+  });
+
+  it('should omit both PKCE params when no challenge is given', () => {
+    // a state minted before PKCE was added carries no verifier; sending a challenge the exchange
+    // cannot answer would break that in-flight flow
+    const url = new URL(authorizeUrlFactory({ state: 'signed-state' }));
+
+    expect(url.searchParams.has('code_challenge')).toBe(false);
+    expect(url.searchParams.has('code_challenge_method')).toBe(false);
   });
 });

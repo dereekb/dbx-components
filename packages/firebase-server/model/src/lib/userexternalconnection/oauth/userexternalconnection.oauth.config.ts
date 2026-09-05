@@ -34,6 +34,8 @@ export function userExternalConnectionOAuthControllerPath(providerType: UserExte
  * @__NO_SIDE_EFFECTS__
  */
 export function userExternalConnectionOAuthRoutesForGlobalRouteExclude(providerType: UserExternalConnectionProviderType): string[] {
+  // the wildcard already covers `authorize`, `callback`, `signin`, and `token` — every route the
+  // abstract controller mounts, present and future
   return [`${userExternalConnectionOAuthControllerPath(providerType)}/{*path}`];
 }
 
@@ -82,6 +84,39 @@ export interface UserExternalConnectionOAuthApiConfig {
    * Where the user is sent after a connection fails. Defaults to the `successUrl`.
    */
   readonly failureUrl?: Maybe<WebsiteUrl>;
+  /**
+   * Where the user is sent after a successful SIGN-IN, with the ticket appended. Defaults to the
+   * `successUrl`.
+   *
+   * Usually different from `successUrl`: a connect returns to a settings page, a sign-in returns to
+   * wherever a freshly signed-in user belongs.
+   */
+  readonly signInSuccessUrl?: Maybe<WebsiteUrl>;
+  /**
+   * App paths a sign-in request may ask to return to.
+   *
+   * An UNVALIDATED return path is an open redirect, so a path absent from this list is dropped and
+   * the sign-in returns to {@link signInSuccessUrl} instead. Absent or empty means no request-supplied
+   * return path is honored at all, which is the safe default.
+   */
+  readonly allowedReturnPaths?: Maybe<readonly string[]>;
+}
+
+/**
+ * Returns whether a request-supplied return path may be honored.
+ *
+ * An exact match against the app's declared list — deliberately not a prefix or pattern match, since
+ * every "starts with /app" style check ever written has eventually been defeated by a path that also
+ * starts with it (`/app.evil.com`, `//evil.com/app`).
+ *
+ * @param config - The provider's OAuth config carrying the allowlist.
+ * @param returnPath - The path the request asked to return to.
+ * @returns True when the path is on the allowlist.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isAllowedUserExternalConnectionReturnPath(config: UserExternalConnectionOAuthApiConfig, returnPath: Maybe<string>): boolean {
+  return returnPath != null && (config.allowedReturnPaths ?? []).includes(returnPath);
 }
 
 /**
@@ -140,6 +175,14 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
    * Path on the app URL the user is returned to after a failed connect. Defaults to `successPath`.
    */
   readonly failurePath?: Maybe<string>;
+  /**
+   * Path on the app URL a successful SIGN-IN returns to. Defaults to `successPath`.
+   */
+  readonly signInSuccessPath?: Maybe<string>;
+  /**
+   * App paths a sign-in request may ask to return to instead of {@link signInSuccessPath}.
+   */
+  readonly allowedReturnPaths?: Maybe<readonly string[]>;
 }
 
 /**
@@ -155,7 +198,7 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
  * @throws {Error} When no app URL is configured, or the derived URIs are inconsistent.
  */
 export function userExternalConnectionOAuthServiceConfigFactory(config: UserExternalConnectionOAuthServiceConfigFactoryConfig): UserExternalConnectionOAuthServiceConfig {
-  const { envService, providerType, successPath, failurePath } = config;
+  const { envService, providerType, successPath, failurePath, signInSuccessPath, allowedReturnPaths } = config;
   const appUrl = envService.appUrl;
 
   if (!appUrl) {
@@ -170,7 +213,9 @@ export function userExternalConnectionOAuthServiceConfigFactory(config: UserExte
       providerType,
       redirectUri: userExternalConnectionOAuthRedirectUri({ origin: oauthOrigin, providerType }),
       successUrl: `${appOrigin}${successPath}`,
-      failureUrl: `${appOrigin}${failurePath ?? successPath}`
+      failureUrl: `${appOrigin}${failurePath ?? successPath}`,
+      signInSuccessUrl: `${appOrigin}${signInSuccessPath ?? successPath}`,
+      allowedReturnPaths
     }
   };
 

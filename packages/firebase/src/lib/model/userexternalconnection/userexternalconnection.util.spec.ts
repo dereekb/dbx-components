@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type UserExternalConnection, type UserExternalConnectionEntry } from './userexternalconnection';
-import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type UserExternalConnectionGrantSummary, userExternalConnectionConnectedProviderTypes, userExternalConnectionEntryForOutcome, userExternalConnectionEntryIsExpired } from './userexternalconnection.util';
+import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type UserExternalConnectionGrantSummary, userExternalConnectionConnectedProviderTypes, userExternalConnectionEntryForOutcome, userExternalConnectionEntryIsExpired, userExternalConnectionExternalAccountKeys } from './userexternalconnection.util';
+import { userExternalConnectionExternalAccountKey } from './userexternalconnection.id';
 
 const TEST_UID = 'testuid';
 
@@ -202,5 +203,61 @@ describe('userExternalConnectionEntryIsExpired()', () => {
 
   it('should return false when the expiration is in the future', () => {
     expect(userExternalConnectionEntryIsExpired({ st: 'connected', uat: now, exa: later }, now)).toBe(false);
+  });
+});
+
+describe('userExternalConnectionExternalAccountKeys()', () => {
+  const connectedEntry: UserExternalConnectionEntry = { st: 'connected', ea: 'account-a', uat: now };
+  const erroredEntry: UserExternalConnectionEntry = { st: 'error', ea: 'account-b', uat: now, er: 'expired' };
+  const disconnectedEntry: UserExternalConnectionEntry = { st: 'disconnected', ea: 'account-c', uat: now };
+  const unidentifiedEntry: UserExternalConnectionEntry = { st: 'connected', uat: now };
+
+  it('should key each entry by provider AND account id', () => {
+    // an external account id is only unique WITHIN a provider — two providers could issue the same string
+    expect(userExternalConnectionExternalAccountKeys({ calcom: connectedEntry })).toEqual(['calcom:account-a']);
+  });
+
+  it('should include an ERRORED entry', () => {
+    // identity survives an expired token: a returning user whose credentials broke must still resolve
+    // to their own uid rather than being treated as a stranger and given a second account
+    expect(userExternalConnectionExternalAccountKeys({ discord: erroredEntry })).toEqual(['discord:account-b']);
+  });
+
+  it('should include a DISCONNECTED entry that retained its account id', () => {
+    // unlike `c`, membership is not filtered by status — this array answers "who IS this account?"
+    expect(userExternalConnectionExternalAccountKeys({ zoom: disconnectedEntry })).toEqual(['zoom:account-c']);
+  });
+
+  it('should omit an entry with no external account id', () => {
+    expect(userExternalConnectionExternalAccountKeys({ calcom: unidentifiedEntry })).toEqual([]);
+  });
+
+  it('should be sorted for a stable stored value', () => {
+    expect(userExternalConnectionExternalAccountKeys({ zoom: disconnectedEntry, calcom: connectedEntry, discord: erroredEntry })).toEqual(['calcom:account-a', 'discord:account-b', 'zoom:account-c']);
+  });
+
+  it('should produce keys through the same builder the query reads with', () => {
+    // one producer for the format, so the derivation and the lookup cannot disagree on the delimiter
+    expect(userExternalConnectionExternalAccountKeys({ calcom: connectedEntry })).toEqual([userExternalConnectionExternalAccountKey({ providerType: 'calcom', externalAccountId: 'account-a' })]);
+  });
+
+  it('should be empty for no entries', () => {
+    expect(userExternalConnectionExternalAccountKeys(null)).toEqual([]);
+  });
+});
+
+describe('applyUserExternalConnectionEntry() external account keys', () => {
+  it('should recompute ec alongside c on every write', () => {
+    const result = applyUserExternalConnectionEntry({ current: undefined, uid: TEST_UID, providerType: 'calcom', entry: { st: 'connected', ea: 'account-a', uat: now }, now });
+
+    expect(result.c).toEqual(['calcom']);
+    expect(result.ec).toEqual(['calcom:account-a']);
+  });
+
+  it('should drop the key when the provider entry is removed', () => {
+    const current: UserExternalConnection = applyUserExternalConnectionEntry({ current: undefined, uid: TEST_UID, providerType: 'calcom', entry: { st: 'connected', ea: 'account-a', uat: now }, now });
+    const result = applyUserExternalConnectionEntry({ current, uid: TEST_UID, providerType: 'calcom', entry: null, now });
+
+    expect(result.ec).toEqual([]);
   });
 });

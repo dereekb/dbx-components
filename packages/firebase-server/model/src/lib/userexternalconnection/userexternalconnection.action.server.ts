@@ -4,23 +4,35 @@ import {
   emptyUserExternalConnection,
   type FirebaseAuthUserId,
   type FirestoreContextReference,
+  type Transaction,
   type UserExternalConnectionDocument,
   type UserExternalConnectionEntryStatus,
   type UserExternalConnectionErrorCode,
+  type UserExternalConnectionExternalAccountId,
   type UserExternalConnectionFirestoreCollections,
   type UserExternalConnectionGrantSummary,
   type UserExternalConnectionProviderType,
-  userExternalConnectionEntryForOutcome
+  iterateFirestoreDocumentSnapshotPairs,
+  userExternalConnectionEntryForOutcome,
+  userExternalConnectionExternalAccountKeys,
+  userExternalConnectionsWithExternalAccountQuery
 } from '@dereekb/firebase';
 import { applyUserExternalConnectionCredentials, type UserExternalConnectionCredentials, type UserExternalConnectionServerFirestoreCollections, userExternalConnectionGrantSummaryFromCredentials } from './userexternalconnection.private';
-import { userExternalConnectionAlreadyExistsError } from './userexternalconnection.error';
+import { userExternalConnectionAlreadyExistsError, userExternalConnectionExternalAccountInUseError } from './userexternalconnection.error';
+import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from './userexternalconnection.policy';
 
 /**
  * Context required by {@link userExternalConnectionServerActions}.
  *
  * Carries BOTH halves of the pair. Nothing else in the workspace should hold the private collection.
  */
-export interface UserExternalConnectionServerActionsContext extends FirestoreContextReference, UserExternalConnectionFirestoreCollections, UserExternalConnectionServerFirestoreCollections {}
+export interface UserExternalConnectionServerActionsContext extends FirestoreContextReference, UserExternalConnectionFirestoreCollections, UserExternalConnectionServerFirestoreCollections {
+  /**
+   * The app's per-provider policies. Optional: a missing registry reads as "all defaults", which is
+   * exactly the behavior this module had before policies existed.
+   */
+  readonly userExternalConnectionProviderPolicyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>;
+}
 
 /**
  * Reference to a {@link UserExternalConnectionServerActions} instance.
@@ -251,11 +263,13 @@ function credentialsForUserExternalConnectionOutcome(input: { readonly outcome: 
  * @returns A function that applies one provider's outcome to both documents atomically.
  */
 export function writeUserExternalConnectionPairInTransactionFactory(context: UserExternalConnectionServerActionsContext) {
-  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection, firestoreContext } = context;
+  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection, firestoreContext, userExternalConnectionProviderPolicyRegistry } = context;
+  const resolveCollision = resolveUserExternalAccountCollisionInTransactionFactory(context);
 
   return async (params: WriteUserExternalConnectionPairParams): Promise<UserExternalConnectionDocument> => {
     const { uid, providerType, outcome, credentials, error, retainEntry } = params;
     const now = params.now ?? new Date();
+    const policy = userExternalConnectionPolicyForProviderType(userExternalConnectionProviderPolicyRegistry, providerType);
 
     return firestoreContext.runTransaction(async (transaction) => {
       const publicDocument = userExternalConnectionCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
@@ -271,11 +285,105 @@ export function writeUserExternalConnectionPairInTransactionFactory(context: Use
       const grant: Maybe<UserExternalConnectionGrantSummary> = nextCredentials ? userExternalConnectionGrantSummaryFromCredentials(nextCredentials) : null;
       const entry = userExternalConnectionEntryForOutcome({ outcome, grant, error, retainEntry, now, previous: currentPublic?.e?.[providerType] });
 
+      // still a READ, so it belongs above the writes
+      const displaced = policy.unique && outcome === 'connected' && entry?.ea ? await resolveCollision({ transaction, uid, providerType, externalAccountId: entry.ea, policy: policy.onCollision }) : undefined;
+
       await publicDocument.accessor.set(applyUserExternalConnectionEntry({ current: currentPublic, uid, providerType, entry, now }));
       await privateDocument.accessor.set(applyUserExternalConnectionCredentials({ current: currentPrivate, uid, providerType, credentials: nextCredentials, now }));
 
+      if (displaced) {
+        await displaced.disconnect(now);
+      }
+
       return publicDocument;
     });
+  };
+}
+
+/**
+ * Input for the collision check performed inside the paired write's read phase.
+ */
+export interface ResolveUserExternalAccountCollisionInput {
+  readonly transaction: Transaction;
+  /**
+   * The user doing the connecting. A document already held by THIS user is not a collision.
+   */
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  readonly externalAccountId: UserExternalConnectionExternalAccountId;
+  readonly policy: 'block' | 'transfer' | 'allow';
+}
+
+/**
+ * A prior holder of an external account, and the write that removes their claim to it.
+ *
+ * Returned rather than performed so the caller keeps every read ahead of every write, which a
+ * Firestore transaction requires.
+ */
+export interface DisplacedUserExternalConnectionHolder {
+  readonly uid: FirebaseAuthUserId;
+  readonly disconnect: (now: Date) => Promise<void>;
+}
+
+/**
+ * Creates the uniqueness check the paired write runs when a provider's policy declares its
+ * connections unique.
+ *
+ * ## Known limitation, stated deliberately
+ *
+ * A Firestore transaction adds the documents a query RETURNED to its read set, but it does not lock
+ * the ABSENCE of a match. Two simultaneous first-time connects to the same external account can
+ * therefore both see no holder and both commit. The window is one transaction wide and every other
+ * case (a second connect while a holder exists) is deterministic. Closing it entirely needs a
+ * doc-id-keyed claim record — `<providerType>_<externalAccountId>` → uid, created in the same
+ * transaction, where the id collision is what serializes the writers. That is additive whenever it
+ * is needed.
+ *
+ * @param context - The context carrying the public collection.
+ * @returns A function resolving the collision inside a transaction.
+ */
+export function resolveUserExternalAccountCollisionInTransactionFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionCollection, userExternalConnectionPrivateCollection } = context;
+
+  return async (input: ResolveUserExternalAccountCollisionInput): Promise<Maybe<DisplacedUserExternalConnectionHolder>> => {
+    const { transaction, uid, providerType, externalAccountId, policy } = input;
+    let result: Maybe<DisplacedUserExternalConnectionHolder>;
+
+    if (policy !== 'allow') {
+      const holders = await userExternalConnectionCollection.queryDocument(userExternalConnectionsWithExternalAccountQuery({ providerType, externalAccountId })).getDocs(transaction);
+      const otherHolder = holders.find((x) => x.id !== uid);
+
+      if (otherHolder != null) {
+        if (policy === 'block') {
+          throw userExternalConnectionExternalAccountInUseError(providerType, externalAccountId, otherHolder.id);
+        }
+
+        // 'transfer': the prior holder's entry AND their credentials are dropped in this same
+        // transaction, so the account is never claimed by two users at once — and the pair never
+        // diverges into a private document holding live credentials for a public `disconnected` entry
+        const otherHolderPrivateDocument = userExternalConnectionPrivateCollection.documentAccessorForTransaction(transaction).loadDocumentForId(otherHolder.id);
+        const [currentHolderData, currentHolderPrivateData] = await Promise.all([otherHolder.snapshotData(), otherHolderPrivateDocument.snapshotData()]);
+
+        result = {
+          uid: otherHolder.id,
+          disconnect: async (now: Date) => {
+            await otherHolder.accessor.set(
+              applyUserExternalConnectionEntry({
+                current: currentHolderData,
+                uid: otherHolder.id,
+                providerType,
+                entry: userExternalConnectionEntryForOutcome({ outcome: 'disconnected', now, previous: currentHolderData?.e?.[providerType] }),
+                now
+              })
+            );
+
+            await otherHolderPrivateDocument.accessor.set(applyUserExternalConnectionCredentials({ current: currentHolderPrivateData, uid: otherHolder.id, providerType, credentials: null, now }));
+          }
+        };
+      }
+    }
+
+    return result;
   };
 }
 
@@ -298,5 +406,79 @@ export function deleteAllUserExternalConnectionsForUserFactory(context: UserExte
       await publicDocument.accessor.delete();
       await privateDocument.accessor.delete();
     });
+  };
+}
+
+// MARK: Backfill
+/**
+ * Parameters for {@link backfillUserExternalConnectionExternalAccountKeysFactory}.
+ */
+export interface BackfillUserExternalConnectionExternalAccountKeysParams {
+  /**
+   * How many documents to load per checkpoint. Defaults to 100.
+   */
+  readonly limitPerCheckpoint?: Maybe<number>;
+  /**
+   * When true, report what would change without writing anything. Defaults to false.
+   */
+  readonly dryRun?: Maybe<boolean>;
+}
+
+/**
+ * The outcome of an `ec` backfill.
+ */
+export interface BackfillUserExternalConnectionExternalAccountKeysResult {
+  readonly visited: number;
+  readonly updated: number;
+}
+
+/**
+ * Creates the one-off job that recomputes every document's derived `ec` array.
+ *
+ * Documents written BEFORE `ec` existed have none, and `ec` is what the uniqueness policy and the
+ * sign-in lookup both query. Until this has run over a collection, a provider marked `unique` sees a
+ * pre-existing connection as no connection at all — it would let a second user claim an account the
+ * first already holds, and a returning user would be treated as a stranger.
+ *
+ * Idempotent, and safe to re-run: `ec` is derived purely from `e`, so a document already carrying the
+ * correct value is skipped rather than rewritten. Expose it through the app's developer-functions map
+ * (`firebaseServerDevFunctions`) rather than any user-reachable route.
+ *
+ * @param context - The context carrying the public collection.
+ * @returns A function performing the backfill.
+ */
+export function backfillUserExternalConnectionExternalAccountKeysFactory(context: UserExternalConnectionServerActionsContext) {
+  const { userExternalConnectionCollection } = context;
+
+  return async (params?: Maybe<BackfillUserExternalConnectionExternalAccountKeysParams>): Promise<BackfillUserExternalConnectionExternalAccountKeysResult> => {
+    const dryRun = params?.dryRun ?? false;
+    let visited = 0;
+    let updated = 0;
+
+    await iterateFirestoreDocumentSnapshotPairs({
+      queryFactory: userExternalConnectionCollection,
+      constraintsFactory: [],
+      limitPerCheckpoint: params?.limitPerCheckpoint ?? 100,
+      documentAccessor: userExternalConnectionCollection.documentAccessor(),
+      iterateSnapshotPair: async (pair) => {
+        const { document, data } = pair;
+        const next = userExternalConnectionExternalAccountKeys(data.e);
+        visited += 1;
+
+        // a plain equality check on the joined values: both sides are sorted by the same derivation,
+        // so an unchanged document is genuinely unchanged rather than merely reordered
+        const changed = (data.ec ?? []).join(',') !== next.join(',');
+
+        if (changed) {
+          updated += 1;
+
+          if (!dryRun) {
+            await document.accessor.update({ ec: next });
+          }
+        }
+      }
+    });
+
+    return { visited, updated };
   };
 }

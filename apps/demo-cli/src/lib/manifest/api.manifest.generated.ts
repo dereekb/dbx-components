@@ -62,7 +62,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.0.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.0.1' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1635,6 +1635,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'uid', longName: 'uid', optional: false },
       { name: 'e', longName: 'entries', tsType: 'UserExternalConnectionEntryMap', optional: false, description: 'Per-provider connection state, keyed by provider type.' },
       { name: 'c', longName: 'connectedProviderTypes', tsType: 'UserExternalConnectionProviderType[]', optional: false, description: 'DERIVED from `e`: every provider type whose entry status is `connected`.' },
+      { name: 'ec', longName: 'externalAccountKeys', tsType: 'Maybe<UserExternalConnectionExternalAccountKey[]>', optional: true, description: 'DERIVED from `e`: the `<providerType>:<externalAccountId>` key of every entry that names an external account.' },
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Date this document was last updated at.' }
     ],
     read: 'owner',

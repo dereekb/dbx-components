@@ -2,13 +2,15 @@ import { type InjectionToken, type ModuleMetadata, type Provider } from '@nestjs
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type FirestoreContext, type FirestoreContextReference, type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
-import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerEnvService, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
+import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, type FirebaseServerAuthService, FirebaseServerEnvService, FirebaseServerFirestoreContextModule } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
 import { type UserExternalConnectionPrivateConverterConfig, UserExternalConnectionServerFirestoreCollections, userExternalConnectionPrivateFirestoreCollection } from './userexternalconnection.private';
 import { UserExternalConnectionServerActions, type UserExternalConnectionServerActionsContext, userExternalConnectionServerActions } from './userexternalconnection.action.server';
 import { UserExternalConnectionAccessor, userExternalConnectionAccessor } from './userexternalconnection.accessor.service';
 import { UserExternalConnectionReader, userExternalConnectionReader } from './userexternalconnection.reader.service';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, userExternalConnectionOAuthRegistryCredentialsRefresher, userExternalConnectionStateCoderFactory } from './oauth';
+import { type UserExternalConnectionProviderPolicy, UserExternalConnectionProviderPolicyRegistry, userExternalConnectionProviderPolicyRegistry } from './userexternalconnection.policy';
+import { type UserExternalConnectionSignInDelegate, UserExternalConnectionSignInService, userExternalConnectionSignInService } from './userexternalconnection.signin';
 
 // MARK: Environment Variable Keys
 /**
@@ -116,6 +118,48 @@ export interface ProvideAppUserExternalConnectionModuleMetadataConfig extends Pi
    * Taking this as a token is what keeps the package from ever naming an app's collections class.
    */
   readonly appCollectionsToken: InjectionToken;
+  /**
+   * Per-provider rules the connect and sign-in paths enforce.
+   *
+   * Omitted means every provider takes {@link DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY} —
+   * shared accounts permitted, connect-only — which is exactly how this module behaved before
+   * policies existed.
+   */
+  readonly providerPolicies?: Maybe<readonly UserExternalConnectionProviderPolicy[]>;
+  /**
+   * Configuration for the sign-in half of the module.
+   *
+   * Omitted means no {@link UserExternalConnectionSignInService} is provided at all, and every
+   * provider's sign-in routes refuse. That is the correct shape for an app that only CONNECTS
+   * providers: enabling sign-in creates an unauthenticated account-creation surface, and it should
+   * take a deliberate declaration to acquire one.
+   */
+  readonly signIn?: Maybe<ProvideAppUserExternalConnectionSignInConfig>;
+}
+
+/**
+ * Configuration for the sign-in half of the UserExternalConnection module.
+ */
+export interface ProvideAppUserExternalConnectionSignInConfig {
+  /**
+   * Token resolving the app's `FirebaseServerAuthService`.
+   *
+   * Taken as a token because the auth service is the app's own subclass — this package must never
+   * name it.
+   */
+  readonly authServiceToken: InjectionToken;
+  /**
+   * Token resolving the app's {@link UserExternalConnectionSignInDelegate}.
+   *
+   * Omitted means {@link denyNewUserSignInDelegate}: a returning user signs in, a stranger is
+   * refused. Provisioning strangers is an explicit opt-in.
+   */
+  readonly delegateToken?: Maybe<InjectionToken>;
+  /**
+   * Whether a created user may ADOPT an existing Firebase account whose email matches the provider's
+   * VERIFIED email. Defaults to false — see the field docs on the service config.
+   */
+  readonly allowVerifiedEmailLinking?: Maybe<boolean>;
 }
 
 /**
@@ -137,13 +181,38 @@ export interface ProvideAppUserExternalConnectionModuleMetadataConfig extends Pi
  * @returns The assembled {@link ModuleMetadata}.
  */
 export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserExternalConnectionModuleMetadataConfig): ModuleMetadata {
-  const { dependencyModule, appCollectionsToken, imports, exports, providers } = config;
+  const { dependencyModule, appCollectionsToken, imports, exports, providers, providerPolicies, signIn } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
+
+  const signInProviders: Provider[] = signIn
+    ? [
+        {
+          provide: UserExternalConnectionSignInService,
+          useFactory: (appCollections: UserExternalConnectionFirestoreCollections & FirestoreContextReference, authService: FirebaseServerAuthService, delegate?: Maybe<UserExternalConnectionSignInDelegate>) =>
+            userExternalConnectionSignInService({
+              authService,
+              userExternalConnectionCollection: appCollections.userExternalConnectionCollection,
+              delegate,
+              allowVerifiedEmailLinking: signIn.allowVerifiedEmailLinking
+            }),
+          inject: signIn.delegateToken ? [appCollectionsToken, signIn.authServiceToken, signIn.delegateToken] : [appCollectionsToken, signIn.authServiceToken]
+        }
+      ]
+    : [];
+
+  const signInExports = signIn ? [UserExternalConnectionSignInService] : [];
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [UserExternalConnectionServerActions, UserExternalConnectionAccessor, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, UserExternalConnectionStateCoder, ...(exports ?? [])],
+    exports: [UserExternalConnectionServerActions, UserExternalConnectionAccessor, UserExternalConnectionServerFirestoreCollections, UserExternalConnectionModuleConfig, UserExternalConnectionStateCoder, UserExternalConnectionProviderPolicyRegistry, ...signInExports, ...(exports ?? [])],
     providers: [
+      {
+        // provider-agnostic like the state coder: whether two users may share a Discord account is a
+        // property of the app, not of any one provider adapter
+        provide: UserExternalConnectionProviderPolicyRegistry,
+        useValue: userExternalConnectionProviderPolicyRegistry(providerPolicies)
+      },
+      ...signInProviders,
       {
         provide: UserExternalConnectionModuleConfig,
         useFactory: userExternalConnectionModuleConfigFactory,
@@ -168,8 +237,8 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
       },
       {
         provide: UserExternalConnectionServerActions,
-        useFactory: userExternalConnectionServerActions,
-        inject: [USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN]
+        useFactory: (context: UserExternalConnectionServerActionsContext, policyRegistry: UserExternalConnectionProviderPolicyRegistry) => userExternalConnectionServerActions({ ...context, userExternalConnectionProviderPolicyRegistry: policyRegistry }),
+        inject: [USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN, UserExternalConnectionProviderPolicyRegistry]
       },
       {
         // the same context the actions are built from already carries both collections, which is all a

@@ -1,7 +1,9 @@
-import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
-import { type ClassLikeType } from '@dereekb/util';
+import { inject, provideAppInitializer, type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
+import { type ClassLikeType, type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
+import { DbxFirebaseAuthLoginService } from '../../auth/login/login.service';
 import { DbxFirebaseExternalConnectionsConfig } from './service/externalconnection';
+import { dbxFirebaseExternalConnectionLoginProviders } from './service/externalconnection.login';
 import { DbxFirebaseExternalConnectionService } from './service/externalconnection.service';
 import { DbxFirebaseUserExternalConnectionCollections } from './store/userexternalconnection.document.store';
 
@@ -16,6 +18,15 @@ export interface ProvideDbxFirebaseExternalConnectionsConfig extends DbxFirebase
    * takes it: the library never names an app's collections class.
    */
   readonly appCollectionClass: ClassLikeType<UserExternalConnectionFirestoreCollections>;
+  /**
+   * Whether to complete an in-flight sign-in on app start, when the landing url carries a ticket.
+   * Defaults to true.
+   *
+   * The other half of `signInWithProvider()`: without it the browser returns from the provider with a
+   * ticket nothing ever redeems. Turn it off only for an app that calls
+   * `handleSignInRedirectResult()` itself, e.g. from a dedicated callback route.
+   */
+  readonly handleSignInRedirectResult?: Maybe<boolean>;
 }
 
 /**
@@ -63,7 +74,25 @@ export function provideDbxFirebaseExternalConnections(config: ProvideDbxFirebase
     {
       provide: DbxFirebaseExternalConnectionService,
       useClass: DbxFirebaseExternalConnectionService
-    }
+    },
+    provideAppInitializer(() => {
+      // registered here rather than through `provideDbxFirebaseLogin`'s `additionalProviders` so the
+      // two declarations cannot drift: an app names Discord once, and both the settings row and the
+      // login button follow from it. `override: false` leaves an app's explicit login registration
+      // for the same method type in charge.
+      const loginService = inject(DbxFirebaseAuthLoginService, { optional: true });
+
+      if (loginService) {
+        dbxFirebaseExternalConnectionLoginProviders(config.providers).forEach((x) => loginService.register(x, false));
+      }
+
+      if (config.handleSignInRedirectResult ?? true) {
+        // deliberately not awaited: a failed redemption must not block the app from booting, and the
+        // user is already looking at a page that renders fine signed out
+        const externalConnectionService = inject(DbxFirebaseExternalConnectionService);
+        externalConnectionService.handleSignInRedirectResult().catch((e: unknown) => console.error('DbxFirebaseExternalConnectionService: failed completing a sign-in redirect: ', e));
+      }
+    })
   ];
 
   return makeEnvironmentProviders(providers);

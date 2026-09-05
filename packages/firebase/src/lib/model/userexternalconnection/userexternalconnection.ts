@@ -20,7 +20,7 @@ import {
   snapshotConverterFunctions
 } from '../../common';
 import { type UserRelated, type UserRelatedById } from '../user';
-import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionExternalAccountKey, type UserExternalConnectionProviderType } from './userexternalconnection.id';
 
 // MARK: Collections
 /**
@@ -166,6 +166,22 @@ export interface UserExternalConnection extends UserRelated, UserRelatedById {
    */
   c: UserExternalConnectionProviderType[];
   /**
+   * DERIVED from `e`: the `<providerType>:<externalAccountId>` key of every entry that names an
+   * external account.
+   *
+   * The `c` array's sibling, and it exists for the same reason: Firestore cannot query across map
+   * keys, so `e.<provider>.ea` is unreachable. `c` answers "who is connected to X?"; this answers
+   * "who IS X?" — the lookup a sign-in performs to resolve a third-party identity to a Firebase uid.
+   *
+   * Unlike `c`, membership is NOT filtered by status. Which Discord account a user is is a fact
+   * about their identity, not about whether their credentials currently work: a returning user whose
+   * token expired (`error`) must still resolve to the same uid, or a sign-in would mint them a
+   * second account. Recomputed from `e` on every write and never passed in by a caller.
+   *
+   * @dbxModelVariable externalAccountKeys
+   */
+  ec?: Maybe<UserExternalConnectionExternalAccountKey[]>;
+  /**
    * Date this document was last updated at.
    *
    * @dbxModelVariable updatedAt
@@ -211,6 +227,7 @@ export const userExternalConnectionConverter = snapshotConverterFunctions<UserEx
       objectField: { fields: userExternalConnectionEntryFields }
     }),
     c: firestoreEnumArray<UserExternalConnectionProviderType>(),
+    ec: optionalFirestoreArray<UserExternalConnectionExternalAccountKey>(),
     uat: firestoreDate({ saveDefaultAsNow: true })
   }
 });

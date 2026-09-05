@@ -4,5 +4,7 @@ export * from './userexternalconnection.accessor.service';
 export * from './userexternalconnection.action.server';
 export * from './userexternalconnection.error';
 export * from './userexternalconnection.module';
+export * from './userexternalconnection.policy';
+export * from './userexternalconnection.signin';
 export * from './userexternalconnection.reader.service';
 export * from './userexternalconnection.refresh.service';

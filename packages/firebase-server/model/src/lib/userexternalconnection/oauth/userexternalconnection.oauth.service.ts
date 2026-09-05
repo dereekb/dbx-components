@@ -1,13 +1,17 @@
 import { Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { cachedGetter, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { cachedGetter, generatePkceMaterial, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
-import { type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
+import { type UserExternalConnectionSignInIdentity, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
+import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
+import { userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
+import { type UserExternalConnectionSignInStateActor, type UserExternalConnectionStateActor, type UserExternalConnectionStateCoder, isUserExternalConnectionSignInStateActor } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthProviderError, userExternalConnectionErrorCodeForOAuthProviderError } from './userexternalconnection.oauth.error';
-import { type UserExternalConnectionOAuthServiceConfig } from './userexternalconnection.oauth.config';
+import { type UserExternalConnectionOAuthServiceConfig, isAllowedUserExternalConnectionReturnPath } from './userexternalconnection.oauth.config';
+import { memoryUserExternalConnectionSignInThrottle, type UserExternalConnectionSignInThrottle } from './userexternalconnection.oauth.throttle';
 
 /**
  * The `state` value carried through the authorization-code handoff.
@@ -17,11 +21,12 @@ import { type UserExternalConnectionOAuthServiceConfig } from './userexternalcon
 export type UserExternalConnectionOAuthState = string;
 
 /**
- * Identifies who a handoff belongs to, as resolved from a verified `state`.
+ * Identifies who (or what) a handoff belongs to, as resolved from a verified `state`.
+ *
+ * An alias of the state coder's own union rather than a second shape: the two would otherwise drift
+ * the moment a mode carried a new field.
  */
-export interface UserExternalConnectionOAuthActor {
-  readonly uid: FirebaseAuthUserId;
-}
+export type UserExternalConnectionOAuthActor = UserExternalConnectionStateActor;
 
 /**
  * The raw callback query, as the provider sent it.
@@ -54,6 +59,14 @@ export interface UserExternalConnectionOAuthExchangeInput {
    * a request target without checking it against an allowlist first.
    */
   readonly query?: Maybe<UserExternalConnectionOAuthCallbackQueryValues>;
+  /**
+   * The PKCE code verifier whose challenge the authorize request carried, when it carried one.
+   *
+   * Present only for a sign-in, whose state is minted by this server and can therefore hold the
+   * verifier. A connect state is minted by the authenticated `read:authorizeState` call, which sends
+   * no challenge, so its exchange sends no verifier either.
+   */
+  readonly codeVerifier?: Maybe<string>;
 }
 
 export interface UserExternalConnectionOAuthHandleCallbackInput {
@@ -105,12 +118,141 @@ export interface UserExternalConnectionOAuthRefreshCredentialsInput {
   readonly credentials: UserExternalConnectionCredentials;
 }
 
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.revokeCredentials}.
+ */
+export interface UserExternalConnectionOAuthRevokeCredentialsInput {
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The credentials being discarded.
+   */
+  readonly credentials: UserExternalConnectionCredentials;
+}
+
 export interface UserExternalConnectionOAuthCallbackResult {
   readonly success: boolean;
   /**
    * The URL the user should be redirected to.
    */
   readonly redirectUrl: WebsiteUrl;
+}
+
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.authorizeUrlForState}.
+ */
+export interface UserExternalConnectionOAuthAuthorizeUrlInput {
+  readonly state: UserExternalConnectionOAuthState;
+  /**
+   * The PKCE code challenge to send to the provider, when the flow has one.
+   *
+   * Set for a sign-in, absent for a connect — see {@link UserExternalConnectionOAuthExchangeInput.codeVerifier}.
+   */
+  readonly codeChallenge?: Maybe<string>;
+}
+
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.signInIdentityForCredentials}.
+ */
+export interface UserExternalConnectionOAuthSignInIdentityInput {
+  readonly credentials: UserExternalConnectionCredentials;
+}
+
+/**
+ * The values a `/signin` request carries.
+ */
+export interface UserExternalConnectionOAuthSignInRequestValues {
+  /**
+   * The browser's PKCE challenge, which the eventual ticket is bound to.
+   */
+  readonly challenge?: Maybe<string>;
+  /**
+   * Where in the app to return to. Validated against the config's allowlist before it is minted into
+   * the state — an unvalidated one is an open redirect.
+   */
+  readonly returnPath?: Maybe<string>;
+  /**
+   * The caller's IP, for the throttle.
+   */
+  readonly clientIp?: Maybe<string>;
+}
+
+/**
+ * Input for {@link AbstractUserExternalConnectionOAuthService.exchangeSignInTicket}.
+ */
+export interface UserExternalConnectionOAuthTicketExchangeInput {
+  readonly ticket?: Maybe<string>;
+  readonly verifier?: Maybe<string>;
+  readonly clientIp?: Maybe<string>;
+}
+
+/**
+ * The custom token a redeemed ticket yields.
+ */
+export interface UserExternalConnectionOAuthTicketExchangeResult {
+  readonly customToken: string;
+}
+
+/**
+ * Reads the `/signin` request's values.
+ *
+ * @param request - The incoming sign-in request.
+ * @returns The challenge, return path, and client IP the request carried.
+ */
+/**
+ * The query parameter the sign-in ticket is returned on.
+ */
+export const USER_EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM = 'ticket';
+
+export interface UserExternalConnectionSignInRedirectUrlInput {
+  /**
+   * The configured sign-in success URL.
+   */
+  readonly baseUrl: WebsiteUrl;
+  /**
+   * The allowlisted return path, when the request named one.
+   */
+  readonly returnPath?: Maybe<string>;
+  readonly ticket: string;
+}
+
+/**
+ * Builds the URL a completed sign-in redirects to.
+ *
+ * `returnPath` REPLACES the base URL's path rather than being appended to it, and has already been
+ * checked against the app's allowlist by the time it gets here — so the origin is always the
+ * configured one and this cannot become an open redirect.
+ *
+ * @param input - The base URL, the validated return path, and the ticket.
+ * @returns The redirect URL carrying the ticket.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionSignInRedirectUrl(input: UserExternalConnectionSignInRedirectUrlInput): WebsiteUrl {
+  const url = new URL(input.baseUrl);
+
+  if (input.returnPath) {
+    url.pathname = input.returnPath;
+  }
+
+  url.searchParams.set(USER_EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM, input.ticket);
+  return url.toString();
+}
+
+/**
+ * Reads the values a `/signin` request carries.
+ *
+ * @param request - The incoming sign-in request.
+ * @returns The challenge, return path, and client IP the request carried.
+ */
+export function userExternalConnectionOAuthSignInValuesForRequest(request: Request): UserExternalConnectionOAuthSignInRequestValues {
+  const challenge = request.query['challenge'];
+  const returnPath = request.query['returnPath'];
+
+  return {
+    challenge: typeof challenge === 'string' && challenge.length > 0 ? challenge : undefined,
+    returnPath: typeof returnPath === 'string' && returnPath.length > 0 ? returnPath : undefined,
+    clientIp: request.ip
+  };
 }
 
 /**
@@ -150,10 +292,32 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * it here would be a cycle. This service needs only the raw read.
    */
   abstract readonly userExternalConnectionAccessor: UserExternalConnectionAccessor;
+  /**
+   * OPTIONAL: resolves a third-party identity to a Firebase uid and mints its custom token.
+   *
+   * Absent for an app that only ever CONNECTS providers — the sign-in routes then refuse every
+   * request, which is the correct behavior for an app that never asked for them. A provider adapter
+   * makes this available by taking it as an `@Optional()` injected constructor property.
+   */
+  readonly userExternalConnectionSignInService?: Maybe<UserExternalConnectionSignInService>;
+  /**
+   * OPTIONAL: the app's per-provider policies. A missing registry means every provider takes the
+   * default policy, whose `signIn` is false.
+   */
+  readonly userExternalConnectionProviderPolicyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>;
+  /**
+   * OPTIONAL: the rate limiter applied to the unauthenticated sign-in routes.
+   *
+   * When an app provides none, {@link memoryUserExternalConnectionSignInThrottle} is installed
+   * instead — an unthrottled account-creation endpoint is not an acceptable default, even though a
+   * per-process limiter is a weaker guarantee than a shared one.
+   */
+  readonly userExternalConnectionSignInThrottle?: Maybe<UserExternalConnectionSignInThrottle>;
 
   // lazy, because `providerType` reads a subclass constructor property that is not assigned yet
   // while this class's own fields initialize
   private readonly _logger = cachedGetter(() => new Logger(`UserExternalConnectionOAuthService(${this.providerType})`));
+  private readonly _fallbackSignInThrottle = cachedGetter(() => memoryUserExternalConnectionSignInThrottle());
 
   protected get logger(): Logger {
     return this._logger();
@@ -179,10 +343,35 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   /**
    * PROVIDER: builds the provider's consent-screen URL carrying the minted state.
    *
-   * @param state - The signed state to echo back on the callback.
+   * @param input - The signed state to echo back on the callback, plus the PKCE challenge when the
+   *   flow has one.
    * @returns The authorize URL to redirect the user's browser to.
    */
-  protected abstract authorizeUrlForState(state: UserExternalConnectionOAuthState): WebsiteUrl;
+  protected abstract authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl;
+
+  /**
+   * PROVIDER (optional): reads the identity a SIGN-IN is attributed to.
+   *
+   * Optional because a connect needs no identity to succeed — an unlabeled connection is fully
+   * usable, which is why `credentialsForAuthorizationCode` treats the identity read as best-effort.
+   * A sign-in is the opposite: with no stable external id there is nothing to key the account on, so
+   * the default below fails hard rather than falling back to a mutable username or an email.
+   *
+   * Override it on a provider whose identity carries more than the exchange already captured — an
+   * email and its verified flag, which the account-linking rules depend on.
+   *
+   * @param input - The credentials the exchange produced.
+   * @returns The identity to sign in as.
+   */
+  protected async signInIdentityForCredentials(input: UserExternalConnectionOAuthSignInIdentityInput): Promise<UserExternalConnectionSignInIdentity> {
+    const externalAccountId = input.credentials.externalAccountId;
+
+    if (!externalAccountId) {
+      throw userExternalConnectionSignInIdentityUnavailableError(this.providerType);
+    }
+
+    return { externalAccountId, label: input.credentials.label };
+  }
 
   /**
    * PROVIDER: exchanges the authorization code and maps the token response to credentials.
@@ -215,6 +404,22 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * @returns The refreshed credentials.
    */
   refreshCredentials?(input: UserExternalConnectionOAuthRefreshCredentialsInput): Promise<UserExternalConnectionCredentials>;
+
+  /**
+   * PROVIDER (optional): revokes the stored credentials at the provider.
+   *
+   * Deleting the stored credentials ends OUR ability to act as the user; it does not end the
+   * provider's grant, so a token captured before the disconnect stays usable until it expires — which
+   * for Discord is seven days. A provider implementing this closes that window.
+   *
+   * Optional and PUBLIC for the same reasons as `refreshCredentials`: not every provider exposes a
+   * revocation endpoint, and the caller reaches it through the registry rather than through a
+   * subclass. Implementations should not throw on an already-invalid token — a disconnect must
+   * succeed regardless of what the provider says about a credential it is about to forget.
+   *
+   * @param input - The acting user and the credentials being discarded.
+   */
+  revokeCredentials?(input: UserExternalConnectionOAuthRevokeCredentialsInput): Promise<void>;
 
   /**
    * Carries the stored refresh token forward when a provider's exchange returned none.
@@ -262,10 +467,122 @@ export abstract class AbstractUserExternalConnectionOAuthService {
     if (state == null) {
       this.logger.warn('Rejected an authorize request with no resolvable state.');
     } else {
-      result = this.authorizeUrlForState(state);
+      result = this.authorizeUrlForState({ state });
     }
 
     return result;
+  }
+
+  /**
+   * The provider's resolved policy.
+   *
+   * @returns The policy, with every optional field defaulted.
+   */
+  get policy() {
+    return userExternalConnectionPolicyForProviderType(this.userExternalConnectionProviderPolicyRegistry, this.providerType);
+  }
+
+  /**
+   * Whether this provider may be used to sign in.
+   *
+   * Requires BOTH the app's policy opt-in and a registered sign-in service: a policy that says yes
+   * with nothing able to resolve a uid would fail at the callback instead of at the front door.
+   *
+   * @returns True when a sign-in request for this provider may proceed.
+   */
+  get signInEnabled(): boolean {
+    return this.policy.signIn && this.userExternalConnectionSignInService != null;
+  }
+
+  /**
+   * Where a sign-in returns to on success, before the ticket is appended.
+   *
+   * @returns The configured sign-in success url, falling back to the connect success url.
+   */
+  get signInSuccessUrl(): WebsiteUrl {
+    const { signInSuccessUrl, successUrl } = this.config.userExternalConnectionOAuth;
+    return signInSuccessUrl ?? successUrl;
+  }
+
+  /**
+   * Builds the authorize URL for an unauthenticated SIGN-IN request.
+   *
+   * Unlike the connect direction, the state is minted HERE: there is no prior authenticated call to
+   * mint it, so the browser's PKCE challenge is what binds the flow instead of a uid. A provider PKCE
+   * verifier is generated at the same time and sealed into the same state, which is the only reason
+   * the exchange can answer a challenge without a server-side store.
+   *
+   * @param request - The incoming sign-in request.
+   * @returns The authorize URL, or null when the request must be bounced to the failure URL.
+   */
+  async signInUrlForRequest(request: Request): Promise<Maybe<WebsiteUrl>> {
+    const { challenge, returnPath, clientIp } = userExternalConnectionOAuthSignInValuesForRequest(request);
+    const providerType = this.providerType;
+    let result: Maybe<WebsiteUrl>;
+
+    if (!this.signInEnabled) {
+      this.logger.warn(`Rejected a sign-in request: "${providerType}" is not enabled for sign-in.`);
+    } else if (!challenge) {
+      this.logger.warn(`Rejected a sign-in request for "${providerType}" with no PKCE challenge.`);
+    } else if (await this.throttleSignInAttempt(clientIp)) {
+      this.logger.warn(`Throttled a sign-in request for "${providerType}".`);
+    } else {
+      // an unvalidated returnPath is an open redirect, so a rejected one is DROPPED rather than
+      // failing the sign-in — the user still lands on the configured default
+      const allowedReturnPath = isAllowedUserExternalConnectionReturnPath(this.config.userExternalConnectionOAuth, returnPath) ? returnPath : undefined;
+
+      if (returnPath != null && allowedReturnPath == null) {
+        this.logger.warn(`Ignored a "${providerType}" sign-in returnPath that is not on the allowlist.`);
+      }
+
+      const { codeVerifier, codeChallenge } = await generatePkceMaterial();
+      const state = this.stateCoder.mintState({ mode: 'signin', providerType, challenge, returnPath: allowedReturnPath, codeVerifier });
+
+      result = this.authorizeUrlForState({ state, codeChallenge });
+    }
+
+    return result;
+  }
+
+  /**
+   * Redeems a sign-in ticket for the custom token it carries.
+   *
+   * The token is handed back on a POST rather than in the redirect's query string: a URL-borne
+   * credential lands in browser history, the `Referer` header, and every proxy log on the way.
+   *
+   * @param input - The ticket and the verifier the browser retained.
+   * @returns The custom token, or null when the ticket cannot be redeemed.
+   */
+  async exchangeSignInTicket(input: UserExternalConnectionOAuthTicketExchangeInput): Promise<Maybe<UserExternalConnectionOAuthTicketExchangeResult>> {
+    let result: Maybe<UserExternalConnectionOAuthTicketExchangeResult>;
+
+    if (!this.signInEnabled) {
+      this.logger.warn(`Rejected a ticket exchange: "${this.providerType}" is not enabled for sign-in.`);
+    } else if (await this.throttleSignInAttempt(input.clientIp)) {
+      this.logger.warn(`Throttled a ticket exchange for "${this.providerType}".`);
+    } else {
+      const redeemed = await this.stateCoder.verifyTicket({ ticket: input.ticket, verifier: input.verifier });
+
+      if (redeemed == null) {
+        this.logger.warn(`Rejected an unredeemable "${this.providerType}" sign-in ticket.`);
+      } else {
+        this.logger.log(`Redeemed a "${this.providerType}" sign-in ticket for uid "${redeemed.uid}".`);
+        result = { customToken: redeemed.customToken };
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Records a sign-in attempt against the throttle and returns whether it should be rejected.
+   *
+   * @param clientIp - The caller's IP, when one could be resolved.
+   * @returns True when the attempt is throttled.
+   */
+  protected throttleSignInAttempt(clientIp: Maybe<string>): Promise<boolean> {
+    const throttle = this.userExternalConnectionSignInThrottle ?? this._fallbackSignInThrottle();
+    return throttle.throttleSignInAttempt({ providerType: this.providerType, clientIp });
   }
 
   /**
@@ -284,7 +601,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
     const providerError: Maybe<UserExternalConnectionOAuthProviderError> = errorCode ? { error: errorCode, errorDescription } : undefined;
 
     let actor: Maybe<UserExternalConnectionOAuthActor>;
-    let success = false;
+    let successUrlForActor: Maybe<WebsiteUrl>;
 
     try {
       actor = this.stateCoder.verifyState({ state, providerType });
@@ -304,16 +621,23 @@ export abstract class AbstractUserExternalConnectionOAuthService {
         throw new Error(`The "${providerType}" OAuth callback did not include an authorization code.`);
       }
 
-      const exchanged = await this.credentialsForAuthorizationCode({ code, redirectUri, query });
-      const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
+      const exchanged = await this.credentialsForAuthorizationCode({ code, redirectUri, query, codeVerifier: actor.codeVerifier });
 
-      await this.userExternalConnectionActions.connectUserExternalConnection({ uid: actor.uid, providerType, credentials });
-      this.logger.log(`Connected "${providerType}" for uid "${actor.uid}".`);
-      success = true;
+      if (isUserExternalConnectionSignInStateActor(actor)) {
+        successUrlForActor = await this.completeSignInCallback(actor, exchanged);
+      } else {
+        const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
+
+        await this.userExternalConnectionActions.connectUserExternalConnection({ uid: actor.uid, providerType, credentials });
+        this.logger.log(`Connected "${providerType}" for uid "${actor.uid}".`);
+        successUrlForActor = successUrl;
+      }
     } catch (e) {
       this.logger.error(`Failed completing the "${providerType}" OAuth handoff: `, e);
 
-      if (actor != null) {
+      // a DENIED sign-in has no uid at all, and a connect whose state failed to verify has no actor —
+      // there is nothing to mark in either case
+      if (actor != null && !isUserExternalConnectionSignInStateActor(actor)) {
         await this.userExternalConnectionActions
           .markUserExternalConnectionError({
             uid: actor.uid,
@@ -327,8 +651,51 @@ export abstract class AbstractUserExternalConnectionOAuthService {
     }
 
     return {
-      success,
-      redirectUrl: success ? successUrl : this.failureUrl
+      success: successUrlForActor != null,
+      redirectUrl: successUrlForActor ?? this.failureUrl
     };
+  }
+
+  /**
+   * Completes the SIGN-IN half of a callback: identity, uid, connection, custom token, ticket.
+   *
+   * The connection is written with the same paired write a connect uses, so a user who signed in
+   * through a provider is connected to it in exactly the same way — there is no second
+   * representation of "this user's Discord account" to keep in sync.
+   *
+   * @param actor - The verified sign-in state.
+   * @param exchanged - The credentials the code exchange produced.
+   * @returns The success URL, carrying the sign-in ticket.
+   */
+  protected async completeSignInCallback(actor: UserExternalConnectionSignInStateActor, exchanged: UserExternalConnectionCredentials): Promise<WebsiteUrl> {
+    const providerType = this.providerType;
+    const signInService = this.userExternalConnectionSignInService;
+
+    if (!this.policy.signIn || signInService == null) {
+      throw userExternalConnectionSignInNotEnabledError(providerType);
+    }
+
+    // MANDATORY here, unlike on a connect: with no stable external id there is nothing to key the
+    // account on, and the lookup that recognizes a returning user would never match
+    const identity = await this.signInIdentityForCredentials({ credentials: exchanged });
+
+    if (!identity.externalAccountId) {
+      throw userExternalConnectionSignInIdentityUnavailableError(providerType);
+    }
+
+    const { uid, created } = await signInService.resolveSignIn({ providerType, identity });
+
+    // force the credentials to describe the identity the sign-in resolved against, so the derived
+    // `ec` key the NEXT sign-in looks up cannot disagree with the account that just signed in
+    const identifiedCredentials: UserExternalConnectionCredentials = { ...exchanged, externalAccountId: identity.externalAccountId, label: exchanged.label ?? identity.label };
+    const credentials = await this.credentialsRetainingStoredRefreshToken({ uid, credentials: identifiedCredentials });
+
+    await this.userExternalConnectionActions.connectUserExternalConnection({ uid, providerType, credentials });
+
+    const customToken = await signInService.mintCustomTokenForUser({ uid });
+    const ticket = this.stateCoder.mintTicket({ customToken, challenge: actor.challenge, uid });
+
+    this.logger.log(`Signed in "${providerType}" as uid "${uid}"${created ? ' (new user)' : ''}.`);
+    return userExternalConnectionSignInRedirectUrl({ baseUrl: this.signInSuccessUrl, returnPath: actor.returnPath, ticket });
   }
 }

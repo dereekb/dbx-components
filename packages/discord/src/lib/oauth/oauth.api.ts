@@ -1,18 +1,24 @@
-import { type Maybe, type Seconds } from '@dereekb/util';
+import { oidcClientSecretBasicAuthorizationHeader, type EmailAddress, type Maybe, type Seconds } from '@dereekb/util';
 import { type FetchJsonInput } from '@dereekb/util/fetch';
+import { exchangeAuthorizationCode as exchangeOidcAuthorizationCode, refreshAccessToken as refreshOidcAccessToken, revokeToken as revokeOidcToken } from '@dereekb/util/oidc';
 import { type DiscordSnowflake } from '../discord.type';
-import { DISCORD_OAUTH_CURRENT_USER_PATH, DISCORD_OAUTH_TOKEN_PATH, type DiscordOAuthConfig, type DiscordOAuthContext } from './oauth.config';
+import { DISCORD_OAUTH_CLIENT_AUTH_METHOD, DISCORD_OAUTH_CURRENT_USER_PATH, DISCORD_OAUTH_REVOKE_PATH, DISCORD_OAUTH_TOKEN_PATH, type DiscordOAuthConfig, type DiscordOAuthContext } from './oauth.config';
 
 /**
  * The `Content-Type` Discord's token endpoint requires.
  *
  * Discord rejects a JSON body outright, unlike Cal.com, which requires one.
  *
- * `@dereekb/util/oidc`'s `postTokenEndpoint` is the in-workspace precedent for this form-encoded
- * shape and is deliberately NOT reused: its `exchangeAuthorizationCode` requires a PKCE
- * `code_verifier`, it authenticates with `client_secret_post` rather than Basic, and it is
- * discovery-driven. Discord is not an OIDC provider — there is no discovery document and no
- * `id_token`.
+ * Discord IS an OIDC provider, contrary to what this file previously claimed. Verified directly:
+ * `https://discord.com/.well-known/openid-configuration` returns 200 with every required discovery
+ * field, `https://discord.com/api/oauth2/keys` serves a JWKS, and the `openid` scope yields an
+ * `id_token` on the authorization-code grant. The relying-party calls below therefore delegate to
+ * `@dereekb/util/oidc`, passing `clientAuth: 'client_secret_basic'` (Discord's discovery document
+ * omits `token_endpoint_auth_methods_supported`, whose OIDC Discovery default is Basic — which is
+ * what Discord in fact requires).
+ *
+ * Discovery itself is not performed: the endpoints are stable, and skipping the extra round trip
+ * keeps the per-request cost the same as before.
  */
 export const DISCORD_OAUTH_TOKEN_CONTENT_TYPE = 'application/x-www-form-urlencoded';
 
@@ -22,6 +28,24 @@ export interface DiscordOAuthExchangeAuthorizationCodeInput {
    * Must be byte-identical to the `redirect_uri` sent on the authorize request.
    */
   readonly redirectUri: string;
+  /**
+   * The PKCE code verifier whose challenge was sent on the authorize request.
+   *
+   * Optional, and must be omitted when the authorize request carried no `code_challenge` — Discord
+   * rejects a `code_verifier` for a code minted without one.
+   */
+  readonly codeVerifier?: Maybe<string>;
+}
+
+export interface DiscordOAuthRevokeTokenInput {
+  /**
+   * The access or refresh token to revoke.
+   */
+  readonly token: string;
+  /**
+   * Optional hint telling Discord which kind of token was passed.
+   */
+  readonly tokenTypeHint?: Maybe<'access_token' | 'refresh_token'>;
 }
 
 export interface DiscordOAuthRefreshTokenInput {
@@ -68,16 +92,31 @@ export interface DiscordOAuthCurrentUser {
   readonly global_name?: Maybe<string>;
   readonly discriminator?: Maybe<string>;
   readonly avatar?: Maybe<string>;
+  /**
+   * The user's email. Present only when the `email` scope was granted.
+   *
+   * Never key an identity on this — it is mutable, and {@link DiscordOAuthCurrentUser.id} is the
+   * stable account identifier.
+   */
+  readonly email?: Maybe<EmailAddress>;
+  /**
+   * Whether Discord has verified {@link DiscordOAuthCurrentUser.email}. Present only when the
+   * `email` scope was granted.
+   *
+   * A sign-in must not adopt an existing account by email unless this is true.
+   */
+  readonly verified?: Maybe<boolean>;
 }
 
 /**
  * Builds the HTTP Basic `Authorization` header value that authenticates the OAuth client.
  *
- * Discord accepts the client credentials as Basic auth rather than in the request body, which is why
+ * Discord requires the client credentials as Basic auth rather than in the request body, which is why
  * `client_id` / `client_secret` are absent from the exchange body below.
  *
- * Uses `btoa()` rather than `Buffer`, so this package stays usable outside Node — the same choice
- * `@dereekb/util`'s PKCE helpers make.
+ * A thin alias of the generic {@link oidcClientSecretBasicAuthorizationHeader}, kept because the
+ * configured fetch bakes the header into its `baseRequest` and so needs it as a value, not as a
+ * per-request auth mode.
  *
  * @param config - The client credentials to encode.
  * @returns The `Authorization` header value, including the `Basic ` prefix.
@@ -85,16 +124,16 @@ export interface DiscordOAuthCurrentUser {
  * @__NO_SIDE_EFFECTS__
  */
 export function discordOAuthBasicAuthorizationHeader(config: DiscordOAuthConfig): string {
-  const credentials = `${config.clientId}:${config.clientSecret}`;
-  return `Basic ${btoa(credentials)}`;
+  return oidcClientSecretBasicAuthorizationHeader(config);
 }
 
 /**
  * Exchanges an OAuth authorization code for access and refresh tokens.
  *
- * Discord requires `application/x-www-form-urlencoded` — a JSON body is rejected — and authenticates
- * the client with HTTP Basic rather than credentials in the body. Both differ from Cal.com, which
- * posts JSON with the credentials inline. The Basic header rides on the context's configured fetch.
+ * Delegates to `@dereekb/util/oidc`'s relying-party `exchangeAuthorizationCode` with
+ * `clientAuth: 'client_secret_basic'`, which produces exactly the form-encoded, Basic-authenticated
+ * request Discord requires. The context's configured fetch supplies the base URL and surfaces
+ * Discord's RFC-6749 error bodies as typed {@link DiscordOAuthError}s.
  *
  * @param context - The Discord OAuth context providing the authenticated fetch.
  * @returns Exchanges an authorization code for access and refresh tokens.
@@ -110,19 +149,19 @@ export function discordOAuthBasicAuthorizationHeader(config: DiscordOAuthConfig)
  * ```
  */
 export function exchangeAuthorizationCode(context: DiscordOAuthContext): (input: DiscordOAuthExchangeAuthorizationCodeInput) => Promise<DiscordOAuthTokenResponse> {
-  return (input) => {
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
+  return async (input) => {
+    const response = await exchangeOidcAuthorizationCode({
+      fetch: context.fetch,
+      tokenEndpoint: DISCORD_OAUTH_TOKEN_PATH,
+      clientId: context.config.clientId,
+      clientSecret: context.config.clientSecret,
+      clientAuth: DISCORD_OAUTH_CLIENT_AUTH_METHOD,
+      redirectUri: input.redirectUri,
       code: input.code,
-      redirect_uri: input.redirectUri
+      codeVerifier: input.codeVerifier
     });
 
-    const fetchJsonInput: FetchJsonInput = {
-      method: 'POST',
-      body: body.toString()
-    };
-
-    return context.fetchJson(DISCORD_OAUTH_TOKEN_PATH, fetchJsonInput);
+    return response as DiscordOAuthTokenResponse;
   };
 }
 
@@ -142,19 +181,42 @@ export function exchangeAuthorizationCode(context: DiscordOAuthContext): (input:
  * @see https://docs.discord.com/developers/topics/oauth2
  */
 export function refreshAccessToken(context: DiscordOAuthContext): (input: DiscordOAuthRefreshTokenInput) => Promise<DiscordOAuthTokenResponse> {
-  return (input) => {
-    const body = new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: input.refreshToken
+  return async (input) => {
+    const response = await refreshOidcAccessToken({
+      fetch: context.fetch,
+      tokenEndpoint: DISCORD_OAUTH_TOKEN_PATH,
+      clientId: context.config.clientId,
+      clientSecret: context.config.clientSecret,
+      clientAuth: DISCORD_OAUTH_CLIENT_AUTH_METHOD,
+      refreshToken: input.refreshToken
     });
 
-    const fetchJsonInput: FetchJsonInput = {
-      method: 'POST',
-      body: body.toString()
-    };
-
-    return context.fetchJson(DISCORD_OAUTH_TOKEN_PATH, fetchJsonInput);
+    return response as DiscordOAuthTokenResponse;
   };
+}
+
+/**
+ * Revokes an access or refresh token, ending Discord's side of the authorization.
+ *
+ * Called when a user disconnects their Discord account: deleting the stored credentials alone leaves
+ * the grant live on Discord, so the token stays usable by anyone who captured it.
+ *
+ * @param context - The Discord OAuth context providing the authenticated fetch.
+ * @returns Revokes the given token.
+ *
+ * @see https://docs.discord.com/developers/topics/oauth2
+ */
+export function revokeToken(context: DiscordOAuthContext): (input: DiscordOAuthRevokeTokenInput) => Promise<void> {
+  return (input) =>
+    revokeOidcToken({
+      fetch: context.fetch,
+      revocationEndpoint: DISCORD_OAUTH_REVOKE_PATH,
+      clientId: context.config.clientId,
+      clientSecret: context.config.clientSecret,
+      clientAuth: DISCORD_OAUTH_CLIENT_AUTH_METHOD,
+      token: input.token,
+      tokenTypeHint: input.tokenTypeHint ?? undefined
+    });
 }
 
 /**

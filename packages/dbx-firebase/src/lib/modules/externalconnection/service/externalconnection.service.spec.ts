@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { webcrypto } from 'node:crypto';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionNavigateFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderEntry, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
-import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave } from './externalconnection.service';
+import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
+import { EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY } from './externalconnection';
 
 const TEST_PROVIDER_TYPE: UserExternalConnectionProviderType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
 const TEST_AUTHORIZE_ORIGIN = 'https://components.dereekb.com';
@@ -307,5 +309,120 @@ describe('DbxFirebaseExternalConnectionService', () => {
       expect(mintedFor).toEqual([]);
       expect(navigatedTo).toEqual(['https://example.com/custom']);
     });
+  });
+});
+
+const signInProvider: DbxFirebaseExternalConnectionProvider = {
+  providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  assets: { providerName: 'Discord' },
+  signIn: { backgroundColor: '#5865F2' }
+};
+
+describe('DbxFirebaseExternalConnectionService sign-in', () => {
+  beforeAll(() => {
+    // jsdom ships `crypto.getRandomValues` but not `crypto.subtle`, which the PKCE challenge needs.
+    // Real browsers expose it on any SECURE context — which is also the deployment requirement:
+    // an app served over plain http on a LAN address cannot start a sign-in at all.
+    if (globalThis.crypto?.subtle == null) {
+      Object.defineProperty(globalThis.crypto, 'subtle', { value: webcrypto.subtle, configurable: true });
+    }
+  });
+
+  afterEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('should resolve the sign-in url against the authorize origin', () => {
+    const { service } = testService({ providers: [signInProvider] });
+    expect(service.signInUrlForProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(`${TEST_AUTHORIZE_ORIGIN}/oauth/discord/signin`);
+  });
+
+  it('should resolve the ticket-exchange url against the authorize origin', () => {
+    const { service } = testService({ providers: [signInProvider] });
+    expect(service.signInTokenUrlForProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(`${TEST_AUTHORIZE_ORIGIN}/oauth/discord/token`);
+  });
+
+  it('should resolve NO sign-in url for a connect-only provider', () => {
+    const { service } = testService({ providers: [testProvider] });
+    expect(service.signInUrlForProvider(TEST_PROVIDER_TYPE)).toBeNull();
+  });
+
+  it('should refuse to sign in with a connect-only provider', async () => {
+    const { service } = testService({ providers: [testProvider] });
+    await expect(service.signInWithProvider(TEST_PROVIDER_TYPE)).rejects.toThrow();
+  });
+
+  it('should send a challenge and NEVER the verifier', async () => {
+    // the verifier is the single secret proving the returning page is the one that began the sign-in
+    const { service, navigatedTo } = testService({ providers: [signInProvider] });
+
+    await service.signInWithProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+
+    const url = new URL(navigatedTo[0]);
+    const stored = JSON.parse(sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY) as string) as { providerType: string; codeVerifier: string };
+
+    expect(url.searchParams.get('challenge')).toBeTruthy();
+    expect(url.searchParams.get('challenge')).not.toBe(stored.codeVerifier);
+    expect(navigatedTo[0]).not.toContain(stored.codeVerifier);
+  });
+
+  it('should store the verifier BEFORE navigating', async () => {
+    // once the page is unloading there is no chance to store anything, and a flow whose verifier
+    // never landed is unredeemable at the other end
+    let storedAtNavigationTime: Maybe<string>;
+    const { service } = testService({
+      providers: [signInProvider],
+      navigate: () => {
+        storedAtNavigationTime = sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY) ?? undefined;
+      }
+    });
+
+    await service.signInWithProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+
+    expect(storedAtNavigationTime).toBeTruthy();
+  });
+
+  it('should mint NO authorize state for a sign-in', () => {
+    // there is no signed-in caller to mint one for — the PKCE challenge binds the flow instead
+    const { service, mintedFor } = testService({ providers: [signInProvider] });
+
+    return service.signInWithProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE).then(() => {
+      expect(mintedFor).toEqual([]);
+    });
+  });
+
+  it('should send an allowlisted return path when the provider declares one', async () => {
+    const { service, navigatedTo } = testService({ providers: [{ ...signInProvider, signIn: { returnPath: '/app/home' } }] });
+
+    await service.signInWithProvider(DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+
+    expect(new URL(navigatedTo[0]).searchParams.get('returnPath')).toBe('/app/home');
+  });
+
+  it('should do nothing when the landing url carries no ticket', async () => {
+    const { service } = testService({ providers: [signInProvider] });
+    await expect(service.handleSignInRedirectResult('https://app.example/app/home')).resolves.toBe(false);
+  });
+
+  it('should fail, and CLEAR the verifier, when a ticket arrives with none stored', async () => {
+    // a verifier left behind would be offered against whatever ticket arrived next
+    const { service } = testService({ providers: [signInProvider] });
+
+    await expect(service.handleSignInRedirectResult('https://app.example/app/home?ticket=abc')).rejects.toThrow();
+    expect(sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe('readExternalConnectionSignInTicketFromUrl()', () => {
+  it('should read the ticket parameter', () => {
+    expect(readExternalConnectionSignInTicketFromUrl('https://app.example/app/home?ticket=abc')).toBe('abc');
+  });
+
+  it('should return nothing for a url with no ticket', () => {
+    expect(readExternalConnectionSignInTicketFromUrl('https://app.example/app/home')).toBeUndefined();
+  });
+
+  it('should return nothing for a url that does not parse', () => {
+    expect(readExternalConnectionSignInTicketFromUrl('not a url')).toBeUndefined();
   });
 });

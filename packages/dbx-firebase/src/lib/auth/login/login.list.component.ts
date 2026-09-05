@@ -114,15 +114,18 @@ export class DbxFirebaseLoginListComponent {
     switch (loginMode) {
       case 'register':
         providers = providers.filter((x) => x.registrationComponentClass !== false);
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
       case 'link':
       case 'unlink':
         providers = providers.filter((x) => x.allowLinking !== false);
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
       default:
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });
+        // `componentData` is carried through so a SHARED button component (one class serving several
+        // providers) can learn which provider it is rendering. Without it the field was declared and
+        // never read, and every provider needed a component class of its own.
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
     }
 

@@ -138,11 +138,18 @@ export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: P
 /**
  * Data passed to login button components via {@link DBX_INJECTION_COMPONENT_DATA} from the login list.
  */
-export interface DbxFirebaseLoginButtonInjectionData {
+export interface DbxFirebaseLoginButtonInjectionData<D = unknown> {
   /**
    * The current login mode for this button instance.
    */
   readonly loginMode: DbxFirebaseLoginMode;
+  /**
+   * The registered provider's `componentData`, passed through unchanged.
+   *
+   * How a SHARED button component — one class registered for several providers — learns which
+   * provider it is rendering. A component class dedicated to one provider ignores it.
+   */
+  readonly componentData?: D;
 }
 
 /**
@@ -181,6 +188,15 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    */
   get effectiveLoginMode(): DbxFirebaseLoginMode {
     return this._injectionData?.loginMode ?? 'login';
+  }
+
+  /**
+   * The registered provider's `componentData`, when the list passed any.
+   *
+   * @returns The component data, or null when the provider declared none.
+   */
+  protected get injectedComponentData(): Maybe<unknown> {
+    return this._injectionData?.componentData;
   }
 
   ngOnInit(): void {

@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId } from '../../common';
 import { type UserExternalConnection, type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionEntryStatus, type UserExternalConnectionErrorCode } from './userexternalconnection';
-import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { userExternalConnectionExternalAccountKey, type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionExternalAccountKey, type UserExternalConnectionProviderType } from './userexternalconnection.id';
 
 /**
  * The facts about a granted third-party authorization that a {@link UserExternalConnectionEntry} is
@@ -33,6 +33,29 @@ export interface UserExternalConnectionGrantSummary {
  */
 export function userExternalConnectionConnectedProviderTypes(entries: Maybe<UserExternalConnectionEntryMap>): UserExternalConnectionProviderType[] {
   const result = entries ? Object.keys(entries).filter((x) => entries[x]?.st === 'connected') : [];
+  result.sort();
+  return result;
+}
+
+/**
+ * The SOLE producer of a {@link UserExternalConnection}'s `ec` array.
+ *
+ * Membership is every entry carrying an `ea`, at ANY status — deliberately unlike
+ * {@link userExternalConnectionConnectedProviderTypes}, which is `connected`-only. `c` answers
+ * "whose credentials can I use?", a question about the credentials; `ec` answers "who IS this
+ * account?", a question about identity, which survives an expired token. Filtering it by status
+ * would make a returning user with `error` credentials look like a stranger, and a sign-in would
+ * mint them a second Firebase user.
+ *
+ * @param entries - The per-provider entry map to derive from.
+ * @returns The external account keys, sorted for a stable stored value.
+ */
+export function userExternalConnectionExternalAccountKeys(entries: Maybe<UserExternalConnectionEntryMap>): UserExternalConnectionExternalAccountKey[] {
+  const result = entries
+    ? Object.keys(entries)
+        .filter((x) => entries[x]?.ea != null)
+        .map((x) => userExternalConnectionExternalAccountKey({ providerType: x, externalAccountId: entries[x].ea as UserExternalConnectionExternalAccountId }))
+    : [];
   result.sort();
   return result;
 }
@@ -170,6 +193,7 @@ export function applyUserExternalConnectionEntry(input: ApplyUserExternalConnect
     uid,
     e: entries,
     c: userExternalConnectionConnectedProviderTypes(entries),
+    ec: userExternalConnectionExternalAccountKeys(entries),
     uat: now
   };
 }
@@ -199,6 +223,7 @@ export function emptyUserExternalConnection(input: EmptyUserExternalConnectionIn
     uid,
     e: {},
     c: [],
+    ec: [],
     uat: now
   };
 }

@@ -238,6 +238,32 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
    * Removes all custom claims from the user.
    */
   clearClaims(): Promise<void>;
+
+  /**
+   * Mints a short-lived Firebase Auth custom token the client exchanges via `signInWithCustomToken`.
+   *
+   * This is how a sign-in performed OUTSIDE Firebase Auth — a third-party OAuth provider Firebase has
+   * no native provider for — is bridged back into it: the server authenticates the user against the
+   * provider, resolves them to a uid, and mints a token for that uid. The alternative (a generic
+   * OIDC/SAML provider) requires the one-way Identity Platform upgrade, which this workspace avoids.
+   *
+   * ## Two operational notes
+   *
+   * 1. `createCustomToken` NESTS the developer claims under a `claims` key inside the unexchanged JWT
+   *    (see `decodeEncodedCreateCustomTokenResult()` in `@dereekb/firebase-server/test`). This is only
+   *    a property of the token BEFORE it is exchanged — after `signInWithCustomToken`, Firebase spreads
+   *    them to the top level of the ID token, where security rules read them. Do not pre-flatten.
+   * 2. Minting requires `iam.serviceAccounts.signBlob` (the Service Account Token Creator role) when
+   *    the Admin SDK runs on default credentials rather than an explicit key file. The Auth emulator
+   *    does not check this, so the standard failure mode is "works locally, 403s in production".
+   *
+   * The user's STORED custom claims are applied by Firebase on exchange regardless of this argument;
+   * `claims` here adds one-off claims to this sign-in only, and does not persist anything.
+   *
+   * @param claims - Optional additional claims to embed in this token.
+   * @returns The custom token to hand to the client.
+   */
+  mintCustomToken<T extends AuthClaimsObject = AuthClaimsObject>(claims?: Maybe<AuthClaimsUpdate<T>>): Promise<string>;
 }
 
 /**
@@ -448,6 +474,12 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.service.auth.setCustomUserClaims(this.uid, claims ?? null).then(() => {
       this._loadRecord.reset(); // reset the cache
     });
+  }
+
+  mintCustomToken<T extends AuthClaimsObject = AuthClaimsObject>(claims?: Maybe<AuthClaimsUpdate<T>>): Promise<string> {
+    // `createCustomToken` rejects an explicit undefined for the claims argument on some Admin SDK
+    // versions, so the no-claims call is made without the second argument at all
+    return claims == null ? this.service.auth.createCustomToken(this.uid) : this.service.auth.createCustomToken(this.uid, filterUndefinedValues(claims) as object);
   }
 }
 

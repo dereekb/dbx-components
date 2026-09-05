@@ -8,12 +8,16 @@ import { DISCORD_OAUTH_AUTHORIZE_URL } from './oauth.config';
  * A runtime list rather than a bare type union, so a configured scope can be validated instead of
  * being passed through to the consent screen and refused there.
  *
- * Deliberately NOT Discord's full ~40-scope surface: only what a per-user account connect can
- * legitimately ask for. Add a scope here when code actually uses it.
+ * Deliberately NOT Discord's full ~40-scope surface: only what a per-user account connect or sign-in
+ * can legitimately ask for. Add a scope here when code actually uses it.
+ *
+ * `openid` is included because Discord is an OIDC provider (its discovery document and JWKS are
+ * live) and requesting it yields an `id_token`. Nothing in this workspace consumes that token —
+ * identity is read server-side from `/users/@me` — but the scope is legal to request.
  *
  * @see https://docs.discord.com/developers/topics/oauth2
  */
-export const ALL_DISCORD_OAUTH_SCOPES = ['identify', 'email', 'guilds', 'connections'] as const;
+export const ALL_DISCORD_OAUTH_SCOPES = ['openid', 'identify', 'email', 'guilds', 'connections'] as const;
 
 /**
  * A Discord OAuth scope modeled by this package.
@@ -42,6 +46,14 @@ export const DISCORD_OAUTH_SCOPE_DELIMITER = ' ';
  * The `response_type` used by the authorization-code flow.
  */
 export const DISCORD_OAUTH_AUTHORIZE_RESPONSE_TYPE = 'code';
+
+/**
+ * The only PKCE challenge method this package emits.
+ *
+ * `plain` is not offered: it provides no protection against an attacker who can read the
+ * authorization request, which is the threat PKCE exists to address.
+ */
+export const DISCORD_OAUTH_AUTHORIZE_CODE_CHALLENGE_METHOD = 'S256';
 
 export interface DiscordOAuthAuthorizeUrlFactoryConfig {
   /**
@@ -73,6 +85,14 @@ export interface DiscordOAuthAuthorizeUrlParams {
    * short-lived.
    */
   readonly state?: Maybe<string>;
+  /**
+   * The PKCE code challenge — the base64url SHA-256 digest of a code verifier the caller retains.
+   *
+   * Discord supports PKCE S256. Optional because a state minted before PKCE was added carries no
+   * verifier, and sending a challenge the later exchange cannot answer would break that flow; every
+   * new authorization should set it.
+   */
+  readonly codeChallenge?: Maybe<string>;
 }
 
 export type DiscordOAuthAuthorizeUrlFactory = (params?: Maybe<DiscordOAuthAuthorizeUrlParams>) => WebsiteUrl;
@@ -97,7 +117,7 @@ export type DiscordOAuthAuthorizeUrlFactory = (params?: Maybe<DiscordOAuthAuthor
  *   scopes: ['identify']
  * });
  *
- * const url = authorizeUrlFactory({ state: 'signed-state' });
+ * const url = authorizeUrlFactory({ state: 'signed-state', codeChallenge: 's256-challenge' });
  * ```
  *
  * @__NO_SIDE_EFFECTS__
@@ -118,6 +138,11 @@ export function discordOAuthAuthorizeUrlFactory(config: DiscordOAuthAuthorizeUrl
 
     if (state != null) {
       url.searchParams.set('state', state);
+    }
+
+    if (params?.codeChallenge != null) {
+      url.searchParams.set('code_challenge', params.codeChallenge);
+      url.searchParams.set('code_challenge_method', DISCORD_OAUTH_AUTHORIZE_CODE_CHALLENGE_METHOD);
     }
 
     return url.toString();

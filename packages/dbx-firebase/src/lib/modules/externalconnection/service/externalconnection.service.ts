@@ -1,7 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { addToSet, type ArrayOrValue, filterMaybeArrayValues, fixExtraQueryParameters, mapIterable, type Maybe, removeFromSet } from '@dereekb/util';
+import { addToSet, type ArrayOrValue, filterMaybeArrayValues, fixExtraQueryParameters, generatePkceMaterial, mapIterable, type Maybe, removeFromSet } from '@dereekb/util';
 import { UserExternalConnectionFunctions, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY, type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
+import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
+import {
+  DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY,
+  DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY,
+  DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY,
+  EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM,
+  EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY,
+  type DbxFirebaseExternalConnectionAuthorizeState,
+  type DbxFirebaseExternalConnectionProvider,
+  type DbxFirebaseExternalConnectionProviderAssets,
+  DbxFirebaseExternalConnectionsConfig
+} from './externalconnection';
 import { dbxFirebaseExternalConnectionProviderForEntry } from './externalconnection.default';
 
 /**
@@ -97,6 +108,12 @@ export class DbxFirebaseExternalConnectionService {
    * missing rather than failing every injection of this service.
    */
   private readonly _userExternalConnectionFunctions = inject(UserExternalConnectionFunctions, { optional: true });
+
+  /**
+   * Optional for the same reason: the connect half of this registry never signs anyone in, and a
+   * spec exercising it should not have to stand up Firebase Auth.
+   */
+  private readonly _dbxFirebaseAuthService = inject(DbxFirebaseAuthService, { optional: true });
 
   private readonly _providers = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProvider>();
   private readonly _assets = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProviderAssets>();
@@ -304,4 +321,213 @@ export class DbxFirebaseExternalConnectionService {
       await navigate(authorizeUrl);
     }
   }
+
+  // MARK: Sign In
+  /**
+   * Resolves the sign-in url for a provider.
+   *
+   * @param providerType - The provider to resolve.
+   * @returns The sign-in url, or null when the provider is not registered for sign-in.
+   */
+  signInUrlForProvider(providerType: UserExternalConnectionProviderType): Maybe<string> {
+    const provider = this.getProvider(providerType);
+    let result: Maybe<string> = null;
+
+    if (provider?.signIn) {
+      const path = provider.signIn.signInPath ?? DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY(providerType);
+      result = this.config.authorizeOrigin ? `${this.config.authorizeOrigin}${path}` : path;
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolves the ticket-exchange url for a provider.
+   *
+   * @param providerType - The provider to resolve.
+   * @returns The token url, or null when the provider is not registered for sign-in.
+   */
+  signInTokenUrlForProvider(providerType: UserExternalConnectionProviderType): Maybe<string> {
+    const provider = this.getProvider(providerType);
+    let result: Maybe<string> = null;
+
+    if (provider?.signIn) {
+      const path = DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY(providerType);
+      result = this.config.authorizeOrigin ? `${this.config.authorizeOrigin}${path}` : path;
+    }
+
+    return result;
+  }
+
+  /**
+   * Begins the sign-in flow for a provider.
+   *
+   * Unlike {@link connectToProvider} there is no `state` to mint: the caller is not signed in, so
+   * there is no authenticated call to make. A PKCE verifier is generated instead and kept in
+   * `sessionStorage`; only its challenge travels, and the ticket the server hands back at the end is
+   * redeemable only by whoever still holds the verifier. That is what makes a redirect-borne ticket
+   * safe where a redirect-borne token would not be.
+   *
+   * REQUIRES a secure context: the challenge is derived with `crypto.subtle`, which browsers expose
+   * only over https or on `localhost`. An app served over plain http on a LAN address cannot start a
+   * sign-in — the same constraint every PKCE client in this workspace already carries.
+   *
+   * @param providerType - The provider to sign in with.
+   * @returns Resolves once the provider's consent page is actually opening.
+   */
+  async signInWithProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
+    const provider = this.getProvider(providerType);
+
+    if (!provider?.signIn) {
+      throw new Error(`DbxFirebaseExternalConnectionService: "${providerType}" is not registered for sign-in.`);
+    }
+
+    const signInUrl = this.signInUrlForProvider(providerType);
+
+    if (!signInUrl) {
+      throw new Error(`DbxFirebaseExternalConnectionService: no sign-in url could be resolved for "${providerType}".`);
+    }
+
+    const { codeVerifier, codeChallenge } = await generatePkceMaterial();
+
+    // written BEFORE navigating: once the page is unloading there is no chance to store anything, and
+    // a flow whose verifier never landed is unredeemable at the other end
+    this.storeSignInVerifier(providerType, codeVerifier);
+
+    const returnPath = provider.signIn.returnPath;
+    const returnPathParam = returnPath ? `&returnPath=${encodeURIComponent(returnPath)}` : '';
+    const url = fixExtraQueryParameters(`${signInUrl}?challenge=${encodeURIComponent(codeChallenge)}${returnPathParam}`);
+
+    const navigate = this.config.navigate ?? DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION;
+    await navigate(url);
+  }
+
+  /**
+   * Completes a sign-in that has just redirected back, when the current URL carries a ticket.
+   *
+   * Safe to call unconditionally on app start: a page with no ticket, or no stored verifier, resolves
+   * to false without touching the network.
+   *
+   * @param url - The url to read the ticket from. Defaults to the current location.
+   * @returns True when a ticket was redeemed and the user is now signed in.
+   */
+  async handleSignInRedirectResult(url: string = window.location.href): Promise<boolean> {
+    const ticket = readExternalConnectionSignInTicketFromUrl(url);
+    let result = false;
+
+    if (ticket != null) {
+      const stored = this.readStoredSignInVerifier();
+
+      // ALWAYS cleared, success or not: a verifier is single-use, and one left behind would be
+      // offered against whatever ticket arrived next
+      this.clearStoredSignInVerifier();
+
+      if (stored == null) {
+        throw new Error('DbxFirebaseExternalConnectionService: a sign-in ticket arrived with no stored verifier. The sign-in must be completed in the tab that started it.');
+      }
+
+      const customToken = await this.exchangeSignInTicket({ providerType: stored.providerType, ticket, verifier: stored.codeVerifier });
+      const dbxFirebaseAuthService = this._dbxFirebaseAuthService;
+
+      if (!dbxFirebaseAuthService) {
+        throw new Error('DbxFirebaseExternalConnectionService: cannot complete a sign-in because DbxFirebaseAuthService was not provided.');
+      }
+
+      await dbxFirebaseAuthService.logInWithCustomToken(customToken);
+      result = true;
+    }
+
+    return result;
+  }
+
+  /**
+   * Posts a ticket and its verifier to the provider's token endpoint.
+   *
+   * @param input - The provider, the ticket from the redirect, and the stored verifier.
+   * @param input.providerType - The provider the ticket belongs to.
+   * @param input.ticket - The ticket the redirect carried.
+   * @param input.verifier - The PKCE verifier the browser retained.
+   * @returns The Firebase custom token.
+   */
+  async exchangeSignInTicket(input: { readonly providerType: UserExternalConnectionProviderType; readonly ticket: string; readonly verifier: string }): Promise<string> {
+    const tokenUrl = this.signInTokenUrlForProvider(input.providerType);
+
+    if (!tokenUrl) {
+      throw new Error(`DbxFirebaseExternalConnectionService: no token url could be resolved for "${input.providerType}".`);
+    }
+
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ ticket: input.ticket, verifier: input.verifier })
+    });
+
+    if (!response.ok) {
+      throw new Error(`DbxFirebaseExternalConnectionService: the "${input.providerType}" sign-in ticket was rejected (${response.status}).`);
+    }
+
+    const { customToken } = (await response.json()) as { customToken?: Maybe<string> };
+
+    if (!customToken) {
+      throw new Error(`DbxFirebaseExternalConnectionService: the "${input.providerType}" ticket exchange returned no custom token.`);
+    }
+
+    return customToken;
+  }
+
+  /**
+   * Stores the in-flight sign-in's verifier and the provider it belongs to.
+   *
+   * @param providerType - The provider the flow was started for.
+   * @param codeVerifier - The PKCE verifier to retain.
+   */
+  protected storeSignInVerifier(providerType: UserExternalConnectionProviderType, codeVerifier: string): void {
+    sessionStorage.setItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY, JSON.stringify({ providerType, codeVerifier }));
+  }
+
+  /**
+   * Reads the stored verifier, treating a corrupt entry as absent — the same contract
+   * `webStorageValueCache` keeps, so a malformed entry never wedges the sign-in.
+   *
+   * @returns The stored provider and verifier, or null when there is none.
+   */
+  protected readStoredSignInVerifier(): Maybe<{ readonly providerType: UserExternalConnectionProviderType; readonly codeVerifier: string }> {
+    const raw = sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY);
+    let result: Maybe<{ readonly providerType: UserExternalConnectionProviderType; readonly codeVerifier: string }>;
+
+    if (raw != null) {
+      try {
+        const parsed = JSON.parse(raw) as { providerType?: Maybe<string>; codeVerifier?: Maybe<string> };
+        result = parsed?.providerType && parsed.codeVerifier ? { providerType: parsed.providerType, codeVerifier: parsed.codeVerifier } : undefined;
+      } catch {
+        result = undefined;
+      }
+    }
+
+    return result;
+  }
+
+  protected clearStoredSignInVerifier(): void {
+    sessionStorage.removeItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY);
+  }
+}
+
+/**
+ * Reads the sign-in ticket a completed handoff redirected back with.
+ *
+ * @param url - The url to read.
+ * @returns The ticket, or null when the url carries none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function readExternalConnectionSignInTicketFromUrl(url: string): Maybe<string> {
+  let result: Maybe<string>;
+
+  try {
+    result = new URL(url).searchParams.get(EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM) ?? undefined;
+  } catch {
+    // a url that does not parse carries no ticket
+  }
+
+  return result;
 }

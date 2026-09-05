@@ -1157,6 +1157,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'DERIVED from `e`: every provider type whose entry status is `connected`.'
       },
       {
+        name: 'ec',
+        longName: 'externalAccountKeys',
+        converter: 'optionalFirestoreArray<UserExternalConnectionExternalAccountKey>()',
+        tsType: 'Maybe<UserExternalConnectionExternalAccountKey[]>',
+        optional: true,
+        description: 'DERIVED from `e`: the `<providerType>:<externalAccountId>` key of every entry that names an external account.'
+      },
+      {
         name: 'uat',
         longName: 'updatedAt',
         converter: 'firestoreDate({ saveDefaultAsNow: true })',
@@ -1166,7 +1174,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     enums: [],
-    detectionHints: ['e', 'c', 'uat'],
+    detectionHints: ['e', 'c', 'ec', 'uat'],
     description: "The client-readable half of a user's third-party OAuth connection state.",
     modelGroup: 'UserExternalConnection',
     collectionKind: 'root',

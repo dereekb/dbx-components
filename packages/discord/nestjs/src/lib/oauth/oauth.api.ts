@@ -13,7 +13,8 @@ import {
   discordOAuthFactory,
   exchangeAuthorizationCode,
   readCurrentUser,
-  refreshAccessToken
+  refreshAccessToken,
+  revokeToken
 } from '@dereekb/discord';
 import { DiscordOAuthServiceConfig } from './oauth.config';
 
@@ -81,6 +82,18 @@ export class DiscordOAuthApi {
    */
   get readCurrentUser() {
     return readCurrentUser(this.oauthContext);
+  }
+
+  /**
+   * Configured pass-through for {@link revokeToken}.
+   *
+   * Ends Discord's side of the authorization. Deleting the stored credentials alone leaves the grant
+   * live at Discord, so a token captured before the disconnect stays usable.
+   *
+   * @returns Function to revoke an access or refresh token.
+   */
+  get revokeToken() {
+    return revokeToken(this.oauthContext);
   }
 
   /**
