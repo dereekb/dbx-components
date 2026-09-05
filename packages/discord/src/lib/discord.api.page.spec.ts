@@ -25,7 +25,7 @@ describe('discordFetchMessagePageFactory()', () => {
     const firstPage = await page.fetchNext();
 
     expect(firstPage.result.data).toEqual(messages);
-    expect(firstPage.hasNext).toBe(true); // hasNext is true because data.length > 0
+    expect(firstPage.hasNext).toBe(false); // hasNext is false because the page is short (data.length < limit)
     expect(fetch).toHaveBeenCalledTimes(1);
 
     // next page should signal no more results since buildInputForNextPage returns undefined
@@ -69,8 +69,43 @@ describe('discordFetchMessagePageFactory()', () => {
     expect(thirdPage.result.data).toEqual(page3Messages);
     expect(fetch).toHaveBeenLastCalledWith(expect.objectContaining({ before: '81', limit: 10 }));
 
+    // full pages report hasNext, the short final page does not
+    expect(firstPage.hasNext).toBe(true);
+    expect(secondPage.hasNext).toBe(true);
+    expect(thirdPage.hasNext).toBe(false);
+
     // third page had fewer than limit, so no more pages
     await expect(thirdPage.fetchNext()).rejects.toThrow();
+  });
+
+  it('should read hasNext against the input limit rather than the default page size', async () => {
+    // a page that is full for its own limit must not be mistaken for a short page just because it
+    // holds fewer than DEFAULT_DISCORD_MESSAGES_PER_PAGE items, which would drop the rest of the channel
+    const messages = makeMessages(10, 100);
+
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
+
+    const factory = discordFetchMessagePageFactory({ fetch });
+    const firstPage = await factory({ limit: 10 }).fetchNext();
+
+    expect(firstPage.result.data.length).toBeLessThan(DEFAULT_DISCORD_MESSAGES_PER_PAGE);
+    expect(firstPage.hasNext).toBe(true);
+  });
+
+  it('should read hasNext against maxItemsPerPage when it overrides the input limit', async () => {
+    const messages = makeMessages(10, 100);
+
+    const fetch = vi.fn(async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
+      data: messages
+    }));
+
+    const factory = discordFetchMessagePageFactory({ fetch });
+
+    // maxItemsPerPage wins over input.limit, exactly as buildInputForNextPage reads it
+    const firstPage = await factory({ limit: 10 }, { maxItemsPerPage: 20 }).fetchNext();
+    expect(firstPage.hasNext).toBe(false);
   });
 
   it('should clear after and around when paginating forward with before', async () => {

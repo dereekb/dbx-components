@@ -117,12 +117,14 @@ export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilte
   return fetchPageFactory<I, DiscordMessagePageResult<T>>({
     ...defaults,
     fetch,
-    readFetchPageResultInfo(result: DiscordMessagePageResult<T>): PromiseOrValue<ReadFetchPageResultInfo> {
+    readFetchPageResultInfo(result: DiscordMessagePageResult<T>, input: I, options: FetchPageFactoryInputOptions): PromiseOrValue<ReadFetchPageResultInfo> {
       const count = result.data.length;
       const nextCursor = count > 0 ? readMessageId(lastValue(result.data)) : undefined;
+      // read the effective limit the same way buildInputForNextPage does, so a short page reports hasNext: false
+      const effectiveLimit = options.maxItemsPerPage ?? input.limit ?? DEFAULT_DISCORD_MESSAGES_PER_PAGE;
 
       return {
-        hasNext: count > 0,
+        hasNext: count >= effectiveLimit,
         nextPageCursor: nextCursor
       };
     },
