@@ -445,3 +445,114 @@ describe('iterateFetchPages()', () => {
     });
   });
 });
+
+/**
+ * Creates a {@link FetchPageFactory} that always reports `hasNext: true` but stops producing input
+ * for the next page after the input page number, so `fetchNext()` throws a {@link FetchPageNoNextPageError}.
+ *
+ * This mirrors the shape of a cursor-based API (Discord's message pagination, for example) that can
+ * only detect the end of the results by seeing a short final page.
+ *
+ * @param finalPage - the page number after which no further input is produced
+ * @returns a configured {@link FetchPageFactory} for testing pagination
+ */
+export function fetchPageWithNoNextPageInputAfter(finalPage: number): FetchPageFactory<TestFetchPageInput, TestFetchPage> {
+  const randomNumber = randomNumberFactory(1000);
+  const randomNumbers = arrayFactory(randomNumber);
+
+  return fetchPageFactory<TestFetchPageInput, TestFetchPage>({
+    fetch: async function (input: TestFetchPageInput): Promise<TestFetchPage> {
+      return {
+        page: input.page ?? 0,
+        items: randomNumbers(input.itemsPerPage ?? DEFAULT_ITEMS_PER_PAGE),
+        hasNext: true
+      };
+    },
+    readFetchPageResultInfo: function (): PromiseOrValue<Omit<FetchPageResultInfo, 'page'>> {
+      return { hasNext: true }; // always claims there is a next page
+    },
+    buildInputForNextPage: function (pageResult: Partial<FetchPageResult<TestFetchPage>>, input: TestFetchPageInput): PromiseOrValue<Maybe<Partial<TestFetchPageInput>>> {
+      const page = input.page ?? 0;
+      return page >= finalPage ? undefined : { ...input, page: page + 1 };
+    }
+  });
+}
+
+describe('iterateFetchPages() with a page source that only signals the end by throwing', () => {
+  const iteratePage = async function (result: FetchPageResult<TestFetchPage>): Promise<number> {
+    return reduceNumbersWithAdd(result.result.items);
+  };
+
+  it('should settle when fetchNext() throws a FetchPageNoNextPageError', async () => {
+    const finalPage = 2;
+    const fetchPageFactory = fetchPageWithNoNextPageInputAfter(finalPage);
+
+    const result = await iterateFetchPages({
+      input: {},
+      maxPage: null,
+      fetchPageFactory,
+      iteratePage
+    });
+
+    expect(result.totalPages).toBe(finalPage + 1);
+    expect(result.totalPagesLimitReached).toBe(false);
+  });
+
+  it('should settle when iterating by items', async () => {
+    const finalPage = 2;
+    const fetchPageFactory = fetchPageWithNoNextPageInputAfter(finalPage);
+
+    const result = await iterateFetchPagesByItems({
+      readItemsFromPageResult: (x: FetchPageResult<TestFetchPage>) => x.result.items,
+      input: {},
+      maxPage: null,
+      fetchPageFactory,
+      iteratePageItems: async (items: number[]) => items
+    });
+
+    expect(result.totalPages).toBe(finalPage + 1);
+    expect(result.totalItemsLoaded).toBe((finalPage + 1) * DEFAULT_ITEMS_PER_PAGE);
+  });
+});
+
+describe('iterateFetchPagesByItems() endEarly', () => {
+  const readItemsFromPageResult = (x: FetchPageResult<TestFetchPage>) => x.result.items;
+
+  it('should use the endEarly provided in the config', async () => {
+    const fetchPageFactory = fetchPageToPageNumber(100);
+
+    let visitedPages = 0;
+
+    const result = await iterateFetchPagesByItems({
+      readItemsFromPageResult,
+      input: {},
+      fetchPageFactory,
+      iteratePageItems: async (items: number[]) => {
+        visitedPages += 1;
+        return items;
+      },
+      endEarly: ({ i }) => i >= 1 // stop after the second page
+    });
+
+    expect(visitedPages).toBe(2);
+    expect(result.totalPages).toBe(2);
+    expect(result.totalItemsLoaded).toBe(2 * DEFAULT_ITEMS_PER_PAGE);
+  });
+
+  it('should still end early on the item limit when an endEarly is provided', async () => {
+    const fetchPageFactory = fetchPageToPageNumber(100);
+    const loadItemLimit = DEFAULT_ITEMS_PER_PAGE;
+
+    const result = await iterateFetchPagesByItems({
+      readItemsFromPageResult,
+      input: {},
+      loadItemLimit,
+      fetchPageFactory,
+      iteratePageItems: async (items: number[]) => items,
+      endEarly: () => false
+    });
+
+    expect(result.totalPages).toBe(1);
+    expect(result.totalItemsLoaded).toBe(loadItemLimit);
+  });
+});

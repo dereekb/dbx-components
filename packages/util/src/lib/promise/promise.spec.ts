@@ -699,4 +699,61 @@ describe('performTasksFromFactoryInParallelFunction()', () => {
       expect(maxRunningTasks).toBe(maxParallelTasks);
     });
   });
+
+  describe('taskInputFactory that throws', () => {
+    it('should reject the returned promise instead of never settling', async () => {
+      const expectedError = new Error('task input factory failure');
+
+      const performTaskFn = performTasksFromFactoryInParallelFunction({
+        taskFactory: async (_value: number) => undefined
+      });
+
+      await expect(
+        performTaskFn(() => {
+          throw expectedError;
+        })
+      ).rejects.toBe(expectedError);
+    });
+
+    it('should reject when the factory throws after issuing tasks', async () => {
+      const expectedError = new Error('task input factory failure');
+      const completedTasks: number[] = [];
+      let callCount = 0;
+
+      const performTaskFn = performTasksFromFactoryInParallelFunction({
+        taskFactory: async (value: number) => {
+          completedTasks.push(value);
+        }
+      });
+
+      await expect(
+        performTaskFn(async () => {
+          callCount += 1;
+
+          if (callCount > 2) {
+            throw expectedError;
+          }
+
+          return callCount;
+        })
+      ).rejects.toBe(expectedError);
+
+      expect(completedTasks).toEqual([1, 2]);
+    });
+
+    it('should reject when the factory throws with multiple parallel tasks', async () => {
+      const expectedError = new Error('task input factory failure');
+
+      const performTaskFn = performTasksFromFactoryInParallelFunction({
+        maxParallelTasks: 3,
+        taskFactory: async (_value: number) => undefined
+      });
+
+      await expect(
+        performTaskFn(async () => {
+          throw expectedError;
+        })
+      ).rejects.toBe(expectedError);
+    });
+  });
 });

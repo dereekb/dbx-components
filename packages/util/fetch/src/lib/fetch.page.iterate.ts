@@ -1,5 +1,5 @@
 import { type DecisionFunction, type IndexNumber, type IndexRef, type Maybe, type Milliseconds, type PromiseOrValue, mapIdentityFunction, performTasksFromFactoryInParallelFunction, performAsyncTasks, type PerformAsyncTasksConfig, type PerformAsyncTasksResult } from '@dereekb/util';
-import { type FetchNextPage, type FetchPage, type FetchPageFactory, type FetchPageFactoryInputOptions, type FetchPageResult, type FetchPageResultWithInput } from './fetch.page';
+import { type FetchNextPage, type FetchPage, type FetchPageFactory, type FetchPageFactoryInputOptions, FetchPageLimitReachedError, FetchPageNoNextPageError, type FetchPageResult, type FetchPageResultWithInput } from './fetch.page';
 
 // MARK: IterateFetchPagesByEachItem
 /**
@@ -256,7 +256,8 @@ export async function iterateFetchPagesByItems<I, O, T, R>(config: IterateFetchP
 
       return results;
     },
-    endEarly: () => hasReachedFinalItem
+    // compose with any caller-provided endEarly so it is not silently discarded
+    endEarly: (pageResult) => hasReachedFinalItem || (config.endEarly?.(pageResult as unknown as IterateFetchPagesIterationResult<I, O, R>) ?? false)
   } as IterateFetchPagesConfig<I, O, R[]>;
 
   const iterateFetchPagesResult = await iterateFetchPages<I, O, R[]>(fetchPagesConfig);
@@ -479,13 +480,32 @@ export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfig
       hasReachedEnd = true;
       result = null;
     } else {
-      currentNextPage = await fetchPage.fetchNext();
-      fetchPage = currentNextPage;
+      let nextPage: Maybe<FetchNextPage<I, O>>;
 
-      result = {
-        i: currentNextPage.page,
-        fetchPageResult: currentNextPage
-      };
+      try {
+        nextPage = await fetchPage.fetchNext();
+      } catch (e) {
+        // a page source can only signal "no more pages" by throwing from fetchNext(), so treat
+        // both terminal errors as a clean end of iteration instead of failing the whole iteration.
+        if (e instanceof FetchPageNoNextPageError || e instanceof FetchPageLimitReachedError) {
+          nextPage = undefined;
+        } else {
+          throw e;
+        }
+      }
+
+      if (nextPage == null) {
+        hasReachedEnd = true;
+        result = null;
+      } else {
+        currentNextPage = nextPage;
+        fetchPage = nextPage;
+
+        result = {
+          i: nextPage.page,
+          fetchPageResult: nextPage
+        };
+      }
     }
 
     return result;

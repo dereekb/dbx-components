@@ -1,5 +1,7 @@
-import { type GatewayIntentBits, type ClientOptions } from 'discord.js';
+import { type APIMessage, type GatewayIntentBits, type ClientOptions } from 'discord.js';
 import { DEFAULT_DISCORD_INTENTS } from './discord.config';
+import { type DiscordApi } from './discord.api';
+import { type DiscordChannelId, type DiscordFetchMessagePageFetchFunction, type DiscordMessagePageFilter } from '@dereekb/discord';
 
 /**
  * Returns default ClientOptions for a bot that reads guild messages.
@@ -36,4 +38,28 @@ export function discordClientOptionsWithIntents(additionalIntents: GatewayIntent
   return {
     intents: [...DEFAULT_DISCORD_INTENTS, ...additionalIntents]
   };
+}
+
+/**
+ * Creates a {@link DiscordFetchMessagePageFetchFunction} bound to a single channel.
+ *
+ * This is the bridge between the `DiscordApi` REST client and the fetch-only scanning/pagination
+ * utilities in `@dereekb/discord`, which take an injected fetch function and know nothing about
+ * discord.js or a bot token.
+ *
+ * @param discordApi - The api to fetch messages through.
+ * @param channelId - The channel to read messages from.
+ * @returns A fetch function that pages through that channel's messages.
+ *
+ * @example
+ * ```ts
+ * const scan = discordScanMessagesFactory({
+ *   fetch: discordApiChannelMessagesFetchFunction(discordApi, channelId)
+ * });
+ *
+ * await scan({ baseInput: {}, afterMessageId, handleMessages });
+ * ```
+ */
+export function discordApiChannelMessagesFetchFunction(discordApi: DiscordApi, channelId: DiscordChannelId): DiscordFetchMessagePageFetchFunction<DiscordMessagePageFilter, APIMessage> {
+  return (input: DiscordMessagePageFilter) => discordApi.fetchChannelMessages({ ...input, channelId });
 }

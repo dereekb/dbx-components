@@ -1,5 +1,5 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DiscordApi } from './discord.api';
 import { DISCORD_BOT_TOKEN_ENV_VAR, DiscordServiceConfig, isUsableDiscordBotToken } from './discord.config';
@@ -46,3 +46,48 @@ export function discordServiceConfigFactory(configService: ConfigService): Disco
   exports: [DiscordApi]
 })
 export class DiscordModule {}
+
+// MARK: App Discord Module
+/**
+ * Factory that creates a {@link DiscordServiceConfig} from the app's config service.
+ */
+export type DiscordServiceConfigFactory = (configService: ConfigService) => DiscordServiceConfig;
+
+export interface ProvideAppDiscordMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
+  /**
+   * Optional override for the DiscordServiceConfigFactory.
+   *
+   * An app that only uses the REST api should supply a factory with `autoLogin: false`, so a cold
+   * start never opens a gateway websocket it will not use.
+   *
+   * @default discordServiceConfigFactory
+   */
+  readonly discordServiceConfigFactory?: DiscordServiceConfigFactory;
+}
+
+/**
+ * Convenience function used to generate ModuleMetadata for an app's DiscordModule.
+ *
+ * Mirrors `appDiscordOAuthModuleMetadata`, letting an app supply its own config factory
+ * instead of re-declaring the whole provider.
+ *
+ * @param config - The module metadata configuration including an optional config factory.
+ * @returns NestJS ModuleMetadata for registering the DiscordModule.
+ */
+export function appDiscordModuleMetadata(config: ProvideAppDiscordMetadataConfig): ModuleMetadata {
+  const { imports, exports, providers } = config;
+
+  return {
+    imports: [ConfigModule, ...(imports ?? [])],
+    exports: [DiscordApi, ...(exports ?? [])],
+    providers: [
+      {
+        provide: DiscordServiceConfig,
+        inject: [ConfigService],
+        useFactory: config.discordServiceConfigFactory ?? discordServiceConfigFactory
+      },
+      DiscordApi,
+      ...(providers ?? [])
+    ]
+  };
+}
