@@ -207,7 +207,7 @@ export function autoCreateUserSignInDelegate(config?: Maybe<AutoCreateUserSignIn
       // the requirement is checked against what the PROVIDER reported, not against what is carried
       // onto the created record — `useProviderEmail: false` still gates, it just does not persist
       const denyReason = userExternalConnectionSignInEmailRequirementDenyReason(requireEmailToCreateUser, input.identity);
-      result = denyReason != null ? { action: 'deny', reason: denyReason } : { action: 'createUser', email: useProviderEmail ? input.identity.email : null, displayName: input.identity.label };
+      result = denyReason == null ? { action: 'createUser', email: useProviderEmail ? input.identity.email : null, displayName: input.identity.label } : { action: 'deny', reason: denyReason };
     }
 
     return result;
@@ -358,15 +358,7 @@ export function userExternalConnectionSignInService(config: UserExternalConnecti
     const existingByEmail = email ? await getAuthUserOrUndefined(authService.auth.getUserByEmail(email)) : undefined;
     let result: UserExternalConnectionSignInResult;
 
-    if (existingByEmail != null) {
-      // adopting an account on an UNVERIFIED third-party email hands it to whoever controls that
-      // email; even verified, linking is a policy choice an app has to opt into
-      if (allowVerifiedEmailLinking && identity.emailVerified) {
-        result = { uid: existingByEmail.uid, created: false };
-      } else {
-        throw userExternalConnectionSignInEmailConflictError(providerType);
-      }
-    } else {
+    if (existingByEmail == null) {
       // a password credential ONLY alongside an email: without one there is no address to sign in with
       // or send a reset to, so the credential would be unreachable rather than a recovery path
       const password = email && provisionPasswordCredential ? generateUserExternalConnectionProvisionedPassword() : undefined;
@@ -378,6 +370,14 @@ export function userExternalConnectionSignInService(config: UserExternalConnecti
       });
 
       result = { uid: created.uid, created: true };
+    } else {
+      // adopting an account on an UNVERIFIED third-party email hands it to whoever controls that
+      // email; even verified, linking is a policy choice an app has to opt into
+      if (allowVerifiedEmailLinking && identity.emailVerified) {
+        result = { uid: existingByEmail.uid, created: false };
+      } else {
+        throw userExternalConnectionSignInEmailConflictError(providerType);
+      }
     }
 
     if (resolution.claims) {

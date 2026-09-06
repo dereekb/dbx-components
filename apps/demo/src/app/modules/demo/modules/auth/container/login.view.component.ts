@@ -56,6 +56,6 @@ export class DemoAuthLoginViewComponent {
    */
   readonly signInErrorMessage = computed<Maybe<string>>(() => {
     const code = this._externalConnectionService.signInErrorCode();
-    return code != null ? (DEMO_EXTERNAL_CONNECTION_SIGN_IN_ERROR_MESSAGES[code] ?? DEMO_EXTERNAL_CONNECTION_SIGN_IN_ERROR_FALLBACK_MESSAGE) : undefined;
+    return code == null ? undefined : (DEMO_EXTERNAL_CONNECTION_SIGN_IN_ERROR_MESSAGES[code] ?? DEMO_EXTERNAL_CONNECTION_SIGN_IN_ERROR_FALLBACK_MESSAGE);
   });
 }

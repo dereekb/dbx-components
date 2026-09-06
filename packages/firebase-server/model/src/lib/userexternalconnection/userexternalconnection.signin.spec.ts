@@ -141,7 +141,7 @@ function stubUserExternalConnectionCollection(uid?: Maybe<string>): StubCollecti
   const userExternalConnectionCollection = {
     queryDocument: (constraints: FirestoreQueryConstraint[]) => {
       queries.push(constraints);
-      return { getDocs: async () => (uid != null ? [{ id: uid }] : []) };
+      return { getDocs: async () => (uid == null ? [] : [{ id: uid }]) };
     }
   } as unknown as StubUserExternalConnectionCollection;
 
