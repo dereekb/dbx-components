@@ -38,9 +38,14 @@ export class DemoDiscordOAuthModule {}
     // the only paths a sign-in request may ask to be returned to instead of the default; an exact
     // match, so anything else is dropped rather than honored
     allowedReturnPaths: [DEMO_EXTERNAL_CONNECTION_SIGN_IN_RETURN_PATH, DEMO_EXTERNAL_CONNECTION_RETURN_PATH],
-    // the default `['identify']` reports NO email, which both fails the demo delegate's verified-email
-    // requirement and silently skips the sign-in service's existing-account collision check
-    scopes: ['identify', 'email']
+    // the DATA grant: least privilege for what the demo's Discord integration actually reads
+    scopes: ['identify'],
+    // the IDENTITY grant, requested only by a sign-in or a login-method link. `email` is required here
+    // and only here — without it the identity carries none, which both fails the demo delegate's
+    // verified-email requirement and silently skips the existing-account collision check. Separating
+    // the two is the point of the split: signing in no longer demands the data scopes, and connecting
+    // no longer demands the user's email
+    signInScopes: ['identify', 'email']
   })
 )
 export class DemoDiscordOAuthConnectionModule {}

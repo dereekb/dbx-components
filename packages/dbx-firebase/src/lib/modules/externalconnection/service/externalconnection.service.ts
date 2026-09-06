@@ -9,6 +9,7 @@ import {
   EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY,
+  type DbxFirebaseExternalConnectionAuthorizeMode,
   type DbxFirebaseExternalConnectionAuthorizeState,
   type DbxFirebaseExternalConnectionProvider,
   type DbxFirebaseExternalConnectionProviderAssets,
@@ -257,16 +258,17 @@ export class DbxFirebaseExternalConnectionService {
    * creates it on load; a custom UI that reaches this call by another route has to create it too.
    *
    * @param providerType - The provider the state is for.
+   * @param mode - Which handoff the state begins. Defaults to `connect`.
    * @returns The state to send on the authorize request.
    */
-  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
+  async mintAuthorizeStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<DbxFirebaseExternalConnectionAuthorizeState> {
     const userExternalConnectionFunctions = this._userExternalConnectionFunctions;
 
     if (!userExternalConnectionFunctions) {
       throw new Error(`DbxFirebaseExternalConnectionService: cannot mint an authorize state for "${providerType}" because UserExternalConnectionFunctions was not provided. Add the userExternalConnection functions to the app's functions config map, or configure mintAuthorizeState: false.`);
     }
 
-    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType });
+    const { state } = await userExternalConnectionFunctions.userExternalConnection.readUserExternalConnection.authorizeState({ providerType, mode: mode ?? undefined });
     return state;
   }
 
@@ -275,14 +277,15 @@ export class DbxFirebaseExternalConnectionService {
    * is enabled.
    *
    * @param providerType - The provider to resolve.
+   * @param mode - Which handoff the state begins. Defaults to `connect`.
    * @returns The authorize url, or null when the provider is not registered.
    */
-  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType): Promise<Maybe<string>> {
+  async authorizeUrlWithStateForProvider(providerType: UserExternalConnectionProviderType, mode?: Maybe<DbxFirebaseExternalConnectionAuthorizeMode>): Promise<Maybe<string>> {
     const authorizeUrl = this.authorizeUrlForProvider(providerType);
     let result = authorizeUrl;
 
     if (authorizeUrl && this.mintsAuthorizeState) {
-      const state = await this.mintAuthorizeStateForProvider(providerType);
+      const state = await this.mintAuthorizeStateForProvider(providerType, mode);
       // appended as text rather than through URL, since an app that shares an origin with its API
       // configures no authorizeOrigin and the path stays relative
       result = fixExtraQueryParameters(`${authorizeUrl}?state=${encodeURIComponent(state)}`);
@@ -348,6 +351,59 @@ export class DbxFirebaseExternalConnectionService {
 
       await navigate(authorizeUrl);
     }
+  }
+
+  /**
+   * Makes a provider a LOGIN METHOD for the already-signed-in user.
+   *
+   * The connect flow's twin, and deliberately a separate round trip rather than a flag on it: the
+   * authorize request runs the provider's SIGN-IN scopes, which are not the data scopes, so one grant
+   * cannot stand in for the other. The server writes only the login link and stores no credentials.
+   *
+   * @param providerType - The provider to link.
+   * @returns Resolves once the authorize page is actually opening, and rejects when it never opened.
+   * @throws {Error} When the provider is not registered, or declares no `signIn` config.
+   */
+  async linkProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
+    const provider = this.getProvider(providerType);
+
+    if (!provider) {
+      throw new Error(`DbxFirebaseExternalConnectionService: no provider registered for "${providerType}".`);
+    }
+
+    if (!provider.signIn) {
+      throw new Error(`DbxFirebaseExternalConnectionService: "${providerType}" is not registered for sign-in, so it cannot be linked as a login method.`);
+    }
+
+    const authorizeUrl = await this.authorizeUrlWithStateForProvider(providerType, 'link');
+
+    if (!authorizeUrl) {
+      throw new Error(`DbxFirebaseExternalConnectionService: no authorize url could be resolved for "${providerType}".`);
+    }
+
+    // awaited exactly as `connectToProvider` awaits it, so the action stays working until the authorize
+    // page is really opening rather than reporting success against a page that has not moved
+    const navigate = this.config.navigate ?? DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION;
+    await navigate(authorizeUrl);
+  }
+
+  /**
+   * Removes a provider as a login method for the signed-in user.
+   *
+   * Strictly more than a disconnect: the server removes the login link, the data connection, and its
+   * credentials together. Refused server-side when it would leave the account with no way to sign in.
+   *
+   * @param providerType - The provider to remove as a login method.
+   * @returns Resolves once the server has applied the change.
+   */
+  async unlinkProvider(providerType: UserExternalConnectionProviderType): Promise<void> {
+    const userExternalConnectionFunctions = this._userExternalConnectionFunctions;
+
+    if (!userExternalConnectionFunctions) {
+      throw new Error(`DbxFirebaseExternalConnectionService: cannot unlink "${providerType}" because UserExternalConnectionFunctions was not provided. Add the userExternalConnection functions to the app's functions config map.`);
+    }
+
+    await userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.unlink({ providerType });
   }
 
   // MARK: Sign In

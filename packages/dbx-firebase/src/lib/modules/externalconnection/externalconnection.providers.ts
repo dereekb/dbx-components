@@ -2,6 +2,8 @@ import { inject, provideAppInitializer, type EnvironmentProviders, makeEnvironme
 import { type ClassLikeType, type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionFirestoreCollections } from '@dereekb/firebase';
 import { DbxFirebaseAuthLoginService } from '../../auth/login/login.service';
+import { DBX_FIREBASE_LINKED_LOGIN_METHODS_SOURCES_TOKEN } from '../../auth/login/login.linked';
+import { DbxFirebaseExternalConnectionLinkedLoginMethodsSource } from './service/externalconnection.linked';
 import { DbxFirebaseExternalConnectionsConfig } from './service/externalconnection';
 import { dbxFirebaseExternalConnectionLoginProviders } from './service/externalconnection.login';
 import { DbxFirebaseExternalConnectionService } from './service/externalconnection.service';
@@ -74,6 +76,13 @@ export function provideDbxFirebaseExternalConnections(config: ProvideDbxFirebase
     {
       provide: DbxFirebaseExternalConnectionService,
       useClass: DbxFirebaseExternalConnectionService
+    },
+    {
+      // contributed rather than read directly by `auth/login`, which must not depend on this module —
+      // it is the half that already depends on `auth/login`
+      provide: DBX_FIREBASE_LINKED_LOGIN_METHODS_SOURCES_TOKEN,
+      useClass: DbxFirebaseExternalConnectionLinkedLoginMethodsSource,
+      multi: true
     },
     provideAppInitializer(() => {
       // registered here rather than through `provideDbxFirebaseLogin`'s `additionalProviders` so the

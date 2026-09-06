@@ -41,6 +41,19 @@ export interface UserExternalConnectionProviderPolicy {
    */
   readonly signIn?: Maybe<boolean>;
   /**
+   * A SIGN-IN through this provider also establishes the DATA connection, storing the credentials the
+   * sign-in exchange produced. Defaults to FALSE.
+   *
+   * Off by default because the two grants are not the same grant. A sign-in requests the identity
+   * scopes (`identify`, `email`); a data connection requests whatever the integration actually reads.
+   * Writing the sign-in's credentials into the data connection therefore REPLACES a broad grant with a
+   * narrow one every time the user signs in — silently downgrading a working integration.
+   *
+   * Turn it on only for an app whose sign-in scopes are a superset of its data scopes, or one that has
+   * no data integration and just wants the connection row to show up.
+   */
+  readonly signInConnects?: Maybe<boolean>;
+  /**
    * What to do when `unique` is set and another user already holds the account. Defaults to `block`.
    */
   readonly onCollision?: Maybe<UserExternalConnectionCollisionPolicy>;
@@ -56,6 +69,7 @@ export interface UserExternalConnectionProviderPolicy {
 export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<UserExternalConnectionProviderPolicy>, 'providerType'> = {
   unique: false,
   signIn: false,
+  signInConnects: false,
   onCollision: 'block'
 };
 
@@ -76,6 +90,7 @@ export interface UserExternalConnectionResolvedProviderPolicy {
   readonly providerType: UserExternalConnectionProviderType;
   readonly unique: boolean;
   readonly signIn: boolean;
+  readonly signInConnects: boolean;
   readonly onCollision: UserExternalConnectionCollisionPolicy;
 }
 
@@ -94,6 +109,7 @@ export function resolveUserExternalConnectionProviderPolicy(providerType: UserEx
     // `??` alone is not enough: an explicitly-null field is a legal `Maybe` and must fall back too
     unique: policy?.unique ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.unique ?? false,
     signIn: policy?.signIn ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signIn ?? false,
+    signInConnects: policy?.signInConnects ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signInConnects ?? false,
     onCollision: policy?.onCollision ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onCollision ?? 'block'
   };
 }

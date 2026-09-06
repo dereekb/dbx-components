@@ -12,7 +12,9 @@ import {
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES,
-  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE
 } from '@dereekb/firebase';
 import { forbiddenError, preconditionConflictError } from '@dereekb/firebase-server';
 import { type Maybe } from '@dereekb/util';
@@ -35,6 +37,8 @@ export {
   USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES
 } from '@dereekb/firebase';
 
@@ -230,6 +234,46 @@ export function userExternalConnectionSignInIdentityUnavailableError(providerTyp
   return preconditionConflictError({
     message: `Could not read the "${providerType}" account to sign in with.`,
     code: USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the provider is not configured to be used as a login method.
+ *
+ * The same `policy.signIn` opt-in that gates the sign-in direction gates this one: linking a provider
+ * as a login method is what MAKES a later sign-in through it resolve to this account, so an app that
+ * has not enabled sign-in must not be able to acquire the binding by another route.
+ *
+ * @param providerType - The provider a link was attempted with.
+ * @returns A forbidden HttpsError.
+ */
+export function userExternalConnectionLinkNotEnabledError(providerType: UserExternalConnectionProviderType) {
+  return forbiddenError({
+    message: `"${providerType}" cannot be linked as a login method.`,
+    code: USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the unlink would leave the account with no way to sign back in.
+ *
+ * Deliberately CONSERVATIVE: it refuses whenever the account would be left with no remaining login
+ * link and no Firebase-native provider, which is exactly the state a custom-token-only user is in.
+ * Guessing wrong in the other direction produces an account nobody — including support — can get back
+ * into, so the ambiguous case is refused rather than allowed.
+ *
+ * A rare edge rather than the normal outcome of unlinking: the sign-in service gives every user it
+ * creates with an email a password credential, so "forgot password" is a working way back in.
+ *
+ * @param providerType - The provider the unlink was attempted on.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionUnlinkLastLoginMethodError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `"${providerType}" is the only way to sign in to this account. Add another sign-in method before removing it.`,
+    code: USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
     data: { providerType }
   });
 }

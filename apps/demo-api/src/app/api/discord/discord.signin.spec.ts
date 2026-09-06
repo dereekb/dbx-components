@@ -1,6 +1,14 @@
 import { type DiscordAccessToken, type DiscordOAuthCurrentUser } from '@dereekb/discord';
 import { DiscordOAuthApi } from '@dereekb/discord/nestjs';
-import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD, type FirebaseAuthUserId, USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE, USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE, userExternalConnectionsWithExternalAccountQuery } from '@dereekb/firebase';
+import {
+  DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD,
+  type FirebaseAuthUserId,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
+  type UserExternalConnection,
+  userExternalConnectionsWithExternalAccountQuery
+} from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { CalcomUserExternalConnectionOAuthService } from '@dereekb/firebase-server/calcom';
 import { DiscordUserExternalConnectionOAuthService } from '@dereekb/firebase-server/discord';
@@ -36,6 +44,11 @@ function discordUser(overrides: Partial<DiscordOAuthCurrentUser> = {}): DiscordO
  *
  * The rule this file exists to pin: a Discord email that already belongs to a Firebase user REJECTS
  * the sign-in. The demo must not adopt or merge that account.
+ *
+ * It also pins the login-link / data-connection split: a sign-in writes the LOGIN LINK only (the demo
+ * leaves `signInConnects` off), a `link` handoff writes it for an already-signed-in user, and an
+ * unlink removes the link, the entry, and the credentials together — refusing when that would leave the
+ * account with no way back in.
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describe('Discord UserExternalConnection sign-in', () => {
@@ -145,6 +158,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     }
 
     /**
+     * Reads a user's whole connection document, so a test can assert on BOTH maps at once.
+     *
+     * @param uid - The user whose document to read.
+     * @returns The document, when the user has one.
+     */
+    async function loadConnection(uid: FirebaseAuthUserId): Promise<Maybe<UserExternalConnection>> {
+      return f.demoFirestoreCollections.userExternalConnectionCollection.documentAccessor().loadDocumentForId(uid).snapshotData();
+    }
+
+    /**
      * The uid whose connection document carries the test Discord account, read through the same `ec`
      * array-contains query the sign-in service uses.
      *
@@ -162,9 +185,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       expect(service.signInEnabled).toBe(true);
     });
 
-    it('should request the email scope, without which no email is reported at all', () => {
-      // the default `['identify']` reports none, which silently skips the collision check below
-      expect([...service.config.scopes]).toEqual(['identify', 'email']);
+    it('should request the email scope for IDENTITY only, and the data scopes for a connect', () => {
+      // the payoff of the split: a data connect no longer demands the user's email, and a sign-in no
+      // longer demands the data scopes. Without `email` on the identity side no email is reported at
+      // all, which silently skips the collision check below
+      expect([...service.config.signInScopes]).toEqual(['identify', 'email']);
+      expect([...service.config.scopes]).toEqual(['identify']);
     });
 
     it('should return a sign-in to the app home, and a failed one to the login page', () => {
@@ -188,7 +214,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('a NEW discord account', () => {
-      it('should create a firebase user, write the connection pair, and return a ticket', async () => {
+      it('should create a firebase user, write the LOGIN LINK, and return a ticket', async () => {
         setDiscordUser(discordUser({ email: 'brand-new@example.com', verified: true }));
 
         const { success, redirectUrl, uid } = await signIn();
@@ -203,14 +229,26 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const userRecord = await f.authService.auth.getUser(uid as string);
         expect(userRecord.email).toBe('brand-new@example.com');
 
+        const connection = await loadConnection(uid as string);
+
+        // the snowflake is the identity, and the derived `ec` key is what the NEXT sign-in looks up
+        expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
+        expect(connection?.li?.[DISCORD]?.em).toBe('brand-new@example.com');
+        expect(connection?.ec).toContain(`${DISCORD}:${TEST_DISCORD_ID}`);
+      });
+
+      it('should NOT establish the data connection, since the demo leaves signInConnects off', async () => {
+        // the sign-in grant carries the IDENTITY scopes. Storing it as the data connection would
+        // replace whatever broad grant a connect had obtained, on every login
+        setDiscordUser(discordUser({ email: 'link-only@example.com', verified: true }));
+
+        const { uid } = await signIn();
         const { entry, credentials } = await f.userExternalConnectionAccessor
           .accessorForUser({ uid: uid as string })(DISCORD)
           .readUserExternalConnectionForProvider();
 
-        expect(entry?.st).toBe('connected');
-        // the snowflake is the identity, and the derived `ec` key is what the NEXT sign-in looks up
-        expect(entry?.ea).toBe(TEST_DISCORD_ID);
-        expect(credentials?.accessToken).toBe('discord-access-token');
+        expect(entry).not.toBeTruthy();
+        expect(credentials).not.toBeTruthy();
       });
 
       it('should redeem the ticket for a custom token, only with the matching verifier', async () => {
@@ -258,6 +296,140 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const { redirectUrl } = await signIn(DEMO_EXTERNAL_CONNECTION_SIGN_IN_RETURN_PATH);
 
         expect(new URL(redirectUrl).pathname).toBe(DEMO_EXTERNAL_CONNECTION_SIGN_IN_RETURN_PATH);
+      });
+    });
+
+    describe('the LINK direction', () => {
+      /**
+       * Mints the `link` state the app's own `read:authorizeState` callable would for a signed-in user.
+       *
+       * @param uid - The user linking Discord.
+       * @returns The state.
+       */
+      function linkState(uid: FirebaseAuthUserId) {
+        return stateCoder.mintState({ mode: 'link', uid, providerType: DISCORD, codeVerifier: 'discord-code-verifier' });
+      }
+
+      // a user who signed in with email/password, i.e. one that HAS a native provider to fall back on
+      demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
+        // the auth user is torn down per test but its connection document is not, and discord is
+        // `unique` — a left-behind claim on the test snowflake would block the next test's link
+        afterEach(async () => {
+          await f.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: u.uid });
+        });
+
+        it('should request the SIGN-IN scopes on the authorize url', async () => {
+          const url = service.authorizeUrlForRequest({ query: { state: linkState(u.uid) } } as never);
+
+          expect(url).toBeDefined();
+          expect(new URL(url as string).searchParams.get('scope')).toBe('identify email');
+        });
+
+        it('should write ONLY the login link, leaving the entry and the credentials untouched', async () => {
+          setDiscordUser(discordUser({ email: 'linker@example.com', verified: true }));
+
+          const result = await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+
+          expect(result.success).toBe(true);
+          // back to the settings page the link was started from, not the sign-in landing page
+          expect(new URL(result.redirectUrl).pathname).toBe('/demo/app/settings');
+
+          const connection = await loadConnection(u.uid);
+          expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
+          expect(connection?.ec).toContain(`${DISCORD}:${TEST_DISCORD_ID}`);
+
+          const { entry, credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
+          expect(entry).not.toBeTruthy();
+          expect(credentials).not.toBeTruthy();
+        });
+
+        it('should unlink the link, the entry, and the credentials together', async () => {
+          setDiscordUser(discordUser({ email: 'unlinker@example.com', verified: true }));
+
+          await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+          // and a data connection alongside it, so the unlink has all three to remove
+          await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
+
+          await f.userExternalConnectionServerActions.unlinkUserExternalConnectionLogin({ uid: u.uid, providerType: DISCORD });
+
+          const connection = await loadConnection(u.uid);
+          expect(connection?.li?.[DISCORD]).toBeUndefined();
+          expect(connection?.e?.[DISCORD]).toBeUndefined();
+          expect(connection?.ec).toEqual([]);
+
+          const { credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
+          expect(credentials).not.toBeTruthy();
+        });
+
+        it('should KEEP the login link when only the data connection is disconnected', async () => {
+          // the correctness bug the split closes: a disconnect used to destroy the sign-in binding, and
+          // the next sign-in minted a second Firebase user for the same person
+          setDiscordUser(discordUser({ email: 'disconnector@example.com', verified: true }));
+
+          await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+          await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
+          await f.userExternalConnectionServerActions.disconnectUserExternalConnection({ uid: u.uid, providerType: DISCORD });
+
+          const connection = await loadConnection(u.uid);
+          expect(connection?.e?.[DISCORD]).toBeUndefined();
+          expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
+          // still resolvable, so a returning sign-in lands on the SAME uid
+          expect(await uidHoldingDiscordAccount()).toBe(u.uid);
+        });
+      });
+
+      it('should give a sign-in-created user a PASSWORD provider, so unlinking is not a lockout', async () => {
+        // the assumption the guard rests on: an email/password credential shows up in the admin sdk's
+        // providerData, which is what `providerData.length > 0` is actually asking about
+        setDiscordUser(discordUser({ email: 'has-password@example.com', verified: true }));
+
+        const { uid } = await signIn();
+        const record = await f.authService.auth.getUser(uid as string);
+
+        expect(record.providerData.map((x) => x.providerId)).toContain('password');
+      });
+
+      it('should ALLOW unlinking the only link once the account carries a password credential', async () => {
+        setDiscordUser(discordUser({ email: 'can-unlink@example.com', verified: true }));
+
+        const { uid } = await signIn();
+        await f.userExternalConnectionServerActions.unlinkUserExternalConnectionLogin({ uid: uid as string, providerType: DISCORD });
+
+        const connection = await loadConnection(uid as string);
+        expect(connection?.li?.[DISCORD]).toBeUndefined();
+        expect(connection?.ec).toEqual([]);
+
+        // and the user can still get back in: "forgot password" against their own verified email
+        const record = await f.authService.auth.getUser(uid as string);
+        expect(record.email).toBe('can-unlink@example.com');
+        expect(record.providerData.map((x) => x.providerId)).toContain('password');
+      });
+
+      it('should still REFUSE when the account has no native provider to fall back on', async () => {
+        // the backstop for a user created before the password credential existed, or by an app that
+        // turned the option off — a custom-token-only account has an EMPTY providerData and no way back
+        // in. Built directly rather than through signIn(), which now always provisions a password
+        const emaillessUid = (await f.authService.auth.createUser({})).uid;
+        // a DIFFERENT snowflake: discord is `unique`, and the test account may be held by a sibling test
+        const otherDiscordId = '80351110224678913';
+
+        try {
+          await f.userExternalConnectionServerActions.linkUserExternalConnectionLogin({ uid: emaillessUid, providerType: DISCORD, identity: { externalAccountId: otherDiscordId } });
+
+          const record = await f.authService.auth.getUser(emaillessUid);
+          // the precondition the guard keys on — asserted, so a firebase change here fails loudly
+          expect(record.providerData).toHaveLength(0);
+
+          const error = (await f.userExternalConnectionServerActions.unlinkUserExternalConnectionLogin({ uid: emaillessUid, providerType: DISCORD }).catch((e: unknown) => e)) as { readonly details: { readonly code: string } };
+
+          expect(error?.details?.code).toBe(USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE);
+
+          const connection = await loadConnection(emaillessUid);
+          expect(connection?.li?.[DISCORD]?.ea).toBe(otherDiscordId);
+        } finally {
+          await f.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: emaillessUid });
+          await f.authService.auth.deleteUser(emaillessUid).catch(() => undefined);
+        }
       });
     });
 

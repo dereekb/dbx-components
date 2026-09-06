@@ -28,6 +28,7 @@ import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidc
 import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { userExternalConnectionUpdateDisconnect } from '../userexternalconnection/userexternalconnection.update';
+import { userExternalConnectionUpdateUnlink } from '../userexternalconnection/userexternalconnection.unlink';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
 import { openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
@@ -141,7 +142,8 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
     rotateClientSecret: oidcEntryRotateClientSecret
   }),
   userExternalConnection: onCallSpecifierHandler({
-    disconnect: userExternalConnectionUpdateDisconnect
+    disconnect: userExternalConnectionUpdateDisconnect,
+    unlink: userExternalConnectionUpdateUnlink
   }),
   openRouterPrompt: openRouterPromptUpdate,
   // Edits the head version in place. The action refuses a version that a newer one has locked.

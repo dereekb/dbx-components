@@ -7,8 +7,16 @@ import { type UserExternalConnectionAccessor } from '../userexternalconnection.a
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { type UserExternalConnectionSignInIdentity, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
-import { userExternalConnectionSignInErrorCode, userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
-import { type UserExternalConnectionSignInStateActor, type UserExternalConnectionStateActor, type UserExternalConnectionStateCoder, isUserExternalConnectionSignInStateActor } from './userexternalconnection.oauth.state';
+import { userExternalConnectionLinkNotEnabledError, userExternalConnectionSignInErrorCode, userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
+import {
+  type UserExternalConnectionLinkStateActor,
+  type UserExternalConnectionSignInStateActor,
+  type UserExternalConnectionStateActor,
+  type UserExternalConnectionStateCoder,
+  type UserExternalConnectionStateMode,
+  isUserExternalConnectionLinkStateActor,
+  isUserExternalConnectionSignInStateActor
+} from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthProviderError, userExternalConnectionErrorCodeForOAuthProviderError } from './userexternalconnection.oauth.error';
 import { type UserExternalConnectionOAuthServiceConfig, isAllowedUserExternalConnectionReturnPath } from './userexternalconnection.oauth.config';
 import { memoryUserExternalConnectionSignInThrottle, type UserExternalConnectionSignInThrottle } from './userexternalconnection.oauth.throttle';
@@ -148,6 +156,14 @@ export interface UserExternalConnectionOAuthAuthorizeUrlInput {
    * Set for a sign-in, absent for a connect — see {@link UserExternalConnectionOAuthExchangeInput.codeVerifier}.
    */
   readonly codeChallenge?: Maybe<string>;
+  /**
+   * Which direction the handoff runs in. Defaults to `connect`.
+   *
+   * This is how an adapter picks its SCOPE SET: the state is an opaque, encrypted envelope the adapter
+   * cannot read, so it cannot work the mode out for itself. `signin` and `link` both want the identity
+   * scopes; `connect` wants the data scopes, which are usually neither a superset nor a subset.
+   */
+  readonly mode?: Maybe<UserExternalConnectionStateMode>;
 }
 
 /**
@@ -506,7 +522,23 @@ export abstract class AbstractUserExternalConnectionOAuthService {
     if (state == null) {
       this.logger.warn('Rejected an authorize request with no resolvable state.');
     } else {
-      result = this.authorizeUrlForState({ state });
+      // the state is DECODED here, not merely forwarded. Two things need it: the adapter has to be
+      // told which scope set to request, and a `link` state must be refused for a provider the app has
+      // not enabled for sign-in. Forwarding an unverified state also meant a garbage one was only
+      // caught after the user had been sent to the provider and come back.
+      const actor = this.stateCoder.verifyState({ state, providerType: this.providerType });
+
+      if (actor == null) {
+        this.logger.warn('Rejected an authorize request whose state could not be verified.');
+      } else if (isUserExternalConnectionSignInStateActor(actor)) {
+        // a sign-in state belongs to the /signin route, which mints its own; accepting one here would
+        // let an unauthenticated flow be started through the authenticated door
+        this.logger.warn('Rejected an authorize request carrying a sign-in state.');
+      } else if (isUserExternalConnectionLinkStateActor(actor) && !this.policy.signIn) {
+        this.logger.warn(`Rejected a link authorize request: "${this.providerType}" is not enabled for sign-in.`);
+      } else {
+        result = this.authorizeUrlForState({ state, mode: actor.mode });
+      }
     }
 
     return result;
@@ -589,7 +621,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       const { codeVerifier, codeChallenge } = await generatePkceMaterial();
       const state = this.stateCoder.mintState({ mode: 'signin', providerType, challenge, returnPath: allowedReturnPath, codeVerifier });
 
-      result = this.authorizeUrlForState({ state, codeChallenge });
+      result = this.authorizeUrlForState({ state, codeChallenge, mode: 'signin' });
     }
 
     return result;
@@ -681,6 +713,8 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       if (isUserExternalConnectionSignInStateActor(actor)) {
         isSignIn = true;
         successUrlForActor = await this.completeSignInCallback(actor, exchanged);
+      } else if (isUserExternalConnectionLinkStateActor(actor)) {
+        successUrlForActor = await this.completeLinkCallback(actor, exchanged);
       } else {
         const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
 
@@ -698,11 +732,18 @@ export abstract class AbstractUserExternalConnectionOAuthService {
         // back to the login page carrying an ALLOWLISTED reason — anything else is reported as a
         // bare failure rather than leaking what went wrong
         failureUrlForActor = userExternalConnectionSignInFailureRedirectUrl({ baseUrl: this.signInFailureUrl, errorCode: userExternalConnectionSignInErrorCode(e) });
+      } else if (isUserExternalConnectionLinkStateActor(actor)) {
+        // a failed link DOES have a session, so it returns to the settings page it started from —
+        // carrying the same allowlisted reason a refused sign-in reports, since the two are refused for
+        // the same reasons and the page needs to be able to say which
+        failureUrlForActor = userExternalConnectionSignInFailureRedirectUrl({ baseUrl: this.failureUrl, errorCode: userExternalConnectionSignInErrorCode(e) });
       }
 
       // a DENIED sign-in has no uid at all, and a connect whose state failed to verify has no actor —
-      // there is nothing to mark in either case
-      if (actor != null && !isUserExternalConnectionSignInStateActor(actor)) {
+      // there is nothing to mark in either case. A failed LINK is deliberately not marked either: it
+      // says nothing about whether the DATA connection's credentials still work, and marking it would
+      // put a working connection into the `error` status.
+      if (actor != null && actor.mode === 'connect') {
         await this.userExternalConnectionActions
           .markUserExternalConnectionError({
             uid: actor.uid,
@@ -750,17 +791,68 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
     const { uid, created } = await signInService.resolveSignIn({ providerType, identity });
 
-    // force the credentials to describe the identity the sign-in resolved against, so the derived
-    // `ec` key the NEXT sign-in looks up cannot disagree with the account that just signed in
-    const identifiedCredentials: UserExternalConnectionCredentials = { ...exchanged, externalAccountId: identity.externalAccountId, label: exchanged.label ?? identity.label };
-    const credentials = await this.credentialsRetainingStoredRefreshToken({ uid, credentials: identifiedCredentials });
+    // the LOGIN LINK is what a sign-in establishes, and it is written from the identity the sign-in
+    // actually resolved against — so the derived `ec` key the NEXT sign-in looks up cannot disagree
+    // with the account that just signed in. It outlives the credentials below, which is the whole
+    // reason it is a separate record.
+    await this.userExternalConnectionActions.linkUserExternalConnectionLogin({ uid, providerType, identity });
 
-    await this.userExternalConnectionActions.connectUserExternalConnection({ uid, providerType, credentials });
+    // the DATA connection is a separate grant and is only written when the app said the sign-in scopes
+    // are good enough to be one. Otherwise a sign-in would replace a broad data grant with the narrow
+    // identity grant every time the user logged in.
+    if (this.policy.signInConnects) {
+      const identifiedCredentials: UserExternalConnectionCredentials = { ...exchanged, externalAccountId: identity.externalAccountId, label: exchanged.label ?? identity.label };
+      const credentials = await this.credentialsRetainingStoredRefreshToken({ uid, credentials: identifiedCredentials });
+
+      await this.userExternalConnectionActions.connectUserExternalConnection({ uid, providerType, credentials });
+    }
 
     const customToken = await signInService.mintCustomTokenForUser({ uid });
     const ticket = this.stateCoder.mintTicket({ customToken, challenge: actor.challenge, uid });
 
     this.logger.log(`Signed in "${providerType}" as uid "${uid}"${created ? ' (new user)' : ''}.`);
     return userExternalConnectionSignInRedirectUrl({ baseUrl: this.signInSuccessUrl, returnPath: actor.returnPath, ticket });
+  }
+
+  /**
+   * Completes the LINK half of a callback: identity, login link, redirect.
+   *
+   * The narrowest of the three branches, and deliberately so. It stores NO credentials: the grant this
+   * round trip obtained carries the identity scopes, which are not the data scopes, so persisting it
+   * as the data connection would silently replace a broad grant with a narrow one.
+   *
+   * It also does NOT revoke anything. Re-authorizing the same OAuth client with narrower scopes may or
+   * may not invalidate the previously issued broad token depending on the provider — and on Discord a
+   * revoke drops the grant for the whole client, which would kill the data connection this link was
+   * meant to be independent of.
+   *
+   * Returns to the CONNECT success url rather than a link-specific one: the link is started from the
+   * settings page, which is where the user should land, and that is already what `successUrl` names.
+   *
+   * @param actor - The verified link state.
+   * @param exchanged - The credentials the code exchange produced.
+   * @returns The success URL.
+   */
+  protected async completeLinkCallback(actor: UserExternalConnectionLinkStateActor, exchanged: UserExternalConnectionCredentials): Promise<WebsiteUrl> {
+    const providerType = this.providerType;
+
+    // the same opt-in that gates signing in: a link is what MAKES a later sign-in resolve to this
+    // account, so an app that has not enabled sign-in must not acquire the binding by this route
+    if (!this.policy.signIn) {
+      throw userExternalConnectionLinkNotEnabledError(providerType);
+    }
+
+    // MANDATORY here for the same reason it is on a sign-in: the link IS the external account id, so
+    // there is nothing to store without one
+    const identity = await this.signInIdentityForCredentials({ credentials: exchanged });
+
+    if (!identity.externalAccountId) {
+      throw userExternalConnectionSignInIdentityUnavailableError(providerType);
+    }
+
+    await this.userExternalConnectionActions.linkUserExternalConnectionLogin({ uid: actor.uid, providerType, identity });
+
+    this.logger.log(`Linked "${providerType}" as a login method for uid "${actor.uid}".`);
+    return this.successUrl;
   }
 }

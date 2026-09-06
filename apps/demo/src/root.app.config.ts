@@ -87,7 +87,9 @@ export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionPr
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   dbxFirebaseKnownExternalConnectionProvider({
     providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
-    signIn: { loginText: 'Log in with Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' }
+    // no loginText: the derived default is already "Continue with Discord", which is how every other
+    // button on the login page reads. Only the brand colors are Discord's own
+    signIn: { backgroundColor: '#5865F2', textColor: '#FFFFFF' }
   }),
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE
 ];

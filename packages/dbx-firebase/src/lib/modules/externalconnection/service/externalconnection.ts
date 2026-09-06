@@ -64,6 +64,14 @@ export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => Pro
 export type DbxFirebaseExternalConnectionAuthorizeState = string;
 
 /**
+ * Which handoff a minted {@link DbxFirebaseExternalConnectionAuthorizeState} begins.
+ *
+ * - `connect` — attach the provider as a DATA connection, with the data scopes.
+ * - `link` — make the provider a LOGIN METHOD, with the sign-in scopes.
+ */
+export type DbxFirebaseExternalConnectionAuthorizeMode = 'connect' | 'link';
+
+/**
  * Mints a fresh {@link DbxFirebaseExternalConnectionAuthorizeState} for a provider.
  */
 export type DbxFirebaseExternalConnectionMintAuthorizeStateFunction = () => Promise<DbxFirebaseExternalConnectionAuthorizeState>;
@@ -164,13 +172,30 @@ export interface DbxFirebaseExternalConnectionProvider {
  */
 export interface DbxFirebaseExternalConnectionSignInConfig {
   /**
-   * Text on the login button, e.g. "Log in with Discord". Defaults to the provider name.
+   * Text on the login button. Defaults to `Continue with <providerName>`.
+   *
+   * "Continue with", not "Log in with", to match every provider in
+   * `DEFAULT_FIREBASE_LOGIN_PROVIDERS`: the same button is shown to a returning user and to someone
+   * signing up for the first time, and the server decides which it turns out to be — so wording that
+   * commits to one of the two is wrong half the time.
    */
   readonly loginText?: Maybe<string>;
   /**
    * Material icon shown in place of the logo.
    */
   readonly loginIcon?: Maybe<string>;
+  /**
+   * Text on the LINK button, e.g. "Connect Discord". Defaults to `Connect <providerName>`.
+   *
+   * The link button makes the provider a login method for an already-signed-in user. Deliberately
+   * worded like the connect row's button because to a user they are the same kind of action; the
+   * sections they sit under are what distinguish them.
+   */
+  readonly linkText?: Maybe<string>;
+  /**
+   * Text on the UNLINK button. Defaults to `Disconnect <providerName>`.
+   */
+  readonly unlinkText?: Maybe<string>;
   /**
    * Brand background color for the button.
    */

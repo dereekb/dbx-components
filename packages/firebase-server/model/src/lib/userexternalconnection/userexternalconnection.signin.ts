@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { type EmailAddress, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type UserExternalConnectionExternalAccountId, type UserExternalConnectionFirestoreCollections, type UserExternalConnectionProviderType, userExternalConnectionsWithExternalAccountQuery } from '@dereekb/firebase';
 import { type FirebaseServerAuthService, getAuthUserOrUndefined } from '@dereekb/firebase-server';
@@ -280,6 +281,46 @@ export interface UserExternalConnectionSignInServiceConfig extends UserExternalC
    * the connect flow already is.
    */
   readonly allowVerifiedEmailLinking?: Maybe<boolean>;
+  /**
+   * Whether a newly created user is also given a PASSWORD credential, so the account has a
+   * Firebase-native way back in that does not depend on the third-party provider.
+   *
+   * Defaults to TRUE, and only applies when the user is created with an email — a password credential
+   * on an emailless user is unreachable, since there is no address to sign in with or reset against.
+   *
+   * The password is high-entropy, generated per user, and DISCARDED — nobody, including this server,
+   * ever learns it. It is not a credential the user is expected to use directly: it exists so
+   * "forgot password" against their own verified email is a working recovery path. That is what makes
+   * removing the third-party provider a safe operation rather than a lockout, which is why
+   * {@link userExternalConnectionUnlinkLastLoginMethodError} is a rare edge rather than the normal
+   * outcome of unlinking.
+   *
+   * Turn it off for an app that wants federated-only accounts and accepts that unlinking the last
+   * provider will be refused.
+   */
+  readonly provisionPasswordCredential?: Maybe<boolean>;
+}
+
+/**
+ * How many random bytes back a provisioned password credential.
+ *
+ * 48 bytes is 384 bits. Deliberately NOT the six-digit `generateRandomSetupPassword()` the new-user
+ * service uses: that is an INVITATION password, delivered to the user and meant to be typed once. This
+ * one is never delivered to anyone, so its only job is to be unguessable — and a six-digit password
+ * sitting on an account nobody is watching would be a genuine takeover vector.
+ */
+export const USER_EXTERNAL_CONNECTION_PROVISIONED_PASSWORD_BYTES = 48;
+
+/**
+ * Generates the password credential a newly created federated user is provisioned with.
+ *
+ * The value is returned to exactly one caller, handed straight to `auth.createUser()`, and never
+ * stored, logged, or returned to the client. Recovery goes through the user's own verified email.
+ *
+ * @returns A high-entropy password.
+ */
+export function generateUserExternalConnectionProvisionedPassword(): string {
+  return randomBytes(USER_EXTERNAL_CONNECTION_PROVISIONED_PASSWORD_BYTES).toString('base64url');
 }
 
 /**
@@ -287,8 +328,13 @@ export interface UserExternalConnectionSignInServiceConfig extends UserExternalC
  *
  * User creation deliberately does NOT go through `AbstractFirebaseServerNewUserService.initializeNewUser()`:
  * that assigns a random six-digit password and writes a setup-password claim, which are INVITATION
- * semantics. A federated sign-in has no password and needs no setup step, so `auth.createUser()` is
- * called directly.
+ * semantics — the password is delivered to the user and the account is expected to complete a setup
+ * step. A federated sign-in has neither, so `auth.createUser()` is called directly.
+ *
+ * It DOES provision a password credential of its own (see `provisionPasswordCredential`), but for the
+ * opposite reason: that one is never delivered to anyone. It exists so the account has a
+ * Firebase-native recovery path via the user's own verified email, which is what makes unlinking the
+ * third-party provider a safe operation instead of a lockout.
  *
  * @param config - The auth service, the public collection, and the app's delegate.
  * @returns The sign-in service.
@@ -299,6 +345,7 @@ export function userExternalConnectionSignInService(config: UserExternalConnecti
   const { authService, userExternalConnectionCollection } = config;
   const delegate = config.delegate ?? denyNewUserSignInDelegate();
   const allowVerifiedEmailLinking = config.allowVerifiedEmailLinking ?? false;
+  const provisionPasswordCredential = config.provisionPasswordCredential ?? true;
 
   async function readExistingUid(input: ResolveUserExternalConnectionSignInInput): Promise<Maybe<FirebaseAuthUserId>> {
     const docs = await userExternalConnectionCollection.queryDocument(userExternalConnectionsWithExternalAccountQuery({ providerType: input.providerType, externalAccountId: input.identity.externalAccountId })).getDocs();
@@ -320,8 +367,13 @@ export function userExternalConnectionSignInService(config: UserExternalConnecti
         throw userExternalConnectionSignInEmailConflictError(providerType);
       }
     } else {
+      // a password credential ONLY alongside an email: without one there is no address to sign in with
+      // or send a reset to, so the credential would be unreachable rather than a recovery path
+      const password = email && provisionPasswordCredential ? generateUserExternalConnectionProvisionedPassword() : undefined;
+
       const created = await authService.auth.createUser({
         ...(email ? { email } : undefined),
+        ...(password ? { password } : undefined),
         ...(resolution.displayName ? { displayName: resolution.displayName } : undefined)
       });
 

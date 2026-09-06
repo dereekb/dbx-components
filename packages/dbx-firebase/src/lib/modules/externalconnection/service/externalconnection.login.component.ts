@@ -24,18 +24,21 @@ export interface DbxFirebaseLoginExternalConnectionComponentData {
  * variation is a url and some brand colors, which is data. The provider it is rendering arrives as
  * `componentData`.
  *
- * ## Why there is no link/unlink here
+ * ## How link/unlink work here
  *
- * A custom-token sign-in produces a Firebase user with NO `providerData` entry — there is no Firebase
- * provider behind it — so `handleUnlink()` has nothing to unlink and
- * `LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP` has no entry to resolve. These providers are
- * therefore registered with `allowLinking: false`, which keeps them out of the link/unlink list
- * entirely.
+ * NOT through the Firebase SDK's own `linkWithPopup` and its inverse. A custom-token sign-in produces
+ * a Firebase user with NO `providerData` entry — there is no Firebase provider behind it — so the base
+ * implementations have nothing to act on and `LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP` has no
+ * entry to resolve.
  *
- * That is not a gap: managing a third-party identity is the CONNECT flow's job, on the settings page,
- * where `DbxFirebaseExternalConnectionsComponent` already renders a connect/disconnect row for the
- * same provider. Sign-in and account management are the two directions of one system, and each has
- * exactly one surface.
+ * Both are overridden onto the external-connection service instead: linking runs a second OAuth round
+ * trip in `link` mode, which writes the account's login link server-side; the inverse calls the server
+ * and removes it. To a user these mean exactly what they mean for Google, which is why these providers
+ * belong in the same list rather than being excluded from it.
+ *
+ * Distinct from the CONNECT row `DbxFirebaseExternalConnectionsComponent` renders for the same
+ * provider: that manages the DATA connection, whose credentials can expire and be revoked
+ * independently of whether the provider is still a way to sign in.
  */
 @Component({
   selector: 'dbx-firebase-login-external-connection',
@@ -68,5 +71,23 @@ export class DbxFirebaseLoginExternalConnectionComponent extends AbstractConfigu
 
   handleLogin(): Promise<unknown> {
     return this.dbxFirebaseExternalConnectionService.signInWithProvider(this.providerType);
+  }
+
+  /**
+   * Links the provider as a login method by starting the `link` OAuth handoff.
+   *
+   * @returns Resolves once the authorize page is opening.
+   */
+  override handleLink(): Promise<unknown> {
+    return this.dbxFirebaseExternalConnectionService.linkProvider(this.providerType);
+  }
+
+  /**
+   * Removes the provider as a login method.
+   *
+   * @returns Resolves once the server has applied the change.
+   */
+  override handleUnlink(): Promise<unknown> {
+    return this.dbxFirebaseExternalConnectionService.unlinkProvider(this.providerType);
   }
 }

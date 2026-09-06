@@ -89,13 +89,16 @@ export function userExternalConnectionServerFirestoreCollectionsFactory(firestor
  *
  * @param appCollections - The app's collections, carrying the public UserExternalConnection collection.
  * @param serverCollections - The module-owned private collection.
+ * @param authService - The app's auth service, when sign-in is configured. Only the unlink lockout
+ *   guard reads it; an app with no sign-in writes no login links and never reaches the guard.
  * @returns The assembled server actions context.
  */
-export function userExternalConnectionServerActionsContextFactory(appCollections: UserExternalConnectionFirestoreCollections & FirestoreContextReference, serverCollections: UserExternalConnectionServerFirestoreCollections): UserExternalConnectionServerActionsContext {
+export function userExternalConnectionServerActionsContextFactory(appCollections: UserExternalConnectionFirestoreCollections & FirestoreContextReference, serverCollections: UserExternalConnectionServerFirestoreCollections, authService?: Maybe<FirebaseServerAuthService>): UserExternalConnectionServerActionsContext {
   return {
     firestoreContext: appCollections.firestoreContext,
     userExternalConnectionCollection: appCollections.userExternalConnectionCollection,
-    userExternalConnectionPrivateCollection: serverCollections.userExternalConnectionPrivateCollection
+    userExternalConnectionPrivateCollection: serverCollections.userExternalConnectionPrivateCollection,
+    userExternalConnectionAuthService: authService
   };
 }
 
@@ -160,6 +163,12 @@ export interface ProvideAppUserExternalConnectionSignInConfig {
    * VERIFIED email. Defaults to false — see the field docs on the service config.
    */
   readonly allowVerifiedEmailLinking?: Maybe<boolean>;
+  /**
+   * Whether a created user is also given a password credential, so the account keeps a
+   * Firebase-native recovery path after the third-party provider is unlinked. Defaults to TRUE — see the
+   * field docs on the service config.
+   */
+  readonly provisionPasswordCredential?: Maybe<boolean>;
 }
 
 /**
@@ -193,7 +202,8 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
               authService,
               userExternalConnectionCollection: appCollections.userExternalConnectionCollection,
               delegate,
-              allowVerifiedEmailLinking: signIn.allowVerifiedEmailLinking
+              allowVerifiedEmailLinking: signIn.allowVerifiedEmailLinking,
+              provisionPasswordCredential: signIn.provisionPasswordCredential
             }),
           inject: signIn.delegateToken ? [appCollectionsToken, signIn.authServiceToken, signIn.delegateToken] : [appCollectionsToken, signIn.authServiceToken]
         }
@@ -233,7 +243,9 @@ export function appUserExternalConnectionModuleMetadata(config: ProvideAppUserEx
       {
         provide: USER_EXTERNAL_CONNECTION_SERVER_ACTIONS_CONTEXT_TOKEN,
         useFactory: userExternalConnectionServerActionsContextFactory,
-        inject: [appCollectionsToken, UserExternalConnectionServerFirestoreCollections]
+        // the auth service rides along only when the app declared sign-in: it is the app's own subclass,
+        // reachable only through the token that config carries
+        inject: signIn ? [appCollectionsToken, UserExternalConnectionServerFirestoreCollections, signIn.authServiceToken] : [appCollectionsToken, UserExternalConnectionServerFirestoreCollections]
       },
       {
         provide: UserExternalConnectionServerActions,

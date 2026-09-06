@@ -21,9 +21,15 @@ export const DBX_FIREBASE_EXTERNAL_CONNECTION_LOGIN_CATEGORY = 'oauth';
  * about which providers exist — there is one registration, and this projects it onto the login
  * registry.
  *
- * `allowLinking: false` is not a limitation but the design: a custom-token user has no
- * `providerData` entry to link or unlink, and managing the identity is the connect flow's job. See
+ * Linking IS allowed. It is not `linkWithPopup` — a custom-token user has no `providerData` entry for
+ * the Firebase SDK to attach to — it is a second OAuth round trip in `link` mode, which writes the
+ * account's login link server-side. The two mean the same thing to a user, so they belong in the same
+ * list; only the mechanism differs, and that lives in
  * {@link DbxFirebaseLoginExternalConnectionComponent}.
+ *
+ * Distinct from the CONNECT row on the settings page, which manages the DATA connection. "Discord is
+ * how I log in" and "Discord's token still works" are different facts with different lifecycles, so
+ * they get different buttons.
  *
  * `registrationComponentClass` is the same component: "Sign up with Discord" and "Log in with
  * Discord" are one button pressed by users in two situations, and the server resolves which it is.
@@ -43,11 +49,13 @@ export function dbxFirebaseExternalConnectionLoginProvider(provider: DbxFirebase
       loginMethodType: signIn.loginMethodType ?? providerType,
       componentClass: DbxFirebaseLoginExternalConnectionComponent,
       registrationComponentClass: DbxFirebaseLoginExternalConnectionComponent,
-      allowLinking: false,
+      allowLinking: true,
       componentData: { providerType },
       assets: {
         providerName: assets.providerName,
-        loginText: signIn.loginText ?? `Log in with ${assets.providerName}`,
+        loginText: signIn.loginText ?? `Continue with ${assets.providerName}`,
+        linkText: signIn.linkText ?? `Connect ${assets.providerName}`,
+        unlinkText: signIn.unlinkText ?? `Disconnect ${assets.providerName}`,
         loginIcon: signIn.loginIcon ?? assets.icon ?? undefined,
         logoUrl: assets.logoUrl ?? undefined,
         logoFilter: assets.logoFilter ?? undefined,

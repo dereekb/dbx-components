@@ -27,3 +27,4 @@ export * from './login.provider.id';
 export * from './manage.providers.component';
 export * from './register.component';
 export * from './register.email.component';
+export * from './login.linked';

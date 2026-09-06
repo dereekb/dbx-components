@@ -69,6 +69,10 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
         // takes the first match, pick arbitrarily between the users holding it
         unique: true,
         signIn: true,
+        // deliberately NOT signInConnects: the demo requests narrow identity scopes for a sign-in and
+        // its own data scopes for a connect, so a login must not overwrite the data connection with the
+        // narrower grant. It is also what makes the settings page's two Discord buttons independently
+        // meaningful — one manages the login link, the other the connected app
         onCollision: 'block'
       }
     ],

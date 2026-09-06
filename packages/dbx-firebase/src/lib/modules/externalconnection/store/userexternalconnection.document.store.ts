@@ -36,7 +36,13 @@ export class UserExternalConnectionDocumentStore extends AbstractDbxFirebaseDocu
   readonly createUserExternalConnection = firebaseDocumentStoreCreateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.createUserExternalConnection);
 
   /**
-   * Disconnects the user from a provider. The only write a client can make to the connection pair.
+   * Disconnects the user from a provider's DATA connection. The provider's login link is retained.
    */
   readonly disconnectUserExternalConnection = firebaseDocumentStoreUpdateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.disconnect);
+
+  /**
+   * Removes a provider as a login method. Strictly more than a disconnect — it takes the data
+   * connection and its credentials with it.
+   */
+  readonly unlinkUserExternalConnectionLogin = firebaseDocumentStoreUpdateFunction(this, this.userExternalConnectionFunctions.userExternalConnection.updateUserExternalConnection.unlink);
 }

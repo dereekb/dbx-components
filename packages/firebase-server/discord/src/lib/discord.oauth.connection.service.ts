@@ -70,6 +70,7 @@ export function discordUserExternalConnectionCredentials(input: DiscordUserExter
 @Injectable()
 export class DiscordUserExternalConnectionOAuthService extends AbstractUserExternalConnectionOAuthService {
   readonly authorizeUrlFactory: DiscordOAuthAuthorizeUrlFactory;
+  readonly signInAuthorizeUrlFactory: DiscordOAuthAuthorizeUrlFactory;
 
   constructor(
     @Inject(DiscordUserExternalConnectionOAuthServiceConfig) readonly config: DiscordUserExternalConnectionOAuthServiceConfig,
@@ -85,7 +86,7 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
   ) {
     super();
 
-    const { scopes, userExternalConnectionOAuth } = config;
+    const { scopes, signInScopes, userExternalConnectionOAuth } = config;
 
     // no clientId guard here, unlike the Cal.com equivalent: DiscordOAuthConfig requires both
     // credentials, so DiscordOAuthApi cannot construct without a client id to authorize as
@@ -93,10 +94,28 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
       redirectUri: userExternalConnectionOAuth.redirectUri,
       scopes
     });
+
+    // a second factory rather than a scope argument on the first: the url factory closes over its
+    // scopes, and the two sets are genuinely different grants rather than one set with a variation
+    this.signInAuthorizeUrlFactory = oauthApi.authorizeUrlFactory({
+      redirectUri: userExternalConnectionOAuth.redirectUri,
+      scopes: signInScopes
+    });
   }
 
+  /**
+   * Picks the scope set from the handoff's direction.
+   *
+   * A `connect` is a DATA grant and gets `scopes`; a `signin` or a `link` is an IDENTITY grant and gets
+   * `signInScopes`. The service cannot read the mode off the state — it is an encrypted envelope only
+   * the state coder can open — so the framework decodes it and passes it in.
+   *
+   * @param input - The state, the optional PKCE challenge, and the mode.
+   * @returns Discord's authorize URL.
+   */
   protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
-    return this.authorizeUrlFactory({ state: input.state, codeChallenge: input.codeChallenge });
+    const factory = input.mode === 'signin' || input.mode === 'link' ? this.signInAuthorizeUrlFactory : this.authorizeUrlFactory;
+    return factory({ state: input.state, codeChallenge: input.codeChallenge });
   }
 
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {

@@ -44,14 +44,30 @@ describe('dbxFirebaseExternalConnectionLoginProvider()', () => {
     expect(derived?.registrationComponentClass).toBe(DbxFirebaseLoginExternalConnectionComponent);
   });
 
-  it('should disallow linking', () => {
-    // a custom-token user has NO providerData entry, so there is nothing to link or unlink —
-    // managing the identity is the connect flow's job
-    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.allowLinking).toBe(false);
+  it('should allow linking', () => {
+    // linking is not linkWithPopup — it is a second OAuth round trip in `link` mode, which the derived
+    // button overrides onto the external-connection service
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.allowLinking).toBe(true);
   });
 
-  it('should default the login text from the provider name', () => {
-    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets.loginText).toBe('Log in with Discord');
+  it('should default the link and unlink text from the provider name', () => {
+    const assets = dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets;
+
+    expect(assets?.linkText).toBe('Connect Discord');
+    expect(assets?.unlinkText).toBe('Disconnect Discord');
+  });
+
+  it('should honor explicit link and unlink text', () => {
+    const assets = dbxFirebaseExternalConnectionLoginProvider({ ...SIGN_IN_CAPABLE, signIn: { linkText: 'Add Discord', unlinkText: 'Remove Discord' } })?.assets;
+
+    expect(assets?.linkText).toBe('Add Discord');
+    expect(assets?.unlinkText).toBe('Remove Discord');
+  });
+
+  it('should default the login text to "Continue with", like every shipped provider', () => {
+    // one button serves login AND registration here, so wording that commits to either is wrong half
+    // the time — and it would read differently from Google/Apple/email sitting beside it
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets.loginText).toBe('Continue with Discord');
   });
 
   it('should carry the brand colors the connection assets deliberately drop', () => {
@@ -83,9 +99,9 @@ describe('dbxFirebaseExternalConnectionLoginProviders()', () => {
   it('should derive a login button from a known provider given a sign-in config', () => {
     // the only way an app turns a known provider into a login provider without hand-spreading the
     // library const
-    const entry = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD, signIn: { loginText: 'Log in with Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' } });
+    const entry = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD, signIn: { loginText: 'Sign in via Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' } });
 
-    expect(entry.signIn?.loginText).toBe('Log in with Discord');
+    expect(entry.signIn?.loginText).toBe('Sign in via Discord');
     // the known provider's presentation is retained rather than restated
     expect(entry.assets.providerName).toBe('Discord');
 

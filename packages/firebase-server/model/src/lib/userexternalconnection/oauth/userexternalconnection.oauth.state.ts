@@ -48,8 +48,12 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_TICKET_EXPIRATION: Milliseconds = 
  *   their uid, minted by an authenticated call before the redirect.
  * - `signin` — an anonymous visitor is authenticating THROUGH the third party. There is no uid yet;
  *   the state carries a client-supplied PKCE challenge instead, which the ticket exchange answers.
+ * - `link` — an ALREADY authenticated user is making the third party a LOGIN METHOD for their account.
+ *   Carries their uid like a connect, but runs the sign-in scopes and writes only the login link. A
+ *   third mode rather than a flag on `connect` because the two request different scopes and produce
+ *   different writes, and because a state minted for one must not be usable for the other.
  */
-export type UserExternalConnectionStateMode = 'connect' | 'signin';
+export type UserExternalConnectionStateMode = 'connect' | 'signin' | 'link';
 
 /**
  * Fields shared by both {@link UserExternalConnectionStatePayload} branches.
@@ -111,9 +115,24 @@ export interface UserExternalConnectionSignInStatePayload extends UserExternalCo
 }
 
 /**
+ * A `link` state: an authenticated user making a provider a login method for their account.
+ *
+ * Shaped like a connect — it carries the uid, and is minted by the same authenticated
+ * `read:authorizeState` call — and differs only in the mode, which is what selects the sign-in scopes
+ * on the way out and the link write on the way back.
+ */
+export interface UserExternalConnectionLinkStatePayload extends UserExternalConnectionStatePayloadBase {
+  readonly mode: 'link';
+  /**
+   * The user the link belongs to.
+   */
+  readonly uid: FirebaseAuthUserId;
+}
+
+/**
  * The payload carried inside an encrypted external-connection OAuth `state`.
  */
-export type UserExternalConnectionStatePayload = UserExternalConnectionConnectStatePayload | UserExternalConnectionSignInStatePayload;
+export type UserExternalConnectionStatePayload = UserExternalConnectionConnectStatePayload | UserExternalConnectionSignInStatePayload | UserExternalConnectionLinkStatePayload;
 
 /**
  * The payload carried inside an encrypted sign-in ticket.
@@ -166,9 +185,18 @@ export interface UserExternalConnectionSignInStateActor {
 }
 
 /**
+ * A verified `link` state — the user the login link will be written for.
+ */
+export interface UserExternalConnectionLinkStateActor {
+  readonly mode: 'link';
+  readonly uid: FirebaseAuthUserId;
+  readonly codeVerifier?: Maybe<string>;
+}
+
+/**
  * Who (or what) a verified state belongs to.
  */
-export type UserExternalConnectionStateActor = UserExternalConnectionConnectStateActor | UserExternalConnectionSignInStateActor;
+export type UserExternalConnectionStateActor = UserExternalConnectionConnectStateActor | UserExternalConnectionSignInStateActor | UserExternalConnectionLinkStateActor;
 
 /**
  * Returns whether a verified actor came from a `signin` state.
@@ -178,6 +206,16 @@ export type UserExternalConnectionStateActor = UserExternalConnectionConnectStat
  */
 export function isUserExternalConnectionSignInStateActor(actor: Maybe<UserExternalConnectionStateActor>): actor is UserExternalConnectionSignInStateActor {
   return actor?.mode === 'signin';
+}
+
+/**
+ * Returns whether a verified actor came from a `link` state.
+ *
+ * @param actor - The verified actor to narrow.
+ * @returns True when the actor is a link actor.
+ */
+export function isUserExternalConnectionLinkStateActor(actor: Maybe<UserExternalConnectionStateActor>): actor is UserExternalConnectionLinkStateActor {
+  return actor?.mode === 'link';
 }
 
 export interface MintUserExternalConnectionConnectStateInput {
@@ -201,7 +239,17 @@ export interface MintUserExternalConnectionSignInStateInput {
   readonly codeVerifier?: Maybe<string>;
 }
 
-export type MintUserExternalConnectionStateInput = MintUserExternalConnectionConnectStateInput | MintUserExternalConnectionSignInStateInput;
+export interface MintUserExternalConnectionLinkStateInput {
+  readonly mode: 'link';
+  readonly uid: FirebaseAuthUserId;
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * The PKCE code verifier whose challenge the authorize request sends to the provider.
+   */
+  readonly codeVerifier?: Maybe<string>;
+}
+
+export type MintUserExternalConnectionStateInput = MintUserExternalConnectionConnectStateInput | MintUserExternalConnectionSignInStateInput | MintUserExternalConnectionLinkStateInput;
 
 export interface VerifyUserExternalConnectionStateInput {
   readonly state: Maybe<string>;
@@ -329,8 +377,19 @@ export function userExternalConnectionStateCoder(config: UserExternalConnectionS
 
   function mintState(input: MintUserExternalConnectionStateInput): string {
     const exp = Date.now() + expiresIn;
-    const payload: UserExternalConnectionStatePayload =
-      input.mode === 'signin' ? { mode: 'signin', providerType: input.providerType, challenge: input.challenge, returnPath: input.returnPath, cv: input.codeVerifier, exp } : { mode: 'connect', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, exp };
+    let payload: UserExternalConnectionStatePayload;
+
+    switch (input.mode) {
+      case 'signin':
+        payload = { mode: 'signin', providerType: input.providerType, challenge: input.challenge, returnPath: input.returnPath, cv: input.codeVerifier, exp };
+        break;
+      case 'link':
+        payload = { mode: 'link', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, exp };
+        break;
+      default:
+        payload = { mode: 'connect', uid: input.uid, providerType: input.providerType, cv: input.codeVerifier, exp };
+        break;
+    }
 
     return base64ToBase64Url(encryption.encryptValue(payload));
   }
@@ -351,7 +410,7 @@ export function userExternalConnectionStateCoder(config: UserExternalConnectionS
               result = { mode: 'signin', challenge: payload.challenge, returnPath: payload.returnPath, codeVerifier: payload.cv };
             }
           } else if (payload.uid) {
-            result = { mode: 'connect', uid: payload.uid, codeVerifier: payload.cv };
+            result = { mode: payload.mode === 'link' ? 'link' : 'connect', uid: payload.uid, codeVerifier: payload.cv };
           }
         }
       } catch {

@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { type UserExternalConnection, type UserExternalConnectionEntry } from './userexternalconnection';
-import { applyUserExternalConnectionEntry, emptyUserExternalConnection, type UserExternalConnectionGrantSummary, userExternalConnectionConnectedProviderTypes, userExternalConnectionEntryForOutcome, userExternalConnectionEntryIsExpired, userExternalConnectionExternalAccountKeys } from './userexternalconnection.util';
+import {
+  applyUserExternalConnectionEntry,
+  applyUserExternalConnectionLogin,
+  emptyUserExternalConnection,
+  type UserExternalConnectionGrantSummary,
+  userExternalConnectionConnectedProviderTypes,
+  userExternalConnectionEntryForOutcome,
+  userExternalConnectionEntryIsExpired,
+  userExternalConnectionExternalAccountKeys,
+  userExternalConnectionLinkedLoginProviderTypes,
+  userExternalConnectionLoginForIdentity,
+  userExternalConnectionLoginForProvider
+} from './userexternalconnection.util';
 import { userExternalConnectionExternalAccountKey } from './userexternalconnection.id';
 
 const TEST_UID = 'testuid';
@@ -182,11 +194,12 @@ describe('applyUserExternalConnectionEntry()', () => {
 });
 
 describe('emptyUserExternalConnection()', () => {
-  it('should return a document with no entries and no connected providers', () => {
+  it('should return a document with no entries, no login links, and no connected providers', () => {
     const result = emptyUserExternalConnection({ uid: TEST_UID, now });
 
     expect(result.uid).toBe(TEST_UID);
     expect(Object.keys(result.e).length).toBe(0);
+    expect(Object.keys(result.li).length).toBe(0);
     expect(result.c).toEqual([]);
     expect(result.uat).toBe(now);
   });
@@ -214,35 +227,35 @@ describe('userExternalConnectionExternalAccountKeys()', () => {
 
   it('should key each entry by provider AND account id', () => {
     // an external account id is only unique WITHIN a provider — two providers could issue the same string
-    expect(userExternalConnectionExternalAccountKeys({ calcom: connectedEntry })).toEqual(['calcom:account-a']);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { calcom: connectedEntry } })).toEqual(['calcom:account-a']);
   });
 
   it('should include an ERRORED entry', () => {
     // identity survives an expired token: a returning user whose credentials broke must still resolve
     // to their own uid rather than being treated as a stranger and given a second account
-    expect(userExternalConnectionExternalAccountKeys({ discord: erroredEntry })).toEqual(['discord:account-b']);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { discord: erroredEntry } })).toEqual(['discord:account-b']);
   });
 
   it('should include a DISCONNECTED entry that retained its account id', () => {
     // unlike `c`, membership is not filtered by status — this array answers "who IS this account?"
-    expect(userExternalConnectionExternalAccountKeys({ zoom: disconnectedEntry })).toEqual(['zoom:account-c']);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { zoom: disconnectedEntry } })).toEqual(['zoom:account-c']);
   });
 
   it('should omit an entry with no external account id', () => {
-    expect(userExternalConnectionExternalAccountKeys({ calcom: unidentifiedEntry })).toEqual([]);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { calcom: unidentifiedEntry } })).toEqual([]);
   });
 
   it('should be sorted for a stable stored value', () => {
-    expect(userExternalConnectionExternalAccountKeys({ zoom: disconnectedEntry, calcom: connectedEntry, discord: erroredEntry })).toEqual(['calcom:account-a', 'discord:account-b', 'zoom:account-c']);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { zoom: disconnectedEntry, calcom: connectedEntry, discord: erroredEntry } })).toEqual(['calcom:account-a', 'discord:account-b', 'zoom:account-c']);
   });
 
   it('should produce keys through the same builder the query reads with', () => {
     // one producer for the format, so the derivation and the lookup cannot disagree on the delimiter
-    expect(userExternalConnectionExternalAccountKeys({ calcom: connectedEntry })).toEqual([userExternalConnectionExternalAccountKey({ providerType: 'calcom', externalAccountId: 'account-a' })]);
+    expect(userExternalConnectionExternalAccountKeys({ entries: { calcom: connectedEntry } })).toEqual([userExternalConnectionExternalAccountKey({ providerType: 'calcom', externalAccountId: 'account-a' })]);
   });
 
   it('should be empty for no entries', () => {
-    expect(userExternalConnectionExternalAccountKeys(null)).toEqual([]);
+    expect(userExternalConnectionExternalAccountKeys({})).toEqual([]);
   });
 });
 
@@ -259,5 +272,111 @@ describe('applyUserExternalConnectionEntry() external account keys', () => {
     const result = applyUserExternalConnectionEntry({ current, uid: TEST_UID, providerType: 'calcom', entry: null, now });
 
     expect(result.ec).toEqual([]);
+  });
+});
+
+describe('userExternalConnectionExternalAccountKeys() union', () => {
+  const connectedEntry: UserExternalConnectionEntry = { st: 'connected', ea: 'account-a', uat: now };
+
+  it('should include a login link with no entry behind it', () => {
+    // the case a sign-in leaves behind when `signInConnects` is off: linked, not connected
+    expect(userExternalConnectionExternalAccountKeys({ logins: { discord: { ea: 'account-d', lat: now, uat: now } } })).toEqual(['discord:account-d']);
+  });
+
+  it('should be the UNION of both maps', () => {
+    expect(userExternalConnectionExternalAccountKeys({ entries: { calcom: connectedEntry }, logins: { discord: { ea: 'account-d', lat: now, uat: now } } })).toEqual(['calcom:account-a', 'discord:account-d']);
+  });
+
+  it('should dedupe a provider present in both maps', () => {
+    // the ordinary state of a linked AND connected provider — one account, one key
+    expect(userExternalConnectionExternalAccountKeys({ entries: { discord: { st: 'connected', ea: 'account-d', uat: now } }, logins: { discord: { ea: 'account-d', lat: now, uat: now } } })).toEqual(['discord:account-d']);
+  });
+});
+
+describe('applyUserExternalConnectionLogin()', () => {
+  const identity = { externalAccountId: 'account-d', email: 'a@b.com', emailVerified: true, label: 'Someone' };
+
+  function linked() {
+    return applyUserExternalConnectionLogin({ current: undefined, uid: TEST_UID, providerType: 'discord', login: userExternalConnectionLoginForIdentity({ identity, now }), now });
+  }
+
+  it('should record the link and derive its key into ec', () => {
+    const result = linked();
+
+    expect(userExternalConnectionLoginForProvider(result, 'discord')?.ea).toBe('account-d');
+    expect(result.ec).toEqual(['discord:account-d']);
+  });
+
+  it('should NOT connect the provider', () => {
+    // an identity-scoped grant is not a data grant, so a link leaves `e` and `c` alone
+    const result = linked();
+
+    expect(result.e['discord']).toBeUndefined();
+    expect(result.c).toEqual([]);
+  });
+
+  it('should leave the entry map untouched when a provider is already connected', () => {
+    const connected = applyUserExternalConnectionEntry({ current: undefined, uid: TEST_UID, providerType: 'discord', entry: { st: 'connected', ea: 'account-d', uat: now }, now });
+    const result = applyUserExternalConnectionLogin({ current: connected, uid: TEST_UID, providerType: 'discord', login: userExternalConnectionLoginForIdentity({ identity, now }), now: later });
+
+    expect(result.e['discord']?.st).toBe('connected');
+    expect(result.c).toEqual(['discord']);
+  });
+
+  it('should list the linked provider types', () => {
+    expect(userExternalConnectionLinkedLoginProviderTypes(linked())).toEqual(['discord']);
+  });
+});
+
+describe('disconnect vs unlink', () => {
+  const identity = { externalAccountId: 'account-d', label: 'Someone' };
+
+  function linkedAndConnected(): UserExternalConnection {
+    const connected = applyUserExternalConnectionEntry({ current: undefined, uid: TEST_UID, providerType: 'discord', entry: { st: 'connected', ea: 'account-d', uat: now }, now });
+    return applyUserExternalConnectionLogin({ current: connected, uid: TEST_UID, providerType: 'discord', login: userExternalConnectionLoginForIdentity({ identity, now }), now });
+  }
+
+  it('should KEEP the login link when the data connection is disconnected', () => {
+    // the bug this split exists to fix: dropping the entry used to drop the sign-in binding with it,
+    // and the next sign-in minted a second Firebase user
+    const result = applyUserExternalConnectionEntry({ current: linkedAndConnected(), uid: TEST_UID, providerType: 'discord', entry: null, now: later });
+
+    expect(userExternalConnectionLoginForProvider(result, 'discord')?.ea).toBe('account-d');
+    expect(result.e['discord']).toBeUndefined();
+    expect(result.c).toEqual([]);
+    // and the identity is STILL resolvable, which is what keeps the returning user on the same uid
+    expect(result.ec).toEqual(['discord:account-d']);
+  });
+
+  it('should clear both maps when the provider is unlinked', () => {
+    const withoutEntry = applyUserExternalConnectionEntry({ current: linkedAndConnected(), uid: TEST_UID, providerType: 'discord', entry: null, now: later });
+    const result = applyUserExternalConnectionLogin({ current: withoutEntry, uid: TEST_UID, providerType: 'discord', login: null, now: later });
+
+    expect(result.e['discord']).toBeUndefined();
+    expect(result.li['discord']).toBeUndefined();
+    expect(result.ec).toEqual([]);
+  });
+});
+
+describe('userExternalConnectionLoginForIdentity()', () => {
+  it('should stamp linkedAt on a first link', () => {
+    expect(userExternalConnectionLoginForIdentity({ identity: { externalAccountId: 'account-d' }, now }).lat).toBe(now);
+  });
+
+  it('should PRESERVE linkedAt across a relink', () => {
+    // the mirror of how an entry preserves `coa`: relinking is a re-consent, not a new relationship
+    const previous = userExternalConnectionLoginForIdentity({ identity: { externalAccountId: 'account-d' }, now });
+    const result = userExternalConnectionLoginForIdentity({ identity: { externalAccountId: 'account-d' }, previous, now: later });
+
+    expect(result.lat).toBe(now);
+    expect(result.uat).toBe(later);
+  });
+
+  it('should retain a previously reported email the provider omitted this time', () => {
+    const previous = userExternalConnectionLoginForIdentity({ identity: { externalAccountId: 'account-d', email: 'a@b.com', emailVerified: true }, now });
+    const result = userExternalConnectionLoginForIdentity({ identity: { externalAccountId: 'account-d' }, previous, now: later });
+
+    expect(result.em).toBe('a@b.com');
+    expect(result.emv).toBe(true);
   });
 });

@@ -32,6 +32,7 @@ import {
   sendNotificationParamsType,
   submitFormSpaceParamsType,
   syncStorageFileWithGroupsParamsType,
+  unlinkUserExternalConnectionLoginParamsType,
   updateFormSpaceParamsType,
   updateNotificationBoxParamsType,
   updateNotificationBoxRecipientParamsType,
@@ -984,7 +985,15 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
     description: 'Mints the short-lived `state` that begins an OAuth connect handoff for a provider.\n\nA read rather than an update: it changes nothing, it just proves who is asking. The app\ndecides how the state is signed and how long it lives.',
     paramsTypeDescription: 'Parameters for beginning an OAuth connect handoff for a provider.',
-    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' }],
+    paramsFields: [
+      { name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to begin connecting to.' },
+      {
+        name: 'mode',
+        typeText: "Maybe<'connect' | 'link'>",
+        description:
+          'Which handoff the state begins. Defaults to `connect`.\n\n- `connect` — attach the provider as a DATA connection, with the data scopes.\n- `link` — make the provider a LOGIN METHOD for the already-signed-in caller, with the sign-in\n  scopes. A separate round trip because the two scope sets are not guaranteed to be the same,\n  so a data grant cannot be assumed to cover an identity read.\n\nAbsent means `connect`, so a client minting a state before `link` existed still gets one.'
+      }
+    ],
     resultTypeDescription:
       "The opaque, short-lived `state` to carry through a provider's OAuth handoff.\n\nMinting it requires an authenticated call, because a top-level navigation to the provider's\nauthorize endpoint carries no credentials and the server must already know who is connecting. The\nclient's only job is to pass this through — it must never append its ID token to the redirect.",
     resultFields: [{ name: 'state', typeText: 'string', description: 'The state to send on the authorize request.' }]
@@ -997,10 +1006,24 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: disconnectUserExternalConnectionParamsType,
     groupName: 'UserExternalConnection',
     sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
-    description: "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result.",
+    description:
+      "Disconnects the current user from the given provider.\n\nRemoves the provider's credentials and its entry in one transaction, and recomputes the\nconnected-provider array from the result. The provider's LOGIN LINK is retained — a data\nconnection ending says nothing about whether the provider is still a way to sign in.",
     paramsTypeDescription:
       "Parameters for disconnecting the current user from a third-party provider.\n\nThis is the ONLY write path a client has to the connection pair. There is deliberately no connect\nor update params type here: connecting requires credentials, which only the server ever sees.\n\nIf no target model is provided, the current user's connection document is assumed.",
     paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to disconnect from.' }]
+  },
+  {
+    model: 'userExternalConnection',
+    verb: 'update',
+    specifier: 'unlink',
+    paramsTypeName: 'UnlinkUserExternalConnectionLoginParams',
+    paramsValidator: unlinkUserExternalConnectionLoginParamsType,
+    groupName: 'UserExternalConnection',
+    sourceFile: 'packages/firebase/src/lib/model/userexternalconnection/userexternalconnection.api.ts',
+    description: 'Removes the given provider as a login method for the current user.\n\nRemoves the login link, the entry, and the credentials in one transaction. Refused when it\nwould leave the account with no way to sign back in.',
+    paramsTypeDescription:
+      'Parameters for removing a provider as a LOGIN METHOD for the current user.\n\nDistinct from {@link DisconnectUserExternalConnectionParams}, and strictly larger: a disconnect\ndrops the data connection and leaves the login link in place, whereas an unlink removes the login\nlink AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no\nlonger how I log in" are different requests, so they are different calls.\n\nIf no target model is provided, the current user\'s connection document is assumed.',
+    paramsFields: [{ name: 'providerType', typeText: 'UserExternalConnectionProviderType', description: 'The provider type to unlink.' }]
   }
 ];
 
@@ -1634,8 +1657,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     fields: [
       { name: 'uid', longName: 'uid', optional: false },
       { name: 'e', longName: 'entries', tsType: 'UserExternalConnectionEntryMap', optional: false, description: 'Per-provider connection state, keyed by provider type.' },
+      { name: 'li', longName: 'logins', tsType: 'UserExternalConnectionLoginMap', optional: false, description: 'Per-provider LOGIN LINKS, keyed by provider type.' },
       { name: 'c', longName: 'connectedProviderTypes', tsType: 'UserExternalConnectionProviderType[]', optional: false, description: 'DERIVED from `e`: every provider type whose entry status is `connected`.' },
-      { name: 'ec', longName: 'externalAccountKeys', tsType: 'Maybe<UserExternalConnectionExternalAccountKey[]>', optional: true, description: 'DERIVED from `e`: the `<providerType>:<externalAccountId>` key of every entry that names an external account.' },
+      { name: 'ec', longName: 'externalAccountKeys', tsType: 'Maybe<UserExternalConnectionExternalAccountKey[]>', optional: true, description: "DERIVED from `e` UNION `li`: the `<providerType>:<externalAccountId>` key of every entry that names an external account, plus every login link's." },
       { name: 'uat', longName: 'updatedAt', tsType: 'Date', optional: false, description: 'Date this document was last updated at.' }
     ],
     read: 'owner',

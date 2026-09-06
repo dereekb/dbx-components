@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type * as admin from 'firebase-admin';
-import { FIREBASE_AUTH_USER_NOT_FOUND_ERROR, type FirestoreQueryConstraint, USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE, USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE, USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE, userExternalConnectionExternalAccountKey } from '@dereekb/firebase';
+import {
+  applyUserExternalConnectionLogin,
+  FIREBASE_AUTH_USER_NOT_FOUND_ERROR,
+  type FirestoreQueryConstraint,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+  userExternalConnectionExternalAccountKey,
+  userExternalConnectionLoginForIdentity
+} from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type EmailAddress, type Maybe } from '@dereekb/util';
 import {
@@ -61,7 +70,7 @@ interface StubAuth {
  */
 function stubAuthService(existing: StubAuthUser[] = []): StubAuth {
   const users = [...existing];
-  const created: { email?: Maybe<string>; displayName?: Maybe<string> }[] = [];
+  const created: { email?: Maybe<string>; password?: Maybe<string>; displayName?: Maybe<string> }[] = [];
   const claims: { uid: string; claims: object }[] = [];
   const minted: string[] = [];
   let nextUid = 0;
@@ -85,7 +94,7 @@ function stubAuthService(existing: StubAuthUser[] = []): StubAuth {
 
       return found as unknown as admin.auth.UserRecord;
     },
-    createUser: async (request: { email?: Maybe<string>; displayName?: Maybe<string> }) => {
+    createUser: async (request: { email?: Maybe<string>; password?: Maybe<string>; displayName?: Maybe<string> }) => {
       created.push(request);
       nextUid += 1;
 
@@ -144,6 +153,7 @@ interface MakeServiceConfig {
   readonly existingUid?: Maybe<string>;
   readonly delegate?: Maybe<UserExternalConnectionSignInDelegate>;
   readonly allowVerifiedEmailLinking?: Maybe<boolean>;
+  readonly provisionPasswordCredential?: Maybe<boolean>;
 }
 
 function makeService(config: MakeServiceConfig = {}) {
@@ -154,7 +164,8 @@ function makeService(config: MakeServiceConfig = {}) {
     authService: auth.authService,
     userExternalConnectionCollection: collection.userExternalConnectionCollection,
     delegate: config.delegate,
-    allowVerifiedEmailLinking: config.allowVerifiedEmailLinking
+    allowVerifiedEmailLinking: config.allowVerifiedEmailLinking,
+    provisionPasswordCredential: config.provisionPasswordCredential
   });
 
   return { service, auth, collection };
@@ -237,6 +248,29 @@ describe('userExternalConnectionSignInService()', () => {
   const createAnyone = autoCreateUserSignInDelegate({ requireEmailToCreateUser: 'none' });
 
   describe('readExistingUid()', () => {
+    it('should resolve a holder whose account is recorded ONLY as a login link', async () => {
+      // the disconnect-then-sign-in case. `ec` is the union of both maps, so a user who dropped the
+      // data connection is still resolvable — before the split, disconnecting destroyed the binding and
+      // the next sign-in minted them a second Firebase user
+      const linkOnly = applyUserExternalConnectionLogin({
+        current: undefined,
+        uid: 'holder-uid',
+        providerType: TEST_PROVIDER_TYPE,
+        login: userExternalConnectionLoginForIdentity({ identity: { externalAccountId: TEST_EXTERNAL_ACCOUNT_ID }, now: new Date() }),
+        now: new Date()
+      });
+
+      expect(linkOnly.e[TEST_PROVIDER_TYPE]).toBeUndefined();
+      // ...and the key the query below asks for is exactly what that document carries
+      expect(linkOnly.ec).toContain(TEST_EXTERNAL_ACCOUNT_KEY);
+
+      const { service, collection } = makeService({ existingUid: 'holder-uid', existingUsers: [{ uid: 'holder-uid' }] });
+      const result = await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity() });
+
+      expect(result).toEqual({ uid: 'holder-uid', created: false });
+      expect(collection.queries[0][0]).toMatchObject({ data: { fieldPath: 'ec', opStr: 'array-contains', value: TEST_EXTERNAL_ACCOUNT_KEY } });
+    });
+
     it('should resolve the holder through the `ec` array-contains query', async () => {
       const { service, collection } = makeService({ existingUid: 'holder-uid', existingUsers: [{ uid: 'holder-uid' }] });
 
@@ -304,6 +338,52 @@ describe('userExternalConnectionSignInService()', () => {
 
       expect(result.created).toBe(true);
       expect(auth.created).toEqual([{}]);
+    });
+  });
+
+  describe('the provisioned password credential', () => {
+    const createAnyoneWithEmail = autoCreateUserSignInDelegate({ requireEmailToCreateUser: 'verified' });
+
+    it('should give a created user a password, so the account has a way back in without the provider', async () => {
+      // this is what makes unlinking the third-party provider an ordinary operation rather than a
+      // lockout: the user can always recover through "forgot password" on their own verified email
+      const { service, auth } = makeService({ delegate: createAnyoneWithEmail });
+
+      await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity({ email: 'free@example.com', emailVerified: true }) });
+
+      expect(auth.created).toHaveLength(1);
+      expect(auth.created[0].password).toBeTruthy();
+    });
+
+    it('should generate a high-entropy password, never a shared default', async () => {
+      // a constant — or a six-digit one — would be an account-takeover hole on every federated user
+      const { service, auth } = makeService({ delegate: createAnyoneWithEmail });
+
+      await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity({ email: 'one@example.com', emailVerified: true }) });
+      await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity({ email: 'two@example.com', emailVerified: true }) });
+
+      const [first, second] = auth.created.map((x) => x.password as string);
+
+      expect(first).not.toBe(second);
+      expect(first.length).toBeGreaterThanOrEqual(32);
+    });
+
+    it('should NOT set one on a user created with no email', async () => {
+      // there would be no address to sign in with or send a reset to, so the credential is unreachable
+      const { service, auth } = makeService({ delegate: createAnyone });
+
+      await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity() });
+
+      expect(auth.created[0].email).toBeUndefined();
+      expect(auth.created[0].password).toBeUndefined();
+    });
+
+    it('should be disableable for an app that wants federated-only accounts', async () => {
+      const { service, auth } = makeService({ delegate: createAnyoneWithEmail, provisionPasswordCredential: false });
+
+      await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity({ email: 'federated-only@example.com', emailVerified: true }) });
+
+      expect(auth.created[0].password).toBeUndefined();
     });
   });
 

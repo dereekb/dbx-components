@@ -39,6 +39,20 @@ export const DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCL
 export const DEFAULT_DISCORD_OAUTH_SCOPES: readonly DiscordOAuthScope[] = ['identify'];
 
 /**
+ * The scopes requested for an IDENTITY round trip — a sign-in, or linking Discord as a login method.
+ *
+ * A separate default from {@link DEFAULT_DISCORD_OAUTH_SCOPES} because the two answer different
+ * questions. The data default is least privilege for whatever the integration reads; this one is what
+ * it takes to know WHO signed in, which needs `email` — without it the identity carries none, which
+ * both fails the shipped auto-create delegate's email requirement and silently skips the sign-in
+ * service's existing-account collision check.
+ *
+ * Keeping them separate is what lets an app request a broad data grant without every login also
+ * demanding it, and vice versa.
+ */
+export const DEFAULT_DISCORD_SIGN_IN_OAUTH_SCOPES: readonly DiscordOAuthScope[] = ['identify', 'email'];
+
+/**
  * Configuration for the {@link DiscordUserExternalConnectionOAuthService}.
  *
  * Extends the framework config with the one thing that is Discord's own — which scopes to request.
@@ -47,7 +61,14 @@ export const DEFAULT_DISCORD_OAUTH_SCOPES: readonly DiscordOAuthScope[] = ['iden
  * `@dereekb/discord/nestjs`, and the service reads them through the injected `DiscordOAuthApi`.
  */
 export abstract class DiscordUserExternalConnectionOAuthServiceConfig extends UserExternalConnectionOAuthServiceConfig {
+  /**
+   * The scopes requested for a DATA connect.
+   */
   readonly scopes!: readonly DiscordOAuthScope[];
+  /**
+   * The scopes requested for a sign-in or a login-method link.
+   */
+  readonly signInScopes!: readonly DiscordOAuthScope[];
 }
 
 export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
@@ -73,9 +94,14 @@ export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
    */
   readonly allowedReturnPaths?: Maybe<readonly string[]>;
   /**
-   * The scopes to request. Defaults to {@link DEFAULT_DISCORD_OAUTH_SCOPES}.
+   * The scopes to request for a DATA connect. Defaults to {@link DEFAULT_DISCORD_OAUTH_SCOPES}.
    */
   readonly scopes?: Maybe<readonly DiscordOAuthScope[]>;
+  /**
+   * The scopes to request for a SIGN-IN or a login-method link. Defaults to
+   * {@link DEFAULT_DISCORD_SIGN_IN_OAUTH_SCOPES}.
+   */
+  readonly signInScopes?: Maybe<readonly DiscordOAuthScope[]>;
 }
 
 /**
@@ -86,11 +112,11 @@ export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
  * code-declared paths. The client credentials are read by `discordOAuthServiceConfigFactory` in
  * `@dereekb/discord/nestjs`, so registering Discord adds no deployment configuration here.
  *
- * @param config - The env service, the return paths, and the optional scope override.
+ * @param config - The env service, the return paths, and the optional scope overrides.
  * @returns The validated service configuration.
  */
 export function discordUserExternalConnectionOAuthServiceConfigFactory(config: DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig): DiscordUserExternalConnectionOAuthServiceConfig {
-  const { envService, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopes } = config;
+  const { envService, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopes, signInScopes } = config;
 
   const baseConfig = userExternalConnectionOAuthServiceConfigFactory({
     envService,
@@ -104,6 +130,7 @@ export function discordUserExternalConnectionOAuthServiceConfigFactory(config: D
 
   return {
     ...baseConfig,
-    scopes: scopes ?? DEFAULT_DISCORD_OAUTH_SCOPES
+    scopes: scopes ?? DEFAULT_DISCORD_OAUTH_SCOPES,
+    signInScopes: signInScopes ?? DEFAULT_DISCORD_SIGN_IN_OAUTH_SCOPES
   };
 }
