@@ -3,7 +3,7 @@ import { type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type UserExternalConnectionCredentials } from '../userexternalconnection.private';
 import { type UserExternalConnectionAccessor } from '../userexternalconnection.accessor.service';
-import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
+import { type UserExternalConnectionLinkLoginParams, type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { generatePkceCodeChallenge, generatePkceCodeVerifier } from '@dereekb/util';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionProviderPolicyRegistry } from '../userexternalconnection.policy';
 import { type ResolveUserExternalConnectionSignInInput, type UserExternalConnectionSignInResult, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
@@ -46,6 +46,7 @@ interface CapturingServerActions {
   readonly actions: UserExternalConnectionServerActions;
   readonly accessor: UserExternalConnectionAccessor;
   readonly connects: CapturedConnect[];
+  readonly links: UserExternalConnectionLinkLoginParams[];
   readonly errors: CapturedError[];
   readonly reads: { readonly uid: string; readonly providerType: string }[];
 }
@@ -70,12 +71,16 @@ interface CapturingServerActionsConfig {
  */
 function capturingServerActions(config: CapturingServerActionsConfig = {}): CapturingServerActions {
   const connects: CapturedConnect[] = [];
+  const links: UserExternalConnectionLinkLoginParams[] = [];
   const errors: CapturedError[] = [];
   const reads: { uid: string; providerType: string }[] = [];
 
   const actions = {
     connectUserExternalConnection: async (params: CapturedConnect) => {
       connects.push(params);
+    },
+    linkUserExternalConnectionLogin: async (params: UserExternalConnectionLinkLoginParams) => {
+      links.push(params);
     },
     markUserExternalConnectionError: async (params: CapturedError) => {
       errors.push(params);
@@ -101,7 +106,7 @@ function capturingServerActions(config: CapturingServerActionsConfig = {}): Capt
       })
   };
 
-  return { actions, accessor, connects, errors, reads };
+  return { actions, accessor, connects, links, errors, reads };
 }
 
 /**
@@ -273,7 +278,7 @@ describe('AbstractUserExternalConnectionOAuthService sign-in', () => {
     return stateCoder.mintState({ mode: 'signin', providerType: TEST_PROVIDER_TYPE, challenge, returnPath });
   }
 
-  it('should connect the resolved uid and redirect with a ticket', async () => {
+  it('should link the resolved uid and redirect with a ticket', async () => {
     const captured = capturingServerActions();
     const signIn = capturingSignInService();
     const service = makeSignInService(captured, signIn);
@@ -286,9 +291,29 @@ describe('AbstractUserExternalConnectionOAuthService sign-in', () => {
     expect(result.success).toBe(true);
     expect(signIn.resolved[0]?.identity.externalAccountId).toBe('external-1');
     expect(signIn.minted).toEqual(['signed-in-uid']);
-    // the same paired write a connect uses — a user who signed in through a provider IS connected to it
-    expect(captured.connects[0]?.uid).toBe('signed-in-uid');
+    // a sign-in establishes the LOGIN LINK, written from the identity it resolved against
+    expect(captured.links[0]?.uid).toBe('signed-in-uid');
+    expect(captured.links[0]?.identity.externalAccountId).toBe('external-1');
+    // and NOT the data connection: the identity grant it carries is not the data grant
+    expect(captured.connects).toHaveLength(0);
     expect(new URL(result.redirectUrl).searchParams.get('ticket')).toBeTruthy();
+  });
+
+  it('should ALSO write the data connection when the policy enables signInConnects', async () => {
+    // the opt-in for an app whose sign-in scopes are a superset of its data scopes
+    const captured = capturingServerActions();
+    const service = makeSignInService(captured, capturingSignInService(), userExternalConnectionProviderPolicyRegistry([{ providerType: TEST_PROVIDER_TYPE, unique: true, signIn: true, signInConnects: true }]));
+
+    service.exchangeResult = { accessToken: 'access-token', issuedAt: new Date().toISOString(), externalAccountId: 'external-1' };
+
+    const result = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
+
+    expect(result.success).toBe(true);
+    expect(captured.links).toHaveLength(1);
+    expect(captured.connects[0]?.uid).toBe('signed-in-uid');
+    // forced to describe the identity the sign-in resolved against, so the `ec` key the NEXT sign-in
+    // looks up cannot disagree with the account that just signed in
+    expect(captured.connects[0]?.credentials.externalAccountId).toBe('external-1');
   });
 
   it('should hand the ticket back only to the holder of the verifier', async () => {

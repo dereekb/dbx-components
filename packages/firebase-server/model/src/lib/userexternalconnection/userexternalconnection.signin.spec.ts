@@ -289,7 +289,8 @@ describe('userExternalConnectionSignInService()', () => {
       const result = await service.resolveSignIn({ providerType: TEST_PROVIDER_TYPE, identity: testIdentity({ email: 'free@example.com', emailVerified: true, label: 'Someone' }) });
 
       expect(result.created).toBe(true);
-      expect(auth.created).toEqual([{ email: 'free@example.com', displayName: 'Someone' }]);
+      // the provisioned password credential is random by design — see 'the provisioned password credential'
+      expect(auth.created).toEqual([{ email: 'free@example.com', displayName: 'Someone', password: expect.any(String) }]);
     });
 
     it('should apply the resolution claims to the created user', async () => {
