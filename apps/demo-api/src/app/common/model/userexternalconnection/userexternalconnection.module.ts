@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
+import { type InjectionToken, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DemoFirestoreCollections } from 'demo-firebase';
-import { appUserExternalConnectionModuleMetadata } from '@dereekb/firebase-server/model';
-import { DemoApiFirestoreModule } from '../../firebase';
+import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
+import { type UserExternalConnectionSignInDelegate, appUserExternalConnectionModuleMetadata, autoCreateUserSignInDelegate } from '@dereekb/firebase-server/model';
+import { DemoApiAuthModule, DemoApiAuthService, DemoApiFirestoreModule } from '../../firebase';
 
 /**
  * Path on the app URL a user is returned to after an external-connection OAuth handoff.
@@ -22,6 +22,28 @@ export const DEMO_EXTERNAL_CONNECTION_RETURN_PATH = '/demo/app/settings';
 export const DEMO_EXTERNAL_CONNECTION_FAILURE_RETURN_PATH = `${DEMO_EXTERNAL_CONNECTION_RETURN_PATH}?connect=failed`;
 
 /**
+ * Path a user is returned to after a successful SIGN-IN.
+ *
+ * Deliberately NOT the settings page a connect returns to: someone who just signed in was not on the
+ * settings page to begin with, so they land where a freshly signed-in user belongs.
+ */
+export const DEMO_EXTERNAL_CONNECTION_SIGN_IN_RETURN_PATH = '/demo/app/home';
+
+/**
+ * Path a user is returned to after a FAILED sign-in, flagged and carrying the reason code.
+ *
+ * The LOGIN page rather than the connect failure page: a failed sign-in leaves the browser signed
+ * out, and the settings page is auth-gated — sending them there would replace the explanation with a
+ * redirect to the login page anyway, minus the reason.
+ */
+export const DEMO_EXTERNAL_CONNECTION_SIGN_IN_FAILURE_PATH = '/demo/auth/login?signin=failed';
+
+/**
+ * NestJS injection token for the demo's {@link UserExternalConnectionSignInDelegate}.
+ */
+export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE';
+
+/**
  * UserExternalConnection model module.
  *
  * NOTE: the private half of the connection pair is provided ONLY here. It is deliberately absent
@@ -30,12 +52,42 @@ export const DEMO_EXTERNAL_CONNECTION_FAILURE_RETURN_PATH = `${DEMO_EXTERNAL_CON
  *
  * The provider-agnostic OAuth `state` coder comes from the module metadata, so every registered
  * provider shares one coder and one secret.
+ *
+ * Discord is the demo's one SIGN-IN provider: it is the only adapter in the workspace that reads a
+ * stable external account id plus an email out of its token exchange, which is what the identity
+ * rules below need.
  */
 @Module(
   appUserExternalConnectionModuleMetadata({
     dependencyModule: DemoApiFirestoreModule,
     appCollectionsToken: DemoFirestoreCollections,
-    imports: [ConfigModule]
+    imports: [ConfigModule, DemoApiAuthModule],
+    providerPolicies: [
+      {
+        providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+        // one Discord account is one demo account: sharing it would make the sign-in lookup, which
+        // takes the first match, pick arbitrarily between the users holding it
+        unique: true,
+        signIn: true,
+        onCollision: 'block'
+      }
+    ],
+    signIn: {
+      authServiceToken: DemoApiAuthService,
+      delegateToken: DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE,
+      // stated rather than left to the default: a Discord email matching an existing demo account
+      // must REJECT the sign-in, not adopt the account. The remedy is to recover that email, sign in
+      // with it, and connect Discord from settings — which is the connect flow.
+      allowVerifiedEmailLinking: false
+    },
+    providers: [
+      {
+        provide: DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE,
+        // open registration: anyone who can authenticate at Discord gets a demo account. The email
+        // requirement is passed explicitly even though it is the default, so the knob is visible.
+        useFactory: (): UserExternalConnectionSignInDelegate => autoCreateUserSignInDelegate({ requireEmailToCreateUser: 'verified' })
+      }
+    ]
   })
 )
 export class UserExternalConnectionModule {}

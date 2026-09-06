@@ -2,6 +2,9 @@
   @switch (mode()) {
     @case ('login') {
       <h3>Login</h3>
+      @if (signInErrorMessage(); as signInErrorMessage) {
+        <p class="app-login-view-signin-error" role="alert" [dbxTextColor]="'warn'">{{ signInErrorMessage }}</p>
+      }
       <dbx-firebase-login></dbx-firebase-login>
       <p>
         Need an account? Register

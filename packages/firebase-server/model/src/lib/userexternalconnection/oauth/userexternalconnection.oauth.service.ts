@@ -7,7 +7,7 @@ import { type UserExternalConnectionAccessor } from '../userexternalconnection.a
 import { type UserExternalConnectionServerActions } from '../userexternalconnection.action.server';
 import { type UserExternalConnectionSignInIdentity, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
 import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnectionPolicyForProviderType } from '../userexternalconnection.policy';
-import { userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
+import { userExternalConnectionSignInErrorCode, userExternalConnectionSignInIdentityUnavailableError, userExternalConnectionSignInNotEnabledError } from '../userexternalconnection.error';
 import { type UserExternalConnectionSignInStateActor, type UserExternalConnectionStateActor, type UserExternalConnectionStateCoder, isUserExternalConnectionSignInStateActor } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthProviderError, userExternalConnectionErrorCodeForOAuthProviderError } from './userexternalconnection.oauth.error';
 import { type UserExternalConnectionOAuthServiceConfig, isAllowedUserExternalConnectionReturnPath } from './userexternalconnection.oauth.config';
@@ -235,6 +235,45 @@ export function userExternalConnectionSignInRedirectUrl(input: UserExternalConne
   }
 
   url.searchParams.set(USER_EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM, input.ticket);
+  return url.toString();
+}
+
+/**
+ * The query parameter a failed sign-in returns its reason code on.
+ */
+export const USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM = 'signInError';
+
+export interface UserExternalConnectionSignInFailureRedirectUrlInput {
+  /**
+   * The configured sign-in failure URL.
+   */
+  readonly baseUrl: WebsiteUrl;
+  /**
+   * The allowlisted reason code, when the failure carried a reportable one.
+   */
+  readonly errorCode?: Maybe<string>;
+}
+
+/**
+ * Builds the URL a failed sign-in redirects to.
+ *
+ * Mirrors {@link userExternalConnectionSignInRedirectUrl}, minus the return path: a refusal belongs
+ * on the page that can explain it, not wherever the sign-in was headed. The reason is a CODE the app
+ * maps to its own copy — a server message rendered verbatim in a browser is both an information leak
+ * and untranslatable.
+ *
+ * @param input - The base URL and the allowlisted reason code.
+ * @returns The redirect URL, carrying the reason when there was one.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionSignInFailureRedirectUrl(input: UserExternalConnectionSignInFailureRedirectUrlInput): WebsiteUrl {
+  const url = new URL(input.baseUrl);
+
+  if (input.errorCode) {
+    url.searchParams.set(USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM, input.errorCode);
+  }
+
   return url.toString();
 }
 
@@ -505,6 +544,18 @@ export abstract class AbstractUserExternalConnectionOAuthService {
   }
 
   /**
+   * Where a FAILED sign-in returns to, before the reason code is appended.
+   *
+   * Falls back to the connect failure url, which is the pre-existing behavior — but an app that
+   * configures one gets its login page instead of the auth-gated page a signed-out user cannot see.
+   *
+   * @returns The configured sign-in failure url, falling back to the connect failure url.
+   */
+  get signInFailureUrl(): WebsiteUrl {
+    return this.config.userExternalConnectionOAuth.signInFailureUrl ?? this.failureUrl;
+  }
+
+  /**
    * Builds the authorize URL for an unauthenticated SIGN-IN request.
    *
    * Unlike the connect direction, the state is minted HERE: there is no prior authenticated call to
@@ -602,6 +653,10 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
     let actor: Maybe<UserExternalConnectionOAuthActor>;
     let successUrlForActor: Maybe<WebsiteUrl>;
+    // read in the `catch`, where `actor` may be null even for a sign-in whose state DID verify but
+    // whose exchange then threw — so the direction is latched the moment it becomes known
+    let isSignIn = false;
+    let failureUrlForActor: Maybe<WebsiteUrl>;
 
     try {
       actor = this.stateCoder.verifyState({ state, providerType });
@@ -624,6 +679,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       const exchanged = await this.credentialsForAuthorizationCode({ code, redirectUri, query, codeVerifier: actor.codeVerifier });
 
       if (isUserExternalConnectionSignInStateActor(actor)) {
+        isSignIn = true;
         successUrlForActor = await this.completeSignInCallback(actor, exchanged);
       } else {
         const credentials = await this.credentialsRetainingStoredRefreshToken({ uid: actor.uid, credentials: exchanged });
@@ -634,6 +690,15 @@ export abstract class AbstractUserExternalConnectionOAuthService {
       }
     } catch (e) {
       this.logger.error(`Failed completing the "${providerType}" OAuth handoff: `, e);
+
+      isSignIn = isSignIn || (actor != null && isUserExternalConnectionSignInStateActor(actor));
+
+      if (isSignIn) {
+        // a failed sign-in has no session to return to the connect settings page with, so it goes
+        // back to the login page carrying an ALLOWLISTED reason — anything else is reported as a
+        // bare failure rather than leaking what went wrong
+        failureUrlForActor = userExternalConnectionSignInFailureRedirectUrl({ baseUrl: this.signInFailureUrl, errorCode: userExternalConnectionSignInErrorCode(e) });
+      }
 
       // a DENIED sign-in has no uid at all, and a connect whose state failed to verify has no actor —
       // there is nothing to mark in either case
@@ -652,7 +717,7 @@ export abstract class AbstractUserExternalConnectionOAuthService {
 
     return {
       success: successUrlForActor != null,
-      redirectUrl: successUrlForActor ?? this.failureUrl
+      redirectUrl: successUrlForActor ?? failureUrlForActor ?? this.failureUrl
     };
   }
 

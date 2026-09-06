@@ -77,6 +77,27 @@ describe('userExternalConnectionOAuthServiceConfigFactory()', () => {
     expect(userExternalConnectionOAuth.failureUrl).toBe('https://app.example.com/demo/app/settings?connect=failed');
   });
 
+  it('defaults the sign-in urls to the connect ones', () => {
+    const { userExternalConnectionOAuth } = userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService(), providerType: CALCOM, successPath: SETTINGS_PATH, failurePath: '/demo/app/settings?connect=failed' });
+    expect(userExternalConnectionOAuth.signInSuccessUrl).toBe(userExternalConnectionOAuth.successUrl);
+    expect(userExternalConnectionOAuth.signInFailureUrl).toBe(userExternalConnectionOAuth.failureUrl);
+  });
+
+  it('resolves the sign-in failure path against the app url', () => {
+    // the login page, not the auth-gated connect failure page — a failed sign-in has no session
+    const { userExternalConnectionOAuth } = userExternalConnectionOAuthServiceConfigFactory({
+      envService: makeEnvService(),
+      providerType: CALCOM,
+      successPath: SETTINGS_PATH,
+      failurePath: '/demo/app/settings?connect=failed',
+      signInSuccessPath: '/demo/app/home',
+      signInFailurePath: '/demo/auth/login?signin=failed'
+    });
+
+    expect(userExternalConnectionOAuth.signInSuccessUrl).toBe('https://app.example.com/demo/app/home');
+    expect(userExternalConnectionOAuth.signInFailureUrl).toBe('https://app.example.com/demo/auth/login?signin=failed');
+  });
+
   it('throws when no app url is configured', () => {
     expect(() => userExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService({ appUrl: undefined }), providerType: CALCOM, successPath: SETTINGS_PATH })).toThrow();
   });

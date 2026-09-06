@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { addToSet, type ArrayOrValue, filterMaybeArrayValues, fixExtraQueryParameters, generatePkceMaterial, mapIterable, type Maybe, removeFromSet } from '@dereekb/util';
 import { UserExternalConnectionFunctions, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
@@ -6,6 +6,7 @@ import {
   DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY,
   DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY,
   DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY,
+  EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM,
   EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY,
   type DbxFirebaseExternalConnectionAuthorizeState,
@@ -91,6 +92,23 @@ export const DEFAULT_EXTERNAL_CONNECTION_NAVIGATE_FUNCTION = (url: string) => {
 };
 
 /**
+ * What a completed sign-in redirect turned out to be.
+ */
+export interface DbxFirebaseExternalConnectionSignInRedirectResult {
+  /**
+   * Whether a ticket was redeemed and the user is now signed in.
+   */
+  readonly signedIn: boolean;
+  /**
+   * The server's allowlisted reason code, when the redirect reported a FAILED sign-in.
+   *
+   * A code rather than a message: the app owns the copy shown for each one. See
+   * {@link EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM}.
+   */
+  readonly errorCode?: Maybe<string>;
+}
+
+/**
  * Registry of the third-party services a user can connect their account to.
  *
  * Modeled on `DbxFirebaseAuthLoginService`, but WITHOUT any per-user state: it is root-scoped, so a
@@ -114,6 +132,16 @@ export class DbxFirebaseExternalConnectionService {
    * spec exercising it should not have to stand up Firebase Auth.
    */
   private readonly _dbxFirebaseAuthService = inject(DbxFirebaseAuthService, { optional: true });
+
+  private readonly _signInErrorCode = signal<Maybe<string>>(undefined);
+
+  /**
+   * The reason the last sign-in redirect reported a failure, when it reported one.
+   *
+   * A signal as well as a returned value because the redirect is handled in the app initializer,
+   * before any view exists to receive the return — the login page reads it when it renders.
+   */
+  readonly signInErrorCode = this._signInErrorCode.asReadonly();
 
   private readonly _providers = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProvider>();
   private readonly _assets = new Map<UserExternalConnectionProviderType, DbxFirebaseExternalConnectionProviderAssets>();
@@ -403,17 +431,20 @@ export class DbxFirebaseExternalConnectionService {
   }
 
   /**
-   * Completes a sign-in that has just redirected back, when the current URL carries a ticket.
+   * Completes a sign-in that has just redirected back, when the current URL carries a ticket — or
+   * records the reason when it carries a failure instead.
    *
-   * Safe to call unconditionally on app start: a page with no ticket, or no stored verifier, resolves
-   * to false without touching the network.
+   * Safe to call unconditionally on app start: a page carrying neither resolves to a not-signed-in
+   * result without touching the network. A reported failure does NOT throw: it is the server
+   * answering a question the user asked, not a fault, and the login page renders it.
    *
-   * @param url - The url to read the ticket from. Defaults to the current location.
-   * @returns True when a ticket was redeemed and the user is now signed in.
+   * @param url - The url to read from. Defaults to the current location.
+   * @returns Whether a ticket was redeemed, and the reason when the redirect reported a failure.
    */
-  async handleSignInRedirectResult(url: string = window.location.href): Promise<boolean> {
+  async handleSignInRedirectResult(url: string = window.location.href): Promise<DbxFirebaseExternalConnectionSignInRedirectResult> {
     const ticket = readExternalConnectionSignInTicketFromUrl(url);
-    let result = false;
+    const errorCode = ticket == null ? readExternalConnectionSignInFailureFromUrl(url) : undefined;
+    let result: DbxFirebaseExternalConnectionSignInRedirectResult = { signedIn: false };
 
     if (ticket != null) {
       const stored = this.readStoredSignInVerifier();
@@ -434,10 +465,23 @@ export class DbxFirebaseExternalConnectionService {
       }
 
       await dbxFirebaseAuthService.logInWithCustomToken(customToken);
-      result = true;
+      result = { signedIn: true };
+    } else if (errorCode != null) {
+      // the flow ended at the provider or the server, so the verifier it was minted for is spent —
+      // leaving it behind would offer a stale one against the NEXT sign-in's ticket
+      this.clearStoredSignInVerifier();
+      this._signInErrorCode.set(errorCode);
+      result = { signedIn: false, errorCode };
     }
 
     return result;
+  }
+
+  /**
+   * Clears the recorded sign-in failure, e.g. once the login page has shown it.
+   */
+  clearSignInErrorCode(): void {
+    this._signInErrorCode.set(undefined);
   }
 
   /**
@@ -527,6 +571,26 @@ export function readExternalConnectionSignInTicketFromUrl(url: string): Maybe<st
     result = new URL(url).searchParams.get(EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM) ?? undefined;
   } catch {
     // a url that does not parse carries no ticket
+  }
+
+  return result;
+}
+
+/**
+ * Reads the reason code a FAILED sign-in redirected back with.
+ *
+ * @param url - The url to read.
+ * @returns The reason code, or null when the url carries none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function readExternalConnectionSignInFailureFromUrl(url: string): Maybe<string> {
+  let result: Maybe<string>;
+
+  try {
+    result = new URL(url).searchParams.get(EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM) ?? undefined;
+  } catch {
+    // a url that does not parse carries no reason
   }
 
   return result;

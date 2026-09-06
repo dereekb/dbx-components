@@ -25,6 +25,18 @@ export interface ProvideAppDiscordUserExternalConnectionOAuthMetadataConfig exte
    */
   readonly failurePath?: Maybe<string>;
   /**
+   * Path on the app URL a successful SIGN-IN returns to. Defaults to `successPath`.
+   */
+  readonly signInSuccessPath?: Maybe<string>;
+  /**
+   * Path on the app URL a FAILED sign-in returns to, e.g. `/auth/login`. Defaults to `failurePath`.
+   */
+  readonly signInFailurePath?: Maybe<string>;
+  /**
+   * App paths a sign-in request may ask to return to instead of `signInSuccessPath`.
+   */
+  readonly allowedReturnPaths?: Maybe<readonly string[]>;
+  /**
    * The scopes to request. Defaults to `DEFAULT_DISCORD_OAUTH_SCOPES`.
    */
   readonly scopes?: Maybe<readonly DiscordOAuthScope[]>;
@@ -45,7 +57,7 @@ export interface ProvideAppDiscordUserExternalConnectionOAuthMetadataConfig exte
  * @returns NestJS ModuleMetadata mounting the Discord connect endpoints.
  */
 export function appDiscordUserExternalConnectionOAuthModuleMetadata(config: ProvideAppDiscordUserExternalConnectionOAuthMetadataConfig): ModuleMetadata {
-  const { dependencyModule, successPath, failurePath, scopes, imports, exports, providers } = config;
+  const { dependencyModule, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopes, imports, exports, providers } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
@@ -56,7 +68,7 @@ export function appDiscordUserExternalConnectionOAuthModuleMetadata(config: Prov
       {
         provide: DiscordUserExternalConnectionOAuthServiceConfig,
         inject: [FirebaseServerEnvService],
-        useFactory: (envService: FirebaseServerEnvService) => discordUserExternalConnectionOAuthServiceConfigFactory({ envService, successPath, failurePath, scopes })
+        useFactory: (envService: FirebaseServerEnvService) => discordUserExternalConnectionOAuthServiceConfigFactory({ envService, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopes })
       },
       DiscordUserExternalConnectionOAuthService,
       ...(providers ?? [])

@@ -114,6 +114,20 @@ export function denyNewUserSignInDelegate(): UserExternalConnectionSignInDelegat
 }
 
 /**
+ * How much of an email the provider must report before a new Firebase user may be provisioned.
+ *
+ * - `verified` — the provider must report an email AND consider it verified.
+ * - `any` — the provider must report an email; whether it is verified is not checked.
+ * - `none` — no email is required, and an emailless user may be created.
+ */
+export type UserExternalConnectionSignInEmailRequirement = 'verified' | 'any' | 'none';
+
+/**
+ * The default {@link UserExternalConnectionSignInEmailRequirement}.
+ */
+export const DEFAULT_USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_REQUIREMENT: UserExternalConnectionSignInEmailRequirement = 'verified';
+
+/**
  * Configuration for {@link autoCreateUserSignInDelegate}.
  */
 export interface AutoCreateUserSignInDelegateConfig {
@@ -123,8 +137,45 @@ export interface AutoCreateUserSignInDelegateConfig {
    * Defaults to true, and applies ONLY to the created user's own record — it does not permit
    * adopting an existing account that already holds the email. That is
    * {@link UserExternalConnectionSignInServiceConfig.allowVerifiedEmailLinking}.
+   *
+   * NOTE that setting this false while {@link requireEmailToCreateUser} is anything other than
+   * `'none'` still GATES on the provider's email but omits it from the created record — which also
+   * suppresses the service's own `getUserByEmail` collision check, since that check reads the email
+   * this delegate returns.
    */
   readonly useProviderEmail?: Maybe<boolean>;
+  /**
+   * What the provider must report about the account's email before a user is created.
+   *
+   * Defaults to {@link DEFAULT_USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_REQUIREMENT} (`'verified'`).
+   * Provisioning an account off an UNVERIFIED third-party email is the takeover vector the service's
+   * own docs warn about, and it is the one case the service-side collision check cannot cover: an
+   * absent email skips the check entirely, and Discord's default scopes report none at all.
+   */
+  readonly requireEmailToCreateUser?: Maybe<UserExternalConnectionSignInEmailRequirement>;
+}
+
+/**
+ * Returns why an identity's email does not meet a requirement, or null when it does.
+ *
+ * @param requirement - The requirement to check against.
+ * @param identity - The identity the provider reported.
+ * @returns The refusal reason, or null when the requirement is met.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionSignInEmailRequirementDenyReason(requirement: UserExternalConnectionSignInEmailRequirement, identity: UserExternalConnectionSignInIdentity): Maybe<string> {
+  let result: Maybe<string>;
+
+  if (requirement !== 'none') {
+    if (!identity.email) {
+      result = 'The provider reported no email address for this account.';
+    } else if (requirement === 'verified' && !identity.emailVerified) {
+      result = 'The provider has not verified the email address on this account.';
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -134,6 +185,9 @@ export interface AutoCreateUserSignInDelegateConfig {
  * account; use a bespoke delegate when they are not (checking a subscription, a guild membership, or
  * an invite list before returning `createUser`).
  *
+ * By default a new user is created ONLY for an identity carrying a provider-VERIFIED email — see
+ * {@link AutoCreateUserSignInDelegateConfig.requireEmailToCreateUser}.
+ *
  * @param config - Optional configuration.
  * @returns A delegate that creates a user on a miss.
  *
@@ -141,10 +195,24 @@ export interface AutoCreateUserSignInDelegateConfig {
  */
 export function autoCreateUserSignInDelegate(config?: Maybe<AutoCreateUserSignInDelegateConfig>): UserExternalConnectionSignInDelegate {
   const useProviderEmail = config?.useProviderEmail ?? true;
+  const requireEmailToCreateUser = config?.requireEmailToCreateUser ?? DEFAULT_USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_REQUIREMENT;
 
-  return {
-    resolveSignIn: async (input) => (input.existingUid ? { action: 'signIn', uid: input.existingUid } : { action: 'createUser', email: useProviderEmail ? input.identity.email : null, displayName: input.identity.label })
-  };
+  async function resolveSignIn(input: UserExternalConnectionSignInInput): Promise<UserExternalConnectionSignInResolution> {
+    let result: UserExternalConnectionSignInResolution;
+
+    if (input.existingUid) {
+      result = { action: 'signIn', uid: input.existingUid };
+    } else {
+      // the requirement is checked against what the PROVIDER reported, not against what is carried
+      // onto the created record — `useProviderEmail: false` still gates, it just does not persist
+      const denyReason = userExternalConnectionSignInEmailRequirementDenyReason(requireEmailToCreateUser, input.identity);
+      result = denyReason != null ? { action: 'deny', reason: denyReason } : { action: 'createUser', email: useProviderEmail ? input.identity.email : null, displayName: input.identity.label };
+    }
+
+    return result;
+  }
+
+  return { resolveSignIn };
 }
 
 // MARK: Service

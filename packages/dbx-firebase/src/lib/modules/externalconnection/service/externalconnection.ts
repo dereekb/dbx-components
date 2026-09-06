@@ -290,6 +290,15 @@ export const DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY = (providerType: Use
 export const EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM = 'ticket';
 
 /**
+ * Query parameter a FAILED sign-in returns its reason code on. Must match the server's
+ * `USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM`.
+ *
+ * The value is one of the server's allowlisted `USER_EXTERNAL_CONNECTION_SIGN_IN_*` codes — an app
+ * maps it to its own copy rather than rendering anything the server said.
+ */
+export const EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM = 'signInError';
+
+/**
  * `sessionStorage` key the in-flight sign-in's PKCE verifier is held under.
  *
  * `sessionStorage`, not `localStorage`: the verifier is scoped to the tab that started the flow and

@@ -9,7 +9,8 @@ import { type UserExternalConnectionProviderPolicyRegistry, userExternalConnecti
 import { type ResolveUserExternalConnectionSignInInput, type UserExternalConnectionSignInResult, type UserExternalConnectionSignInService } from '../userexternalconnection.signin';
 import { userExternalConnectionStateCoder, type UserExternalConnectionStateCoder } from './userexternalconnection.oauth.state';
 import { type UserExternalConnectionOAuthServiceConfig } from './userexternalconnection.oauth.config';
-import { AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthAuthorizeUrlInput } from './userexternalconnection.oauth.service';
+import { USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE, USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE, userExternalConnectionAlreadyExistsError, userExternalConnectionSignInEmailConflictError, userExternalConnectionSignInErrorCode } from '../userexternalconnection.error';
+import { AbstractUserExternalConnectionOAuthService, USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthExchangeInput, type UserExternalConnectionOAuthAuthorizeUrlInput } from './userexternalconnection.oauth.service';
 
 const TEST_PROVIDER_TYPE = 'testprovider';
 const TEST_UID = 'test-uid';
@@ -18,6 +19,7 @@ const TEST_STATE_SECRET = 'd'.repeat(64);
 const TEST_REDIRECT_URI = 'http://localhost:9901/oauth/testprovider/callback';
 const TEST_SUCCESS_URL = 'http://localhost:9010/app/settings';
 const TEST_FAILURE_URL = 'http://localhost:9010/app/settings?failed=1';
+const TEST_SIGN_IN_FAILURE_URL = 'http://localhost:9010/auth/login?signin=failed';
 
 const TEST_CONFIG: UserExternalConnectionOAuthServiceConfig = {
   userExternalConnectionOAuth: {
@@ -314,8 +316,107 @@ describe('AbstractUserExternalConnectionOAuthService sign-in', () => {
     const result = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
 
     expect(result.success).toBe(false);
-    expect(result.redirectUrl).toBe(TEST_FAILURE_URL);
+    // the configured failure url, now carrying the allowlisted reason
+    const failure = new URL(result.redirectUrl);
+    expect(`${failure.origin}${failure.pathname}`).toBe('http://localhost:9010/app/settings');
+    expect(failure.searchParams.get(USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE);
     expect(captured.connects).toHaveLength(0);
+  });
+
+  describe('failure redirect', () => {
+    const signInFailureConfig: UserExternalConnectionOAuthServiceConfig = { userExternalConnectionOAuth: { ...TEST_CONFIG.userExternalConnectionOAuth, signInFailureUrl: TEST_SIGN_IN_FAILURE_URL } };
+
+    function makeFailureService(captured: CapturingServerActions, signIn: Maybe<CapturingSignInService> = capturingSignInService()) {
+      return new TestUserExternalConnectionOAuthService(signInFailureConfig, stateCoder, captured.actions, captured.accessor, signIn?.service, signInPolicy);
+    }
+
+    it('should send a failed SIGN-IN to the sign-in failure url with the reason code', async () => {
+      // a failed sign-in leaves the browser signed out, so the auth-gated connect failure page is
+      // the wrong place to explain it
+      const captured = capturingServerActions();
+      const service = makeFailureService(captured);
+
+      service.exchangeResult = { accessToken: 'access-token', issuedAt: new Date().toISOString() };
+
+      const { success, redirectUrl } = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
+      const url = new URL(redirectUrl);
+
+      expect(success).toBe(false);
+      expect(url.pathname).toBe('/auth/login');
+      expect(url.searchParams.get('signin')).toBe('failed');
+      expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE);
+    });
+
+    it('should report the EMAIL CONFLICT reason the sign-in service raised', async () => {
+      const captured = capturingServerActions();
+      const rejecting = capturingSignInService();
+      const service = makeFailureService(captured, {
+        ...rejecting,
+        service: {
+          ...rejecting.service,
+          resolveSignIn: async () => {
+            throw userExternalConnectionSignInEmailConflictError(TEST_PROVIDER_TYPE);
+          }
+        }
+      });
+
+      service.exchangeResult = { accessToken: 'access-token', issuedAt: new Date().toISOString(), externalAccountId: 'external-1' };
+
+      const { redirectUrl } = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
+
+      expect(new URL(redirectUrl).searchParams.get(USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM)).toBe(USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE);
+    });
+
+    it('should attach NO reason for a failure that is not on the allowlist', async () => {
+      // the allowlist is what keeps an internal failure's shape out of a url the user can read
+      const captured = capturingServerActions();
+      const rejecting = capturingSignInService();
+      const service = makeFailureService(captured, {
+        ...rejecting,
+        service: {
+          ...rejecting.service,
+          resolveSignIn: async () => {
+            throw new Error('an internal detail nobody should see');
+          }
+        }
+      });
+
+      service.exchangeResult = { accessToken: 'access-token', issuedAt: new Date().toISOString(), externalAccountId: 'external-1' };
+
+      const { redirectUrl } = await service.handleCallback({ code: 'a-code', state: await signInStateForVerifier(generatePkceCodeVerifier()) });
+      const url = new URL(redirectUrl);
+
+      expect(url.pathname).toBe('/auth/login');
+      expect(url.searchParams.get(USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM)).toBeNull();
+      expect(redirectUrl).not.toContain('internal detail');
+    });
+
+    it('should leave a failed CONNECT on the connect failure url', async () => {
+      const captured = capturingServerActions({ readFails: true });
+      const service = makeFailureService(captured);
+
+      service.exchangeResult = { accessToken: 'new-access-token', issuedAt: new Date().toISOString() };
+
+      const { redirectUrl } = await service.handleCallback({ code: 'code', state: stateCoder.mintState({ uid: TEST_UID, providerType: TEST_PROVIDER_TYPE }) });
+
+      expect(redirectUrl).toBe(TEST_FAILURE_URL);
+    });
+  });
+
+  describe('userExternalConnectionSignInErrorCode()', () => {
+    it('should read an allowlisted code off the thrown error', () => {
+      expect(userExternalConnectionSignInErrorCode(userExternalConnectionSignInEmailConflictError(TEST_PROVIDER_TYPE))).toBe(USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE);
+    });
+
+    it('should refuse a code that is not on the allowlist', () => {
+      // an off-list code is a code the browser was never meant to see
+      expect(userExternalConnectionSignInErrorCode(userExternalConnectionAlreadyExistsError(TEST_UID))).toBeUndefined();
+    });
+
+    it('should return nothing for a plain error', () => {
+      expect(userExternalConnectionSignInErrorCode(new Error('boom'))).toBeUndefined();
+      expect(userExternalConnectionSignInErrorCode(undefined)).toBeUndefined();
+    });
   });
 
   it('should NOT mark a connection error for a failed sign-in', async () => {

@@ -1,16 +1,60 @@
-import { type FirebaseAuthUserId, type UserExternalConnectionExternalAccountId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import {
+  type FirebaseAuthUserId,
+  type UserExternalConnectionExternalAccountId,
+  type UserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE
+} from '@dereekb/firebase';
 import { forbiddenError, preconditionConflictError } from '@dereekb/firebase-server';
+import { type Maybe } from '@dereekb/util';
 
-export const USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED';
-export const USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED';
-export const USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_ALREADY_EXISTS';
-export const USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED';
-export const USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE';
-export const USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED';
-export const USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED';
-export const USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT';
-export const USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING';
-export const USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE';
+/**
+ * The UserExternalConnection error codes, re-exported from `@dereekb/firebase`.
+ *
+ * They live in the shared package because the BROWSER branches on them too — a login page deciding
+ * what to say about a refused sign-in cannot import from a server package. Re-exported here so the
+ * codes stay importable beside the factories that throw them.
+ */
+export {
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES
+} from '@dereekb/firebase';
+
+/**
+ * Reads the reportable error code off a thrown sign-in failure.
+ *
+ * Reads `HttpsError.details.code` — where every helper in `@dereekb/firebase-server` puts it — and
+ * returns it only when it is in `USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES`. Anything
+ * else, including a plain `Error`, yields null.
+ *
+ * @param e - The thrown value.
+ * @returns The reportable code, or null when there is none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionSignInErrorCode(e: unknown): Maybe<string> {
+  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
+  const code = details?.code;
+  return code != null && USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES.has(code) ? code : undefined;
+}
 
 /**
  * Creates an error indicating the user already has a connection document.
@@ -149,7 +193,7 @@ export function userExternalConnectionSignInDeniedError(providerType: UserExtern
  */
 export function userExternalConnectionSignInEmailConflictError(providerType: UserExternalConnectionProviderType) {
   return preconditionConflictError({
-    message: `An account already exists for the email on that "${providerType}" account. Sign in and connect "${providerType}" from your settings instead.`,
+    message: `An account already exists for the email on that "${providerType}" account. Recover access to that email, sign in with it, then connect "${providerType}" from your settings.`,
     code: USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
     data: { providerType }
   });

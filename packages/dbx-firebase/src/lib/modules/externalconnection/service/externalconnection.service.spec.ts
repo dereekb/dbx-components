@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { type Maybe, waitForMs } from '@dereekb/util';
 import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, UserExternalConnectionFunctions, type UserExternalConnectionProviderType, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionAuthorizeState, type DbxFirebaseExternalConnectionNavigateFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderEntry, DbxFirebaseExternalConnectionsConfig } from './externalconnection';
-import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
+import { DbxFirebaseExternalConnectionService, navigateAndWaitForPageToLeave, readExternalConnectionSignInFailureFromUrl, readExternalConnectionSignInTicketFromUrl } from './externalconnection.service';
 import { EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY } from './externalconnection';
 
 const TEST_PROVIDER_TYPE: UserExternalConnectionProviderType = CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
@@ -401,7 +401,30 @@ describe('DbxFirebaseExternalConnectionService sign-in', () => {
 
   it('should do nothing when the landing url carries no ticket', async () => {
     const { service } = testService({ providers: [signInProvider] });
-    await expect(service.handleSignInRedirectResult('https://app.example/app/home')).resolves.toBe(false);
+    await expect(service.handleSignInRedirectResult('https://app.example/app/home')).resolves.toEqual({ signedIn: false });
+  });
+
+  it('should record a reported failure, and CLEAR the verifier, WITHOUT throwing', async () => {
+    // the server answering a question the user asked, not a fault — the login page renders it. The
+    // flow ended, so the verifier it was minted for is spent and a stale one would be offered
+    // against the next ticket.
+    const { service } = testService({ providers: [signInProvider] });
+    sessionStorage.setItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY, JSON.stringify({ providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, codeVerifier: 'a-verifier' }));
+
+    await expect(service.handleSignInRedirectResult('https://app.example/auth/login?signin=failed&signInError=USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT')).resolves.toEqual({ signedIn: false, errorCode: 'USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT' });
+
+    expect(sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY)).toBeNull();
+    expect(service.signInErrorCode()).toBe('USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT');
+
+    service.clearSignInErrorCode();
+    expect(service.signInErrorCode()).toBeUndefined();
+  });
+
+  it('should prefer a ticket over a failure code on the same url', async () => {
+    const { service } = testService({ providers: [signInProvider] });
+
+    await expect(service.handleSignInRedirectResult('https://app.example/app/home?ticket=abc&signInError=USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED')).rejects.toThrow();
+    expect(service.signInErrorCode()).toBeUndefined();
   });
 
   it('should fail, and CLEAR the verifier, when a ticket arrives with none stored', async () => {
@@ -410,6 +433,20 @@ describe('DbxFirebaseExternalConnectionService sign-in', () => {
 
     await expect(service.handleSignInRedirectResult('https://app.example/app/home?ticket=abc')).rejects.toThrow();
     expect(sessionStorage.getItem(EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe('readExternalConnectionSignInFailureFromUrl()', () => {
+  it('should read the reason parameter', () => {
+    expect(readExternalConnectionSignInFailureFromUrl('https://app.example/auth/login?signin=failed&signInError=USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED')).toBe('USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED');
+  });
+
+  it('should return nothing for a url with no reason', () => {
+    expect(readExternalConnectionSignInFailureFromUrl('https://app.example/auth/login?signin=failed')).toBeUndefined();
+  });
+
+  it('should return nothing for a url that does not parse', () => {
+    expect(readExternalConnectionSignInFailureFromUrl('not a url')).toBeUndefined();
   });
 });
 

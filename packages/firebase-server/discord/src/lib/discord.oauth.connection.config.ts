@@ -31,6 +31,10 @@ export const DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCL
  * — a token granted no scopes can do nothing — and it is what lets the connection be labeled with the
  * account it belongs to. Excludes `email`, which is a real privilege escalation the label does not
  * need, and `guilds` / `connections` / `bot`, which nothing here reads.
+ *
+ * An app using Discord to SIGN IN normally wants `['identify', 'email']`: without `email` the
+ * identity carries none, which both fails the auto-create delegate's default email requirement and
+ * silently skips the sign-in service's existing-account collision check.
  */
 export const DEFAULT_DISCORD_OAUTH_SCOPES: readonly DiscordOAuthScope[] = ['identify'];
 
@@ -57,6 +61,18 @@ export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
    */
   readonly failurePath?: Maybe<string>;
   /**
+   * Path on the app URL a successful SIGN-IN returns to. Defaults to `successPath`.
+   */
+  readonly signInSuccessPath?: Maybe<string>;
+  /**
+   * Path on the app URL a FAILED sign-in returns to, e.g. `/auth/login`. Defaults to `failurePath`.
+   */
+  readonly signInFailurePath?: Maybe<string>;
+  /**
+   * App paths a sign-in request may ask to return to instead of `signInSuccessPath`.
+   */
+  readonly allowedReturnPaths?: Maybe<readonly string[]>;
+  /**
    * The scopes to request. Defaults to {@link DEFAULT_DISCORD_OAUTH_SCOPES}.
    */
   readonly scopes?: Maybe<readonly DiscordOAuthScope[]>;
@@ -74,13 +90,16 @@ export interface DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig {
  * @returns The validated service configuration.
  */
 export function discordUserExternalConnectionOAuthServiceConfigFactory(config: DiscordUserExternalConnectionOAuthServiceConfigFactoryConfig): DiscordUserExternalConnectionOAuthServiceConfig {
-  const { envService, successPath, failurePath, scopes } = config;
+  const { envService, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths, scopes } = config;
 
   const baseConfig = userExternalConnectionOAuthServiceConfigFactory({
     envService,
     providerType: DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
     successPath,
-    failurePath
+    failurePath,
+    signInSuccessPath,
+    signInFailurePath,
+    allowedReturnPaths
   });
 
   return {

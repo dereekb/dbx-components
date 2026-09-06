@@ -93,6 +93,15 @@ export interface UserExternalConnectionOAuthApiConfig {
    */
   readonly signInSuccessUrl?: Maybe<WebsiteUrl>;
   /**
+   * Where the user is sent after a FAILED sign-in, with the reason code appended. Defaults to the
+   * `failureUrl`.
+   *
+   * Usually different from `failureUrl`: a failed connect returns to the auth-gated settings page the
+   * connect was started from, while a failed sign-in has no signed-in user to show that page to — it
+   * belongs back on the login page, where the refusal can be explained and retried.
+   */
+  readonly signInFailureUrl?: Maybe<WebsiteUrl>;
+  /**
    * App paths a sign-in request may ask to return to.
    *
    * An UNVALIDATED return path is an open redirect, so a path absent from this list is dropped and
@@ -180,6 +189,10 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
    */
   readonly signInSuccessPath?: Maybe<string>;
   /**
+   * Path on the app URL a FAILED sign-in returns to, e.g. `/auth/login`. Defaults to `failurePath`.
+   */
+  readonly signInFailurePath?: Maybe<string>;
+  /**
    * App paths a sign-in request may ask to return to instead of {@link signInSuccessPath}.
    */
   readonly allowedReturnPaths?: Maybe<readonly string[]>;
@@ -198,7 +211,7 @@ export interface UserExternalConnectionOAuthServiceConfigFactoryConfig {
  * @throws {Error} When no app URL is configured, or the derived URIs are inconsistent.
  */
 export function userExternalConnectionOAuthServiceConfigFactory(config: UserExternalConnectionOAuthServiceConfigFactoryConfig): UserExternalConnectionOAuthServiceConfig {
-  const { envService, providerType, successPath, failurePath, signInSuccessPath, allowedReturnPaths } = config;
+  const { envService, providerType, successPath, failurePath, signInSuccessPath, signInFailurePath, allowedReturnPaths } = config;
   const appUrl = envService.appUrl;
 
   if (!appUrl) {
@@ -215,6 +228,7 @@ export function userExternalConnectionOAuthServiceConfigFactory(config: UserExte
       successUrl: `${appOrigin}${successPath}`,
       failureUrl: `${appOrigin}${failurePath ?? successPath}`,
       signInSuccessUrl: `${appOrigin}${signInSuccessPath ?? successPath}`,
+      signInFailureUrl: `${appOrigin}${signInFailurePath ?? failurePath ?? successPath}`,
       allowedReturnPaths
     }
   };

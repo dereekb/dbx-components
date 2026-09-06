@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD } from '@dereekb/firebase';
 import { type DbxFirebaseExternalConnectionProvider } from './externalconnection';
+import { dbxFirebaseKnownExternalConnectionProvider } from './externalconnection.default';
 import { dbxFirebaseExternalConnectionLoginProvider, dbxFirebaseExternalConnectionLoginProviders } from './externalconnection.login';
 import { DbxFirebaseLoginExternalConnectionComponent } from './externalconnection.login.component';
 
@@ -77,5 +78,20 @@ describe('dbxFirebaseExternalConnectionLoginProviders()', () => {
   it('should accept a known provider type entry', () => {
     // the library's known providers are connect-only, so naming one yields no login button
     expect(dbxFirebaseExternalConnectionLoginProviders([DISCORD])).toEqual([]);
+  });
+
+  it('should derive a login button from a known provider given a sign-in config', () => {
+    // the only way an app turns a known provider into a login provider without hand-spreading the
+    // library const
+    const entry = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD, signIn: { loginText: 'Log in with Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' } });
+
+    expect(entry.signIn?.loginText).toBe('Log in with Discord');
+    // the known provider's presentation is retained rather than restated
+    expect(entry.assets.providerName).toBe('Discord');
+
+    const [derived] = dbxFirebaseExternalConnectionLoginProviders([entry]);
+
+    expect(derived.loginMethodType).toBe(DISCORD);
+    expect(derived.assets?.backgroundColor).toBe('#5865F2');
   });
 });

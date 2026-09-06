@@ -13,6 +13,7 @@ import {
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
   type DbxFirebaseExternalConnectionProviderEntry,
+  dbxFirebaseKnownExternalConnectionProvider,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   provideDbxFirebase,
   provideDbxFirebaseAuthImpersonation,
@@ -75,8 +76,21 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  *
  * The types come from demo-firebase, because demo-api's OAuth controller writes the same string into
  * the connection entry map.
+ *
+ * Discord is additionally declared a LOGIN provider — `provideDbxFirebaseExternalConnections` derives
+ * the login button from this one entry and registers it with `DbxFirebaseAuthLoginService`, so there
+ * is no second place naming Discord. Demo-api has to enable sign-in for it independently; without
+ * that the button redirects straight back to the login page. No brand mark: the known provider's
+ * `forum` material icon is reused, since the repo carries no Discord asset.
  */
-export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE];
+export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [
+  DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  dbxFirebaseKnownExternalConnectionProvider({
+    providerType: DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    signIn: { loginText: 'Log in with Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' }
+  }),
+  DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE
+];
 
 // MARK: DbxAnalytics
 /**
