@@ -310,71 +310,82 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         return stateCoder.mintState({ mode: 'link', uid, providerType: DISCORD, codeVerifier: 'discord-code-verifier' });
       }
 
-      // a user who signed in with email/password, i.e. one that HAS a native provider to fall back on
-      demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
-        // the auth user is torn down per test but its connection document is not, and discord is
-        // `unique` — a left-behind claim on the test snowflake would block the next test's link
-        afterEach(async () => {
-          await f.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: u.uid });
-        });
+      // a user who signed in with email/password, i.e. one that HAS a native provider to fall back on.
+      // Wrapped in its own describe so the tests that follow it do not inherit its per-test auth user.
+      describe('for an already signed-in user', () => {
+        demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
+          // the auth user is torn down per test but its connection document is not, and discord is
+          // `unique` — a left-behind claim on the test snowflake would block the next test's link.
+          //
+          // The cleanup sits in a NESTED describe deliberately. `afterEach` hooks run in REVERSE
+          // registration order, and the fixture registers its own teardown after this callback has run —
+          // so a hook declared directly here fires AFTER `u` was torn down, making `u.uid` throw. An
+          // inner block's hooks run before the enclosing block's, which is what the fixture convention's
+          // describe-inside-the-callback shape buys.
+          describe('linking discord', () => {
+            afterEach(async () => {
+              await f.userExternalConnectionServerActions.deleteAllUserExternalConnectionsForUser({ uid: u.uid });
+            });
 
-        it('should request the SIGN-IN scopes on the authorize url', async () => {
-          const url = service.authorizeUrlForRequest({ query: { state: linkState(u.uid) } } as never);
+            it('should request the SIGN-IN scopes on the authorize url', async () => {
+              const url = service.authorizeUrlForRequest({ query: { state: linkState(u.uid) } } as never);
 
-          expect(url).toBeDefined();
-          expect(new URL(url as string).searchParams.get('scope')).toBe('identify email');
-        });
+              expect(url).toBeDefined();
+              expect(new URL(url as string).searchParams.get('scope')).toBe('identify email');
+            });
 
-        it('should write ONLY the login link, leaving the entry and the credentials untouched', async () => {
-          setDiscordUser(discordUser({ email: 'linker@example.com', verified: true }));
+            it('should write ONLY the login link, leaving the entry and the credentials untouched', async () => {
+              setDiscordUser(discordUser({ email: 'linker@example.com', verified: true }));
 
-          const result = await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+              const result = await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
 
-          expect(result.success).toBe(true);
-          // back to the settings page the link was started from, not the sign-in landing page
-          expect(new URL(result.redirectUrl).pathname).toBe('/demo/app/settings');
+              expect(result.success).toBe(true);
+              // back to the settings page the link was started from, not the sign-in landing page
+              expect(new URL(result.redirectUrl).pathname).toBe('/demo/app/settings');
 
-          const connection = await loadConnection(u.uid);
-          expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
-          expect(connection?.ec).toContain(`${DISCORD}:${TEST_DISCORD_ID}`);
+              const connection = await loadConnection(u.uid);
+              expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
+              expect(connection?.ec).toContain(`${DISCORD}:${TEST_DISCORD_ID}`);
 
-          const { entry, credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
-          expect(entry).not.toBeTruthy();
-          expect(credentials).not.toBeTruthy();
-        });
+              const { entry, credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
+              expect(entry).not.toBeTruthy();
+              expect(credentials).not.toBeTruthy();
+            });
 
-        it('should unlink the link, the entry, and the credentials together', async () => {
-          setDiscordUser(discordUser({ email: 'unlinker@example.com', verified: true }));
+            it('should unlink the link, the entry, and the credentials together', async () => {
+              setDiscordUser(discordUser({ email: 'unlinker@example.com', verified: true }));
 
-          await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
-          // and a data connection alongside it, so the unlink has all three to remove
-          await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
+              await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+              // and a data connection alongside it, so the unlink has all three to remove
+              await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
 
-          await f.userExternalConnectionServerActions.unlinkUserExternalConnectionLogin({ uid: u.uid, providerType: DISCORD });
+              await f.userExternalConnectionServerActions.unlinkUserExternalConnectionLogin({ uid: u.uid, providerType: DISCORD });
 
-          const connection = await loadConnection(u.uid);
-          expect(connection?.li?.[DISCORD]).toBeUndefined();
-          expect(connection?.e?.[DISCORD]).toBeUndefined();
-          expect(connection?.ec).toEqual([]);
+              const connection = await loadConnection(u.uid);
+              expect(connection?.li?.[DISCORD]).toBeUndefined();
+              expect(connection?.e?.[DISCORD]).toBeUndefined();
+              expect(connection?.ec).toEqual([]);
 
-          const { credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
-          expect(credentials).not.toBeTruthy();
-        });
+              const { credentials } = await f.userExternalConnectionAccessor.accessorForUser({ uid: u.uid })(DISCORD).readUserExternalConnectionForProvider();
+              expect(credentials).not.toBeTruthy();
+            });
 
-        it('should KEEP the login link when only the data connection is disconnected', async () => {
-          // the correctness bug the split closes: a disconnect used to destroy the sign-in binding, and
-          // the next sign-in minted a second Firebase user for the same person
-          setDiscordUser(discordUser({ email: 'disconnector@example.com', verified: true }));
+            it('should KEEP the login link when only the data connection is disconnected', async () => {
+              // the correctness bug the split closes: a disconnect used to destroy the sign-in binding, and
+              // the next sign-in minted a second Firebase user for the same person
+              setDiscordUser(discordUser({ email: 'disconnector@example.com', verified: true }));
 
-          await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
-          await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
-          await f.userExternalConnectionServerActions.disconnectUserExternalConnection({ uid: u.uid, providerType: DISCORD });
+              await service.handleCallback({ code: 'a-code', state: linkState(u.uid) });
+              await f.userExternalConnectionServerActions.connectUserExternalConnection({ uid: u.uid, providerType: DISCORD, credentials: { accessToken: 'discord-access-token', issuedAt: new Date().toISOString(), externalAccountId: TEST_DISCORD_ID } });
+              await f.userExternalConnectionServerActions.disconnectUserExternalConnection({ uid: u.uid, providerType: DISCORD });
 
-          const connection = await loadConnection(u.uid);
-          expect(connection?.e?.[DISCORD]).toBeUndefined();
-          expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
-          // still resolvable, so a returning sign-in lands on the SAME uid
-          expect(await uidHoldingDiscordAccount()).toBe(u.uid);
+              const connection = await loadConnection(u.uid);
+              expect(connection?.e?.[DISCORD]).toBeUndefined();
+              expect(connection?.li?.[DISCORD]?.ea).toBe(TEST_DISCORD_ID);
+              // still resolvable, so a returning sign-in lands on the SAME uid
+              expect(await uidHoldingDiscordAccount()).toBe(u.uid);
+            });
+          });
         });
       });
 

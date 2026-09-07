@@ -3,19 +3,25 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
+    "build-dependency-chain": {
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "The hand-sequenced dependency chain every other project builds on top of (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server -> dbx-web). Split out of `build-all` so the chain can be warmed on its own, without also triggering the `--all` sweep that `build-all` finishes with. This is the same set a containerized `run-tests` pulls in via its `dependsOn: [build]`, so running this first banks those builds in the (bind-mounted, therefore shared) .nx cache."
+      },
+      "options": {
+        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build dbx-web" }],
+        "parallel": false,
+        "color": true
+      }
+    },
     "build-all": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build-dependency-chain"],
+      "metadata": {
+        "description": "Full workspace build. Runs `build-dependency-chain` first (via dependsOn), then the everything-else sweep and demo-api last. Referenced by CI and by the dbx-claude build recovery target, so its end-to-end ordering must stay equivalent to the chain + sweep it replaced."
+      },
       "options": {
-        "commands": [
-          { "command": "npx nx build util" },
-          { "command": "npx nx run-many -t build --projects=rxjs,model,date" },
-          { "command": "npx nx build firebase" },
-          { "command": "npx nx build nestjs" },
-          { "command": "npx nx build firebase-server" },
-          { "command": "npx nx build dbx-web" },
-          { "command": "npx nx run-many -t build --all --exclude=demo-api" },
-          { "command": "npx nx build demo-api" }
-        ],
+        "commands": [{ "command": "npx nx run-many -t build --all --exclude=demo-api" }, { "command": "npx nx build demo-api" }],
         "parallel": false,
         "color": true
       }
