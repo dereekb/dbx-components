@@ -1,3 +1,25 @@
+# [14.1.0](https://github.com/dereekb/dbx-components/compare/v14.0.1-dev...v14.1.0) (2026-09-07)
+
+### Bug Fixes
+
+- **discord:** report hasNext false on a short message page ([730cc348](https://github.com/dereekb/dbx-components/commit/730cc3489a289b6cee74927f1c0f44bdfd61cfb4))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([f3af4617](https://github.com/dereekb/dbx-components/commit/f3af4617f2e016de791bc7d7f80dfbfa4647f8b8))
+
+### Features
+
+- **discord:** add message scan utility and REST history fetch ([0fecfa36](https://github.com/dereekb/dbx-components/commit/0fecfa366541f437ac51aa811931dc75a02c8843))
+- **firebase-server-model:** add sign-in for UserExternalConnection ([45978bff](https://github.com/dereekb/dbx-components/commit/45978bffed5c4dcea63dbc3c5d7cdf6ff6ab06da))
+- **firebase-server-model:** wire Discord sign-in through demo/demo-api ([6b51450b](https://github.com/dereekb/dbx-components/commit/6b51450bd8ca42f54c502f7c1e51bafa5d7dfe07))
+- **firebase:** split login links from data connections ([061b343d](https://github.com/dereekb/dbx-components/commit/061b343def3c01c5766c61f9ac453631a5da66bf))
+
+### Tests
+
+- **demo-api:** fix discord link-spec teardown ordering ([e92b027a](https://github.com/dereekb/dbx-components/commit/e92b027af03121eb92071608e94759abd8456058))
+- **firebase-server-model:** fix specs for login/connection split ([1ef1ff79](https://github.com/dereekb/dbx-components/commit/1ef1ff79efb04d3124d6882c941865b817a37176))
+
 ## [14.0.1](https://github.com/dereekb/dbx-components/compare/v14.0.0-dev...v14.0.1) (2026-09-04)
 
 ### Build System

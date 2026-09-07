@@ -476,39 +476,65 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       let isFulfillingTask = false;
       const requestTasksQueue: [IndexNumber, PromiseReference<NextIncompleteTask>][] = [];
 
+      /**
+       * Rejects the input promise reference and every queued task request with the given error.
+       *
+       * Used when the taskInputFactory throws: without this the awaiting requests would never settle.
+       *
+       * @param promiseReference - The request currently being fulfilled.
+       * @param error - The error to reject every request with.
+       */
+      function rejectAllTaskRequests(promiseReference: PromiseReference<NextIncompleteTask>, error: unknown) {
+        const queued = requestTasksQueue.splice(0, requestTasksQueue.length);
+
+        promiseReference.reject(error);
+        queued.forEach(([, queuedPromiseReference]) => queuedPromiseReference.reject(error));
+      }
+
       async function fulfillRequestMoreTasks(parallelIndex: IndexNumber, promiseReference: PromiseReference<NextIncompleteTask>) {
-        if (incompleteTasks.length === 0) {
-          isFulfillingTask = true;
+        let hasEncounteredTaskInputFailure = false;
 
-          const newTasks = await asPromise(taskInputFactory());
+        try {
+          if (incompleteTasks.length === 0) {
+            isFulfillingTask = true;
 
-          if (newTasks === null) {
-            isOutOfTasks = true;
-          } else {
-            const newTaskEntries = asArray(newTasks)
-              .map((x, i) => [x, asArray(taskKeyFactory(x)), baseI + i] as const)
-              .reverse(); // reverse to use push/pop
+            const newTasks = await asPromise(taskInputFactory());
 
-            baseI += newTaskEntries.length;
-            incompleteTasks = [...newTaskEntries, ...incompleteTasks]; // new tasks go to the front of the stack
+            if (newTasks === null) {
+              isOutOfTasks = true;
+            } else {
+              const newTaskEntries = asArray(newTasks)
+                .map((x, i) => [x, asArray(taskKeyFactory(x)), baseI + i] as const)
+                .reverse(); // reverse to use push/pop
+
+              baseI += newTaskEntries.length;
+              incompleteTasks = [...newTaskEntries, ...incompleteTasks]; // new tasks go to the front of the stack
+            }
           }
-        }
 
-        const nextTask = incompleteTasks.pop();
-        promiseReference.resolve(nextTask); // resolve that promise
+          const nextTask = incompleteTasks.pop();
+          promiseReference.resolve(nextTask); // resolve that promise
+        } catch (e) {
+          // the task input factory threw. Reject every awaiting request instead of leaving them unsettled forever.
+          hasEncounteredTaskInputFailure = true;
+          isOutOfTasks = true;
+          rejectAllTaskRequests(promiseReference, e);
+        }
 
         isFulfillingTask = false;
 
-        // wait before popping off the next task in the queue, if applicable
-        if (waitBetweenTaskInputRequests) {
-          await waitForMs(waitBetweenTaskInputRequests);
-        }
+        if (!hasEncounteredTaskInputFailure) {
+          // wait before popping off the next task in the queue, if applicable
+          if (waitBetweenTaskInputRequests) {
+            await waitForMs(waitBetweenTaskInputRequests);
+          }
 
-        if (requestTasksQueue.length) {
-          const nextItemInQueue = requestTasksQueue.pop();
+          if (requestTasksQueue.length) {
+            const nextItemInQueue = requestTasksQueue.pop();
 
-          if (nextItemInQueue) {
-            void fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
+            if (nextItemInQueue) {
+              void fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
+            }
           }
         }
       }
@@ -632,30 +658,36 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       async function dispatchNextPromise(parallelIndex: IndexNumber) {
         // if a failure has been encountered then the promise has already been rejected.
         if (!hasEncounteredFailure) {
-          const nextTask = await getNextTask(parallelIndex);
+          try {
+            const nextTask = await getNextTask(parallelIndex);
 
-          if (nextTask) {
-            // build/start promise
-            const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
-            currentRunIndex += 1;
+            if (nextTask) {
+              // build/start promise
+              const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
+              currentRunIndex += 1;
 
-            void promise.then(
-              () => {
-                onTaskCompleted(nextTask, parallelIndex);
-                setTimeout(() => void dispatchNextPromise(parallelIndex), waitBetweenTasks);
-              },
-              (e) => {
-                hasEncounteredFailure = true;
-                reject(e);
+              void promise.then(
+                () => {
+                  onTaskCompleted(nextTask, parallelIndex);
+                  setTimeout(() => void dispatchNextPromise(parallelIndex), waitBetweenTasks);
+                },
+                (e) => {
+                  hasEncounteredFailure = true;
+                  reject(e);
+                }
+              );
+            } else {
+              finishedParallels += 1;
+
+              // only resolve after the last parallel is complete
+              if (finishedParallels === maxPromisesToRunAtOneTime) {
+                resolve();
               }
-            );
-          } else {
-            finishedParallels += 1;
-
-            // only resolve after the last parallel is complete
-            if (finishedParallels === maxPromisesToRunAtOneTime) {
-              resolve();
             }
+          } catch (e) {
+            // the task input factory failed, so no more tasks can be retrieved.
+            hasEncounteredFailure = true;
+            reject(e);
           }
         }
       }

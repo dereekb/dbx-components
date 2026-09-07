@@ -1,10 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filterMaybeArrayValues } from '@dereekb/util';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { DbxFirebaseAuthLoginService } from './login.service';
 import { OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY, type FirebaseLoginMethodType } from './login';
-import { firebaseProviderIdToLoginMethodType } from './login.provider.id';
+import { DbxFirebaseLinkedLoginMethodsService } from './login.linked';
 import { DbxFirebaseLoginComponent } from './login.component';
 import { DbxSectionComponent } from '@dereekb/dbx-web';
 
@@ -42,12 +41,9 @@ import { DbxSectionComponent } from '@dereekb/dbx-web';
 export class DbxFirebaseManageAuthProvidersComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+  readonly dbxFirebaseLinkedLoginMethodsService = inject(DbxFirebaseLinkedLoginMethodsService);
 
-  private readonly _linkedProviderIds = toSignal(this.dbxFirebaseAuthService.currentLinkedProviderIds$, { initialValue: [] as string[] });
-
-  readonly linkedMethodTypesSignal = computed<FirebaseLoginMethodType[]>(() => {
-    return filterMaybeArrayValues(this._linkedProviderIds().map(firebaseProviderIdToLoginMethodType));
-  });
+  readonly linkedMethodTypesSignal = toSignal(this.dbxFirebaseLinkedLoginMethodsService.linkedLoginMethodTypes$, { initialValue: [] as FirebaseLoginMethodType[] });
 
   readonly showLinkSectionSignal = computed<boolean>(() => {
     const linkedTypes = new Set(this.linkedMethodTypesSignal());

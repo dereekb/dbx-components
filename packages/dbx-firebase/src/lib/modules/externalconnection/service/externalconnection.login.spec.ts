@@ -1,0 +1,113 @@
+import { describe, expect, it } from 'vitest';
+import { CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as CALCOM, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as DISCORD } from '@dereekb/firebase';
+import { type DbxFirebaseExternalConnectionProvider } from './externalconnection';
+import { dbxFirebaseKnownExternalConnectionProvider } from './externalconnection.default';
+import { dbxFirebaseExternalConnectionLoginProvider, dbxFirebaseExternalConnectionLoginProviders } from './externalconnection.login';
+import { DbxFirebaseLoginExternalConnectionComponent } from './externalconnection.login.component';
+
+const CONNECT_ONLY: DbxFirebaseExternalConnectionProvider = {
+  providerType: CALCOM,
+  assets: { providerName: 'Cal.com', icon: 'event' }
+};
+
+const SIGN_IN_CAPABLE: DbxFirebaseExternalConnectionProvider = {
+  providerType: DISCORD,
+  assets: { providerName: 'Discord', icon: 'forum', logoUrl: 'discord.svg', logoFilter: 'invert(1)' },
+  signIn: { backgroundColor: '#5865F2', textColor: '#FFFFFF' }
+};
+
+describe('dbxFirebaseExternalConnectionLoginProvider()', () => {
+  it('should derive nothing for a connect-only provider', () => {
+    // registering a connect provider must not silently produce a login button for it
+    expect(dbxFirebaseExternalConnectionLoginProvider(CONNECT_ONLY)).toBeUndefined();
+  });
+
+  it('should register under the provider type by default', () => {
+    // legal with no type changes: FirebaseLoginMethodType is a bare string
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.loginMethodType).toBe(DISCORD);
+  });
+
+  it('should honor an explicit login method type', () => {
+    expect(dbxFirebaseExternalConnectionLoginProvider({ ...SIGN_IN_CAPABLE, signIn: { loginMethodType: 'discordsso' } })?.loginMethodType).toBe('discordsso');
+  });
+
+  it('should carry the provider type in componentData', () => {
+    // the ONE thing a shared button component cannot read from the login registry
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.componentData).toEqual({ providerType: DISCORD });
+  });
+
+  it('should use the one shared component for both login and registration', () => {
+    // "Sign up with Discord" and "Log in with Discord" are one button in two situations
+    const derived = dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE);
+
+    expect(derived?.componentClass).toBe(DbxFirebaseLoginExternalConnectionComponent);
+    expect(derived?.registrationComponentClass).toBe(DbxFirebaseLoginExternalConnectionComponent);
+  });
+
+  it('should allow linking', () => {
+    // linking is not linkWithPopup — it is a second OAuth round trip in `link` mode, which the derived
+    // button overrides onto the external-connection service
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.allowLinking).toBe(true);
+  });
+
+  it('should default the link and unlink text from the provider name', () => {
+    const assets = dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets;
+
+    expect(assets?.linkText).toBe('Connect Discord');
+    expect(assets?.unlinkText).toBe('Disconnect Discord');
+  });
+
+  it('should honor explicit link and unlink text', () => {
+    const assets = dbxFirebaseExternalConnectionLoginProvider({ ...SIGN_IN_CAPABLE, signIn: { linkText: 'Add Discord', unlinkText: 'Remove Discord' } })?.assets;
+
+    expect(assets?.linkText).toBe('Add Discord');
+    expect(assets?.unlinkText).toBe('Remove Discord');
+  });
+
+  it('should default the login text to "Continue with", like every shipped provider', () => {
+    // one button serves login AND registration here, so wording that commits to either is wrong half
+    // the time — and it would read differently from Google/Apple/email sitting beside it
+    expect(dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets.loginText).toBe('Continue with Discord');
+  });
+
+  it('should carry the brand colors the connection assets deliberately drop', () => {
+    // a settings row uses a themed button; a sign-in button is a brand affordance
+    const assets = dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets;
+
+    expect(assets?.backgroundColor).toBe('#5865F2');
+    expect(assets?.textColor).toBe('#FFFFFF');
+  });
+
+  it('should carry the logo and its filter over from the connection assets', () => {
+    const assets = dbxFirebaseExternalConnectionLoginProvider(SIGN_IN_CAPABLE)?.assets;
+
+    expect(assets?.logoUrl).toBe('discord.svg');
+    expect(assets?.logoFilter).toBe('invert(1)');
+  });
+});
+
+describe('dbxFirebaseExternalConnectionLoginProviders()', () => {
+  it('should derive only the entries declaring a sign-in config', () => {
+    expect(dbxFirebaseExternalConnectionLoginProviders([CONNECT_ONLY, SIGN_IN_CAPABLE]).map((x) => x.loginMethodType)).toEqual([DISCORD]);
+  });
+
+  it('should accept a known provider type entry', () => {
+    // the library's known providers are connect-only, so naming one yields no login button
+    expect(dbxFirebaseExternalConnectionLoginProviders([DISCORD])).toEqual([]);
+  });
+
+  it('should derive a login button from a known provider given a sign-in config', () => {
+    // the only way an app turns a known provider into a login provider without hand-spreading the
+    // library const
+    const entry = dbxFirebaseKnownExternalConnectionProvider({ providerType: DISCORD, signIn: { loginText: 'Sign in via Discord', backgroundColor: '#5865F2', textColor: '#FFFFFF' } });
+
+    expect(entry.signIn?.loginText).toBe('Sign in via Discord');
+    // the known provider's presentation is retained rather than restated
+    expect(entry.assets.providerName).toBe('Discord');
+
+    const [derived] = dbxFirebaseExternalConnectionLoginProviders([entry]);
+
+    expect(derived.loginMethodType).toBe(DISCORD);
+    expect(derived.assets?.backgroundColor).toBe('#5865F2');
+  });
+});

@@ -1,4 +1,5 @@
 import { type, type Type } from 'arktype';
+import { type Maybe } from '@dereekb/util';
 import { type InferredTargetModelParams, inferredTargetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type UserExternalConnectionTypes } from './userexternalconnection';
@@ -52,13 +53,51 @@ export interface ReadUserExternalConnectionAuthorizeStateParams extends Inferred
    * The provider type to begin connecting to.
    */
   readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Which handoff the state begins. Defaults to `connect`.
+   *
+   * - `connect` — attach the provider as a DATA connection, with the data scopes.
+   * - `link` — make the provider a LOGIN METHOD for the already-signed-in caller, with the sign-in
+   *   scopes. A separate round trip because the two scope sets are not guaranteed to be the same,
+   *   so a data grant cannot be assumed to cover an identity read.
+   *
+   * Absent means `connect`, so a client minting a state before `link` existed still gets one.
+   */
+  readonly mode?: Maybe<'connect' | 'link'>;
 }
 
 export const readUserExternalConnectionAuthorizeStateParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
   type({
-    providerType: 'string'
+    providerType: 'string',
+    'mode?': "'connect' | 'link'"
   })
 ) as Type<ReadUserExternalConnectionAuthorizeStateParams>;
+
+// MARK: Unlink
+/**
+ * Parameters for removing a provider as a LOGIN METHOD for the current user.
+ *
+ * Distinct from {@link DisconnectUserExternalConnectionParams}, and strictly larger: a disconnect
+ * drops the data connection and leaves the login link in place, whereas an unlink removes the login
+ * link AND the data connection and its credentials. "Stop using my Discord token" and "Discord is no
+ * longer how I log in" are different requests, so they are different calls.
+ *
+ * If no target model is provided, the current user's connection document is assumed.
+ *
+ * @dbxModelApiParams
+ */
+export interface UnlinkUserExternalConnectionLoginParams extends InferredTargetModelParams {
+  /**
+   * The provider type to unlink.
+   */
+  readonly providerType: UserExternalConnectionProviderType;
+}
+
+export const unlinkUserExternalConnectionLoginParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    providerType: 'string'
+  })
+) as Type<UnlinkUserExternalConnectionLoginParams>;
 
 /**
  * The opaque, short-lived `state` to carry through a provider's OAuth handoff.
@@ -112,15 +151,23 @@ export type UserExternalConnectionModelCrudFunctionsConfig = {
        * Disconnects the current user from the given provider.
        *
        * Removes the provider's credentials and its entry in one transaction, and recomputes the
-       * connected-provider array from the result.
+       * connected-provider array from the result. The provider's LOGIN LINK is retained — a data
+       * connection ending says nothing about whether the provider is still a way to sign in.
        */
       disconnect: DisconnectUserExternalConnectionParams;
+      /**
+       * Removes the given provider as a login method for the current user.
+       *
+       * Removes the login link, the entry, and the credentials in one transaction. Refused when it
+       * would leave the account with no way to sign back in.
+       */
+      unlink: UnlinkUserExternalConnectionLoginParams;
     };
   };
 };
 
 export const USER_EXTERNAL_CONNECTION_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<UserExternalConnectionModelCrudFunctionsConfig, UserExternalConnectionTypes> = {
-  userExternalConnection: ['create', 'read:authorizeState', 'update:disconnect']
+  userExternalConnection: ['create', 'read:authorizeState', 'update:disconnect,unlink']
 };
 
 /**
@@ -136,6 +183,7 @@ export abstract class UserExternalConnectionFunctions implements ModelFirebaseFu
     };
     updateUserExternalConnection: {
       disconnect: ModelFirebaseCrudFunction<DisconnectUserExternalConnectionParams>;
+      unlink: ModelFirebaseCrudFunction<UnlinkUserExternalConnectionLoginParams>;
     };
   };
 }

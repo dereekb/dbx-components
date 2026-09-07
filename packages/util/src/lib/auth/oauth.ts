@@ -103,6 +103,70 @@ export interface OidcSessionInfo {
   readonly rotationDisabled?: boolean;
 }
 
+// MARK: Client Authentication
+/**
+ * How a confidential OAuth client authenticates itself at the token and revocation endpoints.
+ *
+ * - `client_secret_post` — credentials in the form body.
+ * - `client_secret_basic` — credentials in an HTTP Basic `Authorization` header. This is the OIDC
+ *   Discovery *specification* default when a provider omits `token_endpoint_auth_methods_supported`,
+ *   and is what Discord requires.
+ *
+ * A provider accepting both is unaffected by the choice; one accepting only Basic (Discord) rejects
+ * the body form outright, which is why this is configurable rather than fixed.
+ */
+export type OidcClientAuthMethod = 'client_secret_post' | 'client_secret_basic';
+
+/**
+ * The {@link OidcClientAuthMethod} used when a request does not name one.
+ *
+ * `client_secret_post` rather than the spec's `client_secret_basic`, because every relying-party
+ * call in this workspace predates the option and posted its secret in the body.
+ */
+export const DEFAULT_OIDC_CLIENT_AUTH_METHOD: OidcClientAuthMethod = 'client_secret_post';
+
+/**
+ * The client credentials + auth method mixed into every token/revocation endpoint request.
+ */
+export interface OidcClientAuthInput {
+  readonly clientId: string;
+  /**
+   * Optional client secret. A confidential client presents it via the configured
+   * {@link OidcClientAuthMethod}; a public PKCE client (`token_endpoint_auth_method: 'none'`) omits
+   * it and authenticates via the `code_verifier` alone.
+   */
+  readonly clientSecret?: Maybe<string>;
+  /**
+   * How the client credentials are presented. Defaults to {@link DEFAULT_OIDC_CLIENT_AUTH_METHOD}.
+   *
+   * Ignored when no `clientSecret` is set — a public client has nothing to present.
+   */
+  readonly clientAuth?: Maybe<OidcClientAuthMethod>;
+}
+
+export interface OidcClientSecretBasicAuthorizationHeaderInput {
+  readonly clientId: string;
+  readonly clientSecret: string;
+}
+
+/**
+ * Builds the HTTP Basic `Authorization` header value authenticating an OAuth client via
+ * `client_secret_basic`.
+ *
+ * Uses `btoa()` rather than `Buffer`, so this stays usable outside Node — the same choice the PKCE
+ * helpers make.
+ *
+ * @param input - The client credentials to encode.
+ * @param input.clientId - The OAuth client id.
+ * @param input.clientSecret - The OAuth client secret.
+ * @returns The `Authorization` header value, including the `Basic ` prefix.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function oidcClientSecretBasicAuthorizationHeader(input: OidcClientSecretBasicAuthorizationHeaderInput): string {
+  return `Basic ${btoa(`${input.clientId}:${input.clientSecret}`)}`;
+}
+
 // MARK: Wire Inputs
 export interface DiscoverOidcMetadataInput {
   readonly issuer: string;
@@ -116,37 +180,27 @@ export interface DiscoverOidcMetadataInput {
   readonly fallbackBaseUrl?: string;
 }
 
-export interface ExchangeAuthorizationCodeInput {
+export interface ExchangeAuthorizationCodeInput extends OidcClientAuthInput {
   readonly tokenEndpoint: string;
-  readonly clientId: string;
-  /**
-   * Optional client secret. Confidential clients authenticate via `client_secret_post`; public
-   * PKCE clients (`token_endpoint_auth_method: 'none'`) omit it and authenticate via the
-   * `code_verifier` alone.
-   */
-  readonly clientSecret?: Maybe<string>;
   readonly redirectUri: string;
   readonly code: string;
-  readonly codeVerifier: string;
+  /**
+   * The PKCE code verifier originally paired with the code challenge.
+   *
+   * Optional: a confidential client that did NOT send a `code_challenge` on the authorization
+   * request must omit it, since a provider rejects a `code_verifier` for a code minted without a
+   * challenge. Always set it when the authorization request carried a challenge.
+   */
+  readonly codeVerifier?: Maybe<string>;
 }
 
-export interface RefreshAccessTokenInput {
+export interface RefreshAccessTokenInput extends OidcClientAuthInput {
   readonly tokenEndpoint: string;
-  readonly clientId: string;
-  /**
-   * Optional client secret. Omitted for public PKCE clients.
-   */
-  readonly clientSecret?: Maybe<string>;
   readonly refreshToken: string;
 }
 
-export interface RevokeTokenInput {
+export interface RevokeTokenInput extends OidcClientAuthInput {
   readonly revocationEndpoint: string;
-  readonly clientId: string;
-  /**
-   * Optional client secret. Omitted for public PKCE clients.
-   */
-  readonly clientSecret?: Maybe<string>;
   readonly token: string;
   readonly tokenTypeHint?: 'access_token' | 'refresh_token';
 }

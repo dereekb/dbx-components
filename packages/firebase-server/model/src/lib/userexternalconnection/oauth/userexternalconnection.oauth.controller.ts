@@ -1,4 +1,4 @@
-import { Get, Query, Req, Res } from '@nestjs/common';
+import { Body, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { type Maybe } from '@dereekb/util';
 import { type AbstractUserExternalConnectionOAuthService, type UserExternalConnectionOAuthCallbackQueryValues, type UserExternalConnectionOAuthState } from './userexternalconnection.oauth.service';
@@ -23,6 +23,35 @@ export interface UserExternalConnectionOAuthCallbackQuery extends UserExternalCo
   readonly error?: Maybe<string>;
   readonly error_description?: Maybe<string>;
 }
+
+/**
+ * Body of a sign-in ticket exchange.
+ */
+export interface UserExternalConnectionOAuthTicketExchangeBody {
+  readonly ticket?: Maybe<string>;
+  /**
+   * The PKCE code verifier the browser retained in session storage.
+   */
+  readonly verifier?: Maybe<string>;
+}
+
+/**
+ * Response of a successful sign-in ticket exchange.
+ */
+export interface UserExternalConnectionOAuthTicketExchangeResponse {
+  /**
+   * The Firebase custom token to pass to `signInWithCustomToken`.
+   */
+  readonly customToken: string;
+}
+
+/**
+ * HTTP status returned when a sign-in ticket cannot be redeemed.
+ *
+ * A single status for every failure — expired, tampered with, wrong verifier, throttled — so the
+ * endpoint is not an oracle telling an attacker which part of a forged ticket was wrong.
+ */
+export const USER_EXTERNAL_CONNECTION_OAUTH_TICKET_REJECTED_STATUS = 401;
 
 /**
  * The two endpoints of an external-connection authorization-code handoff.
@@ -85,5 +114,45 @@ export abstract class AbstractUserExternalConnectionOAuthController {
     });
 
     response.redirect(USER_EXTERNAL_CONNECTION_OAUTH_REDIRECT_STATUS, redirectUrl);
+  }
+
+  /**
+   * Begins a SIGN-IN handoff for an anonymous visitor.
+   *
+   * Unauthenticated by necessity: a user who is signing in has no credential to present yet. The
+   * state is minted here rather than by a prior authenticated call, bound to the `challenge` the
+   * browser supplies, and the whole route is refused unless the app's policy enabled sign-in for this
+   * provider.
+   *
+   * @param request - The incoming sign-in request, carrying `challenge` and an optional `returnPath`.
+   * @param response - The response to issue the redirect on.
+   */
+  @Get('signin')
+  async signIn(@Req() request: Request, @Res() response: Response): Promise<void> {
+    const signInUrl = await this.oauthService.signInUrlForRequest(request);
+    response.redirect(USER_EXTERNAL_CONNECTION_OAUTH_REDIRECT_STATUS, signInUrl ?? this.oauthService.failureUrl);
+  }
+
+  /**
+   * Redeems a sign-in ticket for the Firebase custom token it carries.
+   *
+   * Unauthenticated for the same reason as `signin`, and safe for the same reason the ticket is: it
+   * can only be redeemed by whoever holds the PKCE verifier the flow started with.
+   *
+   * @param body - The ticket from the redirect and the verifier the browser retained.
+   * @param request - The incoming request, read for the client IP the throttle keys on.
+   * @param response - The response to write the token or the rejection to.
+   */
+  @Post('token')
+  @HttpCode(200)
+  async token(@Body() body: UserExternalConnectionOAuthTicketExchangeBody, @Req() request: Request, @Res() response: Response): Promise<void> {
+    const result = await this.oauthService.exchangeSignInTicket({ ticket: body?.ticket, verifier: body?.verifier, clientIp: request.ip });
+
+    if (result == null) {
+      response.status(USER_EXTERNAL_CONNECTION_OAUTH_TICKET_REJECTED_STATUS).json({ error: 'invalid_ticket' });
+    } else {
+      const responseBody: UserExternalConnectionOAuthTicketExchangeResponse = { customToken: result.customToken };
+      response.json(responseBody);
+    }
   }
 }

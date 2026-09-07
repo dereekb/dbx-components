@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type EmailAddress, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import {
   AbstractFirestoreDocument,
@@ -13,14 +13,16 @@ import {
   firestoreModelIdentity,
   firestoreObjectMap,
   firestoreUID,
+  firestoreString,
   optionalFirestoreArray,
+  optionalFirestoreBoolean,
   optionalFirestoreDate,
   optionalFirestoreEnum,
   optionalFirestoreString,
   snapshotConverterFunctions
 } from '../../common';
 import { type UserRelated, type UserRelatedById } from '../user';
-import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionProviderType } from './userexternalconnection.id';
+import { type UserExternalConnectionCapability, type UserExternalConnectionExternalAccountId, type UserExternalConnectionExternalAccountKey, type UserExternalConnectionProviderType } from './userexternalconnection.id';
 
 // MARK: Collections
 /**
@@ -129,6 +131,71 @@ export interface UserExternalConnectionEntry {
 export type UserExternalConnectionEntryMap = Record<UserExternalConnectionProviderType, UserExternalConnectionEntry>;
 
 /**
+ * A provider that is a LOGIN METHOD for this account.
+ *
+ * Separate from {@link UserExternalConnectionEntry} rather than a flag on it, because the two describe
+ * different kinds of fact and have different lifecycles. Every field on an entry is DERIVED from the
+ * credentials stored beside it — take the credentials away and the entry has nothing left to say — so
+ * an entry is a statement about a grant. A login link is a statement about the ACCOUNT: "this Discord
+ * user is how this person signs in". It survives the credentials expiring, being revoked by the
+ * provider, and the user disconnecting the data connection, and it is removed only by an explicit
+ * unlink.
+ *
+ * Folding it into the entry would mean a disconnect had to choose between destroying the sign-in
+ * binding and retaining a `disconnected` entry that lies about the credentials. Two maps make the
+ * choice unnecessary.
+ *
+ * Written ONLY by an identity-scoped OAuth round trip (the sign-in or `link` direction), never by the
+ * data connect flow: the scopes a data connection is granted are not guaranteed to cover what an
+ * identity read needs.
+ *
+ * @dbxModelSubObject
+ */
+export interface UserExternalConnectionLogin {
+  /**
+   * Identifier of the linked account within the provider. REQUIRED: this IS the identity.
+   *
+   * @dbxModelVariable externalAccountId
+   */
+  ea: UserExternalConnectionExternalAccountId;
+  /**
+   * Human-readable label for the linked account (e.g. the provider-side username).
+   *
+   * @dbxModelVariable label
+   */
+  l?: Maybe<string>;
+  /**
+   * The email the provider reported at link time, when it reported one.
+   *
+   * @dbxModelVariable email
+   */
+  em?: Maybe<EmailAddress>;
+  /**
+   * Whether the PROVIDER considered that email verified at link time.
+   *
+   * @dbxModelVariable emailVerified
+   */
+  emv?: Maybe<boolean>;
+  /**
+   * Date the provider was FIRST linked. Preserved across relinks.
+   *
+   * @dbxModelVariable linkedAt
+   */
+  lat: Date;
+  /**
+   * Date this link was last updated at.
+   *
+   * @dbxModelVariable updatedAt
+   */
+  uat: Date;
+}
+
+/**
+ * Map of provider type to the login link the user holds for that provider.
+ */
+export type UserExternalConnectionLoginMap = Record<UserExternalConnectionProviderType, UserExternalConnectionLogin>;
+
+/**
  * The client-readable half of a user's third-party OAuth connection state.
  *
  * There is exactly ONE of these per user, keyed by uid — per-provider details live inside `e`
@@ -166,6 +233,37 @@ export interface UserExternalConnection extends UserRelated, UserRelatedById {
    */
   c: UserExternalConnectionProviderType[];
   /**
+   * Per-provider LOGIN LINKS, keyed by provider type.
+   *
+   * A provider present here is a way this account signs in. Independent of `e`: a provider can be
+   * linked without a data connection (the sign-in wrote the link and the app did not opt into
+   * `signInConnects`), connected without being linked (a connect-only provider), or both.
+   *
+   * @dbxModelVariable logins
+   */
+  li: UserExternalConnectionLoginMap;
+  /**
+   * DERIVED from `e` UNION `li`: the `<providerType>:<externalAccountId>` key of every entry that
+   * names an external account, plus every login link's.
+   *
+   * The `c` array's sibling, and it exists for the same reason: Firestore cannot query across map
+   * keys, so `e.<provider>.ea` is unreachable. `c` answers "who is connected to X?"; this answers
+   * "who IS X?" — the lookup a sign-in performs to resolve a third-party identity to a Firebase uid.
+   *
+   * Both maps contribute because either one alone loses the answer. Sourcing it from `e` only meant
+   * disconnecting a data connection silently destroyed the sign-in binding and the next sign-in minted
+   * a second Firebase user; sourcing it from `li` only would lose a connect-established account that
+   * was never a login method.
+   *
+   * Unlike `c`, membership is NOT filtered by status. Which Discord account a user is is a fact
+   * about their identity, not about whether their credentials currently work: a returning user whose
+   * token expired (`error`) must still resolve to the same uid, or a sign-in would mint them a
+   * second account. Recomputed on every write and never passed in by a caller.
+   *
+   * @dbxModelVariable externalAccountKeys
+   */
+  ec?: Maybe<UserExternalConnectionExternalAccountKey[]>;
+  /**
    * Date this document was last updated at.
    *
    * @dbxModelVariable updatedAt
@@ -177,12 +275,17 @@ export interface UserExternalConnection extends UserRelated, UserRelatedById {
  * Roles for a UserExternalConnection. Users can read their own connection state; all writes go
  * through the server.
  *
- * `connect` and `disconnect` are called out separately from `update` because they are the only
- * operations a client can reach, so an app can withhold either one (a user allowed to drop a
+ * `connect`, `disconnect` and `unlink` are called out separately from `update` because they are the
+ * only operations a client can reach, so an app can withhold any one of them (a user allowed to drop a
  * connection but not to add another, or the reverse) without also withholding the server-driven
  * writes that share `update`.
+ *
+ * `unlink` is distinct from `disconnect` because they remove different things: a disconnect drops the
+ * data connection and keeps the login link, an unlink removes the login link AND everything the
+ * disconnect would have. Removing a way to sign in is the more consequential of the two, so an app can
+ * grant one without the other.
  */
-export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole | 'connect' | 'disconnect';
+export type UserExternalConnectionRoles = GrantedReadRole | GrantedUpdateRole | 'connect' | 'disconnect' | 'unlink';
 
 export class UserExternalConnectionDocument extends AbstractFirestoreDocument<UserExternalConnection, UserExternalConnectionDocument, typeof userExternalConnectionIdentity> {
   get modelIdentity() {
@@ -204,13 +307,31 @@ export const userExternalConnectionEntryFields = {
   er: optionalFirestoreEnum<UserExternalConnectionErrorCode>()
 };
 
+/**
+ * Field conversions for a {@link UserExternalConnectionLogin}.
+ */
+export const userExternalConnectionLoginFields = {
+  ea: firestoreString(),
+  l: optionalFirestoreString(),
+  em: optionalFirestoreString(),
+  emv: optionalFirestoreBoolean(),
+  lat: firestoreDate({ saveDefaultAsNow: true }),
+  uat: firestoreDate({ saveDefaultAsNow: true })
+};
+
 export const userExternalConnectionConverter = snapshotConverterFunctions<UserExternalConnection>({
   fields: {
     uid: firestoreUID(),
     e: firestoreObjectMap<UserExternalConnectionEntry, FirestoreModelData<UserExternalConnectionEntry>, UserExternalConnectionProviderType>({
       objectField: { fields: userExternalConnectionEntryFields }
     }),
+    // an absent map decodes as {}, so every document written before `li` existed reads back as
+    // "no login links" without a migration
+    li: firestoreObjectMap<UserExternalConnectionLogin, FirestoreModelData<UserExternalConnectionLogin>, UserExternalConnectionProviderType>({
+      objectField: { fields: userExternalConnectionLoginFields }
+    }),
     c: firestoreEnumArray<UserExternalConnectionProviderType>(),
+    ec: optionalFirestoreArray<UserExternalConnectionExternalAccountKey>(),
     uat: firestoreDate({ saveDefaultAsNow: true })
   }
 });

@@ -9,7 +9,7 @@ import {
   type UserExternalConnectionCredentials,
   type UserExternalConnectionOAuthExchangeInput,
   type UserExternalConnectionOAuthRefreshCredentialsInput,
-  type UserExternalConnectionOAuthState
+  type UserExternalConnectionOAuthAuthorizeUrlInput
 } from '@dereekb/firebase-server/model';
 import { type WebsiteUrl } from '@dereekb/util';
 import { CalcomUserExternalConnectionOAuthServiceConfig } from './calcom.oauth.connection.config';
@@ -76,8 +76,9 @@ export class CalcomUserExternalConnectionOAuthService extends AbstractUserExtern
     });
   }
 
-  protected authorizeUrlForState(state: UserExternalConnectionOAuthState): WebsiteUrl {
-    return this.authorizeUrlFactory({ state });
+  protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
+    // Cal.com's authorize URL takes no PKCE challenge, so `input.codeChallenge` is deliberately unused
+    return this.authorizeUrlFactory({ state: input.state });
   }
 
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {

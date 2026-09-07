@@ -1,15 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { DISCORD_OAUTH_SCOPE_DELIMITER, type DiscordAccessToken, type DiscordOAuthAuthorizeUrlFactory, type DiscordOAuthCurrentUser } from '@dereekb/discord';
 import { DiscordOAuthApi } from '@dereekb/discord/nestjs';
 import {
   AbstractUserExternalConnectionOAuthService,
   UserExternalConnectionAccessor,
+  UserExternalConnectionProviderPolicyRegistry,
   UserExternalConnectionServerActions,
+  UserExternalConnectionSignInService,
+  UserExternalConnectionSignInThrottle,
   UserExternalConnectionStateCoder,
   type UserExternalConnectionCredentials,
+  type UserExternalConnectionOAuthAuthorizeUrlInput,
   type UserExternalConnectionOAuthExchangeInput,
   type UserExternalConnectionOAuthRefreshCredentialsInput,
-  type UserExternalConnectionOAuthState
+  type UserExternalConnectionOAuthRevokeCredentialsInput,
+  type UserExternalConnectionOAuthSignInIdentityInput,
+  type UserExternalConnectionSignInIdentity
 } from '@dereekb/firebase-server/model';
 import { type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { DiscordUserExternalConnectionOAuthServiceConfig } from './discord.oauth.connection.config';
@@ -64,17 +70,23 @@ export function discordUserExternalConnectionCredentials(input: DiscordUserExter
 @Injectable()
 export class DiscordUserExternalConnectionOAuthService extends AbstractUserExternalConnectionOAuthService {
   readonly authorizeUrlFactory: DiscordOAuthAuthorizeUrlFactory;
+  readonly signInAuthorizeUrlFactory: DiscordOAuthAuthorizeUrlFactory;
 
   constructor(
     @Inject(DiscordUserExternalConnectionOAuthServiceConfig) readonly config: DiscordUserExternalConnectionOAuthServiceConfig,
     @Inject(UserExternalConnectionStateCoder) readonly stateCoder: UserExternalConnectionStateCoder,
     @Inject(UserExternalConnectionServerActions) readonly userExternalConnectionActions: UserExternalConnectionServerActions,
     @Inject(UserExternalConnectionAccessor) readonly userExternalConnectionAccessor: UserExternalConnectionAccessor,
-    @Inject(DiscordOAuthApi) readonly oauthApi: DiscordOAuthApi
+    @Inject(DiscordOAuthApi) readonly oauthApi: DiscordOAuthApi,
+    // optional: an app that only CONNECTS Discord registers none of these, and the sign-in routes
+    // then refuse every request
+    @Optional() @Inject(UserExternalConnectionSignInService) override readonly userExternalConnectionSignInService?: Maybe<UserExternalConnectionSignInService>,
+    @Optional() @Inject(UserExternalConnectionProviderPolicyRegistry) override readonly userExternalConnectionProviderPolicyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>,
+    @Optional() @Inject(UserExternalConnectionSignInThrottle) override readonly userExternalConnectionSignInThrottle?: Maybe<UserExternalConnectionSignInThrottle>
   ) {
     super();
 
-    const { scopes, userExternalConnectionOAuth } = config;
+    const { scopes, signInScopes, userExternalConnectionOAuth } = config;
 
     // no clientId guard here, unlike the Cal.com equivalent: DiscordOAuthConfig requires both
     // credentials, so DiscordOAuthApi cannot construct without a client id to authorize as
@@ -82,14 +94,32 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
       redirectUri: userExternalConnectionOAuth.redirectUri,
       scopes
     });
+
+    // a second factory rather than a scope argument on the first: the url factory closes over its
+    // scopes, and the two sets are genuinely different grants rather than one set with a variation
+    this.signInAuthorizeUrlFactory = oauthApi.authorizeUrlFactory({
+      redirectUri: userExternalConnectionOAuth.redirectUri,
+      scopes: signInScopes
+    });
   }
 
-  protected authorizeUrlForState(state: UserExternalConnectionOAuthState): WebsiteUrl {
-    return this.authorizeUrlFactory({ state });
+  /**
+   * Picks the scope set from the handoff's direction.
+   *
+   * A `connect` is a DATA grant and gets `scopes`; a `signin` or a `link` is an IDENTITY grant and gets
+   * `signInScopes`. The service cannot read the mode off the state — it is an encrypted envelope only
+   * the state coder can open — so the framework decodes it and passes it in.
+   *
+   * @param input - The state, the optional PKCE challenge, and the mode.
+   * @returns Discord's authorize URL.
+   */
+  protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
+    const factory = input.mode === 'signin' || input.mode === 'link' ? this.signInAuthorizeUrlFactory : this.authorizeUrlFactory;
+    return factory({ state: input.state, codeChallenge: input.codeChallenge });
   }
 
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {
-    const accessToken = await this.oauthApi.exchangeAuthorizationCodeToAccessToken({ code: input.code, redirectUri: input.redirectUri });
+    const accessToken = await this.oauthApi.exchangeAuthorizationCodeToAccessToken({ code: input.code, redirectUri: input.redirectUri, codeVerifier: input.codeVerifier });
 
     // Best-effort: the connection is fully usable unlabeled, so a failure to read the identity must
     // not fail the handoff. Only the settings row's detail line is lost.
@@ -102,6 +132,29 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
     }
 
     return discordUserExternalConnectionCredentials({ accessToken, currentUser });
+  }
+
+  /**
+   * Reads the Discord account a sign-in is attributed to.
+   *
+   * MANDATORY, unlike the best-effort read in the exchange above: a sign-in with no snowflake has
+   * nothing to key the account on. `email`/`verified` come from the same call and are only populated
+   * when the `email` scope was granted — an app whose sign-in delegate provisions users by email must
+   * request it.
+   *
+   * @param input - The credentials the exchange produced.
+   * @returns The Discord identity to sign in as.
+   */
+  protected override async signInIdentityForCredentials(input: UserExternalConnectionOAuthSignInIdentityInput): Promise<UserExternalConnectionSignInIdentity> {
+    const currentUser = await this.oauthApi.readCurrentUser({ accessToken: input.credentials.accessToken });
+
+    return {
+      // the snowflake, never the username — Discord usernames became mutable in 2023
+      externalAccountId: currentUser.id,
+      email: currentUser.email,
+      emailVerified: currentUser.verified ?? false,
+      label: currentUser.global_name ?? currentUser.username
+    };
   }
 
   override async refreshCredentials(input: UserExternalConnectionOAuthRefreshCredentialsInput): Promise<UserExternalConnectionCredentials> {
@@ -117,5 +170,26 @@ export class DiscordUserExternalConnectionOAuthService extends AbstractUserExter
     // and the framework's merge carries it forward, so spending a request to re-read an unchanged
     // display name on every refresh would buy nothing.
     return discordUserExternalConnectionCredentials({ accessToken });
+  }
+
+  /**
+   * Revokes the Discord grant so a captured token cannot outlive the disconnect.
+   *
+   * The refresh token is revoked when there is one: Discord invalidates the whole grant, so revoking
+   * the longer-lived credential covers the access token issued from it. A failure is logged rather
+   * than thrown — the disconnect has already decided to forget these credentials, and failing it
+   * would leave the user connected to an account they asked to leave.
+   *
+   * @param input - The acting user and the credentials being discarded.
+   */
+  override async revokeCredentials(input: UserExternalConnectionOAuthRevokeCredentialsInput): Promise<void> {
+    const { refreshToken, accessToken } = input.credentials;
+    const token = refreshToken ?? accessToken;
+
+    try {
+      await this.oauthApi.revokeToken({ token, tokenTypeHint: refreshToken ? 'refresh_token' : 'access_token' });
+    } catch (e) {
+      this.logger.warn('Disconnected Discord but could not revoke the token at Discord: ', e);
+    }
   }
 }

@@ -32,6 +32,11 @@ export type DiscordGuildId = DiscordSnowflake;
 export type DiscordMessageId = DiscordSnowflake;
 
 /**
+ * A Discord user id.
+ */
+export type DiscordUserId = DiscordSnowflake;
+
+/**
  * Bot token used to authenticate the Discord bot with the gateway.
  *
  * Declared here alongside the other scalars for one place to look, though only

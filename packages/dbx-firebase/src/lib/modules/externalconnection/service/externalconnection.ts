@@ -1,3 +1,4 @@
+import { type FirebaseLoginMethodType } from '../../../auth/login/login';
 import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type KnownUserExternalConnectionProviderType, type UserExternalConnectionEntry, type UserExternalConnectionEntryMap, type UserExternalConnectionProviderType, userExternalConnectionEntryIsConnected } from '@dereekb/firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
@@ -61,6 +62,14 @@ export type DbxFirebaseExternalConnectionNavigateFunction = (url: string) => Pro
  * carries no Firebase ID token of its own.
  */
 export type DbxFirebaseExternalConnectionAuthorizeState = string;
+
+/**
+ * Which handoff a minted {@link DbxFirebaseExternalConnectionAuthorizeState} begins.
+ *
+ * - `connect` — attach the provider as a DATA connection, with the data scopes.
+ * - `link` — make the provider a LOGIN METHOD, with the sign-in scopes.
+ */
+export type DbxFirebaseExternalConnectionAuthorizeMode = 'connect' | 'link';
 
 /**
  * Mints a fresh {@link DbxFirebaseExternalConnectionAuthorizeState} for a provider.
@@ -140,6 +149,80 @@ export interface DbxFirebaseExternalConnectionProvider {
    * Confirmation shown before disconnecting.
    */
   readonly disconnectConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * Declares that this provider can also be used to LOG IN, and how its login button renders.
+   *
+   * Present means the registry derives a `DbxFirebaseAuthLoginProvider` for it, so "Log in with
+   * Discord" appears beside Google and email. Absent means connect-only, which is what every provider
+   * was before sign-in existed.
+   *
+   * The server must independently enable sign-in for this provider — a client-side declaration alone
+   * gets a redirect straight back to the failure url.
+   */
+  readonly signIn?: Maybe<DbxFirebaseExternalConnectionSignInConfig>;
+}
+
+/**
+ * How a provider renders and behaves as a LOGIN button.
+ *
+ * The brand-color fields {@link DbxFirebaseExternalConnectionProviderAssets} deliberately drops are
+ * back here, and for the same reason they were dropped there: a settings row uses a normal themed
+ * button, while a sign-in button is a brand affordance. The two surfaces genuinely want different
+ * presentation, so they get different asset shapes rather than one compromise.
+ */
+export interface DbxFirebaseExternalConnectionSignInConfig {
+  /**
+   * Text on the login button. Defaults to `Continue with <providerName>`.
+   *
+   * "Continue with", not "Log in with", to match every provider in
+   * `DEFAULT_FIREBASE_LOGIN_PROVIDERS`: the same button is shown to a returning user and to someone
+   * signing up for the first time, and the server decides which it turns out to be — so wording that
+   * commits to one of the two is wrong half the time.
+   */
+  readonly loginText?: Maybe<string>;
+  /**
+   * Material icon shown in place of the logo.
+   */
+  readonly loginIcon?: Maybe<string>;
+  /**
+   * Text on the LINK button, e.g. "Connect Discord". Defaults to `Connect <providerName>`.
+   *
+   * The link button makes the provider a login method for an already-signed-in user. Deliberately
+   * worded like the connect row's button because to a user they are the same kind of action; the
+   * sections they sit under are what distinguish them.
+   */
+  readonly linkText?: Maybe<string>;
+  /**
+   * Text on the UNLINK button. Defaults to `Disconnect <providerName>`.
+   */
+  readonly unlinkText?: Maybe<string>;
+  /**
+   * Brand background color for the button.
+   */
+  readonly backgroundColor?: Maybe<string>;
+  /**
+   * Brand text color for the button.
+   */
+  readonly textColor?: Maybe<string>;
+  /**
+   * Path appended to the authorize origin to start the sign-in flow.
+   *
+   * Defaults to {@link DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY}, mirroring how
+   * `authorizePath` defaults.
+   */
+  readonly signInPath?: Maybe<string>;
+  /**
+   * The login method type this provider registers under. Defaults to the `providerType`.
+   *
+   * Legal with no type changes at all: `FirebaseLoginMethodType` is a bare string, so a custom
+   * `'discord'` method is as valid as `'google'`.
+   */
+  readonly loginMethodType?: Maybe<FirebaseLoginMethodType>;
+  /**
+   * App path the sign-in should return to, sent as `returnPath` and validated server-side against the
+   * app's allowlist. A path the server does not allow is dropped, not honored.
+   */
+  readonly returnPath?: Maybe<string>;
 }
 
 /**
@@ -209,6 +292,45 @@ export abstract class DbxFirebaseExternalConnectionsConfig {
  * @returns The authorize path.
  */
 export const DEFAULT_EXTERNAL_CONNECTION_AUTHORIZE_PATH_FACTORY = (providerType: UserExternalConnectionProviderType) => `/oauth/${providerType}/authorize`;
+
+/**
+ * Default sign-in path for a provider: `/oauth/<providerType>/signin`.
+ *
+ * @param providerType - The provider to build a path for.
+ * @returns The sign-in path.
+ */
+export const DEFAULT_EXTERNAL_CONNECTION_SIGN_IN_PATH_FACTORY = (providerType: UserExternalConnectionProviderType) => `/oauth/${providerType}/signin`;
+
+/**
+ * Default ticket-exchange path for a provider: `/oauth/<providerType>/token`.
+ *
+ * @param providerType - The provider to build a path for.
+ * @returns The token path.
+ */
+export const DEFAULT_EXTERNAL_CONNECTION_TOKEN_PATH_FACTORY = (providerType: UserExternalConnectionProviderType) => `/oauth/${providerType}/token`;
+
+/**
+ * Query parameter the completed sign-in returns its ticket on. Must match the server's.
+ */
+export const EXTERNAL_CONNECTION_SIGN_IN_TICKET_PARAM = 'ticket';
+
+/**
+ * Query parameter a FAILED sign-in returns its reason code on. Must match the server's
+ * `USER_EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM`.
+ *
+ * The value is one of the server's allowlisted `USER_EXTERNAL_CONNECTION_SIGN_IN_*` codes — an app
+ * maps it to its own copy rather than rendering anything the server said.
+ */
+export const EXTERNAL_CONNECTION_SIGN_IN_ERROR_PARAM = 'signInError';
+
+/**
+ * `sessionStorage` key the in-flight sign-in's PKCE verifier is held under.
+ *
+ * `sessionStorage`, not `localStorage`: the verifier is scoped to the tab that started the flow and
+ * must not outlive it. It is the single secret proving the returning page is the one that began the
+ * sign-in, so a verifier shared across tabs would weaken exactly what it exists to establish.
+ */
+export const EXTERNAL_CONNECTION_SIGN_IN_VERIFIER_STORAGE_KEY = 'dbx.externalconnection.signin.verifier';
 
 // MARK: Rows
 /**

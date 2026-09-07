@@ -1,7 +1,7 @@
 import { type KnownUserExternalConnectionProviderType, CALCOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type DbxActionConfirmConfig } from '@dereekb/dbx-web';
-import { type DbxFirebaseExternalConnectionConnectFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, type DbxFirebaseExternalConnectionProviderEntry } from './externalconnection';
+import { type DbxFirebaseExternalConnectionConnectFunction, type DbxFirebaseExternalConnectionProvider, type DbxFirebaseExternalConnectionProviderAssets, type DbxFirebaseExternalConnectionProviderEntry, type DbxFirebaseExternalConnectionSignInConfig } from './externalconnection';
 
 /**
  * Default presentation for Cal.com.
@@ -93,6 +93,14 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
    * Confirmation shown before disconnecting.
    */
   readonly disconnectConfirm?: Maybe<DbxActionConfirmConfig>;
+  /**
+   * Turns the known provider into a LOGIN provider too.
+   *
+   * No known provider declares one — a connectable service is not automatically a login provider, and
+   * the server must independently enable sign-in for it. This is how an app opts in without
+   * hand-spreading the library const.
+   */
+  readonly signIn?: Maybe<DbxFirebaseExternalConnectionSignInConfig>;
 }
 
 /**
@@ -103,7 +111,7 @@ export interface DbxFirebaseKnownExternalConnectionProviderConfig {
  * @throws {Error} When there is no known provider for the given type.
  */
 export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKnownExternalConnectionProviderConfig): DbxFirebaseExternalConnectionProvider {
-  const { providerType, assets, authorizePath, connect, disconnectConfirm } = config;
+  const { providerType, assets, authorizePath, connect, disconnectConfirm, signIn } = config;
   const known = DBX_FIREBASE_KNOWN_EXTERNAL_CONNECTION_PROVIDERS[providerType];
 
   if (known == null) {
@@ -115,7 +123,8 @@ export function dbxFirebaseKnownExternalConnectionProvider(config: DbxFirebaseKn
     assets: { ...known.assets, ...assets },
     authorizePath: authorizePath ?? known.authorizePath,
     connect: connect ?? known.connect,
-    disconnectConfirm: disconnectConfirm ?? known.disconnectConfirm
+    disconnectConfirm: disconnectConfirm ?? known.disconnectConfirm,
+    signIn: signIn ?? known.signIn
   };
 }
 

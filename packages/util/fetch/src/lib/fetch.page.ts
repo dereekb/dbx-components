@@ -122,10 +122,16 @@ export interface FetchPageFactoryConfig<I, O> extends FetchPageFactoryConfigDefa
    *
    * The page number is ignored as it is inferred from the previous page.
    *
+   * The input and the resolved options are passed too, so implementations that need the request's
+   * effective limit (to tell a full page from a short final one, for instance) can read it the same
+   * way buildInputForNextPage does.
+   *
    * @param result
+   * @param input
+   * @param options
    * @returns
    */
-  readonly readFetchPageResultInfo: (result: O) => PromiseOrValue<ReadFetchPageResultInfo>;
+  readonly readFetchPageResultInfo: (result: O, input: I, options: FetchPageFactoryInputOptions) => PromiseOrValue<ReadFetchPageResultInfo>;
   /**
    * Creates new input for the next page that is merged with the previous input.
    *
@@ -162,11 +168,12 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
     const { maxPage: inputMaxPage = defaultMaxPage, maxItemsPerPage: inputMaxItemsPerPage } = options ?? {};
     const maxItemsPerPage = inputMaxItemsPerPage ?? defaultMaxItemsPerPage;
     const maxPage = inputMaxPage === null ? Number.MAX_SAFE_INTEGER : (inputMaxPage ?? DEFAULT_FETCH_PAGE_FACTORY_MAX_PAGE);
+    const inputOptions: FetchPageFactoryInputOptions = { maxPage, maxItemsPerPage };
 
     function fetchNextWithInput(input: I, previous: Maybe<FetchNextPage<I, O>> = undefined): () => Promise<FetchNextPage<I, O>> {
       return async (): Promise<FetchNextPage<I, O>> => {
         const result: O = await fetch(input);
-        const { cursor: readCursor, nextPageCursor, hasNext: readHasNext } = await readFetchPageResultInfo(result);
+        const { cursor: readCursor, nextPageCursor, hasNext: readHasNext } = await readFetchPageResultInfo(result, input, inputOptions);
         const cursor = readCursor ?? previous?.cursor;
         const hasNext = readHasNext !== false;
         const page = previous ? previous.page + 1 : FIRST_PAGE;
@@ -188,7 +195,7 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
             }
 
             // assert next page
-            const nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input, { maxPage, maxItemsPerPage }) : undefined;
+            const nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input, inputOptions) : undefined;
 
             if (!nextPageInfo) {
               throw new FetchPageNoNextPageError(nextPageResult);

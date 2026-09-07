@@ -1,10 +1,64 @@
-import { type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
-import { preconditionConflictError } from '@dereekb/firebase-server';
+import {
+  type FirebaseAuthUserId,
+  type UserExternalConnectionExternalAccountId,
+  type UserExternalConnectionProviderType,
+  USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE
+} from '@dereekb/firebase';
+import { forbiddenError, preconditionConflictError } from '@dereekb/firebase-server';
+import { type Maybe } from '@dereekb/util';
 
-export const USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED';
-export const USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED';
-export const USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_ALREADY_EXISTS';
-export const USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE = 'USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED';
+/**
+ * The UserExternalConnection error codes, re-exported from `@dereekb/firebase`.
+ *
+ * They live in the shared package because the BROWSER branches on them too — a login page deciding
+ * what to say about a refused sign-in cannot import from a server package. Re-exported here so the
+ * codes stay importable beside the factories that throw them.
+ */
+export {
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_CONNECTED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_ALREADY_EXISTS_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_CREDENTIALS_EXPIRED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
+  USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES
+} from '@dereekb/firebase';
+
+/**
+ * Reads the reportable error code off a thrown sign-in failure.
+ *
+ * Reads `HttpsError.details.code` — where every helper in `@dereekb/firebase-server` puts it — and
+ * returns it only when it is in `USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES`. Anything
+ * else, including a plain `Error`, yields null.
+ *
+ * @param e - The thrown value.
+ * @returns The reportable code, or null when there is none.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function userExternalConnectionSignInErrorCode(e: unknown): Maybe<string> {
+  const details = (e as Maybe<{ readonly details?: Maybe<{ readonly code?: Maybe<string> }> }>)?.details;
+  const code = details?.code;
+  return code != null && USER_EXTERNAL_CONNECTION_SIGN_IN_REPORTABLE_ERROR_CODES.has(code) ? code : undefined;
+}
 
 /**
  * Creates an error indicating the user already has a connection document.
@@ -69,6 +123,157 @@ export function userExternalConnectionProviderNotAllowedError(providerType: User
   return preconditionConflictError({
     message: `"${providerType}" is not an allowed external connection provider.`,
     code: USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating another user already holds the external account being connected.
+ *
+ * Raised only for a provider whose policy declares its connections `unique` with `onCollision: 'block'`.
+ * The holder's uid is deliberately absent from the message and present only in `data`, which is
+ * server-side: telling a caller which account owns a Discord id is an account-enumeration oracle.
+ *
+ * @param providerType - The provider whose account is contested.
+ * @param externalAccountId - The contested external account id.
+ * @param existingUid - The uid that already holds it.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionExternalAccountInUseError(providerType: UserExternalConnectionProviderType, externalAccountId: UserExternalConnectionExternalAccountId, existingUid: FirebaseAuthUserId) {
+  return preconditionConflictError({
+    message: `That "${providerType}" account is already connected to another user.`,
+    code: USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
+    data: { providerType, externalAccountId, existingUid }
+  });
+}
+
+/**
+ * Creates an error indicating the provider is not configured to be used for signing in.
+ *
+ * Distinct from {@link userExternalConnectionProviderNotAllowedError}: the provider IS allowed, just
+ * not in the sign-in direction. Sign-in is opt-in per provider precisely so an app cannot acquire an
+ * unauthenticated account-creation surface by registering a connect provider.
+ *
+ * @param providerType - The provider a sign-in was attempted with.
+ * @returns A forbidden HttpsError.
+ */
+export function userExternalConnectionSignInNotEnabledError(providerType: UserExternalConnectionProviderType) {
+  return forbiddenError({
+    message: `"${providerType}" cannot be used to sign in.`,
+    code: USER_EXTERNAL_CONNECTION_SIGN_IN_NOT_ENABLED_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the app's sign-in delegate refused the identity.
+ *
+ * The delegate's `reason` rides in `data` rather than the message: it typically describes why an
+ * account does not qualify (no subscription, not a guild member), which is not something to hand back
+ * to an unauthenticated caller.
+ *
+ * @param providerType - The provider the sign-in was attempted with.
+ * @param reason - The delegate's reason, for the server log.
+ * @returns A forbidden HttpsError.
+ */
+export function userExternalConnectionSignInDeniedError(providerType: UserExternalConnectionProviderType, reason: string) {
+  return forbiddenError({
+    message: `That "${providerType}" account cannot sign in.`,
+    code: USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
+    data: { providerType, reason }
+  });
+}
+
+/**
+ * Creates an error indicating a new user could not be created because the provider's email already
+ * belongs to a Firebase user.
+ *
+ * Adopting that account would let whoever controls the third-party email take over the Firebase one,
+ * so the sign-in fails instead. The remedy is an explicit link performed by the already-signed-in
+ * user — which is what the connect flow is.
+ *
+ * @param providerType - The provider the sign-in was attempted with.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionSignInEmailConflictError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `An account already exists for the email on that "${providerType}" account. Recover access to that email, sign in with it, then connect "${providerType}" from your settings.`,
+    code: USER_EXTERNAL_CONNECTION_SIGN_IN_EMAIL_CONFLICT_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the uid a sign-in resolved to no longer exists in Firebase Auth.
+ *
+ * Reachable when a user is deleted from Auth without their connection documents being cleaned up:
+ * minting a token for a deleted uid produces a signed-in session with no user record behind it.
+ *
+ * @param providerType - The provider the sign-in was attempted with.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionSignInUserMissingError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `The user connected to that "${providerType}" account no longer exists.`,
+    code: USER_EXTERNAL_CONNECTION_SIGN_IN_USER_MISSING_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the provider returned no stable account id to identify the user by.
+ *
+ * A connect can proceed without one (it only costs the settings row its label), but a sign-in cannot:
+ * with no stable id there is nothing to key the identity on, and falling back to a mutable username
+ * or an email would be the takeover vector this design exists to avoid.
+ *
+ * @param providerType - The provider the sign-in was attempted with.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionSignInIdentityUnavailableError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `Could not read the "${providerType}" account to sign in with.`,
+    code: USER_EXTERNAL_CONNECTION_SIGN_IN_IDENTITY_UNAVAILABLE_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the provider is not configured to be used as a login method.
+ *
+ * The same `policy.signIn` opt-in that gates the sign-in direction gates this one: linking a provider
+ * as a login method is what MAKES a later sign-in through it resolve to this account, so an app that
+ * has not enabled sign-in must not be able to acquire the binding by another route.
+ *
+ * @param providerType - The provider a link was attempted with.
+ * @returns A forbidden HttpsError.
+ */
+export function userExternalConnectionLinkNotEnabledError(providerType: UserExternalConnectionProviderType) {
+  return forbiddenError({
+    message: `"${providerType}" cannot be linked as a login method.`,
+    code: USER_EXTERNAL_CONNECTION_LINK_NOT_ENABLED_ERROR_CODE,
+    data: { providerType }
+  });
+}
+
+/**
+ * Creates an error indicating the unlink would leave the account with no way to sign back in.
+ *
+ * Deliberately CONSERVATIVE: it refuses whenever the account would be left with no remaining login
+ * link and no Firebase-native provider, which is exactly the state a custom-token-only user is in.
+ * Guessing wrong in the other direction produces an account nobody — including support — can get back
+ * into, so the ambiguous case is refused rather than allowed.
+ *
+ * A rare edge rather than the normal outcome of unlinking: the sign-in service gives every user it
+ * creates with an email a password credential, so "forgot password" is a working way back in.
+ *
+ * @param providerType - The provider the unlink was attempted on.
+ * @returns A precondition-conflict HttpsError.
+ */
+export function userExternalConnectionUnlinkLastLoginMethodError(providerType: UserExternalConnectionProviderType) {
+  return preconditionConflictError({
+    message: `"${providerType}" is the only way to sign in to this account. Add another sign-in method before removing it.`,
+    code: USER_EXTERNAL_CONNECTION_UNLINK_LAST_LOGIN_METHOD_ERROR_CODE,
     data: { providerType }
   });
 }

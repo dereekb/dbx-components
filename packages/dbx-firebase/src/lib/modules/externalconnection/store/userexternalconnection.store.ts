@@ -2,33 +2,37 @@ import { Injectable, inject } from '@angular/core';
 import { filter, first, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { isLoadingStateLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { type DocumentDataWithIdAndKey, FIRESTORE_PERMISSION_DENIED_ERROR_CODE, type OnCallCreateModelResult, type UserExternalConnection, type UserExternalConnectionEntryMap } from '@dereekb/firebase';
+import { type DocumentDataWithIdAndKey, FIRESTORE_PERMISSION_DENIED_ERROR_CODE, type OnCallCreateModelResult, type UserExternalConnection, type UserExternalConnectionEntryMap, type UserExternalConnectionLoginMap } from '@dereekb/firebase';
 import { DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR } from '../../../model/error';
 import { UserExternalConnectionDocumentStore } from './userexternalconnection.document.store';
 
 /**
- * Maps the document store's loading state into the per-provider entry map the UI renders from.
+ * Maps the document store's loading state into one of the connection document's provider maps.
  *
  * This mapper exists because `dataLoadingState$` turns a MISSING document into
  * `errorResult(modelDoesNotExistError())` — and a user who has never connected anything has no
  * document, which is the common case, not an error. `exists$` catches `permission-denied` but does
  * not feed `dataLoadingState$`, so that case has to be handled here too.
  *
- * Both cases mean the same thing to this UI: an empty connection map.
+ * Both cases mean the same thing to this UI: an empty map.
+ *
+ * Generalized over WHICH map it projects because the document now carries two — `e` (data
+ * connections) and `li` (login links) — and both want identical missing/denied handling.
  *
  * Pure and exported so it is unit-testable without a TestBed.
  *
  * @param state - The document store's data loading state.
- * @returns The loading state of the user's entry map.
+ * @param readMap - Reads the map to project off the loaded document.
+ * @returns The loading state of that map.
  */
-export function externalConnectionsLoadingStateFromDocumentLoadingState(state: LoadingState<DocumentDataWithIdAndKey<UserExternalConnection>>): LoadingState<UserExternalConnectionEntryMap> {
+export function externalConnectionMapLoadingStateFromDocumentLoadingState<T extends object>(state: LoadingState<DocumentDataWithIdAndKey<UserExternalConnection>>, readMap: (connection: UserExternalConnection) => Maybe<T>): LoadingState<T> {
   const errorCode = state.error?.code;
-  let result: LoadingState<UserExternalConnectionEntryMap>;
+  let result: LoadingState<T>;
 
   if (state.value) {
-    result = successResult(state.value.e ?? {});
+    result = successResult(readMap(state.value) ?? ({} as T));
   } else if (errorCode === DBX_FIREBASE_MODEL_DOES_NOT_EXIST_ERROR || errorCode === FIRESTORE_PERMISSION_DENIED_ERROR_CODE) {
-    result = successResult({});
+    result = successResult({} as T);
   } else if (state.error) {
     result = { ...state, value: undefined };
   } else {
@@ -36,6 +40,26 @@ export function externalConnectionsLoadingStateFromDocumentLoadingState(state: L
   }
 
   return result;
+}
+
+/**
+ * Maps the document store's loading state into the per-provider ENTRY map the connect UI renders from.
+ *
+ * @param state - The document store's data loading state.
+ * @returns The loading state of the user's entry map.
+ */
+export function externalConnectionsLoadingStateFromDocumentLoadingState(state: LoadingState<DocumentDataWithIdAndKey<UserExternalConnection>>): LoadingState<UserExternalConnectionEntryMap> {
+  return externalConnectionMapLoadingStateFromDocumentLoadingState(state, (x) => x.e);
+}
+
+/**
+ * Maps the document store's loading state into the per-provider LOGIN LINK map.
+ *
+ * @param state - The document store's data loading state.
+ * @returns The loading state of the user's login link map.
+ */
+export function externalConnectionLoginsLoadingStateFromDocumentLoadingState(state: LoadingState<DocumentDataWithIdAndKey<UserExternalConnection>>): LoadingState<UserExternalConnectionLoginMap> {
+  return externalConnectionMapLoadingStateFromDocumentLoadingState(state, (x) => x.li);
 }
 
 /**
@@ -68,6 +92,11 @@ export class DbxFirebaseUserExternalConnectionsStore {
    * The user's per-provider entries. A missing document (or a denied read) resolves to an empty map.
    */
   readonly entriesLoadingState$: Observable<LoadingState<UserExternalConnectionEntryMap>> = this.userExternalConnectionDocumentStore.dataLoadingState$.pipe(map(externalConnectionsLoadingStateFromDocumentLoadingState), shareReplay(1));
+
+  /**
+   * The user's per-provider LOGIN LINKS. A missing document (or a denied read) resolves to an empty map.
+   */
+  readonly loginsLoadingState$: Observable<LoadingState<UserExternalConnectionLoginMap>> = this.userExternalConnectionDocumentStore.dataLoadingState$.pipe(map(externalConnectionLoginsLoadingStateFromDocumentLoadingState), shareReplay(1));
 
   /**
    * Creates the user's connection document if they do not have one, and does nothing if they do.

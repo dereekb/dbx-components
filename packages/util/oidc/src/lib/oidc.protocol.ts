@@ -1,16 +1,19 @@
 import {
+  DEFAULT_OIDC_CLIENT_AUTH_METHOD,
   type DiscoverOidcMetadataInput,
   type ExchangeAuthorizationCodeInput,
   type FetchSessionInfoInput,
   type FetchUserInfoInput,
   type Maybe,
+  type OidcClientAuthInput,
   type OidcDiscoveryMetadata,
   OidcRelyingPartyError,
   type OidcSessionInfo,
   type OidcTokenResponse,
   type RefreshAccessTokenInput,
   type RevokeTokenInput,
-  buildOidcDiscoveryCandidates
+  buildOidcDiscoveryCandidates,
+  oidcClientSecretBasicAuthorizationHeader
 } from '@dereekb/util';
 
 // MARK: Fetch Injection
@@ -87,27 +90,26 @@ export async function discoverOidcMetadata(input: DiscoverOidcMetadataInput & Oi
  * @param input - The token exchange parameters plus the injected fetch transport.
  * @param input.tokenEndpoint - The OIDC token endpoint URL discovered from the issuer.
  * @param input.clientId - The OAuth client ID.
- * @param input.clientSecret - Optional client secret for `client_secret_post` auth; omit for public clients.
+ * @param input.clientSecret - Optional client secret; omit for public clients.
+ * @param input.clientAuth - How the client secret is presented. Defaults to `client_secret_post`.
  * @param input.redirectUri - The redirect URI registered with the OAuth client.
  * @param input.code - The authorization code returned to the redirect URI.
- * @param input.codeVerifier - The PKCE code verifier originally paired with the code challenge.
+ * @param input.codeVerifier - The PKCE code verifier originally paired with the code challenge. Omitted when the authorization request sent no challenge.
  * @param input.fetch - The plain fetch transport.
  * @returns The parsed {@link OidcTokenResponse} with access/refresh tokens.
  */
 export async function exchangeAuthorizationCode(input: ExchangeAuthorizationCodeInput & OidcRelyingPartyFetchInput): Promise<OidcTokenResponse> {
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
-    client_id: input.clientId,
     redirect_uri: input.redirectUri,
-    code: input.code,
-    code_verifier: input.codeVerifier
+    code: input.code
   });
 
-  if (input.clientSecret) {
-    params.set('client_secret', input.clientSecret);
+  if (input.codeVerifier) {
+    params.set('code_verifier', input.codeVerifier);
   }
 
-  return postTokenEndpoint({ tokenEndpoint: input.tokenEndpoint, body: params, fetch: input.fetch });
+  return postTokenEndpoint({ tokenEndpoint: input.tokenEndpoint, body: applyOidcClientAuthToParams(input, params), fetch: input.fetch, authorization: oidcClientAuthAuthorizationHeader(input) });
 }
 
 /**
@@ -117,6 +119,7 @@ export async function exchangeAuthorizationCode(input: ExchangeAuthorizationCode
  * @param input.tokenEndpoint - The OIDC token endpoint URL discovered from the issuer.
  * @param input.clientId - The OAuth client ID.
  * @param input.clientSecret - Optional client secret; omit for public clients.
+ * @param input.clientAuth - How the client secret is presented. Defaults to `client_secret_post`.
  * @param input.refreshToken - The cached refresh token to redeem.
  * @param input.fetch - The plain fetch transport.
  * @returns The parsed {@link OidcTokenResponse} with the refreshed access token.
@@ -124,15 +127,10 @@ export async function exchangeAuthorizationCode(input: ExchangeAuthorizationCode
 export async function refreshAccessToken(input: RefreshAccessTokenInput & OidcRelyingPartyFetchInput): Promise<OidcTokenResponse> {
   const params = new URLSearchParams({
     grant_type: 'refresh_token',
-    client_id: input.clientId,
     refresh_token: input.refreshToken
   });
 
-  if (input.clientSecret) {
-    params.set('client_secret', input.clientSecret);
-  }
-
-  return postTokenEndpoint({ tokenEndpoint: input.tokenEndpoint, body: params, fetch: input.fetch });
+  return postTokenEndpoint({ tokenEndpoint: input.tokenEndpoint, body: applyOidcClientAuthToParams(input, params), fetch: input.fetch, authorization: oidcClientAuthAuthorizationHeader(input) });
 }
 
 /**
@@ -142,6 +140,7 @@ export async function refreshAccessToken(input: RefreshAccessTokenInput & OidcRe
  * @param input.revocationEndpoint - The OIDC revocation endpoint URL.
  * @param input.clientId - The OAuth client ID.
  * @param input.clientSecret - Optional client secret; omit for public clients.
+ * @param input.clientAuth - How the client secret is presented. Defaults to `client_secret_post`.
  * @param input.token - The access or refresh token to revoke.
  * @param input.tokenTypeHint - Optional hint passed as `token_type_hint` (`access_token` or `refresh_token`).
  * @param input.fetch - The plain fetch transport.
@@ -149,19 +148,16 @@ export async function refreshAccessToken(input: RefreshAccessTokenInput & OidcRe
  */
 export async function revokeToken(input: RevokeTokenInput & OidcRelyingPartyFetchInput): Promise<void> {
   const params = new URLSearchParams({
-    client_id: input.clientId,
     token: input.token,
     ...(input.tokenTypeHint ? { token_type_hint: input.tokenTypeHint } : {})
   });
 
-  if (input.clientSecret) {
-    params.set('client_secret', input.clientSecret);
-  }
+  const authorization = oidcClientAuthAuthorizationHeader(input);
 
   const res = await input.fetch(input.revocationEndpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-    body: params.toString()
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', ...(authorization ? { Authorization: authorization } : {}) },
+    body: applyOidcClientAuthToParams(input, params).toString()
   });
 
   if (!res.ok) {
@@ -224,15 +220,52 @@ export async function fetchSessionInfo(input: FetchSessionInfoInput & OidcRelyin
   return (await res.json()) as OidcSessionInfo;
 }
 
+/**
+ * Returns the `Authorization` header value the client's configured {@link OidcClientAuthMethod}
+ * requires, or `undefined` when the credentials belong in the body instead (or there are none).
+ *
+ * @param input - The client credentials and auth method.
+ * @returns The Basic `Authorization` header value, or undefined.
+ */
+function oidcClientAuthAuthorizationHeader(input: OidcClientAuthInput): Maybe<string> {
+  const useBasic = input.clientSecret != null && (input.clientAuth ?? DEFAULT_OIDC_CLIENT_AUTH_METHOD) === 'client_secret_basic';
+  return useBasic ? oidcClientSecretBasicAuthorizationHeader({ clientId: input.clientId, clientSecret: input.clientSecret as string }) : undefined;
+}
+
+/**
+ * Places the client credentials on the request body, unless the client authenticates via
+ * `client_secret_basic` — then BOTH `client_id` and `client_secret` ride in the `Authorization`
+ * header instead (RFC 6749 §2.3.1), and a provider may reject a request presenting them twice.
+ *
+ * @param input - The client credentials and auth method.
+ * @param params - The request body to augment.
+ * @returns The same params instance, for call-site chaining.
+ */
+function applyOidcClientAuthToParams(input: OidcClientAuthInput, params: URLSearchParams): URLSearchParams {
+  if (oidcClientAuthAuthorizationHeader(input) == null) {
+    params.set('client_id', input.clientId);
+
+    if (input.clientSecret) {
+      params.set('client_secret', input.clientSecret);
+    }
+  }
+
+  return params;
+}
+
 interface PostTokenEndpointInput extends OidcRelyingPartyFetchInput {
   readonly tokenEndpoint: string;
   readonly body: URLSearchParams;
+  /**
+   * Optional `Authorization` header value, set for a `client_secret_basic` client.
+   */
+  readonly authorization?: Maybe<string>;
 }
 
 async function postTokenEndpoint(input: PostTokenEndpointInput): Promise<OidcTokenResponse> {
   const res = await input.fetch(input.tokenEndpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', ...(input.authorization ? { Authorization: input.authorization } : {}) },
     body: input.body.toString()
   });
 

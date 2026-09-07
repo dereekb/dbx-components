@@ -1149,12 +1149,28 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Per-provider connection state, keyed by provider type.'
       },
       {
+        name: 'li',
+        longName: 'logins',
+        converter: 'firestoreObjectMap<UserExternalConnectionLogin, FirestoreModelData<UserExternalConnectionLogin>, UserExternalConnectionProviderType>({ objectField: { fields: userExternalConnectionLoginFields } })',
+        tsType: 'UserExternalConnectionLoginMap',
+        optional: false,
+        description: 'Per-provider LOGIN LINKS, keyed by provider type.'
+      },
+      {
         name: 'c',
         longName: 'connectedProviderTypes',
         converter: 'firestoreEnumArray<UserExternalConnectionProviderType>()',
         tsType: 'UserExternalConnectionProviderType[]',
         optional: false,
         description: 'DERIVED from `e`: every provider type whose entry status is `connected`.'
+      },
+      {
+        name: 'ec',
+        longName: 'externalAccountKeys',
+        converter: 'optionalFirestoreArray<UserExternalConnectionExternalAccountKey>()',
+        tsType: 'Maybe<UserExternalConnectionExternalAccountKey[]>',
+        optional: true,
+        description: "DERIVED from `e` UNION `li`: the `<providerType>:<externalAccountId>` key of every entry that names an external account, plus every login link's."
       },
       {
         name: 'uat',
@@ -1166,7 +1182,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       }
     ],
     enums: [],
-    detectionHints: ['e', 'c', 'uat'],
+    detectionHints: ['e', 'li', 'c', 'ec', 'uat'],
     description: "The client-readable half of a user's third-party OAuth connection state.",
     modelGroup: 'UserExternalConnection',
     collectionKind: 'root',

@@ -16,12 +16,17 @@ import { type DemoReadModelFunction } from '../function.context';
  * here rather than taken from `key` (which the client's document store injects, but which cannot name
  * anything else the caller could act on). The `connect` role is asserted against that document, which
  * therefore has to exist — a user creates it before connecting anything.
+ *
+ * The same role gates BOTH modes. A `link` state begins an identity-scoped handoff rather than a data
+ * one, but it is still the caller attaching their own third-party account, and the server independently
+ * refuses a link for a provider whose policy has not enabled sign-in. An app that wants the two
+ * separable asserts `unlink` for the link mode instead.
  */
 export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<ReadUserExternalConnectionAuthorizeStateParams, UserExternalConnectionAuthorizeStateResult> = withApiDetails({
   inputType: readUserExternalConnectionAuthorizeStateParamsType,
   fn: async (request) => {
     const { nest, data, auth } = request;
-    const { providerType } = data;
+    const { providerType, mode } = data;
 
     nest.userExternalConnectionOAuthRegistry.assertHasAuthorizeFlowForProviderType(providerType);
 
@@ -31,7 +36,7 @@ export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<Rea
       request,
       key: firestoreModelKey(userExternalConnectionIdentity, uid),
       roles: 'connect',
-      use: () => ({ state: nest.userExternalConnectionStateCoder.mintState({ uid, providerType }) })
+      use: () => ({ state: mode === 'link' ? nest.userExternalConnectionStateCoder.mintState({ mode: 'link', uid, providerType }) : nest.userExternalConnectionStateCoder.mintState({ uid, providerType }) })
     });
   }
 });

@@ -13,6 +13,7 @@ import {
   type AuthProvider,
   type PopupRedirectResolver,
   signInAnonymously,
+  signInWithCustomToken,
   signInWithEmailAndPassword,
   type UserCredential,
   createUserWithEmailAndPassword,
@@ -627,6 +628,26 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   logInAsAnonymous(): Promise<UserCredential> {
     return signInAnonymously(this.firebaseAuth);
+  }
+
+  /**
+   * Signs in with a Firebase custom token minted by this app's server.
+   *
+   * The bridge for a third-party provider Firebase Auth has no native provider for: the server
+   * authenticates the user against that provider, resolves them to a uid, and mints a token for it.
+   *
+   * The resulting user has NO `providerData` entry — there is no Firebase provider behind them — so
+   * the link/unlink surface does not apply. Managing that third-party identity is the external
+   * connection flow's job. The server's stored custom claims are spread to the top level of the
+   * exchanged ID token as usual, so security rules behave exactly as for any other sign-in.
+   *
+   * No `_authUpdate$` nudge is needed: this fires `onAuthStateChanged` like any other sign-in.
+   *
+   * @param token - The custom token from the server.
+   * @returns The credential for the signed-in user.
+   */
+  logInWithCustomToken(token: string): Promise<UserCredential> {
+    return signInWithCustomToken(this.firebaseAuth, token);
   }
 
   logOut(): Promise<void> {

@@ -20,7 +20,7 @@ import {
   type UserExternalConnectionOAuthCallbackQueryValues,
   type UserExternalConnectionOAuthExchangeInput,
   type UserExternalConnectionOAuthRefreshCredentialsInput,
-  type UserExternalConnectionOAuthState
+  type UserExternalConnectionOAuthAuthorizeUrlInput
 } from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { ZohoUserExternalConnectionOAuthServiceConfig } from './zoho.oauth.connection.config';
@@ -152,8 +152,9 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
     });
   }
 
-  protected authorizeUrlForState(state: UserExternalConnectionOAuthState): WebsiteUrl {
-    return this.authorizeUrlFactory({ state });
+  protected authorizeUrlForState(input: UserExternalConnectionOAuthAuthorizeUrlInput): WebsiteUrl {
+    // Zoho's authorize URL takes no PKCE challenge, so `input.codeChallenge` is deliberately unused
+    return this.authorizeUrlFactory({ state: input.state });
   }
 
   protected async credentialsForAuthorizationCode(input: UserExternalConnectionOAuthExchangeInput): Promise<UserExternalConnectionCredentials> {

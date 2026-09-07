@@ -2,10 +2,10 @@ import { type DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from '
 import { type DbxFirebaseLoginMode, type FirebaseLoginMethodType, type FirebaseLoginMethodCategory } from './login';
 import { Component, type Type, computed, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { containsStringAnyCase, type Maybe, type ArrayOrValue, excludeValuesFromArray, asArray, filterMaybeArrayValues } from '@dereekb/util';
+import { containsStringAnyCase, type Maybe, type ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
-import { firebaseProviderIdToLoginMethodType } from './login.provider.id';
+import { DbxFirebaseLinkedLoginMethodsService } from './login.linked';
 
 /**
  * Injection config for a single login list item, enriched with the login method type for tracking.
@@ -37,14 +37,14 @@ export class DbxFirebaseLoginListComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
-  private readonly _linkedProviderIds = toSignal(this.dbxFirebaseAuthService.currentLinkedProviderIds$, { initialValue: [] as string[] });
+  readonly dbxFirebaseLinkedLoginMethodsService = inject(DbxFirebaseLinkedLoginMethodsService);
 
   /**
-   * The login method types currently linked to the authenticated user.
+   * The login method types currently linked to the authenticated user — the Firebase-native ones and
+   * every registered non-native source, since a custom-token provider has no `providerData` entry to
+   * be read from.
    */
-  readonly linkedMethodTypesSignal = computed<FirebaseLoginMethodType[]>(() => {
-    return filterMaybeArrayValues(this._linkedProviderIds().map(firebaseProviderIdToLoginMethodType));
-  });
+  readonly linkedMethodTypesSignal = toSignal(this.dbxFirebaseLinkedLoginMethodsService.linkedLoginMethodTypes$, { initialValue: [] as FirebaseLoginMethodType[] });
 
   readonly loginMode = input<DbxFirebaseLoginMode>('login');
   readonly providerTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
@@ -114,15 +114,18 @@ export class DbxFirebaseLoginListComponent {
     switch (loginMode) {
       case 'register':
         providers = providers.filter((x) => x.registrationComponentClass !== false);
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
       case 'link':
       case 'unlink':
         providers = providers.filter((x) => x.allowLinking !== false);
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
       default:
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });
+        // `componentData` is carried through so a SHARED button component (one class serving several
+        // providers) can learn which provider it is rendering. Without it the field was declared and
+        // never read, and every provider needed a component class of its own.
+        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode, componentData: x.componentData } });
         break;
     }
 

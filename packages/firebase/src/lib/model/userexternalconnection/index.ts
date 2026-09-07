@@ -4,3 +4,4 @@ export * from './userexternalconnection.util';
 export * from './userexternalconnection.query';
 export * from './userexternalconnection.api';
 export * from './userexternalconnection.action';
+export * from './userexternalconnection.error';

@@ -11,5 +11,11 @@
   },
   "tests": {
     "default": { "runner": "npx nx" }
+  },
+  "builds": {
+    "recovery": { "enabled": true, "target": "workspace:build-all" }
+  },
+  "capabilityConfig": {
+    "block-nx-build": { "options": { "enabled": true } }
   }
 }

@@ -7,7 +7,7 @@ import { DISCORD_CLIENT_ID_CONFIG_KEY, DISCORD_CLIENT_SECRET_CONFIG_KEY, appDisc
 import { type FetchHandler } from '@dereekb/util/fetch';
 import { DISCORD_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, type UserExternalConnectionSignInIdentity, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
 import { DEFAULT_DISCORD_OAUTH_SCOPES, DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE, discordUserExternalConnectionOAuthServiceConfigFactory } from './discord.oauth.connection.config';
 import { DiscordUserExternalConnectionOAuthController } from './discord.oauth.connection.controller';
 import { appDiscordUserExternalConnectionOAuthModuleMetadata } from './discord.oauth.connection.module';
@@ -117,7 +117,8 @@ function capturingServerActions() {
  */
 function capturingFetchHandler() {
   const requests: Request[] = [];
-  let currentUserResponse: () => Response = () => new Response(JSON.stringify(CURRENT_USER), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  const currentUserJsonResponse = (currentUser: DiscordOAuthCurrentUser) => new Response(JSON.stringify(currentUser), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  let currentUserResponse: () => Response = () => currentUserJsonResponse(CURRENT_USER);
 
   const fetchHandler: FetchHandler = async (request) => {
     requests.push(request.clone());
@@ -132,6 +133,9 @@ function capturingFetchHandler() {
   return {
     fetchHandler,
     requests,
+    setCurrentUser: (currentUser: DiscordOAuthCurrentUser) => {
+      currentUserResponse = () => currentUserJsonResponse(currentUser);
+    },
     failCurrentUser: () => {
       currentUserResponse = () => {
         throw new Error('Discord identity call failed.');
@@ -224,6 +228,82 @@ describe('DiscordUserExternalConnectionOAuthService', () => {
 
       expect(config.userExternalConnectionOAuth.failureUrl).toBe(TEST_SUCCESS_URL);
       expect(config.scopes).toEqual(DEFAULT_DISCORD_OAUTH_SCOPES);
+    });
+
+    it('should default the sign-in urls to the connect ones', () => {
+      const { userExternalConnectionOAuth } = discordUserExternalConnectionOAuthServiceConfigFactory({ envService: makeEnvService(), successPath: TEST_SUCCESS_PATH, failurePath: TEST_FAILURE_PATH });
+
+      expect(userExternalConnectionOAuth.signInSuccessUrl).toBe(TEST_SUCCESS_URL);
+      expect(userExternalConnectionOAuth.signInFailureUrl).toBe(TEST_FAILURE_URL);
+    });
+
+    it('should thread the sign-in paths, allowed return paths and scopes to the framework config', () => {
+      // without this the framework fields are unreachable from any app that registers Discord
+      const config = discordUserExternalConnectionOAuthServiceConfigFactory({
+        envService: makeEnvService(),
+        successPath: TEST_SUCCESS_PATH,
+        failurePath: TEST_FAILURE_PATH,
+        signInSuccessPath: '/demo/app/home',
+        signInFailurePath: '/demo/auth/login?signin=failed',
+        allowedReturnPaths: ['/demo/app/home'],
+        scopes: ['identify', 'email']
+      });
+
+      expect(config.userExternalConnectionOAuth.signInSuccessUrl).toBe(`${TEST_APP_URL}/demo/app/home`);
+      expect(config.userExternalConnectionOAuth.signInFailureUrl).toBe(`${TEST_APP_URL}/demo/auth/login?signin=failed`);
+      expect(config.userExternalConnectionOAuth.allowedReturnPaths).toEqual(['/demo/app/home']);
+      expect(config.scopes).toEqual(['identify', 'email']);
+    });
+  });
+
+  describe('signInIdentityForCredentials()', () => {
+    /**
+     * Reads the identity the way the framework's sign-in callback does, without standing up the
+     * sign-in service the callback would also need.
+     *
+     * @param credentials - The credentials the exchange produced.
+     * @returns The identity the provider reports for them.
+     */
+    function readSignInIdentity(credentials: UserExternalConnectionCredentials) {
+      return (service as unknown as { readonly signInIdentityForCredentials: (input: { readonly credentials: UserExternalConnectionCredentials }) => Promise<UserExternalConnectionSignInIdentity> }).signInIdentityForCredentials({ credentials });
+    }
+
+    it('should key the identity on the snowflake and carry the email and its verified flag', async () => {
+      // the snowflake, never the username: Discord usernames became mutable in 2023, so keying on
+      // one would hand an account to whoever claimed the name next
+      fetches.setCurrentUser({ ...CURRENT_USER, email: 'nelly@example.com', verified: true });
+
+      await expect(readSignInIdentity({ accessToken: 'access-token', issuedAt: new Date().toISOString() })).resolves.toEqual({
+        externalAccountId: CURRENT_USER.id,
+        email: 'nelly@example.com',
+        emailVerified: true,
+        label: 'Nelly'
+      });
+    });
+
+    it('should report emailVerified false when Discord did not say', async () => {
+      fetches.setCurrentUser({ ...CURRENT_USER, email: 'nelly@example.com' });
+
+      const identity = await readSignInIdentity({ accessToken: 'access-token', issuedAt: new Date().toISOString() });
+
+      expect(identity.emailVerified).toBe(false);
+    });
+
+    it('should carry no email at all under the default identify-only scopes', async () => {
+      // the `['identify']` default reports none, which is why an app signing in with Discord asks
+      // for `email` too
+      const identity = await readSignInIdentity({ accessToken: 'access-token', issuedAt: new Date().toISOString() });
+
+      expect(identity.externalAccountId).toBe(CURRENT_USER.id);
+      expect(identity.email).toBeUndefined();
+    });
+
+    it('should FAIL a sign-in whose identity has no external account id', async () => {
+      // mandatory here, unlike a connect: with no stable id the next sign-in would not recognize
+      // the same person
+      fetches.failCurrentUser();
+
+      await expect(readSignInIdentity({ accessToken: 'access-token', issuedAt: new Date().toISOString() })).rejects.toThrow();
     });
   });
 

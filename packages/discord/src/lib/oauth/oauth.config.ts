@@ -1,4 +1,4 @@
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type OidcClientAuthMethod } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type DiscordOAuthClientId, type DiscordOAuthClientSecret } from '../discord.config';
 
@@ -20,6 +20,24 @@ export const DISCORD_OAUTH_TOKEN_PATH = '/oauth2/token';
  * The Discord OAuth2 token revocation endpoint path, relative to {@link DISCORD_API_URL}.
  */
 export const DISCORD_OAUTH_REVOKE_PATH = '/oauth2/token/revoke';
+
+/**
+ * How this client authenticates itself at Discord's token and revocation endpoints.
+ *
+ * Discord's discovery document omits `token_endpoint_auth_methods_supported`, whose OIDC Discovery
+ * default is `client_secret_basic` — and Discord does in fact require Basic, rejecting the
+ * credentials-in-body form the OAuth relying-party layer otherwise defaults to.
+ */
+export const DISCORD_OAUTH_CLIENT_AUTH_METHOD: OidcClientAuthMethod = 'client_secret_basic';
+
+/**
+ * Discord's OIDC issuer.
+ *
+ * `https://discord.com/.well-known/openid-configuration` resolves against it, though this package
+ * does not perform discovery — the endpoint paths above are stable, so the extra round trip buys
+ * nothing. Exported for consumers that do want to discover.
+ */
+export const DISCORD_OIDC_ISSUER = 'https://discord.com';
 
 /**
  * Path of the endpoint returning the user an access token belongs to.
