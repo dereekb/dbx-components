@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/openrouter/firebase",
-  "version": "14.0.1",
+  "version": "14.1.0",
   "type": "module",
   "peerDependencies": {
-    "@dereekb/date": "14.0.1",
-    "@dereekb/firebase": "14.0.1",
-    "@dereekb/model": "14.0.1",
-    "@dereekb/openrouter": "14.0.1",
-    "@dereekb/rxjs": "14.0.1",
-    "@dereekb/util": "14.0.1",
+    "@dereekb/date": "14.1.0",
+    "@dereekb/firebase": "14.1.0",
+    "@dereekb/model": "14.1.0",
+    "@dereekb/openrouter": "14.1.0",
+    "@dereekb/rxjs": "14.1.0",
+    "@dereekb/util": "14.1.0",
     "arktype": "^2.2.0"
   }
 }
