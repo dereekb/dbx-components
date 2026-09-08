@@ -3,10 +3,15 @@ import { hideBin } from 'yargs/helpers';
 import { type ActionCommandSpec } from '../action/action.command.factory';
 import { buildActionCommands } from '../action/build-action-commands';
 import { createAuthCommand } from '../auth/auth.command.factory';
+import { type CreateCacheCommandInput, createCacheCommand } from '../cache/cache.command.factory';
+import { type CliDataCache, createCliDataCache } from '../cache/data-cache';
+import { CLI_DATA_CACHE_GLOBAL_OPTION_NAMES, DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS, checkCliDataCacheArgv } from '../cache/data-cache.options';
 import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
+import { type Maybe } from '@dereekb/util';
 import { type CliEnvDefault } from '../config/env';
+import { buildCliPaths } from '../config/paths';
 import { type CliContext, getCliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
 import { createEnvCommand } from '../env/env.command.factory';
@@ -33,7 +38,7 @@ import { setCliRawArgv } from '../util/stdin';
  * these from `--help` when the user passes `--data-help` so the help output
  * focuses on the schema sections.
  */
-export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all', 'pretty', 'timeout'];
+export const STANDARD_GLOBAL_OPTION_NAMES: readonly string[] = ['verbose', 'env', 'dump-dir', 'pick', 'set-dump-dir', 'set-pick', 'pick-all', 'pretty', 'timeout', ...CLI_DATA_CACHE_GLOBAL_OPTION_NAMES];
 
 export interface CreateCliInput extends CliLifecycleHooks {
   readonly cliName: string;
@@ -150,6 +155,15 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly disableFirestoreGet?: boolean;
   /**
+   * Enables the recorded query/export dataset cache: the auth-free `cache` command group, and the
+   * `--cache` / `--refresh` global flags that `firestore-query` and app actions honour.
+   *
+   * Pass `true` for the defaults (`<configDir>/cache`, the CLI's `version` as the recorded build
+   * stamp), or an object to override the cache instance (tests point it at a temp dir), the build
+   * stamp, or the command name.
+   */
+  readonly dataCache?: boolean | Omit<CreateCacheCommandInput, 'cliName'>;
+  /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
    *
@@ -222,6 +236,7 @@ export interface CreateCliInput extends CliLifecycleHooks {
  *   if {@link CreateCliInput.modelManifest} is provided.
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
+ * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
  * @param input.manifestGeneratorVersion - The `@dereekb/dbx-cli` version that emitted the app's generated
  *   manifests, for the built-in `cli-build-not-stale` doctor check.
  * @param input.setup - App hook run once before the command's handler; a throw aborts the command.
@@ -252,6 +267,17 @@ export function createCli(input: CreateCliInput): Argv {
     builtInConfigCommands.push(buildFirestoreQueriesCommand(input.firestoreQueryManifest));
   }
 
+  // ONE cache instance for the whole invocation, shared by the `cache` group and every command that
+  // records or reads a dataset — two instances would each hold their own memoized copy of the index,
+  // and the second writer would clobber the first's entries.
+  const dataCacheSetup: Maybe<Omit<CreateCacheCommandInput, 'cliName'>> = input.dataCache ? (typeof input.dataCache === 'object' ? input.dataCache : {}) : undefined;
+  const dataCacheBuildStamp = dataCacheSetup?.cliBuildStamp ?? input.version;
+  const dataCache: Maybe<CliDataCache> = dataCacheSetup == null ? undefined : (dataCacheSetup.cache ?? createCliDataCache({ dataCacheDir: buildCliPaths({ cliName }).dataCacheDir, ...(dataCacheBuildStamp == null ? {} : { cliBuildStamp: dataCacheBuildStamp }) }));
+
+  if (dataCache != null) {
+    builtInConfigCommands.push(createCacheCommand({ cliName, cache: dataCache, ...(dataCacheBuildStamp == null ? {} : { cliBuildStamp: dataCacheBuildStamp }), ...(dataCacheSetup?.commandName == null ? {} : { commandName: dataCacheSetup.commandName }) }));
+  }
+
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
   const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [CALL_PASSTHROUGH_COMMAND];
 
@@ -266,7 +292,7 @@ export function createCli(input: CreateCliInput): Argv {
   }
 
   if (input.firestore && input.firestoreQueryManifest && input.disableFirestoreQuery !== true) {
-    builtInApiCommands.push(buildFirestoreQueryCommand(input.firestoreQueryManifest));
+    builtInApiCommands.push(buildFirestoreQueryCommand(input.firestoreQueryManifest, dataCache == null ? {} : { dataCache }));
   }
 
   if (input.firestore && input.disableFirestoreGet !== true) {
@@ -313,6 +339,15 @@ export function createCli(input: CreateCliInput): Argv {
     .help()
     .alias('help', 'h')
     .wrap(Math.min(120, process.stdout.columns || 80));
+
+  if (dataCache != null) {
+    // registered only when the cache is on, so a CLI without one rejects `--cache` outright under
+    // `.strict()` rather than accepting a flag that silently does nothing
+    parser = parser
+      .option('cache', { type: 'string', global: true, describe: `Read recorded data no older than N hours (bare --cache = ${DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS}h; --cache=0 = any age; --no-cache also skips recording)` })
+      .option('refresh', { type: 'boolean', global: true, describe: 'Ignore recorded data, rebuild, and overwrite it. Beats --cache.' })
+      .check(checkCliDataCacheArgv);
+  }
 
   if (input.setup != null) {
     parser = parser.middleware([setupMiddleware]);
@@ -422,6 +457,9 @@ async function runCliTeardown(input: RunCliTeardownInput): Promise<void> {
  *
  * Teardown is best-effort by design: it runs once the command has already produced its output, so a
  * failure here must not change what the caller sees or the exit code they get.
+ *
+ * @param input - The function inputs.
+ * @param input.cliName - The CLI name, used to find the Firebase apps this process opened.
  */
 async function closeCliFirestoreSessionForExit(input: Pick<RunCliTeardownInput, 'cliName'>): Promise<void> {
   try {

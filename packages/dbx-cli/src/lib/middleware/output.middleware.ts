@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import type { MiddlewareFunction } from 'yargs';
+import { configureCliDataCacheOptions, resolveCliDataCacheOptions } from '../cache/data-cache.options';
 import { type CliCommandOutputConfig, type CliOutputConfig, loadCliConfig, mergeCliConfig, resolveOutputConfig } from '../config/cli.config';
 import { buildCliPaths } from '../config/paths';
 import { configureOutputOptions, setCliTimeoutMs, setCliVerbose } from '../util/output';
@@ -85,6 +86,9 @@ export function createOutputMiddleware(input: CreateOutputMiddlewareInput): Midd
     setCliVerbose(Boolean(argv.verbose));
     // No `--timeout` flag → undefined → the default timeout applies. `--timeout 0` disables it.
     setCliTimeoutMs(typeof argv.timeout === 'number' ? argv.timeout * 1000 : undefined);
+    // resolved here rather than in the auth middleware so it is set for config commands too — the
+    // `cache` group bypasses auth, and a command reading the cache must not depend on a login
+    configureCliDataCacheOptions(resolveCliDataCacheOptions(argv));
 
     const commandPath: string[] = argv._ ? (argv._ as string[]).map(String) : [];
     const topCommand = commandPath[0];
