@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/firebase-server/discord",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "peerDependencies": {
     "@dereekb/analytics": "14.1.0",

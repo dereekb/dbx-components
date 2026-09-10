@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/zoho",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "bin": {
     "zoho-cli": "cli/index.js"

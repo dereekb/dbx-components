@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli-lint-cache",
   "version": "14.1.0",
+  "sideEffects": false,
   "private": true,
   "type": "module",
   "devDependencies": {

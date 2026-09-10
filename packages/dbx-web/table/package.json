@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-web/table",
   "version": "14.1.0",
+  "sideEffects": false,
   "peerDependencies": {
     "@angular/common": "22.1.4",
     "@angular/core": "22.1.4",

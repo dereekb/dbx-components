@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-components-cli",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "bin": {
     "dbx-components-cli": "dbx-components-cli.js"

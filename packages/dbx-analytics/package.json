@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-analytics",
   "version": "14.1.0",
+  "sideEffects": false,
   "peerDependencies": {
     "@angular/core": "22.1.4",
     "@dereekb/analytics": "14.1.0",

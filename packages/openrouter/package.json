@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/openrouter",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     "./firebase": {

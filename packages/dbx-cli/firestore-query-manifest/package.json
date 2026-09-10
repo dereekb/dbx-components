@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-cli-firestore-query-manifest",
   "version": "14.1.0",
+  "sideEffects": false,
   "private": true,
   "type": "module",
   "devDependencies": {

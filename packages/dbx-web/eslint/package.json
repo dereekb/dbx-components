@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/dbx-web/eslint",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "peerDependencies": {
     "@dereekb/util": "14.1.0",

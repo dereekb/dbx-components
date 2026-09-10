@@ -1,6 +1,7 @@
 {
   "name": "@dereekb/firebase-server/model",
   "version": "14.1.0",
+  "sideEffects": false,
   "type": "module",
   "peerDependencies": {
     "@dereekb/analytics": "14.1.0",
