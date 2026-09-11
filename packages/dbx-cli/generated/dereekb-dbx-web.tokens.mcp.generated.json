@@ -1125,6 +1125,19 @@
       "componentScope": "dialog"
     },
     {
+      "cssVariable": "--dbx-dialog-max-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "dialog max width"
+      ],
+      "description": "Component-scoped override point (`dialog`) read in `packages/dbx-web/src/lib/interaction/dialog/_dialog.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `80vw`.",
+      "defaults": {
+        "light": "80vw"
+      },
+      "componentScope": "dialog"
+    },
+    {
       "cssVariable": "--dbx-disabled-color",
       "scssVariable": "$dbx-disabled-color-var",
       "source": "dbx-web",
