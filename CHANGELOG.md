@@ -1,3 +1,20 @@
+# [14.2.0](https://github.com/dereekb/dbx-components/compare/v14.1.0-dev...v14.2.0) (2026-09-11)
+
+### Bug Fixes
+
+- **dbx-web:** restore pre-M3 80vw dialog max-width default ([a395b674](https://github.com/dereekb/dbx-components/commit/a395b6749db366dea8192c1aed81e11f8fafc737))
+- **env:** make-env.js now rejects empty env values ([e0a55f1c](https://github.com/dereekb/dbx-components/commit/e0a55f1cfbe59e2131ba2b9ba03d63b3d7a40cfa))
+- **workspace:** add sideEffects:false to remaining subpath packages ([fae06c2f](https://github.com/dereekb/dbx-components/commit/fae06c2f75588268575733a2de98c0c12982c227))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([4d601a53](https://github.com/dereekb/dbx-components/commit/4d601a530328f71711963a7428bdfdd273b3e912))
+
+### Features
+
+- **dbx-cli:** record and replay query/export datasets ([7a317fe2](https://github.com/dereekb/dbx-components/commit/7a317fe290b4e03fc133cdb925032e68662ef72d))
+- **firebase:** store unmodelled json as a string, not a map ([a5eaaae0](https://github.com/dereekb/dbx-components/commit/a5eaaae034adc1dbd756cf4660bb73a065ad0380))
+
 # [14.1.0](https://github.com/dereekb/dbx-components/compare/v14.0.1-dev...v14.1.0) (2026-09-07)
 
 ### Bug Fixes

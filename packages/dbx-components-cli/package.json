@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components-cli",
-  "version": "14.1.0",
+  "version": "14.2.0",
   "sideEffects": false,
   "type": "module",
   "bin": {
@@ -14,7 +14,7 @@
     "@types/adm-zip": "^0.5.8"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.1.0",
-    "@dereekb/util": "14.1.0"
+    "@dereekb/dbx-cli": "14.2.0",
+    "@dereekb/util": "14.2.0"
   }
 }
