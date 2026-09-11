@@ -446,18 +446,7 @@ export async function loadOrBuildCliCachedData<T>(input: LoadOrBuildCliCachedDat
   const hit = options.read ? await cache.loadData<T>({ dataset, datasetVersion, env, filter, codec, maxAgeMs: options.maxAgeMs }) : undefined;
   let result: CliCachedDataResult<T>;
 
-  if (hit != null) {
-    const builtAt = new Date(hit.entry.builtAt);
-    result = {
-      data: hit.data,
-      fromCache: true,
-      dataset,
-      fingerprint: hit.entry.fingerprint,
-      builtAt,
-      ageMs: Math.max(0, Date.now() - builtAt.getTime()),
-      ...(hit.entry.itemCount == null ? {} : { itemCount: hit.entry.itemCount })
-    };
-  } else {
+  if (hit == null) {
     const data = await build();
     const itemCount: Maybe<number> = Array.isArray(data) ? data.length : undefined;
     // `--no-cache` still reports the fingerprint and build time, so a run that opts out of recording
@@ -472,6 +461,17 @@ export async function loadOrBuildCliCachedData<T>(input: LoadOrBuildCliCachedDat
       builtAt: new Date(built.builtAt),
       ageMs: 0,
       ...(itemCount == null ? {} : { itemCount })
+    };
+  } else {
+    const builtAt = new Date(hit.entry.builtAt);
+    result = {
+      data: hit.data,
+      fromCache: true,
+      dataset,
+      fingerprint: hit.entry.fingerprint,
+      builtAt,
+      ageMs: Math.max(0, Date.now() - builtAt.getTime()),
+      ...(hit.entry.itemCount == null ? {} : { itemCount: hit.entry.itemCount })
     };
   }
 

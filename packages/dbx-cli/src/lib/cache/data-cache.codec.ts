@@ -155,9 +155,9 @@ function encodeObject(value: object, seen: Set<object>): unknown {
     // string can produce, so it round-trips as null rather than exploding the whole cache write
     result = { [DATE_TAG]: Number.isNaN(time) ? null : value.toISOString() };
   } else if (value instanceof Map) {
-    result = { [MAP_TAG]: [...value.entries()].map(([key, entryValue]) => [encodeValue(key, seen), encodeValue(entryValue, seen)]) };
+    result = { [MAP_TAG]: Array.from(value.entries()).map(([key, entryValue]) => [encodeValue(key, seen), encodeValue(entryValue, seen)]) };
   } else if (value instanceof Set) {
-    result = { [SET_TAG]: [...value.values()].map((member) => encodeValue(member, seen)) };
+    result = { [SET_TAG]: Array.from(value.values()).map((member) => encodeValue(member, seen)) };
   } else if (Array.isArray(value)) {
     result = value.map((member) => encodeValue(member, seen));
   } else {
