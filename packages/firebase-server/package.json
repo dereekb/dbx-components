@@ -51,7 +51,7 @@
     }
   },
   "peerDependencies": {
-    "@cantoo/pdf-lib": "^2.6.5",
+    "@cantoo/pdf-lib": ">=2.6.5 <2.11.0",
     "@dereekb/analytics": "14.2.0",
     "@dereekb/calcom": "14.2.0",
     "@dereekb/date": "14.2.0",

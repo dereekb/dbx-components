@@ -25,7 +25,7 @@
     "@angular/platform-browser": "22.1.4",
     "@angular/router": "22.1.4",
     "@bobbyquantum/ngx-editor": "22.0.1",
-    "@cantoo/pdf-lib": "^2.6.5",
+    "@cantoo/pdf-lib": ">=2.6.5 <2.11.0",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/pubsub": "^6.0.1",
     "@google-cloud/storage": "^7.22.0",
