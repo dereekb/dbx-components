@@ -124,6 +124,16 @@ export interface ModelExtractionIdentity {
   readonly modelType: string;
   readonly collectionPrefix: string | undefined;
   readonly parentIdentityConst: string | undefined;
+  /**
+   * Model type of the parent, when the identity was read from a DECLARATION rather than a call.
+   *
+   * A `.d.ts` spells the parent as an inline type (`FirestoreModelIdentityWithParent<
+   * RootFirestoreModelIdentity<"openRouterPrompt", "orp">, …>`) rather than by naming the const the
+   * source called `firestoreModelIdentity` with, so the const name the parent chain is walked by is not
+   * present to read. The model type is, and it identifies the same parent — the orchestrator resolves
+   * one to the other against the global identity registry.
+   */
+  readonly parentModelType: string | undefined;
 }
 
 /**

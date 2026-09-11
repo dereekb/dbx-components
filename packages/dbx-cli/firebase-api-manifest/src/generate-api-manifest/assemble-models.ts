@@ -220,7 +220,39 @@ function buildGlobalRegistries(extractions: AssembleModelsInput['extractions']):
     }
   }
 
+  linkDeclaredParents(identityByConst);
+
   return { converterRegistry, interfaceRegistry, groupByModelName, serviceFactoryByModelType, enumNames, singleItemByIdentityConst, identityByConst, stringConstants };
+}
+
+/**
+ * Fills in `parentIdentityConst` for identities read from a declaration file.
+ *
+ * A `.d.ts` names its parent by inline TYPE rather than by the const the source passed to
+ * `firestoreModelIdentity`, so the extractor can only report the parent's model type. Everything
+ * downstream — the parent chain the example key is built from, the emitted `parentIdentityConst` —
+ * walks by const name, so the two are reconciled once here rather than at each of those call sites.
+ *
+ * A second pass because it needs every identity in the scan: the parent is routinely declared in a
+ * different file than the child, and may be registered after it.
+ *
+ * @param identityByConst - The identity registry, mutated in place.
+ */
+function linkDeclaredParents(identityByConst: Map<string, ModelExtractionIdentity>): void {
+  const constByModelType = new Map<string, string>();
+
+  for (const identity of identityByConst.values()) {
+    if (!constByModelType.has(identity.modelType)) constByModelType.set(identity.modelType, identity.identityConst);
+  }
+
+  for (const [key, identity] of identityByConst) {
+    if (identity.parentIdentityConst === undefined && identity.parentModelType !== undefined) {
+      const parentIdentityConst = constByModelType.get(identity.parentModelType);
+      if (parentIdentityConst !== undefined) {
+        identityByConst.set(key, { ...identity, parentIdentityConst });
+      }
+    }
+  }
 }
 
 function registerConverters(converters: ModelExtraction['converters'], registry: Map<string, ModelExtractionConverter>): void {
@@ -246,8 +278,10 @@ function registerModelGroups(modelGroups: ModelExtraction['modelGroups'], regist
 }
 
 function appendEntriesFromSource(source: AssembleModelsInput['extractions'][number], registries: GlobalRegistries, accumulator: AssemblyAccumulator): void {
-  for (const identity of source.extraction.identities) {
-    if (accumulator.seen.has(identity.identityConst)) continue;
+  for (const rawIdentity of source.extraction.identities) {
+    if (accumulator.seen.has(rawIdentity.identityConst)) continue;
+    // the registry copy, since that is the one linkDeclaredParents resolved the parent const on
+    const identity = registries.identityByConst.get(rawIdentity.identityConst) ?? rawIdentity;
     const entry = buildEntryForIdentity({ identity, source, registries });
     if (entry) {
       accumulator.seen.add(identity.identityConst);
@@ -271,8 +305,10 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
     const iface = registries.interfaceRegistry.get(modelName);
     if (iface?.hasDbxModelTag) {
       const converter = findConverterForInterface(source.extraction, modelName) ?? findConverterFromRegistry(registries.converterRegistry, modelName);
+      let fields: readonly CliModelField[] | undefined;
+
       if (converter) {
-        const fields = buildFields({
+        fields = buildFields({
           converter,
           iface,
           interfaceRegistry: registries.interfaceRegistry,
@@ -281,12 +317,69 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
           depth: 0,
           visitedConverters: new Set<string>()
         });
+      } else if (isDeclarationSource(source.sourceFile)) {
+        // A declaration file keeps the converter's TYPE but not its `fields` literal, so there is no
+        // converter to find and never will be. The interface carries the persisted keys, their
+        // `@dbxModelVariable` long names, and their docs, which is everything the manifest needs bar the
+        // converter expression text. Restricted to declaration sources on purpose: for a source package a
+        // missing converter means the scan failed to find one, and emitting a half-built entry would hide
+        // that rather than report it.
+        fields = buildFieldsFromInterface(iface, registries.interfaceRegistry);
+      }
+
+      if (fields) {
         result = buildManifestEntry({ identity, modelName, collectionPrefix: identity.collectionPrefix, iface, fields, source, registries });
       }
     }
   }
 
   return result;
+}
+
+/**
+ * Whether a scanned file is a TypeScript declaration file rather than source.
+ *
+ * @param sourceFile - Path of the scanned file.
+ * @returns `true` for a `.d.ts`.
+ */
+function isDeclarationSource(sourceFile: string): boolean {
+  return sourceFile.endsWith('.d.ts');
+}
+
+/**
+ * Builds a model's fields from its interface alone, for a model whose converter is unreachable.
+ *
+ * The converter is what normally supplies the field LIST, because a converter names exactly the
+ * persisted keys while an interface may also carry keys that are never stored. For a declaration source
+ * that distinction is unavailable, so every declared property is treated as persisted — which is what
+ * the interface of a `@dbxModel` describes in practice.
+ *
+ * `converter` is left off each field rather than guessed. It is an opt-in field on
+ * {@link CliModelField} that only the dbx-components MCP consumes, and a wrong expression there is worse
+ * than an absent one.
+ *
+ * @param iface - The model's interface.
+ * @param interfaceRegistry - Registry used to pull inherited properties from ancestors.
+ * @returns One field per declared property, own properties taking precedence over inherited ones.
+ */
+function buildFieldsFromInterface(iface: ModelExtractionInterface, interfaceRegistry: ReadonlyMap<string, ModelExtractionInterface>): readonly CliModelField[] {
+  const propByName = new Map<string, ModelExtractionInterfaceProp>();
+
+  for (const prop of iface.props) propByName.set(prop.name, prop);
+  for (const ancestor of collectAncestors(iface, interfaceRegistry)) {
+    for (const prop of ancestor.props) {
+      if (!propByName.has(prop.name)) propByName.set(prop.name, prop);
+    }
+  }
+
+  return Array.from(propByName.values(), (prop) => ({
+    name: prop.name,
+    longName: resolveLongName(prop.name, prop.longName),
+    ...(prop.tsType ? { tsType: prop.tsType } : {}),
+    optional: prop.optional,
+    ...(prop.description ? { description: prop.description } : {}),
+    ...(prop.syncFlag ? { syncFlag: prop.syncFlag } : {})
+  }));
 }
 
 interface BuildManifestEntryInput {

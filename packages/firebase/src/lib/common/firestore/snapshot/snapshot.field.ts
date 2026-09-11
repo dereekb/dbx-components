@@ -25,6 +25,8 @@
  * - **Arrays**: `firestoreArray`, `firestoreUniqueArray`, `firestoreEnumArray`, `firestoreEncodedArray`
  * - **Maps**: `firestoreMap`, `firestoreEncodedObjectMap`, `firestoreObjectMap`, `firestoreArrayMap`
  * - **Objects**: `firestoreSubObject`, `firestoreObjectArray`
+ * - **Unmodelled json**: `optionalFirestorePassthroughJsonField` (native map, queryable),
+ *   `optionalFirestoreJsonStringField` (serialized string, holds json a map cannot)
  * - **Specialized**: `firestoreUID`, `firestoreLatLngString`, `firestoreWebsiteLink`,
  *   `firestoreDateCellRange`, `firestoreBitwiseSet`, `firestoreUnitedStatesAddress`
  */
@@ -579,6 +581,113 @@ export function optionalFirestorePassthroughJsonField<T extends object>(config?:
     // transformToData rather than transformData: the latter is applied in both directions and would copy
     // the field on every READ too.
     transformToData: copyValueDeepFunction(config)
+  });
+}
+
+/**
+ * Configuration for {@link optionalFirestoreJsonStringField}.
+ *
+ * Extends {@link CopyValueDeepConfig} for parity with {@link optionalFirestorePassthroughJsonField}, so a
+ * field can move between the two without its write-side filtering changing meaning.
+ *
+ * `defaultReadValue` is deliberately absent: the base field applies it in DATA space, which here is the
+ * serialized string rather than the object, and a default expressed as raw json is a worse thing to
+ * write than the `?? {}` at the read site it would replace. That leaves nothing for a type parameter to
+ * describe, so — unlike its passthrough sibling — this config is not generic.
+ */
+export interface OptionalFirestoreJsonStringFieldConfig extends CopyValueDeepConfig {
+  /**
+   * Whether to store `null` instead of a value that has no keys left after filtering. Defaults to `false`.
+   */
+  readonly dontStoreIfEmpty?: boolean;
+}
+
+/**
+ * Creates a field mapping configuration for an optional object field that is stored as a JSON STRING.
+ *
+ * The counterpart to {@link optionalFirestorePassthroughJsonField}, and the one to reach for when the
+ * json is arbitrary rather than merely unmodelled: a json schema, a tool definition, whatever an llm
+ * returned. The passthrough field stores a native Firestore map, and a map cannot represent every legal
+ * json value — Firestore forbids an array directly inside an array, which an array-valued `enum`,
+ * `const`, `default`, or `examples` produces immediately. That write does not degrade, it FAILS, and it
+ * fails from inside whatever was doing the writing with an opaque "invalid nested entity" error.
+ *
+ * Serializing sidesteps the entire Firestore type system: the stored value is one string, so anything
+ * `JSON.stringify` accepts round-trips exactly, including the shapes a map rejects. The cost is that the
+ * field is no longer queryable and no longer readable in the Firestore console — pick this one when the
+ * json is never a query target, and the passthrough field when it is.
+ *
+ * Two behaviours worth knowing:
+ *
+ * - A value only `JSON.stringify` knows how to narrow is narrowed. A `Date` becomes an ISO string and
+ *   stays a string on read, where the passthrough field would have kept it a `Timestamp`. Anything
+ *   carrying non-json values wants the passthrough field, not this one.
+ * - Reads tolerate a legacy native map, so a field migrated from
+ *   {@link optionalFirestorePassthroughJsonField} keeps reading documents written before the switch. New
+ *   writes are always strings, so a document converts itself the next time it is written.
+ *
+ * @param config - Filtering and storage configuration. Defaults to stripping `undefined` values at every depth.
+ * @returns A field mapping configuration for optional json values stored as a string.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldOptional true
+ * @dbxModelSnapshotFieldTags json, string, serialized, stringify, object, raw, optional, arbitrary, schema, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-passthrough-json-field, optional-firestore-field, firestore-sub-object
+ * @template T - Type of the model field. Stored as a json string.
+ *
+ * @example
+ * ```ts
+ * fields: {
+ *   // { model: 'm', text: { format: { schema: { enum: [['a']] } } } }
+ *   // stores as the string '{"model":"m","text":{"format":{"schema":{"enum":[["a"]]}}}}'
+ *   config: optionalFirestoreJsonStringField<MyVendorConfig>(),
+ *   // store null rather than the string '{}' when nothing survives the filtering
+ *   usage: optionalFirestoreJsonStringField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })
+ * }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function optionalFirestoreJsonStringField<T extends object>(config?: OptionalFirestoreJsonStringFieldConfig): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>> {
+  const { dontStoreIfEmpty } = config ?? {};
+  const copyValue = copyValueDeepFunction(config);
+
+  /**
+   * Malformed json reads as absent rather than throwing: only this field writes the value, so a string
+   * that will not parse means the document was written by something else, and taking the whole document
+   * down is a worse answer than reporting the one field missing.
+   *
+   * @param input - The stored value: a json string, or a legacy native map.
+   * @returns The parsed value, or null when the string does not parse.
+   */
+  function fromStoredValue(input: string): Maybe<T> {
+    let result: Maybe<T>;
+
+    if (typeof input === 'string') {
+      try {
+        result = JSON.parse(input) as T;
+      } catch {
+        result = null;
+      }
+    } else {
+      // COMPAT: written before this field replaced optionalFirestorePassthroughJsonField, so the stored
+      // value is still the native map that field wrote.
+      result = input as T;
+    }
+
+    return result;
+  }
+
+  function toStoredValue(input: T): Maybe<string> {
+    const copied = copyValue(input);
+    return dontStoreIfEmpty && objectHasNoKeys(copied) ? null : JSON.stringify(copied);
+  }
+
+  return optionalFirestoreField<T, string>({
+    // cast: the base types a read transform as total, but an unparseable value has no T to return.
+    transformFromData: fromStoredValue as MapFunction<string, T>,
+    transformToData: toStoredValue
   });
 }
 

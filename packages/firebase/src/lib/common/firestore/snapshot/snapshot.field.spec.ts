@@ -60,7 +60,8 @@ import {
   optionalFirestoreArray,
   optionalFirestoreUnixDateTimeSecondsNumber,
   firestoreUnixDateTimeSecondsNumber,
-  optionalFirestorePassthroughJsonField
+  optionalFirestorePassthroughJsonField,
+  optionalFirestoreJsonStringField
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -453,6 +454,116 @@ describe('optionalFirestorePassthroughJsonField()', () => {
       const d = new Date();
       const result = to({ b: { d } }) as unknown as { b: { d: string } };
       expect(result.b.d).toBe(d.toISOString());
+    });
+  });
+});
+
+describe('optionalFirestoreJsonStringField()', () => {
+  interface TestJsonStringValue {
+    a?: Maybe<number>;
+    b?: Maybe<{ c?: Maybe<number>; d?: Maybe<Date>; e?: Maybe<number[]> }>;
+  }
+
+  const field = optionalFirestoreJsonStringField<TestJsonStringValue>();
+
+  it('should store the value as a json string', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const value = { a: 1, b: { c: 2, e: [3] } };
+    expect(to(value)).toBe('{"a":1,"b":{"c":2,"e":[3]}}');
+  });
+
+  it('should read a stored json string back as the parsed value', () => {
+    const { from } = modelFieldMapFunctions(field);
+    expect(from('{"a":1,"b":{"c":2}}')).toEqual({ a: 1, b: { c: 2 } });
+  });
+
+  it('should round trip a value the native map representation cannot hold', () => {
+    // the reason this field exists. Firestore refuses an array directly inside an array, so a json
+    // schema carrying an array-valued `enum` fails the write outright under the passthrough field.
+    const { to, from } = modelFieldMapFunctions(field);
+
+    const value = { schema: { enum: [['a'], ['b']] } } as unknown as TestJsonStringValue;
+    const stored = to(value);
+
+    expect(typeof stored).toBe('string');
+    expect(from(stored)).toEqual(value);
+  });
+
+  it('should strip an undefined value at any depth before serializing', () => {
+    const { to } = modelFieldMapFunctions(field);
+    expect(to({ a: undefined, b: { c: undefined, e: [1] } })).toBe('{"b":{"e":[1]}}');
+  });
+
+  it('should strip an undefined value from a nested array rather than serializing it as null', () => {
+    // JSON.stringify alone turns a hole into `null`; the copy removes it first.
+    const { to } = modelFieldMapFunctions(field);
+    expect(to({ b: { e: [1, undefined as unknown as number, 2] } })).toBe('{"b":{"e":[1,2]}}');
+  });
+
+  it('should not mutate the input value', () => {
+    const { to } = modelFieldMapFunctions(field);
+
+    const value = { a: undefined, b: { c: undefined } };
+    to(value);
+
+    expect(Object.keys(value)).toContain('a');
+    expect(Object.keys(value.b)).toContain('c');
+  });
+
+  it('should narrow a Date to an iso string, since json has no date type', () => {
+    const { to, from } = modelFieldMapFunctions(field);
+
+    const d = new Date();
+    const result = from(to({ b: { d } })) as unknown as { b: { d: string } };
+    expect(result.b.d).toBe(d.toISOString());
+  });
+
+  it('should return null for a null input value, clearing the field', () => {
+    const { to } = modelFieldMapFunctions(field);
+    expect(to(null)).toBeNull();
+  });
+
+  it('should return null for an undefined input value', () => {
+    const { to } = modelFieldMapFunctions(field);
+    expect(to(undefined)).toBeNull();
+  });
+
+  describe('reading a legacy value', () => {
+    it('should read a native map written before the field stored strings', () => {
+      // COMPAT: documents written by optionalFirestorePassthroughJsonField are still maps until rewritten.
+      const { from } = modelFieldMapFunctions(field);
+
+      const legacy = { a: 1, b: { c: 2 } };
+      expect(from(legacy as unknown as string)).toEqual(legacy);
+    });
+
+    it('should read malformed json as absent rather than throwing', () => {
+      const { from } = modelFieldMapFunctions(field);
+      expect(from('{"a":')).toBeNull();
+    });
+  });
+
+  describe('filter', () => {
+    const nullFilteredField = optionalFirestoreJsonStringField<TestJsonStringValue>({ filter: KeyValueTypleValueFilter.NULL });
+
+    it('should strip null values at any depth', () => {
+      const { to } = modelFieldMapFunctions(nullFilteredField);
+      expect(to({ a: null, b: { c: null, e: [1] } })).toBe('{"b":{"e":[1]}}');
+    });
+  });
+
+  describe('dontStoreIfEmpty', () => {
+    const dontStoreIfEmptyField = optionalFirestoreJsonStringField<TestJsonStringValue>({ filterEmptyValues: true, dontStoreIfEmpty: true });
+
+    it('should store null when nothing survives the filtering', () => {
+      const { to } = modelFieldMapFunctions(dontStoreIfEmptyField);
+      expect(to({ a: undefined, b: { c: undefined } })).toBeNull();
+    });
+
+    it('should store the value when something survives the filtering', () => {
+      const { to } = modelFieldMapFunctions(dontStoreIfEmptyField);
+      expect(to({ a: 1, b: { c: undefined } })).toBe('{"a":1}');
     });
   });
 });

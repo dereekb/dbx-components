@@ -1795,7 +1795,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/interaction/dialog/_dialog.scss",
-      "line": 20,
+      "line": 45,
       "declarations": [
         {
           "property": "display",

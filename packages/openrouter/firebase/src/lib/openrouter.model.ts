@@ -33,7 +33,7 @@ import {
   optionalFirestoreBoolean,
   optionalFirestoreDate,
   optionalFirestoreNumber,
-  optionalFirestorePassthroughJsonField,
+  optionalFirestoreJsonStringField,
   optionalFirestoreString,
   snapshotConverterFunctions
 } from '@dereekb/firebase';
@@ -274,10 +274,15 @@ export interface OpenRouterPromptVersion {
   /**
    * Model configuration.
    *
-   * Stored as PASSTHROUGH JSON, deliberately not a strict converter. OpenRouter's parameter surface
-   * moves fast, and a strict converter would silently drop any field it did not know about — turning
-   * every OpenRouter release into a config-corrupting event. `OpenRouterModelConfig` types it in
-   * TypeScript for autocomplete and call-time validation instead: strict types in code, loose storage.
+   * Stored as a JSON STRING, deliberately not a strict converter. OpenRouter's parameter surface moves
+   * fast, and a strict converter would silently drop any field it did not know about — turning every
+   * OpenRouter release into a config-corrupting event. `OpenRouterModelConfig` types it in TypeScript
+   * for autocomplete and call-time validation instead: strict types in code, loose storage.
+   *
+   * A string rather than a native Firestore map because this config carries a json schema, and a map
+   * cannot hold every legal one: Firestore forbids an array inside an array, so an array-valued `enum`,
+   * `const`, `default`, or `examples` fails the write outright rather than degrading. Serializing costs
+   * queryability on the config's interior, which nothing wants, and buys back the whole json type system.
    *
    * @dbxModelVariable config
    */
@@ -333,7 +338,7 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     v: firestoreNumber({ default: 0 }),
     i: optionalFirestoreString(),
     m: optionalFirestoreArray<OpenRouterPromptVersionMessage>({ dontStoreIfEmpty: true }),
-    c: optionalFirestorePassthroughJsonField<OpenRouterModelConfig>(),
+    c: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
     nt: optionalFirestoreString(),
     by: optionalFirestoreString(),
     lk: optionalFirestoreBoolean()
@@ -732,12 +737,12 @@ export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterR
     in: firestoreArray<OpenRouterInputMessage>({}),
     fp: optionalFirestoreArray<OpenRouterFileReference>({ dontStoreIfEmpty: true }),
     fa: optionalFirestoreArray<OpenRouterFileAnnotation>({ dontStoreIfEmpty: true }),
-    co: optionalFirestorePassthroughJsonField<OpenRouterModelConfig>(),
+    co: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
     o: optionalFirestoreString(),
-    j: optionalFirestorePassthroughJsonField<Record<string, unknown>>(),
+    j: optionalFirestoreJsonStringField<Record<string, unknown>>(),
     gi: optionalFirestoreArray<OpenRouterGenerationId>({ filterUnique: true, dontStoreIfEmpty: true }),
-    u: optionalFirestorePassthroughJsonField<OpenRouterRunUsage>(),
-    e: optionalFirestorePassthroughJsonField<OpenRouterRunError>(),
+    u: optionalFirestoreJsonStringField<OpenRouterRunUsage>(),
+    e: optionalFirestoreJsonStringField<OpenRouterRunError>(),
     msg: optionalFirestoreArray<OpenRouterInputMessage>({ dontStoreIfEmpty: true }),
     ptc: optionalFirestoreArray<OpenRouterRunTaskPendingToolCall>({ dontStoreIfEmpty: true }),
     utr: optionalFirestoreArray<OpenRouterRunTaskUnsentToolResult>({ dontStoreIfEmpty: true })

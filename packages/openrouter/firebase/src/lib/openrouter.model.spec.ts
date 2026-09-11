@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { type OpenRouterModelConfig } from '@dereekb/openrouter';
 import { OPENROUTER_PROMPT_VERSION_ID_DIGITS, openRouterPromptVersionId, openRouterPromptVersionNumberFromId } from './openrouter.id';
 import {
   OPENROUTER_RUN_TASK_CLAIMABLE_STATES,
@@ -133,26 +134,35 @@ describe('openRouterRunTaskConverter', () => {
     expect(openRouterRunTaskConverter.mapFunctions.from(data).fa).toEqual([{ hash: 'h1', filename: 'a.pdf', content: 'parsed' }]);
   });
 
-  it('should store config overrides as passthrough json', () => {
+  it('should store config overrides as json, round-tripping unknown vendor keys', () => {
     const co = { plugins: [{ id: 'file-parser', pdf: { engine: 'native' } }], provider: { only: ['openai'], allowFallbacks: false }, unknownFuture: true };
     const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], co });
     expect(openRouterRunTaskConverter.mapFunctions.from(data).co).toEqual(co);
   });
 
-  it('should strip an undefined value out of a passthrough json field rather than store it', () => {
-    // Firestore rejects an explicit `undefined` outright. Usage is assembled from whichever token counts a
-    // response happened to report, so one unreported measurement would otherwise fail the whole result
-    // write and lose an inference that had already been paid for.
-    const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], u: { inputTokens: 10, cost: undefined }, co: { model: 'm', temperature: undefined } });
+  it('should store a json field as a string rather than a native map', () => {
+    // A map cannot hold every legal config: Firestore forbids an array inside an array, which a json
+    // schema reaches with an array-valued `enum`, and that write FAILS rather than degrading.
+    const co = { text: { format: { schema: { enum: [['a'], ['b']] } } } } as unknown as OpenRouterModelConfig;
+    const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], co });
 
-    expect(data.u).toEqual({ inputTokens: 10 });
-    expect(Object.keys(data.u as object)).not.toContain('cost');
-    expect(data.co).toEqual({ model: 'm' });
+    expect(typeof data.co).toBe('string');
+    expect(openRouterRunTaskConverter.mapFunctions.from(data).co).toEqual(co);
   });
 
-  it('should strip a nested undefined value out of a passthrough json field', () => {
+  it('should strip an undefined value out of a json field rather than store it', () => {
+    // Usage is assembled from whichever token counts a response happened to report, so an unreported
+    // measurement must not reach storage as a key at all.
+    const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], u: { inputTokens: 10, cost: undefined }, co: { model: 'm', temperature: undefined } });
+
+    expect(data.u).toBe('{"inputTokens":10}');
+    expect(data.co).toBe('{"model":"m"}');
+  });
+
+  it('should strip a nested undefined value out of a json field', () => {
     // The json these fields carry is nested, and its interior is just as capable of carrying an
-    // `undefined` as its top level — a nested one fails the write exactly the same way.
+    // `undefined` as its top level. Inside an ARRAY that matters beyond tidiness: JSON.stringify turns a
+    // hole into `null`, so the recursive copy has to remove it before serializing.
     const data = openRouterRunTaskConverter.mapFunctions.to({
       s: 0,
       qat: new Date(),
@@ -163,9 +173,18 @@ describe('openRouterRunTaskConverter', () => {
       co: { model: 'm', provider: { only: ['openai'], sort: undefined }, plugins: [{ id: 'file-parser', pdf: { engine: 'native', unused: undefined } }] }
     });
 
-    expect(data.co).toEqual({ model: 'm', provider: { only: ['openai'] }, plugins: [{ id: 'file-parser', pdf: { engine: 'native' } }] });
-    expect(JSON.stringify(data.co)).not.toContain('sort');
-    expect(JSON.stringify(data.co)).not.toContain('unused');
+    expect(JSON.parse(data.co as unknown as string)).toEqual({ model: 'm', provider: { only: ['openai'] }, plugins: [{ id: 'file-parser', pdf: { engine: 'native' } }] });
+    expect(data.co).not.toContain('sort');
+    expect(data.co).not.toContain('unused');
+  });
+
+  it('should read a legacy native map, for documents written before json fields stored strings', () => {
+    // COMPAT: a stored map predates the switch; new writes are strings, so a document converts itself
+    // the next time it is written.
+    const legacy = { model: 'm', provider: { only: ['openai'] } };
+    const read = openRouterRunTaskConverter.mapFunctions.from({ s: 0, qat: new Date().toISOString(), at: 0, pk: 'p', pv: 1, in: [], co: legacy } as never);
+
+    expect(read.co).toEqual(legacy);
   });
 
   it('should not mutate the value it was given when stripping', () => {
@@ -175,7 +194,7 @@ describe('openRouterRunTaskConverter', () => {
     expect(Object.keys(co.provider)).toContain('sort');
   });
 
-  it('should still clear a passthrough json field written as null', () => {
+  it('should still clear a json field written as null', () => {
     // The strip runs only on an object; a top-level null short-circuits ahead of it, which is what keeps
     // `update({ e: null })` working as "clear this field".
     const data = openRouterRunTaskConverter.mapFunctions.to({ s: 0, qat: new Date(), at: 0, pk: 'p', pv: 1, in: [], e: null });

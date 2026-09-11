@@ -15,6 +15,7 @@
  * `packages/dbx-cli/firebase-api-manifest/src/generate-api-manifest/`.
  */
 
+import { type Maybe } from '@dereekb/util';
 import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/dbx-cli';
 import { Node, SyntaxKind, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
 import type {
@@ -39,6 +40,10 @@ const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
 
 const IDENTITY_FN = 'firestoreModelIdentity';
+// the declared-type counterparts of IDENTITY_FN, which is all a .d.ts retains of the call
+const IDENTITY_TYPE = 'FirestoreModelIdentity';
+const ROOT_IDENTITY_TYPE = 'RootFirestoreModelIdentity';
+const IDENTITY_WITH_PARENT_TYPE = 'FirestoreModelIdentityWithParent';
 const SINGLE_ITEM_COLLECTION_FN = 'singleItemFirestoreCollection';
 const ROOT_SINGLE_ITEM_COLLECTION_FN = 'rootSingleItemFirestoreCollection';
 const SINGLE_ITEM_COLLECTION_FN_NAMES = [SINGLE_ITEM_COLLECTION_FN, ROOT_SINGLE_ITEM_COLLECTION_FN] as const;
@@ -90,15 +95,126 @@ function readIdentities(sourceFile: SourceFile): readonly ModelExtractionIdentit
     if (!statement.isExported()) continue;
     for (const decl of statement.getDeclarations()) {
       const initializer = decl.getInitializer();
-      if (!initializer || !Node.isCallExpression(initializer)) continue;
-      if (initializer.getExpression().getText() !== IDENTITY_FN) continue;
-      const parsed = parseFirestoreModelIdentityArgs(initializer.getArguments());
-      if (parsed) {
-        out.push({ identityConst: decl.getName(), ...parsed });
+
+      if (initializer && Node.isCallExpression(initializer)) {
+        if (initializer.getExpression().getText() !== IDENTITY_FN) continue;
+        const parsed = parseFirestoreModelIdentityArgs(initializer.getArguments());
+        if (parsed) {
+          out.push({ identityConst: decl.getName(), ...parsed, parentModelType: undefined });
+        }
+      } else {
+        // A declaration file has no initializer to read — the identity survives only in the declared
+        // type, which is the whole reason a node_modules-installed package can contribute models at all.
+        const parsed = parseDeclaredIdentityType(decl.getTypeNode());
+        if (parsed) {
+          out.push({ identityConst: decl.getName(), ...parsed });
+        }
       }
     }
   }
   return out;
+}
+
+/**
+ * Reads an identity out of the DECLARED TYPE of an initializer-less export.
+ *
+ * The three shapes `@dereekb/firebase` declares, after a `.d.ts` rewrites every import as an inline
+ * `import("…").` qualifier:
+ *
+ * - `RootFirestoreModelIdentity<"worker", "wk">`
+ * - `FirestoreModelIdentity<"worker", "wk">`
+ * - `FirestoreModelIdentityWithParent<RootFirestoreModelIdentity<"prompt", "orp">, "version", "orpv">`
+ *
+ * @param typeNode - The declared type node, when the declaration carries one.
+ * @returns The identity parts, or undefined when the type is not one of the identity shapes.
+ */
+function parseDeclaredIdentityType(typeNode: Maybe<Node>): Omit<ModelExtractionIdentity, 'identityConst'> | undefined {
+  let result: Omit<ModelExtractionIdentity, 'identityConst'> | undefined;
+  const named = readNamedTypeNode(typeNode);
+
+  if (named) {
+    const { typeName, args } = named;
+
+    if (typeName === IDENTITY_WITH_PARENT_TYPE && args.length >= 3) {
+      const parent = parseDeclaredIdentityType(args[0]);
+      result = {
+        modelType: readLiteralTypeText(args[1]) ?? '',
+        collectionPrefix: readLiteralTypeText(args[2]),
+        parentIdentityConst: undefined,
+        parentModelType: parent?.modelType
+      };
+    } else if ((typeName === ROOT_IDENTITY_TYPE || typeName === IDENTITY_TYPE) && args.length >= 2) {
+      result = {
+        modelType: readLiteralTypeText(args[0]) ?? '',
+        collectionPrefix: readLiteralTypeText(args[1]),
+        parentIdentityConst: undefined,
+        parentModelType: undefined
+      };
+    }
+
+    // a default-parameterized identity carries no literals, so it names no model
+    if (result && !result.modelType) {
+      result = undefined;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * The type name and type arguments of a type node, across the two shapes a name can arrive in.
+ */
+interface NamedTypeNode {
+  readonly typeName: string;
+  readonly args: readonly Node[];
+}
+
+/**
+ * Normalizes a type node to its name and type arguments.
+ *
+ * Two shapes, because a `.d.ts` does not write the one the source did: source that imported the type
+ * normally leaves a `TypeReference` (`RootFirestoreModelIdentity<…>`), while a declaration file inlines
+ * the import and leaves an `ImportType` (`import("@dereekb/firebase").RootFirestoreModelIdentity<…>`),
+ * whose name is its QUALIFIER rather than its type name. Reading only the first is what made a
+ * declaration-sourced identity invisible.
+ *
+ * @param typeNode - The type node to read.
+ * @returns The unqualified type name and its type arguments, or undefined when the node is neither shape.
+ */
+function readNamedTypeNode(typeNode: Maybe<Node>): NamedTypeNode | undefined {
+  let result: NamedTypeNode | undefined;
+
+  if (typeNode) {
+    if (Node.isImportTypeNode(typeNode)) {
+      const qualifier = typeNode.getQualifier();
+      if (qualifier) {
+        result = { typeName: qualifier.getText().split('.').pop() ?? '', args: typeNode.getTypeArguments() };
+      }
+    } else if (Node.isTypeReference(typeNode)) {
+      result = { typeName: typeNode.getTypeName().getText().split('.').pop() ?? '', args: typeNode.getTypeArguments() };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Reads the text of a string-literal type node (`"wk"` → `wk`).
+ *
+ * @param node - The type node to read.
+ * @returns The literal's text, or undefined when the node is not a string literal type.
+ */
+function readLiteralTypeText(node: Maybe<Node>): string | undefined {
+  let result: string | undefined;
+
+  if (node && Node.isLiteralTypeNode(node)) {
+    const literal = node.getLiteral();
+    if (Node.isStringLiteral(literal)) {
+      result = literal.getLiteralText();
+    }
+  }
+
+  return result;
 }
 
 function readInterfaces(sourceFile: SourceFile): readonly ModelExtractionInterface[] {

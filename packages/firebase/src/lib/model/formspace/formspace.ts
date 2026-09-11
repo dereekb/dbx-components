@@ -19,7 +19,7 @@ import {
   firestoreUID,
   firestoreUnixDateTimeSecondsNumber,
   optionalFirestoreDate,
-  optionalFirestorePassthroughJsonField,
+  optionalFirestoreJsonStringField,
   optionalFirestoreString,
   optionalFirestoreUID,
   optionalFirestoreUnixDateTimeSecondsNumber,
@@ -210,6 +210,12 @@ export const formSpaceFileSubObject = firestoreSubObject<FormSpaceFile>({
  *
  * PASS-THROUGH: the framework never interprets it. The type's handler is what gives it meaning, and an app
  * narrows this generic to its own interface at the point it reads the space.
+ *
+ * Persisted as a json STRING rather than a native Firestore map, because this is genuinely arbitrary json
+ * and a map cannot hold all of it: Firestore forbids an array directly inside an array, which a form
+ * reaches the moment a field holds a grid, a matrix, or a repeated group of multi-selects. That write
+ * FAILS rather than degrading, so the shape a form could submit would otherwise be bounded by the storage
+ * rather than by the type. Nothing queries into `d`, which is what makes string storage free here.
  */
 export type FormSpaceData = Record<string, unknown>;
 
@@ -480,7 +486,7 @@ export const formSpaceConverter = snapshotConverterFunctions<FormSpace>({
     n: optionalFirestoreString(),
     s: firestoreEnum<FormSpaceState>({ default: FormSpaceState.DRAFT }),
     ps: firestoreEnum<FormSpaceProcessingState>({ default: FormSpaceProcessingState.INIT_OR_NONE }),
-    d: optionalFirestorePassthroughJsonField<FormSpaceData>({ dontStoreIfEmpty: true }),
+    d: optionalFirestoreJsonStringField<FormSpaceData>({ dontStoreIfEmpty: true }),
     u: firestoreUID(),
     o: optionalFirestoreString(),
     m: optionalFirestoreString(),

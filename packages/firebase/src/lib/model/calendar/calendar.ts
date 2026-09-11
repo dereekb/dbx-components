@@ -22,7 +22,7 @@ import {
   optionalFirestoreDate,
   optionalFirestoreEnum,
   optionalFirestoreNumber,
-  optionalFirestorePassthroughJsonField,
+  optionalFirestoreJsonStringField,
   optionalFirestoreString,
   optionalFirestoreArray,
   optionalFirestoreUnixDateTimeSecondsNumber,
@@ -280,7 +280,7 @@ export const calendarEventItemFields = {
   st: optionalFirestoreEnum<CalendarEventStatus>(),
   q: optionalFirestoreNumber(),
   ca: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true }),
-  x: optionalFirestorePassthroughJsonField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true }),
+  x: optionalFirestoreJsonStringField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true }),
   cat: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true }),
   uat: firestoreUnixDateTimeSecondsNumber({ saveDefaultAsNow: true })
 };
@@ -500,7 +500,7 @@ export const calendarConverter = snapshotConverterFunctions<Calendar>({
       sortWith: calendarEventItemsSortFunction<CalendarRecurringEventItem>(),
       filterUnique: calendarEventItemsFilterUniqueFunction<CalendarRecurringEventItem>()
     }),
-    x: optionalFirestorePassthroughJsonField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true }),
+    x: optionalFirestoreJsonStringField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true }),
     cat: firestoreDate({ saveDefaultAsNow: true }),
     uat: firestoreDate({ saveDefaultAsNow: true }),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),

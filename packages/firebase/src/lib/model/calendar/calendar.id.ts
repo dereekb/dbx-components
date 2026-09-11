@@ -78,6 +78,12 @@ export type CalendarType = string;
  *
  * Keys are stored WITHOUT the "X-" prefix and are prefixed at emit time, which is what makes it impossible
  * for a stored key to shadow a standard property like SUMMARY.
+ *
+ * Persisted as a json STRING rather than a native Firestore map, for consistency with the other
+ * unmodelled-json fields in the workspace. Nothing here forces that — a flat map of strings is a shape
+ * Firestore stores perfectly well — so the reason is uniformity plus room for the type to widen, not a
+ * limit this type can currently reach. Nothing queries into it, which is the condition that makes string
+ * storage free.
  */
 export type CalendarExtensionData = Readonly<Record<string, string>>;
 
