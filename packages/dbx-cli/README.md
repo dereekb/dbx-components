@@ -7,6 +7,56 @@ License: MIT
 
 ---
 
+## `auth login`
+
+`auth login` runs the OIDC authorization-code + PKCE flow. By default it **opens the authorization
+URL in your browser** and **captures the redirect itself**, so nothing has to be copy/pasted:
+
+```bash
+demo-cli auth login --env local
+# Authorization URL:
+#   http://localhost:9010/oidc/auth?response_type=code&...
+# Waiting for the redirect to http://127.0.0.1:8976/callback ... (Ctrl-C to cancel)
+```
+
+The URL is always printed (on stderr, so JSON stdout stays parseable) — it is the fallback whenever
+the browser cannot be launched, e.g. over SSH.
+
+### Enabling redirect capture
+
+Capture requires a redirect URI the CLI can actually bind: an `http:` **loopback** URI
+(`127.0.0.1`, `localhost`, `[::1]`) with a **concrete, non-zero port**. The default
+`http://127.0.0.1:0/callback` is a placeholder, not a bindable port, so it falls back to the paste
+prompt and prints how to fix that. Two steps, once per env:
+
+1. Add `http://127.0.0.1:8976/callback` to the OAuth client's registered redirect URIs.
+2. Point the CLI at it:
+
+```bash
+demo-cli auth setup --env local --redirect-uri http://127.0.0.1:8976/callback
+```
+
+The bound port is **not** negotiable at runtime — the `redirect_uri` sent in the authorization
+request has to match a registered one exactly, so the CLI sends the URI you configured rather than
+grabbing an ephemeral port. (An OAuth client registered as a *native* app is compared
+port-insensitively for loopback URIs, but the client registration surface here does not set
+`application_type`.)
+
+### Flags
+
+| Flag | Default | Effect |
+| --- | --- | --- |
+| `--no-open` | opens | Print the authorization URL instead of launching a browser |
+| `--no-listen` | listens | Skip the loopback listener and always prompt for a pasted redirect URL |
+| `--listen-for <duration>` | `5m` | How long to wait for the redirect before falling back to the paste prompt |
+| `--redirect-port <port>` | from the redirect URI | Bind a different port (the resulting URI must also be registered) |
+| `--code <url-or-code>` | — | Non-interactive: skip the browser, the listener, and the prompt entirely |
+
+Whenever capture is unavailable or times out, the command falls back to the original
+`Paste redirect URL or code:` prompt rather than failing.
+
+---
+
 ## Direct Firestore reads
 
 A `dbx-cli`-built CLI can read Firestore two ways:
