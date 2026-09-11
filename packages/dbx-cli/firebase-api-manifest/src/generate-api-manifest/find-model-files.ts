@@ -45,16 +45,34 @@ export function findModelFiles(packageRoot: string): ModelFileMatch[] {
   const out: ModelFileMatch[] = [];
 
   if (safeIsDirectory(libRoot)) {
+    const seenStems = new Set<string>();
+
     for (const filePath of walkSourceFiles(libRoot)) {
+      // A workspace package that has been built carries both `x.ts` and `x.d.ts`. Source wins — it is
+      // the only one of the pair that retains the converter field literals — and the walker reaches it
+      // first because `.d.ts` sorts after `.ts` on the shared stem.
+      const stem = sourceFileStem(filePath);
+      if (seenStems.has(stem)) continue;
       const text = readFileSync(filePath, 'utf8');
       if (!textHasModelMarker(text)) continue;
       const extraction = extractModelsFromSource({ name: filePath, text });
       if (!hasExtractedArtifact(extraction)) continue;
+      seenStems.add(stem);
       out.push({ filePath, extraction });
     }
   }
 
   return out;
+}
+
+/**
+ * The path a `.ts` and its emitted `.d.ts` share, used to keep only one of the pair.
+ *
+ * @param filePath - Absolute path to the source file.
+ * @returns The path with its `.d.ts` / `.ts` extension removed.
+ */
+function sourceFileStem(filePath: string): string {
+  return filePath.replace(/\.d\.ts$/, '').replace(/\.ts$/, '');
 }
 
 function textHasModelMarker(text: string): boolean {
@@ -65,6 +83,9 @@ function textHasModelMarker(text: string): boolean {
   // the ts-morph parse off the hot path.
   return (
     text.includes('firestoreModelIdentity(') ||
+    // the declared-type form the call leaves behind in a .d.ts. One substring covers all three identity
+    // types, since `RootFirestoreModelIdentity` and `FirestoreModelIdentityWithParent` both contain it.
+    text.includes('FirestoreModelIdentity') ||
     text.includes('@dbxModelGroup') ||
     text.includes('snapshotConverterFunctions') ||
     text.includes('firestoreSubObject') ||
@@ -72,7 +93,8 @@ function textHasModelMarker(text: string): boolean {
     text.includes('@dbxModelServiceFactory') ||
     text.includes('singleItemFirestoreCollection') ||
     text.includes('rootSingleItemFirestoreCollection') ||
-    text.includes('export enum ')
+    text.includes('export enum ') ||
+    text.includes('export declare enum ')
   );
 }
 
@@ -100,8 +122,20 @@ function* walkSourceFiles(dir: string): Generator<string> {
   }
 }
 
+/**
+ * Whether a filename is one the model walker parses.
+ *
+ * `.d.ts` qualifies so a `@dereekb/*` package installed into `node_modules` — which ships declarations
+ * and no source — contributes its models rather than silently contributing none. That is the whole
+ * reason a framework-declared model used to be missing from the prefix table while its API calls were
+ * present: `find-api-files` has always accepted `.api.d.ts`, and this walker did not accept its
+ * counterpart.
+ *
+ * @param name - The file's basename.
+ * @returns `true` when the file should be parsed.
+ */
 function isCandidateSourceFile(name: string): boolean {
-  return name.endsWith('.ts') && !name.endsWith('.api.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.test.ts') && !name.endsWith('.d.ts');
+  return name.endsWith('.ts') && !name.endsWith('.api.ts') && !name.endsWith('.api.d.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.test.ts');
 }
 
 function safeIsDirectory(p: string): boolean {

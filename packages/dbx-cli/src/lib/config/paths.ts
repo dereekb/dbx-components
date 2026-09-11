@@ -9,6 +9,15 @@ export interface CliPaths {
   readonly configFilePath: string;
   readonly tokenCachePath: string;
   readonly firestoreSessionCachePath: string;
+  /**
+   * Directory holding the recorded query/export dataset cache — an index file plus one payload file
+   * per recorded build.
+   *
+   * A directory rather than a single file because a payload here is a whole dataset (a 20k-row
+   * export), not the handful of fields the token and session caches hold: one file per build is what
+   * keeps listing the cache from having to read all of it.
+   */
+  readonly dataCacheDir: string;
 }
 
 export interface CliPathsConfig {
@@ -31,11 +40,12 @@ export interface CliPathsConfig {
  *   - `<configDir>/config.json` — the persistent CLI config (envs, output settings)
  *   - `<configDir>/.tokens.json` — per-env access/refresh token cache (mode 0600)
  *   - `<configDir>/.firestore-sessions.json` — per-env direct-Firestore session cache (mode 0600)
+ *   - `<configDir>/cache/` — recorded query/export dataset cache (mode 0600 throughout)
  *
  * @param config - The path-building inputs.
  * @param config.cliName - The CLI's binary name; the default config dir is `~/.<cliName>`.
  * @param config.configDirOverride - Optional override that replaces the default config directory verbatim (used by tests).
- * @returns The {@link CliPaths} pointing at `configDir`, the config file, the token cache file, and the Firestore session cache file.
+ * @returns The {@link CliPaths} pointing at `configDir`, the config file, the token cache file, the Firestore session cache file, and the dataset cache directory.
  * @__NO_SIDE_EFFECTS__
  */
 export function buildCliPaths(config: CliPathsConfig): CliPaths {
@@ -45,6 +55,7 @@ export function buildCliPaths(config: CliPathsConfig): CliPaths {
     configDir,
     configFilePath: join(configDir, 'config.json'),
     tokenCachePath: join(configDir, '.tokens.json'),
-    firestoreSessionCachePath: join(configDir, '.firestore-sessions.json')
+    firestoreSessionCachePath: join(configDir, '.firestore-sessions.json'),
+    dataCacheDir: join(configDir, 'cache')
   };
 }

@@ -1,10 +1,15 @@
+import { type Maybe } from '@dereekb/util';
 import type { Argv, CommandModule } from 'yargs';
+import { type CliDataCache, cliDataCacheMeta, createCliDataCache, loadOrBuildCliCachedData } from '../cache/data-cache';
+import { DISABLED_CLI_DATA_CACHE_OPTIONS, cliDataCacheOptions } from '../cache/data-cache.options';
+import { buildCliPaths } from '../config/paths';
 import { requireCliContext } from '../context/cli.context';
 import { type CliFirestoreQueryManifest } from '../manifest/types';
 import { wrapCommandHandler } from '../util/handler';
 import { outputResult } from '../util/output';
 import { requireCliFirestoreModels } from './firestore.models';
-import { runCliFirestoreQuery } from './firestore.query';
+import { type CliFirestoreQueryResult, runCliFirestoreQuery } from './firestore.query';
+import { resolveCliFirestoreQueryArgs } from './firestore.query-params';
 import { resolveCliFirestoreQueryEntry } from './query-info-utils';
 import { assertCliFirestoreQueryCanRun } from './query-mode';
 import { createCliFirestoreQueryRegistry } from './query-registry';
@@ -15,10 +20,34 @@ import { createCliFirestoreQueryRegistry } from './query-registry';
 export const DEFAULT_FIRESTORE_QUERY_COMMAND_NAME = 'firestore-query';
 
 /**
+ * Dataset id prefix under which a `firestore-query` run records its result.
+ *
+ * One dataset per catalog slug, so `cache list` reads as a list of queries rather than one
+ * undifferentiated blob.
+ */
+export const CLI_FIRESTORE_QUERY_DATASET_PREFIX = 'firestore-query';
+
+/**
+ * Version of the recorded `firestore-query` payload.
+ *
+ * Bump when the result envelope's shape changes, or when the row projection changes what it decodes
+ * — a recorded build from older code is a wrong-answer bug, not just a slow one.
+ */
+export const CLI_FIRESTORE_QUERY_DATASET_VERSION = 1;
+
+/**
  * Options accepted by {@link buildFirestoreQueryCommand}.
  */
 export interface BuildFirestoreQueryCommandOptions {
   readonly commandName?: string;
+  /**
+   * The dataset cache recorded runs are written to and `--cache` reads from.
+   *
+   * Supplied by `createCli` so the `cache` command group and this command share ONE instance (and
+   * so a test can point both at a temp directory). Omitted, it falls back to the CLI's own
+   * `<configDir>/cache`.
+   */
+  readonly dataCache?: Maybe<CliDataCache>;
 }
 
 const EPILOGUE = [
@@ -35,7 +64,11 @@ const EPILOGUE = [
   '',
   "A query `firestore-queries` reports as MODE = parent-child addresses ONE parent document's",
   'subcollection: pass --parent with the full ancestor chain the rules declare (any depth).',
-  'MODE = unavailable means no client can run it on any transport.'
+  'MODE = unavailable means no client can run it on any transport.',
+  '',
+  'With the dataset cache enabled, every run RECORDS its rows and `--cache` reads them back. The',
+  'recorded build is keyed by the RESOLVED parameters, so two spellings of the same params object',
+  'share one entry. `cache list` shows what has been recorded.'
 ].join('\n');
 
 /**
@@ -45,7 +78,7 @@ const EPILOGUE = [
  * as the authenticated user.
  *
  * @param manifest - The generated Firestore query manifest.
- * @param options - Optional command-name override.
+ * @param options - Optional command-name override and the shared dataset cache.
  * @returns A yargs `CommandModule` for `runCli({ apiCommands })`.
  *
  * @__NO_SIDE_EFFECTS__
@@ -69,25 +102,50 @@ export function buildFirestoreQueryCommand(manifest: CliFirestoreQueryManifest, 
     handler: wrapCommandHandler(async (argv: any) => {
       const entry = resolveCliFirestoreQueryEntry(registry, String(argv.query));
       const parent = typeof argv.parent === 'string' ? argv.parent : undefined;
+      const params = typeof argv.params === 'string' ? argv.params : undefined;
+      const rawParams = Boolean(argv.rawParams);
+      const limit = typeof argv.limit === 'number' ? argv.limit : undefined;
+      const count = Boolean(argv.count);
 
       // refused before the session is opened, mirroring `firestore-get`'s server-only check: the
       // mode is a property of the entry, so paying for a handshake to be told `permission-denied`
       // teaches nothing. `runCliFirestoreQuery` re-checks for programmatic callers.
       assertCliFirestoreQueryCanRun({ entry, parent });
 
-      const models = await requireCliFirestoreModels(requireCliContext());
+      const context = requireCliContext();
+      // no cache supplied means the CLI did not enable one, and the whole path goes inert: with
+      // reads and writes both off, `loadOrBuildCliCachedData` never touches disk, so a CLI without
+      // `runCli({ dataCache })` neither records anything nor grows a cache directory
+      const dataCache = options?.dataCache;
+      const cache = dataCache ?? createCliDataCache({ dataCacheDir: buildCliPaths({ cliName: context.cliName }).dataCacheDir });
+      const cacheOptions = dataCache == null ? DISABLED_CLI_DATA_CACHE_OPTIONS : cliDataCacheOptions();
+      let sessionFromCache: Maybe<boolean>;
 
-      const result = await runCliFirestoreQuery({
-        models,
-        entry,
-        params: typeof argv.params === 'string' ? argv.params : undefined,
-        rawParams: Boolean(argv.rawParams),
-        parent,
-        limit: typeof argv.limit === 'number' ? argv.limit : undefined,
-        count: Boolean(argv.count)
+      const cached = await loadOrBuildCliCachedData<CliFirestoreQueryResult>({
+        cache,
+        dataset: `${CLI_FIRESTORE_QUERY_DATASET_PREFIX}:${entry.slug}`,
+        datasetVersion: CLI_FIRESTORE_QUERY_DATASET_VERSION,
+        env: context.envName,
+        // the RESOLVED args rather than the raw `--params` string, so `{"a":1,"b":2}` and
+        // `{"b":2,"a":1}` are one recorded build instead of two. `rawParams` is folded in by virtue
+        // of changing what the args resolve to.
+        filter: { args: resolveCliFirestoreQueryArgs({ entry, params, rawParams }), parent, limit, count },
+        options: cacheOptions,
+        // the session is opened INSIDE the build, so a cache hit costs no handshake at all
+        build: async () => {
+          const models = await requireCliFirestoreModels(context);
+          sessionFromCache = models.session.fromCache;
+          return runCliFirestoreQuery({ models, entry, params, rawParams, parent, limit, count });
+        }
       });
 
-      outputResult(result, { source: 'firestore', sessionFromCache: models.session.fromCache });
+      outputResult(cached.data, {
+        source: cached.fromCache ? 'cache' : 'firestore',
+        ...(sessionFromCache === undefined ? {} : { sessionFromCache }),
+        // omitted entirely when no cache is configured, so an envelope never advertises provenance
+        // for a cache that does not exist
+        ...(dataCache == null ? {} : cliDataCacheMeta(cached))
+      });
     })
   };
 }

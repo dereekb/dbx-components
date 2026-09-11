@@ -125,6 +125,92 @@ describe('extractModelsFromSource()', () => {
     expect(empty.converters).toHaveLength(0);
   });
 
+  describe('declaration files', () => {
+    // What a `.d.ts` in node_modules retains: the identity survives only as the declared TYPE, and every
+    // import is rewritten as an inline `import("…").` qualifier.
+    const DECLARATION_SOURCE = `
+export declare const openRouterPromptIdentity: import("@dereekb/firebase").RootFirestoreModelIdentity<"openRouterPrompt", "orp">;
+export declare const openRouterPromptVersionIdentity: import("@dereekb/firebase").FirestoreModelIdentityWithParent<import("@dereekb/firebase").RootFirestoreModelIdentity<"openRouterPrompt", "orp">, "openRouterPromptVersion", "orpv">;
+export declare const plainIdentity: import("@dereekb/firebase").FirestoreModelIdentity<"worker", "wk">;
+export declare const notAnIdentity: string;
+`;
+
+    const declared = extractModelsFromSource({ name: 'openrouter.model.d.ts', text: DECLARATION_SOURCE });
+
+    it('reads a root identity from its declared type', () => {
+      expect(declared.identities.find((x) => x.identityConst === 'openRouterPromptIdentity')).toEqual({
+        identityConst: 'openRouterPromptIdentity',
+        modelType: 'openRouterPrompt',
+        collectionPrefix: 'orp',
+        parentIdentityConst: undefined,
+        parentModelType: undefined
+      });
+    });
+
+    it('reads a parented identity, reporting the parent by model type', () => {
+      // the const name is not in the type, so the orchestrator links it against the identity registry
+      expect(declared.identities.find((x) => x.identityConst === 'openRouterPromptVersionIdentity')).toEqual({
+        identityConst: 'openRouterPromptVersionIdentity',
+        modelType: 'openRouterPromptVersion',
+        collectionPrefix: 'orpv',
+        parentIdentityConst: undefined,
+        parentModelType: 'openRouterPrompt'
+      });
+    });
+
+    it('reads the unqualified FirestoreModelIdentity form', () => {
+      expect(declared.identities.find((x) => x.identityConst === 'plainIdentity')?.collectionPrefix).toBe('wk');
+    });
+
+    it('reads the plain TypeReference form, which a hand-written declaration leaves', () => {
+      // the non-inlined shape: a .d.ts that imported the type normally rather than via `import("…")`
+      const result = extractModelsFromSource({ name: 'x.d.ts', text: 'export declare const workerIdentity: RootFirestoreModelIdentity<"worker", "wk">;\n' });
+      expect(result.identities[0]).toEqual({
+        identityConst: 'workerIdentity',
+        modelType: 'worker',
+        collectionPrefix: 'wk',
+        parentIdentityConst: undefined,
+        parentModelType: undefined
+      });
+    });
+
+    it('ignores a declaration that is not an identity', () => {
+      expect(declared.identities.map((x) => x.identityConst)).not.toContain('notAnIdentity');
+    });
+
+    it('ignores a default-parameterized identity, which names no model', () => {
+      const result = extractModelsFromSource({ name: 'x.d.ts', text: 'export declare const anyIdentity: import("@dereekb/firebase").FirestoreModelIdentity;\n' });
+      expect(result.identities).toHaveLength(0);
+    });
+
+    it('still captures interfaces and their @dbxModelVariable tags from a declaration', () => {
+      // the half a .d.ts DOES keep — which is what lets a converter-less model still carry its fields
+      const source = `
+/**
+ * A prompt.
+ *
+ * @dbxModel
+ * @dbxModelServerOnly
+ */
+export interface OpenRouterPrompt {
+    /**
+     * Human-readable name.
+     *
+     * @dbxModelVariable name
+     */
+    n: string;
+}
+export declare const openRouterPromptIdentity: import("@dereekb/firebase").RootFirestoreModelIdentity<"openRouterPrompt", "orp">;
+`;
+      const result = extractModelsFromSource({ name: 'openrouter.model.d.ts', text: source });
+      const iface = result.interfaces.find((x) => x.name === 'OpenRouterPrompt');
+
+      expect(iface?.hasDbxModelTag).toBe(true);
+      expect(iface?.dbxModelServerOnly).toBe(true);
+      expect(iface?.props.find((p) => p.name === 'n')?.longName).toBe('name');
+    });
+  });
+
   describe('@dbxModelMcpToolNameSegment tag', () => {
     it('captures the first token as the tool-name segment', () => {
       const source = `

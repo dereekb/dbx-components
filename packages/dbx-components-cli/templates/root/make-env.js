@@ -23,11 +23,36 @@ const envSpecifierType = new String(specifier).toUpperCase(); // Also use this t
 const envSpecifierTypeLower = envSpecifierType.toLowerCase();
 const envSpecifierSeparator = '_';
 
+const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
+const keysToIgnore = new Set(keysToIgnoreFromTemplate);
+
+// An empty value is NEVER allowed, in any file this tool reads or in the env it generates.
+//
+// A key with an empty value is not the same as an absent key: it is a real, present key that erases
+// whatever an earlier file defined. The deploy targets copy .env.<specifier> into the dist folder
+// beside the .env generated here, and the Firebase CLI merges the two last-file-wins (.env, then
+// .env.<projectId> / .env.<alias>), so "KEY=" in the override file silently blanks the resolved
+// secret in the deployed environment. Fail here instead.
+function isEmptyEnvValue(value) {
+  return value == null || String(value).trim().length === 0;
+}
+
+function assertHasNoEmptyValues(source, values, ignoreKeys = new Set()) {
+  const keysWithEmptyValues = Object.keys(values).filter((key) => !ignoreKeys.has(key) && isEmptyEnvValue(values[key]));
+
+  // throw error with all failed keys.
+  if (keysWithEmptyValues.length) {
+    throw new Error(`The ${keysWithEmptyValues.length} environment variable(s) ${keysWithEmptyValues.map((x) => `"${x}"`).join(', ')} in ${source} each had an empty value. Empty values are never allowed. Either remove the key entirely or give it a value.`);
+  }
+}
+
 // NOTE: If run within nx, remember that nx adds all variables within .env to the environment and, thus, process.env.
 // Variables that are within bash take prority.
 const templateFilePath = '.env';
 const templateEnv = fs.readFileSync(templateFilePath).toString();
 const template = parse(templateEnv);
+
+assertHasNoEmptyValues(templateFilePath, template, keysToIgnore);
 
 // Also attempt to read an overriding template file with the name .env.<environment>
 // Any variables from here are not added to the template; they're just used for overriding variables in the template.
@@ -38,12 +63,11 @@ let specifierTemplateOverrides = {};
 if (fs.existsSync(specifierTemplateOverridesFilePath)) {
   const specifierTemplateOverridesEnv = fs.readFileSync(specifierTemplateOverridesFilePath).toString();
   specifierTemplateOverrides = parse(specifierTemplateOverridesEnv);
+
+  assertHasNoEmptyValues(specifierTemplateOverridesFilePath, specifierTemplateOverrides, keysToIgnore);
 }
 
 const env = {}; // this is the object that is exported
-
-const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
-const keysToIgnore = new Set(keysToIgnoreFromTemplate);
 
 Object.keys(template)
   .filter((x) => !keysToIgnore.has(x))
@@ -112,15 +136,19 @@ function applyEnvFallbacks(fallbacks, defaultValue) {
 const defaultPlaceholderValue = 'placeholder'; // This is the default value to use if an environment variable that is requested is not defined.
 initWithProcessEnv(defaultPlaceholderValue); // Init with process.env, copying values from process.env onto the existing keys of our env variable
 
+// Explicit Declaration
+copyToEnvFromProcessEnv('MAILGUN_DOMAIN', defaultPlaceholderValue);
+
+// ======================================
+// Finish Configuration
+// ======================================
+
+// Check no value ended up empty. This runs for every specifier, and after every explicit declaration above.
+assertHasNoEmptyValues('the generated env', env);
+
 // Check there are no placeholder values remaining when targeting either staging or prod.
 if (envSpecifierTypeLower === 'staging' || envSpecifierTypeLower === 'prod') {
   assertHasNoPlaceholderValues(defaultPlaceholderValue);
 }
 
-// Explicit Declaration
-copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
-
-// ======================================
-// Finish Configuration
-// ======================================
 console.log(stringify(env)); // output to console/stdout to allow piping.

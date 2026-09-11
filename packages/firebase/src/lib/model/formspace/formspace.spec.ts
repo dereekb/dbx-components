@@ -83,4 +83,29 @@ describe('formSpaceConverter', () => {
     const data = formSpaceConverter.mapFunctions.to({ ...model, d: {} }) as Record<string, unknown>;
     expect(data['d']).toBeNull();
   });
+
+  it('should store form data as a json string rather than a native map', () => {
+    const data = formSpaceConverter.mapFunctions.to(model) as Record<string, unknown>;
+    expect(data['d']).toBe('{"fullName":"Ada","message":"Hello"}');
+  });
+
+  it('should round trip form data a native map could not hold', () => {
+    // The reason `d` is a string. Firestore forbids an array directly inside an array, which a form reaches
+    // with a grid, a matrix, or a repeated group of multi-selects — and that write FAILS rather than
+    // degrading, bounding what a form could submit by the storage instead of by the type.
+    const d = { grid: [['a', 'b'], ['c']], answers: [{ picks: [['x']] }] };
+    const data = formSpaceConverter.mapFunctions.to({ ...model, d });
+
+    expect(formSpaceConverter.mapFunctions.from(data).d).toEqual(d);
+  });
+
+  it('should read form data written as a legacy native map', () => {
+    // COMPAT: documents written before `d` stored strings. New writes are strings, so a space converts
+    // itself the next time it is written.
+    const legacy = { fullName: 'Ada' };
+    const data = formSpaceConverter.mapFunctions.to(model) as Record<string, unknown>;
+    const result = formSpaceConverter.mapFunctions.from({ ...data, d: legacy } as never);
+
+    expect(result.d).toEqual(legacy);
+  });
 });

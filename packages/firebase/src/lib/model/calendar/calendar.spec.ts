@@ -121,6 +121,18 @@ describe('calendarConverter', () => {
     expect(calendarConverter.mapFunctions.to({ ...model, x: {} }).x).toBeNull();
   });
 
+  it('should store the extension data as a json string rather than a native map', () => {
+    expect(calendarConverter.mapFunctions.to(model).x).toBe('{"calcolor":"blue"}');
+  });
+
+  it('should read extension data written as a legacy native map', () => {
+    // COMPAT: documents written before `x` stored strings still read, and convert on the next write.
+    const data = calendarConverter.mapFunctions.to(model);
+    const result = calendarConverter.mapFunctions.from({ ...data, x: { calcolor: 'green' } } as never);
+
+    expect(result.x).toEqual({ calcolor: 'green' });
+  });
+
   it('should convert an empty document into empty arrays and a UTC timezone', () => {
     const result = calendarConverter.mapFunctions.from({});
 

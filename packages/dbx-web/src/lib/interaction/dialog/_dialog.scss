@@ -8,6 +8,31 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
 
 // MARK: Mixin
 @mixin core() {
+  // Restores the pre-M3 default ceiling on the dialog panel's width.
+  //
+  // Angular Material caps `.cdk-overlay-pane.mat-mdc-dialog-panel` with
+  // `--mat-dialog-container-max-width`, whose baked-in fallback is the M3 spec value of 560px (under M2
+  // theming it was 80vw). Because `max-width` outranks the `width` a dialog is opened with, the 560px
+  // value silently defeats every dialog that asks to be wide — most visibly `DbxInjectionDialogComponent`,
+  // which opens at `width: 80vw; height: 80vh` and therefore renders full-height but only 560px wide.
+  //
+  // This only lifts a ceiling: a dialog opened without an explicit `width` is still content-sized, so
+  // nothing that did not already ask to be wider than 560px changes size. The <=599px breakpoint reads a
+  // separate token (`--mat-dialog-container-small-max-width`, defaulting to `calc(100vw - 32px)`) and is
+  // left alone, so phone-width dialogs keep Material's near-full-screen behavior.
+  //
+  // Declared on the CDK overlay container rather than `:root`, and that placement is load-bearing:
+  // `theme()` emits `mat.all-component-themes()` — and with it `--mat-dialog-container-max-width: 560px` —
+  // under the app's theme selector, which `dbxStyleBody` puts on `<body>`, while the overlay container is
+  // appended to `<body>` as a child. A `:root` (`<html>`) declaration is therefore shadowed by the nearer
+  // `<body>` value no matter how it is ordered or how specific it is. `.cdk-overlay-container` sits between
+  // the themed body and every dialog pane, so its declaration is the one each pane inherits. For that same
+  // reason an app retunes this through `--dbx-dialog-max-width` (inherited from `:root`, read here) rather
+  // than by declaring the Material token itself.
+  .cdk-overlay-container {
+    --mat-dialog-container-max-width: var(--dbx-dialog-max-width, 80vw);
+  }
+
   .mat-mdc-dialog-surface {
     color: var(--mat-sys-on-surface);
   }

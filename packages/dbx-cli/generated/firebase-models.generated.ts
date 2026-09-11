@@ -79,7 +79,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       {
         name: 'x',
         longName: 'extensionData',
-        converter: 'optionalFirestorePassthroughJsonField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true })',
+        converter: 'optionalFirestoreJsonStringField<CalendarExtensionData>({ filterEmptyValues: true, dontStoreIfEmpty: true })',
         tsType: 'Maybe<CalendarExtensionData>',
         optional: true,
         description: 'Extension data emitted as "X-" properties on the calendar\'s VCALENDAR.'
@@ -193,7 +193,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       {
         name: 'd',
         longName: 'data',
-        converter: 'optionalFirestorePassthroughJsonField<FormSpaceData>({ dontStoreIfEmpty: true })',
+        converter: 'optionalFirestoreJsonStringField<FormSpaceData>({ dontStoreIfEmpty: true })',
         tsType: 'Maybe<T>',
         optional: true,
         description: "The form's own values, stored as pass-through JSON."

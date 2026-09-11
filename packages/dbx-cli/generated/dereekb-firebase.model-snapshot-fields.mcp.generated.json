@@ -133,6 +133,47 @@
       ]
     },
     {
+      "slug": "optional-firestore-json-string-field",
+      "name": "optionalFirestoreJsonStringField",
+      "kind": "factory",
+      "category": "object",
+      "module": "@dereekb/firebase",
+      "subpath": "common/firestore/snapshot/snapshot.field",
+      "signature": "optionalFirestoreJsonStringField(config?: OptionalFirestoreJsonStringFieldConfig): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>>",
+      "description": "Creates a field mapping configuration for an optional object field that is stored as a JSON STRING.\n\nThe counterpart to {@link optionalFirestorePassthroughJsonField}, and the one to reach for when the\njson is arbitrary rather than merely unmodelled: a json schema, a tool definition, whatever an llm\nreturned. The passthrough field stores a native Firestore map, and a map cannot represent every legal\njson value — Firestore forbids an array directly inside an array, which an array-valued `enum`,\n`const`, `default`, or `examples` produces immediately. That write does not degrade, it FAILS, and it\nfails from inside whatever was doing the writing with an opaque \"invalid nested entity\" error.\n\nSerializing sidesteps the entire Firestore type system: the stored value is one string, so anything\n`JSON.stringify` accepts round-trips exactly, including the shapes a map rejects. The cost is that the\nfield is no longer queryable and no longer readable in the Firestore console — pick this one when the\njson is never a query target, and the passthrough field when it is.\n\nTwo behaviours worth knowing:\n\n- A value only `JSON.stringify` knows how to narrow is narrowed. A `Date` becomes an ISO string and\n  stays a string on read, where the passthrough field would have kept it a `Timestamp`. Anything\n  carrying non-json values wants the passthrough field, not this one.\n- Reads tolerate a legacy native map, so a field migrated from\n  {@link optionalFirestorePassthroughJsonField} keeps reading documents written before the switch. New\n  writes are always strings, so a document converts itself the next time it is written.",
+      "optional": true,
+      "params": [
+        {
+          "name": "config",
+          "type": "OptionalFirestoreJsonStringFieldConfig",
+          "description": "- Filtering and storage configuration. Defaults to stripping `undefined` values at every depth.",
+          "optional": true
+        }
+      ],
+      "returns": "A field mapping configuration for optional json values stored as a string.",
+      "tags": [
+        "json",
+        "string",
+        "serialized",
+        "stringify",
+        "object",
+        "raw",
+        "optional",
+        "arbitrary",
+        "schema",
+        "factory",
+        "firestore",
+        "field",
+        "optionalfirestorejsonstringfield"
+      ],
+      "example": "fields: {\n  // { model: 'm', text: { format: { schema: { enum: [['a']] } } } }\n  // stores as the string '{\"model\":\"m\",\"text\":{\"format\":{\"schema\":{\"enum\":[[\"a\"]]}}}}'\n  config: optionalFirestoreJsonStringField<MyVendorConfig>(),\n  // store null rather than the string '{}' when nothing survives the filtering\n  usage: optionalFirestoreJsonStringField<MyVendorUsage>({ filterEmptyValues: true, dontStoreIfEmpty: true })\n}",
+      "relatedSlugs": [
+        "optional-firestore-passthrough-json-field",
+        "optional-firestore-field",
+        "firestore-sub-object"
+      ]
+    },
+    {
       "slug": "firestore-string",
       "name": "firestoreString",
       "kind": "factory",

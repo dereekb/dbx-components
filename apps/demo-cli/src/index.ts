@@ -15,6 +15,10 @@ void runCli({
   // collections object the Angular app builds, read through the same security rules
   firestore: demoCliFirestore.binding,
   firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
+  // records every firestore-query / action dataset under ~/.demo-cli/cache and wires the auth-free
+  // `cache` group plus the `--cache` / `--refresh` flags. Recording is automatic; READING a recorded
+  // build back is opt-in per run, so a plain command never returns data that is not live.
+  dataCache: true,
   // the generator version the committed manifests were emitted by, so `doctor`'s `cli-build-not-stale`
   // check can also catch manifests left behind by a `@dereekb/*` bump that skipped regeneration
   manifestGeneratorVersion: DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP.generatorVersion,

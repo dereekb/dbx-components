@@ -150,6 +150,9 @@ carrying **both** a time and a zone is coerced — a bare `YYYY-MM-DD` is left a
 `--limit` **replaces** a factory-baked `limit()` rather than appending a second one. `--count` returns
 the count with no rows.
 
+With `runCli({ dataCache })` on, every run **records** its result and `--cache` reads it back — see
+[The dataset cache](#the-dataset-cache).
+
 **`--parent` rules:**
 
 | entry | `--parent` |
@@ -231,6 +234,65 @@ backend rejects is dropped and re-minted **once** rather than requiring a manual
 
 `doctor`'s `firestore-session` check reports `sessionFromCache` alongside the resolved read
 preference, the invocable query-entry count, and the server-only model count.
+
+### The dataset cache
+
+Separate from the session cache, and solving a different problem: the session cache saves the
+*handshake*, this saves the *download*.
+
+`runCli({ dataCache: true })` turns on a per-user store under `~/.<cliName>/cache/` holding one
+recorded build per dataset + filter. Every run **records** what it built; **reading** a recorded build
+back is opt-in:
+
+| flag | behaviour |
+| --- | --- |
+| *(none)* | build and record. "When was this last built" is always accurate, and a plain command never returns data that is not live |
+| `--cache` | read a build recorded within the last 24 hours |
+| `--cache=<hours>` | same, with an explicit window. `--cache=0` accepts any age |
+| `--refresh` | ignore any recorded build, rebuild, overwrite. Beats `--cache`, so a wrapper script that always passes `--cache` can still be forced fresh |
+| `--no-cache` | neither read nor record |
+
+An app's actions record their own **pipeline stages** with `loadOrBuildCliCachedData`, which is what
+makes a second export cheap:
+
+```ts
+// nested, so a hit on the LATE stage never runs the early one — and never opens Firestore at all
+const lineDetails = await loadOrBuildCliCachedData({
+  cache, dataset: 'worker.lineDetails', datasetVersion: 1, env: context.envName,
+  filter, options: cliDataCacheOptions(),
+  build: async () => {
+    const source = await loadOrBuildCliCachedData({
+      cache, dataset: 'worker.source', datasetVersion: 1, env: context.envName,
+      filter, options: cliDataCacheOptions(),
+      build: () => loadWorkersForExportFilter({ collections, filter })
+    });
+    return buildLineDetails(source.data);
+  }
+});
+```
+
+Two rules make this correct rather than merely fast:
+
+1. **`filter` names only what the stage depends on.** Output format, export flavour, destination file,
+   and any row filter the pipeline applies *downstream* must be left out — those are exactly the
+   things you want to change for free. Filters are normalized before hashing (empty values dropped,
+   keys sorted, arrays sorted, dates rendered as ISO), so every spelling of "no filter" is one entry.
+2. **Bump `datasetVersion` when the stage's output shape *or the code that builds it* changes.** A
+   recorded build produced by older code is a wrong-answer bug, not just a slow one.
+
+Values are stored through a tagged structured codec, so `Date`, `Map`, `Set`, an explicitly-`undefined`
+field, a non-finite number and a `bigint` all survive the disk round trip — a plain `JSON.stringify`
+loses every one of those, and a `Date` that comes back as an ISO string is indistinguishable from the
+strings `firestoreDate` actually persists. A cached value holding a live function is refused rather
+than silently dropped.
+
+Everything is written mode `0600`: a recorded export holds production rows.
+
+`cache list` / `cache show` / `cache clear` / `cache prune` manage the store. They are **config**
+commands, so they bypass auth — inspecting a local cache has to work offline, which is when it matters
+most. Any reason a recorded build cannot be used — absent, past its window, wrong `datasetVersion`,
+payload deleted or unparsable — is reported the same way: a miss, so the caller rebuilds. A cache is
+never allowed to turn into a failure.
 
 ### Rules vs roleMap
 

@@ -1,17 +1,18 @@
 {
   "name": "@dereekb/firebase-server/calcom",
-  "version": "14.1.0",
+  "version": "14.2.0",
+  "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/analytics": "14.1.0",
-    "@dereekb/calcom": "14.1.0",
-    "@dereekb/date": "14.1.0",
-    "@dereekb/firebase": "14.1.0",
-    "@dereekb/firebase-server": "14.1.0",
-    "@dereekb/model": "14.1.0",
-    "@dereekb/nestjs": "14.1.0",
-    "@dereekb/rxjs": "14.1.0",
-    "@dereekb/util": "14.1.0",
+    "@dereekb/analytics": "14.2.0",
+    "@dereekb/calcom": "14.2.0",
+    "@dereekb/date": "14.2.0",
+    "@dereekb/firebase": "14.2.0",
+    "@dereekb/firebase-server": "14.2.0",
+    "@dereekb/model": "14.2.0",
+    "@dereekb/nestjs": "14.2.0",
+    "@dereekb/rxjs": "14.2.0",
+    "@dereekb/util": "14.2.0",
     "@nestjs/common": "^12.0.1",
     "express": "^5.2.1"
   }

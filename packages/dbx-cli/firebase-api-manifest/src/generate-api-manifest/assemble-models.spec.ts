@@ -325,3 +325,87 @@ export function billingPermissionTableFirestoreCollectionFactory(firestoreContex
     warn.mockRestore();
   });
 });
+
+// A `@dereekb/*` package as it is INSTALLED: declarations only. The identity survives as a declared
+// type, the interface survives whole, and the converter keeps its type but loses the `fields` literal
+// that normally supplies the field list.
+const DECLARED_SOURCE = `/**
+ * A prompt.
+ *
+ * @dbxModel
+ * @dbxModelServerOnly
+ */
+export interface OpenRouterPrompt {
+    /**
+     * Human-readable name.
+     *
+     * @dbxModelVariable name
+     */
+    n: string;
+    /**
+     * Lifecycle state.
+     *
+     * @dbxModelVariable state
+     */
+    s?: number;
+}
+/**
+ * One version of a prompt.
+ *
+ * @dbxModel
+ */
+export interface OpenRouterPromptVersion {
+    /**
+     * The version number.
+     *
+     * @dbxModelVariable version
+     */
+    v: number;
+}
+export declare const openRouterPromptIdentity: import("@dereekb/firebase").RootFirestoreModelIdentity<"openRouterPrompt", "orp">;
+export declare const openRouterPromptVersionIdentity: import("@dereekb/firebase").FirestoreModelIdentityWithParent<import("@dereekb/firebase").RootFirestoreModelIdentity<"openRouterPrompt", "orp">, "openRouterPromptVersion", "orpv">;
+export declare const openRouterPromptConverter: import("@dereekb/firebase").SnapshotConverterFunctions<OpenRouterPrompt, object>;
+`;
+
+describe('assembleModels (declaration-sourced packages)', () => {
+  const models = assembleModels({
+    extractions: [
+      {
+        sourcePackage: '@dereekb/openrouter/firebase',
+        sourceFile: 'node_modules/@dereekb/openrouter/firebase/src/lib/openrouter.model.d.ts',
+        extraction: extractModelsFromSource({ name: 'openrouter.model.d.ts', text: DECLARED_SOURCE })
+      }
+    ]
+  });
+
+  it('emits a model for an identity that exists only as a declared type', () => {
+    // the regression: framework models were absent from the prefix table while their API calls were present
+    const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
+    expect(prompt?.collectionPrefix).toBe('orp');
+    expect(prompt?.modelName).toBe('OpenRouterPrompt');
+  });
+
+  it('carries the interface description and server-only flag through', () => {
+    const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
+    expect(prompt?.description).toBe('A prompt.');
+    expect(prompt?.serverOnly).toBe(true);
+  });
+
+  it('builds fields from the interface when the converter literal is unavailable', () => {
+    const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
+    expect(prompt?.fields.map((f) => f.name)).toEqual(['n', 's']);
+    expect(prompt?.fields.find((f) => f.name === 'n')?.longName).toBe('name');
+    expect(prompt?.fields.find((f) => f.name === 's')?.optional).toBe(true);
+  });
+
+  it('omits the converter expression rather than guessing one', () => {
+    const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
+    expect(prompt?.fields.find((f) => f.name === 'n')?.converter).toBeUndefined();
+  });
+
+  it('links a declared parent by model type, since the type names no const', () => {
+    const version = models.find((m) => m.modelType === 'openRouterPromptVersion');
+    expect(version?.parentIdentityConst).toBe('openRouterPromptIdentity');
+    expect(version?.exampleKey).toBe('orp/<openRouterPromptId>/orpv/<openRouterPromptVersionId>');
+  });
+});
