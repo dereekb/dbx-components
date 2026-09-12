@@ -188,7 +188,7 @@ const DEFAULT_OAUTH_TEST_TIMEOUT = 30_000;
 export function oAuthAuthorizedSuperTestContextFactory(config?: OAuthAuthorizedSuperTestContextFactoryConfig): (params: OAuthAuthorizedSuperTestContextParams, buildTests: (oauth: OAuthAuthorizedSuperTestFixture) => void) => void {
   const { timeout = DEFAULT_OAUTH_TEST_TIMEOUT, makeFixture = () => new OAuthAuthorizedSuperTestFixture(), makeInstance = (server: ReturnType<INestApplication['getHttpServer']>, accessToken: string) => new OAuthAuthorizedSuperTestInstance(server, accessToken), ...flowConfigOverrides } = config ?? {};
 
-  const flowConfig: OAuthTestFlowConfig | undefined = flowConfigOverrides.scopes || flowConfigOverrides.redirectUri || flowConfigOverrides.clientName || flowConfigOverrides.providerProfiles ? flowConfigOverrides : undefined;
+  const flowConfig: OAuthTestFlowConfig | undefined = Object.values(flowConfigOverrides).some((value) => value != null) ? flowConfigOverrides : undefined;
 
   return (params: OAuthAuthorizedSuperTestContextParams, buildTests: (oauth: OAuthAuthorizedSuperTestFixture) => void) => {
     const { f, u } = params;

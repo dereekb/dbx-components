@@ -6,6 +6,7 @@ import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
 import { adminOnlyScopesForOidcProviderConfig, oidcClientProviderProfileScopes } from '../profile';
+import { reconsiderRejectedValues, requestedOIDCClaimNames, requestedResourceIndicators, unrejectOIDCClaims, unrejectOIDCScopes, unrejectResourceScopes } from '../service/oidc.grant';
 import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
 import { OIDC_ANALYTICS_SERVICE, emitOidcAnalyticsEvent, noopOidcAnalyticsService, type OidcAnalyticsService } from '../service/analytics';
 
@@ -151,8 +152,6 @@ export class OidcInteractionController {
       clientId = params['client_id'] as string;
       accountId = session?.accountId ?? '';
 
-      const missingOIDCScope = (prompt.details['missingOIDCScope'] as string[] | undefined) ?? [];
-
       // When the grant already exists (re-consent), find it up-front so its encountered scopes feed
       // both the admin-only gate below and the silent-no-op handling further down. A new grant is
       // created later with the resolved TTL, since `findOrCreateGrant` only applies `expiresIn` on creation.
@@ -163,7 +162,20 @@ export class OidcInteractionController {
       // but the consent UI sources its checkbox list from the auth URL's `scope=` param (the full request set)
       // and re-submits them all. We accept already-encountered values as silent no-ops so a re-consent on a
       // client the user has previously authorized doesn't fail validation.
-      const encounteredOIDCScopes = existingGrant ? existingGrant.getOIDCScopeEncountered().split(' ').filter(Boolean) : [];
+      //
+      // A REJECTED value is the exception. oidc-provider counts it as encountered too, so it never comes back
+      // in `missing*` — and a rejected scope is subtracted from `getOIDCScope()` on every read, so treating it
+      // as a no-op would make it ungrantable on this Grant for good, even when the user explicitly ticks it
+      // again. `reconsiderRejectedValues` moves the rejected values this request names back into `missing`
+      // so this consent decides them afresh; a grant of one of those un-rejects it further down.
+      const requestedScopeParam = new Set(((params['scope'] as string | undefined) ?? '').split(' ').filter(Boolean));
+      const oidcScopes = reconsiderRejectedValues({
+        missing: (prompt.details['missingOIDCScope'] as string[] | undefined) ?? [],
+        encountered: existingGrant ? existingGrant.getOIDCScopeEncountered().split(' ').filter(Boolean) : [],
+        rejected: existingGrant ? existingGrant.getRejectedOIDCScope().split(' ').filter(Boolean) : [],
+        requested: requestedScopeParam
+      });
+      const { missing: missingOIDCScope, encountered: encounteredOIDCScopes } = oidcScopes;
 
       // Loaded once here and reused by the provider-profile gate below and the TTL resolution further down.
       const clientPayload = await this.oidcService.findClientPayload(clientId);
@@ -262,6 +274,7 @@ export class OidcInteractionController {
         const { granted, rejected } = effectiveOIDCScopes;
 
         if (granted.length > 0) {
+          unrejectOIDCScopes(grant, granted);
           grant.addOIDCScope(granted.join(' '));
         }
 
@@ -270,14 +283,20 @@ export class OidcInteractionController {
         }
       }
 
-      const encounteredOIDCClaims = grant.getOIDCClaimsEncountered();
-
-      const missingOIDCClaims = (prompt.details['missingOIDCClaims'] as string[] | undefined) ?? [];
+      // Same reconsideration as the scopes above: a claim rejected on an earlier consent that this request's
+      // `claims` parameter names again is decided afresh rather than silently kept rejected.
+      const { missing: missingOIDCClaims, encountered: encounteredOIDCClaims } = reconsiderRejectedValues({
+        missing: (prompt.details['missingOIDCClaims'] as string[] | undefined) ?? [],
+        encountered: grant.getOIDCClaimsEncountered(),
+        rejected: grant.getRejectedOIDCClaims(),
+        requested: requestedOIDCClaimNames(params['claims'])
+      });
 
       if (missingOIDCClaims.length > 0) {
         const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCClaims, requestedSubset: body.grantedOIDCClaims, alreadyEncountered: encounteredOIDCClaims });
 
         if (granted.length > 0) {
+          unrejectOIDCClaims(grant, granted);
           grant.addOIDCClaims(granted);
         }
 
@@ -288,7 +307,20 @@ export class OidcInteractionController {
 
       const missingResourceScopes = (prompt.details['missingResourceScopes'] as Record<string, string[]> | undefined) ?? {};
 
-      for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
+      // Resource indicators this consent decides: the ones oidc-provider reports as still undecided, plus any
+      // the request names (`resource` param) that carry a rejection worth reconsidering. An indicator whose
+      // every scope was rejected earlier is absent from `missingResourceScopes` entirely, which is exactly the
+      // case that needs the second source.
+      const resourceIndicators = new Set<string>([...Object.keys(missingResourceScopes), ...requestedResourceIndicators(params['resource']).filter((indicator) => grant.getRejectedResourceScope(indicator).length > 0)]);
+
+      for (const indicator of resourceIndicators) {
+        const { missing: scopes, encountered: encounteredResourceScopes } = reconsiderRejectedValues({
+          missing: missingResourceScopes[indicator] ?? [],
+          encountered: grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean),
+          rejected: grant.getRejectedResourceScope(indicator).split(' ').filter(Boolean),
+          requested: requestedScopeParam
+        });
+
         // A submission with no explicit per-resource selection falls back to the OIDC scope selection
         // rather than granting everything the resource server declares. A resource server's scope list
         // is drawn from the same provider scopes the consent UI renders as one checkbox list, so a scope
@@ -296,10 +328,10 @@ export class OidcInteractionController {
         // an admin-only scope would clear the gate above while the token still carried it.
         // `grantedOIDCScopes` being absent still means "grant everything requested".
         const requestedSubset = body.grantedResourceScopes?.[indicator] ?? (body.grantedOIDCScopes ? scopes.filter((scope) => consentedOIDCScopeSet.has(scope)) : undefined);
-        const encounteredResourceScopes = grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean);
         const { granted, rejected } = resolveEffectiveSubset({ missing: scopes, requestedSubset, alreadyEncountered: encounteredResourceScopes });
 
         if (granted.length > 0) {
+          unrejectResourceScopes(grant, indicator, granted);
           grant.addResourceScope(indicator, granted.join(' '));
         }
 
@@ -366,7 +398,9 @@ export interface ResolveEffectiveSubsetInput {
    */
   readonly alwaysGranted?: readonly string[];
   /**
-   * Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
+   * Entries the existing Grant has already decided and this consent leaves as-is. Tolerated as no-ops on
+   * re-consent. A previously-rejected entry the request names again belongs in `missing` instead — see
+   * `reconsiderRejectedValues` — or it can never be granted on that Grant.
    */
   readonly alreadyEncountered?: readonly string[];
 }

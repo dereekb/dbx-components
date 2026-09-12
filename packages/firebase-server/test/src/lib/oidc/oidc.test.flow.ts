@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { adminOnlyScopesForOidcProviderProfiles, assignmentOnlyScopesForOidcProviderProfiles, type OidcProviderProfileKey, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
-import { OidcClientService, OidcAccountService, JwksService } from '@dereekb/firebase-server/oidc';
+import { OidcClientService, OidcAccountService, JwksService, OidcProviderConfigService } from '@dereekb/firebase-server/oidc';
 
 // MARK: Config
 /**
@@ -38,12 +38,65 @@ export interface OAuthTestFlowConfig {
    * "all registered scopes" resolution deliberately drops assignment-only scopes.
    */
   readonly providerProfiles?: readonly OidcProviderProfileKey[];
+  /**
+   * OAuth `prompt` parameter for the authorization request (e.g. `'consent'` to force the consent screen
+   * on a session that has already authorized the client). Omitted by default.
+   */
+  readonly prompt?: string;
+  /**
+   * Explicit subset of the requested OIDC scopes to grant at consent (the consent request's
+   * `grantedOIDCScopes`). Omitted by default, which grants every requested scope.
+   */
+  readonly grantedOIDCScopes?: readonly string[];
+  /**
+   * A prior flow's client and cookies to run this flow against — the same OAuth client, the same
+   * provider session, and therefore the same Grant. Omitted by default, which creates a fresh client
+   * and starts a fresh session.
+   *
+   * When the session is still logged in, the provider skips the login prompt and the flow goes straight
+   * to consent (or straight to the callback when nothing new needs consenting and `prompt` is unset).
+   */
+  readonly session?: OAuthTestFlowSession;
+}
+
+/**
+ * The client and cookies a flow ran with, for chaining a second flow onto the same provider session.
+ */
+export interface OAuthTestFlowSession {
+  readonly client: OAuthTestFlowClient;
+  readonly cookieJar: OAuthTestFlowCookieJar;
+}
+
+/**
+ * The OAuth client a flow created (or reused).
+ */
+export interface OAuthTestFlowClient {
+  readonly client_id: string;
+  readonly client_secret?: string;
+  readonly redirectUri: string;
+}
+
+/**
+ * Cookie jar helpers for the OAuth flow. See {@link createCookieJar}.
+ */
+export interface OAuthTestFlowCookieJar {
+  readonly collectCookies: (res: request.Response) => void;
+  readonly cookieHeader: () => string;
 }
 
 // MARK: Result
 export interface PerformFullOAuthFlowResult {
   readonly accessToken: string;
   readonly idToken: string;
+  /**
+   * The space-separated scope the token endpoint reported for the access token.
+   */
+  readonly scope: string;
+  /**
+   * The client and cookies this flow ran with, for chaining another flow onto the same session via
+   * {@link OAuthTestFlowConfig.session}.
+   */
+  readonly session: OAuthTestFlowSession;
 }
 
 // MARK: Helpers
@@ -91,6 +144,18 @@ function extractInteractionUid(res: request.Response): string {
 }
 
 /**
+ * Whether a redirect response points at the given interaction frontend URL (the login or consent screen).
+ *
+ * @param res - Supertest response to inspect.
+ * @param frontendUrl - The frontend URL to match, without its query string.
+ * @returns True when the response's `Location` header starts with `frontendUrl`.
+ */
+function isRedirectTo(res: request.Response, frontendUrl: string): boolean {
+  const location = res.headers['location'] as string | undefined;
+  return location != null && location.startsWith(frontendUrl);
+}
+
+/**
  * Cookie jar helpers for the OAuth flow.
  *
  * oidc-provider scopes cookies to specific paths, so supertest.agent()
@@ -98,7 +163,7 @@ function extractInteractionUid(res: request.Response): string {
  *
  * @returns A pair of helpers — `collectCookies(res)` to absorb `Set-Cookie` headers from a response, and `cookieHeader()` to produce a combined `Cookie` header string for subsequent requests.
  */
-function createCookieJar() {
+function createCookieJar(): OAuthTestFlowCookieJar {
   const cookieJar = new Map<string, string>();
 
   function collectCookies(res: request.Response): void {
@@ -191,27 +256,39 @@ export interface PerformFullOAuthFlowInput {
  */
 export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
   const { server, oidcClientService, nestApp, uid, config } = input;
-  const { collectCookies, cookieHeader } = createCookieJar();
+  const cookieJar = config?.session?.cookieJar ?? createCookieJar();
+  const { collectCookies, cookieHeader } = cookieJar;
 
-  const redirectUri = config?.redirectUri ?? 'https://example.com/callback';
+  const redirectUri = config?.session?.client.redirectUri ?? config?.redirectUri ?? 'https://example.com/callback';
   const clientName = config?.clientName ?? 'test-oauth-context';
   const tokenEndpointAuthMethod: OidcTokenEndpointAuthMethod = config?.tokenEndpointAuthMethod ?? 'client_secret_post';
   const providerProfiles = config?.providerProfiles;
   const scopes = await resolveScopes(nestApp, config);
 
-  // 1. Create a client via the service
-  const { client_id, client_secret } = await oidcClientService.createClient({
-    client_name: clientName,
-    redirect_uris: [redirectUri],
-    token_endpoint_auth_method: tokenEndpointAuthMethod,
-    ...(providerProfiles == null ? {} : { dbx_provider_profiles: [...providerProfiles] })
-  });
+  // 1. Create a client via the service (or reuse the prior flow's)
+  let client: OAuthTestFlowClient;
+
+  if (config?.session) {
+    client = config.session.client;
+  } else {
+    const { client_id, client_secret } = await oidcClientService.createClient({
+      client_name: clientName,
+      redirect_uris: [redirectUri],
+      token_endpoint_auth_method: tokenEndpointAuthMethod,
+      ...(providerProfiles == null ? {} : { dbx_provider_profiles: [...providerProfiles] })
+    });
+
+    client = { client_id, client_secret, redirectUri };
+  }
+
+  const { client_id, client_secret } = client;
 
   // 2. Generate PKCE code_verifier and code_challenge
   const codeVerifier = randomBytes(32).toString('base64url');
   const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 
-  // 3. Start authorization — provider redirects to login interaction
+  // 3. Start authorization — provider redirects to the login interaction (or, on a live session, straight
+  //    to consent / the callback)
   const authRes = await request(server)
     .get('/oidc/auth')
     .query({
@@ -222,30 +299,44 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       state: 'test-state',
-      nonce: 'test-nonce'
+      nonce: 'test-nonce',
+      ...(config?.prompt == null ? {} : { prompt: config.prompt })
     })
     .redirects(0);
 
   collectCookies(authRes);
-  const loginUid = extractInteractionUid(authRes);
 
-  // 4. Complete login with a Firebase ID token
   const idToken = await createTestIdToken(nestApp, uid);
-  const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
+  const providerConfigService = nestApp.get(OidcProviderConfigService);
+  let interactionRes: request.Response = authRes;
 
-  // 5. Resume after login → consent redirect
-  const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
-  const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
-  collectCookies(consentRedirectRes);
-  const consentUid = extractInteractionUid(consentRedirectRes);
+  // 4. Complete login with a Firebase ID token — unless the session is already logged in, in which case the
+  //    provider skipped the login prompt and `authRes` already points at the consent screen (or the callback)
+  if (isRedirectTo(authRes, providerConfigService.appLoginUrl)) {
+    const loginUid = extractInteractionUid(authRes);
+    const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
 
-  // 6. Approve consent
-  const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
+    // 5. Resume after login → consent redirect
+    const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+    interactionRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
+    collectCookies(interactionRes);
+  }
 
-  // 7. Follow resume redirect → callback with authorization code
-  const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
-  const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
-  collectCookies(callbackRedirectRes);
+  // 6. Approve consent — unless nothing needed consenting and the provider went straight to the callback
+  let callbackRedirectRes: request.Response = interactionRes;
+
+  if (isRedirectTo(interactionRes, providerConfigService.appConsentUrl)) {
+    const consentUid = extractInteractionUid(interactionRes);
+    const consentRes = await request(server)
+      .post(`/interaction/${consentUid}/consent`)
+      .set('Cookie', cookieHeader())
+      .send({ idToken, approved: true, ...(config?.grantedOIDCScopes == null ? {} : { grantedOIDCScopes: [...config.grantedOIDCScopes] }) });
+
+    // 7. Follow resume redirect → callback with authorization code
+    const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
+    callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
+    collectCookies(callbackRedirectRes);
+  }
 
   const callbackUrl = new URL(callbackRedirectRes.headers['location']);
   const authorizationCode = callbackUrl.searchParams.get('code')!;
@@ -266,7 +357,9 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
 
   return {
     accessToken: tokenRes.body.access_token,
-    idToken: tokenRes.body.id_token
+    idToken: tokenRes.body.id_token,
+    scope: tokenRes.body.scope,
+    session: { client, cookieJar }
   };
 }
 

@@ -1,5 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
-import { DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent, DbxTextColorDirective } from '@dereekb/dbx-web';
 import { type ErrorInput, type Maybe, readableError } from '@dereekb/util';
 
 /**
@@ -29,7 +29,7 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
  */
 @Component({
   selector: 'dbx-firebase-oauth-login-view',
-  imports: [DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent],
+  imports: [DbxBasicLoadingComponent, DbxErrorComponent, DbxButtonComponent, DbxTextColorDirective],
   template: `
     <div class="dbx-firebase-oauth-login-view">
       @switch (loginStateCase()) {
@@ -37,6 +37,9 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
           <dbx-basic-loading [loading]="true"></dbx-basic-loading>
         }
         @case ('no_user') {
+          @if (notice(); as notice) {
+            <p class="dbx-firebase-oauth-login-view-notice" role="alert" [dbxTextColor]="'warn'">{{ notice }}</p>
+          }
           <ng-content></ng-content>
         }
         @case ('user') {
@@ -59,6 +62,11 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
 export class DbxFirebaseOAuthLoginViewComponent {
   readonly loginStateCase = input.required<OidcLoginStateCase>();
   readonly error = input<Maybe<string | ErrorInput>>();
+  /**
+   * Copy shown above the projected login UI in the `'no_user'` state — why the user is being asked to sign
+   * in when they thought they already were (e.g. the server refused their session's ID token).
+   */
+  readonly notice = input<Maybe<string>>();
 
   readonly resolvedErrorSignal = computed<Maybe<ErrorInput>>(() => {
     const error = this.error();
