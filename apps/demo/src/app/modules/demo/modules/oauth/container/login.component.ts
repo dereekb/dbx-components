@@ -10,6 +10,9 @@ import { DemoAuthLoginViewComponent } from '../../auth/container/login.view.comp
  * to replace the default Firebase login UI.
  */
 @Component({
+  // A selector of its own: the login and consent containers have templates of the same shape, so left
+  // selector-less they hash to the same component ID and Angular warns NG0912 on every OIDC interaction.
+  selector: 'app-oauth-login',
   template: `
     <dbx-content-box>
       <dbx-firebase-oauth-login>

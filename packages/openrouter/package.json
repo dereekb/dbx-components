@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/openrouter",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -16,7 +16,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "14.2.0",
+    "@dereekb/util": "14.3.0",
     "@openrouter/sdk": "^1.2.26"
   }
 }

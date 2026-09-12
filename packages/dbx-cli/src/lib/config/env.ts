@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type OidcClientAuthMethod } from '@dereekb/util';
 import { type CliTokenEntry } from './token.cache';
 
 /**
@@ -18,7 +18,12 @@ export const MODEL_WRITE_OIDC_SCOPES = ['model.create', 'model.update', 'model.d
 /**
  * The default redirect URI used by the CLI.
  *
- * Opens up to nothing in the browser so the user can copy/paste the resulting token url back into the CLI.
+ * The `0` port is a placeholder, not a bindable port: the redirect resolves to nothing in the
+ * browser and the user copy/pastes the resulting URL back into the CLI.
+ *
+ * To have `auth login` capture the redirect automatically instead, configure a redirect URI with a
+ * concrete loopback port (e.g. `http://127.0.0.1:8976/callback`) and register that exact URI with
+ * the OAuth client — `auth login` binds it and reads the code straight out of the browser redirect.
  */
 export const DEFAULT_CLI_REDIRECT_URI = 'http://127.0.0.1:0/callback';
 
@@ -140,6 +145,7 @@ export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Mayb
       appClientUrl: nonEmpty(e?.appClientUrl) ?? nonEmpty(d?.appClientUrl),
       clientId: nonEmpty(e?.clientId) ?? nonEmpty(d?.clientId),
       clientSecret: nonEmpty(e?.clientSecret) ?? nonEmpty(d?.clientSecret),
+      tokenEndpointAuthMethod: (nonEmpty(e?.tokenEndpointAuthMethod) ?? nonEmpty(d?.tokenEndpointAuthMethod)) as OidcCliTokenEndpointAuthMethod | undefined,
       redirectUri: nonEmpty(e?.redirectUri) ?? nonEmpty(d?.redirectUri),
       scopes: nonEmpty(e?.scopes) ?? nonEmpty(d?.scopes),
       firebase: mergeCliFirebaseConfig(e?.firebase, d?.firebase)
@@ -287,6 +293,15 @@ export function cliFirebaseEmulatorsInUse(firebase: Maybe<CliFirebaseConfig>): b
 }
 
 /**
+ * The OAuth client's registered `token_endpoint_auth_method`, as far as the CLI needs to model it.
+ *
+ * Wider than {@link OidcClientAuthMethod} by exactly one member: `'none'`, the public-client case.
+ * That value is meaningless to the protocol layer — a public client sends no credential, so there is
+ * no presentation to choose — but it is precisely what the CLI needs in order to stop asking for one.
+ */
+export type OidcCliTokenEndpointAuthMethod = OidcClientAuthMethod | 'none';
+
+/**
  * Environment-targeting config for a CLI invocation.
  *
  * Each env (e.g. `local`, `staging`, `prod`) holds the API base URL plus the OIDC client
@@ -324,12 +339,30 @@ export interface CliEnvConfig {
   readonly clientId?: string;
   /**
    * The OAuth client secret registered with the target app.
+   *
+   * Absent for a public client — see {@link tokenEndpointAuthMethod}.
    */
   readonly clientSecret?: string;
   /**
-   * The redirect URI registered with the OAuth client. The CLI does not bind a server — it parses
-   * the URL the user pastes back, so this can be any value the OIDC provider accepts as a
-   * registered redirect URI (e.g. `http://127.0.0.1:0/callback` or another loopback/placeholder URL).
+   * How the client authenticates at the token endpoint, mirroring the OAuth client's registered
+   * `token_endpoint_auth_method`.
+   *
+   * `'none'` marks a PUBLIC client: it holds no secret and proves itself with PKCE instead. Recording
+   * it lets `auth setup` skip the client-secret prompt outright rather than asking for a credential
+   * that must not exist — the prompt cannot infer this, since "no secret yet" and "never a secret"
+   * look identical from an empty config.
+   *
+   * Omit to leave it unknown, which keeps the existing prompt-and-accept-empty behaviour.
+   */
+  readonly tokenEndpointAuthMethod?: OidcCliTokenEndpointAuthMethod;
+  /**
+   * The redirect URI registered with the OAuth client.
+   *
+   * When this is an `http:` loopback URI with a concrete, non-zero port (e.g.
+   * `http://127.0.0.1:8976/callback`), `auth login` binds that port and reads the authorization code
+   * straight out of the browser redirect. Any other value — including the
+   * {@link DEFAULT_CLI_REDIRECT_URI} `:0` placeholder and out-of-band URNs — falls back to the user
+   * pasting the redirect URL back into the CLI.
    *
    * Defaults to {@link DEFAULT_CLI_REDIRECT_URI}.
    */
@@ -474,11 +507,16 @@ function parsePort(value: Maybe<string>): number | undefined {
 /**
  * Returns true when the env has the minimum fields needed to attempt an OAuth login or token refresh.
  *
+ * `clientSecret` is NOT among them. A CLI is a public client in the usual case
+ * (`token_endpoint_auth_method: 'none'`), authenticating with PKCE rather than a secret, so requiring
+ * one here would report a correctly-configured public env as incomplete — and send the caller back to
+ * `auth setup` to supply a credential the provider would then reject.
+ *
  * @param env - The env config to check.
- * @returns `true` when `apiBaseUrl`, `oidcIssuer`, `clientId`, `clientSecret`, and `redirectUri` are all present and non-empty.
+ * @returns `true` when `apiBaseUrl`, `oidcIssuer`, `clientId`, and `redirectUri` are all present and non-empty.
  */
-export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'clientSecret' | 'redirectUri'>> & CliEnvConfig {
-  return Boolean(env?.apiBaseUrl && env?.oidcIssuer && env?.clientId && env?.clientSecret && env?.redirectUri);
+export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>> & CliEnvConfig {
+  return Boolean(env?.apiBaseUrl && env?.oidcIssuer && env?.clientId && env?.redirectUri);
 }
 
 /**

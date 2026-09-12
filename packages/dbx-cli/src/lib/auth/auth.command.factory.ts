@@ -1,18 +1,29 @@
 import type { Argv, CommandModule } from 'yargs';
-import { MS_IN_SECOND, noop, type OidcSessionInfo, generateOAuthState, generatePkceMaterial } from '@dereekb/util';
+import { MS_IN_SECOND, type Maybe, noop, type OidcSessionInfo, generateOAuthState, generatePkceMaterial } from '@dereekb/util';
 import { durationDataToMilliseconds, parseDurationString } from '@dereekb/date';
 import { loadCliConfig, maskEnv, maskSecret, mergeCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault, withServiceTokenScopes } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, type OidcCliTokenEndpointAuthMethod, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault, withServiceTokenScopes } from '../config/env';
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
+import { type LoopbackRedirectCapture, SUGGESTED_CLI_LOOPBACK_REDIRECT_PORT, parseLoopbackRedirectUri, startLoopbackRedirectCapture } from './oidc.loopback';
 import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
+import { openUrlInBrowser } from '../util/browser';
 import { promptLine } from '../util/interactive';
 import { withEnv } from '../util/args';
+
+/**
+ * Default time `auth login` waits for the browser redirect to reach the loopback listener before
+ * falling back to the paste prompt.
+ *
+ * Long enough to cover a first-time sign-in (account picker, password manager, MFA, consent screen),
+ * since the fallback costs the user the whole flow again.
+ */
+const DEFAULT_AUTH_LOGIN_LISTEN_FOR = '5m';
 
 export interface CreateAuthCommandInput {
   readonly cliName: string;
@@ -41,6 +52,12 @@ async function resolveAuthSetupPrompt(input: ResolveAuthSetupPromptInput): Promi
 
   if (argvValue) {
     result = argvValue;
+  } else if (argvValue === '') {
+    // An EXPLICIT empty flag clears the stored value. Distinguished from an absent flag — which is
+    // `undefined` and falls through to the existing value — because the two mean opposite things:
+    // `--client-secret ''` is how a confidential client is converted to a public one, and treating
+    // it as "not supplied" silently keeps the old secret, which the provider then rejects.
+    result = undefined;
   } else if (existingValue) {
     result = existingValue;
   } else {
@@ -160,7 +177,8 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         .option('oidc-issuer', { type: 'string', describe: 'OIDC issuer URL (e.g. <api-base-url>/oidc)' })
         .option('app-client-url', { type: 'string', describe: 'Frontend client base URL to rebase the auth URL onto (e.g. http://localhost:9010)' })
         .option('client-id', { type: 'string', describe: 'OAuth client ID registered with the target app' })
-        .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
+        .option('client-secret', { type: 'string', describe: "OAuth client secret; omit for a public (PKCE) client, or pass '' to clear a stored one" })
+        .option('token-endpoint-auth-method', { type: 'string', choices: ['none', 'client_secret_post', 'client_secret_basic'], describe: "The OAuth client's registered token_endpoint_auth_method; 'none' marks a public (PKCE) client and skips the client-secret prompt" })
         .option('redirect-uri', { type: 'string', describe: 'OAuth redirect URI registered with the OAuth client' })
         .option('scopes', { type: 'string', describe: 'Space-separated OAuth scopes (default: openid profile email)' })
         .option('set-active', { type: 'boolean', default: false, describe: 'Also set the env as the active env after saving' }),
@@ -183,15 +201,25 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const oidcIssuer = await resolveAuthSetupPrompt({ argvValue: argv.oidcIssuer as string | undefined, existingValue: existing?.oidcIssuer, prompt: `OIDC issuer [${existing?.oidcIssuer ?? ''}]: ` });
       const appClientUrl = (argv.appClientUrl as string | undefined) ?? existing?.appClientUrl;
       const clientId = await resolveAuthSetupPrompt({ argvValue: argv.clientId as string | undefined, existingValue: existing?.clientId, prompt: 'Client ID: ' });
-      const clientSecret = await resolveAuthSetupPrompt({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
+      const tokenEndpointAuthMethod = ((argv.tokenEndpointAuthMethod as OidcCliTokenEndpointAuthMethod | undefined) ?? existing?.tokenEndpointAuthMethod) as OidcCliTokenEndpointAuthMethod | undefined;
+      // A public client has no secret to ask for, so a KNOWN `none` skips the prompt entirely rather
+      // than asking and accepting an empty answer. Any other value — including an unknown one — keeps
+      // the prompt, since "no secret configured yet" and "never has a secret" are indistinguishable
+      // without this field.
+      const publicClient = tokenEndpointAuthMethod === 'none';
+      const clientSecret = publicClient ? undefined : await resolveAuthSetupPrompt({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
       const redirectUri = (await resolveAuthSetupPrompt({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? DEFAULT_CLI_REDIRECT_URI}]: ` })) ?? DEFAULT_CLI_REDIRECT_URI;
       const scopes = (argv.scopes as string | undefined) ?? existing?.scopes;
 
-      if (!apiBaseUrl || !oidcIssuer || !clientId || !clientSecret) {
-        throw new CliError({ message: 'apiBaseUrl, oidcIssuer, clientId, and clientSecret are all required.', code: 'AUTH_SETUP_INCOMPLETE' });
+      // `clientSecret` is deliberately NOT required: a CLI is a public client in the usual case
+      // (`token_endpoint_auth_method: 'none'`), authenticating with PKCE instead of a secret. The
+      // protocol layer already omits an absent secret from the token request, so requiring one here
+      // was the only thing making a public client unconfigurable.
+      if (!apiBaseUrl || !oidcIssuer || !clientId) {
+        throw new CliError({ message: 'apiBaseUrl, oidcIssuer, and clientId are all required.', code: 'AUTH_SETUP_INCOMPLETE' });
       }
 
-      const nextEnv: CliEnvConfig = { apiBaseUrl, oidcIssuer, clientId, clientSecret, redirectUri, ...(appClientUrl ? { appClientUrl } : {}), ...(scopes ? { scopes } : {}) };
+      const nextEnv: CliEnvConfig = { apiBaseUrl, oidcIssuer, clientId, redirectUri, ...(clientSecret ? { clientSecret } : {}), ...(tokenEndpointAuthMethod ? { tokenEndpointAuthMethod } : {}), ...(appClientUrl ? { appClientUrl } : {}), ...(scopes ? { scopes } : {}) };
 
       const merged = await mergeCliConfig({
         configFilePath: paths.configFilePath,
@@ -217,7 +245,10 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     describe: 'Run OIDC PKCE flow and persist tokens for the active env',
     builder: (yargs: Argv) =>
       withEnv(yargs)
-        .option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' })
+        .option('open', { type: 'boolean', default: true, describe: 'Open the authorization URL in the default browser. Use --no-open to print it only.' })
+        .option('listen', { type: 'boolean', default: true, describe: 'Bind the loopback redirect URI and read the authorization code straight out of the browser redirect. Use --no-listen to always paste it back by hand.' })
+        .option('listen-for', { type: 'string', default: DEFAULT_AUTH_LOGIN_LISTEN_FOR, describe: `How long to wait for the browser redirect before falling back to the paste prompt (e.g. 5m, 90s). Defaults to ${DEFAULT_AUTH_LOGIN_LISTEN_FOR}.` })
+        .option('redirect-port', { type: 'number', describe: 'Bind the loopback listener on this port instead of the one in the configured redirect URI. The resulting redirect URI must also be registered with the OAuth client.' })
         .option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' })
         .option('read-only-scopes', { type: 'boolean', default: false, describe: 'Drop model.create/model.update/model.delete from the requested scopes (keeps model.read and model.query)' })
         .option('service-token', { type: 'boolean', default: false, alias: 'long-lived', describe: 'Request a long-lived, non-rotating admin service token (adds token.service + offline_access). Combine with --login-for.' })
@@ -252,31 +283,108 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         requestedSessionTtlSeconds = Math.floor(ms / MS_IN_SECOND);
       }
 
+      const listenForMs = durationDataToMilliseconds(parseDurationString((argv.listenFor as string | undefined) ?? DEFAULT_AUTH_LOGIN_LISTEN_FOR));
+
+      if (listenForMs <= 0) {
+        throw new CliError({
+          message: `--listen-for: invalid duration "${argv.listenFor}". Use formats like "5m", "90s", or mixed units like "1h30m".`,
+          code: 'AUTH_LISTEN_FOR_INVALID'
+        });
+      }
+
+      // The loopback listener is started BEFORE the authorization URL is built: the port it binds is
+      // part of the `redirect_uri` the provider echoes back, so it has to be settled first.
+      const suppliedCode = argv.code as string | undefined;
+      const shouldListen = suppliedCode == null && argv.listen !== false;
+      const loopbackTarget = shouldListen ? parseLoopbackRedirectUri({ redirectUri: env.redirectUri, port: argv.redirectPort as number | undefined }) : undefined;
+      let capture: Maybe<LoopbackRedirectCapture>;
+
+      if (loopbackTarget) {
+        try {
+          capture = await startLoopbackRedirectCapture({ target: loopbackTarget });
+        } catch (e) {
+          // A port that is already in use is not worth failing the whole login over — the paste
+          // flow is still there, and it is what the CLI did unconditionally before.
+          process.stderr.write(`${(e as Error).message} Falling back to pasting the redirect URL.\n`);
+        }
+      } else if (shouldListen) {
+        const suggestedRedirectUri = `http://127.0.0.1:${SUGGESTED_CLI_LOOPBACK_REDIRECT_PORT}/callback`;
+        process.stderr.write(`Redirect capture is unavailable: "${env.redirectUri}" has no loopback port to bind.\n  To capture the redirect automatically, register ${suggestedRedirectUri} with the OAuth client, then run:\n    ${cliName} auth setup --env ${envName} --redirect-uri ${suggestedRedirectUri}\n`);
+      }
+
+      // Identical to the configured redirect URI unless `--redirect-port` moved it, and it is what
+      // the token exchange must echo back — a mismatch there is rejected as `invalid_grant`.
+      const redirectUri = capture?.redirectUri ?? env.redirectUri;
+
       const url = buildAuthorizationUrl({
         authorizationEndpoint: meta.authorization_endpoint,
         oidcIssuer: env.oidcIssuer,
         apiBaseUrl: env.apiBaseUrl,
         appClientUrl: env.appClientUrl,
         clientId: env.clientId,
-        redirectUri: env.redirectUri,
+        redirectUri,
         scopes: requestedScopes,
         state,
         codeChallenge,
         requestedSessionTtlSeconds
       });
 
-      // The CLI never opens a browser itself — it prints the URL and reads the redirect back.
-      // Emit the URL through a clearly-prefixed stderr line so JSON stdout stays parseable.
+      // Printed even when the browser opens: it is the fallback whenever the launch fails, and the
+      // record of what was opened. Emitted on stderr so JSON stdout stays parseable.
       process.stderr.write(`Authorization URL:\n  ${url}\n`);
 
-      const pasted = (argv.code as string | undefined) ?? (await promptLine({ question: 'Paste redirect URL or code: ' }));
+      if (suppliedCode == null && argv.open !== false && !(await openUrlInBrowser({ url }))) {
+        process.stderr.write('Could not open a browser automatically — open the URL above by hand.\n');
+      }
+
+      let pasted: string;
+
+      try {
+        if (suppliedCode != null) {
+          pasted = suppliedCode;
+        } else if (capture) {
+          // The hint goes to stderr and the prompt itself is rendered empty, so the readline prompt
+          // never lands on stdout alongside the JSON envelope.
+          process.stderr.write(`Waiting for the redirect to ${capture.redirectUri} ... (or paste the redirect URL here)\n`);
+
+          // Both sources run at once. The listener is the happy path, and the prompt is the way out
+          // when the browser cannot reach this process's loopback interface at all (an SSH session,
+          // a container) — without it that case would just sit here until the listener timed out.
+          const controller = new AbortController();
+          const prompt = promptLine({ question: '', signal: controller.signal });
+          const redirected = capture.waitForRedirect(listenForMs);
+
+          // Whichever source loses is abandoned mid-flight; its rejection is expected, not unhandled.
+          prompt.catch(noop);
+          redirected.catch(noop);
+
+          try {
+            pasted = await Promise.race([redirected, prompt]);
+          } catch (e) {
+            // Only the listener's timeout reaches here — the prompt is still open, so keep waiting on it.
+            process.stderr.write(`${(e as Error).message}\n`);
+            pasted = await prompt;
+          } finally {
+            // Released only once a winner is settled. Aborting from inside the redirect's own `then`
+            // instead would reject the prompt a microtask BEFORE the redirect resolved, and the race
+            // would hand back that rejection rather than the code it just captured.
+            controller.abort();
+          }
+        } else {
+          pasted = await promptLine({ question: 'Paste redirect URL or code: ' });
+        }
+      } finally {
+        // Unconditional: a listener left bound keeps the process alive well past the command.
+        await capture?.close();
+      }
+
       const { code } = parsePastedRedirect({ pasted, expectedState: state });
 
       const tokenResponse = await exchangeAuthorizationCode({
         tokenEndpoint: meta.token_endpoint,
         clientId: env.clientId,
         clientSecret: env.clientSecret,
-        redirectUri: env.redirectUri,
+        redirectUri,
         code,
         codeVerifier
       });
@@ -331,7 +439,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs });
       const entry = await tokens.get(envName);
 
-      if (argv.revoke && entry?.refreshToken && env.clientId && env.clientSecret) {
+      // No `clientSecret` in the guard: a public client has none, and gating on it would silently
+      // skip the server-side revoke for exactly the clients that most need it.
+      if (argv.revoke && entry?.refreshToken && env.clientId) {
         try {
           const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
 

@@ -36,10 +36,14 @@
         "{workspaceRoot}/components/demo-firebase/package.json",
         "{workspaceRoot}/components/demo-firebase/src/lib/**/*.query.ts",
         "{workspaceRoot}/components/demo-firebase/src/lib/**/*.ts",
+        "{workspaceRoot}/packages/openrouter/firebase/dbx-mcp.scan.json",
+        "{workspaceRoot}/packages/openrouter/firebase/package.json",
+        "{workspaceRoot}/packages/openrouter/firebase/src/lib/**/*.query.ts",
+        "{workspaceRoot}/packages/openrouter/firebase/src/lib/**/*.ts",
         "{workspaceRoot}/firestore.rules"
       ],
       "options": {
-        "command": "node dist/packages/dbx-cli/firestore-query-manifest/main.js --project=demo-cli --component=components/demo-firebase --output=apps/demo-cli/src/lib/manifest/query.manifest.generated.ts --rules=firestore.rules",
+        "command": "node dist/packages/dbx-cli/firestore-query-manifest/main.js --project=demo-cli --component=components/demo-firebase --component=packages/openrouter/firebase --output=apps/demo-cli/src/lib/manifest/query.manifest.generated.ts --rules=firestore.rules",
         "cwd": "{workspaceRoot}"
       }
     },

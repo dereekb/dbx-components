@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { BAD_REQUEST_ERROR_CODE, FORBIDDEN_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, type OnCallQueryModelResult, firestoreModelKey, onCallCreateModelParams, onCallQueryModelParams, onCallUpdateModelParams } from '@dereekb/firebase';
+import { BAD_REQUEST_ERROR_CODE, FORBIDDEN_ERROR_CODE, MODEL_NOT_AVAILABLE_ERROR_CODE, type OnCallQueryModelResult, firestoreModelKey, onCallCreateModelParams, onCallQueryModelParams, onCallReadModelParams, onCallUpdateModelParams } from '@dereekb/firebase';
 import { type OpenRouterModelConfig } from '@dereekb/openrouter';
-import { type CreateOpenRouterPromptVersionResult, type OpenRouterPrompt, OpenRouterPromptState, type UpdateOpenRouterPromptVersionResult, openRouterPromptIdentity, openRouterPromptVersionId, openRouterPromptVersionIdentity } from '@dereekb/openrouter/firebase';
+import { type CreateOpenRouterPromptVersionResult, type OpenRouterPrompt, OpenRouterPromptState, type ReadOpenRouterPromptResult, type UpdateOpenRouterPromptVersionResult, openRouterPromptIdentity, openRouterPromptVersionId, openRouterPromptVersionIdentity } from '@dereekb/openrouter/firebase';
 import { demoOpenRouterPromptDefinitions } from '../../common/model/openrouter/openrouter.definitions';
 import { DEMO_API_TEST_OPENROUTER_MODEL_CONFIG, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoOpenRouterPromptContext, demoOpenRouterPromptVersionContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
@@ -168,6 +168,73 @@ demoApiFunctionContextFactory((f) => {
 
         itShouldFail('with BAD_REQUEST when no key is supplied', async () => {
           await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(openRouterPromptIdentity, { name: 'nowhere to land' })), expectFailAssertHttpErrorServerErrorCode(BAD_REQUEST_ERROR_CODE));
+        });
+      });
+
+      describe('openRouterPrompt.read', () => {
+        describe('a prompt with a promoted version', () => {
+          demoOpenRouterPromptContext({ f }, (p) => {
+            it('should return what the store serves, not just the prompt document', async () => {
+              // The gap this read closes: the prompt document holds `av`/`lv` and nothing a version says,
+              // so model-get on it cannot answer what the prompt actually instructs.
+              await p.createVersion({ instructions: 'You are the stored version.', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> });
+              await p.update({ activeVersion: 1, state: OpenRouterPromptState.ACTIVE });
+
+              const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, { key: p.documentKey }))) as ReadOpenRouterPromptResult;
+
+              expect(result.source).toBe('store');
+              expect(result.resolved.version).toBe(1);
+              expect(result.resolved.instructions).toBe('You are the stored version.');
+              expect(result.resolved.promptKey).toBe(p.document.id);
+              expect(result.errors).toEqual([]);
+              // The stored document still comes back alongside the resolution, so one call covers both
+              // "which version is active" and "what does it say".
+              expect(result.prompt?.av).toBe(1);
+              expect(result.prompt?.lv).toBe(1);
+            });
+
+            it('should read a pinned version rather than the active one', async () => {
+              await p.createVersion({ instructions: 'v1', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> });
+              await p.createVersion({ instructions: 'v2', config: DEMO_API_TEST_OPENROUTER_MODEL_CONFIG as Record<string, unknown> });
+              await p.update({ activeVersion: 2, state: OpenRouterPromptState.ACTIVE });
+
+              const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, { key: p.documentKey, version: 1 }))) as ReadOpenRouterPromptResult;
+
+              expect(result.resolved.version).toBe(1);
+              expect(result.resolved.instructions).toBe('v1');
+            });
+
+            demoAuthorizedUserContext({ f }, (u) => {
+              itShouldFail('with FORBIDDEN for a non-admin', async () => {
+                await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, { key: p.documentKey })), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              });
+            });
+          });
+        });
+
+        describe('a prompt that has never been seeded', () => {
+          // `create: false` stages only the reference, so the key names a definition the app ships with
+          // no document behind it — the state every fresh environment is in.
+          demoOpenRouterPromptContext({ f, key: demoPromptDefinition.promptKey, create: false }, (p) => {
+            it('should serve the code definition and say so', async () => {
+              const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, { key: p.documentKey }))) as ReadOpenRouterPromptResult;
+
+              // The precedence rule, made observable: a null prompt beside a populated resolution is the
+              // never-seeded case rather than an error, and `source` is what distinguishes them.
+              expect(result.prompt).toBeNull();
+              expect(result.source).toBe('definition');
+              expect(result.resolved.version).toBe(demoPromptDefinition.version);
+              expect(result.resolved.instructions).toBe(demoPromptDefinition.instructions);
+            });
+          });
+        });
+
+        itShouldFail('with BAD_REQUEST when no key is supplied', async () => {
+          await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, {})), expectFailAssertHttpErrorServerErrorCode(BAD_REQUEST_ERROR_CODE));
+        });
+
+        itShouldFail('when the prompt has neither a stored version nor a definition', async () => {
+          await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(openRouterPromptIdentity, { key: firestoreModelKey(openRouterPromptIdentity, 'no-such-prompt') })));
         });
       });
 

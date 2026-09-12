@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli-firestore-query-manifest",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "sideEffects": false,
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "eslint": "10.9.1"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.2.0",
-    "@dereekb/util": "14.2.0"
+    "@dereekb/dbx-cli": "14.3.0",
+    "@dereekb/util": "14.3.0"
   }
 }

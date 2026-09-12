@@ -1,3 +1,16 @@
+# [14.3.0](https://github.com/dereekb/dbx-components/compare/v14.2.0-dev...v14.3.0) (2026-09-12)
+
+### Bug Fixes
+
+- **oidc:** hold login/consent loading until interaction data loads ([55a1720f](https://github.com/dereekb/dbx-components/commit/55a1720f2ae6cdec0efcfb547c00589fb8391ed8))
+- **oidc:** re-grant a scope rejected on an earlier consent ([55c7227a](https://github.com/dereekb/dbx-components/commit/55c7227ae8e7511f327656b1b024c78b92d0803a))
+- **workspace:** cap @cantoo/pdf-lib below 2.11.0 ([321ab0bc](https://github.com/dereekb/dbx-components/commit/321ab0bcfce363ad04c65ce35a37798b1b5bf38b))
+
+### Features
+
+- **dbx-cli:** auto-open browser + capture the OIDC redirect on login ([c388e5b3](https://github.com/dereekb/dbx-components/commit/c388e5b3ac043a364d3740f9375d8dd9b9fe7f14))
+- **openrouter:** admin read-back of prompts + run tasks via session ([c4c1f8fa](https://github.com/dereekb/dbx-components/commit/c4c1f8fa25026858de5ab8d7a672a5fe3722c2a6))
+
 # [14.2.0](https://github.com/dereekb/dbx-components/compare/v14.1.0-dev...v14.2.0) (2026-09-11)
 
 ### Bug Fixes

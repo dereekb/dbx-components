@@ -10,7 +10,7 @@ import { CliError } from '../util/output';
  * Guarantees that the OIDC client fields are present so callers can pass them through to the
  * OIDC client/token helpers without a non-null assertion or extra runtime check.
  */
-export type CliEnvConfigComplete = Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'clientSecret' | 'redirectUri'>> & CliEnvConfig;
+export type CliEnvConfigComplete = Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>> & CliEnvConfig;
 
 /**
  * Builds the conventional `<CLINAME>_ENV` env var name from the CLI binary name.
@@ -91,8 +91,9 @@ export async function resolveCliEnv(input: ResolveCliEnvInput): Promise<ResolveC
 export interface ResolveCliEnvOrThrowInput extends ResolveCliEnvInput {
   /**
    * When `true`, throws `AUTH_ENV_INCOMPLETE` if the resolved env is missing OIDC fields
-   * (apiBaseUrl, oidcIssuer, clientId, clientSecret, redirectUri). The returned env is narrowed
-   * to {@link CliEnvConfigComplete}. Defaults to `false`.
+   * (apiBaseUrl, oidcIssuer, clientId, redirectUri). `clientSecret` is not required — see
+   * {@link isCliEnvConfigComplete}. The returned env is narrowed to {@link CliEnvConfigComplete}.
+   * Defaults to `false`.
    */
   readonly requireComplete?: boolean;
 }

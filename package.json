@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",
@@ -25,7 +25,7 @@
     "@angular/platform-browser": "22.1.4",
     "@angular/router": "22.1.4",
     "@bobbyquantum/ngx-editor": "22.0.1",
-    "@cantoo/pdf-lib": "^2.6.5",
+    "@cantoo/pdf-lib": ">=2.6.5 <2.11.0",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/pubsub": "^6.0.1",
     "@google-cloud/storage": "^7.22.0",

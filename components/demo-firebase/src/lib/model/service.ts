@@ -119,6 +119,10 @@ import {
   type OpenRouterPromptFirestoreCollections,
   type OpenRouterPromptVersionFirestoreCollectionFactory,
   type OpenRouterPromptVersionFirestoreCollectionGroup,
+  type OpenRouterRunTask,
+  type OpenRouterRunTaskDocument,
+  type OpenRouterRunTaskRoles,
+  type OpenRouterRunTaskTypes,
   type OpenRouterRunTaskFirestoreCollection,
   type OpenRouterRunTaskFirestoreCollections,
   openRouterPromptFirestoreCollection,
@@ -603,10 +607,10 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
  * @dbxModelServiceFactory openRouterPrompt
  */
 export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPrompt, OpenRouterPromptDocument, OpenRouterPromptRoles>({
-  // SERVER-ONLY: firestore.rules has no match block for `orp`, so no client can read it there.
-  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
-  // never consults the rules — would hand the document to a client anyway.
-  serverOnly: true,
+  // NOT server-only: firestore.rules grants `orp` reads to system admins, and roleMapForModel below
+  // gates the model API on the same claim, so both transports refuse the same callers. An app that
+  // wants prompts closed sets `serverOnly: true` here AND drops the rules block — the two mirror each
+  // other, and `dbx_model_server_only_validate_app` reports it when they drift apart.
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPrompt, OpenRouterPromptDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — a prompt is operational configuration
   },
@@ -617,14 +621,28 @@ export const openRouterPromptFirebaseModelServiceFactory = firebaseModelServiceF
  * @dbxModelServiceFactory openRouterPromptVersion
  */
 export const openRouterPromptVersionFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterPromptVersion, OpenRouterPromptVersionDocument, OpenRouterPromptVersionRoles>({
-  // SERVER-ONLY: firestore.rules has no match block for `orpv`, so no client can read it there.
-  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
-  // never consults the rules — would hand the document to a client anyway.
-  serverOnly: true,
+  // NOT server-only: firestore.rules grants `orpv` reads to system admins, on both the nested match
+  // and the `{path=**}/orpv` collection-group match this factory's collection group needs.
   roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterPromptVersion, OpenRouterPromptVersionDocument>, context: DemoFirebaseContext, _model: OpenRouterPromptVersionDocument): PromiseOrValue<GrantedRoleMap<OpenRouterPromptVersionRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
   getFirestoreCollection: (c) => c.app.openRouterPromptVersionCollectionGroup
+});
+
+/**
+ * @dbxModelServiceFactory openRouterRunTask
+ */
+export const openRouterRunTaskFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OpenRouterRunTask, OpenRouterRunTaskDocument, OpenRouterRunTaskRoles>({
+  // Readable, not server-only: a run task is the execution record an operator reaches for when a run
+  // fails, and `msg` carrying the raw model input and output is exactly what makes it worth reading.
+  // Gated to system admins on both transports — firestore.rules grants `orrt` the same way.
+  //
+  // Read-only by role: the sweep owns every write (claim, lease, state transition), so granting update
+  // here would let a caller move a task out from under the sweep that is executing it.
+  roleMapForModel: function (output: FirebasePermissionServiceModel<OpenRouterRunTask, OpenRouterRunTaskDocument>, context: DemoFirebaseContext, _model: OpenRouterRunTaskDocument): PromiseOrValue<GrantedRoleMap<OpenRouterRunTaskRoles>> {
+    return grantModelRolesIfAdmin(context, grantedRoleKeysMapFromArray(['read']));
+  },
+  getFirestoreCollection: (c) => c.app.openRouterRunTaskCollection
 });
 
 // MARK: UserExternalConnection
@@ -639,7 +657,7 @@ export const userExternalConnectionFirebaseModelServiceFactory = firebaseModelSe
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | CalendarTypes | FormSpaceTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes | CalendarTypes | FormSpaceTypes | OidcModelTypes | UserExternalConnectionTypes | OpenRouterPromptTypes | OpenRouterRunTaskTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -665,7 +683,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   oidcEntry: oidcEntryFirebaseModelServiceFactory,
   userExternalConnection: userExternalConnectionFirebaseModelServiceFactory,
   openRouterPrompt: openRouterPromptFirebaseModelServiceFactory,
-  openRouterPromptVersion: openRouterPromptVersionFirebaseModelServiceFactory
+  openRouterPromptVersion: openRouterPromptVersionFirebaseModelServiceFactory,
+  openRouterRunTask: openRouterRunTaskFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

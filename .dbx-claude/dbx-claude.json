@@ -16,6 +16,19 @@
     "recovery": { "enabled": true, "target": "workspace:build-all" }
   },
   "capabilityConfig": {
-    "block-nx-build": { "options": { "enabled": true } }
+    "block-nx-build": { "options": { "enabled": true } },
+    "docker": {
+      "options": {
+        "serve": {
+          "service": "demo-api-server",
+          "containerName": "demo-api-server",
+          "passEnv": ["OPENROUTER_API_KEY", "OPENROUTER_TEST_MODEL_ID", "OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID"],
+          "exec": {
+            "command": ["npx", "firebase", "--project=default", "emulators:exec", "--only", "auth,firestore,storage"],
+            "joinCommand": true
+          }
+        }
+      }
+    }
   }
 }

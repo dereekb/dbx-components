@@ -1,5 +1,5 @@
 import { type Getter, type Maybe, type Milliseconds, MS_IN_MINUTE, arrayToMap, expiringCachedGetter } from '@dereekb/util';
-import { type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, validateOpenRouterModelConfig } from '@dereekb/openrouter';
+import { type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import { type OpenRouterPrompt, type OpenRouterPromptDocument, type OpenRouterPromptFirestoreCollections, type OpenRouterPromptVersion, OpenRouterPromptState, openRouterPromptVersionId, openRouterResolvedPromptForVersion } from '@dereekb/openrouter/firebase';
 
 /**
@@ -28,6 +28,20 @@ export interface OpenRouterResolvePromptParams {
    * The version to pin to. When omitted the prompt's `activeVersion` is used.
    */
   readonly version?: Maybe<OpenRouterPromptVersionNumber>;
+}
+
+/**
+ * A resolved prompt together with where it came from.
+ */
+export interface OpenRouterPromptResolution {
+  /**
+   * The version that will be served.
+   */
+  readonly resolved: OpenRouterResolvedPrompt;
+  /**
+   * Which half of the resolution produced {@link resolved}.
+   */
+  readonly source: OpenRouterPromptResolutionSource;
 }
 
 /**
@@ -74,6 +88,17 @@ export abstract class OpenRouterPromptService {
    * @throws {OpenRouterPromptResolutionError} when the prompt, or the requested version, is not servable.
    */
   abstract resolvePrompt(params: OpenRouterResolvePromptParams): Promise<OpenRouterResolvedPrompt>;
+  /**
+   * Resolves a prompt and reports which half of the resolution served it.
+   *
+   * The same work {@link resolvePrompt} does, off the same cache — that one projects this result down
+   * to its `resolved` half. Separate rather than widening `resolvePrompt`'s return type because every
+   * dispatch path calls it on the hot path and wants the prompt, not a wrapper around it; the source is
+   * only interesting to a caller inspecting the prompt rather than running it.
+   *
+   * @throws {OpenRouterPromptResolutionError} when the prompt, or the requested version, is not servable.
+   */
+  abstract readPrompt(params: OpenRouterResolvePromptParams): Promise<OpenRouterPromptResolution>;
   /**
    * Drops any cached resolution for a prompt. Called after a publish/promote so the change is visible
    * immediately rather than after the cache expires.
@@ -123,7 +148,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
   const duration = cacheDuration ?? OPENROUTER_PROMPT_CACHE_DURATION;
 
   const definitionsByKey = arrayToMap(definitions ?? [], (definition) => definition.promptKey);
-  const cache = new Map<string, Getter<Promise<OpenRouterResolvedPrompt>>>();
+  const cache = new Map<string, Getter<Promise<OpenRouterPromptResolution>>>();
 
   async function loadPromptDefinitions(): Promise<OpenRouterPromptDefinition[]> {
     // A fresh array each call rather than one built at construction: the returned type is mutable, and
@@ -154,7 +179,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     return versionData == null ? undefined : openRouterResolvedPromptForVersion(promptKey, versionData);
   }
 
-  async function resolveVersion(promptKey: OpenRouterPromptKey, inputVersion: Maybe<OpenRouterPromptVersionNumber>): Promise<OpenRouterResolvedPrompt> {
+  async function resolveVersion(promptKey: OpenRouterPromptKey, inputVersion: Maybe<OpenRouterPromptVersionNumber>): Promise<OpenRouterPromptResolution> {
     const definition = definitionsByKey.get(promptKey);
     const promptDocument = loadPromptDocument(promptKey);
     const prompt = await promptDocument.snapshotData();
@@ -166,6 +191,10 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     const storedActiveVersion = prompt?.s === OpenRouterPromptState.ACTIVE ? prompt.av : undefined;
 
     let resolved: Maybe<OpenRouterResolvedPrompt>;
+    // Tracked alongside `resolved` rather than inferred from it afterwards: a definition and a stored
+    // version that agree are indistinguishable by value, and the branch that picked one is the only
+    // place that actually knows.
+    let source: OpenRouterPromptResolutionSource = 'store';
 
     if (inputVersion != null) {
       // Pinned. The store wins whenever it actually holds that version, so a version published under the
@@ -175,10 +204,12 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
 
       if (resolved == null && definition?.version === inputVersion) {
         resolved = definition;
+        source = 'definition';
       }
     } else if (definition != null && (storedActiveVersion == null || definition.version > storedActiveVersion)) {
       // Unpinned, and code is either standing in for the store or ahead of it.
       resolved = definition;
+      source = 'definition';
     } else if (storedActiveVersion != null) {
       resolved = await readStoredVersion(promptDocument, promptKey, storedActiveVersion);
     }
@@ -205,17 +236,17 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
       }
     }
 
-    return resolved;
+    return { resolved, source };
   }
 
   function cacheKey(promptKey: OpenRouterPromptKey, version: Maybe<OpenRouterPromptVersionNumber>): string {
     return `${promptKey}:${version ?? '_'}`;
   }
 
-  async function resolvePrompt(params: OpenRouterResolvePromptParams): Promise<OpenRouterResolvedPrompt> {
+  async function readPrompt(params: OpenRouterResolvePromptParams): Promise<OpenRouterPromptResolution> {
     const { promptKey, version } = params;
     const key = cacheKey(promptKey, version);
-    let getter: Maybe<Getter<Promise<OpenRouterResolvedPrompt>>> = cache.get(key);
+    let getter: Maybe<Getter<Promise<OpenRouterPromptResolution>>> = cache.get(key);
 
     if (getter == null) {
       const load = () => resolveVersion(promptKey, version);
@@ -228,7 +259,7 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
       cache.set(key, getter);
     }
 
-    let result: OpenRouterResolvedPrompt;
+    let result: OpenRouterPromptResolution;
 
     try {
       result = await getter();
@@ -242,6 +273,12 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     return result;
   }
 
+  async function resolvePrompt(params: OpenRouterResolvePromptParams): Promise<OpenRouterResolvedPrompt> {
+    // Projection of readPrompt rather than a second resolution path, so both share the one cache entry
+    // and cannot disagree about what is being served.
+    return (await readPrompt(params)).resolved;
+  }
+
   function clearCachedPrompt(promptKey: OpenRouterPromptKey): void {
     // Every version of the prompt goes, pinned entries included: a publish or promote can change what any
     // of them resolve to. Deleting the current entry mid-iteration is well-defined for a Map iterator, so
@@ -253,5 +290,5 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     }
   }
 
-  return { loadPromptDefinitions, loadPrompt, resolvePrompt, clearCachedPrompt };
+  return { loadPromptDefinitions, loadPrompt, resolvePrompt, readPrompt, clearCachedPrompt };
 }

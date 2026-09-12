@@ -113,10 +113,11 @@
     },
     "serve": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "commands": [
           {
-            "command": "npx nx build-base demo-api --watch"
+            "command": "npx nx build-all && npx nx build-base demo-api --watch"
           },
           {
             "command": "npx nx run demo-api:watch-emulators"

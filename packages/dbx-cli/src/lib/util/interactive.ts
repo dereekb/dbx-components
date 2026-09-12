@@ -4,6 +4,14 @@ import { CliError } from './output';
 export interface PromptInput {
   readonly question: string;
   readonly mask?: boolean;
+  /**
+   * Optional signal that cancels the prompt, rejecting it with {@link PROMPT_CANCELLED_ERROR_CODE}
+   * and releasing stdin.
+   *
+   * Lets a prompt race another source of the same answer — `auth login` offers the paste prompt
+   * while its loopback listener waits, and aborts the prompt the moment the redirect lands.
+   */
+  readonly signal?: AbortSignal;
 }
 
 /**
@@ -26,11 +34,12 @@ const KEY_DEL = ''; // DEL
  * pasted redirect URL.
  *
  * Rejects with a {@link CliError} (`code: 'PROMPT_CANCELLED'`) when the user presses Ctrl-C
- * during a masked prompt, instead of forcibly terminating the process.
+ * during a masked prompt, or when `signal` aborts, instead of forcibly terminating the process.
  *
  * @param input - The prompt inputs.
  * @param input.question - The prompt text written to stdout (or stderr when masking).
  * @param input.mask - When `true`, characters are echoed as `*` and Ctrl-C cancels the prompt.
+ * @param input.signal - Optional signal that cancels the prompt and releases stdin.
  * @returns The line entered by the user (without the trailing newline).
  */
 export function promptLine(input: PromptInput): Promise<string> {
@@ -75,6 +84,16 @@ export function promptLine(input: PromptInput): Promise<string> {
         }
       };
 
+      const onAbort = () => {
+        stdout.write('\n');
+        process.stdin.removeListener('data', onData);
+        process.stdin.setRawMode?.(false);
+        process.stdin.pause();
+        reject(new CliError({ message: 'Prompt cancelled.', code: PROMPT_CANCELLED_ERROR_CODE }));
+      };
+
+      input.signal?.addEventListener('abort', onAbort, { once: true });
+
       process.stdin.setRawMode?.(true);
       process.stdin.resume();
       process.stdin.on('data', onData);
@@ -82,11 +101,27 @@ export function promptLine(input: PromptInput): Promise<string> {
   } else {
     const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
 
-    result = new Promise<string>((resolve) => {
-      rl.question(input.question, (answer) => {
+    result = new Promise<string>((resolve, reject) => {
+      const signal = input.signal;
+      const onAbort = () => {
         rl.close();
-        resolve(answer);
-      });
+        // `rl.close()` detaches the interface but leaves the stream flowing, which keeps the CLI's
+        // event loop alive after the racing source already produced the answer.
+        process.stdin.pause();
+        reject(new CliError({ message: 'Prompt cancelled.', code: PROMPT_CANCELLED_ERROR_CODE }));
+      };
+
+      if (signal?.aborted) {
+        onAbort();
+      } else {
+        signal?.addEventListener('abort', onAbort, { once: true });
+
+        rl.question(input.question, (answer) => {
+          signal?.removeEventListener('abort', onAbort);
+          rl.close();
+          resolve(answer);
+        });
+      }
     });
   }
 

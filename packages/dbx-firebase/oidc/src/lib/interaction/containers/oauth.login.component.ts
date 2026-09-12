@@ -1,4 +1,5 @@
 import { Component, inject, computed, signal, effect, type Signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -7,6 +8,11 @@ import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '../../service/oidc.confi
 import { type OidcInteractionUid } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../components/oauth.login.view.component';
+
+/**
+ * Notice shown over the login UI after the server refused the signed-in user's ID token.
+ */
+export const OIDC_LOGIN_SESSION_REJECTED_NOTICE = 'Your previous sign-in is no longer valid. Please sign in again.';
 
 /**
  * Container component for the OIDC OAuth login interaction flow.
@@ -25,7 +31,7 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   selector: 'dbx-firebase-oauth-login',
   imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
-    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" (retryClick)="retry()">
+    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" [notice]="notice()" (retryClick)="retry()">
       <ng-content />
     </dbx-firebase-oauth-login-view>
   `,
@@ -44,8 +50,10 @@ export class DbxFirebaseOAuthLoginComponent {
 
   readonly submitting = signal(false);
   readonly errorMessage = signal<Maybe<string>>(null);
+  readonly notice = signal<Maybe<string>>(null);
 
   readonly loginStateCaseSignal = computed<OidcLoginStateCase>(() => {
+    const interactionUid = this.interactionUid();
     const errorMessage = this.errorMessage();
     const isLoggedIn = this.isLoggedIn();
     let result: OidcLoginStateCase;
@@ -58,7 +66,12 @@ export class DbxFirebaseOAuthLoginComponent {
       if (isLoggedIn === undefined) {
         result = 'unknown';
       } else if (isLoggedIn) {
-        result = 'user';
+        // Stay in the loading state until the interaction uid is known. On a warm client-side navigation
+        // `isLoggedIn` is replayed synchronously while the uid route param is still resolving; entering
+        // `'user'` then fires the auto-submit with no uid, which sets a "Missing interaction UID" error a
+        // later uid emission cannot clear. The redirect that reaches this screen always carries the uid, so
+        // this only defers `'user'` by the tick it takes the param to propagate.
+        result = interactionUid == null ? 'unknown' : 'user';
       } else {
         result = 'no_user';
       }
@@ -91,6 +104,7 @@ export class DbxFirebaseOAuthLoginComponent {
 
     this.submitting.set(true);
     this.errorMessage.set(null);
+    this.notice.set(null);
 
     this.interactionService.submitLogin(uid).subscribe({
       next: (response) => {
@@ -102,9 +116,27 @@ export class DbxFirebaseOAuthLoginComponent {
           this.submitting.set(false);
         }
       },
-      error: () => {
-        this.submitting.set(false);
-        this.errorMessage.set('Failed to complete login. Please try again.');
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          // The server could not verify the ID token: the Firebase session the browser holds is one it will
+          // not accept (expired, revoked, or issued by an Auth instance the server no longer knows — an
+          // emulator restart does this). A retry resubmits the same token and can never succeed, so sign out
+          // instead: `isLoggedIn` flips to false, the login UI surfaces, and a fresh sign-in re-triggers the
+          // auto-submit with a token the server can verify.
+          //
+          // Should the sign-out itself fail the user is still logged in, and clearing `submitting` would return
+          // the state to `'user'` and re-fire the auto-submit — so that case lands in the error state instead.
+          this.dbxFirebaseAuthService
+            .logOut()
+            .then(
+              () => this.notice.set(OIDC_LOGIN_SESSION_REJECTED_NOTICE),
+              () => this.errorMessage.set('Failed to complete login. Please try again.')
+            )
+            .finally(() => this.submitting.set(false));
+        } else {
+          this.submitting.set(false);
+          this.errorMessage.set('Failed to complete login. Please try again.');
+        }
       }
     });
   }

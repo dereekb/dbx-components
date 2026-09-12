@@ -88,7 +88,9 @@ export function defaultDoctorChecks(input: DefaultDoctorChecksInput = {}): Docto
     },
     async ({ cliName, envName, env }) => {
       let result: DoctorCheckResult;
-      if (!envName || !env?.clientId || !env?.clientSecret) {
+      // `clientSecret` is absent for a public (PKCE) client, so requiring it here would report a
+      // correctly-configured env as having incomplete credentials.
+      if (!envName || !env?.clientId) {
         result = { name: 'token-refresh-round-trip', ok: false, suggestion: 'Env credentials are incomplete.' };
       } else {
         const paths = buildCliPaths({ cliName });

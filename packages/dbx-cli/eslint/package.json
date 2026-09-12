@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/dbx-cli/eslint",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.2.0",
-    "@dereekb/util": "14.2.0",
+    "@dereekb/dbx-cli": "14.3.0",
+    "@dereekb/util": "14.3.0",
     "@typescript-eslint/utils": "8.69.0",
     "typescript": "6.0.3"
   },
