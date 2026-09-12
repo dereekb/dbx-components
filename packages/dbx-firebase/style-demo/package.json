@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-firebase/style-demo",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "sideEffects": false,
   "peerDependencies": {
     "@angular/common": "22.1.4",
     "@angular/core": "22.1.4",
     "@angular/material": "^22.1.4",
-    "@dereekb/dbx-firebase": "14.2.0",
-    "@dereekb/dbx-web": "14.2.0",
-    "@dereekb/util": "14.2.0",
-    "@dereekb/vitest": "14.2.0"
+    "@dereekb/dbx-firebase": "14.3.0",
+    "@dereekb/dbx-web": "14.3.0",
+    "@dereekb/util": "14.3.0",
+    "@dereekb/vitest": "14.3.0"
   }
 }
