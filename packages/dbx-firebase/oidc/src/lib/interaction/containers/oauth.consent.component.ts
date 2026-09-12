@@ -132,14 +132,31 @@ export class DbxOAuthConsentComponent implements OnDestroy {
     return Array.from(new Set<OidcScope>([...OAUTH_CONSENT_REQUIRED_SCOPES, ...serverRequiredScopes]));
   });
 
+  /**
+   * Whether the interaction details the consent form needs — the uid to submit against and the requested
+   * scopes the scope list renders — have loaded from the route params.
+   *
+   * The scopes param is populated on the server redirect that reaches this screen alongside the uid, so
+   * this becomes true within a tick of navigation; it exists to bridge the window where it has not yet.
+   */
+  readonly interactionReadySignal = computed<boolean>(() => {
+    const routeScopes = this.routeScopes();
+    return this.routeUid() != null && (routeScopes ?? '').length > 0;
+  });
+
   readonly consentStateCaseSignal = computed<OidcConsentStateCase>(() => {
+    const interactionReady = this.interactionReadySignal();
     const isLoggedIn = this.isLoggedIn();
     let result: OidcConsentStateCase;
 
     if (isLoggedIn === undefined) {
       result = 'unknown';
     } else if (isLoggedIn) {
-      result = 'user';
+      // Wait for the interaction details before leaving the loading state. On a warm client-side navigation
+      // (the login screen redirects here while the SPA is already running) `isLoggedIn` is replayed
+      // synchronously while the route params are still resolving; rendering `'user'` then would flash an
+      // empty consent screen — no client name, and a content pit with no scope rows.
+      result = interactionReady ? 'user' : 'unknown';
     } else {
       result = 'no_user';
     }

@@ -53,6 +53,7 @@ export class DbxFirebaseOAuthLoginComponent {
   readonly notice = signal<Maybe<string>>(null);
 
   readonly loginStateCaseSignal = computed<OidcLoginStateCase>(() => {
+    const interactionUid = this.interactionUid();
     const errorMessage = this.errorMessage();
     const isLoggedIn = this.isLoggedIn();
     let result: OidcLoginStateCase;
@@ -65,7 +66,12 @@ export class DbxFirebaseOAuthLoginComponent {
       if (isLoggedIn === undefined) {
         result = 'unknown';
       } else if (isLoggedIn) {
-        result = 'user';
+        // Stay in the loading state until the interaction uid is known. On a warm client-side navigation
+        // `isLoggedIn` is replayed synchronously while the uid route param is still resolving; entering
+        // `'user'` then fires the auto-submit with no uid, which sets a "Missing interaction UID" error a
+        // later uid emission cannot clear. The redirect that reaches this screen always carries the uid, so
+        // this only defers `'user'` by the tick it takes the param to propagate.
+        result = interactionUid == null ? 'unknown' : 'user';
       } else {
         result = 'no_user';
       }

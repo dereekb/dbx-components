@@ -104,3 +104,56 @@ describe('DbxFirebaseOAuthLoginComponent on a refused ID token', () => {
     expect(component.notice()).toBeNull();
   });
 });
+
+/**
+ * On a warm client-side navigation `isLoggedIn` is already true while the uid route param is still
+ * resolving. The container must not auto-submit until the uid is known — otherwise the submit errors with
+ * "Missing interaction UID" and a later uid emission cannot recover it.
+ */
+describe('DbxFirebaseOAuthLoginComponent before the interaction uid resolves', () => {
+  let params: BehaviorSubject<Record<string, unknown>>;
+  let submitLogin: ReturnType<typeof vi.fn>;
+  let fixture: ComponentFixture<DbxFirebaseOAuthLoginComponent>;
+  let component: DbxFirebaseOAuthLoginComponent;
+
+  async function detectChanges(): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  beforeEach(async () => {
+    params = new BehaviorSubject<Record<string, unknown>>({});
+    submitLogin = vi.fn(() => of({ redirectTo: undefined }));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DbxRouterService, useValue: { params$: params.asObservable() } },
+        { provide: DbxFirebaseAuthService, useValue: { isLoggedIn$: of(true), logOut: vi.fn() } },
+        { provide: DbxFirebaseOidcInteractionService, useValue: { submitLogin } }
+      ]
+    });
+
+    fixture = TestBed.createComponent(DbxFirebaseOAuthLoginComponent);
+    component = fixture.componentInstance;
+    await detectChanges();
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('should hold in the loading state and not submit while the uid is absent', () => {
+    expect(component.loginStateCaseSignal()).toBe('unknown');
+    expect(submitLogin).not.toHaveBeenCalled();
+  });
+
+  it('should auto-submit once the uid arrives', async () => {
+    expect(submitLogin).not.toHaveBeenCalled();
+
+    params.next({ uid: 'lateuid' });
+    await detectChanges();
+
+    expect(submitLogin).toHaveBeenCalledWith('lateuid');
+  });
+});
