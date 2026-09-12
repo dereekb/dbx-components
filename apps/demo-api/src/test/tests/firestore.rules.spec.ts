@@ -238,6 +238,121 @@ describe('firestore.rules', () => {
     });
 
     /**
+     * The `orp` / `orpv` / `orrt` grants exist so an admin who can EDIT a prompt through the model
+     * API can read back what they wrote directly through a Firestore session. The in-process CLI
+     * spec cannot prove them - under the test fixtures a session token is authenticated but
+     * claimless - so this is the one place the sys-admin grant is exercised against the real engine.
+     */
+    describe('OpenRouter', () => {
+      const ADMIN_UID = 'rulestestsysadmin';
+      const ADMIN_TOKEN = { a: 1 };
+      const PROMPT_KEY = 'rulestestprompt';
+      const VERSION_ID = '000001';
+      const RUN_TASK_KEY = 'rulestestrun';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'orp', PROMPT_KEY), { n: 'Rules Test Prompt', av: 1 });
+          await setDoc(doc(firestore, 'orp', PROMPT_KEY, 'orpv', VERSION_ID), { v: 1, i: 'instructions' });
+          await setDoc(doc(firestore, 'orrt', RUN_TASK_KEY), { s: 0, qat: new Date(), at: 0, pk: PROMPT_KEY, pv: 1, in: [] });
+        });
+      });
+
+      describe('orp (OpenRouterPrompt)', () => {
+        it('should allow a sys admin to read a prompt', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp', PROMPT_KEY)));
+        });
+
+        it('should allow a sys admin to list the collection', async () => {
+          await assertSucceeds(getDocs(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp')));
+        });
+
+        it('should deny a non-admin read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'orp', PROMPT_KEY)));
+        });
+
+        it('should deny an unauthenticated read', async () => {
+          await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'orp', PROMPT_KEY)));
+        });
+
+        it('should deny a sys admin writing a prompt', async () => {
+          // the grant is read-only: prompt writes go through the model API, never a client session
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp', PROMPT_KEY), { n: 'tampered' }));
+        });
+      });
+
+      describe('orpv (OpenRouterPromptVersion)', () => {
+        it('should allow a sys admin to read a version through the nested path', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp', PROMPT_KEY, 'orpv', VERSION_ID)));
+        });
+
+        it('should allow a sys admin to list the versions of a prompt', async () => {
+          await assertSucceeds(getDocs(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp', PROMPT_KEY, 'orpv')));
+        });
+
+        it('should allow a sys admin a collection group query over versions', async () => {
+          // the nested match does not imply this; it is the separate `/{path=**}/orpv` block that
+          // lets the model API address a version by its full key with no parent document in hand
+          await assertSucceeds(getDocs(query(collectionGroup(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orpv'), where('v', '==', 1))));
+        });
+
+        it('should deny a non-admin read through the nested path', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'orp', PROMPT_KEY, 'orpv', VERSION_ID)));
+        });
+
+        it('should deny a non-admin collection group query over versions', async () => {
+          await assertFails(getDocs(query(collectionGroup(f.firestoreForUser(OWNER_UID), 'orpv'), where('v', '==', 1))));
+        });
+
+        it('should deny an unauthenticated read', async () => {
+          await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'orp', PROMPT_KEY, 'orpv', VERSION_ID)));
+        });
+
+        it('should deny a sys admin writing a version', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orp', PROMPT_KEY, 'orpv', VERSION_ID), { i: 'tampered' }));
+        });
+      });
+
+      describe('orrt (OpenRouterRunTask)', () => {
+        it('should allow a sys admin to read a run task', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orrt', RUN_TASK_KEY)));
+        });
+
+        it('should allow a sys admin to list the collection', async () => {
+          await assertSucceeds(getDocs(query(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orrt'), where('s', '==', 0))));
+        });
+
+        it('should deny a non-admin read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'orrt', RUN_TASK_KEY)));
+        });
+
+        it('should deny an unauthenticated read', async () => {
+          await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'orrt', RUN_TASK_KEY)));
+        });
+
+        // READ ONLY, and not by omission: every write belongs to the sweep that claims, leases, and
+        // transitions the task. A client write - even an admin's - would move a task out from under
+        // the sweep executing it.
+        it('should deny a sys admin writing a run task', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orrt', RUN_TASK_KEY), { s: 2 }));
+        });
+
+        it('should deny a sys admin creating a run task', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'orrt', 'rulestestcreated'), { s: 0, qat: new Date(), at: 0, pk: PROMPT_KEY, pv: 1, in: [] }));
+        });
+
+        it('should deny a non-admin write', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'orrt', RUN_TASK_KEY), { s: 2 }));
+        });
+      });
+
+      it('should deny a token that carries the admin key with a non-1 value', async () => {
+        // userClaimsIsSysAdmin() checks `a == 1`, not merely that the key is present
+        await assertFails(getDoc(doc(f.firestoreForUser(ADMIN_UID, { a: 0 }), 'orrt', RUN_TASK_KEY)));
+      });
+    });
+
+    /**
      * The DYNAMIC oracle for the CLI query catalog's `reachability` verdict.
      *
      * `scanFirestoreRules()` reports `collectionGroup: true` only for a collection carrying a

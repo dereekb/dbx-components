@@ -178,10 +178,41 @@ service cloud.firestore {
       allow list: if userClaimsIsSysAdmin() || resourceIsOwnedByAuthOwnershipKey();
     }
 
-    // NOTE: there is deliberately NO match block for /orp (OpenRouterPrompt), /orpv
-    // (OpenRouterPromptVersion) or /orrt (OpenRouterRunTask). They are server-only models: prompts are
-    // authored through the admin-gated callable model API, and a run task carries the model's raw input
-    // and output. The implicit default-deny is what protects them; a block here could only weaken that.
+    // MARK: OpenRouter
+    // Prompts are operational configuration, so reads are system-admin only - the same posture the
+    // model API applies through `grantModelRolesIfAdmin` in service.ts. Reads are granted rather than
+    // default-denied because an admin who can EDIT a prompt has to be able to read back what they
+    // wrote; the version model below is where a prompt's actual text lives.
+    //
+    // These grants and `serverOnly` on the service factory move together. Closing one without the
+    // other either leaks the model (rules closed, flag absent) or leaves every client refusing a read
+    // the rules would allow (rules open, flag set) - the mismatch `dbx_model_server_only_validate_app`
+    // reports.
+    match /orp/{openRouterPrompt} {
+      allow read: if userClaimsIsSysAdmin();
+
+      match /orpv/{openRouterPromptVersion} {
+        allow read: if userClaimsIsSysAdmin();
+      }
+    }
+
+    // The model API addresses a version through the collection GROUP - a version is named by its full
+    // key, with no parent document to scope a subcollection factory to - so the group needs its own
+    // grant. The nested match above does not cover a collection-group read.
+    match /{path=**}/orpv/{openRouterPromptVersion} {
+      allow read: if userClaimsIsSysAdmin();
+    }
+
+    // A run task is the execution record an operator reaches for when a run fails, so a system admin
+    // can read one. Its `msg` field carrying the model's raw input and output is the reason to read it,
+    // not a reason to hide it — the same admin can already read the prompt that produced the input.
+    //
+    // READ ONLY, and not by omission: every write belongs to the sweep that claims, leases, and
+    // transitions the task. A client write would move a task out from under the sweep executing it, so
+    // the role map grants `read` alone rather than full access.
+    match /orrt/{openRouterRunTask} {
+      allow read: if userClaimsIsSysAdmin();
+    }
 
     // MARK: OIDC Adapter
     match /oidc_e/{entryId} {

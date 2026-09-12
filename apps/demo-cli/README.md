@@ -117,11 +117,21 @@ demo-cli model guestbook get <id> --via api
 
 The demo is deliberately set up so the divergence is visible:
 
-- **Model-level — reconciled.** `sys`, `nbn`, `nbnw`, `nbnle`, `nbnlep`, `prp`, `orp`, `orpv` have no
-  client read grant in `firestore.rules`. They are tagged `@dbxModelServerOnly` with
-  `serverOnly: true` on their service configs, so `demo-cli get sys/<id>` now fails
-  `MODEL_IS_SERVER_ONLY` on **every** `--via` value. This is a **breaking change**: those reads
-  succeeded for a sysadmin before, by way of the model API bypassing the rules entirely.
+- **Model-level — reconciled.** `sys`, `nbn`, `nbnw`, `nbnle`, `nbnlep`, `prp` have no client read
+  grant in `firestore.rules`. They are tagged `@dbxModelServerOnly` with `serverOnly: true` on their
+  service configs, so `demo-cli get sys/<id>` now fails `MODEL_IS_SERVER_ONLY` on **every** `--via`
+  value. This is a **breaking change**: those reads succeeded for a sysadmin before, by way of the
+  model API bypassing the rules entirely.
+- **`orp` / `orpv` are readable by a system admin**, and are the counter-example. They are operational
+  configuration rather than plumbing, and an admin who can edit a prompt has to be able to read back
+  what they wrote — so the rules grant the read and neither model is tagged. Prefer
+  `demo-cli model openRouterPrompt read` over `get orp/<key>`: the prompt document holds only version
+  pointers, while the read resolves the version actually being served and reports whether it came from
+  the store or from a code definition.
+- **`orrt` is admin-readable, but `read`-only.** It is the execution record an operator reaches for
+  when a run fails. Both the rules and its role map grant `read` alone: the sweep owns every write
+  (claim, lease, state transition), so a client write would move a task out from under the sweep
+  executing it.
 - **Document-level — not reconciled.** `/gb` is `allow read: if resourceIsPublished()`, while
   `roleMapForModel` also grants the creator and admins read on an *unpublished* guestbook. So
   `demo-cli get gb/<unpublishedId> --via firestore` is correctly refused while `--via api` succeeds for

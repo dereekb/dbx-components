@@ -359,7 +359,8 @@ async function resolveDoctorAccessToken(input: ResolveDoctorAccessTokenInput): P
 
   if (entry?.accessToken && !isTokenExpired(entry)) {
     result = entry.accessToken;
-  } else if (entry?.refreshToken && env.clientId && env.clientSecret) {
+    // A public client refreshes with `client_id` alone, so the secret is not part of the guard.
+  } else if (entry?.refreshToken && env.clientId) {
     try {
       const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
       const refreshed = await refreshAccessToken({

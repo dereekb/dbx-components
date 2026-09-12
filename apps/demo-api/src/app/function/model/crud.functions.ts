@@ -31,6 +31,7 @@ import { userExternalConnectionUpdateDisconnect } from '../userexternalconnectio
 import { userExternalConnectionUpdateUnlink } from '../userexternalconnection/userexternalconnection.unlink';
 import { userExternalConnectionReadAuthorizeState } from '../userexternalconnection/userexternalconnection.read';
 import { userExternalConnectionCreate } from '../userexternalconnection/userexternalconnection.create';
+import { openRouterPromptRead } from '../openrouter/openrouterprompt.read';
 import { openRouterPromptUpdate } from '../openrouter/openrouterprompt.update';
 import { openRouterPromptQuery } from '../openrouter/openrouterprompt.query';
 import { openRouterPromptVersionCreate } from '../openrouter/openrouterpromptversion.create';
@@ -81,6 +82,9 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive
   }),
+  // A prompt's stored document holds only version POINTERS, so the read resolves: it follows the active
+  // version and the code-definition fallback to return what the app actually serves.
+  openRouterPrompt: openRouterPromptRead,
   userExternalConnection: onCallSpecifierHandler({
     authorizeState: userExternalConnectionReadAuthorizeState
   })

@@ -42,7 +42,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createOpenRouterPromptVersionParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
+import { createOpenRouterPromptVersionParamsType, readOpenRouterPromptParamsType, updateOpenRouterPromptParamsType, updateOpenRouterPromptVersionParamsType } from '@dereekb/openrouter/firebase';
 import {
   allPublishedGuestbookEntriesParamsType,
   createGuestbookParamsType,
@@ -63,7 +63,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.1.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.2.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -535,6 +535,39 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsTypeDescription:
       'Parameters for querying {@link OpenRouterPrompt}s.\n\nThe standard query operation rather than a bespoke list endpoint: it inherits `limit` and\n`cursorDocumentKey` pagination that every client and the callModel MCP already know how to drive,\nand returns the stored documents rather than a hand-maintained projection of them.',
     paramsFields: [{ name: 'state', typeText: 'Maybe<OpenRouterPromptState>', description: 'Restrict to one lifecycle state. Omit to page through every prompt.\n\nThe only filter axis, deliberately — see {@link openRouterPromptsWithStateQuery}.' }]
+  },
+  {
+    model: 'openRouterPrompt',
+    verb: 'read',
+    paramsTypeName: 'ReadOpenRouterPromptParams',
+    paramsValidator: readOpenRouterPromptParamsType,
+    resultTypeName: 'ReadOpenRouterPromptResult',
+    groupName: 'OpenRouterPrompt',
+    sourceFile: 'packages/openrouter/firebase/src/lib/openrouter.api.ts',
+    paramsTypeDescription: 'Parameters for reading an {@link OpenRouterPrompt} together with the version it serves.',
+    paramsFields: [{ name: 'version', typeText: 'Maybe<OpenRouterPromptVersionNumber>', description: 'The version to read. Omit to read the version an unpinned caller is served right now.' }],
+    resultTypeDescription:
+      'Result of reading a prompt.\n\nReturns the RESOLVED version rather than a stored document, because the stored document is not\nnecessarily what the app serves: a code {@link OpenRouterPromptDefinition} stands in when the store\ncannot serve, or is behind it. Reading the two documents by key would answer "what is stored", which\nis a different — and, when they disagree, misleading — question from "what will run".',
+    resultFields: [
+      { name: 'prompt', typeText: 'Maybe<OpenRouterPrompt>', description: 'The stored prompt document, or null when the prompt exists only as a code definition.\n\nNull here alongside a populated {@link resolved} is the never-seeded case, not an error.' },
+      {
+        name: 'resolved',
+        typeText: 'OpenRouterResolvedPrompt',
+        description: 'The version that will actually be served — instructions, seed messages, and model config.\n\nThis is the read the version model could not previously give back: a version could be written and\nnever read, so an author edited a prompt blind.'
+      },
+      {
+        name: 'source',
+        typeText: 'OpenRouterPromptResolutionSource',
+        description: 'Which half of the resolution won: the stored version, or the code definition standing in for it.\n\nThe one field that makes the precedence rule observable. A caller who published version 3 and is\nstill being served version 4 from code sees `definition` here rather than having to rederive why.'
+      },
+      { name: 'warnings', typeText: 'string[]', description: 'Config problems that do not stop the prompt from being served.\n\nSame warnings a create or update returns, reported here so a prompt that was published before a\nvalidation rule existed still surfaces them on read.' },
+      {
+        name: 'errors',
+        typeText: 'string[]',
+        description:
+          'Config problems that make {@link resolved} unusable.\n\nSeparate from {@link warnings}, and non-empty only in cases a create would have refused. A read\nstill returns rather than throwing on them: the resolver rejects an invalid config only when it is\nconfigured with `rejectInvalidConfig`, so such a version CAN be the live one — and showing the\ncaller the config that is breaking their calls is the entire point of the read.'
+      }
+    ]
   },
   {
     model: 'openRouterPrompt',
@@ -1443,7 +1476,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'lv', longName: 'latestVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'Highest version number allocated so far — the allocator for the next one.' },
       { name: 't', longName: 'tags', tsType: 'Maybe<string[]>', optional: true, description: 'Free-form tags for grouping.' }
     ],
-    serverOnly: true,
+    read: 'admin-only',
     serviceFactory: { exportName: 'openRouterPromptFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1467,7 +1500,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of whoever published it.' },
       { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' }
     ],
-    serverOnly: true,
+    read: 'admin-only',
     serviceFactory: { exportName: 'openRouterPromptVersionFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1502,7 +1535,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'msg', longName: 'messages', tsType: 'Maybe<OpenRouterInputMessage[]>', optional: true, description: 'Conversation history. This is what replaces `previous_response_id`, which OpenRouter rejects with a 400 — continuing a conversation means resending its history.' },
       { name: 'ptc', longName: 'pendingToolCalls', tsType: 'Maybe<OpenRouterRunTaskPendingToolCall[]>', optional: true, description: 'Tool calls awaiting a result from another process. Only populated for deferred-tool runs.' },
       { name: 'utr', longName: 'unsentToolResults', tsType: 'Maybe<OpenRouterRunTaskUnsentToolResult[]>', optional: true, description: 'Tool results recorded but not yet delivered to the model. Only populated for deferred-tool runs.' }
-    ]
+    ],
+    read: 'admin-only',
+    serviceFactory: { exportName: 'openRouterRunTaskFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'profile',

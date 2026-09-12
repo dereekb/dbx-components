@@ -16,7 +16,7 @@ import {
 } from '@dereekb/firebase';
 import { clearable } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterPromptVersionNumber } from '@dereekb/openrouter';
+import { type OpenRouterPromptResolutionSource, type OpenRouterPromptVersionNumber, type OpenRouterResolvedPrompt } from '@dereekb/openrouter';
 import { type OpenRouterPrompt, type OpenRouterPromptState, type OpenRouterPromptTypes } from './openrouter.model';
 
 // MARK: Update
@@ -216,6 +216,72 @@ export interface QueryOpenRouterPromptsParams extends OnCallQueryModelRequestPar
   readonly state?: Maybe<OpenRouterPromptState>;
 }
 
+// MARK: Read
+/**
+ * Parameters for reading an {@link OpenRouterPrompt} together with the version it serves.
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadOpenRouterPromptParams extends InferredTargetModelParams {
+  /**
+   * The version to read. Omit to read the version an unpinned caller is served right now.
+   */
+  readonly version?: Maybe<OpenRouterPromptVersionNumber>;
+}
+
+export const readOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
+  type({
+    'version?': 'number'
+  })
+) as Type<ReadOpenRouterPromptParams>;
+
+/**
+ * Result of reading a prompt.
+ *
+ * Returns the RESOLVED version rather than a stored document, because the stored document is not
+ * necessarily what the app serves: a code {@link OpenRouterPromptDefinition} stands in when the store
+ * cannot serve, or is behind it. Reading the two documents by key would answer "what is stored", which
+ * is a different — and, when they disagree, misleading — question from "what will run".
+ */
+export interface ReadOpenRouterPromptResult {
+  /**
+   * The stored prompt document, or null when the prompt exists only as a code definition.
+   *
+   * Null here alongside a populated {@link resolved} is the never-seeded case, not an error.
+   */
+  readonly prompt: Maybe<OpenRouterPrompt>;
+  /**
+   * The version that will actually be served — instructions, seed messages, and model config.
+   *
+   * This is the read the version model could not previously give back: a version could be written and
+   * never read, so an author edited a prompt blind.
+   */
+  readonly resolved: OpenRouterResolvedPrompt;
+  /**
+   * Which half of the resolution won: the stored version, or the code definition standing in for it.
+   *
+   * The one field that makes the precedence rule observable. A caller who published version 3 and is
+   * still being served version 4 from code sees `definition` here rather than having to rederive why.
+   */
+  readonly source: OpenRouterPromptResolutionSource;
+  /**
+   * Config problems that do not stop the prompt from being served.
+   *
+   * Same warnings a create or update returns, reported here so a prompt that was published before a
+   * validation rule existed still surfaces them on read.
+   */
+  readonly warnings: string[];
+  /**
+   * Config problems that make {@link resolved} unusable.
+   *
+   * Separate from {@link warnings}, and non-empty only in cases a create would have refused. A read
+   * still returns rather than throwing on them: the resolver rejects an invalid config only when it is
+   * configured with `rejectInvalidConfig`, so such a version CAN be the live one — and showing the
+   * caller the config that is breaking their calls is the entire point of the read.
+   */
+  readonly errors: string[];
+}
+
 // MARK: Run Task
 /**
  * Parameters for reading an {@link OpenRouterRunTask}.
@@ -252,14 +318,21 @@ export const OPENROUTER_PROMPT_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeCon
  * appears — rather than as a specifier on the parent's update. Its `update` edits the latest version
  * in place and refuses a locked one, so iterating on a prompt does not mint a version per keystroke.
  *
- * Neither model declares a `read`: both are registered model services, so a stored prompt or one of its
- * versions is already fetchable by key through model-get.
+ * The prompt declares a `read` on top of model-get, because model-get answers a different question: it
+ * returns the stored DOCUMENT, which holds only pointers (`av`, `lv`) and none of what the prompt says.
+ * Following it by hand means reading the version subcollection at a zero-padded id the caller has to
+ * construct, and still leaves the code-definition fallback invisible. The `read` returns what will
+ * actually be served, and says which half of the resolution produced it.
+ *
+ * The VERSION declares no `read`: it is a registered model service, so a specific stored version is
+ * already fetchable by key through model-get, and the prompt's `read` covers the "what is live" case.
  *
  * `OpenRouterRunTask` is absent on purpose. A run task is written and drained entirely server-side, and
  * its `msg` field carries raw model input and output.
  */
 export type OpenRouterPromptModelCrudFunctionsConfig = {
   readonly openRouterPrompt: {
+    read: [ReadOpenRouterPromptParams, ReadOpenRouterPromptResult];
     update: UpdateOpenRouterPromptParams;
     query: [QueryOpenRouterPromptsParams, OnCallQueryModelResult<OpenRouterPrompt>];
   };
@@ -270,7 +343,7 @@ export type OpenRouterPromptModelCrudFunctionsConfig = {
 };
 
 export const OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<OpenRouterPromptModelCrudFunctionsConfig, OpenRouterPromptTypes> = {
-  openRouterPrompt: ['update', 'query'],
+  openRouterPrompt: ['read', 'update', 'query'],
   openRouterPromptVersion: ['create', 'update']
 };
 
@@ -279,6 +352,7 @@ export const OPENROUTER_PROMPT_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFun
  */
 export abstract class OpenRouterPromptModelFunctions implements ModelFirebaseFunctionMap<OpenRouterPromptFunctionTypeMap, OpenRouterPromptModelCrudFunctionsConfig> {
   abstract openRouterPrompt: {
+    readOpenRouterPrompt: ModelFirebaseCrudFunction<ReadOpenRouterPromptParams, ReadOpenRouterPromptResult>;
     updateOpenRouterPrompt: ModelFirebaseCrudFunction<UpdateOpenRouterPromptParams>;
     queryOpenRouterPrompt: ModelFirebaseQueryFunction<QueryOpenRouterPromptsParams, OnCallQueryModelResult<OpenRouterPrompt>>;
   };

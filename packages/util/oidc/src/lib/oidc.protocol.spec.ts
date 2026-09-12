@@ -65,6 +65,30 @@ describe('exchangeAuthorizationCode()', () => {
     expect(bodyParams(calls[0].init).get('client_secret')).toBe('shh');
   });
 
+  it('treats an EMPTY client secret as a public client rather than a confidential one', async () => {
+    // The state a confidential client lands in once its secret is cleared. Sending `client_secret=`
+    // makes the provider fail client authentication, which reads as a bad credential rather than as
+    // the public-client request it is.
+    const { fetch, calls } = mockFetch([jsonResponse({ access_token: 'at' })]);
+
+    await exchangeAuthorizationCode({ tokenEndpoint: 'https://api.example.com/oidc/token', clientId: 'cid', clientSecret: '', redirectUri: 'https://app/cb', code: 'code', codeVerifier: 'verifier', fetch });
+
+    const params = bodyParams(calls[0].init);
+    expect(params.get('client_id')).toBe('cid');
+    expect(params.has('client_secret')).toBe(false);
+  });
+
+  it('sends no Basic header for an empty secret on a client_secret_basic client', async () => {
+    // `client_secret_basic` reads the credentials off the Authorization header, so an empty secret
+    // there would encode `cid:` — a well-formed header carrying no credential at all.
+    const { fetch, calls } = mockFetch([jsonResponse({ access_token: 'at' })]);
+
+    await exchangeAuthorizationCode({ tokenEndpoint: 'https://api.example.com/oidc/token', clientId: 'cid', clientSecret: '', clientAuth: 'client_secret_basic', redirectUri: 'https://app/cb', code: 'code', codeVerifier: 'verifier', fetch });
+
+    expect((calls[0].init?.headers as Record<string, string> | undefined)?.['Authorization']).toBeUndefined();
+    expect(bodyParams(calls[0].init).get('client_id')).toBe('cid');
+  });
+
   it('maps an invalid_grant error to TOKEN_INVALID_GRANT', async () => {
     const { fetch } = mockFetch([jsonResponse({ error: 'invalid_grant', error_description: 'bad code' }, 400)]);
     await expect(exchangeAuthorizationCode({ tokenEndpoint: 't', clientId: 'cid', redirectUri: 'r', code: 'c', codeVerifier: 'v', fetch })).rejects.toMatchObject({ code: 'TOKEN_INVALID_GRANT' });

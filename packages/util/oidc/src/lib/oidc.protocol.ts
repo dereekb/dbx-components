@@ -228,7 +228,11 @@ export async function fetchSessionInfo(input: FetchSessionInfoInput & OidcRelyin
  * @returns The Basic `Authorization` header value, or undefined.
  */
 function oidcClientAuthAuthorizationHeader(input: OidcClientAuthInput): Maybe<string> {
-  const useBasic = input.clientSecret != null && (input.clientAuth ?? DEFAULT_OIDC_CLIENT_AUTH_METHOD) === 'client_secret_basic';
+  // Truthiness rather than a null check, so an EMPTY secret reads as "no secret" — the same way
+  // `applyOidcClientAuthToParams` treats it. A `''` secret would otherwise build a Basic header
+  // carrying nothing after the colon, which a provider rejects as failed client authentication
+  // rather than as the public-client request it actually is.
+  const useBasic = Boolean(input.clientSecret) && (input.clientAuth ?? DEFAULT_OIDC_CLIENT_AUTH_METHOD) === 'client_secret_basic';
   return useBasic ? oidcClientSecretBasicAuthorizationHeader({ clientId: input.clientId, clientSecret: input.clientSecret as string }) : undefined;
 }
 

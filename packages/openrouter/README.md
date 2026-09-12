@@ -46,6 +46,79 @@ one run onto another's history.
 Short calls skip all of it: `callModelForPrompt(...)` runs inline and returns the result with no
 document.
 
+## Managing prompts
+
+There is deliberately no Angular UI for prompt authoring. Declaring the CRUD is what makes every prompt
+operation reachable over a consuming app's existing callModel surface — its CLI and the callModel MCP —
+instead of requiring a screen.
+
+| Operation | What it does |
+|---|---|
+| `openRouterPrompt.read` | The prompt plus **the version it actually serves**. |
+| `openRouterPrompt.query` | Page the collection, optionally filtered by lifecycle state. |
+| `openRouterPrompt.update` | Metadata, lifecycle state, and which version is active. |
+| `openRouterPromptVersion.create` | Publish a version. Allocates its number and locks the one it succeeds. |
+| `openRouterPromptVersion.update` | Edit the head version in place. Refuses a locked one. |
+
+A prompt has no `create`: it comes into existence server-side from a seed against an
+`OpenRouterPromptDefinition` the app already ships. Seeding is not CRUD either — exposing it would hand
+any admin a button that rewrites prompt pointers.
+
+**Prefer `read` over `model-get`.** Both models are registered model services, so either document is
+fetchable by key, but the prompt document holds only pointers (`av`, `lv`) and none of what the prompt
+says. Following them by hand means addressing the version subcollection at a zero-padded id, and still
+misses the definition fallback. `read` resolves, and reports `source: 'store' | 'definition'` so the
+precedence rule is observable rather than rederived:
+
+| Store state | Served | `source` |
+|---|---|---|
+| No prompt document | Code definition | `definition` |
+| Stored `activeVersion` **≥** the definition's declared version | Store | `store` |
+| Stored `activeVersion` **<** the definition's declared version | Code definition | `definition` |
+
+### Access
+
+Prompts are operational configuration, not secrets — nothing here is encrypted, and reads are
+**admin-only** rather than server-only. An admin who can edit a prompt has to be able to read back what
+they wrote, which is why neither model carries `@dbxModelServerOnly`: that tag is copied onto the
+generated CLI/MCP manifest, so a consuming app cannot override it, and the CLI would refuse the read
+locally before choosing a transport.
+
+A consuming app that wants these closed does so in the two places that actually refuse a read, and must
+do **both** — they mirror each other, and `dbx_model_server_only_validate_app` reports the drift when
+they disagree:
+
+1. omit the `orp` / `orpv` match blocks from `firestore.rules`, and
+2. set `serverOnly: true` on the model's `firebaseModelServiceFactory`.
+
+An app that leaves them open grants the read to system admins:
+
+```
+match /orp/{openRouterPrompt} {
+  allow read: if userClaimsIsSysAdmin();
+
+  match /orpv/{openRouterPromptVersion} {
+    allow read: if userClaimsIsSysAdmin();
+  }
+}
+
+// the model API addresses a version through the collection GROUP, which the nested match does not cover
+match /{path=**}/orpv/{openRouterPromptVersion} {
+  allow read: if userClaimsIsSysAdmin();
+}
+```
+
+`orrt` (`OpenRouterRunTask`) is readable by a system admin too — it is the execution record an operator
+reaches for when a run fails, and its `msg` field carrying the model's raw input and output is the
+reason to read it. It is granted `read` ALONE, on both transports: the sweep owns every write (claim,
+lease, state transition), so a client write would move a task out from under the sweep executing it.
+
+```
+match /orrt/{openRouterRunTask} {
+  allow read: if userClaimsIsSysAdmin();
+}
+```
+
 ## Files and PDFs
 
 There is no upload step. A run task stores the **GCS object path** (`fp`) and nothing else — never a

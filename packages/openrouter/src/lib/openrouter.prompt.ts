@@ -51,6 +51,18 @@ export interface OpenRouterResolvedPrompt {
 }
 
 /**
+ * Which half of a prompt resolution served it: the stored version, or the code definition standing in
+ * for it.
+ *
+ * `definition` is not an error state — it is the normal answer for an environment that has never been
+ * seeded, and for one whose {@link OpenRouterPromptDefinition} has moved ahead of the store.
+ *
+ * Lives here rather than beside the resolver in `@dereekb/openrouter/firebase-server` because the read
+ * API returns it, and that API is declared client-side.
+ */
+export type OpenRouterPromptResolutionSource = 'store' | 'definition';
+
+/**
  * A prompt defined in CODE rather than published to Firestore.
  *
  * This is the backup half of prompt resolution: an app ships its prompts as definitions, so a fresh

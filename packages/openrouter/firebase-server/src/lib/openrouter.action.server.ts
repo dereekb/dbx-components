@@ -11,11 +11,14 @@ import {
   OpenRouterPromptState,
   type OpenRouterPromptVersion,
   type OpenRouterPromptVersionDocument,
+  type ReadOpenRouterPromptParams,
+  type ReadOpenRouterPromptResult,
   type UpdateOpenRouterPromptParams,
   type UpdateOpenRouterPromptVersionParams,
   type UpdateOpenRouterPromptVersionResult,
   createOpenRouterPromptVersionParamsType,
   openRouterPromptVersionId,
+  readOpenRouterPromptParamsType,
   updateOpenRouterPromptParamsType,
   updateOpenRouterPromptVersionParamsType
 } from '@dereekb/openrouter/firebase';
@@ -112,12 +115,16 @@ export interface SeedOpenRouterPromptsResult {
 /**
  * Server actions for managing prompts.
  *
- * The writes exist instead of an Angular UI: they reach the model API, and the existing callModel MCP
- * surface makes them callable without building a screen for it. Reads are absent because the prompt and
- * version model services already make both fetchable by key through model-get, and listing is the
- * model API's standard query operation over {@link openRouterPromptsWithStateQuery}.
+ * These exist instead of an Angular UI: they reach the model API, and the existing callModel MCP
+ * surface makes them callable without building a screen for it.
+ *
+ * The one read is {@link readOpenRouterPrompt}, which answers "what does this prompt serve right now".
+ * Fetching either document by key is already covered by model-get, and listing by the model API's
+ * standard query over {@link openRouterPromptsWithStateQuery}, so the read earns its place only by
+ * resolving — following the version pointer and the code-definition fallback that model-get cannot.
  */
 export abstract class OpenRouterPromptServerActions {
+  abstract readOpenRouterPrompt(params: ReadOpenRouterPromptParams): Promise<(document: OpenRouterPromptDocument) => Promise<ReadOpenRouterPromptResult>>;
   abstract createOpenRouterPrompt(params: CreateOpenRouterPromptParams): Promise<OpenRouterPromptDocument>;
   abstract updateOpenRouterPrompt(params: UpdateOpenRouterPromptParams): Promise<(document: OpenRouterPromptDocument) => Promise<OpenRouterPromptDocument>>;
   abstract createOpenRouterPromptVersion(params: CreateOpenRouterPromptVersionParams): Promise<(document: OpenRouterPromptDocument) => Promise<CreateOpenRouterPromptVersionResult>>;
@@ -137,6 +144,7 @@ export abstract class OpenRouterPromptServerActions {
  */
 export function openRouterPromptServerActions(context: OpenRouterPromptServerActionsContext): OpenRouterPromptServerActions {
   return {
+    readOpenRouterPrompt: readOpenRouterPromptFactory(context),
     createOpenRouterPrompt: createOpenRouterPromptFactory(context),
     updateOpenRouterPrompt: updateOpenRouterPromptFactory(context),
     createOpenRouterPromptVersion: createOpenRouterPromptVersionFactory(context),
@@ -219,6 +227,47 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
 
       openRouterPromptService.clearCachedPrompt(document.id);
       return document;
+    };
+  });
+}
+
+/**
+ * Reads a prompt together with the version it actually serves.
+ *
+ * Goes through the prompt SERVICE rather than reading the two documents directly, so the answer is the
+ * one a dispatch would get — code definition included. Reading the documents here would reimplement the
+ * precedence rule in a second place, where it could drift from the resolver it is meant to describe.
+ *
+ * @param context - The actions context.
+ * @returns The read action.
+ */
+export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, openRouterPromptService } = context;
+
+  return firebaseServerActionTransformFunctionFactory(readOpenRouterPromptParamsType, async (params) => {
+    const { version } = params;
+
+    return async (document: OpenRouterPromptDocument) => {
+      const promptKey = document.id;
+
+      // Both halves come from the service: `loadPrompt` reads the store and returns null for a prompt
+      // that exists only in code, while `readPrompt` always answers with something servable or throws.
+      const [prompt, resolution] = await Promise.all([openRouterPromptService.loadPrompt(promptKey), openRouterPromptService.readPrompt({ promptKey, version })]);
+      const { resolved, source } = resolution;
+      const validation = validateOpenRouterModelConfig(resolved.config);
+
+      const result: ReadOpenRouterPromptResult = {
+        prompt: prompt ?? null,
+        resolved,
+        source,
+        // Both severities are reported rather than thrown. A create refuses an invalid config, but the
+        // resolver only refuses one when configured to, so an unusable config can already be live —
+        // and showing it is what the read is for.
+        warnings: validation.warnings,
+        errors: validation.errors
+      };
+
+      return result;
     };
   });
 }

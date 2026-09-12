@@ -89,10 +89,20 @@ export enum OpenRouterPromptState {
  * The prompt document holds only identity and version pointers; everything servable lives on an
  * {@link OpenRouterPromptVersion}.
  *
+ * NOT `@dbxModelServerOnly`, deliberately. The tag means "no client may read this on any path", which
+ * a downstream app cannot override: it is copied onto the generated CLI/MCP manifest, so the CLI
+ * refuses the read locally before it picks a transport. That is right for the models that carry it —
+ * system plumbing tagged `@dbxModelRead system` — but a prompt is `@dbxModelRead admin-only` operational
+ * configuration, and an admin reading the configuration they are allowed to edit is the normal case.
+ * Nothing here is encrypted; `serverOnly` is an access posture, not confidentiality at rest.
+ *
+ * Server-only-ness is a PER-APP property anyway, because it follows from that app's `firestore.rules`.
+ * An app that wants these closed still closes them, in the two places that actually refuse a read:
+ * omit the `orp` match block, and set `serverOnly: true` on its `firebaseModelServiceFactory`.
+ *
  * @dbxModel
- * @dbxModelRead admin
+ * @dbxModelRead admin-only
  * @dbxModelUpdate admin
- * @dbxModelServerOnly
  */
 export interface OpenRouterPrompt {
   /**
@@ -242,9 +252,13 @@ export interface OpenRouterPromptVersionMessage {
  * iterated on without minting a version per keystroke — which does mean a run against the head can be
  * replayed against text that has since moved. Lock it by creating the next version.
  *
+ * NOT `@dbxModelServerOnly`, for the reason given on {@link OpenRouterPrompt} — and more so here, since
+ * this is the model that holds what a prompt actually SAYS. Tagging it meant an author could write a
+ * version and never read back what they wrote.
+ *
  * @dbxModel
- * @dbxModelRead admin
- * @dbxModelServerOnly
+ * @dbxModelRead admin-only
+ * @dbxModelUpdate admin
  */
 export interface OpenRouterPromptVersion {
   /**
@@ -556,7 +570,7 @@ export interface OpenRouterRunTaskUnsentToolResult {
  * run reuses this document instead of queueing a duplicate.
  *
  * @dbxModel
- * @dbxModelRead admin
+ * @dbxModelRead admin-only
  * @dbxModelUpdate admin
  */
 export interface OpenRouterRunTask {

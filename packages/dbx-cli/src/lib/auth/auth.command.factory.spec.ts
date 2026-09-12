@@ -10,7 +10,10 @@ const h = vi.hoisted(() => ({
   sessionInfoMock: vi.fn(),
   outputResultMock: vi.fn(),
   outputErrorMock: vi.fn(),
-  resolveEnvMock: vi.fn()
+  resolveEnvMock: vi.fn(),
+  loadConfigMock: vi.fn(),
+  mergeConfigMock: vi.fn(),
+  promptLineMock: vi.fn()
 }));
 
 vi.mock('../config/token.cache', async (orig) => {
@@ -35,6 +38,13 @@ vi.mock('../util/output', async (orig) => {
 vi.mock('../config/env.resolve', () => ({
   resolveCliEnvOrThrow: h.resolveEnvMock
 }));
+
+vi.mock('../config/cli.config', async (orig) => {
+  const actual = (await orig()) as Record<string, unknown>;
+  return { ...actual, loadCliConfig: h.loadConfigMock, mergeCliConfig: h.mergeConfigMock };
+});
+
+vi.mock('../util/interactive', () => ({ promptLine: h.promptLineMock }));
 
 import { createAuthCommand } from './auth.command.factory';
 
@@ -71,6 +81,81 @@ function runStatus(): Promise<void> {
   const statusCommand = readAuthSubcommand('status');
   return (statusCommand.handler as (argv: unknown) => Promise<void>)({ _: ['auth', 'status'], env: 'prod' });
 }
+
+function runSetup(argv: Record<string, unknown>): Promise<void> {
+  const setupCommand = readAuthSubcommand('setup');
+  return (setupCommand.handler as (argv: unknown) => Promise<void>)({ _: ['auth', 'setup'], env: 'prod', ...argv });
+}
+
+/**
+ * Reads back the env `setup` persisted, so a test asserts what was written rather than what was printed.
+ */
+function savedEnv(): Record<string, unknown> {
+  return h.mergeConfigMock.mock.calls[0][0].updates.envs['prod'];
+}
+
+describe('createAuthCommand setup', () => {
+  beforeEach(() => {
+    h.loadConfigMock.mockReset();
+    h.mergeConfigMock.mockReset();
+    h.promptLineMock.mockReset();
+    h.outputResultMock.mockReset();
+    h.loadConfigMock.mockResolvedValue({ envs: {} });
+    h.mergeConfigMock.mockResolvedValue({ envs: {} });
+    // Any prompt that fires in these tests is a bug, so make one loud rather than silently empty.
+    h.promptLineMock.mockRejectedValue(new Error('unexpected interactive prompt'));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const BASE = { apiBaseUrl: 'http://x/api', oidcIssuer: 'http://x/oidc', clientId: 'id', redirectUri: 'urn:cb' };
+
+  it('should save a public client without prompting for a secret when the auth method is none', async () => {
+    await runSetup({ ...BASE, tokenEndpointAuthMethod: 'none' });
+
+    expect(h.promptLineMock).not.toHaveBeenCalled();
+    const env = savedEnv();
+    expect(env['clientSecret']).toBeUndefined();
+    expect(env['tokenEndpointAuthMethod']).toBe('none');
+  });
+
+  it('should drop a previously-stored secret once the client is declared public', async () => {
+    // The conversion a confidential client goes through, which is where a kept secret would start
+    // failing client authentication against a provider that now expects none.
+    h.loadConfigMock.mockResolvedValue({ envs: { prod: { ...BASE, clientSecret: 'stale' } } });
+
+    await runSetup({ tokenEndpointAuthMethod: 'none' });
+
+    expect(h.promptLineMock).not.toHaveBeenCalled();
+    expect(savedEnv()['clientSecret']).toBeUndefined();
+  });
+
+  it('should clear a stored secret when an explicitly empty flag is passed', async () => {
+    h.loadConfigMock.mockResolvedValue({ envs: { prod: { ...BASE, clientSecret: 'stale' } } });
+
+    await runSetup({ clientSecret: '' });
+
+    expect(savedEnv()['clientSecret']).toBeUndefined();
+  });
+
+  it('should keep a stored secret when the flag is absent', async () => {
+    h.loadConfigMock.mockResolvedValue({ envs: { prod: { ...BASE, clientSecret: 'kept' } } });
+
+    await runSetup({});
+
+    expect(savedEnv()['clientSecret']).toBe('kept');
+  });
+
+  it('should not require a client secret to complete setup', async () => {
+    // Previously threw AUTH_SETUP_INCOMPLETE, which made a public client unconfigurable.
+    await runSetup({ ...BASE, clientSecret: '' });
+
+    expect(h.outputErrorMock).not.toHaveBeenCalled();
+    expect(h.mergeConfigMock).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('createAuthCommand status', () => {
   beforeEach(() => {
