@@ -195,6 +195,6 @@ afterEach(async () => {
 });
 ```
 
-`createCliFirestoreSessionContext` reuses one Firebase app per `<cliName>-<envName>`, so its
-`Firestore` instance would otherwise outlive the fixture's per-test emulator reset and answer from a
-cache still holding the previous test's deleted documents.
+`createCliFirestoreSessionContext` registers one Firebase app per `<cliName>::<envName>::<uid>`, so
+its `Firestore` instance would otherwise outlive the fixture's per-test emulator reset and answer from
+a cache still holding the previous test's deleted documents.

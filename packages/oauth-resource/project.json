@@ -18,6 +18,9 @@
             "command": "npx nx run oauth-resource-express:build-base"
           },
           {
+            "command": "npx nx run oauth-resource-firebase:build-base"
+          },
+          {
             "description": "normalize + verify the ESM-only package shape",
             "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/oauth-resource"
           }
@@ -43,6 +46,10 @@
           {
             "description": "run oauth-resource-express tests",
             "command": "npx nx test oauth-resource-express"
+          },
+          {
+            "description": "run oauth-resource-firebase tests",
+            "command": "npx nx test oauth-resource-firebase"
           }
         ],
         "color": true,

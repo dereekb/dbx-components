@@ -44,8 +44,10 @@ describe('inspectCliFirestoreSdkIdentity()', () => {
     // the fact that would have settled the duplicated-SDK hypothesis without an investigation
     const report = inspectCliFirestoreSdkIdentity({ firestoreContext: healthyContext });
 
-    expect(report.sdkFromDbxCli.packageDir).toBeTruthy();
-    expect(report.sdkFromDbxCli.version).toBeTruthy();
+    // resolved through THIS package's `require`, not `@dereekb/oauth-resource/firebase`'s — the
+    // duplicated-SDK question is specifically about what `@dereekb/dbx-cli` sees
+    expect(report.sdkFromConsumer.packageDir).toBeTruthy();
+    expect(report.sdkFromConsumer.version).toBeTruthy();
     expect(report.firebaseVersion).toBeTruthy();
 
     // The second resolution goes through `@dereekb/firebase` AS A PACKAGE, which only exists in a
@@ -55,7 +57,7 @@ describe('inspectCliFirestoreSdkIdentity()', () => {
     if (report.sdkFromDbxFirebase.packageDir == null) {
       expect(report.sdkFromDbxFirebase.error).toBeTruthy();
     } else {
-      expect(report.sdkFromDbxFirebase.packageDir).toBe(report.sdkFromDbxCli.packageDir);
+      expect(report.sdkFromDbxFirebase.packageDir).toBe(report.sdkFromConsumer.packageDir);
     }
 
     // unprovable is not the same as duplicated — a failed resolution must never accuse
@@ -96,6 +98,12 @@ describe('inspectCliFirestoreSdkIdentity()', () => {
     expect(report.ok).toBe(false);
     expect(report.problem).toBe('unexpected-driver');
     expect(cliFirestoreSdkIdentitySuggestion(report)).toContain('clientFirebaseFirestoreContextFactory');
+  });
+
+  it('keeps the CLI-flavored remediation for the problems the CLI overrides', () => {
+    // the operator-facing text must survive the inspection core moving to @dereekb/oauth-resource/firebase
+    expect(cliFirestoreSdkIdentitySuggestion(inspectCliFirestoreSdkIdentity({}))).toContain('re-run with `--verbose`');
+    expect(cliFirestoreSdkIdentitySuggestion(inspectCliFirestoreSdkIdentity({ firestoreContext: { firestore: { notAFirestore: true } } }))).toContain('rebuild the CLI');
   });
 
   it('tolerates a context with no drivers at all', () => {

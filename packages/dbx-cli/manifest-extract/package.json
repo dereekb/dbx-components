@@ -9,8 +9,12 @@
     "@dereekb/firebase": "14.3.0",
     "@dereekb/model": "14.3.0",
     "@dereekb/nestjs": "14.3.0",
+    "@dereekb/oauth-resource": "14.3.0",
     "@dereekb/rxjs": "14.3.0",
     "@dereekb/util": "14.3.0",
     "ts-morph": "^28.0.0"
+  },
+  "devDependencies": {
+    "@dereekb/firebase": "14.3.0"
   }
 }

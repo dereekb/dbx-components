@@ -64,6 +64,7 @@
     "@dereekb/firebase": "14.3.0",
     "@dereekb/model": "14.3.0",
     "@dereekb/nestjs": "14.3.0",
+    "@dereekb/oauth-resource": "14.3.0",
     "@dereekb/util": "14.3.0",
     "@nestjs/common": "^12.0.1",
     "arktype": "^2.2.0",
@@ -77,6 +78,8 @@
   "devDependencies": {
     "@angular/core": "22.1.4",
     "@types/yargs": "^17.0.35",
-    "eslint": "10.9.1"
+    "@typescript-eslint/parser": "8.69.0",
+    "eslint": "10.9.1",
+    "firebase": "^12.18.0"
   }
 }

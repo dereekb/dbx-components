@@ -82,6 +82,7 @@
       "@dereekb/nestjs/eslint": ["./packages/nestjs/eslint/src/index.ts"],
       "@dereekb/oauth-resource": ["./packages/oauth-resource/src/index.ts"],
       "@dereekb/oauth-resource/express": ["./packages/oauth-resource/express/src/index.ts"],
+      "@dereekb/oauth-resource/firebase": ["./packages/oauth-resource/firebase/src/index.ts"],
       "@dereekb/openrouter": ["./packages/openrouter/src/index.ts"],
       "@dereekb/openrouter/firebase": ["./packages/openrouter/firebase/src/index.ts"],
       "@dereekb/openrouter/firebase-server": ["./packages/openrouter/firebase-server/src/index.ts"],

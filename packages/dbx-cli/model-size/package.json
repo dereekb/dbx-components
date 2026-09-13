@@ -10,6 +10,7 @@
   "peerDependencies": {
     "@dereekb/dbx-cli": "14.3.0",
     "@dereekb/firebase": "14.3.0",
+    "@dereekb/oauth-resource": "14.3.0",
     "@dereekb/util": "14.3.0"
   }
 }

@@ -62,10 +62,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   /**
    * Drops the Firebase client app the session opened.
    *
-   * Required between tests: `createCliFirestoreSessionContext` reuses a single app per
-   * `<cliName>-<envName>`, so its `Firestore` instance would outlive the fixture's per-test emulator
-   * reset and then answer queries from a cache still holding the previous test's (since-deleted)
-   * documents.
+   * Required between tests: `createCliFirestoreSessionContext` registers one app per
+   * `<cliName>::<envName>::<uid>`, so its `Firestore` instance would outlive the fixture's per-test
+   * emulator reset and then answer queries from a cache still holding the previous test's
+   * (since-deleted) documents.
    */
   afterEach(async () => {
     await Promise.all(getApps().map((app) => deleteApp(app)));
