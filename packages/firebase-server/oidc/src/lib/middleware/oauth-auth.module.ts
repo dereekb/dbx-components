@@ -1,3 +1,4 @@
+import { buildBearerChallenge as buildOAuthResourceBearerChallenge } from '@dereekb/oauth-resource';
 import { type INestApplication, Logger } from '@nestjs/common';
 import { type SlashPath, type Configurable } from '@dereekb/util';
 import { type Request, type Response, type NextFunction } from 'express';
@@ -59,19 +60,15 @@ export abstract class OidcAuthMiddlewareConfig {
  * included as the RFC 9728 `resource_metadata` hint so clients can locate the
  * discovery doc directly instead of relying on origin-rooted path-walkback.
  *
+ * Delegates to `@dereekb/oauth-resource`'s builder so the challenge an off-box resource server
+ * emits and the one this API emits are produced by the same code.
+ *
  * @param error - The RFC 6750 `error` token (e.g. `invalid_token`, `invalid_request`).
  * @param resourceMetadataUrl - Optional protected-resource metadata URL.
  * @returns Header value, e.g. `Bearer resource_metadata="…", error="invalid_token"`.
  */
 export function buildBearerChallenge(error: string, resourceMetadataUrl?: string): string {
-  const params: string[] = [];
-
-  if (resourceMetadataUrl) {
-    params.push(`resource_metadata="${resourceMetadataUrl}"`);
-  }
-
-  params.push(`error="${error}"`);
-  return `Bearer ${params.join(', ')}`;
+  return buildOAuthResourceBearerChallenge({ error, resourceMetadataUrl });
 }
 
 // MARK: Module

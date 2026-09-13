@@ -22,11 +22,13 @@ import { OidcProviderConfigService } from './oidc.config.service';
 import { adminOnlyScopesForOidcProviderConfig, DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA, oidcClientProviderProfileScopes } from '../profile';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
-import { cachedGetter, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { cachedGetter, filterKeysOnPOJOFunction, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
 import { buildOidcInteractionPolicy } from './oidc.interaction-policy';
 import { type DecodedIdToken } from 'firebase-admin/auth';
 import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
+import { verifyBearerJwt } from '@dereekb/oauth-resource';
+import { oidcProviderIssuerProfiles } from './oidc.jwt-verify';
 
 /**
  * Tier flags that select the server-max login-duration ceiling for a grant.
@@ -44,6 +46,15 @@ export interface ResolveLoginDurationTier {
   readonly hasServiceScope: boolean;
 }
 
+// MARK: JWT Access Tokens
+/**
+ * Claims a JWT access token carries that the {@link OidcAuthData} shape sets explicitly, and that
+ * are therefore NOT app account claims.
+ */
+export const OIDC_JWT_ACCESS_TOKEN_RESERVED_CLAIMS: readonly string[] = ['iss', 'sub', 'aud', 'exp', 'iat', 'nbf', 'jti', 'auth_time', 'uid', 'scope', 'client_id', 'firebase'];
+
+const filterReservedJwtAccessTokenClaims = filterKeysOnPOJOFunction<Record<string, unknown>>(OIDC_JWT_ACCESS_TOKEN_RESERVED_CLAIMS, true);
+
 // MARK: Service
 /**
  * Core OIDC service that wraps the oidc-provider instance and exposes
@@ -53,6 +64,7 @@ export interface ResolveLoginDurationTier {
 export class OidcService {
   private readonly _logger = new Logger(OidcService.name);
   private readonly _getProvider = cachedGetter(() => this._buildProvider());
+  private readonly _getIssuerProfiles = cachedGetter(() => oidcProviderIssuerProfiles(this.config, this.jwksService));
 
   // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
@@ -117,12 +129,25 @@ export class OidcService {
 
   // MARK: Token Verification
   /**
-   * Verifies an opaque access token and returns the {@link OidcAuthData}.
+   * Verifies an access token and returns the {@link OidcAuthData}.
    *
-   * Uses the provider's `AccessToken` model to look up the token and extract
-   * the account ID, scope, and client ID.
+   * Two formats are accepted, because oidc-provider issues two:
    *
-   * @param rawToken - The opaque access token string.
+   * - **opaque** (the default) — a database key. Looked up through the provider's `AccessToken`
+   *   model, which reads the Firestore adapter record written at issuance.
+   * - **JWT** (a resource server registered with `accessTokenFormat: 'jwt'`) — verified by
+   *   signature against this provider's own JWKS via `@dereekb/oauth-resource`. A JWT access token
+   *   is deliberately NOT persisted by oidc-provider (`lib/models/formats/jwt.js` returns no
+   *   payload, so `base_model.js` skips the `adapter.upsert`), which means `AccessToken.find()`
+   *   always misses for one and the store lookup alone would 401 every token the provider just
+   *   issued.
+   *
+   * The same absence of an adapter record is why a JWT access token **cannot be revoked before
+   * `exp`**: {@link revokeGrant} deletes the Grant and every persisted token referencing it, which
+   * stops refresh and future issuance, but an outstanding JWT stays verifiable until it expires.
+   * Keep `accessTokenTTL` short on any resource server that opts into the JWT format.
+   *
+   * @param rawToken - The access token string, opaque or JWT.
    * @returns The auth context, or `undefined` if the token is invalid or expired.
    */
   async verifyAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
@@ -170,6 +195,69 @@ export class OidcService {
           ...accountClaims
         }
       };
+    } else {
+      result = await this._verifyJwtAccessToken(rawToken);
+    }
+
+    return result;
+  }
+
+  /**
+   * Verifies a JWT-format access token issued by THIS provider for one of its registered resource
+   * servers, and builds the same {@link OidcAuthData} shape the opaque path produces.
+   *
+   * `sub` is the `accountId` oidc-provider stamped at issuance, which IS the Firebase uid (the
+   * opaque path reads the identical value off `accessToken.accountId`), so no mapping table is
+   * involved.
+   *
+   * @param rawToken - The raw token, which may not be a JWT at all.
+   * @returns The auth context, or `undefined` when the token is not a verifiable JWT from this provider.
+   */
+  private async _verifyJwtAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
+    let result: OidcAuthData | undefined;
+
+    try {
+      const verified = await verifyBearerJwt(rawToken, { profiles: this._getIssuerProfiles() });
+      const { claims } = verified;
+      const scope = typeof claims['scope'] === 'string' ? (claims['scope'] as string) : undefined;
+      const clientId = typeof claims['client_id'] === 'string' ? (claims['client_id'] as OidcEntryClientId) : undefined;
+      // Account claims baked into the token at issuance time via extraAccessTokenClaims, minus the
+      // standard JWT + OAuth claims the shape below sets explicitly.
+      const accountClaims = filterReservedJwtAccessTokenClaims({ ...claims });
+
+      const token: DecodedIdToken = {
+        ...accountClaims,
+        // `aud` is always present — jose rejected the token otherwise
+        aud: firstValue(claims.aud) as string,
+        iss: this.config.issuer,
+        sub: verified.subject,
+        iat: claims.iat as number,
+        exp: claims.exp as number,
+        auth_time: claims.iat as number,
+        uid: verified.subject,
+        ...(scope == null ? {} : { scope }),
+        ...(clientId == null ? {} : { client_id: clientId }),
+        firebase: {
+          identities: {},
+          sign_in_provider: 'dbx_oidc'
+        }
+      };
+
+      result = {
+        uid: verified.subject,
+        token,
+        rawToken,
+        oidcValidatedToken: {
+          sub: verified.subject,
+          scope,
+          client_id: clientId,
+          ...accountClaims
+        }
+      };
+    } catch (e) {
+      // Not a verifiable JWT from this provider — indistinguishable from an unknown opaque token,
+      // so report it the same way and let the caller emit the 401.
+      this._logger.debug(`verifyAccessToken: token is neither a known opaque token nor a verifiable JWT (${(e as Error).message}).`);
     }
 
     return result;

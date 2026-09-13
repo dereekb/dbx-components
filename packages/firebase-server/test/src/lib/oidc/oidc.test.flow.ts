@@ -57,6 +57,20 @@ export interface OAuthTestFlowConfig {
    * to consent (or straight to the callback when nothing new needs consenting and `prompt` is unset).
    */
   readonly session?: OAuthTestFlowSession;
+  /**
+   * RFC 8707 `resource` indicator, sent on both `/oidc/auth` and `/oidc/token`.
+   *
+   * Must match a key registered on the provider's `resourceServers` config. The issued access
+   * token then carries that entry's `audience` and — when the entry sets
+   * `accessTokenFormat: 'jwt'` — is an RS256 JWT a remote resource server can verify against the
+   * provider's JWKS, rather than the default opaque token only the provider itself can validate.
+   */
+  readonly resource?: string;
+  /**
+   * Extra query parameters merged onto the `/oidc/auth` request, for parameters this config does
+   * not model explicitly.
+   */
+  readonly extraAuthParams?: Record<string, string | number>;
 }
 
 /**
@@ -88,6 +102,10 @@ export interface OAuthTestFlowCookieJar {
 export interface PerformFullOAuthFlowResult {
   readonly accessToken: string;
   readonly idToken: string;
+  /**
+   * The `token_type` the token endpoint reported for the access token.
+   */
+  readonly tokenType?: string;
   /**
    * The space-separated scope the token endpoint reported for the access token.
    */
@@ -300,7 +318,9 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
       code_challenge_method: 'S256',
       state: 'test-state',
       nonce: 'test-nonce',
-      ...(config?.prompt == null ? {} : { prompt: config.prompt })
+      ...(config?.prompt == null ? {} : { prompt: config.prompt }),
+      ...(config?.resource == null ? {} : { resource: config.resource }),
+      ...config?.extraAuthParams
     })
     .redirects(0);
 
@@ -342,14 +362,19 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
   const authorizationCode = callbackUrl.searchParams.get('code')!;
 
   // 8. Exchange authorization code for tokens
-  const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader()).type('form').send({
-    grant_type: 'authorization_code',
-    code: authorizationCode,
-    redirect_uri: redirectUri,
-    client_id,
-    client_secret,
-    code_verifier: codeVerifier
-  });
+  const tokenRes = await request(server)
+    .post('/oidc/token')
+    .set('Cookie', cookieHeader())
+    .type('form')
+    .send({
+      grant_type: 'authorization_code',
+      code: authorizationCode,
+      redirect_uri: redirectUri,
+      client_id,
+      client_secret,
+      code_verifier: codeVerifier,
+      ...(config?.resource == null ? {} : { resource: config.resource })
+    });
 
   if (!tokenRes.body.access_token) {
     throw new Error(`OAuth token exchange failed (status ${tokenRes.status}): ${JSON.stringify(tokenRes.body)}`);
@@ -358,6 +383,7 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
   return {
     accessToken: tokenRes.body.access_token,
     idToken: tokenRes.body.id_token,
+    tokenType: tokenRes.body.token_type,
     scope: tokenRes.body.scope,
     session: { client, cookieJar }
   };

@@ -3,5 +3,6 @@ export * from './model';
 export * from './oidc.config';
 export * from './controller';
 export * from './oidc.module';
+export * from './oidc.resource-server';
 export * from './profile';
 export * from './service';
