@@ -76,6 +76,15 @@ export interface SaveCliConfigInput extends LoadCliConfigInput {
 }
 
 /**
+ * File mode `config.json` is written with.
+ *
+ * Owner-only, matching `.tokens.json`: the config holds `clientSecret` for a confidential client,
+ * which is every bit as sensitive as a cached token. It previously inherited the umask (0644 in the
+ * usual case), leaving a real credential world-readable on a shared machine.
+ */
+export const CLI_CONFIG_FILE_MODE = 0o600;
+
+/**
  * Writes the full {@link CliConfig} to disk, creating the parent directory if needed.
  *
  * @param input - The save inputs.
@@ -85,7 +94,7 @@ export interface SaveCliConfigInput extends LoadCliConfigInput {
  * @returns Resolves once the file has been written.
  */
 export function saveCliConfig(input: SaveCliConfigInput): Promise<void> {
-  return writeJsonFile({ filePath: input.configFilePath, dirPath: input.configDir, data: input.config });
+  return writeJsonFile({ filePath: input.configFilePath, dirPath: input.configDir, data: input.config, mode: CLI_CONFIG_FILE_MODE });
 }
 
 export interface MergeCliConfigInput extends Omit<SaveCliConfigInput, 'config'> {

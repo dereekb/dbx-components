@@ -57,7 +57,17 @@ export type CliSecretPattern = RegExp;
  * Apps can extend this list via {@link configureCliSecretPatterns} to add provider-specific patterns
  * (e.g. Zoho's `1000.<32-char>` token shape).
  */
-export const DEFAULT_CLI_SECRET_PATTERNS: CliSecretPattern[] = [/Bearer\s+\S+/gi, /access_token[=:]\s*\S+/gi, /refresh_token[=:]\s*\S+/gi, /client_secret[=:]\s*\S+/gi, /id_token[=:]\s*\S+/gi];
+export const DEFAULT_CLI_SECRET_PATTERNS: CliSecretPattern[] = [
+  /Bearer\s+\S+/gi,
+  /access_token[=:]\s*\S+/gi,
+  /refresh_token[=:]\s*\S+/gi,
+  /client_secret[=:]\s*\S+/gi,
+  /id_token[=:]\s*\S+/gi,
+  // `auth handoff` posts `{"code": "<claim code>"}` and reads it from <PREFIX>_CLI_HANDOFF — a live
+  // pointer at a refresh token, so `--verbose` tracing must never echo either form.
+  /cli_handoff[=:]\s*\S+/gi,
+  /"code"\s*:\s*"[^"]+"/gi
+];
 
 /**
  * Optional mapper for converting consumer-specific exception types into a {@link CliErrorOutput} envelope.

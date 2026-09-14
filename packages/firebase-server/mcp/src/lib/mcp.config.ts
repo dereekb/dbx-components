@@ -279,3 +279,68 @@ export type McpModelRolesTargetUidPredicate = (auth: Maybe<FirebaseServerAuthDat
  * NestJS injection token for the optional {@link McpModelRolesTargetUidPredicate} provider.
  */
 export const MCP_MODEL_ROLES_TARGET_UID_PREDICATE = 'MCP_MODEL_ROLES_TARGET_UID_PREDICATE';
+
+// MARK: CLI Token Minter
+/**
+ * Input handed to an {@link McpCliTokenMinter}.
+ */
+export interface McpCliTokenMintInput {
+  /**
+   * The calling request's auth data — the identity the minted credential belongs to.
+   */
+  readonly auth: Maybe<FirebaseServerAuthData>;
+  /**
+   * An optional subset of the caller's own scopes to grant. May only narrow.
+   */
+  readonly scopes?: Maybe<readonly string[]>;
+  /**
+   * An optional requested lifetime in seconds, clamped by the minter.
+   */
+  readonly ttlSeconds?: Maybe<number>;
+  /**
+   * When true, ask the minter to also produce a signed, self-authenticating download URL for the
+   * CLI binary so a bare machine can fetch it before redeeming the claim code.
+   */
+  readonly includeDownloadUrl?: boolean;
+}
+
+/**
+ * What an {@link McpCliTokenMinter} returns. Carries the one-time claim code and NEVER the refresh
+ * token — the tool's output reaches an MCP transcript, and a refresh token must not.
+ */
+export interface McpCliTokenMintResult {
+  readonly claimCode: string;
+  readonly claimExpiresAt: string;
+  readonly expiresAt: string;
+  readonly scope: string;
+  /**
+   * The CLI's binary name, used to render the exact `<cli> auth handoff <code>` command.
+   */
+  readonly cliName?: string;
+  /**
+   * A signed download URL for the CLI binary, when one was requested and the app wired the
+   * download path.
+   */
+  readonly downloadUrl?: string;
+  /**
+   * SHA-256 of the artifact behind {@link downloadUrl}, so the caller can verify what it fetched.
+   */
+  readonly downloadSha256?: string;
+}
+
+/**
+ * Signature for the optional app-supplied CLI credential minter behind the `cli-token` MCP tool.
+ *
+ * Minting needs `OidcService.getProvider()`, which lives in `@dereekb/firebase-server/oidc`. Routing
+ * it through an app-supplied injection token — the same shape as
+ * {@link McpModelRolesTargetUidPredicate} — keeps `@dereekb/firebase-server/mcp` app-agnostic and
+ * free of a dependency on the oidc package.
+ *
+ * When no minter is provided the `cli-token` tool is not registered at all.
+ */
+export type McpCliTokenMinter = (input: McpCliTokenMintInput) => PromiseOrValue<McpCliTokenMintResult>;
+
+/**
+ * NestJS injection token for the optional {@link McpCliTokenMinter} provider.
+ */
+export const MCP_CLI_TOKEN_MINTER = 'MCP_CLI_TOKEN_MINTER';

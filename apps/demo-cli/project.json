@@ -81,6 +81,14 @@
         "production": {
           "minify": true,
           "sourcemap": false
+        },
+        "standalone": {
+          "//": "The single self-contained artifact shipped through the API's signed asset-download path. `thirdParty: true` is what makes it runnable outside the workspace - the default build leaves yargs/rxjs/firebase/date-fns as bare imports against a `private: true` package.json full of peerDependencies, so downloading that file alone gets you a CLI that cannot start. The externals below are oxfmt's OPTIONAL prettier plugins (Astro/Twig/Pug/Liquid/Marko/...), reached only through lazy import() for languages this CLI never formats; they are not installed, so bundling them is a hard resolve error. oxfmt itself is reached only by the codegen scan-helpers, never by a CLI command.",
+          "minify": true,
+          "sourcemap": false,
+          "thirdParty": true,
+          "outputPath": "dist/apps/demo-cli-standalone",
+          "external": ["class-validator", "class-transformer", "@prettier/plugin-oxc", "@prettier/plugin-hermes", "@prettier/plugin-pug", "prettier-plugin-astro", "prettier-plugin-marko", "@zackad/prettier-plugin-twig", "@shopify/prettier-plugin-liquid"]
         }
       }
     },

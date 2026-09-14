@@ -323,6 +323,15 @@ export interface BuildStaticToolDefinitionInput {
    * Declarative visibility rule checked per request. Defaults to `{}` (always visible) when omitted.
    */
   readonly rule?: McpVisibilityRule;
+  /**
+   * OIDC scope TERMS an OIDC caller must satisfy to see AND to invoke this tool, evaluated by the
+   * same `oidcScopeTermsSatisfied` path the generated callModel tools use.
+   *
+   * Generated tools derive their terms from the dispatch call type; a built-in tool has no model
+   * verb to derive from, so a privileged one declares its own here (e.g. the CLI-token mint gates on
+   * `token.cli`). Omitted ⇒ no scope requirement, which is right for every read-only built-in.
+   */
+  readonly requiredScopeTerms?: readonly OidcScopeTerm[];
 }
 
 /**
@@ -341,7 +350,7 @@ export interface BuildStaticToolDefinitionInput {
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput): McpToolDefinition {
-  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule } = input;
+  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule, requiredScopeTerms } = input;
   const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
   const description = applyWriteMarker(input.description, annotations);
 
@@ -353,7 +362,7 @@ export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput)
     annotations,
     dispatch,
     staticHandler,
-    filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly },
+    filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly, ...(requiredScopeTerms == null ? undefined : { requiredScopeTerms }) },
     staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations })
   };
 }

@@ -223,6 +223,40 @@ export const FIRESTORE_SESSION_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<F
   description: 'Admin-only: connect directly to Firestore as you, through security rules'
 };
 
+// MARK: CLI Token Scope
+/**
+ * Custom OIDC scope that lets a session mint ONE short-lived CLI login credential for itself — a
+ * refresh token bound to the app's CLI OAuth client, carrying no more privilege than the session
+ * that minted it and capped at one hour.
+ *
+ * Exists so an agent already holding a valid, admin-scoped MCP session can bring a
+ * `@dereekb/dbx-cli`-based CLI up unattended, instead of a human running `auth login` through a
+ * browser by hand. The mint is the direct analogue of `session.firestore`, which trades the same
+ * session for a short-lived *Firebase* credential; this one trades it for a short-lived *OAuth* one.
+ *
+ * This scope is privileged and is expected to be gated by an `adminOnly` {@link OidcProviderProfile}
+ * rather than by `OidcProviderConfig.adminOnlyScopes` — the latter also selects the widened
+ * service-token TTL tier, which a one-hour handoff credential must never trigger. A profile gives
+ * the same admin gate at consent plus a per-client assignment gate, with no TTL widening.
+ *
+ * Scope-gating alone is NOT a sufficient gate: `oidcScopesFromScopeClaim` returns `undefined` for a
+ * non-OIDC caller (a plain Firebase ID token) and every enforcement site treats `undefined` as
+ * "skip". The endpoint's admin predicate is the load-bearing check; this scope is defence in depth.
+ */
+export const CLI_TOKEN_OIDC_SCOPE = 'token.cli' as const;
+
+export type CliTokenOidcScope = typeof CLI_TOKEN_OIDC_SCOPE;
+
+/**
+ * Pre-built scope picker entry for {@link CLI_TOKEN_OIDC_SCOPE}. Labeled as an admin-only scope so
+ * consent screens and admin pickers signal that it is restricted to privileged users.
+ */
+export const CLI_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<CliTokenOidcScope> = {
+  label: 'CLI handoff (admin)',
+  value: CLI_TOKEN_OIDC_SCOPE,
+  description: 'Admin-only: mint a short-lived CLI login credential from this session'
+};
+
 // MARK: Scope Terms (callModel AND-of-ORs enforcement)
 /**
  * A single requirement TERM in the callModel OIDC scope model.

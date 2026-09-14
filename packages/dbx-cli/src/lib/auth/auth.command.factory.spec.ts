@@ -13,7 +13,8 @@ const h = vi.hoisted(() => ({
   resolveEnvMock: vi.fn(),
   loadConfigMock: vi.fn(),
   mergeConfigMock: vi.fn(),
-  promptLineMock: vi.fn()
+  promptLineMock: vi.fn(),
+  claimHandoffMock: vi.fn()
 }));
 
 vi.mock('../config/token.cache', async (orig) => {
@@ -45,6 +46,8 @@ vi.mock('../config/cli.config', async (orig) => {
 });
 
 vi.mock('../util/interactive', () => ({ promptLine: h.promptLineMock }));
+
+vi.mock('./cli-handoff.client', () => ({ claimCliHandoff: h.claimHandoffMock }));
 
 import { createAuthCommand } from './auth.command.factory';
 
@@ -242,5 +245,138 @@ describe('createAuthCommand status', () => {
       expect(result.authenticated).toBe(false);
       expect(result.suggestion).toContain('auth login');
     });
+  });
+});
+
+// MARK: handoff
+const HANDOFF_EXPIRES_AT = '2100-01-01T00:00:00.000Z';
+
+function runHandoff(argv: Record<string, unknown> = {}): Promise<void> {
+  const handoffCommand = readAuthSubcommand('handoff [code]');
+  return (handoffCommand.handler as (argv: unknown) => Promise<void>)({ _: ['auth', 'handoff'], env: 'prod', code: 'CLAIM-CODE', ...argv });
+}
+
+function handoffBundle(overrides: Record<string, unknown> = {}) {
+  return {
+    uid: 'uid-1',
+    issuer: 'http://x/oidc',
+    apiBaseUrl: 'http://x/api',
+    clientId: 'cli-client',
+    refreshToken: 'refresh-token-value',
+    scope: 'openid demo offline_access',
+    expiresAt: HANDOFF_EXPIRES_AT,
+    ...overrides
+  };
+}
+
+/**
+ * Drives `handoff` expecting it to FAIL, and returns the error `wrapCommandHandler` reported.
+ *
+ * A thrown `CliError` never escapes the handler — the wrapper converts it into an `outputError`
+ * call followed by `process.exit`, so the failure has to be asserted on what was reported rather
+ * than on a rejection. `process.exit` is stubbed for the duration or the vitest worker goes down
+ * with it (the same guard `cache.command.factory.spec.ts` uses).
+ */
+async function runHandoffExpectingError(argv: Record<string, unknown> = {}): Promise<any> {
+  const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
+    throw new Error(`process.exit:${code ?? 0}`);
+  }) as never);
+
+  try {
+    await expect(runHandoff(argv)).rejects.toThrow('process.exit:1');
+  } finally {
+    exitSpy.mockRestore();
+  }
+
+  return h.outputErrorMock.mock.calls[0]?.[0];
+}
+
+describe('createAuthCommand handoff', () => {
+  beforeEach(() => {
+    h.loadConfigMock.mockReset();
+    h.mergeConfigMock.mockReset();
+    h.setMock.mockReset();
+    h.outputResultMock.mockReset();
+    h.outputErrorMock.mockReset();
+    h.claimHandoffMock.mockReset();
+    h.promptLineMock.mockRejectedValue(new Error('unexpected interactive prompt'));
+    h.loadConfigMock.mockResolvedValue({ envs: {} });
+    h.mergeConfigMock.mockResolvedValue({ envs: {}, activeEnv: 'prod' });
+    h.claimHandoffMock.mockResolvedValue(handoffBundle());
+    delete process.env['DEMO_CLI_CLI_HANDOFF'];
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env['DEMO_CLI_CLI_HANDOFF'];
+  });
+
+  it('bootstraps an env that does not exist yet from the bundle alone', async () => {
+    await runHandoff({ oidcIssuer: 'http://x/oidc' });
+
+    const saved = h.mergeConfigMock.mock.calls[0][0].updates.envs['prod'];
+    expect(saved).toMatchObject({ apiBaseUrl: 'http://x/api', oidcIssuer: 'http://x/oidc', clientId: 'cli-client', scopes: 'openid demo offline_access' });
+    expect(saved.redirectUri).toBeDefined();
+  });
+
+  it('persists a token entry with expiresAt 0 and no fromEnv flag', async () => {
+    await runHandoff({ oidcIssuer: 'http://x/oidc' });
+
+    const [envName, entry] = h.setMock.mock.calls[0];
+    expect(envName).toBe('prod');
+    // expiresAt 0 forces a refresh on first use — the readEnvTokenEntry convention
+    expect(entry.expiresAt).toBe(0);
+    expect(entry.accessToken).toBe('');
+    expect(entry.refreshToken).toBe('refresh-token-value');
+    expect(entry.scope).toBe('openid demo offline_access');
+    // NOT fromEnv: a public PKCE client rotates its refresh token, and a rotation that is not
+    // written back trips oidc-provider's reuse detection and kills the grant
+    expect(entry.fromEnv).toBeUndefined();
+    expect(entry.sessionExpiresAt).toBe(Math.floor(new Date(HANDOFF_EXPIRES_AT).getTime() / 1000));
+  });
+
+  it('uses the stored env\u2019s issuer when no flag is passed', async () => {
+    h.loadConfigMock.mockResolvedValue({ envs: { prod: { ...COMPLETE_ENV } } });
+
+    await runHandoff();
+
+    expect(h.claimHandoffMock).toHaveBeenCalledWith({ oidcIssuer: 'http://x/oidc', code: 'CLAIM-CODE' });
+  });
+
+  it('reads the code from the env var when no positional is given', async () => {
+    process.env['DEMO_CLI_CLI_HANDOFF'] = 'FROM-ENV';
+
+    await runHandoff({ code: undefined, oidcIssuer: 'http://x/oidc' });
+
+    expect(h.claimHandoffMock).toHaveBeenCalledWith({ oidcIssuer: 'http://x/oidc', code: 'FROM-ENV' });
+  });
+
+  it('fails when no code is supplied by any route', async () => {
+    const error = await runHandoffExpectingError({ code: undefined, oidcIssuer: 'http://x/oidc' });
+
+    expect(error).toMatchObject({ code: 'AUTH_HANDOFF_NO_CODE' });
+    expect(h.setMock).not.toHaveBeenCalled();
+  });
+
+  it('fails when no issuer can be resolved', async () => {
+    const error = await runHandoffExpectingError();
+
+    expect(error).toMatchObject({ code: 'AUTH_HANDOFF_NO_ISSUER' });
+    expect(h.claimHandoffMock).not.toHaveBeenCalled();
+  });
+
+  it('fails when the bundle carries no apiBaseUrl and the env has none', async () => {
+    h.claimHandoffMock.mockResolvedValue(handoffBundle({ apiBaseUrl: undefined }));
+
+    const error = await runHandoffExpectingError({ oidcIssuer: 'http://x/oidc' });
+
+    expect(error).toMatchObject({ code: 'AUTH_HANDOFF_NO_API_BASE_URL' });
+    expect(h.setMock).not.toHaveBeenCalled();
+  });
+
+  it('never prints the raw refresh token', async () => {
+    await runHandoff({ oidcIssuer: 'http://x/oidc' });
+
+    expect(JSON.stringify(h.outputResultMock.mock.calls[0][0])).not.toContain('refresh-token-value');
   });
 });

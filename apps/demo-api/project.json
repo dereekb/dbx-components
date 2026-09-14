@@ -4,7 +4,8 @@
   "sourceRoot": "apps/demo-api/src",
   "projectType": "application",
   "tags": [],
-  "implicitDependencies": ["!util-test"],
+  "//implicitDependencies": "demo-cli is a real dependency, not just a task-graph edge: the API SHIPS the CLI binary inside its dist (assets/secure), so `nx affected` must rebuild and redeploy the API whenever the CLI changes. A build.dependsOn edge alone would not do that.",
+  "implicitDependencies": ["!util-test", "demo-cli"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -15,8 +16,13 @@
           {
             "description": "build api",
             "command": "npx nx run demo-api:build-base"
+          },
+          {
+            "description": "copy the standalone CLI into the API's secure assets folder",
+            "command": "npx nx run demo-api:copy-cli-artifact"
           }
         ],
+        "parallel": false,
         "color": true
       },
       "configurations": {
@@ -25,9 +31,29 @@
             {
               "description": "build api (production)",
               "command": "npx nx run demo-api:build-base:production"
+            },
+            {
+              "description": "copy the standalone CLI into the API's secure assets folder",
+              "command": "npx nx run demo-api:copy-cli-artifact"
             }
           ]
         }
+      }
+    },
+    "copy-cli-artifact": {
+      "//": "Runs AFTER build-base, never as a build.dependsOn: build-base's own asset copy writes into dist/apps/demo-api/assets and would clobber the CLI if this ran first. build-base's deleteOutputPath:false is what keeps esbuild from wiping the folder at all - load-bearing here exactly as it is for the manifests. This is NOT an `assets` entry on build-base because @nx/esbuild's copyAssets applies the workspace .gitignore, whose /dist line silently makes a dist-rooted asset input copy nothing.",
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/assets/secure"],
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "parallel": false,
+        "commands": [
+          "npx nx run demo-cli:build:standalone",
+          "mkdir -p dist/apps/demo-api/assets/secure",
+          "cp dist/apps/demo-cli-standalone/index.js dist/apps/demo-api/assets/secure/demo-cli",
+          "chmod +x dist/apps/demo-api/assets/secure/demo-cli",
+          "node -e \"const {createHash}=require('node:crypto'),fs=require('node:fs');const p='dist/apps/demo-api/assets/secure/demo-cli';fs.writeFileSync(p+'.sha256',createHash('sha256').update(fs.readFileSync(p)).digest('hex')+'  demo-cli\\n');\""
+        ]
       }
     },
     "generate-mcp-manifest": {
@@ -161,6 +187,10 @@
         "commands": [
           {
             "command": "npx nx run demo-api:build-base:production"
+          },
+          {
+            "//": "ci-deploy calls build-base directly and bypasses `build` entirely, so it runs none of build's commands or dependsOn targets - the CLI copy has to be repeated here or the deployed function ships without it.",
+            "command": "npx nx run demo-api:copy-cli-artifact"
           },
           {
             "command": "npx nx make-env demo-api --skip-nx-cache"

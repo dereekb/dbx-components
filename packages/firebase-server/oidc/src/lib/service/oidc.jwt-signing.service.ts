@@ -1,9 +1,10 @@
 import { type Maybe, type Milliseconds, type Seconds } from '@dereekb/util';
 import { Inject, Injectable } from '@nestjs/common';
-import { type JWK, type KeyInput, SignJWT, importJWK } from 'jose';
+import { type JWK, type JWTPayload, type KeyInput, SignJWT, importJWK, jwtVerify } from 'jose';
 import { randomUUID } from 'node:crypto';
 import { OidcModuleConfig } from '../oidc.config';
 import { JwksService } from './oidc.jwks.service';
+import { jwksServiceVerifyGetKey } from './oidc.jwt-verify';
 
 // MARK: Constants
 /**
@@ -49,6 +50,24 @@ export interface OidcSignJwtInput {
   readonly typ?: Maybe<string>;
 }
 
+export interface OidcVerifyJwtInput {
+  /**
+   * The compact JWT to verify.
+   */
+  readonly token: string;
+  /**
+   * Required `aud` claim value.
+   */
+  readonly audience: string | readonly string[];
+  /**
+   * Required header `typ`. Pass the SAME discriminator the token was minted with — a first-party JWT
+   * minted for a non-OAuth purpose (e.g. an asset-download capability) is signed by the same JWKS as
+   * the provider's `at+jwt` access tokens, so `typ` + `aud` are what keep the two from being
+   * interchangeable.
+   */
+  readonly typ?: Maybe<string>;
+}
+
 export interface OidcSignedJwt {
   readonly token: string;
   readonly expiresAt: Date;
@@ -82,6 +101,7 @@ interface CachedSigningKey {
 @Injectable()
 export class OidcJwtSigningService {
   private _cached: Maybe<CachedSigningKey>;
+  private _verifyKey: Maybe<ReturnType<typeof jwksServiceVerifyGetKey>>;
 
   constructor(
     @Inject(JwksService) private readonly _jwks: JwksService,
@@ -110,6 +130,49 @@ export class OidcJwtSigningService {
       .sign(key);
 
     return { token, kid, expiresAt: new Date(exp * 1000) };
+  }
+
+  /**
+   * Verifies a JWT that THIS provider signed, against its own JWKS.
+   *
+   * Enforces `iss` (this provider), `aud`, and — when supplied — the header `typ`. Returns
+   * `undefined` rather than throwing when the token does not verify, so a caller serving an
+   * unauthenticated route can answer with one generic error for every failure mode.
+   *
+   * The counterpart to {@link signJwt}: `verifyAccessToken` deliberately does NOT accept a token
+   * minted with a non-`at+jwt` `typ` and a non-OAuth audience, and this method is how a purpose-built
+   * token proves it is the RIGHT kind.
+   *
+   * @param input - The token, its required audience, and its required `typ`.
+   * @returns The verified payload, or `undefined` when verification fails.
+   */
+  async verifyJwt(input: OidcVerifyJwtInput): Promise<Maybe<JWTPayload>> {
+    let result: Maybe<JWTPayload>;
+
+    try {
+      const getKey = this._getVerifyKey();
+      const verified = await jwtVerify(input.token, getKey, {
+        issuer: this._config.issuer,
+        audience: typeof input.audience === 'string' ? input.audience : [...input.audience],
+        ...(input.typ ? { typ: input.typ } : undefined)
+      });
+
+      result = verified.payload;
+    } catch {
+      // an invalid signature, a wrong audience, a wrong typ, and an expired token are all
+      // indistinguishable to the caller by design
+      result = undefined;
+    }
+
+    return result;
+  }
+
+  private _getVerifyKey() {
+    if (this._verifyKey == null) {
+      this._verifyKey = jwksServiceVerifyGetKey(this._jwks);
+    }
+
+    return this._verifyKey;
   }
 
   private async _loadSigningKey(): Promise<CachedSigningKey> {

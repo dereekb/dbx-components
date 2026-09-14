@@ -404,6 +404,16 @@ export abstract class OidcModuleConfig {
   readonly protectedPaths?: SlashPath[];
 
   /**
+   * Path prefixes EXCLUDED from bearer verification, checked before {@link protectedPaths}.
+   *
+   * Protection matches by prefix, so a public sub-route of a protected prefix is otherwise
+   * unreachable: `POST /oidc/cli-token/claim` is deliberately unauthenticated (the one-time claim
+   * code IS the credential there), yet it sits under the protected `/oidc/cli-token` prefix. Listing
+   * it here is what keeps it reachable.
+   */
+  readonly unprotectedPaths?: SlashPath[];
+
+  /**
    * Map of recognized OAuth resource indicator URLs (RFC 8707) to their
    * {@link OidcResourceServerInfo}. When non-empty, oidc-provider's
    * `features.resourceIndicators.getResourceServerInfo` is wired to look up
