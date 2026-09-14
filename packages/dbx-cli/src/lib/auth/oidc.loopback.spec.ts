@@ -1,4 +1,6 @@
+import { createServer } from 'node:http';
 import { describe, it, expect } from 'vitest';
+import { type Maybe } from '@dereekb/util';
 import { LOOPBACK_REDIRECT_TIMEOUT_ERROR_CODE, type LoopbackRedirectCapture, parseLoopbackRedirectUri, startLoopbackRedirectCapture } from './oidc.loopback';
 
 describe('parseLoopbackRedirectUri', () => {
@@ -48,21 +50,60 @@ describe('parseLoopbackRedirectUri', () => {
 });
 
 /**
- * Binds a capture on an OS-assigned port, so the suite never fights a port that happens to be busy.
+ * The loopback hosts this machine can actually bind, in URL-authority form (so `::1` keeps its brackets).
  *
- * `parseLoopbackRedirectUri` deliberately refuses port `0`, so the target is built by binding an
- * ephemeral port through a throwaway target and reading back what the OS handed out — which is
- * exactly what the production path cannot do against a registered redirect URI.
+ * A single-stack machine has no `::1` and fails that bind with `EADDRNOTAVAIL` — an IPv4-only CI
+ * container is the usual case. The capture is built to degrade to whichever family it could bind,
+ * so a test asserting across families has to ask the machine what it has instead of assuming both.
  */
-async function startTestCapture(pathname = '/callback'): Promise<LoopbackRedirectCapture> {
-  let result: LoopbackRedirectCapture | undefined;
+async function bindableLoopbackHosts(): Promise<string[]> {
+  const probes = await Promise.all(
+    ['127.0.0.1', '::1'].map(
+      (address) =>
+        new Promise<Maybe<string>>((resolve) => {
+          const server = createServer();
+
+          server.once('error', () => resolve(undefined));
+          server.listen(0, address, () => server.close(() => resolve(address === '::1' ? `[${address}]` : address)));
+        })
+    )
+  );
+
+  return probes.filter((x): x is string => x != null);
+}
+
+interface StartTestCaptureInput {
+  /**
+   * Loopback hostname to bind, as it appears in the redirect URI. Defaults to `127.0.0.1`.
+   */
+  readonly hostname?: string;
+  /**
+   * Redirect path to bind. Defaults to `/callback`.
+   */
+  readonly pathname?: string;
+}
+
+/**
+ * Binds a capture on a randomly chosen high port, so the suite never fights a port that happens to be busy.
+ *
+ * A retry loop rather than an ephemeral bind: the capture's contract is that it binds the exact port
+ * the redirect URI names — `parseLoopbackRedirectUri` deliberately refuses the `:0` placeholder — so
+ * the test picks a port and accepts a collision as a retry.
+ *
+ * @param input - The capture inputs.
+ * @param input.hostname - Loopback hostname to bind.
+ * @param input.pathname - Redirect path to bind.
+ * @returns The started capture.
+ */
+async function startTestCapture(input: StartTestCaptureInput = {}): Promise<LoopbackRedirectCapture> {
+  const { hostname = '127.0.0.1', pathname = '/callback' } = input;
+
+  let result: Maybe<LoopbackRedirectCapture>;
   let lastError: unknown;
 
-  // A retry loop rather than an ephemeral bind: the capture's contract is that it binds the exact
-  // port the redirect URI names, so the test picks a port and accepts a collision as a retry.
   for (let attempt = 0; attempt < 20 && result == null; attempt += 1) {
     const port = 30000 + Math.floor(Math.random() * 20000);
-    const target = parseLoopbackRedirectUri({ redirectUri: `http://127.0.0.1:${port}${pathname}` });
+    const target = parseLoopbackRedirectUri({ redirectUri: `http://${hostname}:${port}${pathname}` });
 
     try {
       result = await startLoopbackRedirectCapture({ target: target as NonNullable<typeof target> });
@@ -132,29 +173,20 @@ describe('startLoopbackRedirectCapture', () => {
     }
   });
 
-  it('should answer a localhost redirect on both loopback families', async () => {
+  it('should answer a localhost redirect on every loopback family this machine has', async () => {
     // Node binds one address per server and browsers pick their own — a listener that landed only on
-    // `::1` refuses every connection the browser opens to `127.0.0.1`.
-    let capture: LoopbackRedirectCapture | undefined;
-    let lastError: unknown;
+    // `::1` refuses every connection the browser opens to `127.0.0.1`, and vice versa. A single-stack
+    // machine can only ever answer on the one family it has (an IPv4-only CI container being the
+    // usual case), so the assertion covers the families this machine can actually bind.
+    const hosts = await bindableLoopbackHosts();
+    expect(hosts.length).toBeGreaterThan(0);
 
-    for (let attempt = 0; attempt < 20 && capture == null; attempt += 1) {
-      const port = 30000 + Math.floor(Math.random() * 20000);
-
-      try {
-        capture = await startLoopbackRedirectCapture({ target: parseLoopbackRedirectUri({ redirectUri: `http://localhost:${port}/callback` }) as never });
-      } catch (e) {
-        lastError = e;
-      }
-    }
-
-    if (!capture) {
-      throw lastError;
-    }
+    const capture = await startTestCapture({ hostname: 'localhost' });
 
     try {
-      expect((await fetch(`http://127.0.0.1:${capture.port}/callback?code=ipv4`)).status).toBe(200);
-      expect((await fetch(`http://[::1]:${capture.port}/callback?code=ipv6`)).status).toBe(200);
+      for (const host of hosts) {
+        expect((await fetch(`http://${host}:${capture.port}/callback?code=the-code`)).status).toBe(200);
+      }
     } finally {
       await capture.close();
     }
