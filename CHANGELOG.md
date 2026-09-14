@@ -1,3 +1,18 @@
+# [14.4.0](https://github.com/dereekb/dbx-components/compare/v14.3.0-dev...v14.4.0) (2026-09-14)
+
+### Bug Fixes
+
+- **dbx-cli:** scope loopback spec to the host's real IP families ([14ea6052](https://github.com/dereekb/dbx-components/commit/14ea6052e25086f544c114fbd305e755a15557d2))
+
+### Code Refactoring
+
+- **firebase-server:** stop-at-stage OAuth test flow harness ([42bcdde0](https://github.com/dereekb/dbx-components/commit/42bcdde0e2244c03f5e591d1cd09324080005918))
+
+### Features
+
+- **oauth-resource:** extract OAuth resource-server verification ([24d4189d](https://github.com/dereekb/dbx-components/commit/24d4189dc865bfcf91c2979e29b70ab68b2d8430))
+- **oauth-resource:** user-scoped Firestore sessions at /firebase ([6c44cd93](https://github.com/dereekb/dbx-components/commit/6c44cd934ccff13bc23f420b65679ad6c91ce58a))
+
 # [14.3.0](https://github.com/dereekb/dbx-components/compare/v14.2.0-dev...v14.3.0) (2026-09-12)
 
 ### Bug Fixes
