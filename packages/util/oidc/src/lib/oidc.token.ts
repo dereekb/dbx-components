@@ -1,4 +1,4 @@
-import { type AsyncValueCache, type Getter, type Maybe, MS_IN_SECOND, OidcRelyingPartyError, type OidcTokenResponse, type UnixDateTimeMillisecondsNumber, calculateExpirationDate, expirationDetails, inMemoryAsyncValueCache } from '@dereekb/util';
+import { type AsyncValueCache, type Getter, type Maybe, type Milliseconds, MS_IN_SECOND, OidcRelyingPartyError, type OidcTokenResponse, type UnixDateTimeMillisecondsNumber, calculateExpirationDate, expirationDetails, inMemoryAsyncValueCache } from '@dereekb/util';
 
 // MARK: Constants
 /**
@@ -335,4 +335,73 @@ function decodeBase64UrlToString(base64Url: string): string {
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (c) => c.codePointAt(0) ?? 0);
   return new TextDecoder().decode(bytes);
+}
+
+// MARK: Cached Token Provider
+/**
+ * Default refresh skew: a cached token is re-minted once it is within this many milliseconds of
+ * expiring. Wider than {@link DEFAULT_OIDC_TOKEN_REFRESH_BUFFER_MS} because a re-mint is a local
+ * signing operation rather than a network exchange, so pre-empting early costs nothing.
+ */
+export const DEFAULT_CACHED_TOKEN_REFRESH_SKEW_MS: Milliseconds = 5 * 60 * 1000;
+
+/**
+ * A minted token and when it expires.
+ */
+export interface MintedToken {
+  readonly token: string;
+  readonly expiresAt: Date;
+}
+
+/**
+ * A `getToken` function that hands out the same minted token until it nears expiry.
+ */
+export type CachedTokenProvider = Getter<Promise<string>>;
+
+export interface CachedTokenProviderConfig {
+  /**
+   * Mints a fresh token.
+   */
+  readonly mint: Getter<Promise<MintedToken>>;
+  /**
+   * Re-mint once `expiresAt - now` drops below this. Defaults to {@link DEFAULT_CACHED_TOKEN_REFRESH_SKEW_MS}.
+   */
+  readonly refreshSkewMs?: Maybe<Milliseconds>;
+  /**
+   * Clock in epoch milliseconds; injected in specs. Defaults to `Date.now`.
+   */
+  readonly now?: Maybe<Getter<UnixDateTimeMillisecondsNumber>>;
+}
+
+/**
+ * Wraps a token minter in a cache: the current token is reused until it is within
+ * `refreshSkewMs` of expiring, then re-minted. Concurrent callers during a mint share the
+ * single in-flight promise (single-flight), and a failed mint leaves nothing cached so the
+ * next call retries.
+ *
+ * Adjacent to {@link oidcTokenManager}, not redundant with it: the manager redeems a **refresh
+ * token** against a token endpoint, while this re-**mints** from scratch (e.g. an API signing a
+ * first-party JWT for a resource it owns) and holds no refresh token at all.
+ *
+ * @param config - The minter, refresh skew, and clock.
+ * @returns The caching token provider.
+ */
+export function createCachedTokenProvider(config: CachedTokenProviderConfig): CachedTokenProvider {
+  const { mint } = config;
+  const refreshSkewMs = config.refreshSkewMs ?? DEFAULT_CACHED_TOKEN_REFRESH_SKEW_MS;
+  const now = config.now ?? (() => Date.now());
+  let current: Maybe<MintedToken>;
+  let inFlight: Maybe<Promise<MintedToken>>;
+
+  return async () => {
+    if (!current || current.expiresAt.getTime() - now() < refreshSkewMs) {
+      inFlight ??= mint().finally(() => {
+        inFlight = undefined;
+      });
+
+      current = await inFlight;
+    }
+
+    return current.token;
+  };
 }

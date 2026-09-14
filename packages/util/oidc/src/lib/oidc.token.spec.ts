@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OidcRelyingPartyError, type OidcTokenResponse, inMemoryAsyncValueCache } from '@dereekb/util';
-import { type OidcTokenState, type OidcTokenStorage, accessTokenNeedsRefresh, decodeJwtClaims, isAccessTokenExpired, nextRefreshDelay, oidcTokenManager, oidcTokenStateFromResponse } from './oidc.token';
+import { type OidcTokenState, type OidcTokenStorage, accessTokenNeedsRefresh, createCachedTokenProvider, decodeJwtClaims, isAccessTokenExpired, nextRefreshDelay, oidcTokenManager, oidcTokenStateFromResponse } from './oidc.token';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -163,5 +163,87 @@ describe('oidcTokenManager()', () => {
 
     expect(await manager.getValidAccessToken()).toBeUndefined();
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('createCachedTokenProvider()', () => {
+  const START = 1_800_000_000_000;
+
+  function buildProvider(config?: { readonly refreshSkewMs?: number; readonly lifetimeMs?: number }) {
+    const lifetimeMs = config?.lifetimeMs ?? 30 * 60 * 1000;
+    let clock = START;
+    let mints = 0;
+    const provider = createCachedTokenProvider({
+      refreshSkewMs: config?.refreshSkewMs,
+      now: () => clock,
+      mint: async () => {
+        mints += 1;
+        return { token: `token-${mints}`, expiresAt: new Date(clock + lifetimeMs) };
+      }
+    });
+
+    return {
+      provider,
+      mintCount: () => mints,
+      advance: (ms: number) => {
+        clock += ms;
+      }
+    };
+  }
+
+  it('should reuse the cached token until it nears expiry', async () => {
+    const { provider, mintCount, advance } = buildProvider();
+
+    expect(await provider()).toBe('token-1');
+    expect(await provider()).toBe('token-1');
+
+    advance(10 * 60 * 1000);
+    expect(await provider()).toBe('token-1');
+    expect(mintCount()).toBe(1);
+  });
+
+  it('should re-mint once inside the refresh skew', async () => {
+    const { provider, mintCount, advance } = buildProvider();
+
+    expect(await provider()).toBe('token-1');
+    advance(26 * 60 * 1000); // 4 minutes of lifetime left, inside the 5 minute default skew
+
+    expect(await provider()).toBe('token-2');
+    expect(mintCount()).toBe(2);
+  });
+
+  it('should share a single in-flight mint between concurrent callers', async () => {
+    let mints = 0;
+    const provider = createCachedTokenProvider({
+      mint: async () => {
+        mints += 1;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return { token: `token-${mints}`, expiresAt: new Date(Date.now() + 60 * 60 * 1000) };
+      }
+    });
+
+    const results = await Promise.all([provider(), provider(), provider()]);
+
+    expect(results).toEqual(['token-1', 'token-1', 'token-1']);
+    expect(mints).toBe(1);
+  });
+
+  it('should cache nothing when the mint fails, so the next call retries', async () => {
+    let attempts = 0;
+    const provider = createCachedTokenProvider({
+      mint: async () => {
+        attempts += 1;
+
+        if (attempts === 1) {
+          throw new Error('mint failed');
+        }
+
+        return { token: 'token-ok', expiresAt: new Date(Date.now() + 60 * 60 * 1000) };
+      }
+    });
+
+    await expect(provider()).rejects.toThrow('mint failed');
+    expect(await provider()).toBe('token-ok');
+    expect(attempts).toBe(2);
   });
 });

@@ -6,7 +6,7 @@ import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demo
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
 import { McpModuleConfig } from '@dereekb/firebase-server/mcp';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
-import { callableRequestTest } from '@dereekb/firebase-server/test';
+import { callableRequestTest, performOAuthFlow } from '@dereekb/firebase-server/test';
 import { type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../../function/model/crud.functions';
 
@@ -19,70 +19,6 @@ vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
  * matches the project ID the Admin SDK was initialized with. We craft the token
  * directly to ensure the audience matches the dynamic test project ID.
  */
-interface StartAuthRequestWithResourceInput {
-  readonly app: INestApplication;
-  readonly oidcClientService: OidcClientService;
-  readonly resource: string;
-  readonly scope: string;
-}
-
-/**
- * Input for the service-token suite's `driveServiceFlow` helper.
- */
-interface DriveServiceFlowInput {
-  readonly uid: string;
-  readonly clientId: string;
-  readonly scope: string;
-  /**
-   * The scopes the simulated consent UI submits as still-checked. Omitted entirely means "grant
-   * everything requested".
-   */
-  readonly grantedOIDCScopes?: readonly string[];
-  readonly extraAuthParams?: Record<string, string | number>;
-}
-
-/**
- * Result of driving the full auth-code flow via `driveServiceFlow`.
- */
-interface DriveServiceFlowResult {
-  /**
-   * The final callback URL, carrying either `code` or `error`.
-   */
-  readonly callbackUrl: URL;
-  /**
-   * The URL of the consent SCREEN, built by the provider's `interactions.url`. Its `scopes` param is
-   * the checkbox list the UI renders, so it is what admin-only withholding acts on.
-   */
-  readonly consentRedirectUrl: URL;
-  readonly cookieHeader: string;
-  readonly codeVerifier: string;
-}
-
-async function startAuthRequestWithResourceHelper(input: StartAuthRequestWithResourceInput): Promise<request.Response> {
-  const { app, oidcClientService, resource, scope } = input;
-  const { client_id } = await oidcClientService.createClient({
-    client_name: 'mcp-resource-test',
-    redirect_uris: ['https://example.com/callback'],
-    token_endpoint_auth_method: 'client_secret_post'
-  });
-
-  const codeChallenge = createHash('sha256').update(randomBytes(32)).digest('base64url');
-
-  return request(app.getHttpServer())
-    .get('/oidc/auth')
-    .query({
-      client_id,
-      redirect_uri: 'https://example.com/callback',
-      response_type: 'code',
-      scope,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
-      state: 'mcp-resource-state',
-      resource
-    })
-    .redirects(0);
-}
-
 async function createTestIdToken(nestApp: INestApplication, uid: string): Promise<string> {
   const { OidcAccountService } = await import('@dereekb/firebase-server/oidc');
   const accountService = nestApp.get(OidcAccountService);
@@ -350,7 +286,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // the login interaction. The OIDC provider must accept the advertised
   // resource indicator and 303-redirect to /interaction/<uid>/login.
   describe('GET /oidc/auth with `resource` (RFC 8707)', () => {
-    const startAuthRequestWithResource = (resource: string, scope: string = 'openid email demo'): Promise<request.Response> => startAuthRequestWithResourceHelper({ app, oidcClientService, resource, scope });
+    async function startAuthRequestWithResource(resource: string, scope: string = 'openid email demo'): Promise<request.Response> {
+      const { authResponse } = await performOAuthFlow({ server: app.getHttpServer(), oidcClientService, nestApp: app, config: { clientName: 'mcp-resource-test', scopes: scope, resource, stopAtStage: 'auth' } });
+      return authResponse;
+    }
 
     it('303-redirects to the configured app-side OAuth interaction UI when the resource is a registered resource server', async () => {
       const authRes = await startAuthRequestWithResource(mcpModuleConfig.mcpUrl);
@@ -2100,70 +2039,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     demoAuthorizedUserContext({ f }, (nonAdmin) => {
       demoAuthorizedUserAdminContext({ f }, (admin) => {
         /**
-         * Drives the full auth-code flow (auth → login → consent[approved] → callback) for a given
-         * user, returning the final callback URL (which carries either `code` or `error`).
-         */
-        async function driveServiceFlow(input: DriveServiceFlowInput): Promise<DriveServiceFlowResult> {
-          const server = app.getHttpServer();
-          const cookieJar = new Map<string, string>();
-
-          function collectCookies(res: request.Response): void {
-            const setCookies = res.headers['set-cookie'];
-
-            if (setCookies) {
-              const items = Array.isArray(setCookies) ? setCookies : [setCookies];
-
-              for (const cookie of items) {
-                const [nameValue] = cookie.split(';');
-                const [name] = nameValue.split('=');
-                cookieJar.set(name, nameValue);
-              }
-            }
-          }
-
-          function cookieHeader(): string {
-            return [...cookieJar.values()].join('; ');
-          }
-
-          const codeVerifier = randomBytes(32).toString('base64url');
-          const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
-          // offline_access only persists when the auth request also asks for prompt=consent.
-          const promptParams: Record<string, string> = input.scope.split(' ').includes('offline_access') ? { prompt: 'consent' } : {};
-
-          const authRes = await request(server)
-            .get('/oidc/auth')
-            .query({ client_id: input.clientId, redirect_uri: 'https://example.com/callback', response_type: 'code', scope: input.scope, code_challenge: codeChallenge, code_challenge_method: 'S256', state: 'svc-state', nonce: 'svc-nonce', ...promptParams, ...input.extraAuthParams })
-            .redirects(0);
-          expect(authRes.status).toBe(303);
-          collectCookies(authRes);
-          const loginUid = new URL(authRes.headers['location'], 'http://localhost').searchParams.get('uid')!;
-
-          const idToken = await createTestIdToken(app, input.uid);
-          const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
-          expect(loginRes.status).toBe(200);
-
-          const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
-          const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
-          expect(consentRedirectRes.status).toBe(303);
-          collectCookies(consentRedirectRes);
-          const consentRedirectUrl = new URL(consentRedirectRes.headers['location'], 'http://localhost');
-          const consentUid = consentRedirectUrl.searchParams.get('uid')!;
-
-          const consentRes = await request(server)
-            .post(`/interaction/${consentUid}/consent`)
-            .set('Cookie', cookieHeader())
-            .send(input.grantedOIDCScopes ? { idToken, approved: true, grantedOIDCScopes: input.grantedOIDCScopes } : { idToken, approved: true });
-          expect(consentRes.status).toBe(200);
-          collectCookies(consentRes);
-
-          const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
-          const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
-          expect(callbackRedirectRes.status).toBe(303);
-
-          return { callbackUrl: new URL(callbackRedirectRes.headers['location']), consentRedirectUrl, cookieHeader: cookieHeader(), codeVerifier };
-        }
-
-        /**
          * Returns the largest Grant TTL (`exp - iat`, seconds) currently persisted for the given uid,
          * or undefined when none exist. Uses the max so a long-lived service grant is unambiguous even
          * if other grants exist for the same user.
@@ -2185,17 +2060,22 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         it('admin + token.service: consent succeeds, grant TTL ≈ 1 year, and the refresh token does not rotate', async () => {
           const server = app.getHttpServer();
-          const { client_id, client_secret } = await oidcClientService.createClient({
-            client_name: 'svc-admin-success',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+
+          // Request 2 years; the service-token tier clamps it to 1 year. `offline_access` only
+          // persists when the auth request also asks for prompt=consent.
+          const { callbackUrl, codeVerifier, session } = await performOAuthFlow({
+            server,
+            oidcClientService,
+            nestApp: app,
+            uid: admin.uid,
+            config: { clientName: 'svc-admin-success', scopes: 'openid email demo offline_access token.service', prompt: 'consent', stopAtStage: 'callback', extraAuthParams: { dbx_session_ttl: TWO_YEARS } }
           });
 
-          // Request 2 years; the service-token tier clamps it to 1 year.
-          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+          const { client_id, client_secret } = session.client;
+          const cookieHeader = session.cookieJar.cookieHeader();
 
-          expect(callbackUrl.searchParams.get('error')).toBeNull();
-          const code = callbackUrl.searchParams.get('code')!;
+          expect(callbackUrl!.searchParams.get('error')).toBeNull();
+          const code = callbackUrl!.searchParams.get('code')!;
           expect(code).toBeDefined();
 
           const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier });
@@ -2222,16 +2102,16 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         it('non-admin + token.service: consent ends in access_denied', async () => {
-          const { client_id } = await oidcClientService.createClient({
-            client_name: 'svc-nonadmin-denied',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+          const { callbackUrl } = await performOAuthFlow({
+            server: app.getHttpServer(),
+            oidcClientService,
+            nestApp: app,
+            uid: nonAdmin.uid,
+            config: { clientName: 'svc-nonadmin-denied', scopes: 'openid email demo offline_access token.service', prompt: 'consent', stopAtStage: 'callback', extraAuthParams: { dbx_session_ttl: TWO_YEARS } }
           });
 
-          const { callbackUrl } = await driveServiceFlow({ uid: nonAdmin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
-
-          expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
-          expect(callbackUrl.searchParams.get('code')).toBeNull();
+          expect(callbackUrl!.searchParams.get('error')).toBe('access_denied');
+          expect(callbackUrl!.searchParams.get('code')).toBeNull();
         });
 
         // The admin-only gate reads what the user consented to, not what the client requested. A client
@@ -2240,25 +2120,31 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         // than a dead end for every non-admin.
         it('non-admin deselecting token.service: consent succeeds, the scope is not granted, and the TTL stays on the non-admin tier', async () => {
           const server = app.getHttpServer();
-          const { client_id, client_secret } = await oidcClientService.createClient({
-            client_name: 'svc-nonadmin-deselected',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
-          });
 
           // Driven with the MCP resource indicator, the way an MCP client actually authorizes: the
           // resource server declares every provider scope, so a deselected scope must be kept off the
           // resource-bound access token too — not just off the OIDC grant.
-          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({
+          const { callbackUrl, codeVerifier, session } = await performOAuthFlow({
+            server,
+            oidcClientService,
+            nestApp: app,
             uid: nonAdmin.uid,
-            clientId: client_id,
-            scope: 'openid email demo offline_access token.service',
-            grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access'],
-            extraAuthParams: { dbx_session_ttl: TWO_YEARS, resource: mcpModuleConfig.mcpUrl }
+            config: {
+              clientName: 'svc-nonadmin-deselected',
+              scopes: 'openid email demo offline_access token.service',
+              prompt: 'consent',
+              stopAtStage: 'callback',
+              grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access'],
+              resource: mcpModuleConfig.mcpUrl,
+              extraAuthParams: { dbx_session_ttl: TWO_YEARS }
+            }
           });
 
-          expect(callbackUrl.searchParams.get('error')).toBeNull();
-          const code = callbackUrl.searchParams.get('code')!;
+          const { client_id, client_secret } = session.client;
+          const cookieHeader = session.cookieJar.cookieHeader();
+
+          expect(callbackUrl!.searchParams.get('error')).toBeNull();
+          const code = callbackUrl!.searchParams.get('code')!;
           expect(code).toBeDefined();
 
           const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier, resource: mcpModuleConfig.mcpUrl });
@@ -2276,44 +2162,45 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         // consent UI renders every offered scope pre-checked, so a non-admin who just clicks Allow
         // hits the gate. Withholding the scope from the screen entirely means they are never asked.
         it('non-admin: the consent screen is not offered the admin-only scope at all', async () => {
-          const { client_id } = await oidcClientService.createClient({
-            client_name: 'svc-nonadmin-not-offered',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
-          });
-
-          const { consentRedirectUrl } = await driveServiceFlow({
+          const { consentRedirectUrl } = await performOAuthFlow({
+            server: app.getHttpServer(),
+            oidcClientService,
+            nestApp: app,
             uid: nonAdmin.uid,
-            clientId: client_id,
-            scope: 'openid email demo offline_access token.service',
-            grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access']
+            config: {
+              clientName: 'svc-nonadmin-not-offered',
+              scopes: 'openid email demo offline_access token.service',
+              prompt: 'consent',
+              stopAtStage: 'callback',
+              grantedOIDCScopes: ['openid', 'email', 'demo', 'offline_access']
+            }
           });
 
-          const offeredScopes = (consentRedirectUrl.searchParams.get('scopes') ?? '').split(' ');
+          const offeredScopes = (consentRedirectUrl!.searchParams.get('scopes') ?? '').split(' ');
           expect(offeredScopes).not.toContain('token.service');
           expect(offeredScopes).toContain('demo');
         });
 
         it('admin: the consent screen is still offered the admin-only scope', async () => {
-          const { client_id } = await oidcClientService.createClient({
-            client_name: 'svc-admin-offered',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+          const { consentRedirectUrl } = await performOAuthFlow({
+            server: app.getHttpServer(),
+            oidcClientService,
+            nestApp: app,
+            uid: admin.uid,
+            config: { clientName: 'svc-admin-offered', scopes: 'openid email demo offline_access token.service', prompt: 'consent', stopAtStage: 'callback' }
           });
 
-          const { consentRedirectUrl } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service' });
-
-          expect((consentRedirectUrl.searchParams.get('scopes') ?? '').split(' ')).toContain('token.service');
+          expect((consentRedirectUrl!.searchParams.get('scopes') ?? '').split(' ')).toContain('token.service');
         });
 
         it('admin normal login clamps to the 90-day ceiling', async () => {
-          const { client_id } = await oidcClientService.createClient({
-            client_name: 'svc-admin-normal',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+          await performOAuthFlow({
+            server: app.getHttpServer(),
+            oidcClientService,
+            nestApp: app,
+            uid: admin.uid,
+            config: { clientName: 'svc-admin-normal', scopes: 'openid email demo offline_access', prompt: 'consent', stopAtStage: 'callback', extraAuthParams: { dbx_session_ttl: TWO_YEARS } }
           });
-
-          await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
 
           const grantTtl = await maxGrantTtlForUid(admin.uid);
           expect(grantTtl).toBeGreaterThanOrEqual(90 * ONE_DAY - SLACK_SECONDS);
@@ -2321,13 +2208,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         });
 
         it('non-admin normal login clamps to the 45-day ceiling', async () => {
-          const { client_id } = await oidcClientService.createClient({
-            client_name: 'svc-nonadmin-normal',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+          await performOAuthFlow({
+            server: app.getHttpServer(),
+            oidcClientService,
+            nestApp: app,
+            uid: nonAdmin.uid,
+            config: { clientName: 'svc-nonadmin-normal', scopes: 'openid email demo offline_access', prompt: 'consent', stopAtStage: 'callback', extraAuthParams: { dbx_session_ttl: TWO_YEARS } }
           });
-
-          await driveServiceFlow({ uid: nonAdmin.uid, clientId: client_id, scope: 'openid email demo offline_access', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
 
           const grantTtl = await maxGrantTtlForUid(nonAdmin.uid);
           expect(grantTtl).toBeGreaterThanOrEqual(45 * ONE_DAY - SLACK_SECONDS);
@@ -2336,14 +2223,18 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         it('GET /oidc/session reports expiresAt and rotationDisabled for a service token', async () => {
           const server = app.getHttpServer();
-          const { client_id, client_secret } = await oidcClientService.createClient({
-            client_name: 'svc-session-route',
-            redirect_uris: ['https://example.com/callback'],
-            token_endpoint_auth_method: 'client_secret_post'
+
+          const { callbackUrl, codeVerifier, session } = await performOAuthFlow({
+            server,
+            oidcClientService,
+            nestApp: app,
+            uid: admin.uid,
+            config: { clientName: 'svc-session-route', scopes: 'openid email demo offline_access token.service', prompt: 'consent', stopAtStage: 'callback', extraAuthParams: { dbx_session_ttl: TWO_YEARS } }
           });
 
-          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
-          const code = callbackUrl.searchParams.get('code')!;
+          const { client_id, client_secret } = session.client;
+          const cookieHeader = session.cookieJar.cookieHeader();
+          const code = callbackUrl!.searchParams.get('code')!;
 
           const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier });
           expect(tokenRes.status).toBe(200);

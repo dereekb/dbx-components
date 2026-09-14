@@ -1,4 +1,5 @@
 import { type Maybe, type OidcClientAuthMethod } from '@dereekb/util';
+import { DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST, type FirebaseClientConfig, type FirebaseClientEmulatorsConfig, firebaseClientEmulatorsInUse, isFirebaseClientConfigComplete } from '@dereekb/oauth-resource/firebase';
 import { type CliTokenEntry } from './token.cache';
 
 /**
@@ -201,71 +202,26 @@ function nonEmpty(value: Maybe<string>): string | undefined {
 }
 
 /**
- * Local Firebase emulator targets for a CLI env.
- *
- * Mirrors the semantics of `DbxFirebaseEmulatorsConfig` in `@dereekb/dbx-firebase` (whose parse
- * helper is Angular-bound and not reusable here): the presence of this object means "use emulators"
- * unless {@link useEmulators} is explicitly `false`.
- *
- * App Check is auto-disabled whenever emulators are in use — the emulators do not verify
- * attestations, and `initializeAppCheck` against a fake project only gets in the way.
+ * Local Firebase emulator targets for a CLI env. The CLI's name for
+ * {@link FirebaseClientEmulatorsConfig}.
  */
-export interface CliFirebaseEmulatorsConfig {
-  /**
-   * Set `false` to keep the emulator targets configured but inactive. Defaults to `true`.
-   */
-  readonly useEmulators?: boolean;
-  /**
-   * Host the emulators are reachable at. Defaults to {@link DEFAULT_CLI_FIREBASE_EMULATOR_HOST}.
-   */
-  readonly host?: string;
-  /**
-   * Port of the Auth emulator. When unset, Auth is not redirected to an emulator.
-   */
-  readonly authPort?: number;
-  /**
-   * Port of the Firestore emulator. When unset, Firestore is not redirected to an emulator.
-   */
-  readonly firestorePort?: number;
-}
+export type CliFirebaseEmulatorsConfig = FirebaseClientEmulatorsConfig;
 
 /**
  * Firebase client-SDK configuration for a CLI env, used only by the direct-Firestore session
  * (`CliContext.getFirestoreContext`). Everything else the CLI does goes over the model HTTP API and
  * needs none of this.
  *
- * These are the same public values the app's browser client initializes with — copy them from the
- * target app's environment file. `appId` in particular must be the registered **web** app, since the
- * server mints its App Check attestation for that app.
+ * The CLI's name for {@link FirebaseClientConfig}: the same shape any resource server opening a
+ * user-scoped Firestore session supplies.
  */
-export interface CliFirebaseConfig {
-  /**
-   * The Firebase web API key.
-   */
-  readonly apiKey?: string;
-  /**
-   * The project's auth domain (e.g. `my-project.firebaseapp.com`).
-   */
-  readonly authDomain?: string;
-  /**
-   * The Firebase project id.
-   */
-  readonly projectId?: string;
-  /**
-   * The registered **web** app id (e.g. `1:1234567890:web:abcdef`).
-   */
-  readonly appId?: string;
-  /**
-   * Optional emulator targets for local development.
-   */
-  readonly emulators?: CliFirebaseEmulatorsConfig;
-}
+export type CliFirebaseConfig = FirebaseClientConfig;
 
 /**
  * Default host used for Firebase emulator connections when a {@link CliFirebaseEmulatorsConfig}
- * omits one.
+ * omits one. See {@link DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST}.
  */
-export const DEFAULT_CLI_FIREBASE_EMULATOR_HOST = 'localhost';
+export const DEFAULT_CLI_FIREBASE_EMULATOR_HOST = DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST;
 
 /**
  * Returns true when the env carries the minimum Firebase client config needed to open a direct
@@ -274,23 +230,15 @@ export const DEFAULT_CLI_FIREBASE_EMULATOR_HOST = 'localhost';
  * Deliberately separate from {@link isCliEnvConfigComplete}: the Firebase config is optional, and
  * folding it into the general completeness check would break every CLI that only uses the model API.
  *
- * @param firebase - The env's Firebase client config, if any.
- * @returns `true` when `apiKey`, `projectId`, and `appId` are all present and non-empty.
+ * See {@link isFirebaseClientConfigComplete}.
  */
-export function isCliFirebaseConfigComplete(firebase: Maybe<CliFirebaseConfig>): firebase is Required<Pick<CliFirebaseConfig, 'apiKey' | 'projectId' | 'appId'>> & CliFirebaseConfig {
-  return Boolean(firebase?.apiKey && firebase?.projectId && firebase?.appId);
-}
+export const isCliFirebaseConfigComplete = isFirebaseClientConfigComplete;
 
 /**
- * Returns true when the env's emulator config is present and active.
- *
- * @param firebase - The env's Firebase client config, if any.
- * @returns `true` when emulators are configured and not explicitly disabled.
+ * Returns true when the env's emulator config is present and active. See
+ * {@link firebaseClientEmulatorsInUse}.
  */
-export function cliFirebaseEmulatorsInUse(firebase: Maybe<CliFirebaseConfig>): boolean {
-  const emulators = firebase?.emulators;
-  return Boolean(emulators && emulators.useEmulators !== false && (emulators.authPort != null || emulators.firestorePort != null));
-}
+export const cliFirebaseEmulatorsInUse = firebaseClientEmulatorsInUse;
 
 /**
  * The OAuth client's registered `token_endpoint_auth_method`, as far as the CLI needs to model it.

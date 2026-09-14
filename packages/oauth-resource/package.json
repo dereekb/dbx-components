@@ -1,0 +1,44 @@
+{
+  "name": "@dereekb/oauth-resource",
+  "version": "14.4.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./express": {
+      "types": "./express/index.d.ts",
+      "import": "./express/index.esm.js",
+      "default": "./express/index.esm.js"
+    },
+    "./firebase": {
+      "types": "./firebase/index.d.ts",
+      "import": "./firebase/index.esm.js",
+      "default": "./firebase/index.esm.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/firebase": "14.4.0",
+    "@dereekb/util": "14.4.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "firebase": "^12.18.0",
+    "jose": "^6.2.12",
+    "make-error": "^1.3.6"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
+  },
+  "peerDependenciesMeta": {
+    "@dereekb/firebase": {
+      "optional": true
+    },
+    "cors": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "firebase": {
+      "optional": true
+    }
+  }
+}

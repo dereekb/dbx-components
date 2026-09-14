@@ -159,7 +159,7 @@
             "command": "npx nx run vitest:ci-publish-npmjs && npx nx run util:ci-publish-npmjs && npx nx run rxjs:ci-publish-npmjs"
           },
           {
-            "command": "npx nx run date:ci-publish-npmjs && npx nx run model:ci-publish-npmjs && npx nx run browser:ci-publish-npmjs"
+            "command": "npx nx run date:ci-publish-npmjs && npx nx run model:ci-publish-npmjs && npx nx run browser:ci-publish-npmjs && npx nx run oauth-resource:ci-publish-npmjs"
           },
           {
             "command": "npx nx run nestjs:ci-publish-npmjs && npx nx run firebase:ci-publish-npmjs && npx nx run firebase-server:ci-publish-npmjs"

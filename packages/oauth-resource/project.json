@@ -1,0 +1,66 @@
+{
+  "name": "oauth-resource",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/oauth-resource/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/oauth-resource"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run oauth-resource:build-base"
+          },
+          {
+            "command": "npx nx run oauth-resource-express:build-base"
+          },
+          {
+            "command": "npx nx run oauth-resource-firebase:build-base"
+          },
+          {
+            "description": "normalize + verify the ESM-only package shape",
+            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/oauth-resource"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run oauth-resource tests",
+            "command": "npx nx test oauth-resource"
+          },
+          {
+            "description": "run oauth-resource-express tests",
+            "command": "npx nx test oauth-resource-express"
+          },
+          {
+            "description": "run oauth-resource-firebase tests",
+            "command": "npx nx test oauth-resource-firebase"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/oauth-resource && npm publish --access public"
+      }
+    }
+  }
+}

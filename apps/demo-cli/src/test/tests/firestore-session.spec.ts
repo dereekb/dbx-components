@@ -55,10 +55,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   /**
    * Drops the Firebase client app the session opened.
    *
-   * Required between tests: `createCliFirestoreSessionContext` reuses a single app per
-   * `<cliName>-<envName>`, so its `Firestore` instance would outlive the fixture's per-test emulator
-   * reset and then answer queries from a cache still holding the previous test's (since-deleted)
-   * documents.
+   * Required between tests: `createCliFirestoreSessionContext` registers one app per
+   * `<cliName>::<envName>::<uid>`, so its `Firestore` instance would outlive the fixture's per-test
+   * emulator reset and then answer queries from a cache still holding the previous test's
+   * (since-deleted) documents.
    */
   afterEach(async () => {
     await Promise.all(getApps().map((app) => deleteApp(app)));
@@ -117,6 +117,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
             expect(second.session.customToken).toBe(first.session.customToken);
             expect(second.firestore).toBe(first.firestore);
+
+            // one app, under the derived `<cliName>::<envName>::<uid>` name. Each open registers a
+            // FRESH app (reusing one silently keeps the first App Check attestation), so "two calls,
+            // one app" is a property of the memo — and the derived name is what
+            // `closeAllCliFirebaseApps` sweeps on.
+            const cliApps = getApps().filter((x) => x.name.startsWith(`${DEMO_TEST_CLI_NAME}::`));
+            expect(cliApps.map((x) => x.name)).toEqual([`${DEMO_TEST_CLI_NAME}::${DEMO_TEST_CLI_ENV_NAME}::${adminUser.uid}`]);
           });
 
           it('releases the Firebase app on close, which is what lets the CLI exit', async () => {

@@ -1,13 +1,23 @@
 import request from 'supertest';
 import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
-import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
+import { type Maybe, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { adminOnlyScopesForOidcProviderProfiles, assignmentOnlyScopesForOidcProviderProfiles, type OidcProviderProfileKey, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { OidcClientService, OidcAccountService, JwksService, OidcProviderConfigService } from '@dereekb/firebase-server/oidc';
 
+// MARK: Stage
+/**
+ * A stage of the OAuth authorization code flow that {@link performOAuthFlow} can stop at.
+ *
+ * - `'auth'` — stop on the `/oidc/auth` response, before the login interaction.
+ * - `'callback'` — stop on the client callback redirect, before the token exchange.
+ * - `'token'` — run the whole flow, through the token exchange.
+ */
+export type OAuthTestFlowStage = 'auth' | 'callback' | 'token';
+
 // MARK: Config
 /**
- * Configuration for {@link performFullOAuthFlow}.
+ * Configuration for {@link performOAuthFlow} / {@link performFullOAuthFlow}.
  */
 export interface OAuthTestFlowConfig {
   /**
@@ -57,6 +67,36 @@ export interface OAuthTestFlowConfig {
    * to consent (or straight to the callback when nothing new needs consenting and `prompt` is unset).
    */
   readonly session?: OAuthTestFlowSession;
+  /**
+   * RFC 8707 `resource` indicator, sent on both `/oidc/auth` and `/oidc/token`.
+   *
+   * Must match a key registered on the provider's `resourceServers` config. The issued access
+   * token then carries that entry's `audience` and — when the entry sets
+   * `accessTokenFormat: 'jwt'` — is an RS256 JWT a remote resource server can verify against the
+   * provider's JWKS, rather than the default opaque token only the provider itself can validate.
+   */
+  readonly resource?: string;
+  /**
+   * Extra query parameters merged onto the `/oidc/auth` request, for parameters this config does
+   * not model explicitly.
+   */
+  readonly extraAuthParams?: Record<string, string | number>;
+  /**
+   * The stage to stop the flow at. Defaults to `'token'`, the full flow.
+   *
+   * - `'auth'` — issue the `/oidc/auth` request and stop, exposing the raw redirect response on
+   *   {@link OAuthTestFlowResult.authResponse}. Nothing logs in, so no `uid` is needed.
+   * - `'callback'` — drive auth → login → consent → the callback redirect and stop before the token
+   *   exchange, exposing {@link OAuthTestFlowResult.callbackUrl} and
+   *   {@link OAuthTestFlowResult.consentRedirectUrl}. A callback carrying an `error` instead of a
+   *   `code` (e.g. `access_denied`) is not treated as a failure at this stage, so a caller can assert
+   *   on it.
+   * - `'token'` — the full flow, exchanging the authorization code for tokens.
+   *
+   * Ignored by {@link performFullOAuthFlow} / {@link setupAndPerformFullOAuthFlow}, whose result type
+   * guarantees tokens; stop early with {@link performOAuthFlow} / {@link setupAndPerformOAuthFlow}.
+   */
+  readonly stopAtStage?: OAuthTestFlowStage;
 }
 
 /**
@@ -85,18 +125,79 @@ export interface OAuthTestFlowCookieJar {
 }
 
 // MARK: Result
-export interface PerformFullOAuthFlowResult {
-  readonly accessToken: string;
-  readonly idToken: string;
+/**
+ * Result of {@link performOAuthFlow}, covering every {@link OAuthTestFlowStage} it can stop at.
+ *
+ * Every field a stage produced is populated; the fields belonging to later stages are undefined.
+ */
+export interface OAuthTestFlowResult {
   /**
-   * The space-separated scope the token endpoint reported for the access token.
+   * The stage the flow stopped at.
    */
-  readonly scope: string;
+  readonly stage: OAuthTestFlowStage;
+  /**
+   * The raw `/oidc/auth` response, before any redirect was followed.
+   *
+   * Always populated. This is what a flow stopped at the `'auth'` stage asserts on — it may be a
+   * redirect to the login interaction, or an error callback (e.g. `error=invalid_target`).
+   */
+  readonly authResponse: request.Response;
+  /**
+   * The PKCE `code_verifier` the flow's `code_challenge` was derived from.
+   *
+   * Always populated, for a caller that performs its own `/oidc/token` request after stopping at the
+   * `'callback'` stage.
+   */
+  readonly codeVerifier: string;
+  /**
+   * The URL of the consent SCREEN the provider redirected to, when the flow reached it.
+   *
+   * Its `scopes` query parameter is the checkbox list the consent UI renders, so it is what scope
+   * withholding (e.g. an admin-only scope kept off a non-admin's screen) acts on.
+   *
+   * Undefined when the flow stopped at the `'auth'` stage, or when nothing needed consenting.
+   */
+  readonly consentRedirectUrl?: Maybe<URL>;
+  /**
+   * The client callback URL the flow ended on, carrying either a `code` or an `error`.
+   *
+   * Undefined when the flow stopped at the `'auth'` stage.
+   */
+  readonly callbackUrl?: Maybe<URL>;
+  /**
+   * The access token the token endpoint issued. Undefined unless the flow ran to the `'token'` stage.
+   */
+  readonly accessToken?: string;
+  /**
+   * The ID token the token endpoint issued. Undefined unless the flow ran to the `'token'` stage.
+   */
+  readonly idToken?: string;
+  /**
+   * The `token_type` the token endpoint reported for the access token.
+   */
+  readonly tokenType?: string;
+  /**
+   * The space-separated scope the token endpoint reported for the access token. Undefined unless the
+   * flow ran to the `'token'` stage.
+   */
+  readonly scope?: string;
   /**
    * The client and cookies this flow ran with, for chaining another flow onto the same session via
-   * {@link OAuthTestFlowConfig.session}.
+   * {@link OAuthTestFlowConfig.session} — and for the cookie header a caller's own `/oidc/token`
+   * request needs, via `session.cookieJar.cookieHeader()`.
    */
   readonly session: OAuthTestFlowSession;
+}
+
+/**
+ * Result of {@link performFullOAuthFlow} — an {@link OAuthTestFlowResult} that ran to the `'token'`
+ * stage, so the callback and the tokens are guaranteed.
+ */
+export interface PerformFullOAuthFlowResult extends OAuthTestFlowResult {
+  readonly callbackUrl: URL;
+  readonly accessToken: string;
+  readonly idToken: string;
+  readonly scope: string;
 }
 
 // MARK: Helpers
@@ -230,35 +331,57 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
 
 // MARK: Flow
 /**
- * Input for {@link performFullOAuthFlow}.
+ * Input for {@link performOAuthFlow}.
  */
-export interface PerformFullOAuthFlowInput {
+export interface PerformOAuthFlowInput {
   readonly server: ReturnType<INestApplication['getHttpServer']>;
   readonly oidcClientService: OidcClientService;
   readonly nestApp: INestApplication;
-  readonly uid: string;
+  /**
+   * Firebase user ID for whom the test ID token is minted and the flow is authorized.
+   *
+   * Only optional for a flow that stops at the `'auth'` stage, which never reaches the login
+   * interaction. Any later stage throws when it is missing.
+   */
+  readonly uid?: Maybe<string>;
   readonly config?: OAuthTestFlowConfig;
 }
 
 /**
- * Performs the full OAuth authorization code flow with PKCE and returns tokens.
+ * Input for {@link performFullOAuthFlow}.
+ */
+export interface PerformFullOAuthFlowInput extends PerformOAuthFlowInput {
+  readonly uid: string;
+}
+
+/**
+ * Performs the OAuth authorization code flow with PKCE, up to the configured
+ * {@link OAuthTestFlowConfig.stopAtStage}.
  *
  * Steps: create client → PKCE → auth redirect → login → consent → code exchange → token
  *
- * @param input - Bag of services and overrides needed to drive the flow end-to-end.
+ * Stopping early is how a test asserts on an intermediate the completed flow discards — the raw
+ * `/oidc/auth` response, the consent screen's offered `scopes`, or a callback that came back carrying
+ * an `error` instead of a `code`. A stage before `'token'` never exchanges the code, so it never
+ * throws on such a callback; the caller asserts on {@link OAuthTestFlowResult.callbackUrl} instead,
+ * and can run its own `/oidc/token` request with {@link OAuthTestFlowResult.codeVerifier} and the
+ * session's cookie header.
+ *
+ * @param input - Bag of services and overrides needed to drive the flow.
  * @param input.server - HTTP server returned by `nestApp.getHttpServer()` against which all supertest requests are issued.
  * @param input.oidcClientService - Service used to create the OAuth client whose credentials drive the flow.
  * @param input.nestApp - Initialized NestJS application; used to resolve {@link OidcAccountService} for project-id-derived ID tokens and default scopes.
- * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
- * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles).
- * @returns The exchanged access token and ID token from the OIDC `/token` endpoint.
- * @throws {Error} When the token exchange step fails (the response body and status are included in the message).
+ * @param input.uid - Firebase user ID for whom the test ID token is minted; required for any stage past `'auth'`.
+ * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles, stop stage).
+ * @returns The intermediates the flow produced, plus the tokens when it ran to the `'token'` stage.
+ * @throws {Error} When a stage past `'auth'` is requested without a `uid`, or when the token exchange step fails (the response body and status are included in the message).
  */
-export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
+export async function performOAuthFlow(input: PerformOAuthFlowInput): Promise<OAuthTestFlowResult> {
   const { server, oidcClientService, nestApp, uid, config } = input;
   const cookieJar = config?.session?.cookieJar ?? createCookieJar();
   const { collectCookies, cookieHeader } = cookieJar;
 
+  const stage: OAuthTestFlowStage = config?.stopAtStage ?? 'token';
   const redirectUri = config?.session?.client.redirectUri ?? config?.redirectUri ?? 'https://example.com/callback';
   const clientName = config?.clientName ?? 'test-oauth-context';
   const tokenEndpointAuthMethod: OidcTokenEndpointAuthMethod = config?.tokenEndpointAuthMethod ?? 'client_secret_post';
@@ -300,67 +423,141 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
       code_challenge_method: 'S256',
       state: 'test-state',
       nonce: 'test-nonce',
-      ...(config?.prompt == null ? {} : { prompt: config.prompt })
+      ...(config?.prompt == null ? {} : { prompt: config.prompt }),
+      ...(config?.resource == null ? {} : { resource: config.resource }),
+      ...config?.extraAuthParams
     })
     .redirects(0);
 
   collectCookies(authRes);
 
-  const idToken = await createTestIdToken(nestApp, uid);
-  const providerConfigService = nestApp.get(OidcProviderConfigService);
-  let interactionRes: request.Response = authRes;
+  let consentRedirectUrl: Maybe<URL>;
+  let callbackUrl: Maybe<URL>;
+  let tokenBody: Maybe<{ access_token: string; id_token: string; token_type?: string; scope: string }>;
 
-  // 4. Complete login with a Firebase ID token — unless the session is already logged in, in which case the
-  //    provider skipped the login prompt and `authRes` already points at the consent screen (or the callback)
-  if (isRedirectTo(authRes, providerConfigService.appLoginUrl)) {
-    const loginUid = extractInteractionUid(authRes);
-    const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
+  if (stage !== 'auth') {
+    if (uid == null) {
+      throw new Error(`performOAuthFlow requires a uid to reach the "${stage}" stage (only the "auth" stage skips the login interaction).`);
+    }
 
-    // 5. Resume after login → consent redirect
-    const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
-    interactionRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
-    collectCookies(interactionRes);
-  }
+    const idToken = await createTestIdToken(nestApp, uid);
+    const providerConfigService = nestApp.get(OidcProviderConfigService);
+    let interactionRes: request.Response = authRes;
 
-  // 6. Approve consent — unless nothing needed consenting and the provider went straight to the callback
-  let callbackRedirectRes: request.Response = interactionRes;
+    // 4. Complete login with a Firebase ID token — unless the session is already logged in, in which case the
+    //    provider skipped the login prompt and `authRes` already points at the consent screen (or the callback)
+    if (isRedirectTo(authRes, providerConfigService.appLoginUrl)) {
+      const loginUid = extractInteractionUid(authRes);
+      const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
 
-  if (isRedirectTo(interactionRes, providerConfigService.appConsentUrl)) {
-    const consentUid = extractInteractionUid(interactionRes);
-    const consentRes = await request(server)
-      .post(`/interaction/${consentUid}/consent`)
-      .set('Cookie', cookieHeader())
-      .send({ idToken, approved: true, ...(config?.grantedOIDCScopes == null ? {} : { grantedOIDCScopes: [...config.grantedOIDCScopes] }) });
+      // 5. Resume after login → consent redirect
+      const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+      interactionRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
+      collectCookies(interactionRes);
+    }
 
-    // 7. Follow resume redirect → callback with authorization code
-    const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
-    callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
-    collectCookies(callbackRedirectRes);
-  }
+    // 6. Approve consent — unless nothing needed consenting and the provider went straight to the callback
+    let callbackRedirectRes: request.Response = interactionRes;
 
-  const callbackUrl = new URL(callbackRedirectRes.headers['location']);
-  const authorizationCode = callbackUrl.searchParams.get('code')!;
+    if (isRedirectTo(interactionRes, providerConfigService.appConsentUrl)) {
+      consentRedirectUrl = new URL(interactionRes.headers['location'], 'http://localhost');
 
-  // 8. Exchange authorization code for tokens
-  const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader()).type('form').send({
-    grant_type: 'authorization_code',
-    code: authorizationCode,
-    redirect_uri: redirectUri,
-    client_id,
-    client_secret,
-    code_verifier: codeVerifier
-  });
+      const consentUid = extractInteractionUid(interactionRes);
+      const consentRes = await request(server)
+        .post(`/interaction/${consentUid}/consent`)
+        .set('Cookie', cookieHeader())
+        .send({ idToken, approved: true, ...(config?.grantedOIDCScopes == null ? {} : { grantedOIDCScopes: [...config.grantedOIDCScopes] }) });
 
-  if (!tokenRes.body.access_token) {
-    throw new Error(`OAuth token exchange failed (status ${tokenRes.status}): ${JSON.stringify(tokenRes.body)}`);
+      // 7. Follow resume redirect → callback with authorization code
+      const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
+      callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
+      collectCookies(callbackRedirectRes);
+    }
+
+    callbackUrl = new URL(callbackRedirectRes.headers['location']);
+
+    if (stage !== 'callback') {
+      // 8. Exchange authorization code for tokens
+      const authorizationCode = callbackUrl.searchParams.get('code')!;
+      const tokenRes = await request(server)
+        .post('/oidc/token')
+        .set('Cookie', cookieHeader())
+        .type('form')
+        .send({
+          grant_type: 'authorization_code',
+          code: authorizationCode,
+          redirect_uri: redirectUri,
+          client_id,
+          client_secret,
+          code_verifier: codeVerifier,
+          ...(config?.resource == null ? {} : { resource: config.resource })
+        });
+
+      if (!tokenRes.body.access_token) {
+        throw new Error(`OAuth token exchange failed (status ${tokenRes.status}): ${JSON.stringify(tokenRes.body)}`);
+      }
+
+      tokenBody = tokenRes.body;
+    }
   }
 
   return {
-    accessToken: tokenRes.body.access_token,
-    idToken: tokenRes.body.id_token,
-    scope: tokenRes.body.scope,
+    stage,
+    authResponse: authRes,
+    codeVerifier,
+    consentRedirectUrl,
+    callbackUrl,
+    accessToken: tokenBody?.access_token,
+    idToken: tokenBody?.id_token,
+    tokenType: tokenBody?.token_type,
+    scope: tokenBody?.scope,
     session: { client, cookieJar }
   };
+}
+
+/**
+ * Performs the full OAuth authorization code flow with PKCE and returns tokens.
+ *
+ * Steps: create client → PKCE → auth redirect → login → consent → code exchange → token
+ *
+ * Always runs to the `'token'` stage — {@link OAuthTestFlowConfig.stopAtStage} is ignored here, since
+ * this function's result guarantees tokens. Use {@link performOAuthFlow} to stop earlier.
+ *
+ * @param input - Bag of services and overrides needed to drive the flow end-to-end.
+ * @param input.server - HTTP server returned by `nestApp.getHttpServer()` against which all supertest requests are issued.
+ * @param input.oidcClientService - Service used to create the OAuth client whose credentials drive the flow.
+ * @param input.nestApp - Initialized NestJS application; used to resolve {@link OidcAccountService} for project-id-derived ID tokens and default scopes.
+ * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
+ * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles).
+ * @returns The exchanged access token and ID token from the OIDC `/token` endpoint, plus the flow's intermediates.
+ * @throws {Error} When the token exchange step fails (the response body and status are included in the message).
+ */
+export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
+  const result = await performOAuthFlow({ ...input, config: { ...input.config, stopAtStage: 'token' } });
+  return result as PerformFullOAuthFlowResult;
+}
+
+/**
+ * Higher-level helper that resolves OIDC services from the NestJS DI container,
+ * rotates JWKS keys, and then performs the OAuth flow up to {@link OAuthTestFlowConfig.stopAtStage}.
+ *
+ * This avoids callers needing to import from `@dereekb/firebase-server/oidc` directly.
+ *
+ * @param nestApp - Initialized NestJS application from which {@link JwksService} and {@link OidcClientService} are resolved.
+ * @param uid - Firebase user ID for whom the OAuth flow is authorized; only omittable for the `'auth'` stage.
+ * @param config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles, stop stage).
+ * @returns The result of {@link performOAuthFlow}.
+ */
+export async function setupAndPerformOAuthFlow(nestApp: INestApplication, uid: Maybe<string>, config?: OAuthTestFlowConfig): Promise<OAuthTestFlowResult> {
+  // Rotate JWKS keys so JWKS endpoints work
+  const jwksService = nestApp.get(JwksService);
+  await jwksService.rotateKeys();
+
+  // Resolve OidcClientService from DI
+  const oidcClientService = nestApp.get(OidcClientService);
+
+  const server = nestApp.getHttpServer();
+  return performOAuthFlow({ server, oidcClientService, nestApp, uid, config });
 }
 
 /**
@@ -375,13 +572,6 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
  * @returns The exchanged access token and ID token from {@link performFullOAuthFlow}.
  */
 export async function setupAndPerformFullOAuthFlow(nestApp: INestApplication, uid: string, config?: OAuthTestFlowConfig): Promise<PerformFullOAuthFlowResult> {
-  // Rotate JWKS keys so JWKS endpoints work
-  const jwksService = nestApp.get(JwksService);
-  await jwksService.rotateKeys();
-
-  // Resolve OidcClientService from DI
-  const oidcClientService = nestApp.get(OidcClientService);
-
-  const server = nestApp.getHttpServer();
-  return performFullOAuthFlow({ server, oidcClientService, nestApp, uid, config });
+  const result = await setupAndPerformOAuthFlow(nestApp, uid, { ...config, stopAtStage: 'token' });
+  return result as PerformFullOAuthFlowResult;
 }
