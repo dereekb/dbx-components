@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { DEFAULT_DOWNLOAD_CONTENT_TYPE, DOWNLOAD_API_ASSET_QUERY_PARAM, DOWNLOAD_INVALID_TOKEN_ERROR_CODE, DOWNLOAD_TOKEN_PATH_CLAIM, DownloadApiService } from '@dereekb/firebase-server';
 import { DEMO_SECURE_ASSETS_ROOT } from './download.module';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory } from '../../../test/fixture';
+import { binaryParser } from '../../../test/http';
 
 vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
 
@@ -13,18 +14,6 @@ vi.setConfig({ hookTimeout: 40000, testTimeout: 40000 });
 const FIXTURE_ASSET_NAME = 'download-e2e-fixture';
 const FIXTURE_ASSET_CONTENT = 'demo-api signed asset download e2e fixture\n';
 const FIXTURE_ASSET_SHA256 = createHash('sha256').update(FIXTURE_ASSET_CONTENT).digest('hex');
-
-/**
- * Collects the raw response body so the served BYTES can be compared, rather than letting
- * superagent's content-type-driven parsing reinterpret them.
- */
-function binaryParser(res: NodeJS.ReadableStream, callback: (error: Error | null, body: Buffer) => void): void {
-  const chunks: Buffer[] = [];
-
-  res.on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)));
-  res.on('end', () => callback(null, Buffer.concat(chunks)));
-  res.on('error', (error: Error) => callback(error, Buffer.alloc(0)));
-}
 
 /**
  * Coverage for the signed asset-download path as wired into demo-api: `GET /api/download?asset=<token>`.

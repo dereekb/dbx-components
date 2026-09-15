@@ -13,3 +13,4 @@ export * from './tools/mcp.tool.model-decode';
 export * from './tools/mcp.tool.enum-info';
 export * from './tools/mcp.tool.url-models';
 export * from './tools/mcp.tool.batch-execute';
+export * from './tools/mcp.tool.cli-token';
