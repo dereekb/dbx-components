@@ -5,22 +5,10 @@
   "sourceRoot": "packages/dbx-web/table/src",
   "prefix": "dbx",
   "tags": [],
+  "metadata": {
+    "description": "A SECONDARY ENTRY POINT of @dereekb/dbx-web, not a package of its own: it compiles into dist/packages/dbx-web/table and is named by that package's dist `exports` under \"./table\".  It has no build target, and that is deliberate. ng-packagr's discoverPackages globs `**/ng-package.json` under packages/dbx-web and builds every match as a secondary entry point, so `dbx-web:build-base` ALONE already writes this directory.  A standalone build-base here was a DUPLICATE WRITER of dbx-web's dist -- and worse, running it standalone made ng-packagr treat this as a PRIMARY entry point, which falls back to the schema default `dest: \"dist\"` and wrote a stray packages/dbx-web/table/dist/ next to the source.  Consumers still resolve correctly: @nx/js updatePaths binds \"@dereekb/dbx-web/table\" to dist/packages/dbx-web/table off the PARENT dependency's outputs (its \"check for secondary entrypoints\" pass), and `^build` onto a project with no `build` creates a dummy task and recurses to its dependencies, landing on `dbx-web:build`."
+  },
   "targets": {
-    "build-base": {
-      "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-web/table"],
-      "options": {
-        "project": "packages/dbx-web/table/ng-package.json",
-        "tsConfig": "packages/dbx-web/table/tsconfig.lib.json"
-      },
-      "configurations": {
-        "production": {
-          "tsConfig": "packages/dbx-web/table/tsconfig.lib.prod.json"
-        },
-        "development": {}
-      },
-      "defaultConfiguration": "production"
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     }
