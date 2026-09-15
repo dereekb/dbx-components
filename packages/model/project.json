@@ -8,23 +8,21 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
       "outputs": ["{workspaceRoot}/dist/packages/model"],
+      "metadata": {
+        "description": "The flat case: model has no subpath entry points, so it is the sole writer of dist/packages/model and `build` is simply its compile plus the ESM finalize. The nested `npx nx run model:build-base` command it used to shell out to is now a dependsOn edge, so this runs inside ONE Nx process and one task graph instead of spawning a second one that shares no scheduling or dedup with the first."
+      },
       "options": {
         "color": true,
-        "commands": [
-          {
-            "command": "npx nx run model:build-base"
-          },
-          {
-            "description": "normalize + verify the ESM-only package shape",
-            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/model"
-          }
-        ],
-        "parallel": false
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/model"
       }
     },
     "build-base": {
-      "dependsOn": []
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers: @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` -- and rollup writes `.` as {import, types} until the dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

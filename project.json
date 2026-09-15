@@ -200,6 +200,16 @@
       "options": {
         "command": "node tools/scripts/check-esm-named-imports.mjs"
       }
+    },
+    "verify-esm-exports": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "metadata": {
+        "description": "Whole-tree ESM packaging assertions over the built dist: every `exports` target exists on disk, no CommonJS artifacts survived, and every directory holding ambiguous `.js` sits in a package scope declaring the module type. This is the `--mode=verify` half of tools/scripts/finalize-esm-exports.mjs; the `--mode=rewrite` half runs per-package inside each project own `build`. It lives at the workspace level because the assertions are only valid once EVERYTHING is built -- a parent package `exports` names its subpaths, so asserting the moment the parent finishes would report subpath targets that have not been built yet. Companion to check-esm-imports."
+      },
+      "options": {
+        "command": "node tools/scripts/finalize-esm-exports.mjs --mode=verify dist/packages"
+      }
     }
   }
 }
