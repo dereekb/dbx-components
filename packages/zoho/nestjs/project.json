@@ -6,7 +6,19 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "dependsOn": []
+      "dependsOn": [
+        {
+          "projects": ["zoho"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to zoho:build-base, NOT `^build`. This entry point cannot compile before the parent's dist exists, so the edge is real -- but it has to be spelled out, because `^build` here would resolve to zoho:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory. This entry point also imports @dereekb/util/test, which the parent does NOT depend on, so `zoho:build-base` never pulls it in. Cross-family deps are spelled as the other family's ROOT `build` (not `build-base`, and not that family's child project): a sibling family's child has no `build` of its own and writes into its parent's dist, so the parent's `build` -- which runs the ESM finalize -- is the only thing that produces a finalized copy for TypeScript to resolve `exports` against."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

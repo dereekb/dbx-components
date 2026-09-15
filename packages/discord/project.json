@@ -10,24 +10,25 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/discord"],
       "options": {
-        "commands": [
-          {
-            "command": "npx nx run discord:build-base"
-          },
-          {
-            "command": "npx nx run discord-nestjs:build-base"
-          },
-          {
-            "description": "normalize + verify the ESM-only package shape",
-            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/discord"
-          }
-        ],
-        "parallel": false,
-        "color": true
+        "color": true,
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/discord"
+      },
+      "dependsOn": [
+        "build-base",
+        {
+          "projects": ["discord-nestjs"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "The nested case. dist/packages/discord is ONE npm package with 2 rollup entry points, not 2 packages: discord-nestjs compiles INTO this directory and is named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and the child deliberately has no `build` of its own -- there is nothing it could publish.  What changed: the sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules it concurrently. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back."
       }
     },
     "build-base": {
-      "dependsOn": []
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
