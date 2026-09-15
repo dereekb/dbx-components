@@ -8,36 +8,11 @@
   "implicitDependencies": ["!util-test", "demo-cli"],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo-api/main.js", "{workspaceRoot}/dist/apps/demo-api/package.json", "{workspaceRoot}/dist/apps/demo-api/package-lock.json", "{workspaceRoot}/dist/apps/demo-api/assets"],
-      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest"],
-      "options": {
-        "commands": [
-          {
-            "description": "build api",
-            "command": "npx nx run demo-api:build-base"
-          },
-          {
-            "description": "copy the standalone CLI into the API's secure assets folder",
-            "command": "npx nx run demo-api:copy-cli-artifact"
-          }
-        ],
-        "parallel": false,
-        "color": true
-      },
-      "configurations": {
-        "production": {
-          "commands": [
-            {
-              "description": "build api (production)",
-              "command": "npx nx run demo-api:build-base:production"
-            },
-            {
-              "description": "copy the standalone CLI into the API's secure assets folder",
-              "command": "npx nx run demo-api:copy-cli-artifact"
-            }
-          ]
-        }
+      "executor": "nx:noop",
+      "outputs": [],
+      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest"],
+      "metadata": {
+        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the two manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the four dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
       }
     },
     "copy-cli-artifact": {

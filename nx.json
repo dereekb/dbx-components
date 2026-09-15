@@ -85,10 +85,7 @@
     },
     "@nx/js:tsc": {
       "cache": true,
-      "inputs": ["production", "^production"],
-      "options": {
-        "buildLibsFromSource": false
-      }
+      "inputs": ["production", "^production"]
     },
     "ci-deploy-prod": {
       "cache": false

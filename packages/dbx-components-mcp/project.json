@@ -100,19 +100,21 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-components-mcp"],
-      "options": {
-        "command": "npx nx run dbx-components-mcp:build-base",
-        "color": true
-      },
-      "dependsOn": ["^build"]
+      "executor": "nx:noop",
+      "outputs": [],
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "A pure aggregation node. This package has no subpath entry points and no post-build step, so once the nested `npx nx run dbx-components-mcp:build-base` shell-out became a dependsOn edge there was no command left to run -- hence `nx:noop` (a bare dependsOn with no executor is invalid; createTask throws). `outputs` is empty because build-base is the sole writer of dist/packages/dbx-components-mcp; declaring the directory here too would make a second task own it. `^build` moved onto build-base, where the compile that actually needs finalized upstream dist lives."
+      }
     },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-firebase-models", "generate-manifests", "generate-css-tokens"],
+      "dependsOn": ["^build", "generate-firebase-models", "generate-manifests", "generate-css-tokens"],
+      "metadata": {
+        "description": "`^build` (not `^build-base`: @dereekb/* imports are remapped to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports`, which the dependency's own `build` finalizes) alongside the three pre-existing generate targets. The `^build` used to sit on the `build` wrapper that shelled out to this target; it belongs on the compile."
+      },
       "options": {
         "outputPath": "dist/packages/dbx-components-mcp",
         "main": "packages/dbx-components-mcp/bin/dbx-components-mcp.ts",

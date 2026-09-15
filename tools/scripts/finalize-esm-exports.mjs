@@ -23,14 +23,20 @@
  * Those two halves have different scopes, which is what `--mode` selects:
  *
  *   - `--mode=rewrite <dir>` rewrites `<dir>/package.json` and nothing else. It is per-package and
- *     idempotent, so it belongs in each project's own `build` — including the subpath entry points,
- *     which are their own nested packages with their own `package.json` and their own `build`.
+ *     idempotent. NOTE it is currently UNUSED, and switching the per-package callers to it would be
+ *     a regression: it would stop rewriting the nested subpath `package.json` files. Those are their
+ *     own packages, but they have no `build` of their own — under the build-graph design a subpath
+ *     entry point is a compilation unit, not a deliverable, so its parent's `build` is the only
+ *     thing that finalizes it. This mode only becomes usable if children ever gain their own
+ *     `build`, which is exactly the design that was tried and reverted.
  *   - `--mode=verify <dirs...>` runs the assertions over the whole tree and writes nothing. The
  *     assertions are only valid once *everything* has been built: a parent package's `exports`
  *     names its subpaths, so verifying it the moment the parent finishes — before its subpaths
- *     build — reports targets that simply do not exist yet. Hence a workspace-level target that
- *     runs once at the end.
- *   - no flag runs both over the whole tree, which is the original single-shot behavior.
+ *     build — reports targets that simply do not exist yet. Hence `workspace:verify-esm-exports`,
+ *     which `workspace:build-all` runs once after the whole `run-many -t build` sweep.
+ *   - no flag runs both over the whole tree. This is the original single-shot behavior and what all
+ *     19 per-package `build` targets use: the parent's `build` runs after every one of its entry
+ *     points, so by then the whole package directory is complete and both halves are valid on it.
  *
  * Usage: node tools/scripts/finalize-esm-exports.mjs [--mode=rewrite|verify] <distPackageDir> [...moreDirs]
  *   e.g. node tools/scripts/finalize-esm-exports.mjs --mode=rewrite dist/packages/util
@@ -189,8 +195,9 @@ for (const root of roots) {
     continue;
   }
 
-  // A rewrite pass runs inside one project's `build`, so it owns exactly one package.json — its
-  // own. Walking deeper would touch the subpath packages, which their own `build` finalizes.
+  // A rewrite-only pass deliberately owns exactly one package.json — its own. Nothing calls it that
+  // way today (see the --mode notes above): subpath packages have no `build` to finalize them, so
+  // the parent's whole-tree `both` pass is what covers them.
   const packageJsonPaths = verifying ? collectPackageJsonPaths(root) : [join(root, 'package.json')];
 
   for (const packageJsonPath of packageJsonPaths) {

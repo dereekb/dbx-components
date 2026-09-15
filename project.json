@@ -3,36 +3,13 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
-    "build-api-dependency-chain": {
-      "executor": "nx:run-commands",
-      "metadata": {
-        "description": "The hand-sequenced dependency chain every other project builds on top of (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server). Split out of `build-all` so the chain can be warmed on its own, without also triggering the `--all` sweep that `build-all` finishes with. This is the same set a containerized `run-tests` pulls in via its `dependsOn: [build]`, so running this first banks those builds in the (bind-mounted, therefore shared) .nx cache. That sharing depends on nx.json's `cacheDirectory` pinning the cache to .nx/cache -- without it Nx 23.2 resolves the cache under ~/.nx, which in the container is an ephemeral path that `docker compose run --rm` destroys."
-      },
-      "options": {
-        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build oauth-resource" }],
-        "parallel": false,
-        "color": true
-      }
-    },
-    "build-dependency-chain": {
-      "executor": "nx:run-commands",
-      "metadata": {
-        "description": "The hand-sequenced dependency chain every other project builds on top of (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server -> dbx-web). Split out of `build-all` so the chain can be warmed on its own, without also triggering the `--all` sweep that `build-all` finishes with. This is the same set a containerized `run-tests` pulls in via its `dependsOn: [build]`, so running this first banks those builds in the (bind-mounted, therefore shared) .nx cache. That sharing depends on nx.json's `cacheDirectory` pinning the cache to .nx/cache -- without it Nx 23.2 resolves the cache under ~/.nx, which in the container is an ephemeral path that `docker compose run --rm` destroys."
-      },
-      "options": {
-        "commands": [{ "command": "npx nx build-api-dependency-chain" }, { "command": "npx nx build dbx-core" }, { "command": "npx nx build dbx-web" }],
-        "parallel": false,
-        "color": true
-      }
-    },
     "build-all": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-dependency-chain"],
       "metadata": {
-        "description": "Full workspace build. Runs `build-dependency-chain` first (via dependsOn), then the everything-else sweep and demo-api last. Referenced by CI and by the dbx-claude build recovery target, so its end-to-end ordering must stay equivalent to the chain + sweep it replaced."
+        "description": "Full workspace build: every project's `build`, ordered by the task graph, followed by the whole-tree ESM packaging assertions. Referenced by .circleci/config.yml and by the dbx-claude build recovery target (.dbx-claude/dbx-claude.json).  This used to be a hand-sequenced chain -- `build-api-dependency-chain` (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server -> oauth-resource), then `build-dependency-chain` (+ dbx-core, dbx-web), then an `--exclude=demo-api` sweep, then demo-api last -- and those targets' own descriptions said outright that they existed because the graph edges did not. They do now: every package family and every app carries real `dependsOn` edges (parent `build-base` -> `^build`, child `build-base` -> its parent, parent `build` -> its children), so one scheduler derives the order, dedupes shared tasks and parallelizes what is genuinely independent. Re-introducing a hand-written chain here would only serialize work the graph already knows how to order.  verify-esm-exports runs SECOND and as its own command (not a dependsOn entry -- dependsOn does not order its own entries): its assertions are only valid once EVERYTHING is built, because a parent package's `exports` names subpaths that other projects compile into its dist."
       },
       "options": {
-        "commands": [{ "command": "npx nx run-many -t build --all --exclude=demo-api" }, { "command": "npx nx build demo-api" }],
+        "commands": [{ "command": "npx nx run-many -t build" }, { "command": "npx nx run workspace:verify-esm-exports" }],
         "parallel": false,
         "color": true
       }
@@ -205,7 +182,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "metadata": {
-        "description": "Whole-tree ESM packaging assertions over the built dist: every `exports` target exists on disk, no CommonJS artifacts survived, and every directory holding ambiguous `.js` sits in a package scope declaring the module type. This is the `--mode=verify` half of tools/scripts/finalize-esm-exports.mjs; the `--mode=rewrite` half runs per-package inside each project own `build`. It lives at the workspace level because the assertions are only valid once EVERYTHING is built -- a parent package `exports` names its subpaths, so asserting the moment the parent finishes would report subpath targets that have not been built yet. Companion to check-esm-imports."
+        "description": "Whole-tree ESM packaging assertions over the built dist: every `exports` target exists on disk, no CommonJS artifacts survived, and every directory holding ambiguous `.js` sits in a package scope declaring the module type. This is the `--mode=verify` half of tools/scripts/finalize-esm-exports.mjs. It lives at the workspace level because the assertions are only valid once EVERYTHING is built -- a parent package `exports` names its subpaths, so asserting the moment the parent finishes would report subpath targets that have not been built yet. `build-all` runs it as its final step, which is what makes these assertions actually fire in CI.  The `--mode=rewrite` half stays unused on purpose: it rewrites only the directory it is handed, and subpath entry points have no `build` of their own to finalize their nested package.json, so the 19 per-package callers keep the no-flag (rewrite + verify) form. Companion to check-esm-imports."
       },
       "options": {
         "command": "node tools/scripts/finalize-esm-exports.mjs --mode=verify dist/packages"

@@ -9,23 +9,22 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-components-cli"],
       "options": {
-        "commands": [
-          {
-            "command": "npx nx run dbx-components-cli:build-base"
-          },
-          {
-            "command": "node tools/build-templates-archive.mjs packages/dbx-components-cli/templates dist/packages/dbx-components-cli/templates.zip"
-          }
-        ],
-        "parallel": false,
+        "command": "node tools/build-templates-archive.mjs packages/dbx-components-cli/templates dist/packages/dbx-components-cli/templates.zip",
         "color": true
       },
-      "dependsOn": ["^build"]
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "The flat case: this package has no subpath entry points, so build-base is the sole writer of dist/packages/dbx-components-cli and `build` is simply its bundle plus the templates archive. The nested `npx nx run dbx-components-cli:build-base` command it used to shell out to is now a dependsOn edge, so this runs inside ONE Nx process and one task graph instead of spawning a second one that shares no scheduling or dedup with the first; `parallel: false` went with it, since a single command cannot race anything. `^build` moved onto build-base, where the compile that actually needs finalized upstream dist lives."
+      }
     },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, not `^build-base`. @dereekb/* imports are remapped to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. The edge used to sit on the `build` wrapper that shelled out to this target; it belongs on the compile."
+      },
       "options": {
         "outputPath": "dist/packages/dbx-components-cli",
         "main": "packages/dbx-components-cli/bin/dbx-components-cli.ts",
