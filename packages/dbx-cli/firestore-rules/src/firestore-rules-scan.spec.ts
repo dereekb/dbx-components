@@ -22,6 +22,12 @@ describe('scanFirestoreRules()', () => {
       ns: ['allowed', 'allowed'],
       nb: ['allowed', 'allowed'],
       oidc_e: ['allowed', 'allowed'],
+      // admin-only operational configuration, deliberately NOT `@dbxModelServerOnly`: an admin who can
+      // EDIT a prompt has to be able to read back what they wrote, so the rules grant the read rather
+      // than default-denying it. `orpv` is additionally reachable as a collection group.
+      orp: ['allowed', 'allowed'],
+      orpv: ['allowed', 'allowed'],
+      orrt: ['allowed', 'allowed'],
       // gettable by id, deliberately NOT listable
       uec: ['allowed', 'denied'],
       sf: ['allowed', 'unmatched'],
@@ -40,7 +46,7 @@ describe('scanFirestoreRules()', () => {
     }
 
     // every model the rules file has NO match block for at all
-    for (const collection of ['sys', 'sysp', 'orp', 'orpv', 'orrt', 'pp', 'uecp']) {
+    for (const collection of ['sys', 'sysp', 'pp', 'uecp']) {
       it(`reports ${collection} as unmatched and server-only`, () => {
         const entry = firestoreRulesAccessForCollection(scan, collection);
         expect(entry.get).toBe('unmatched');
@@ -54,6 +60,12 @@ describe('scanFirestoreRules()', () => {
       const entry = firestoreRulesAccessForCollection(scan, 'gbe');
       expect(entry.collectionGroup).toBe(true);
       expect(entry.paths).toEqual(['/gb/{guestbook}/gbe/{guestbookEntry}', '/{path=**}/gbe/{guestbookEntry}']);
+    });
+
+    it('marks orpv as reachable as a collection group', () => {
+      const entry = firestoreRulesAccessForCollection(scan, 'orpv');
+      expect(entry.collectionGroup).toBe(true);
+      expect(entry.paths).toEqual(['/orp/{openRouterPrompt}/orpv/{openRouterPromptVersion}', '/{path=**}/orpv/{openRouterPromptVersion}']);
     });
 
     it('does not mark a plain nested collection as a group', () => {
