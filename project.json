@@ -3,21 +3,24 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
+    "build-api-dependency-chain": {
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "The hand-sequenced dependency chain every other project builds on top of (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server). Split out of `build-all` so the chain can be warmed on its own, without also triggering the `--all` sweep that `build-all` finishes with. This is the same set a containerized `run-tests` pulls in via its `dependsOn: [build]`, so running this first banks those builds in the (bind-mounted, therefore shared) .nx cache."
+      },
+      "options": {
+        "commands": [{ "command": "npx nx build util" }, { "command": "npx nx run-many -t build --projects=rxjs,model,date" }, { "command": "npx nx build firebase" }, { "command": "npx nx build nestjs" }, { "command": "npx nx build firebase-server" }, { "command": "npx nx build oauth-resource" }],
+        "parallel": false,
+        "color": true
+      }
+    },
     "build-dependency-chain": {
       "executor": "nx:run-commands",
       "metadata": {
         "description": "The hand-sequenced dependency chain every other project builds on top of (util -> rxjs/model/date -> firebase -> nestjs -> firebase-server -> dbx-web). Split out of `build-all` so the chain can be warmed on its own, without also triggering the `--all` sweep that `build-all` finishes with. This is the same set a containerized `run-tests` pulls in via its `dependsOn: [build]`, so running this first banks those builds in the (bind-mounted, therefore shared) .nx cache."
       },
       "options": {
-        "commands": [
-          { "command": "npx nx build util" },
-          { "command": "npx nx run-many -t build --projects=rxjs,model,date" },
-          { "command": "npx nx build firebase" },
-          { "command": "npx nx build nestjs" },
-          { "command": "npx nx build firebase-server" },
-          { "command": "npx nx build dbx-core" },
-          { "command": "npx nx build dbx-web" }
-        ],
+        "commands": [{ "command": "npx nx build-api-dependency-chain" }, { "command": "npx nx build dbx-core" }, { "command": "npx nx build dbx-web" }],
         "parallel": false,
         "color": true
       }

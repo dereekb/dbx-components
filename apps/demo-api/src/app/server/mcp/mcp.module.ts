@@ -2,7 +2,7 @@ import { Logger, Module } from '@nestjs/common';
 import { DownloadApiService, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, MCP_CLI_TOKEN_MINTER, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpAuthRoleReader, type McpCliTokenMinter, type McpModelRolesTargetUidPredicate } from '@dereekb/firebase-server/mcp';
 import { OidcCliTokenService, OidcModuleConfig } from '@dereekb/firebase-server/oidc';
-import { FIRESTORE_SESSION_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { CLI_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { AUTH_ADMIN_ROLE, type AuthClaims } from '@dereekb/util';
 import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
@@ -44,7 +44,20 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     // - session.firestore unlocks a DIRECT Firestore connection, which the MCP tools have no use for
     //   (they reach data through callModel), and asking for it would put every admin MCP grant in the
     //   widened admin-only-scope TTL tier for no benefit.
-    scopesSupported: (allScopes) => allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE),
+    //
+    // token.cli is added BACK: it is assignment-only, so `clientRequestableScopesSupported` drops it
+    // from the base list, and a connector that never asks for it can never mint a CLI credential. It
+    // is safe to advertise to every MCP client because the unlock gate is per-client — the consent
+    // builder withholds it from any client without the `cli-handoff` profile, which lands it in the
+    // submit's `rejected` set rather than failing the authorization. Assigning that profile is
+    // therefore the switch that selects which clients can actually obtain it.
+    scopesSupported: (allScopes) => {
+      const base = allScopes.filter((scope) => scope !== SERVICE_TOKEN_OIDC_SCOPE && scope !== FIRESTORE_SESSION_OIDC_SCOPE);
+      // Already present outside production, where `cli-handoff` is a default profile and `token.cli`
+      // is therefore no longer assignment-only. Appended only when the base list omits it — i.e. in a
+      // deployed environment, where an assigned client still needs it advertised to request it.
+      return base.includes(CLI_TOKEN_OIDC_SCOPE) ? base : [...base, CLI_TOKEN_OIDC_SCOPE];
+    },
     serverName: 'demo-api-mcp',
     serverVersion,
     serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
@@ -104,7 +117,9 @@ export function demoMcpCliTokenMinterFactory(cliTokenService: OidcCliTokenServic
   const logger = new Logger('demoMcpCliTokenMinter');
 
   return async (input) => {
-    const minted = await cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds });
+    // `requestIp` is forwarded so an MCP mint records the same address an HTTP mint does — otherwise
+    // `bindClaimToMintIp` would bind codes minted over HTTP and silently skip those minted here.
+    const minted = await cliTokenService.mintCliToken(input.auth, { scopes: input.scopes, ttlSeconds: input.ttlSeconds }, { requestIp: input.requestIp });
     let download: { readonly downloadUrl: string; readonly downloadSha256: string } | undefined;
 
     if (input.includeDownloadUrl !== false && downloadService.enabled) {

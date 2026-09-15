@@ -57,12 +57,17 @@ export const DEFAULT_CLI_TOKEN_TTL_SECONDS: Seconds = SECONDS_IN_HOUR;
  * Window a one-time claim code may be redeemed within, in seconds.
  *
  * Short by design: the code only has to survive the hop from the minting agent to the machine
- * running the CLI. The credential it unwraps lives its own (also short) life from the mint.
+ * running the CLI, which is an immediate copy-paste or an automated follow-up command — not
+ * something a human sits on. The credential it unwraps lives its own (also short) life from the
+ * mint, so this window is purely the exposure of the code in transit and is kept near its floor.
  */
-export const CLI_TOKEN_CLAIM_TTL_SECONDS: Seconds = 5 * SECONDS_IN_MINUTE;
+export const CLI_TOKEN_CLAIM_TTL_SECONDS: Seconds = 2 * SECONDS_IN_MINUTE;
 
 /**
  * Number of random bytes behind a claim code. 32 bytes base64url-encodes to 43 characters.
+ *
+ * Applies to the opaque-random code form. A JWT-shaped code (see {@link CliTokenMintResult.claimCode})
+ * would size itself from its payload instead, and should spend at least this much entropy on a `jti`.
  */
 export const CLI_TOKEN_CLAIM_CODE_BYTES = 32;
 
@@ -111,6 +116,36 @@ export const CLI_TOKEN_ADMIN_PREDICATE = 'CLI_TOKEN_ADMIN_PREDICATE';
 
 // MARK: Config
 /**
+ * Resolver form of {@link CliTokenApiModuleConfig.cliClientId}.
+ *
+ * Invoked once per mint rather than read at boot, so an app may discover — or lazily provision — its
+ * CLI client after the DI graph was built. Returning a nullish value leaves the endpoint disabled for
+ * that call, exactly as an empty literal does.
+ *
+ * @returns The CLI client's `client_id`, or nullish when none is available.
+ */
+export type CliTokenClientIdResolver = () => Promise<Maybe<string>> | Maybe<string>;
+
+/**
+ * Resolves the configured CLI `client_id`, invoking the resolver form when one was supplied.
+ *
+ * Takes the configured VALUE rather than the whole config so it can be exercised — and reused —
+ * without standing up a module config. An empty result is normalized to `undefined`, so a blank
+ * literal disables the endpoint exactly as an absent one does.
+ *
+ * Memoization is deliberately NOT done here: the resolver is invoked once per mint so an app may
+ * provision its CLI client lazily, which means an app that must see a stable id has to memoize its
+ * own resolver (e.g. with `cachedGetter`).
+ *
+ * @param cliClientId - The configured value, in either the literal or the resolver form.
+ * @returns The resolved `client_id`, or `undefined` when the mint is not configured.
+ */
+export async function resolveCliTokenClientId(cliClientId: Maybe<string | CliTokenClientIdResolver>): Promise<Maybe<string>> {
+  const resolved = typeof cliClientId === 'function' ? await cliClientId() : cliClientId;
+  return resolved || undefined;
+}
+
+/**
  * Configuration for the CLI-token mint endpoint, supplied by the app via its dependency module.
  *
  * Without a config the endpoint is DISABLED: there is no safe default for `cliClientId`, and minting
@@ -122,8 +157,12 @@ export abstract class CliTokenApiModuleConfig {
    * `auth setup` was configured with.
    *
    * REQUIRED. When absent (or unresolvable at the provider) the endpoint is disabled.
+   *
+   * May be a {@link CliTokenClientIdResolver} instead of a literal id, for an app that discovers or
+   * provisions its CLI client at runtime rather than reading a configured value. The resolver is
+   * invoked per mint, so it can return a value that did not exist when the DI graph was built.
    */
-  readonly cliClientId!: string;
+  readonly cliClientId!: string | CliTokenClientIdResolver;
   /**
    * OIDC scope term an OIDC caller must hold to mint. Defaults to
    * {@link DEFAULT_CLI_TOKEN_REQUIRED_OIDC_SCOPE}. Pass `null` to disable scope enforcement entirely
@@ -135,6 +174,24 @@ export abstract class CliTokenApiModuleConfig {
    * {@link MAX_CLI_TOKEN_TTL_SECONDS}. Defaults to {@link DEFAULT_CLI_TOKEN_TTL_SECONDS}.
    */
   readonly defaultTtlSeconds?: Seconds;
+  /**
+   * Whether a claim code may only be redeemed from the same IP that minted it. Defaults to FALSE.
+   *
+   * Defence in depth on top of the code's own controls (unguessable, single-use, short-lived): a code
+   * that leaks out of a transcript is useless from anywhere but the minting host.
+   *
+   * **Off by default because it is incompatible with the feature's primary use case.** A cloud-hosted
+   * agent provisioning a *different* machine mints and redeems from different addresses by
+   * construction, and enforcing a match would make that handoff impossible. Enable it only where the
+   * minting session and the redeeming machine are genuinely the same host.
+   *
+   * Two further limits worth knowing before relying on it. Behind NAT every host on the network shares
+   * one egress address, so the check passes for any of them — it is weakest exactly where several
+   * machines could race for the code. And the claim route is unauthenticated and proxied, so the
+   * observed address is only as trustworthy as the proxy that set `X-Forwarded-For`; where nothing
+   * rewrites that header it is caller-supplied and the binding is decorative.
+   */
+  readonly bindClaimToMintIp?: boolean;
   /**
    * The app's API base URL, echoed into the handoff bundle so a machine with no prior `auth setup`
    * can bootstrap an env from the bundle alone.
@@ -150,6 +207,20 @@ export abstract class CliTokenApiModuleConfig {
 export interface CliTokenMintResult {
   /**
    * The one-time code to redeem at `POST /oidc/cli-token/claim`.
+   *
+   * OPAQUE to its holder: the CLI passes it back verbatim and reads nothing out of it. Today it is
+   * {@link CLI_TOKEN_CLAIM_CODE_BYTES} random bytes, base64url-encoded — a pointer at the stored
+   * claim, carrying no data of its own.
+   *
+   * It may instead become an encoded (or signed) JWT if the code ever has to carry information the
+   * redeeming machine needs BEFORE it can redeem — an issuer or API base URL it would otherwise have
+   * no way to learn. Nothing downstream assumes the random form: `cliTokenClaimDocumentId` normalizes
+   * the value into a document id, and base64url (which a compact JWS also uses) already satisfies it.
+   *
+   * Two properties must survive such a change. The code has to stay unguessable, so a JWT form must
+   * still carry its own random `jti` rather than being derivable from the mint's inputs; and a failed
+   * redemption must stay undifferentiated, so a self-describing code must not let a caller distinguish
+   * "expired" from "unknown" locally and turn the unauthenticated claim route into an oracle.
    */
   readonly claimCode: string;
   /**

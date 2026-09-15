@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { type Maybe, type Seconds, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { type OidcEntry, type OidcScope, OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE } from '@dereekb/firebase';
-import { assertEndpointOidcScope, badRequestError, forbiddenError, type FirebaseServerAuthData, notFoundError, oidcScopesFromRequestAuth, unauthenticatedError } from '@dereekb/firebase-server';
+import { assertEndpointOidcScope, badRequestError, clientIpsMatch, forbiddenError, type FirebaseServerAuthData, notFoundError, oidcScopesFromRequestAuth, unauthenticatedError } from '@dereekb/firebase-server';
 import { OidcModuleConfig } from '../oidc.config';
 import { OidcService } from '../service/oidc.service';
 import { OidcEncryptionService } from '../service/oidc.encryption.service';
@@ -12,6 +12,7 @@ import {
   CLI_TOKEN_ADMIN_PREDICATE,
   CLI_TOKEN_CLAIM_CODE_BYTES,
   CLI_TOKEN_CLAIM_TTL_SECONDS,
+  resolveCliTokenClientId,
   type CliTokenAdminPredicate,
   CliTokenApiModuleConfig,
   type CliTokenHandoffBundle,
@@ -81,6 +82,21 @@ interface StoredCliTokenClaimPayload {
    */
   readonly encryptedRefreshToken: string;
   readonly apiBaseUrl?: string;
+  /**
+   * The address the mint was called from, recorded only when `bindClaimToMintIp` is enabled. Absent
+   * on a claim minted while the option was off, which redeems from anywhere as before.
+   */
+  readonly mintIp?: string;
+}
+
+/**
+ * Per-request context for a mint or claim, carrying what the transport layer observed.
+ */
+export interface CliTokenRequestContext {
+  /**
+   * The calling client's address, as resolved by the controller.
+   */
+  readonly requestIp?: Maybe<string>;
 }
 
 // MARK: Service
@@ -145,7 +161,7 @@ export class OidcCliTokenService {
    * @returns The claim code and the minted credential's metadata. The refresh token itself is NOT returned.
    * @throws {HttpsError} `401` with no uid, `403` when a gate rejects the caller, `400` when minting is disabled.
    */
-  async mintCliToken(auth: Maybe<FirebaseServerAuthData>, params: MintCliTokenParams): Promise<CliTokenMintResult> {
+  async mintCliToken(auth: Maybe<FirebaseServerAuthData>, params: MintCliTokenParams, context?: CliTokenRequestContext): Promise<CliTokenMintResult> {
     const uid = auth?.uid;
 
     if (!uid) {
@@ -172,7 +188,7 @@ export class OidcCliTokenService {
       endpoint: FIREBASE_SERVER_CLI_TOKEN_API_PROTECTED_PATH
     });
 
-    const cliClientId = this.config?.cliClientId;
+    const cliClientId = await resolveCliTokenClientId(this.config?.cliClientId);
 
     if (!cliClientId) {
       throw badRequestError({ status: 400, code: CLI_TOKEN_DISABLED_ERROR_CODE, message: 'CLI credential minting is not configured for this app.' });
@@ -230,7 +246,8 @@ export class OidcCliTokenService {
         scope: scopeString,
         expiresAt,
         encryptedRefreshToken: this.encryptionService.provider.encrypt(refreshTokenValue),
-        ...(this.config?.apiBaseUrl ? { apiBaseUrl: this.config.apiBaseUrl } : undefined)
+        ...(this.config?.apiBaseUrl ? { apiBaseUrl: this.config.apiBaseUrl } : undefined),
+        ...(this.config?.bindClaimToMintIp && context?.requestIp ? { mintIp: context.requestIp } : undefined)
       }
     });
 
@@ -247,7 +264,7 @@ export class OidcCliTokenService {
    * @returns The handoff bundle: everything a bare machine needs to be logged in.
    * @throws {HttpsError} A `404` with the SAME generic error for a missing, expired, or already-consumed code.
    */
-  async claimCliToken(params: ClaimCliTokenParams): Promise<CliTokenHandoffBundle> {
+  async claimCliToken(params: ClaimCliTokenParams, context?: CliTokenRequestContext): Promise<CliTokenHandoffBundle> {
     const code = typeof params?.code === 'string' ? params.code.trim() : '';
 
     if (code.length === 0) {
@@ -265,8 +282,23 @@ export class OidcCliTokenService {
       // `consumed` is set INSIDE the transaction, so a concurrent second redeem reads the same
       // pre-consume snapshot and Firestore aborts one of the two writes.
       if (data != null && data.type === OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE && data.consumed == null && !hasExpired(data)) {
-        result = data.payload as unknown as StoredCliTokenClaimPayload;
-        await document.accessor.set({ consumed: unixDateTimeSecondsNumberForNow() } as Partial<OidcEntry>, { merge: true });
+        const payload = data.payload as unknown as StoredCliTokenClaimPayload;
+
+        // Evaluated INSIDE the transaction alongside the consume, so a mismatched redeem cannot race a
+        // matching one. A mismatch deliberately leaves `consumed` unset — the legitimate holder can
+        // still redeem — and falls through to the same generic error every other failure returns, so
+        // the route does not reveal that a code exists but was called from the wrong address.
+        //
+        // Only enforced for a claim that actually recorded an address: a code minted while
+        // `bindClaimToMintIp` was off redeems from anywhere, as it did when it was issued. Once an
+        // address WAS recorded, `clientIpsMatch` normalizes both sides and counts an unresolvable
+        // address as a mismatch, so a binding behind a proxy that strips the header fails closed.
+        if (payload.mintIp == null || clientIpsMatch(payload.mintIp, context?.requestIp)) {
+          result = payload;
+          await document.accessor.set({ consumed: unixDateTimeSecondsNumberForNow() } as Partial<OidcEntry>, { merge: true });
+        } else {
+          this._logger.warn(`Rejected a CLI credential claim from ${context?.requestIp ?? 'an unknown address'} — the code was minted from ${payload.mintIp}.`);
+        }
       }
 
       return result;

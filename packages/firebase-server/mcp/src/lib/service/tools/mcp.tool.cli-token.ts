@@ -1,6 +1,7 @@
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
 import { CLI_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { requestClientIp } from '@dereekb/firebase-server';
 import { type McpCliTokenMinter, type McpCliTokenMintResult } from '../../mcp.config';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -35,8 +36,8 @@ export interface CreateCliTokenToolDeps {
 /**
  * Output payload for the `cli-token` tool.
  *
- * Deliberately does NOT carry the refresh token: the claim code is a one-time, five-minute-lived
- * pointer at it, which is what makes the tool's output safe to leave in a transcript.
+ * Deliberately does NOT carry the refresh token: the claim code is a one-time, short-lived pointer
+ * at it, which is what makes the tool's output safe to leave in a transcript.
  */
 export interface CliTokenToolOutput {
   readonly claimCode: string;
@@ -77,7 +78,7 @@ export function createCliTokenTool(deps: CreateCliTokenToolDeps): McpToolDefinit
   return buildStaticToolDefinition({
     name: CLI_TOKEN_TOOL_NAME,
     description:
-      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within five minutes.',
+      'Mints a short-lived CLI login credential for YOU (the calling session) and returns a one-time claim code plus, when available, a signed download URL for the CLI binary. The credential is capped at one hour, carries no more privilege than this session (never `token.cli` or `token.service`), and expires with this session if that is sooner. The refresh token is never returned here — redeem the claim code with `<cli> auth handoff <code>` within two minutes.',
     inputSchema: CLI_TOKEN_INPUT_SCHEMA,
     outputSchema: CLI_TOKEN_OUTPUT_SCHEMA,
     dispatch: {
@@ -97,7 +98,10 @@ async function cliTokenToolHandler(args: Record<string, unknown>, ctx: McpStatic
     auth: ctx.auth,
     scopes: parseScopes(args['scopes']),
     ttlSeconds: parseTtlSeconds(args['ttlSeconds']),
-    includeDownloadUrl: args['includeDownloadUrl'] !== false
+    includeDownloadUrl: args['includeDownloadUrl'] !== false,
+    // resolved from the tool call's raw request so an MCP mint records the same address an HTTP mint
+    // does — see McpCliTokenMintInput.requestIp
+    requestIp: requestClientIp(ctx.rawRequest)
   });
 
   const output = buildOutput(minted);

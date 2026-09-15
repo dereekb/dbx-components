@@ -106,9 +106,14 @@ export class OidcProviderConfigService {
    * provider does support those scopes, for the clients holding the profile. This narrower list is
    * for metadata a client treats as a request template — notably an MCP protected-resource
    * document's `scopes_supported`, which dynamic-registration clients (the Claude Code CLI) copy
-   * verbatim onto `/authorize`. An assignment-only scope advertised there ends the flow in
-   * `access_denied`: the consent unlock gate judges the REQUEST, so unlike an admin-only scope
-   * there is no deselect-at-consent way through.
+   * verbatim onto `/authorize`. Defaulting such a document to this narrower list keeps an
+   * unassigned client from requesting a scope it can never be granted.
+   *
+   * A resource MAY still advertise an assignment-only scope deliberately (demo-api does for
+   * `token.cli`, so an MCP connector can ask for it at all). That is not fatal for the clients
+   * lacking the profile: the consent URL builder withholds the scope from them, so it lands in the
+   * submit's `rejected` set and the flow completes without it — the same treatment an admin-only
+   * scope gets for a non-admin.
    */
   readonly clientRequestableScopesSupported: string[];
 

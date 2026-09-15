@@ -62,9 +62,10 @@ export class McpWellKnownController {
 
     // Base scope list is what the issuer grants an arbitrary client, NOT its full
     // `scopes_supported`: a dynamic-registration client copies this list verbatim onto
-    // `/authorize`, and a provider-profile-gated scope in it would be hard-rejected at the
-    // consent unlock gate (`access_denied`) for every client lacking that profile assignment.
-    // The optional filter narrows the list further.
+    // `/authorize`, and a provider-profile-gated scope in it is useless to every client lacking
+    // that profile assignment. The optional filter adjusts the list — usually narrowing it, but
+    // an app may also add a gated scope back so an assigned client can request it at all (the
+    // consent builder withholds it from the unassigned ones, so their flow still completes).
     const providerScopes = this.oidcProviderConfigService.clientRequestableScopesSupported;
     const scopes = scopesFilter ? scopesFilter(providerScopes) : providerScopes;
 

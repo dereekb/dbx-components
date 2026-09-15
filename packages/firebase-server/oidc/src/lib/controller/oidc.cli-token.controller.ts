@@ -1,6 +1,6 @@
 import { Body, Controller, HttpException, HttpStatus, Inject, Post, Req } from '@nestjs/common';
 import { type Request } from 'express';
-import { type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
+import { type FirebaseServerAuthenticatedRequest, requestClientIp } from '@dereekb/firebase-server';
 import { CLI_TOKEN_CLAIM_PATH_PART, CLI_TOKEN_MINT_PATH_PART, type CliTokenHandoffBundle, type CliTokenMintResult } from './oidc.cli-token.config';
 import { type ClaimCliTokenParams, type MintCliTokenParams, OidcCliTokenService } from './oidc.cli-token.service';
 
@@ -39,7 +39,7 @@ export class OidcCliTokenController {
     const auth = (req as FirebaseServerAuthenticatedRequest).auth;
 
     try {
-      return await this.cliTokenService.mintCliToken(auth, body ?? {});
+      return await this.cliTokenService.mintCliToken(auth, body ?? {}, { requestIp: requestClientIp(req) });
     } catch (error: any) {
       throw toCliTokenHttpException(error);
     }
@@ -51,13 +51,14 @@ export class OidcCliTokenController {
    * Unauthenticated by design: the machine redeeming the code has no credential yet — obtaining one
    * is the entire point. Every failure returns the same generic error so the route is not an oracle.
    *
+   * @param req - The Express request, read only for the caller's address.
    * @param body - The claim code.
    * @returns The {@link CliTokenHandoffBundle}.
    */
   @Post(CLI_TOKEN_CLAIM_PATH_PART)
-  async claimCliToken(@Body() body: ClaimCliTokenParams): Promise<CliTokenHandoffBundle> {
+  async claimCliToken(@Req() req: Request, @Body() body: ClaimCliTokenParams): Promise<CliTokenHandoffBundle> {
     try {
-      return await this.cliTokenService.claimCliToken(body ?? { code: '' });
+      return await this.cliTokenService.claimCliToken(body ?? { code: '' }, { requestIp: requestClientIp(req) });
     } catch (error: any) {
       throw toCliTokenHttpException(error);
     }

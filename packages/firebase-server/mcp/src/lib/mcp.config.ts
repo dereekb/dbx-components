@@ -144,9 +144,11 @@ export abstract class McpModuleConfig {
    * injected {@link OidcProviderConfigService.clientRequestableScopesSupported}, so
    * the MCP resource advertises the scopes the issuer grants an arbitrary client
    * without the app restating them. Scopes only an admin-assigned provider profile
-   * unlocks are already excluded — requesting one is fatal at the consent unlock
-   * gate. Provide this only to narrow the set further; it returns the subset to
-   * advertise. When unset, the whole base list is advertised.
+   * unlocks are excluded from that base list, since an unassigned client can never
+   * be granted one. Provide this to narrow the set further — or to add such a gated
+   * scope back deliberately, which is safe: the consent URL builder withholds it
+   * from any client whose profiles do not unlock it, so that client's flow completes
+   * without it rather than failing. When unset, the whole base list is advertised.
    *
    * Advertising these matters because dynamic-registration MCP clients (the Claude
    * Code CLI) read `scopes_supported` to decide which scopes to request on the
@@ -302,6 +304,14 @@ export interface McpCliTokenMintInput {
    * CLI binary so a bare machine can fetch it before redeeming the claim code.
    */
   readonly includeDownloadUrl?: boolean;
+  /**
+   * The calling MCP session's client address, resolved from the tool call's raw request.
+   *
+   * Forwarded so a mint through the MCP surface records the same address an HTTP mint does. Without
+   * it an app that binds a claim code to its minting address would silently apply that binding on one
+   * path and not the other — a gate that looks enabled while doing nothing is worse than none.
+   */
+  readonly requestIp?: Maybe<string>;
 }
 
 /**

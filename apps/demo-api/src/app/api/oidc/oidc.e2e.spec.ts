@@ -7,7 +7,7 @@ import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type Oidc
 import { McpModuleConfig } from '@dereekb/firebase-server/mcp';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { callableRequestTest, performOAuthFlow } from '@dereekb/firebase-server/test';
-import { type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
+import { CLI_TOKEN_OIDC_SCOPE, type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../../function/model/crud.functions';
 
 vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
@@ -143,16 +143,26 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(res.body.scopes_supported).toContain('model.read');
       });
 
-      // A dynamic-registration MCP client requests this list verbatim, and the consent unlock gate
-      // judges the REQUEST — so advertising `lms`/`reports` (unlocked only by an assigned provider
-      // profile) ended every such client's flow in `access_denied` with no way to deselect them.
-      // The issuer's own discovery document still advertises them ('still lists the gated scopes in
-      // discovery scopes_supported' below); only this resource-level list is narrowed.
+      // A dynamic-registration MCP client requests this list verbatim, so the base list omits the
+      // scopes unlocked only by an assigned provider profile — a fresh client could never be granted
+      // them, and asking buys it nothing. The issuer's own discovery document still advertises them
+      // ('still lists the gated scopes in discovery scopes_supported' below); only this
+      // resource-level list is narrowed.
       it('should omit the provider-profile-gated scopes a fresh client cannot obtain', async () => {
         const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
 
         expect(res.body.scopes_supported).not.toContain('lms');
         expect(res.body.scopes_supported).not.toContain('reports');
+      });
+
+      // `token.cli` is the deliberate exception demo-api's own `scopesSupported` filter adds back: an
+      // MCP connector that never requests it could never mint a CLI credential, and advertising it is
+      // safe because the consent builder withholds it from any client lacking the `cli-handoff`
+      // profile. Advertised ≠ granted — see the unlock-gate drop test below.
+      it('should advertise token.cli so an assigned MCP client can request it', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
+
+        expect(res.body.scopes_supported).toContain(CLI_TOKEN_OIDC_SCOPE);
       });
 
       // Dropped by the demo's own `scopesSupported` filter rather than the framework — the framework
@@ -901,11 +911,20 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(scopes).not.toContain('reports');
         });
 
-        it('rejects a gated scope for a client without the unlocking profile', async () => {
-          const { client_id } = await oidcClientService.createClient({ client_name: 'plain-client', redirect_uris: ['https://example.com/callback'], token_endpoint_auth_method: 'client_secret_post' });
-          const { callbackUrl } = await flowToCallback(client_id, 'openid lms');
-          expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
-          expect(callbackUrl.searchParams.get('code')).toBeNull();
+        // Formerly an `access_denied`: the unlock gate judged the REQUEST, so a gated scope a client
+        // could not unlock was fatal. It now judges what was CONSENTED, and the consent URL builder
+        // withholds an assignment-only scope from a client whose profiles do not unlock it — so the
+        // scope lands in the submit's `rejected` set and the flow completes without it, exactly as an
+        // admin-only scope does for a non-admin. That is what lets a resource advertise a gated scope
+        // (demo-api does for `token.cli`) without breaking every client that copies the advertised
+        // list but holds no profile assignment. The gate remains as defense in depth for a submit
+        // that names the scope anyway.
+        it('drops a gated scope for a client without the unlocking profile and completes without it', async () => {
+          const { client_id, client_secret } = await oidcClientService.createClient({ client_name: 'plain-client', redirect_uris: ['https://example.com/callback'], token_endpoint_auth_method: 'client_secret_post' });
+          const scopes = await tokenScopesForFlow(client_id, client_secret!, 'openid lms');
+
+          expect(scopes).toContain('openid');
+          expect(scopes).not.toContain('lms');
         });
 
         it('rejects an lms-profile client that omits the required lms scope', async () => {

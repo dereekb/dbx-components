@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLI_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE, type OidcScope } from '@dereekb/firebase';
-import { DEFAULT_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
+import { CLI_TOKEN_CLAIM_TTL_SECONDS, DEFAULT_CLI_TOKEN_TTL_SECONDS, MAX_CLI_TOKEN_TTL_SECONDS, resolveCliTokenClientId, resolveCliTokenScopes, resolveCliTokenTtlSeconds } from './oidc.cli-token.config';
 
 function scopeSet(...scopes: string[]): ReadonlySet<OidcScope> {
   return new Set(scopes);
@@ -91,5 +91,45 @@ describe('resolveCliTokenTtlSeconds()', () => {
 
   it('never returns less than one second', () => {
     expect(resolveCliTokenTtlSeconds({ requestedTtlSeconds: 300, parentRemainingSeconds: 0.2 })).toBe(1);
+  });
+});
+
+describe('resolveCliTokenClientId()', () => {
+  it('returns a statically configured client id', async () => {
+    await expect(resolveCliTokenClientId('static-client')).resolves.toBe('static-client');
+  });
+
+  it('invokes the resolver form', async () => {
+    await expect(resolveCliTokenClientId(() => 'resolved-client')).resolves.toBe('resolved-client');
+  });
+
+  it('awaits an async resolver', async () => {
+    await expect(resolveCliTokenClientId(async () => 'async-client')).resolves.toBe('async-client');
+  });
+
+  // The resolver is called per mint, so this is the shape an app memoizing its provisioning has:
+  // the mint must see the SAME id every time, not a freshly registered client each call.
+  it('does not memoize on its own — a caller provisioning lazily has to', async () => {
+    let calls = 0;
+    const resolver = () => `client-${++calls}`;
+
+    await expect(resolveCliTokenClientId(resolver)).resolves.toBe('client-1');
+    await expect(resolveCliTokenClientId(resolver)).resolves.toBe('client-2');
+  });
+
+  it('normalizes an empty or absent id to undefined so the endpoint disables', async () => {
+    await expect(resolveCliTokenClientId('')).resolves.toBeUndefined();
+    await expect(resolveCliTokenClientId(undefined)).resolves.toBeUndefined();
+    await expect(resolveCliTokenClientId(() => undefined)).resolves.toBeUndefined();
+    await expect(resolveCliTokenClientId(() => '')).resolves.toBeUndefined();
+  });
+});
+
+describe('CLI_TOKEN_CLAIM_TTL_SECONDS', () => {
+  // The claim code only has to survive one hop from a tool result into a shell. It is pinned so a
+  // widening is a deliberate edit rather than a drift — the code sits in an MCP transcript for its
+  // whole life, and the MCP tool's own description quotes this window to the agent.
+  it('is two minutes', () => {
+    expect(CLI_TOKEN_CLAIM_TTL_SECONDS).toBe(120);
   });
 });
