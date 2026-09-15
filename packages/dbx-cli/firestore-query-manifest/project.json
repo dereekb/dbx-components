@@ -6,19 +6,23 @@
   "tags": [],
   "implicitDependencies": [],
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/firestore-query-manifest"],
-      "options": {
-        "command": "npx nx run dbx-cli-firestore-query-manifest:build-base",
-        "color": true
-      },
-      "dependsOn": ["^build"]
-    },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/firestore-query-manifest"],
       "defaultConfiguration": "production",
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  Its sibling deps dbx-cli-firestore-rules and dbx-cli-firestore-indexes are source-only projects with no build target of any kind -- esbuild compiles them straight into this bundle, so there is nothing to order against and no sibling edge to add. Cross-family deps point at the other family's ROOT `build`: a sibling family's child has no `build` of its own and writes into its parent's dist, so only the parent's `build` -- which runs the ESM finalize -- produces a finalized copy for TypeScript to resolve `exports` against."
+      },
       "options": {
         "outputPath": "dist/packages/dbx-cli/firestore-query-manifest",
         "main": "packages/dbx-cli/firestore-query-manifest/src/main.ts",

@@ -11,7 +11,7 @@
       "outputs": ["{projectRoot}/src/lib/manifest/api.manifest.generated.ts"],
       "dependsOn": [
         {
-          "projects": ["dbx-cli-firebase-api-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],
@@ -26,7 +26,7 @@
       "outputs": ["{projectRoot}/src/lib/manifest/query.manifest.generated.ts"],
       "dependsOn": [
         {
-          "projects": ["dbx-cli-firestore-query-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],

@@ -71,7 +71,7 @@
           "target": "generate-api-manifest"
         },
         {
-          "projects": ["dbx-cli-generate-mcp-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],
@@ -87,7 +87,7 @@
       "dependsOn": [
         "generate-mcp-manifest",
         {
-          "projects": ["dbx-cli-generate-route-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],

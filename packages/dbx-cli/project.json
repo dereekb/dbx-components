@@ -9,57 +9,71 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-cli"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/packages/dbx-cli/eslint/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/eslint/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/firebase-api-manifest/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/firebase-api-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/firestore-indexes/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/firestore-indexes/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/firestore-query-manifest/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/firestore-query-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/firestore-rules/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/firestore-rules/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/generate-firestore-indexes/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/generate-firestore-indexes/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/generate-mcp-manifest/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/generate-mcp-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/generate-route-manifest/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/generate-route-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/lint-cache/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/lint-cache/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/manifest-extract/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/manifest-extract/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/model-test/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/model-test/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/route/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/route/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/test/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/test/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/validate/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/validate/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"
+      ],
       "options": {
-        "commands": [
-          {
-            "command": "npx nx run dbx-cli:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-manifest-extract:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-route:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-firebase-api-manifest:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-lint-cache:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-generate-firestore-indexes:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-firestore-query-manifest:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-generate-mcp-manifest:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-generate-route-manifest:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-eslint:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-validate:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-model-test:build-base"
-          },
-          {
-            "command": "npx nx run dbx-cli-test:build-base"
-          },
-          {
-            "description": "normalize + verify the ESM-only package shape",
-            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/dbx-cli"
-          }
-        ],
-        "parallel": false
+        "color": true,
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/dbx-cli"
+      },
+      "dependsOn": [
+        "build-base",
+        {
+          "projects": [
+            "dbx-cli-manifest-extract",
+            "dbx-cli-route",
+            "dbx-cli-firebase-api-manifest",
+            "dbx-cli-lint-cache",
+            "dbx-cli-generate-firestore-indexes",
+            "dbx-cli-firestore-query-manifest",
+            "dbx-cli-generate-mcp-manifest",
+            "dbx-cli-generate-route-manifest",
+            "dbx-cli-eslint",
+            "dbx-cli-validate",
+            "dbx-cli-model-test",
+            "dbx-cli-test"
+          ],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "The nested case, and the widest one in the workspace. dist/packages/dbx-cli is ONE npm package with 12 entry points, not 12 packages: five rollup subpaths (dbx-cli-manifest-extract, -route, -eslint, -model-test, -test) and seven esbuild CLI bundles (-firebase-api-manifest, -lint-cache, -generate-firestore-indexes, -firestore-query-manifest, -generate-mcp-manifest, -generate-route-manifest, -validate) all compile INTO this directory and are named by this package's own dist `exports` and `bin`. So this target is the sole deliverable and the sole owner of the directory.  What changed: the thirteen sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules the children by their real layering (3 waves: dbx-cli:build-base; the ten children that need only it; then -firebase-api-manifest and -validate, which also need the -manifest-extract / -model-test siblings) instead of 13 sequential steps. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item, and why every child carries its own explicit edge to `dbx-cli:build-base` rather than relying on this list's order.  The seven esbuild children also LOST the `build` targets they used to carry: each shelled out to its own `build-base`, which this target's command list already ran, so those subprojects were built twice into the same directory on every `nx build dbx-cli`.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back. `inputs` has to name the nested project directories explicitly -- `production` resolves `{projectRoot}/**/*` against this project's OWN file list, which Nx assigns nested projects' files away from, so without these globs a child's source change would not invalidate the cached copy of the directory that child writes into."
       }
     },
     "build-base": {
-      "dependsOn": []
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies.  `^build` here also walks the pre-existing dbx-cli <-> dbx-cli-firestore-indexes project-graph cycle (this package imports @dereekb/dbx-cli/firestore-indexes; that project reaches back into packages/dbx-cli/src/lib/scan-helpers by relative path). It does NOT become a task-graph cycle: dbx-cli-firestore-indexes has no `build`, so Nx creates a dummy task, and filterDummyTasks (create-task-graph.js) drops the deps of any dummy that sits on a cycle -- so the dummy's would-be edge back to dbx-cli:build is discarded. Nothing is lost by that: its only other dep, util, is already a real edge here. Verified with createTaskGraph + findCycle over 12 scenarios before this change landed."
+      }
     },
     "typecheck": {
       "executor": "nx:run-commands",

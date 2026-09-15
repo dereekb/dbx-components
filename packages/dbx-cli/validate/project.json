@@ -15,20 +15,32 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/validate"],
-      "options": {
-        "command": "npx nx run dbx-cli-validate:build-base",
-        "color": true
-      },
-      "dependsOn": ["^build"]
-    },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-rule-catalog"],
+      "dependsOn": [
+        "generate-rule-catalog",
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["dbx-cli-manifest-extract"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["dbx-cli-model-test"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  The pre-existing non-`^` entry, generate-rule-catalog, stays first: it writes src/generated/rule-catalog.generated.ts, which this bundle compiles. It also imports two SIBLING entry points, @dereekb/dbx-cli/manifest-extract and @dereekb/dbx-cli/model-test. A sibling edge is spelled as `build-base` (not `build`): siblings compile into this same dist directory and have no `build` of their own, and the parent's `build` is what depends on all of them, so pointing at it here would close the cycle the parent-edge note describes. Cross-family deps point at the other family's ROOT `build`: a sibling family's child has no `build` of its own and writes into its parent's dist, so only the parent's `build` -- which runs the ESM finalize -- produces a finalized copy for TypeScript to resolve `exports` against."
+      },
       "options": {
         "outputPath": "dist/packages/dbx-cli/validate",
         "main": "packages/dbx-cli/validate/src/index.ts",
