@@ -19,6 +19,7 @@ import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
 import { UtilManifest, type UtilEntry } from '../manifest/utils-schema.js';
 import { extractUtilEntries, type ExtractedUtilEntry, type UtilExtractWarning } from './utils-extract.js';
+import { sanitizeTypeText } from './sanitize-type-text.js';
 import { DEFAULT_UTILS_SCAN_OUT_PATH, UTILS_SCAN_CONFIG_FILENAME, UtilsScanConfig } from './utils-scan-config-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../scan-helpers/scan-io.js';
 
@@ -32,6 +33,12 @@ export type BuildUtilsGlobber = ScanGlobber;
 export interface BuildUtilsManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
+  /**
+   * Absolute workspace root that absolute paths baked into type text are made
+   * relative to. Defaults to `process.cwd()`, which is the workspace root because
+   * the generate-* targets all run with `cwd: {workspaceRoot}`.
+   */
+  readonly workspaceRoot?: string;
   readonly now?: () => Date;
   readonly readFile?: BuildUtilsReadFile;
   readonly globber?: BuildUtilsGlobber;
@@ -63,7 +70,7 @@ const DEFAULT_GLOBBER: BuildUtilsGlobber = defaultGlobber;
  * @returns A discriminated outcome describing the result.
  */
 export async function buildUtilsManifest(input: BuildUtilsManifestInput): Promise<BuildUtilsManifestOutcome> {
-  const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
+  const { projectRoot, generator, workspaceRoot = process.cwd(), readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
 
   const configPath = resolve(projectRoot, UTILS_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
@@ -101,7 +108,7 @@ export async function buildUtilsManifest(input: BuildUtilsManifestInput): Promis
   const extractResult = extractUtilEntries({ project, projectRoot });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName, projectRoot }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName, projectRoot, workspaceRoot }));
 
   const manifest = {
     version: 1 as const,
@@ -134,6 +141,7 @@ interface AssembleEntryInput {
   readonly entry: ExtractedUtilEntry;
   readonly moduleName: string;
   readonly projectRoot: string;
+  readonly workspaceRoot: string;
 }
 
 const SRC_PREFIXES = ['/src/lib/', '/src/'];
@@ -159,7 +167,7 @@ function deriveSubpath(filePath: string, projectRoot: string): string {
 }
 
 function assembleEntry(input: AssembleEntryInput): UtilEntry {
-  const { entry, moduleName, projectRoot } = input;
+  const { entry, moduleName, projectRoot, workspaceRoot } = input;
   const subpath = deriveSubpath(entry.filePath, projectRoot);
   const out: UtilEntry = {
     slug: entry.slug,
@@ -168,10 +176,10 @@ function assembleEntry(input: AssembleEntryInput): UtilEntry {
     category: entry.category,
     module: moduleName,
     subpath,
-    signature: entry.signature,
+    signature: sanitizeTypeText({ typeText: entry.signature, workspaceRoot }),
     description: entry.description,
-    params: entry.params.map((p) => ({ ...p })),
-    returns: entry.returns,
+    params: entry.params.map((p) => ({ ...p, type: sanitizeTypeText({ typeText: p.type, workspaceRoot }) })),
+    returns: sanitizeTypeText({ typeText: entry.returns, workspaceRoot }),
     tags: [...entry.tags],
     ...(entry.example.length > 0 ? { example: entry.example } : {}),
     ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),

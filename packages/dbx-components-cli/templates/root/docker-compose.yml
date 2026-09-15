@@ -23,6 +23,13 @@ services:
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
       - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt
+      # Nx disables its daemon whenever CI=true. Without the daemon every nested `npx nx run
+      # <pkg>:build-base` rebuilds the entire project graph, and since @nx/rollup/plugin is
+      # registered graph construction evaluates every rollup.config.cjs -- so concurrent
+      # reconstructions serialize on the graph-construction file lock and stall the container.
+      # `CI` is normally unset here (docker compose run does not inherit host env), so this is a
+      # guard for the case where it leaks in. Same reason .circleci/config.yml pins NX_DAEMON.
+      - NX_DAEMON=true
     # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
     # - "firebase-public.firebaseio.com:0.0.0.0"
     networks:

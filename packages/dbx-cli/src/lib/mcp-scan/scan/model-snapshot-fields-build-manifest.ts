@@ -20,6 +20,7 @@ import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
 import { ModelSnapshotFieldManifest, type ModelSnapshotFieldEntry } from '../manifest/model-snapshot-fields-schema.js';
 import { extractModelSnapshotFieldEntries, type ExtractedModelSnapshotFieldEntry, type ModelSnapshotFieldExtractWarning } from './model-snapshot-fields-extract.js';
+import { sanitizeTypeText } from './sanitize-type-text.js';
 import { DEFAULT_MODEL_SNAPSHOT_FIELDS_SCAN_OUT_PATH, MODEL_SNAPSHOT_FIELDS_SCAN_CONFIG_FILENAME, ModelSnapshotFieldsScanConfig } from './model-snapshot-fields-scan-config-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../scan-helpers/scan-io.js';
 
@@ -33,6 +34,12 @@ export type BuildModelSnapshotFieldsGlobber = ScanGlobber;
 export interface BuildModelSnapshotFieldsManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
+  /**
+   * Absolute workspace root that absolute paths baked into type text are made
+   * relative to. Defaults to `process.cwd()`, which is the workspace root because
+   * the generate-* targets all run with `cwd: {workspaceRoot}`.
+   */
+  readonly workspaceRoot?: string;
   readonly now?: () => Date;
   readonly readFile?: BuildModelSnapshotFieldsReadFile;
   readonly globber?: BuildModelSnapshotFieldsGlobber;
@@ -64,7 +71,7 @@ const DEFAULT_GLOBBER: BuildModelSnapshotFieldsGlobber = defaultGlobber;
  * @returns A discriminated outcome describing the result.
  */
 export async function buildModelSnapshotFieldsManifest(input: BuildModelSnapshotFieldsManifestInput): Promise<BuildModelSnapshotFieldsManifestOutcome> {
-  const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
+  const { projectRoot, generator, workspaceRoot = process.cwd(), readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
 
   const configPath = resolve(projectRoot, MODEL_SNAPSHOT_FIELDS_SCAN_CONFIG_FILENAME);
   const packagePath = resolve(projectRoot, 'package.json');
@@ -102,7 +109,7 @@ export async function buildModelSnapshotFieldsManifest(input: BuildModelSnapshot
   const extractResult = extractModelSnapshotFieldEntries({ project, projectRoot });
   const moduleName = scanSection.module ?? packageName;
   const sourceLabel = scanSection.source ?? packageName;
-  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName, projectRoot }));
+  const entries = extractResult.entries.map((entry) => assembleEntry({ entry, moduleName, projectRoot, workspaceRoot }));
 
   const manifest = {
     version: 1 as const,
@@ -135,6 +142,7 @@ interface AssembleEntryInput {
   readonly entry: ExtractedModelSnapshotFieldEntry;
   readonly moduleName: string;
   readonly projectRoot: string;
+  readonly workspaceRoot: string;
 }
 
 const SRC_PREFIXES = ['/src/lib/', '/src/'];
@@ -160,7 +168,7 @@ function deriveSubpath(filePath: string, projectRoot: string): string {
 }
 
 function assembleEntry(input: AssembleEntryInput): ModelSnapshotFieldEntry {
-  const { entry, moduleName, projectRoot } = input;
+  const { entry, moduleName, projectRoot, workspaceRoot } = input;
   const subpath = deriveSubpath(entry.filePath, projectRoot);
   const out: ModelSnapshotFieldEntry = {
     slug: entry.slug,
@@ -169,11 +177,11 @@ function assembleEntry(input: AssembleEntryInput): ModelSnapshotFieldEntry {
     category: entry.category,
     module: moduleName,
     subpath,
-    signature: entry.signature,
+    signature: sanitizeTypeText({ typeText: entry.signature, workspaceRoot }),
     description: entry.description,
     optional: entry.optional,
-    params: entry.params.map((p) => ({ ...p })),
-    returns: entry.returns,
+    params: entry.params.map((p) => ({ ...p, type: sanitizeTypeText({ typeText: p.type, workspaceRoot }) })),
+    returns: sanitizeTypeText({ typeText: entry.returns, workspaceRoot }),
     tags: [...entry.tags],
     ...(entry.example.length > 0 ? { example: entry.example } : {}),
     ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),

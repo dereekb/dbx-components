@@ -1,20 +1,31 @@
 #!/bin/bash
 echo "Running server in docker container with emulators with continuous build enabled..."
 
-# Nx 23's recursive-task-invocation guard inserts a (root_pid, task_id) row -- with a
-# UNIQUE primary key -- into the SQLite db under .nx/workspace-data/. That dir is
-# bind-mounted into the container (./:/code), so the db survives `docker compose run
-# --rm`. Inside a fresh container `nx` deterministically gets PID 20, and `--rm`
-# SIGKILLs the process before Nx can run its cleanup, leaving a stale (20, ...:serve)
-# row behind. Nx only purges stale rows older than a day, so the next `serve-server.sh`
-# within 24h re-registers (20, ...:serve), hits the PK collision, and aborts with a
-# false "recursive loop of task invocations" error.
+# Nx keys its recursive-task-invocation guard on (root_pid, task_id) rows in the SQLite db under
+# .nx/workspace-data/, which is bind-mounted into the container via ./:/code and therefore shared
+# across container runs. Container PID namespaces start low and repeat, so a run whose root PID
+# matches a row left behind by an earlier container aborts with a false "Recursive task invocation
+# detected". Nx prefers NX_INVOCATION_ROOT_PID over process.pid, so give each run a value that
+# cannot collide. It must stay under 2^31 -- the root_pid column is 32-bit and Nx does Number(...)
+# on it -- so this is (epoch seconds mod 1e7) * 100 + (pid mod 100): unique per second per process,
+# max 999,999,999. POSIX sh arithmetic, no bashisms.
+NX_INVOCATION_ROOT_PID="$(( ($(date +%s) % 10000000) * 100 + $$ % 100 ))"
+export NX_INVOCATION_ROOT_PID
+
+# Clear stale task state before starting.
 #
-# Passing a unique root PID per run sidesteps the cross-run PID-reuse collision while
-# leaving genuine in-run recursion detection intact (child tasks inherit this value).
-# Epoch seconds stay within the table's 32-bit root_pid column and well above any
-# container PID.
-export NX_INVOCATION_ROOT_PID="$(date +%s)"
+# Nx records running tasks (and task invocations) in the SQLite db under .nx/workspace-data/. Since
+# nx.json pins `cacheDirectory` to .nx/cache, that db lives inside the checkout and is therefore
+# bind-mounted into the container -- which is what lets the container reuse the host's build cache.
+# The cost is that the db now OUTLIVES the container: `docker compose run --rm` (and ./down.sh)
+# SIGKILL the process, so Nx never runs its cleanup and rows for demo-api:serve / demo-api:build-watch
+# are left behind. The next run then blocks forever on "Waiting for demo-api:serve in another nx
+# process". Before `cacheDirectory` was pinned the db sat at /root/.nx inside the container and died
+# with it, so this never surfaced.
+#
+# --onlyWorkspaceData clears the db and the project-graph metadata but NOT .nx/cache, so the shared
+# build cache survives; the graph is recomputed once on the next command.
+npx nx reset --onlyWorkspaceData > /dev/null 2>&1
 
 docker compose run --rm --name=demo-api-server --service-ports \
   -e NX_INVOCATION_ROOT_PID \

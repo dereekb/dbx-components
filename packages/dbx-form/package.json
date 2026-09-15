@@ -44,5 +44,8 @@
     },
     "./mapbox": {},
     "./style-demo": {}
+  },
+  "devDependencies": {
+    "@angular/platform-browser": "22.1.4"
   }
 }

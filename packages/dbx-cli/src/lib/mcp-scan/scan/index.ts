@@ -10,6 +10,7 @@
 export * from './scan-config-schema.js';
 export * from './extract.js';
 export * from './build-manifest.js';
+export * from './sanitize-type-text.js';
 export * from './cli.js';
 export * from './filters-cli.js';
 export * from './filters-extract.js';

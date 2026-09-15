@@ -14,6 +14,10 @@
     "@dereekb/rxjs": "14.4.0",
     "@dereekb/util": "14.4.0",
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^12.0.1"
   }
 }

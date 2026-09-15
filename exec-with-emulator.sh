@@ -9,13 +9,15 @@ USE_PORTS_ARG=--service-ports
 echo "service ports are being used"
 fi
 
-# Nx detects recursive task invocations using a table keyed on (root_pid, task_id), stored in
-# the workspace database under .nx/workspace-data -- which is shared with every container via
-# the ./:/code bind mount. Container PID namespaces start low and repeat, so a run whose root
-# PID matches a row left behind by an earlier container aborts with a false
-# "Recursive task invocation detected". Nx prefers NX_INVOCATION_ROOT_PID over process.pid, so
-# giving each run a value that cannot collide keeps the invocations distinct.
-NX_INVOCATION_ROOT_PID="$$$RANDOM"
+# Nx keys its recursive-task-invocation guard on (root_pid, task_id) rows in the SQLite db under
+# .nx/workspace-data/, which is bind-mounted into the container via ./:/code and therefore shared
+# across container runs. Container PID namespaces start low and repeat, so a run whose root PID
+# matches a row left behind by an earlier container aborts with a false "Recursive task invocation
+# detected". Nx prefers NX_INVOCATION_ROOT_PID over process.pid, so give each run a value that
+# cannot collide. It must stay under 2^31 -- the root_pid column is 32-bit and Nx does Number(...)
+# on it -- so this is (epoch seconds mod 1e7) * 100 + (pid mod 100): unique per second per process,
+# max 999,999,999. POSIX sh arithmetic, no bashisms.
+NX_INVOCATION_ROOT_PID="$(( ($(date +%s) % 10000000) * 100 + $$ % 100 ))"
 
 # Live-gated specs (the openrouter blocks, and anything else that skips itself without credentials)
 # read their key off the process env, and `docker compose run` starts the container with none of the
