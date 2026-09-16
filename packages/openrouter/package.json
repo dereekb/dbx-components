@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/openrouter",
-  "version": "14.5.0",
+  "version": "14.5.1",
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -16,15 +16,15 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/firebase": "14.5.0",
-    "@dereekb/firebase-server": "14.5.0",
-    "@dereekb/model": "14.5.0",
-    "@dereekb/util": "14.5.0",
+    "@dereekb/firebase": "14.5.1",
+    "@dereekb/firebase-server": "14.5.1",
+    "@dereekb/model": "14.5.1",
+    "@dereekb/util": "14.5.1",
     "@nestjs/common": "^12.0.1",
     "@openrouter/sdk": "^1.2.26",
     "arktype": "^2.2.0"
   },
   "devDependencies": {
-    "@dereekb/nestjs": "14.5.0"
+    "@dereekb/nestjs": "14.5.1"
   }
 }

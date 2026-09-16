@@ -36,6 +36,7 @@
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-model.utils.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-firebase.utils.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-firebase.model-snapshot-fields.mcp.generated.json",
+        "{workspaceRoot}/packages/dbx-cli/generated/dereekb-firebase.model-firebase-index.mcp.generated.json",
         "{workspaceRoot}/packages/dbx-cli/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
       ],
       "inputs": [
@@ -44,6 +45,7 @@
         "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/manifest/**/*.ts",
         "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/registry/**/*.ts",
         "{workspaceRoot}/packages/dbx-cli/src/lib/scan-helpers/**/*.ts",
+        "{workspaceRoot}/packages/dbx-cli/firestore-indexes/src/**/*.ts",
         "{workspaceRoot}/dbx-mcp.config.json",
         "{workspaceRoot}/packages/util/src/**/*.ts",
         "{workspaceRoot}/packages/model/src/**/*.ts",
