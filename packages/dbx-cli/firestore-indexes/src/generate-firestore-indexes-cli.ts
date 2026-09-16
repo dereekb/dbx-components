@@ -32,6 +32,7 @@ import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/pr
 import { resolve } from 'node:path';
 import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo, type ModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
+import { formatModelFirebaseIndexPackageManifestFailure, loadModelFirebaseIndexPackageManifests } from './model-firebase-index-package-manifests.js';
 import { generateFirestoreIndexesJson, serializeFirestoreIndexesJson, type FirestoreIndexesJson } from './firestore-indexes-generate.js';
 
 // MARK: Public types
@@ -108,13 +109,20 @@ const DEFAULT_BIN_NAME = 'dbx-cli-generate-firestore-indexes';
 
 function buildUsage(binName: string): string {
   return [
-    `Usage: ${binName} --component <dir> [--component <dir> ...] [--output <path>] [--check] [--json] [--help]`,
+    `Usage: ${binName} [--component <dir> ...] [--packages] [--manifest <path> ...] [--output <path>] [--check] [--json] [--help]`,
     '',
     'Generates `firestore.indexes.json` from `@dbxModelFirebaseIndex`-tagged factories.',
     '',
     'Options:',
-    '  --component <dir>  Required, repeatable. Relative path to a `-firebase` component or package.',
-    '                     Repeat to derive one indexes file from several packages at once.',
+    '  --component <dir>  Repeatable. Relative path to a `-firebase` component or package whose',
+    '                     source is scanned for tagged factories. Repeat to derive one indexes',
+    '                     file from several packages at once.',
+    '  --packages         Also merge the pre-built index manifests bundled in the installed',
+    '                     @dereekb/dbx-components-mcp. Lets an app derive the framework models\u2019',
+    '                     indexes without a scannable copy of their source.',
+    '  --manifest <path>  Repeatable. Merge a specific pre-built manifest JSON file.',
+    '',
+    '  At least one of --component / --packages / --manifest is required.',
     '  --output <path>    Output path. Defaults to `firestore.indexes.json` at the cwd.',
     '  --check            Compare against the on-disk file; exit 1 on drift, do not write.',
     '  --json             Print the diff summary as JSON instead of human-readable text.',
@@ -124,6 +132,8 @@ function buildUsage(binName: string): string {
 
 interface ParsedArgs {
   readonly components: readonly string[];
+  readonly manifests: readonly string[];
+  readonly packages: boolean;
   readonly output: string;
   readonly check: boolean;
   readonly json: boolean;
@@ -154,8 +164,8 @@ export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestore
     stderr(usage);
     return { exitCode: 2 };
   }
-  if (parsed.components.length === 0) {
-    stderr('generate-firestore-indexes: --component is required');
+  if (parsed.components.length === 0 && parsed.manifests.length === 0 && !parsed.packages) {
+    stderr('generate-firestore-indexes: at least one of --component / --packages / --manifest is required');
     stderr(usage);
     return { exitCode: 2 };
   }
@@ -195,6 +205,21 @@ export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestore
     loadedSources.push(buildOutcome.manifest.source);
   }
 
+  // Pre-built manifests carry entries the analyzer cannot derive here, because the package that
+  // declares them publishes no scannable source. Merged after the scanned components so a local
+  // factory's entry is the one that wins a slug collision.
+  if (parsed.packages || parsed.manifests.length > 0) {
+    const merged = await collectPackageManifestEntries({ cwd, manifestPaths: parsed.manifests, discoverBundled: parsed.packages, readFile });
+
+    if (merged.kind === 'fail') {
+      stderr(merged.message);
+      return { exitCode: 1 };
+    }
+
+    entries.push(...merged.entries);
+    loadedSources.push(...merged.sources);
+  }
+
   if (sawUnresolvedModel) {
     stderr('generate-firestore-indexes: one or more @dbxModelFirebaseIndexModel tags could not be resolved, so their indexes were dropped. Add the missing identity file to the component’s `dbx-mcp.scan.json` include globs.');
     return { exitCode: 1 };
@@ -227,9 +252,51 @@ export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestore
   return { exitCode: 0 };
 }
 
+// MARK: Package manifest merging
+type CollectPackageManifestEntriesResult = { readonly kind: 'ok'; readonly entries: readonly ModelFirebaseIndexEntryInfo[]; readonly sources: readonly string[] } | { readonly kind: 'fail'; readonly message: string };
+
+interface CollectPackageManifestEntriesInput {
+  readonly cwd: string;
+  readonly manifestPaths: readonly string[];
+  readonly discoverBundled: boolean;
+  readonly readFile: GenerateFirestoreIndexesCliReadFile;
+}
+
+/**
+ * Loads the requested pre-built manifests and flattens them into the entry /
+ * source shape the registry consumes. Kept out of the CLI entry point so the
+ * manifest path does not add branching to an already-long orchestration.
+ *
+ * @param input - Cwd, the manifest sources to load, and the CLI's file reader.
+ * @returns The flattened entries and source labels, or a ready-to-print failure message.
+ */
+async function collectPackageManifestEntries(input: CollectPackageManifestEntriesInput): Promise<CollectPackageManifestEntriesResult> {
+  const { cwd, manifestPaths, discoverBundled, readFile } = input;
+  const outcome = await loadModelFirebaseIndexPackageManifests({ cwd, manifestPaths, discoverBundled, readFile });
+
+  let result: CollectPackageManifestEntriesResult;
+  if (outcome.kind === 'success') {
+    const entries: ModelFirebaseIndexEntryInfo[] = [];
+    const sources: string[] = [];
+    for (const { manifest } of outcome.loaded) {
+      for (const entry of manifest.entries) {
+        entries.push(toModelFirebaseIndexEntryInfo(entry));
+      }
+      sources.push(manifest.source);
+    }
+    result = { kind: 'ok', entries, sources };
+  } else {
+    result = { kind: 'fail', message: `generate-firestore-indexes: ${formatModelFirebaseIndexPackageManifestFailure(outcome)}` };
+  }
+
+  return result;
+}
+
 // MARK: Argv parsing
 function parseArgv(argv: readonly string[]): ParsedArgs {
   const components: string[] = [];
+  const manifests: string[] = [];
+  let packages = false;
   let output = 'firestore.indexes.json';
   let check = false;
   let json = false;
@@ -246,6 +313,17 @@ function parseArgv(argv: readonly string[]): ParsedArgs {
         } else {
           components.push(argv[i]);
         }
+        break;
+      case '--manifest':
+        i += 1;
+        if (i >= argv.length) {
+          error = 'generate-firestore-indexes: --manifest requires a value';
+        } else {
+          manifests.push(argv[i]);
+        }
+        break;
+      case '--packages':
+        packages = true;
         break;
       case '--output':
         i += 1;
@@ -271,7 +349,7 @@ function parseArgv(argv: readonly string[]): ParsedArgs {
     }
     i += 1;
   }
-  return { components, output, check, json, help, error };
+  return { components, manifests, packages, output, check, json, help, error };
 }
 
 // MARK: Existing JSON read

@@ -176,6 +176,18 @@
       }
     ]
   },
+  "modelFirebaseIndex": {
+    "scan": [
+      {
+        "project": "packages/firebase",
+        "source": "@dereekb/firebase",
+        "module": "@dereekb/firebase",
+        "include": ["src/lib/model/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-cli/generated/dereekb-firebase.model-firebase-index.mcp.generated.json"
+      }
+    ]
+  },
   "dbxDocsUiExamples": {
     "scan": [
       {
