@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/oauth-resource/express",
-  "version": "14.5.0",
+  "version": "14.5.1",
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/oauth-resource": "14.5.0",
-    "@dereekb/util": "14.5.0",
+    "@dereekb/oauth-resource": "14.5.1",
+    "@dereekb/util": "14.5.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jose": "^6.2.12",

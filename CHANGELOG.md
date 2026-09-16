@@ -1,3 +1,13 @@
+## [14.5.1](https://github.com/dereekb/dbx-components/compare/v14.5.0-dev...v14.5.1) (2026-09-16)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([8135dcd6](https://github.com/dereekb/dbx-components/commit/8135dcd6e3ff0b59e8a2a31350eeffc8190f8772))
+
+### Code Refactoring
+
+- **dbx-cli:** merge published framework firestore index manifests ([253f62fe](https://github.com/dereekb/dbx-components/commit/253f62feb5a49910516f9b63a31a6bce0c490cb3))
+
 # [14.5.0](https://github.com/dereekb/dbx-components/compare/v14.4.0-dev...v14.5.0) (2026-09-16)
 
 ### Bug Fixes
