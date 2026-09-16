@@ -49,7 +49,7 @@ vi.mock('../util/interactive', () => ({ promptLine: h.promptLineMock }));
 
 vi.mock('./cli-handoff.client', () => ({ claimCliHandoff: h.claimHandoffMock }));
 
-import { createAuthCommand } from './auth.command.factory';
+import { cliIssuersMatch, createAuthCommand, DEFAULT_HANDOFF_ENV_NAME } from './auth.command.factory';
 
 const COMPLETE_ENV = { apiBaseUrl: 'http://x/api', oidcIssuer: 'http://x/oidc', clientId: 'id', clientSecret: 'secret', redirectUri: 'urn:cb' };
 const SESSION_EXPIRES_AT_SECONDS = 4102444800; // 2100-01-01, far enough out that the grant is unambiguously alive.
@@ -378,5 +378,42 @@ describe('createAuthCommand handoff', () => {
     await runHandoff({ oidcIssuer: 'http://x/oidc' });
 
     expect(JSON.stringify(h.outputResultMock.mock.calls[0][0])).not.toContain('refresh-token-value');
+  });
+});
+
+describe('cliIssuersMatch()', () => {
+  it('matches identical issuers', () => {
+    expect(cliIssuersMatch('https://api.example.com/oidc', 'https://api.example.com/oidc')).toBe(true);
+  });
+
+  it('ignores a trailing slash', () => {
+    expect(cliIssuersMatch('https://api.example.com/oidc/', 'https://api.example.com/oidc')).toBe(true);
+  });
+
+  it('ignores case in the scheme and host', () => {
+    expect(cliIssuersMatch('HTTPS://API.Example.com/oidc', 'https://api.example.com/oidc')).toBe(true);
+  });
+
+  it('does NOT match a different host — the repoint the guard exists to catch', () => {
+    expect(cliIssuersMatch('https://prod.example.com/oidc', 'http://localhost:9010/oidc')).toBe(false);
+  });
+
+  it('does NOT match a different port on the same host', () => {
+    expect(cliIssuersMatch('http://localhost:9010/oidc', 'http://localhost:9011/oidc')).toBe(false);
+  });
+
+  it('does NOT match a different path on the same origin', () => {
+    expect(cliIssuersMatch('https://example.com/oidc', 'https://example.com/other')).toBe(false);
+  });
+
+  it('falls back to a trimmed string compare when a value is not a URL', () => {
+    expect(cliIssuersMatch('not a url', 'not a url')).toBe(true);
+    expect(cliIssuersMatch('not a url', 'https://example.com/oidc')).toBe(false);
+  });
+});
+
+describe('DEFAULT_HANDOFF_ENV_NAME', () => {
+  it('is a neutral name, so a bare redeem never has to burn the one-time code for lack of one', () => {
+    expect(DEFAULT_HANDOFF_ENV_NAME).toBe('default');
   });
 });

@@ -176,6 +176,44 @@ function describeRemainingDuration(remainingMs: number): string {
   return result;
 }
 
+/**
+ * Env name a handoff falls back to when nothing else names one — no `--env`, no `envName` from the
+ * minting deployment, no active env, and no single built-in default to borrow a name from.
+ *
+ * Only reachable on an unconfigured machine redeeming against a server that declares no
+ * `CliTokenApiModuleConfig.envName`. A neutral name is better than refusing: the credential is
+ * already spent by this point, so failing here would burn a one-time code.
+ */
+export const DEFAULT_HANDOFF_ENV_NAME = 'default';
+
+/**
+ * Whether two OIDC issuer URLs name the same provider, ignoring the differences that carry no
+ * meaning — a trailing slash, case in the scheme/host, and a default port for the scheme.
+ *
+ * Used to decide whether redeeming a claim would REPOINT an existing env at a different deployment.
+ * Anything unparseable falls back to a trimmed string compare rather than reporting a match, so a
+ * malformed value fails closed into the guard.
+ *
+ * @param a - The env's currently configured issuer.
+ * @param b - The issuer the claimed bundle came from.
+ * @returns True when both resolve to the same origin and path.
+ */
+export function cliIssuersMatch(a: string, b: string): boolean {
+  let result: boolean;
+
+  try {
+    const urlA = new URL(a);
+    const urlB = new URL(b);
+    const normalize = (url: URL) => `${url.protocol}//${url.host}${url.pathname.replace(/\/+$/, '')}`.toLowerCase();
+
+    result = normalize(urlA) === normalize(urlB);
+  } catch {
+    result = a.trim().replace(/\/+$/, '') === b.trim().replace(/\/+$/, '');
+  }
+
+  return result;
+}
+
 interface ResolveHandoffCodeInput {
   readonly argvCode: unknown;
   readonly envVarName: string;
@@ -554,30 +592,54 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       withEnv(yargs)
         .positional('code', { type: 'string', describe: `The claim code. Pass '-' to read it from stdin, or set ${handoffEnvVarName}.` })
         .option('oidc-issuer', { type: 'string', describe: "OIDC issuer to redeem against. Defaults to the env's configured (or built-in default) issuer — required only when neither exists." })
-        .option('set-active', { type: 'boolean', default: false, describe: 'Also set the env as the active env after redeeming' }),
+        .option('set-active', { type: 'boolean', default: true, describe: 'Set the env as the active env after redeeming. Pass --no-set-active to provision it without switching.' })
+        .option('force', { type: 'boolean', default: false, describe: 'Allow the redeem to repoint an existing env at a different OIDC issuer' }),
     handler: wrapCommandHandler(async (argv: any) => {
       // `handoff` is the bootstrap path: the env may not exist yet (that is the whole point), so the
       // throwing resolver — which demands a complete env — cannot be used. Resolve only the NAME the
       // way `setup` does, then merge whatever is already known underneath it.
       const config = (await loadCliConfig({ configFilePath: paths.configFilePath })) ?? {};
-      const envName = (argv.env as string | undefined) ?? process.env[envVarName ?? defaultEnvVarName] ?? config.activeEnv;
 
-      if (!envName) {
-        throw new CliError({ message: `Provide --env <name> to redeem a handoff code into.`, code: 'NO_ACTIVE_ENV' });
-      }
+      // The env NAME is resolved in TWO phases, because the authoritative name arrives WITH the
+      // credential. Only an explicit `--env` (or the env var) can be known before the claim; the
+      // minting deployment's own `envName` comes back in the bundle. A bare machine — the case this
+      // command exists for — has no active env to fall back on, so demanding the name up front is
+      // what used to make the rendered one-line handoff command fail with NO_ACTIVE_ENV.
+      const requestedEnvName = (argv.env as string | undefined) ?? process.env[envVarName ?? defaultEnvVarName];
 
-      const existing = mergeCliEnvWithDefault({ env: config.envs?.[envName], defaultEnv: findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env });
-      const oidcIssuer = (argv.oidcIssuer as string | undefined) ?? existing?.oidcIssuer;
+      // The ISSUER, by contrast, is needed before the claim — it is where the code is redeemed. Look
+      // it up under whichever name we already have, falling back to the sole built-in default when
+      // the CLI ships exactly one (an unambiguous target on an unconfigured machine).
+      const issuerLookupEnvName = requestedEnvName ?? config.activeEnv;
+      const issuerLookupEnv = issuerLookupEnvName ? mergeCliEnvWithDefault({ env: config.envs?.[issuerLookupEnvName], defaultEnv: findCliEnvDefault({ name: issuerLookupEnvName, defaults: defaultEnvs })?.env }) : undefined;
+      const soleDefaultEnv = defaultEnvs?.length === 1 ? defaultEnvs[0] : undefined;
+      const oidcIssuer = (argv.oidcIssuer as string | undefined) ?? issuerLookupEnv?.oidcIssuer ?? soleDefaultEnv?.env?.oidcIssuer;
 
       if (!oidcIssuer) {
         throw new CliError({
-          message: `No OIDC issuer known for env "${envName}". Pass --oidc-issuer <url>.`,
+          message: `No OIDC issuer known${issuerLookupEnvName ? ` for env "${issuerLookupEnvName}"` : ''}. Pass --oidc-issuer <url> (or --env <name> for a configured env).`,
           code: 'AUTH_HANDOFF_NO_ISSUER'
         });
       }
 
       const code = await resolveHandoffCode({ argvCode: argv.code, envVarName: handoffEnvVarName });
       const bundle = await claimCliHandoff({ oidcIssuer, code });
+
+      // Phase two. An explicit name always wins; otherwise the minting deployment names itself, and
+      // only then do we fall back to local state.
+      const envName = requestedEnvName ?? bundle.envName ?? config.activeEnv ?? soleDefaultEnv?.names[0] ?? DEFAULT_HANDOFF_ENV_NAME;
+      const existing = mergeCliEnvWithDefault({ env: config.envs?.[envName], defaultEnv: findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env });
+
+      // A bundle rewrites the env's issuer/apiBaseUrl/clientId wholesale, so redeeming a code from
+      // deployment B into an env named for deployment A would leave the NAME pointing somewhere else
+      // entirely — a far quieter failure than a bad credential. Refuse unless asked explicitly.
+      if (existing?.oidcIssuer && bundle.issuer && !cliIssuersMatch(existing.oidcIssuer, bundle.issuer) && !argv.force) {
+        throw new CliError({
+          message: `Env "${envName}" points at ${existing.oidcIssuer}, but this claim was minted by ${bundle.issuer}.`,
+          code: 'AUTH_HANDOFF_ISSUER_MISMATCH',
+          suggestion: `Redeem into its own env with --env <name>, or pass --force to repoint "${envName}".`
+        });
+      }
 
       // The bundle carries everything a machine with no prior `auth setup` needs, so the env is
       // created/updated from it rather than requiring a separate setup pass.

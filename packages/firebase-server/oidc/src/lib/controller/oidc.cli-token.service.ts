@@ -83,6 +83,11 @@ interface StoredCliTokenClaimPayload {
   readonly encryptedRefreshToken: string;
   readonly apiBaseUrl?: string;
   /**
+   * The env name the app configured, recorded at mint so the claim can echo it without re-reading
+   * config that may have changed between mint and redeem.
+   */
+  readonly envName?: string;
+  /**
    * The address the mint was called from, recorded only when `bindClaimToMintIp` is enabled. Absent
    * on a claim minted while the option was off, which redeems from anywhere as before.
    */
@@ -247,6 +252,7 @@ export class OidcCliTokenService {
         expiresAt,
         encryptedRefreshToken: this.encryptionService.provider.encrypt(refreshTokenValue),
         ...(this.config?.apiBaseUrl ? { apiBaseUrl: this.config.apiBaseUrl } : undefined),
+        ...(this.config?.envName ? { envName: this.config.envName } : undefined),
         ...(this.config?.bindClaimToMintIp && context?.requestIp ? { mintIp: context.requestIp } : undefined)
       }
     });
@@ -317,7 +323,8 @@ export class OidcCliTokenService {
       refreshToken: this.encryptionService.provider.decrypt(payload.encryptedRefreshToken),
       scope: payload.scope,
       expiresAt: payload.expiresAt,
-      ...(payload.apiBaseUrl ? { apiBaseUrl: payload.apiBaseUrl } : undefined)
+      ...(payload.apiBaseUrl ? { apiBaseUrl: payload.apiBaseUrl } : undefined),
+      ...(payload.envName ? { envName: payload.envName } : undefined)
     };
   }
 

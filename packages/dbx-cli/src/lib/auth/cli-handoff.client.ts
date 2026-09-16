@@ -19,6 +19,11 @@ export interface CliHandoffBundle {
   readonly uid: string;
   readonly issuer: string;
   readonly apiBaseUrl?: string;
+  /**
+   * The env name the minting deployment says it is. Advisory — an explicit `--env` still wins — but
+   * it is what lets the rendered one-line handoff command work on a machine with no config at all.
+   */
+  readonly envName?: string;
   readonly clientId: string;
   readonly refreshToken: string;
   readonly scope: string;

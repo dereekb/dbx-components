@@ -192,8 +192,10 @@ const demoCliTokenAdminPredicate: CliTokenAdminPredicate = (auth) => DEMO_AUTH_C
  *
  * `cliClientId` prefers {@link DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY}. Outside production it falls back to
  * provisioning a CLI client on first mint rather than staying disabled, so a dev checkout needs no
- * configured id; in production an explicit value is still required. `apiBaseUrl` is echoed into the
- * handoff bundle so a machine with no prior `auth setup` can bootstrap an env from it alone.
+ * configured id; in production an explicit value is still required. `apiBaseUrl` and `envName` are
+ * echoed into the handoff bundle so a machine with no prior `auth setup` can bootstrap an env from it
+ * alone — and so the redeem names that env after THIS deployment rather than after whatever env
+ * happened to be active locally.
  *
  * @param envService - The Firebase server environment service, used for the API base URL.
  * @param moduleRef - Used to lazily resolve `OidcClientService` when provisioning the development CLI client.
@@ -240,7 +242,12 @@ export function demoCliTokenApiModuleConfigFactory(envService: FirebaseServerEnv
     // In production an explicit value is still REQUIRED: minting against an auto-created client would
     // hand the CLI a credential the deployed `auth setup` cannot refresh, so it stays disabled instead.
     cliClientId: () => process.env[DEMO_CLI_OIDC_CLIENT_ID_ENV_KEY] || (envService.isProduction ? undefined : resolveDevCliClientId()),
-    ...(apiBaseUrl ? { apiBaseUrl } : undefined)
+    ...(apiBaseUrl ? { apiBaseUrl } : undefined),
+    // Deliberately NOT `local` / `prod`: a redeem writes the env wholesale, so naming it after the
+    // hand-managed env would overwrite a developer's own `local` with a one-hour credential. The
+    // `-mcp` names are registered as ALIASES of the same demo-cli presets (env.defaults.ts), so this
+    // env stays separate while still inheriting their `firebase` block and `appClientUrl`.
+    envName: envService.isProduction ? 'prod-mcp' : 'dev-mcp'
   };
 }
 

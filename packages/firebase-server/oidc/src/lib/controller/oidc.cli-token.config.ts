@@ -197,6 +197,17 @@ export abstract class CliTokenApiModuleConfig {
    * can bootstrap an env from the bundle alone.
    */
   readonly apiBaseUrl?: WebsiteUrl;
+  /**
+   * The CLI env name this deployment should be stored under, echoed into the handoff bundle.
+   *
+   * The SERVER is the only party that knows which deployment it is. Without this the redeeming CLI
+   * can only fall back to whatever env is already active locally, which has two bad outcomes: on a
+   * bare machine there is no active env at all and the redeem fails, and on a configured machine a
+   * code minted here can silently repoint an env named for a DIFFERENT deployment at this one.
+   *
+   * Name it after the deployment (`local`, `staging`, `prod`), not after the app.
+   */
+  readonly envName?: string;
 }
 
 // MARK: Results
@@ -255,6 +266,15 @@ export interface CliTokenHandoffBundle {
    * create the env from this bundle alone.
    */
   readonly apiBaseUrl?: WebsiteUrl;
+  /**
+   * The CLI env name this deployment should be stored under, when the app configured one via
+   * {@link CliTokenApiModuleConfig.envName}.
+   *
+   * Advisory: an explicit `--env` on the redeeming side still wins. It exists so the rendered
+   * one-line handoff command works on a machine with no config, and so a redeem cannot silently
+   * repoint an env named for another deployment.
+   */
+  readonly envName?: string;
   /**
    * The CLI OAuth client the refresh token is bound to. The CLI must present THIS `client_id` when
    * refreshing — a refresh token is client-bound.
