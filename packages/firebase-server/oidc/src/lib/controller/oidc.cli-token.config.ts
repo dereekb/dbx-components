@@ -168,7 +168,7 @@ export abstract class CliTokenApiModuleConfig {
    * {@link DEFAULT_CLI_TOKEN_REQUIRED_OIDC_SCOPE}. Pass `null` to disable scope enforcement entirely
    * (the admin predicate remains the real gate either way).
    */
-  readonly requiredScope?: Maybe<OidcScopeTerm> | null;
+  readonly requiredScope?: Maybe<Maybe<OidcScopeTerm>>;
   /**
    * Lifetime requested for a minted credential when the caller names none. Clamped to
    * {@link MAX_CLI_TOKEN_TTL_SECONDS}. Defaults to {@link DEFAULT_CLI_TOKEN_TTL_SECONDS}.

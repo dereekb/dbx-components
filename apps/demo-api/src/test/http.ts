@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { type Response } from 'supertest';
 
 /**
@@ -10,7 +11,7 @@ import { type Response } from 'supertest';
  * @param res - The in-flight superagent response, read here as a stream.
  * @param callback - Node-style callback handed the collected body.
  */
-export function binaryParser(res: Response, callback: (error: Error | null, body: Buffer) => void): void {
+export function binaryParser(res: Response, callback: (error: Maybe<Error>, body: Buffer) => void): void {
   const chunks: Buffer[] = [];
   const stream = res as unknown as NodeJS.ReadableStream;
 

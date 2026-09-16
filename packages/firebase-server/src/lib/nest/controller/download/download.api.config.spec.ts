@@ -67,7 +67,7 @@ describe('isSafeRelativeAssetPath()', () => {
 
   it('rejects a backslash-separated traversal', () => {
     // a Windows-style path reaching a POSIX host would slip through posix-only segment splitting
-    expect(isSafeRelativeAssetPath('nested\\..\\..\\outside')).toBe(false);
+    expect(isSafeRelativeAssetPath(String.raw`nested\..\..\outside`)).toBe(false);
   });
 });
 

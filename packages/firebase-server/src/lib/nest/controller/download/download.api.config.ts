@@ -228,8 +228,8 @@ export function isSafeRelativeAssetPath(relativePath: string): boolean {
     // check the SEGMENTS rather than the raw string: a filename legitimately containing '..'
     // (`v1..2.tar`) is fine, while `a/../../etc` is not. Both separators are checked because a
     // Windows-style path reaching a POSIX host would otherwise slip through `path.posix` splitting.
-    const segments = normalized.split(/[/\\]/);
-    result = !segments.includes('..') && !segments.includes('');
+    const segments = new Set(normalized.split(/[/\\]/));
+    result = !segments.has('..') && !segments.has('');
   }
 
   return result;

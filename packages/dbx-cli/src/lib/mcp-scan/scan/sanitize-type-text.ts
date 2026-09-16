@@ -53,15 +53,14 @@ export interface SanitizeTypeTextInput {
  */
 export function sanitizeTypeText(input: SanitizeTypeTextInput): string {
   const { typeText, workspaceRoot } = input;
-  const result = typeText.replace(INLINE_TYPE_IMPORT_PATTERN, (match, importPath: string) => {
+  return typeText.replaceAll(INLINE_TYPE_IMPORT_PATTERN, (match, importPath: string) => {
     let replacement: string;
-    if (!isAbsolute(importPath)) {
-      replacement = match;
-    } else {
+    if (isAbsolute(importPath)) {
       const relativePath = relative(workspaceRoot, importPath).replaceAll('\\', '/');
       replacement = relativePath.length > 0 && !relativePath.startsWith('..') ? `import("${relativePath}")` : match;
+    } else {
+      replacement = match;
     }
     return replacement;
   });
-  return result;
 }

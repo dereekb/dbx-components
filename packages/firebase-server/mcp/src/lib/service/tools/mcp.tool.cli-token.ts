@@ -147,7 +147,9 @@ function parseTtlSeconds(value: unknown): Maybe<number> {
 function renderText(output: CliTokenToolOutput): string {
   const lines: string[] = ['# CLI credential minted', ''];
 
-  if (output.downloadUrl != null) {
+  if (output.downloadUrl == null) {
+    lines.push('## Log in', '');
+  } else {
     const cliName = output.cliName ?? 'cli';
     lines.push('## 1. Download the CLI', '', '```sh', `curl -fsSL -o ${cliName} "${output.downloadUrl}" && chmod +x ${cliName}`, '```', '');
 
@@ -156,15 +158,9 @@ function renderText(output: CliTokenToolOutput): string {
     }
 
     lines.push('## 2. Log it in', '');
-  } else {
-    lines.push('## Log in', '');
   }
 
-  lines.push('```sh', `./${output.handoffCommand}`, '```', '');
-  lines.push(`- **claim code expires:** ${output.claimExpiresAt} (one-time use)`);
-  lines.push(`- **credential expires:** ${output.expiresAt}`);
-  lines.push(`- **scopes:** \`${output.scope}\``);
-  lines.push('', '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._');
+  lines.push('```sh', `./${output.handoffCommand}`, '```', '', `- **claim code expires:** ${output.claimExpiresAt} (one-time use)`, `- **credential expires:** ${output.expiresAt}`, `- **scopes:** \`${output.scope}\``, '', '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._');
 
   return lines.join('\n');
 }
