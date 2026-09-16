@@ -4,30 +4,37 @@
   "sourceRoot": "apps/demo-api/src",
   "projectType": "application",
   "tags": [],
-  "implicitDependencies": ["!util-test"],
+  "//implicitDependencies": "demo-cli is a real dependency, not just a task-graph edge: the API SHIPS the CLI binary inside its dist (assets/secure), so `nx affected` must rebuild and redeploy the API whenever the CLI changes. A build.dependsOn edge alone would not do that.",
+  "implicitDependencies": ["!util-test", "demo-cli"],
   "targets": {
     "build": {
+      "executor": "nx:noop",
+      "outputs": [],
+      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest"],
+      "metadata": {
+        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the two manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the four dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
+      }
+    },
+    "copy-cli-artifact": {
+      "//": "Runs AFTER build-base, never as a build.dependsOn: build-base's own asset copy writes into dist/apps/demo-api/assets and would clobber the CLI if this ran first. build-base's deleteOutputPath:false is what keeps esbuild from wiping the folder at all - load-bearing here exactly as it is for the manifests. This is NOT an `assets` entry on build-base because @nx/esbuild's copyAssets applies the workspace .gitignore, whose /dist line silently makes a dist-rooted asset input copy nothing.",
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/apps/demo-api/main.js", "{workspaceRoot}/dist/apps/demo-api/package.json", "{workspaceRoot}/dist/apps/demo-api/package-lock.json", "{workspaceRoot}/dist/apps/demo-api/assets"],
-      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest"],
-      "options": {
-        "commands": [
-          {
-            "description": "build api",
-            "command": "npx nx run demo-api:build-base"
-          }
-        ],
-        "color": true
-      },
-      "configurations": {
-        "production": {
-          "commands": [
-            {
-              "description": "build api (production)",
-              "command": "npx nx run demo-api:build-base:production"
-            }
-          ]
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/assets/secure"],
+      "dependsOn": [
+        "build-base",
+        {
+          "projects": ["demo-cli"],
+          "target": "build-standalone"
         }
+      ],
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "parallel": false,
+        "commands": [
+          "mkdir -p dist/apps/demo-api/assets/secure",
+          "cp dist/apps/demo-cli-standalone/index.js dist/apps/demo-api/assets/secure/demo-cli",
+          "chmod +x dist/apps/demo-api/assets/secure/demo-cli",
+          "node -e \"const {createHash}=require('node:crypto'),fs=require('node:fs');const p='dist/apps/demo-api/assets/secure/demo-cli';fs.writeFileSync(p+'.sha256',createHash('sha256').update(fs.readFileSync(p)).digest('hex')+'  demo-cli\\n');\""
+        ]
       }
     },
     "generate-mcp-manifest": {
@@ -39,7 +46,7 @@
           "target": "generate-api-manifest"
         },
         {
-          "projects": ["dbx-cli-generate-mcp-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],
@@ -55,7 +62,7 @@
       "dependsOn": [
         "generate-mcp-manifest",
         {
-          "projects": ["dbx-cli-generate-route-manifest"],
+          "projects": ["dbx-cli"],
           "target": "build"
         }
       ],
@@ -99,32 +106,61 @@
         }
       }
     },
+    "build-watch": {
+      "//": "The watch leg of `serve`. A separate target rather than `build-base --watch` because serve must not shell out to a nested `npx nx`: build-base carries dependsOn ^build, so a nested invocation re-derives and re-runs the whole 23-task chain in its own process -- in the container that raced the Nx daemon into 'Failed to reconnect to daemon after multiple attempts' and the watch leg died, leaving the emulators serving a dist that never rebuilt. As a real target it joins serve's single task graph, where the ^build deps are already satisfied via copy-cli-artifact and get deduped. Options mirror build-base; keep them in sync -- only `watch` differs.",
+      "executor": "@nx/esbuild:esbuild",
+      "continuous": true,
+      "dependsOn": ["copy-cli-artifact"],
+      "outputs": ["{options.outputPath}/main.js", "{options.outputPath}/package.json", "{options.outputPath}/package-lock.json", "{options.outputPath}/assets"],
+      "options": {
+        "outputPath": "dist/apps/demo-api",
+        "main": "apps/demo-api/src/main.ts",
+        "tsConfig": "apps/demo-api/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/demo-api/src/assets",
+            "output": "assets"
+          }
+        ],
+        "generatePackageJson": true,
+        "platform": "node",
+        "target": "node24",
+        "format": ["esm"],
+        "bundle": true,
+        "thirdParty": false,
+        "declaration": false,
+        "skipTypeCheck": false,
+        "deleteOutputPath": false,
+        "minify": false,
+        "sourcemap": false,
+        "esbuildConfig": "apps/demo-api/esbuild.config.js",
+        "watch": true
+      }
+    },
     "run-emulators": {
       "executor": "nx:run-commands",
       "options": {
         "command": "npx env-cmd -f .env.local --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
-      }
+      },
+      "continuous": true
     },
     "watch-emulators": {
+      "//": "Body lives in watch-emulators.sh so `serve` can run it directly instead of via a nested `npx nx` (which deadlocks -- see the script header).",
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find dist/apps/demo-api | entr -n -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
-      }
+        "command": "./watch-emulators.sh"
+      },
+      "continuous": true
     },
     "serve": {
+      "//": "Routed through the task graph rather than nested `npx nx` calls. Previously `nx build demo-api --watch`: run-commands forwards unknown args to EVERY command (forwardAllArgs defaults true), so --watch went to both commands, the first never exited, and with parallel:false copy-cli-artifact never ran -- serving never produced dist/apps/demo-api/assets/secure/demo-cli. Now the manifests and the build+CLI-copy chain are dependsOn entries resolved in ONE task graph, build-watch (continuous) is the rebuild leg, and the emulator loop is invoked as a plain script: any nested `npx nx` here inherits NX_INVOCATION_ROOT_PID and deadlocks against the running serve task.",
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest", "build-watch"],
       "options": {
-        "commands": [
-          {
-            "command": "npx nx build-all && npx nx build-base demo-api --watch"
-          },
-          {
-            "command": "npx nx run demo-api:watch-emulators"
-          }
-        ],
-        "parallel": true
-      }
+        "command": "./watch-emulators.sh"
+      },
+      "continuous": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -161,6 +197,10 @@
         "commands": [
           {
             "command": "npx nx run demo-api:build-base:production"
+          },
+          {
+            "//": "ci-deploy calls build-base directly and bypasses `build` entirely, so it runs none of build's commands or dependsOn targets - the CLI copy has to be repeated here or the deployed function ships without it.",
+            "command": "npx nx run demo-api:copy-cli-artifact"
           },
           {
             "command": "npx nx make-env demo-api --skip-nx-cache"

@@ -193,17 +193,6 @@ export class OidcInteractionController {
       // to the registry's default profiles). Independent of the admin-only gate below; a scope may be
       // subject to both.
       const { unlocked: clientUnlockedScopes, required: clientRequiredScopes } = oidcClientProviderProfileScopes(providerProfiles, clientPayload?.dbx_provider_profiles ?? undefined);
-      const profileGatedScopes = scopesForOidcProviderProfiles(providerProfiles ?? []);
-
-      // Unlock gate: reject any requested gated scope this client's profiles do not unlock.
-      const disallowedGatedScopes = Array.from(requestedOIDCScopeSet).filter((scope) => profileGatedScopes.has(scope) && !clientUnlockedScopes.has(scope));
-
-      if (disallowedGatedScopes.length > 0) {
-        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `The following scope(s) are not available to this client: ${disallowedGatedScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
-        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, reason: 'scope_not_unlocked_for_client', durationMs: Date.now() - startedAt }, this._logger);
-        res.json({ redirectTo });
-        return;
-      }
 
       // Required gate: a scope a client's profiles force-require (`require: 'required'`) must be present
       // in the request. Reject when the client did not request a required scope.
@@ -216,12 +205,31 @@ export class OidcInteractionController {
         return;
       }
 
+      // Provider-profile unlock gate. A gated scope this client's profiles do not unlock is DROPPED from
+      // the grant — moved into its `rejected` set — rather than failing the whole interaction.
+      //
+      // Dropping rather than rejecting is what lets a resource advertise a gated scope at all: a
+      // dynamic-registration client copies the protected-resource document's `scopes_supported` onto
+      // `/authorize` verbatim and cannot know which profiles it was assigned, so a hard rejection would
+      // make an advertised gated scope fatal for every unassigned client. This mirrors how an admin-only
+      // scope is withheld from a non-admin's consent screen, and covers the submit directly rather than
+      // only the offered list — a client that names a scope the consent URL never offered is dropped
+      // here too. Dropping can never widen a grant, so it is safe as the load-bearing check.
+      const profileGatedScopes = scopesForOidcProviderProfiles(providerProfiles ?? []);
+      const withheldGatedScopes = withheldGatedScopesForClient({ requestedScopes: requestedOIDCScopeSet, profileGatedScopes, clientUnlockedScopes });
+
+      if (withheldGatedScopes.length > 0) {
+        this._logger.warn(`Dropping scope(s) not unlocked for client ${clientId}: ${withheldGatedScopes.join(', ')}.`);
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, reason: 'scope_not_unlocked_for_client', durationMs: Date.now() - startedAt }, this._logger);
+      }
+
       // The scopes this consent actually puts in force. Resolved once here and re-applied to the grant
       // further down, so the admin-only gate below judges exactly the set that will be granted.
       //
       // Force-grants the client's required profile scopes (in addition to `openid`) so they cannot be
-      // dropped at consent — the required gate above already guarantees they were requested.
-      const effectiveOIDCScopes = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...Array.from(clientRequiredScopes)], alreadyEncountered: encounteredOIDCScopes });
+      // dropped at consent — the required gate above already guarantees they were requested. Withheld
+      // gated scopes are subtracted last, so they cannot be reintroduced by the force-grant.
+      const effectiveOIDCScopes = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...Array.from(clientRequiredScopes)], alreadyEncountered: encounteredOIDCScopes, withheld: withheldGatedScopes });
 
       // Scopes the existing Grant already holds (granted, minus any it rejected). Nothing here revokes
       // them, so they stay in force through this consent and the gate below has to count them too.
@@ -382,6 +390,41 @@ export class OidcInteractionController {
 }
 
 /**
+ * Inputs to {@link withheldGatedScopesForClient}.
+ */
+export interface WithheldGatedScopesForClientInput {
+  /**
+   * Every scope the authorization request named.
+   */
+  readonly requestedScopes: ReadonlySet<string>;
+  /**
+   * Every scope referenced by ANY provider profile — the "gated" set.
+   */
+  readonly profileGatedScopes: ReadonlySet<string>;
+  /**
+   * The scopes THIS client's resolved profiles unlock.
+   */
+  readonly clientUnlockedScopes: ReadonlySet<string>;
+}
+
+/**
+ * The requested scopes that are provider-profile gated and NOT unlocked by this client's profiles —
+ * the set a consent must withhold from the user and drop from the grant.
+ *
+ * A gated scope is not necessarily unavailable: one unlocked by a DEFAULT profile is reachable by
+ * every client, which `clientUnlockedScopes` already accounts for (it is resolved through
+ * `oidcClientProviderProfileScopes`, whose fallback is the registry's default profiles).
+ *
+ * @param input - The requested, gated, and client-unlocked scope sets.
+ * @returns The requested scopes to withhold, in request order.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function withheldGatedScopesForClient(input: WithheldGatedScopesForClientInput): string[] {
+  const { requestedScopes, profileGatedScopes, clientUnlockedScopes } = input;
+  return Array.from(requestedScopes).filter((scope) => profileGatedScopes.has(scope) && !clientUnlockedScopes.has(scope));
+}
+
+/**
  * Inputs for {@link resolveEffectiveSubset}.
  */
 export interface ResolveEffectiveSubsetInput {
@@ -403,6 +446,12 @@ export interface ResolveEffectiveSubsetInput {
    * `reconsiderRejectedValues` — or it can never be granted on that Grant.
    */
   readonly alreadyEncountered?: readonly string[];
+  /**
+   * Entries to withhold from the grant no matter what else applies. Subtracted LAST, so a withheld
+   * entry lands in `rejected` even when the caller explicitly named it or an `alwaysGranted` rule
+   * would otherwise have added it. Withholding can only ever subtract, never widen a grant.
+   */
+  readonly withheld?: readonly string[];
 }
 
 /**
@@ -420,13 +469,15 @@ export interface ResolveEffectiveSubsetInput {
  *   entry so oidc-provider does not re-prompt for them. Values in `alreadyEncountered` pass validation but
  *   are not re-applied to the grant (no-op).
  * - Always-granted entries are union'd into `granted` (clamped to `missing`).
+ * - Withheld entries are subtracted last, so they end up in `rejected` even when the caller named
+ *   them or an always-granted rule would otherwise have added them.
  *
  * @param input - Missing entries plus optional subset, always-granted, and already-encountered lists.
  * @returns `granted` to add to the grant and `rejected` to record on the grant.
  * @throws {HttpException} `400 BAD_REQUEST` when `requestedSubset` includes a value that is neither missing nor already-encountered.
  */
 export function resolveEffectiveSubset(input: ResolveEffectiveSubsetInput): { granted: string[]; rejected: string[] } {
-  const { missing, requestedSubset, alwaysGranted = [], alreadyEncountered = [] } = input;
+  const { missing, requestedSubset, alwaysGranted = [], alreadyEncountered = [], withheld = [] } = input;
   const missingSet = new Set(missing);
   const encounteredSet = new Set(alreadyEncountered);
   let baseSelection: readonly string[];
@@ -450,6 +501,12 @@ export function resolveEffectiveSubset(input: ResolveEffectiveSubsetInput): { gr
     if (missingSet.has(value)) {
       grantedSet.add(value);
     }
+  }
+
+  // Subtracted last so withholding outranks both an explicit request and an always-granted rule;
+  // anything removed here falls through to `rejected` below.
+  for (const value of withheld) {
+    grantedSet.delete(value);
   }
 
   const rejected: string[] = [];

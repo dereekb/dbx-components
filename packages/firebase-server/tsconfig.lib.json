@@ -8,7 +8,9 @@
   "exclude": [
     "test/**",
     "calcom/**",
+    "discord/**",
     "mailgun/**",
+    "mcp/**",
     "twilio/**",
     "zoho/**",
     "model/**",

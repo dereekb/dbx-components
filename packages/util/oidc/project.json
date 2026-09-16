@@ -6,7 +6,15 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "dependsOn": []
+      "dependsOn": [
+        {
+          "projects": ["util"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to util:build-base, NOT `^build`. This entry point cannot compile before the parent's dist exists, so the edge is real -- but it has to be spelled out, because `^build` here would resolve to util:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

@@ -4,20 +4,10 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-form/quiz/src",
   "prefix": "dbx",
+  "metadata": {
+    "description": "A SECONDARY ENTRY POINT of @dereekb/dbx-form, not a package of its own: it compiles into dist/packages/dbx-form/quiz and is named by that package's dist `exports` under \"./quiz\".  It has no build target, and that is deliberate. ng-packagr's discoverPackages globs `**/ng-package.json` under packages/dbx-form and builds every match as a secondary entry point, so `dbx-form:build-base` ALONE already writes this directory.  A standalone build-base here was a DUPLICATE WRITER of dbx-form's dist -- and worse, running it standalone made ng-packagr treat this as a PRIMARY entry point, which falls back to the schema default `dest: \"dist\"` and wrote a stray packages/dbx-form/quiz/dist/ next to the source.  Consumers still resolve correctly: @nx/js updatePaths binds \"@dereekb/dbx-form/quiz\" to dist/packages/dbx-form/quiz off the PARENT dependency's outputs (its \"check for secondary entrypoints\" pass), and `^build` onto a project with no `build` creates a dummy task and recurses to its dependencies, landing on `dbx-form:build`."
+  },
   "targets": {
-    "build-base": {
-      "executor": "@nx/angular:package",
-      "options": {
-        "project": "packages/dbx-form/quiz/ng-package.json",
-        "tsConfig": "packages/dbx-form/quiz/tsconfig.lib.json"
-      },
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-form/quiz"],
-      "configurations": {
-        "production": {
-          "tsConfig": "packages/dbx-form/quiz/tsconfig.lib.prod.json"
-        }
-      }
-    },
     "lint": {
       "executor": "@nx/eslint:lint"
     }

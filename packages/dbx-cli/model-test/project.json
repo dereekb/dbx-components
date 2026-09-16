@@ -6,7 +6,19 @@
   "tags": ["publishable"],
   "targets": {
     "build-base": {
-      "dependsOn": []
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["util"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  Like dbx-cli-lint-cache this has no source import of @dereekb/dbx-cli; the parent edge is the nested-output ordering edge for dist/packages/dbx-cli/model-test (plan 2.4 names this exact pair)."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

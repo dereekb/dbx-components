@@ -6,7 +6,39 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "dependsOn": []
+      "dependsOn": [
+        {
+          "projects": ["openrouter"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["openrouter-firebase"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["analytics"],
+          "target": "build"
+        },
+        {
+          "projects": ["date"],
+          "target": "build"
+        },
+        {
+          "projects": ["rxjs"],
+          "target": "build"
+        },
+        {
+          "projects": ["firebase-server"],
+          "target": "build"
+        },
+        {
+          "projects": ["nestjs"],
+          "target": "build"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to openrouter:build-base, NOT `^build`. This entry point cannot compile before the parent's dist exists, so the edge is real -- but it has to be spelled out, because `^build` here would resolve to openrouter:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory. This is the widest child in the workspace: beyond the parent it also imports @dereekb/openrouter/firebase (a SIBLING entry point, hence a `build-base` edge -- siblings compile into this same dist directory and have no `build` of their own, so pointing at the parent's `build` here would close a cycle), plus @dereekb/analytics, @dereekb/date, @dereekb/rxjs, @dereekb/firebase-server/test and @dereekb/nestjs/openrouter. The last two are other families' CHILDREN, and by the cross-family rule they collapse to those families' ROOT `build` -- `firebase-server:build` and `nestjs:build` -- because a sibling family's child has no `build` of its own and writes into its parent's dist, so only the parent's `build` produces a finalized copy for TypeScript to resolve `exports` against. Neither closes a cycle: firebase-server and nestjs both sit upstream of openrouter and neither depends on it (nestjs-openrouter wraps the OpenRouter HTTP API directly, not @dereekb/openrouter)."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

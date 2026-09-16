@@ -147,6 +147,9 @@ function buildPerFileTokens(naming: SetupNaming, options: SetupTokenOptions): Re
   // test-demo-api.sh (script line 427) — also renamed to test-<api>.sh by the root module.
   map.set('root/test-demo-api.sh', [{ search: 'demo-api', replace: naming.apiAppName }]);
 
+  // watch-emulators.sh — the emulator rebuild loop extracted out of the nx target
+  map.set('root/watch-emulators.sh', [{ search: 'demo-api', replace: naming.apiAppName }]);
+
   // wait-for-ports.sh (script line 432)
   map.set('root/wait-for-ports.sh', [{ search: '9900-9908', replace: naming.emulatorPortRange }]);
 

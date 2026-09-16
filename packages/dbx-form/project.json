@@ -9,25 +9,20 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-form", "{workspaceRoot}/dist/packages/dbx-form/_index.scss", "{workspaceRoot}/dist/packages/dbx-form/LICENSE", "{workspaceRoot}/dist/packages/dbx-form/**/*.scss"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-form"],
       "options": {
-        "commands": [
-          {
-            "description": "build dbx-form production",
-            "command": "npx nx run dbx-form:build-base:production"
-          },
-          {
-            "description": "finish dbx-form build script",
-            "command": "sh packages/dbx-form/complete-dbx-form-build.sh"
-          }
-        ],
-        "parallel": false,
-        "color": true
+        "color": true,
+        "command": "sh packages/dbx-form/complete-dbx-form-build.sh"
+      },
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "The nested case, ng-packagr flavour. dist/packages/dbx-form is ONE npm package with several entry points, not several packages: `calendar`, `mapbox`, `quiz` and `style-demo` compile INTO this directory and are named by this package's own dist `exports`. So this target is the sole deliverable and the sole owner of the directory, and those entry points deliberately have no build target of their own -- there is nothing they could publish.  Unlike the rollup families, the secondaries need no dependsOn entries: ng-packagr's discoverPackages globs `**/ng-package.json` under this package and builds every match as a secondary entry point, so `dbx-form:build-base` ALONE already produces all four, in ng-packagr's own dependency order.  What changed: the nested `npx nx run dbx-form:build-base:production` shell-out became a dependsOn EDGE, so the build is one Nx process and one task graph instead of a parent process shelling out to a child one. The `:production` suffix is not lost -- a TargetDependencyConfig has no `configuration` field, but Nx's resolveConfiguration falls back to the target's `defaultConfiguration`, which is `production`. `parallel: false` is dropped now that the shell script is the single remaining command; it stays this target's OWN command, so it cannot start until build-base has finished.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back.  Outputs were also NARROWED to just the directory. The extra entries (_index.scss, LICENSE, `**/*.scss`) were all SUBSETS of it, but declaring more than one output flips Nx's cache RESTORE from directory mode to file mode: the native expandOutputs returns a single entry for a lone directory -- so copyFilesFromCache remove()s the whole directory and replaces it -- but ENUMERATES that directory's files once another output is present, and a per-file remove+copy cannot delete anything the payload does not contain. That mattered the moment build-base became a task in this same graph: build-base's payload legitimately contains the intermediate src/ tree that complete-dbx-form-build.sh deletes, so restoring build-base (directory mode) and then build (file mode) left a stray dist/packages/dbx-form/src behind on every cache hit. One output, one writer, one complete payload."
       }
     },
     "build-base": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form"],
+      "dependsOn": ["^build"],
       "options": {
         "project": "packages/dbx-form/ng-package.json",
         "tsConfig": "packages/dbx-form/tsconfig.lib.json"
@@ -38,7 +33,10 @@
         },
         "development": {}
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "metadata": {
+        "description": "`^build`, not `^build-base`. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and the dependency's own `build` is what finalizes those exports. That matters concretely here: the `calendar`, `mapbox` and `style-demo` entry points import @dereekb/dbx-web secondaries, which resolve to dist/packages/dbx-web/<sub> only once dbx-web:build has run. Declared explicitly rather than inherited from the `@nx/angular:package` targetDefault in nx.json so the edge is visible where it matters; the value is the same.  This one target builds the primary entry point AND every secondary (calendar, mapbox, quiz, style-demo), because ng-packagr discovers them from their nested ng-package.json files."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"

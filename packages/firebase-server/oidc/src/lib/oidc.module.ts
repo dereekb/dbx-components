@@ -5,7 +5,7 @@ import { OIDC_JSON_RENDER_ERROR_FUNCTION, DEFAULT_OIDC_TOKEN_LIFETIMES, OidcModu
 import { buildOidcResourceServer } from './oidc.resource-server';
 import { OidcAccountService } from './service/oidc.account.service';
 import { OidcService } from './service/oidc.service';
-import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
+import { OidcWellKnownController, OidcInteractionController, OidcProviderController, OidcCliTokenController, OidcCliTokenService } from './controller';
 import { oidcEntryFirestoreCollection, type FirestoreContext } from '@dereekb/firebase';
 import { FIREBASE_FIRESTORE_CONTEXT_TOKEN, FirebaseServerFirestoreContextModule, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { type AES256GCMEncryptionSecret, isValidAES256GCMEncryptionSecret } from '@dereekb/nestjs';
@@ -244,6 +244,7 @@ export type OidcModuleMetadataOverrides = Partial<
     | 'suppressBodyParserWarning'
     | 'renderError'
     | 'protectedPaths'
+    | 'unprotectedPaths'
     | 'appOAuthInteractionPath'
     | 'appOAuthLoginUrlPart'
     | 'appOAuthConsentUrlPart'
@@ -321,8 +322,11 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
 
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
-    controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
-    exports: [OidcClientService, OidcService, OidcJwtSigningService, OidcProviderConfigService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, JwksService, ...(exports ?? [])],
+    // OidcCliTokenController MUST precede OidcProviderController: both mount at `oidc`, and the
+    // provider controller ends in an `@All('{*path}')` catch-all that would otherwise swallow
+    // `POST /oidc/cli-token` and hand it to the oidc-provider callback as an unknown endpoint.
+    controllers: [OidcWellKnownController, OidcInteractionController, OidcCliTokenController, OidcProviderController],
+    exports: [OidcClientService, OidcService, OidcJwtSigningService, OidcCliTokenService, OidcProviderConfigService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, JwksService, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
@@ -364,7 +368,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
       },
       {
         provide: OidcAuthMiddlewareConfig,
-        useFactory: (x: OidcModuleConfig) => ({ protectedPaths: x.protectedPaths ?? [], resourceMetadataUrl: x.resourceMetadataUrl }),
+        useFactory: (x: OidcModuleConfig) => ({ protectedPaths: x.protectedPaths ?? [], unprotectedPaths: x.unprotectedPaths ?? [], resourceMetadataUrl: x.resourceMetadataUrl }),
         inject: [OidcModuleConfig]
       },
       {
@@ -378,6 +382,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         inject: [FIREBASE_FIRESTORE_CONTEXT_TOKEN, OidcModuleConfig]
       },
       OidcInteractionService,
+      OidcCliTokenService,
       OidcProviderConfigService,
       OidcEncryptionService,
       OidcService,

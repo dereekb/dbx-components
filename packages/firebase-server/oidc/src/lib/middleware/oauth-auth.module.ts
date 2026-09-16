@@ -40,6 +40,14 @@ export abstract class OidcAuthMiddlewareConfig {
    */
   readonly protectedPaths!: SlashPath[];
   /**
+   * Path prefixes excluded from verification, checked BEFORE {@link protectedPaths}.
+   *
+   * Needed because protection matches by prefix: a deliberately-public sub-route of a protected
+   * prefix (e.g. `/oidc/cli-token/claim` under `/oidc/cli-token`) would otherwise be 401'd for
+   * exactly the callers it exists for.
+   */
+  readonly unprotectedPaths?: SlashPath[];
+  /**
    * Absolute URL of the OAuth 2.0 Protected Resource Metadata document
    * (RFC 9728). When set, included as the `resource_metadata` parameter
    * of the `WWW-Authenticate: Bearer` header on 401 responses so OAuth
@@ -119,6 +127,7 @@ export function applyOidcAuthMiddleware(nestApp: INestApplication): void {
   const oidcService = nestApp.get(OidcService);
   const config = nestApp.get(OidcAuthMiddlewareConfig);
   const protectedPaths = config?.protectedPaths ?? [];
+  const unprotectedPaths = config?.unprotectedPaths ?? [];
   const resourceMetadataUrl = config?.resourceMetadataUrl;
 
   if (protectedPaths.length === 0) {
@@ -132,7 +141,8 @@ export function applyOidcAuthMiddleware(nestApp: INestApplication): void {
   };
 
   nestApp.use((req: Request, res: Response, next: NextFunction) => {
-    const isProtected = protectedPaths.some((prefix) => req.path.startsWith(prefix));
+    // the exclusion wins: a public sub-route of a protected prefix is only reachable this way
+    const isProtected = !unprotectedPaths.some((prefix) => req.path.startsWith(prefix)) && protectedPaths.some((prefix) => req.path.startsWith(prefix));
 
     if (isProtected) {
       const authHeader = req.headers.authorization;

@@ -52,8 +52,17 @@ const DEMO_CLI_LOCAL_FIREBASE_CONFIG: CliFirebaseConfig = {
   }
 };
 
+/**
+ * `dev-mcp` / `prod-mcp` are aliases, not separate presets.
+ *
+ * An MCP-minted handoff declares its env name server-side and the redeeming CLI stores it under that
+ * name, so pointing it at `local` would overwrite a hand-configured `local` env with a one-hour
+ * credential. Giving the MCP flow its own NAME keeps the two apart, while listing it here means the
+ * separate env still inherits this preset's `firebase` block and `appClientUrl` — which the handoff
+ * bundle itself does not carry.
+ */
 export const DEFAULT_DEMO_LOCAL_ENV: CliEnvDefault = {
-  names: ['local', 'dev'],
+  names: ['local', 'dev', 'dev-mcp'],
   env: {
     apiBaseUrl: DEMO_LOCAL_API_BASE_URL,
     oidcIssuer: DEMO_LOCAL_OIDC_ISSUER,
@@ -64,7 +73,7 @@ export const DEFAULT_DEMO_LOCAL_ENV: CliEnvDefault = {
 };
 
 export const DEFAULT_DEMO_PROD_ENV: CliEnvDefault = {
-  names: ['prod', 'production'],
+  names: ['prod', 'production', 'prod-mcp'],
   env: {
     apiBaseUrl: DEMO_PROD_API_BASE_URL,
     oidcIssuer: DEMO_PROD_OIDC_ISSUER,

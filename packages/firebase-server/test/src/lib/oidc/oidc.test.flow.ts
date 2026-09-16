@@ -173,6 +173,16 @@ export interface OAuthTestFlowResult {
    */
   readonly idToken?: string;
   /**
+   * The refresh token the token endpoint issued.
+   *
+   * Only present when the flow requested `offline_access` — the provider issues a refresh token for
+   * no other reason. Undefined unless the flow ran to the `'token'` stage.
+   *
+   * This is what a revocation test spends: a refresh exchange is the one operation that keeps working
+   * against a still-live Grant and fails with `invalid_grant` the instant the Grant is destroyed.
+   */
+  readonly refreshToken?: string;
+  /**
    * The `token_type` the token endpoint reported for the access token.
    */
   readonly tokenType?: string;
@@ -433,7 +443,7 @@ export async function performOAuthFlow(input: PerformOAuthFlowInput): Promise<OA
 
   let consentRedirectUrl: Maybe<URL>;
   let callbackUrl: Maybe<URL>;
-  let tokenBody: Maybe<{ access_token: string; id_token: string; token_type?: string; scope: string }>;
+  let tokenBody: Maybe<{ access_token: string; id_token: string; refresh_token?: string; token_type?: string; scope: string }>;
 
   if (stage !== 'auth') {
     if (uid == null) {
@@ -509,6 +519,7 @@ export async function performOAuthFlow(input: PerformOAuthFlowInput): Promise<OA
     callbackUrl,
     accessToken: tokenBody?.access_token,
     idToken: tokenBody?.id_token,
+    refreshToken: tokenBody?.refresh_token,
     tokenType: tokenBody?.token_type,
     scope: tokenBody?.scope,
     session: { client, cookieJar }

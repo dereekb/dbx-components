@@ -1,3 +1,35 @@
+# [14.5.0](https://github.com/dereekb/dbx-components/compare/v14.4.0-dev...v14.5.0) (2026-09-16)
+
+### Bug Fixes
+
+- **build:** share nx cache with docker and fix demo-api serve ([dbdd96ee](https://github.com/dereekb/dbx-components/commit/dbdd96ee0a43136d1c4373606ddd905596079931))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([459fe6fa](https://github.com/dereekb/dbx-components/commit/459fe6fac4edd73b104ab5edd2479c393920af4a))
+
+### Code Refactoring
+
+- **build:** convert firebase-server to dependsOn edges ([ef66ac61](https://github.com/dereekb/dbx-components/commit/ef66ac615a2137e55b0be03d969f07c98ae6cebc))
+- **build:** convert nestjs, date and rxjs to dependsOn edges ([69433bf9](https://github.com/dereekb/dbx-components/commit/69433bf9d077f95b70df7941079bc3e79a37da2b))
+- **build:** convert the apps and collapse the root build-all ([aa3ec932](https://github.com/dereekb/dbx-components/commit/aa3ec932cd46d9dabd48e699dd774fa4bc958560))
+- **build:** convert the dbx-* angular packages to dependsOn edges ([5f8ede14](https://github.com/dereekb/dbx-components/commit/5f8ede145ab2cef01434863fff5254f0e7a00045))
+- **build:** convert the dbx-cli family to dependsOn edges ([bc62215c](https://github.com/dereekb/dbx-components/commit/bc62215cb0ef9dcf5f458e22c73a9a83848b8b1d))
+- **build:** convert the nine small families to dependsOn edges ([3f89ed17](https://github.com/dereekb/dbx-components/commit/3f89ed17e4369c65eb295eb0b0bf711979710228))
+- **build:** replace nested nx build calls with real graph edges ([a72b989b](https://github.com/dereekb/dbx-components/commit/a72b989bdf77c9094279422a6503c73a0090edf2))
+
+### Features
+
+- **cli-handoff:** name the handoff env server-side and set it active ([baaffc39](https://github.com/dereekb/dbx-components/commit/baaffc39e467c9ccd48e1d2b3f279f8aabfe2632))
+- **oidc:** mint CLI credentials from MCP + signed downloads ([09b86ad7](https://github.com/dereekb/dbx-components/commit/09b86ad7d5b3d2996c5bc79a3bfcae1de164494c))
+- **oidc:** unlock token.cli in dev and harden the CLI handoff ([d8fdab07](https://github.com/dereekb/dbx-components/commit/d8fdab07be21990e49a9d12317c4c3bf3157aafa))
+
+### Tests
+
+- **demo-api:** mcp-surface e2e for the cli-token handoff ([cc5f2837](https://github.com/dereekb/dbx-components/commit/cc5f28374417fb5e75752e4486f13da3746dcf39))
+- **oidc:** pin revocation latency and the Firebase session gap ([7a17b435](https://github.com/dereekb/dbx-components/commit/7a17b43591c33c5924e5913454a4f22b82cf44bf))
+- **openrouter:** sync rules-scan table with admin read grants ([474e8a4b](https://github.com/dereekb/dbx-components/commit/474e8a4b11f42928d92eb340d7f9831168eee756))
+
 # [14.4.0](https://github.com/dereekb/dbx-components/compare/v14.3.0-dev...v14.4.0) (2026-09-14)
 
 ### Bug Fixes

@@ -6,7 +6,7 @@ import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/f
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpModelRolesTargetUidPredicate } from '../mcp.config';
+import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader, MCP_CLI_TOKEN_MINTER, type McpCliTokenMinter, MCP_MODEL_ROLES_TARGET_UID_PREDICATE, type McpModelRolesTargetUidPredicate } from '../mcp.config';
 import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
@@ -19,6 +19,7 @@ import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
 import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
 import { createWhoamiTool } from './tools/mcp.tool.whoami';
+import { createCliTokenTool } from './tools/mcp.tool.cli-token';
 import { createUrlModelsTool } from './tools/mcp.tool.url-models';
 import { createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
 
@@ -68,7 +69,8 @@ export class McpServerFactoryService {
     @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader,
     @Optional() @Inject(MCP_ANALYTICS_SERVICE) analyticsService?: McpAnalyticsService,
     @Optional() @Inject(FirebaseServerStorageService) private readonly storageService?: FirebaseServerStorageService,
-    @Optional() @Inject(MCP_MODEL_ROLES_TARGET_UID_PREDICATE) private readonly modelRolesTargetUidPredicate?: McpModelRolesTargetUidPredicate
+    @Optional() @Inject(MCP_MODEL_ROLES_TARGET_UID_PREDICATE) private readonly modelRolesTargetUidPredicate?: McpModelRolesTargetUidPredicate,
+    @Optional() @Inject(MCP_CLI_TOKEN_MINTER) private readonly cliTokenMinter?: McpCliTokenMinter
   ) {
     this._analyticsService = analyticsService ?? noopMcpAnalyticsService();
   }
@@ -295,6 +297,12 @@ export class McpServerFactoryService {
 
       if (authManifest != null) {
         staticTools.push(createWhoamiTool({ auth: authManifest, roleReader: this.roleReader }));
+      }
+
+      // `cli-token` only exists when the app wires a minter — the mint needs the OIDC provider,
+      // which this package deliberately does not depend on.
+      if (this.cliTokenMinter != null) {
+        staticTools.push(createCliTokenTool({ minter: this.cliTokenMinter }));
       }
 
       // Guard against the auto-generated tools accidentally claiming a static tool name. The first

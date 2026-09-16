@@ -1,5 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "//cacheDirectory": "Pins the Nx cache AND the task DB into the checkout. Without it, Nx 23.2 resolves both to ~/.nx/<workspace-id>/{cache,databases} (see node_modules/nx/dist/src/utils/cache-directory.js). The id derives from the git remote, so the container computes the SAME id as the host but resolves it against HOME=/root -- a path that is not bind-mounted and is destroyed by `docker compose run --rm`. That gave every containerized build a cold cache while the host stayed warm. Setting this makes computeSharedDataLocation return {share:'none'}, so host resolves <repo>/.nx/cache and the container resolves /code/.nx/cache -- the same physical directory through the ./:/code bind mount. NX_CACHE_DIRECTORY in docker-compose.yml would NOT work: the host would keep using ~/.nx. Matches .circleci/config.yml, which sets NX_CACHE_DIRECTORY for the same reason.",
+  "cacheDirectory": ".nx/cache",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/package-lock.json"],
@@ -83,10 +85,7 @@
     },
     "@nx/js:tsc": {
       "cache": true,
-      "inputs": ["production", "^production"],
-      "options": {
-        "buildLibsFromSource": false
-      }
+      "inputs": ["production", "^production"]
     },
     "ci-deploy-prod": {
       "cache": false

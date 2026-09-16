@@ -48,15 +48,29 @@ export const oidcEntryIdentity = firestoreModelIdentity('oidcEntry', 'oidc_e');
  * Known oidc-provider model types stored in the adapter collection.
  *
  * Used as the discriminator in the {@link OidcEntry.type} field.
+ *
+ * `DbxCliTokenClaim` is the one entry type NOT owned by oidc-provider: it is written directly by
+ * the CLI-token mint endpoint rather than through the adapter, reusing this collection for its
+ * `consumed` / `expiresAt` columns and its at-rest payload encryption.
  */
 export type OidcEntryType = SuggestedString<
-  'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest'
+  'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | 'DbxCliTokenClaim'
 >;
 
 /**
  * Type value for Client adapter entries.
  */
 export const OIDC_ENTRY_CLIENT_TYPE: OidcEntryType = 'Client';
+
+/**
+ * Type value for the pending CLI-token handoff entries written by `POST /oidc/cli-token`.
+ *
+ * Not an oidc-provider model: the entry holds a one-time claim code's payload until
+ * `POST /oidc/cli-token/claim` consumes it (transactionally, by setting `consumed`), or until
+ * `expiresAt` passes. Stored here so it inherits the collection's TTL columns and the adapter's
+ * encryption-at-rest conventions instead of needing a new collection.
+ */
+export const OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE: OidcEntryType = 'DbxCliTokenClaim';
 
 // MARK: Types
 /**

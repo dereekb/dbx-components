@@ -21,7 +21,7 @@ import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
 import { adminOnlyScopesForOidcProviderConfig, DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA, oidcClientProviderProfileScopes } from '../profile';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
-import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
+import { assignmentOnlyScopesForOidcProviderProfiles, type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 import { cachedGetter, filterKeysOnPOJOFunction, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { type OidcAuthData } from './oidc.auth';
 import { buildOidcInteractionPolicy } from './oidc.interaction-policy';
@@ -468,14 +468,26 @@ export class OidcService {
               // submit that tries to grant one anyway.
               const isAdmin = await this._isAdminInteractionUser(interaction);
               const adminOnlyScopes = isAdmin ? undefined : adminOnlyScopesForOidcProviderConfig(providerConfig);
-              const offeredScopes = adminOnlyScopes ? requestedScopes.filter((scope) => !adminOnlyScopes.has(scope)) : requestedScopes;
+
+              // Withhold assignment-only profile scopes this client's profiles do not unlock, for the
+              // same reason and by the same mechanism as the admin-only scopes above. This is what makes
+              // it safe to advertise a gated scope (e.g. `token.cli`) in protected-resource metadata that
+              // a dynamic-registration client copies onto `/authorize` verbatim: the scope is offered
+              // only to a client an admin assigned the unlocking profile to, and is silently dropped for
+              // every other client instead of ending its authorization in `access_denied`.
+              //
+              // Scoped to the ASSIGNMENT-ONLY subset, not every gated scope: a scope unlocked by a
+              // default profile is reachable by each client, so withholding it would hide a scope the
+              // consent screen should still offer.
+              const { unlocked: clientUnlockedScopes, required } = oidcClientProviderProfileScopes(providerConfig.providerProfiles, client.dbx_provider_profiles ?? undefined);
+              const assignmentOnlyScopes = assignmentOnlyScopesForOidcProviderProfiles(providerConfig.providerProfiles ?? []);
+              const offeredScopes = requestedScopes.filter((scope) => !adminOnlyScopes?.has(scope) && !(assignmentOnlyScopes.has(scope) && !clientUnlockedScopes.has(scope)));
               const scopes = offeredScopes.join(' ') as OAuthInteractionScopes;
 
               // Surface the scopes the client's provider profiles force-require so the consent UI can
               // render them as required. Intersect with the actually-offered scopes so only visible
               // scope rows are flagged.
               const requestedScopeSet = new Set(offeredScopes);
-              const { required } = oidcClientProviderProfileScopes(providerConfig.providerProfiles, client.dbx_provider_profiles ?? undefined);
               const requiredScopes = Array.from(required).filter((scope) => requestedScopeSet.has(scope));
 
               const interactionLoginDetails: OAuthInteractionLoginDetails = {

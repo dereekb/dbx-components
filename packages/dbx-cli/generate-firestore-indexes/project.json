@@ -6,19 +6,19 @@
   "tags": [],
   "implicitDependencies": [],
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-firestore-indexes"],
-      "options": {
-        "command": "npx nx run dbx-cli-generate-firestore-indexes:build-base",
-        "color": true
-      },
-      "dependsOn": ["^build"]
-    },
     "build-base": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-firestore-indexes"],
       "defaultConfiguration": "production",
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  Its other dependency, dbx-cli-firestore-indexes, is a source-only sibling with no build target of any kind -- it is compiled straight into this bundle, so there is nothing to order against."
+      },
       "options": {
         "outputPath": "dist/packages/dbx-cli/generate-firestore-indexes",
         "main": "packages/dbx-cli/generate-firestore-indexes/src/main.ts",

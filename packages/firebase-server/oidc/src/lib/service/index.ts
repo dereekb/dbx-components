@@ -12,3 +12,4 @@ export * from './oidc.interaction.service';
 export * from './oidc.grant';
 export * from './oidc.interaction-policy';
 export * from './oidc.jwt-signing.service';
+export * from './oidc.download-signer';

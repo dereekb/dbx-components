@@ -3,9 +3,18 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/dbx-cli/test/src",
   "projectType": "library",
+  "implicitDependencies": ["!firebase-server-test"],
   "targets": {
     "build-base": {
-      "dependsOn": []
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  Everything it imports in source (@dereekb/util, @dereekb/dbx-cli) arrives through the parent edge. Its package.json also lists @dereekb/firebase-server/test as a peerDependency with zero source usage; that false edge is suppressed with `implicitDependencies: [\"!firebase-server-test\"]` because declaring it would put firebase-server:build inside dbx-cli:build, and firebase-server -> zoho -> dbx-cli is a real project-graph path, so it closes a genuine task-graph cycle."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

@@ -20,12 +20,27 @@
  *     `"type": "module"`, so Node's parse goal is explicit rather than left to syntax detection;
  *   - every path an `exports` entry points at actually exists on disk.
  *
- * It walks the whole dist tree because subpath entry points are their own nested packages with
- * their own `package.json`, and those have only a `build-base` target — there is no per-subpath
- * `build` to hook individually.
+ * Those two halves have different scopes, which is what `--mode` selects:
  *
- * Usage: node tools/scripts/finalize-esm-exports.mjs <distPackageDir> [...moreDirs]
- *   e.g. node tools/scripts/finalize-esm-exports.mjs dist/packages/util
+ *   - `--mode=rewrite <dir>` rewrites `<dir>/package.json` and nothing else. It is per-package and
+ *     idempotent. NOTE it is currently UNUSED, and switching the per-package callers to it would be
+ *     a regression: it would stop rewriting the nested subpath `package.json` files. Those are their
+ *     own packages, but they have no `build` of their own — under the build-graph design a subpath
+ *     entry point is a compilation unit, not a deliverable, so its parent's `build` is the only
+ *     thing that finalizes it. This mode only becomes usable if children ever gain their own
+ *     `build`, which is exactly the design that was tried and reverted.
+ *   - `--mode=verify <dirs...>` runs the assertions over the whole tree and writes nothing. The
+ *     assertions are only valid once *everything* has been built: a parent package's `exports`
+ *     names its subpaths, so verifying it the moment the parent finishes — before its subpaths
+ *     build — reports targets that simply do not exist yet. Hence `workspace:verify-esm-exports`,
+ *     which `workspace:build-all` runs once after the whole `run-many -t build` sweep.
+ *   - no flag runs both over the whole tree. This is the original single-shot behavior and what all
+ *     19 per-package `build` targets use: the parent's `build` runs after every one of its entry
+ *     points, so by then the whole package directory is complete and both halves are valid on it.
+ *
+ * Usage: node tools/scripts/finalize-esm-exports.mjs [--mode=rewrite|verify] <distPackageDir> [...moreDirs]
+ *   e.g. node tools/scripts/finalize-esm-exports.mjs --mode=rewrite dist/packages/util
+ *        node tools/scripts/finalize-esm-exports.mjs --mode=verify dist/packages
  *
  * Exits non-zero and lists every violation. Companion check:
  * `tools/scripts/check-esm-named-imports.mjs` (`nx run workspace:check-esm-imports`), which
@@ -41,12 +56,34 @@ const CJS_ARTIFACT = /\.cjs\.js$|\.cjs\.mjs$|\.cjs\.default\.js$/;
 /** The condition order every rewritten entry gets. `types` must lead — conditions match in order. */
 const CONDITION_ORDER = ['types', 'import', 'default'];
 
-const roots = process.argv.slice(2);
+/** `both` is the no-flag default, preserving the original single-shot behavior. */
+const MODES = ['rewrite', 'verify', 'both'];
+
+const roots = [];
+let mode = 'both';
+
+for (const arg of process.argv.slice(2)) {
+  const flag = /^--mode=(.*)$/.exec(arg);
+
+  if (flag) {
+    mode = flag[1];
+  } else {
+    roots.push(arg);
+  }
+}
+
+if (!MODES.includes(mode)) {
+  console.error(`finalize-esm-exports: unknown --mode=${mode}; expected one of ${MODES.join(', ')}.`);
+  process.exit(1);
+}
 
 if (!roots.length) {
   console.error('finalize-esm-exports: expected at least one dist package directory.');
   process.exit(1);
 }
+
+const rewriting = mode === 'rewrite' || mode === 'both';
+const verifying = mode === 'verify' || mode === 'both';
 
 /** Collect every package.json under `dir`, nested subpath packages included. */
 function collectPackageJsonPaths(dir) {
@@ -158,27 +195,40 @@ for (const root of roots) {
     continue;
   }
 
-  const packageJsonPaths = collectPackageJsonPaths(root);
-  const scopes = new Map(packageJsonPaths.map((path) => [dirname(path), path]));
+  // A rewrite-only pass deliberately owns exactly one package.json — its own. Nothing calls it that
+  // way today (see the --mode notes above): subpath packages have no `build` to finalize them, so
+  // the parent's whole-tree `both` pass is what covers them.
+  const packageJsonPaths = verifying ? collectPackageJsonPaths(root) : [join(root, 'package.json')];
 
   for (const packageJsonPath of packageJsonPaths) {
+    if (!existsSync(packageJsonPath)) {
+      violations.push(`${packageJsonPath}: package.json does not exist — was the build run?`);
+      continue;
+    }
+
     inspected++;
 
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
     let changed = false;
 
-    for (const [key, value] of Object.entries(packageJson.exports ?? {})) {
-      const normalized = normalizeExportEntry(value);
+    if (rewriting) {
+      for (const [key, value] of Object.entries(packageJson.exports ?? {})) {
+        const normalized = normalizeExportEntry(value);
 
-      if (normalized.changed) {
-        packageJson.exports[key] = normalized.entry;
-        changed = true;
+        if (normalized.changed) {
+          packageJson.exports[key] = normalized.entry;
+          changed = true;
+        }
       }
     }
 
     if (changed) {
       writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
       rewritten++;
+    }
+
+    if (!verifying) {
+      continue;
     }
 
     for (const [key, target] of exportTargets(packageJson.exports)) {
@@ -191,6 +241,12 @@ for (const root of roots) {
       }
     }
   }
+
+  if (!verifying) {
+    continue;
+  }
+
+  const scopes = new Map(packageJsonPaths.map((path) => [dirname(path), path]));
 
   /** The nearest package scope for a file, mirroring Node's LOOKUP_PACKAGE_SCOPE. */
   function scopeFor(dir) {
@@ -240,7 +296,7 @@ for (const root of roots) {
   }
 }
 
-console.log(`finalize-esm-exports: ${inspected} package.json inspected, ${rewritten} rewritten (${roots.join(', ')}).`);
+console.log(`finalize-esm-exports[${mode}]: ${inspected} package.json inspected, ${rewritten} rewritten (${roots.join(', ')}).`);
 
 if (!violations.length) {
   process.exit(0);

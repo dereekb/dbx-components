@@ -1,6 +1,6 @@
 {
   "name": "demo-api",
-  "version": "14.4.0",
+  "version": "14.5.0",
   "dependencies": {
     "mailgun.js": "^12.0.0"
   },
@@ -8,27 +8,35 @@
     "node": ">=24.0.0"
   },
   "peerDependencies": {
-    "@dereekb/date": "14.4.0",
-    "@dereekb/firebase": "14.4.0",
-    "@dereekb/firebase-server": "14.4.0",
-    "@dereekb/model": "14.4.0",
-    "@dereekb/nestjs": "14.4.0",
-    "@dereekb/util": "14.4.0",
-    "@dereekb/zoom": "14.4.0",
+    "@dereekb/calcom": "14.5.0",
+    "@dereekb/date": "14.5.0",
+    "@dereekb/discord": "14.5.0",
+    "@dereekb/firebase": "14.5.0",
+    "@dereekb/firebase-server": "14.5.0",
+    "@dereekb/model": "14.5.0",
+    "@dereekb/nestjs": "14.5.0",
+    "@dereekb/openrouter": "14.5.0",
+    "@dereekb/util": "14.5.0",
+    "@dereekb/zoho": "14.5.0",
+    "@dereekb/zoom": "14.5.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "@nestjs/core": "^12.0.1",
     "express": "^5.2.1",
     "firebase-admin": "^13.10.0",
     "firebase-functions": "^7.3.2",
     "sharp": "0.35.4",
-    "stripe": "^22.6.1"
+    "stripe": "^22.6.1",
+    "supertest": "^7.2.2"
   },
   "devDependencies": {
-    "@dereekb/oauth-resource": "14.4.0",
+    "@cantoo/pdf-lib": ">=2.6.5 <2.11.0",
+    "@dereekb/oauth-resource": "14.5.0",
     "adm-zip": "0.6.0",
     "date-fns": "^4.1.0",
-    "jose": "^6.2.12",
-    "supertest": "^7.2.2"
+    "firebase": "^12.18.0",
+    "jose": "^6.2.12"
   }
 }

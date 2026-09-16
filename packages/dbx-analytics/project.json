@@ -11,22 +11,18 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-analytics"],
       "options": {
-        "commands": [
-          {
-            "description": "build dbx-analytics production",
-            "command": "npx nx run dbx-analytics:build-base:production"
-          },
-          {
-            "description": "copy license",
-            "command": "echo 'copying dbx-analytics license' && cp LICENSE dist/packages/dbx-analytics"
-          }
-        ],
-        "color": true
+        "color": true,
+        "command": "echo 'copying dbx-analytics license' && cp LICENSE dist/packages/dbx-analytics"
+      },
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "The flat case -- dbx-analytics has no secondary entry points, so this target is just the post-step wrapper around build-base. What changed: the nested `npx nx run dbx-analytics:build-base:production` shell-out became a dependsOn EDGE, so the build is one Nx process and one task graph instead of a parent process shelling out to a child one. The `:production` suffix is not lost by dropping it: a TargetDependencyConfig has no `configuration` field, but Nx's resolveConfiguration falls back to the target's `defaultConfiguration`, and build-base declares `production` as exactly that.  This also fixes a live bug. `parallel` was unset on the old two-command build, which defaults to TRUE, so `cp LICENSE` raced ng-packagr -- and lost: dist/packages/dbx-analytics shipped with no LICENSE file at all, because @nx/angular:package deletes its whole dest directory before writing. With the copy as this target's OWN command it cannot start until build-base has finished."
       }
     },
     "build-base": {
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-analytics"],
+      "dependsOn": ["^build"],
       "options": {
         "project": "packages/dbx-analytics/ng-package.json",
         "tsConfig": "packages/dbx-analytics/tsconfig.lib.json"
@@ -37,7 +33,10 @@
         },
         "development": {}
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "metadata": {
+        "description": "`^build`, not `^build-base`. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and the dependency's own `build` is what finalizes those exports. Declared explicitly rather than inherited from the `@nx/angular:package` targetDefault in nx.json so the edge is visible where it matters; the value is the same."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"

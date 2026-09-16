@@ -8,11 +8,11 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/components/demo-components"],
-      "options": {
-        "command": "npx nx run demo-components:build-base",
-        "color": true
+      "executor": "nx:noop",
+      "outputs": [],
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "A pure aggregation node. This component has no subpath entry points and no post-build step, so once the nested `npx nx run demo-components:build-base` shell-out became a dependsOn edge there was no command left to run -- hence `nx:noop` (a bare dependsOn with no executor is invalid; createTask throws). `outputs` is empty because build-base is the sole writer of dist/components/demo-components; declaring the directory here too would make a second task own it."
       }
     },
     "build-base": {
@@ -22,14 +22,17 @@
         "project": "components/demo-components/ng-package.json",
         "tsConfig": "components/demo-components/tsconfig.lib.json"
       },
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "configurations": {
         "production": {
           "tsConfig": "components/demo-components/tsconfig.lib.prod.json"
         },
         "development": {}
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "metadata": {
+        "description": "`^build`, not the empty list this used to carry. The empty list cancelled the `^build` the `@nx/angular:package` targetDefault supplies, which was safe only while this target was reachable solely through the `build` wrapper (which carried its own `^build`). Now that `build` is a plain aggregation edge, the dependency edge has to live here. `^build` and not `^build-base`: @dereekb/* imports are remapped to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports`, and the dependency's own `build` (finalize-esm-exports) is what finalizes them."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"

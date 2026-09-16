@@ -11,21 +11,18 @@
       "outputs": ["{workspaceRoot}/dist/packages/rxjs"],
       "options": {
         "color": true,
-        "commands": [
-          {
-            "command": "npx nx run rxjs:build-base"
-          },
-          {
-            "description": "normalize + verify the ESM-only package shape",
-            "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/rxjs"
-          }
-        ],
-        "parallel": false
+        "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/rxjs"
       },
-      "dependsOn": ["^build"]
+      "dependsOn": ["build-base"],
+      "metadata": {
+        "description": "The flat case: rxjs has no subpath entry points, so it is the sole writer of dist/packages/rxjs and `build` is simply its compile plus the ESM finalize. The nested `npx nx run rxjs:build-base` command it used to shell out to is now a dependsOn edge, so this runs inside ONE Nx process and one task graph instead of spawning a second one that shares no scheduling or dedup with the first."
+      }
     },
     "build-base": {
-      "dependsOn": []
+      "dependsOn": ["^build"],
+      "metadata": {
+        "description": "`^build`, NOT the `^build-base` @nx/rollup/plugin infers. @nx/js remaps @dereekb/* imports to the dist DIRECTORY, so TypeScript reads that directory's package.json `exports` to resolve them -- and rollup writes `.` as {import, types} until that dependency's own `build` reorders it. `^build-base` would compile this package against un-finalized dependencies."
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

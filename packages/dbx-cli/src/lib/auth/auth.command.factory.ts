@@ -8,12 +8,14 @@ import { buildCliPaths } from '../config/paths';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
+import { claimCliHandoff } from './cli-handoff.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
 import { type LoopbackRedirectCapture, SUGGESTED_CLI_LOOPBACK_REDIRECT_PORT, parseLoopbackRedirectUri, startLoopbackRedirectCapture } from './oidc.loopback';
 import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { openUrlInBrowser } from '../util/browser';
 import { promptLine } from '../util/interactive';
+import { isStdinPositionalSentinel, readAllStdin } from '../util/stdin';
 import { withEnv } from '../util/args';
 
 /**
@@ -124,7 +126,11 @@ async function loadUserInfoSafely(input: { readonly userinfoEndpoint: string; re
 }
 
 /**
- * Renders a human-readable session-lifetime summary, e.g. `valid until 2027-06-01T00:00:00.000Z (~365 days), rotation: disabled`.
+ * Renders a human-readable session-lifetime summary, e.g. `valid until 2027-06-01T00:00:00.000Z (~365 days), rotation: enabled`.
+ *
+ * The unit scales with what is left. A `--service-token` session is measured in months and a handoff
+ * credential (`auth handoff`) in minutes — reporting the latter as "~0 days" hid exactly the fact
+ * the caller most needs to see.
  *
  * @param input - The session lifetime fields.
  * @param input.sessionExpiresAt - Grant expiry as unix epoch seconds.
@@ -137,9 +143,109 @@ function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; re
 
   if (input.sessionExpiresAt != null) {
     const expiresMs = input.sessionExpiresAt * MS_IN_SECOND;
-    const days = Math.max(0, Math.round((expiresMs - (input.nowMs ?? Date.now())) / MS_IN_SECOND / 86400));
+    const remaining = describeRemainingDuration(expiresMs - (input.nowMs ?? Date.now()));
     const rotation = input.rotationDisabled ? 'disabled' : 'enabled';
-    result = `valid until ${new Date(expiresMs).toISOString()} (~${days} days), rotation: ${rotation}`;
+    result = `valid until ${new Date(expiresMs).toISOString()} (${remaining}), rotation: ${rotation}`;
+  }
+
+  return result;
+}
+
+/**
+ * Renders a remaining-duration phrase at the coarsest unit that still reads as a number: days, then
+ * hours, then minutes, with `expired` for anything already past.
+ *
+ * @param remainingMs - Milliseconds remaining (may be negative).
+ * @returns The phrase, e.g. `~365 days`, `~2 hours`, `~48 min`, or `expired`.
+ * @__NO_SIDE_EFFECTS__
+ */
+function describeRemainingDuration(remainingMs: number): string {
+  const seconds = Math.floor(remainingMs / MS_IN_SECOND);
+  let result: string;
+
+  if (seconds <= 0) {
+    result = 'expired';
+  } else if (seconds >= 86400) {
+    result = `~${Math.round(seconds / 86400)} days`;
+  } else if (seconds >= 3600) {
+    result = `~${Math.round(seconds / 3600)} hours`;
+  } else {
+    result = `~${Math.max(1, Math.round(seconds / 60))} min`;
+  }
+
+  return result;
+}
+
+/**
+ * Env name a handoff falls back to when nothing else names one — no `--env`, no `envName` from the
+ * minting deployment, no active env, and no single built-in default to borrow a name from.
+ *
+ * Only reachable on an unconfigured machine redeeming against a server that declares no
+ * `CliTokenApiModuleConfig.envName`. A neutral name is better than refusing: the credential is
+ * already spent by this point, so failing here would burn a one-time code.
+ */
+export const DEFAULT_HANDOFF_ENV_NAME = 'default';
+
+/**
+ * Whether two OIDC issuer URLs name the same provider, ignoring the differences that carry no
+ * meaning — a trailing slash, case in the scheme/host, and a default port for the scheme.
+ *
+ * Used to decide whether redeeming a claim would REPOINT an existing env at a different deployment.
+ * Anything unparseable falls back to a trimmed string compare rather than reporting a match, so a
+ * malformed value fails closed into the guard.
+ *
+ * @param a - The env's currently configured issuer.
+ * @param b - The issuer the claimed bundle came from.
+ * @returns True when both resolve to the same origin and path.
+ */
+export function cliIssuersMatch(a: string, b: string): boolean {
+  let result: boolean;
+
+  try {
+    const urlA = new URL(a);
+    const urlB = new URL(b);
+    const normalize = (url: URL) => `${url.protocol}//${url.host}${url.pathname.replace(/\/+$/, '')}`.toLowerCase();
+
+    result = normalize(urlA) === normalize(urlB);
+  } catch {
+    result = a.trim().replace(/\/+$/, '') === b.trim().replace(/\/+$/, '');
+  }
+
+  return result;
+}
+
+interface ResolveHandoffCodeInput {
+  readonly argvCode: unknown;
+  readonly envVarName: string;
+}
+
+/**
+ * Resolves the handoff claim code from the positional, stdin (`-`), or the env var — in that order.
+ *
+ * The env-var and stdin paths exist so a live credential pointer never has to appear in argv, which
+ * is world-readable in the process list on a shared machine.
+ *
+ * @param input - The parsed positional and the env var name to fall back to.
+ * @returns The trimmed claim code.
+ * @throws {CliError} `AUTH_HANDOFF_NO_CODE` when no code was supplied by any route.
+ */
+async function resolveHandoffCode(input: ResolveHandoffCodeInput): Promise<string> {
+  const argvCode = input.argvCode;
+  let result: string;
+
+  if (isStdinPositionalSentinel(argvCode)) {
+    result = (await readAllStdin()).trim();
+  } else if (typeof argvCode === 'string' && argvCode.length > 0) {
+    result = argvCode.trim();
+  } else {
+    result = (process.env[input.envVarName] ?? '').trim();
+  }
+
+  if (result.length === 0) {
+    throw new CliError({
+      message: `No claim code supplied. Pass it as an argument, pipe it in with '-', or set ${input.envVarName}.`,
+      code: 'AUTH_HANDOFF_NO_CODE'
+    });
   }
 
   return result;
@@ -148,9 +254,13 @@ function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; re
 /**
  * Factory for the built-in `auth` command tree.
  *
- * Wires `setup`, `login`, `logout`, `status`, `show`, and `check` subcommands that drive the OIDC
- * PKCE flow against the active env, persist tokens via the per-CLI token cache, and print a
+ * Wires `setup`, `login`, `handoff`, `logout`, `status`, `show`, and `check` subcommands that drive
+ * the OIDC PKCE flow against the active env, persist tokens via the per-CLI token cache, and print a
  * structured envelope.
+ *
+ * `handoff` is the non-interactive counterpart to `login`: it redeems a one-time claim code minted by
+ * an already-authenticated MCP session, so an agent can bring a CLI up on a bare machine with no
+ * browser and no prior `auth setup`.
  *
  * @param input - Factory configuration.
  * @param input.cliName - The CLI's binary name. Used for the per-user config dir, env-var prefix, and error messages.
@@ -162,6 +272,13 @@ function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; re
 export function createAuthCommand(input: CreateAuthCommandInput): CommandModule {
   const cliName = input.cliName;
   const envVarName = input.envVarName;
+  const envVarPrefix = cliName.replaceAll('-', '_').toUpperCase();
+  const defaultEnvVarName = `${envVarPrefix}_ENV`;
+  /**
+   * Env var a handoff claim code may be passed through, so a code never has to appear in argv (and
+   * therefore in the process list) on a shared machine.
+   */
+  const handoffEnvVarName = `${envVarPrefix}_CLI_HANDOFF`;
   const paths = buildCliPaths({ cliName });
   const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
   const firestoreSessions = createCliFirestoreSessionCacheStore({ firestoreSessionCachePath: paths.firestoreSessionCachePath });
@@ -187,7 +304,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       // Resolve only the name (flag → env var → activeEnv) and bail with a tailored message
       // when none can be found.
       const config = (await loadCliConfig({ configFilePath: paths.configFilePath })) ?? {};
-      const envName = (argv.env as string | undefined) ?? process.env[envVarName ?? `${cliName.replaceAll('-', '_').toUpperCase()}_ENV`] ?? config.activeEnv;
+      const envName = (argv.env as string | undefined) ?? process.env[envVarName ?? defaultEnvVarName] ?? config.activeEnv;
 
       if (!envName) {
         throw new CliError({ message: 'Provide --env <name> on first setup.', code: 'NO_ACTIVE_ENV' });
@@ -467,6 +584,127 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
     })
   };
 
+  // MARK: handoff
+  const handoffCommand: CommandModule = {
+    command: 'handoff [code]',
+    describe: 'Redeem a one-time CLI handoff claim code (from an MCP session) and log in without a browser',
+    builder: (yargs: Argv) =>
+      withEnv(yargs)
+        .positional('code', { type: 'string', describe: `The claim code. Pass '-' to read it from stdin, or set ${handoffEnvVarName}.` })
+        .option('oidc-issuer', { type: 'string', describe: "OIDC issuer to redeem against. Defaults to the env's configured (or built-in default) issuer — required only when neither exists." })
+        .option('set-active', { type: 'boolean', default: true, describe: 'Set the env as the active env after redeeming. Pass --no-set-active to provision it without switching.' })
+        .option('force', { type: 'boolean', default: false, describe: 'Allow the redeem to repoint an existing env at a different OIDC issuer' }),
+    handler: wrapCommandHandler(async (argv: any) => {
+      // `handoff` is the bootstrap path: the env may not exist yet (that is the whole point), so the
+      // throwing resolver — which demands a complete env — cannot be used. Resolve only the NAME the
+      // way `setup` does, then merge whatever is already known underneath it.
+      const config = (await loadCliConfig({ configFilePath: paths.configFilePath })) ?? {};
+
+      // The env NAME is resolved in TWO phases, because the authoritative name arrives WITH the
+      // credential. Only an explicit `--env` (or the env var) can be known before the claim; the
+      // minting deployment's own `envName` comes back in the bundle. A bare machine — the case this
+      // command exists for — has no active env to fall back on, so demanding the name up front is
+      // what used to make the rendered one-line handoff command fail with NO_ACTIVE_ENV.
+      const requestedEnvName = (argv.env as string | undefined) ?? process.env[envVarName ?? defaultEnvVarName];
+
+      // The ISSUER, by contrast, is needed before the claim — it is where the code is redeemed. Look
+      // it up under whichever name we already have, falling back to the sole built-in default when
+      // the CLI ships exactly one (an unambiguous target on an unconfigured machine).
+      const issuerLookupEnvName = requestedEnvName ?? config.activeEnv;
+      const issuerLookupEnv = issuerLookupEnvName ? mergeCliEnvWithDefault({ env: config.envs?.[issuerLookupEnvName], defaultEnv: findCliEnvDefault({ name: issuerLookupEnvName, defaults: defaultEnvs })?.env }) : undefined;
+      const soleDefaultEnv = defaultEnvs?.length === 1 ? defaultEnvs[0] : undefined;
+      const oidcIssuer = (argv.oidcIssuer as string | undefined) ?? issuerLookupEnv?.oidcIssuer ?? soleDefaultEnv?.env?.oidcIssuer;
+
+      if (!oidcIssuer) {
+        throw new CliError({
+          message: `No OIDC issuer known${issuerLookupEnvName ? ` for env "${issuerLookupEnvName}"` : ''}. Pass --oidc-issuer <url> (or --env <name> for a configured env).`,
+          code: 'AUTH_HANDOFF_NO_ISSUER'
+        });
+      }
+
+      const code = await resolveHandoffCode({ argvCode: argv.code, envVarName: handoffEnvVarName });
+      const bundle = await claimCliHandoff({ oidcIssuer, code });
+
+      // Phase two. An explicit name always wins; otherwise the minting deployment names itself, and
+      // only then do we fall back to local state.
+      const envName = requestedEnvName ?? bundle.envName ?? config.activeEnv ?? soleDefaultEnv?.names[0] ?? DEFAULT_HANDOFF_ENV_NAME;
+      const existing = mergeCliEnvWithDefault({ env: config.envs?.[envName], defaultEnv: findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env });
+
+      // A bundle rewrites the env's issuer/apiBaseUrl/clientId wholesale, so redeeming a code from
+      // deployment B into an env named for deployment A would leave the NAME pointing somewhere else
+      // entirely — a far quieter failure than a bad credential. Refuse unless asked explicitly.
+      if (existing?.oidcIssuer && bundle.issuer && !cliIssuersMatch(existing.oidcIssuer, bundle.issuer) && !argv.force) {
+        throw new CliError({
+          message: `Env "${envName}" points at ${existing.oidcIssuer}, but this claim was minted by ${bundle.issuer}.`,
+          code: 'AUTH_HANDOFF_ISSUER_MISMATCH',
+          suggestion: `Redeem into its own env with --env <name>, or pass --force to repoint "${envName}".`
+        });
+      }
+
+      // The bundle carries everything a machine with no prior `auth setup` needs, so the env is
+      // created/updated from it rather than requiring a separate setup pass.
+      const nextEnv: CliEnvConfig = {
+        apiBaseUrl: bundle.apiBaseUrl ?? existing?.apiBaseUrl ?? '',
+        oidcIssuer: bundle.issuer || oidcIssuer,
+        clientId: bundle.clientId,
+        redirectUri: existing?.redirectUri ?? DEFAULT_CLI_REDIRECT_URI,
+        scopes: bundle.scope,
+        ...(existing?.appClientUrl ? { appClientUrl: existing.appClientUrl } : {}),
+        ...(existing?.tokenEndpointAuthMethod ? { tokenEndpointAuthMethod: existing.tokenEndpointAuthMethod } : {}),
+        ...(existing?.firebase ? { firebase: existing.firebase } : {})
+      };
+
+      if (!nextEnv.apiBaseUrl) {
+        throw new CliError({
+          message: `The handoff bundle carried no apiBaseUrl and env "${envName}" has none configured.`,
+          code: 'AUTH_HANDOFF_NO_API_BASE_URL',
+          suggestion: `Run: ${cliName} auth setup --env ${envName} --api-base-url <url>`
+        });
+      }
+
+      const merged = await mergeCliConfig({
+        configFilePath: paths.configFilePath,
+        configDir: paths.configDir,
+        updates: {
+          envs: { [envName]: nextEnv },
+          ...(argv.setActive ? { activeEnv: envName } : {})
+        }
+      });
+
+      const sessionExpiresAt = Math.floor(new Date(bundle.expiresAt).getTime() / MS_IN_SECOND);
+      const entry: CliTokenEntry = {
+        // No access token is handed over — only the refresh token. `expiresAt: 0` marks it expired so
+        // the FIRST non-auth command refreshes, which is also the `readEnvTokenEntry` convention.
+        accessToken: '',
+        refreshToken: bundle.refreshToken,
+        scope: bundle.scope,
+        expiresAt: 0,
+        sessionExpiresAt
+      };
+
+      // PERSISTED, deliberately not `fromEnv`: the CLI client is a public PKCE client, so the server
+      // rotates the refresh token on every exchange and a rotation that is not written back would
+      // trip oidc-provider's reuse detection and kill the whole grant.
+      await tokens.set(envName, entry);
+
+      const remainingMinutes = Math.max(0, Math.round((sessionExpiresAt * MS_IN_SECOND - Date.now()) / MS_IN_SECOND / 60));
+      process.stderr.write(`Handoff credential accepted for ${bundle.uid}. SHORT-LIVED: expires ${bundle.expiresAt} (~${remainingMinutes} min). Run \`${cliName} auth login\` for a durable session.\n`);
+
+      outputResult({
+        handoff: true,
+        env: envName,
+        activeEnv: merged.activeEnv,
+        uid: bundle.uid,
+        clientId: bundle.clientId,
+        scope: bundle.scope,
+        refreshToken: maskSecret(bundle.refreshToken),
+        expiresAt: bundle.expiresAt,
+        sessionExpiresAt,
+        config: maskEnv(nextEnv)
+      });
+    })
+  };
+
   // MARK: status
   const statusCommand: CommandModule = {
     command: 'status',
@@ -580,7 +818,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
   return {
     command: 'auth',
     describe: 'Manage OIDC authentication for the active env',
-    builder: (yargs: Argv) => yargs.command(setupCommand).command(loginCommand).command(logoutCommand).command(statusCommand).command(showCommand).command(checkCommand).demandCommand(1, 'Specify an auth subcommand.'),
+    builder: (yargs: Argv) => yargs.command(setupCommand).command(loginCommand).command(handoffCommand).command(logoutCommand).command(statusCommand).command(showCommand).command(checkCommand).demandCommand(1, 'Specify an auth subcommand.'),
     handler: noop
   };
 }
