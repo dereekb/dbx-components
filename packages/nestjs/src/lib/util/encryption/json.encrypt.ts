@@ -13,6 +13,13 @@ const ENCRYPTED_FIELD_KEY_LENGTH = 32;
 // MARK: Types
 /**
  * A hex-encoded secret key for AES-256-GCM encryption. Must be 64 hex characters (32 bytes).
+ *
+ * @example
+ *
+ * ```bash
+ * openssl rand -hex 32
+ * # 88f216e16d8b25f91b5569654fa355b907a01a942c102a3c591cf21f6f9254cd
+ * ```
  */
 export type AES256GCMEncryptionSecret = string;
 

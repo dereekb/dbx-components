@@ -259,7 +259,9 @@ export class OidcCliTokenService {
 
     this._logger.log(`Minted CLI credential: minter=${uid} parentGrant=${parentGrantId(auth) ?? 'unknown'} childGrant=${grantId} client=${cliClientId} scope="${scopeString}" expiresAt=${expiresAt}`);
 
-    return { claimCode, claimExpiresAt: claimExpiresAt.toISOString(), expiresAt, scope: scopeString };
+    // `envName` is returned as well as stored on the claim: the stored copy configures the env AFTER a
+    // successful redeem, but the caller needs the name to BUILD the redeem command in the first place.
+    return { claimCode, claimExpiresAt: claimExpiresAt.toISOString(), expiresAt, scope: scopeString, ...(this.config?.envName ? { envName: this.config.envName } : undefined) };
   }
 
   /**

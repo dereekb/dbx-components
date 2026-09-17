@@ -129,7 +129,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(typeof output.claimCode).toBe('string');
             expect(output.claimCode.length).toBeGreaterThan(20);
             expect(output.cliName).toBe(DEMO_CLI_NAME);
-            expect(output.handoffCommand).toBe(`${DEMO_CLI_NAME} auth handoff ${output.claimCode}`);
+            // `--env` is part of the RUNNABLE contract, not a nicety: `auth handoff` resolves the issuer
+            // it POSTs the claim to from the ACTIVE env, so the command has to name the env or it only
+            // works on a machine that happens to be pointed at the right one already — a bare machine
+            // fails `AUTH_HANDOFF_NO_ISSUER`. demo-api configures `dev-mcp` outside production.
+            expect(output.envName).toBe('dev-mcp');
+            expect(output.handoffCommand).toBe(`${DEMO_CLI_NAME} auth handoff ${output.claimCode} --env dev-mcp`);
             expect(new Date(output.claimExpiresAt).getTime()).toBeGreaterThan(Date.now());
             // the tool's output reaches an MCP transcript — a refresh token must not
             expect(JSON.stringify(output)).not.toContain('refreshToken');

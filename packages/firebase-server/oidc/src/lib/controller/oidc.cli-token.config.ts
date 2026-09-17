@@ -246,6 +246,18 @@ export interface CliTokenMintResult {
    * The space-delimited scopes the minted credential carries.
    */
   readonly scope: string;
+  /**
+   * Name of the CLI env the credential should be redeemed into, echoed from
+   * {@link CliTokenApiModuleConfig.envName}.
+   *
+   * Returned at MINT time, not only stored in the claim payload, because the redeeming machine needs
+   * it BEFORE it can redeem — this is the "information the redeeming machine needs before it can
+   * redeem" the {@link CliTokenMintResult.claimCode} note anticipates, supplied alongside the code
+   * rather than encoded into it. `dbx-cli auth handoff` takes the issuer it POSTs the claim to from
+   * the ACTIVE env, so without a name to pass as `--env` a bare machine fails
+   * `AUTH_HANDOFF_NO_ISSUER` and a machine pointed elsewhere sends the claim to the wrong issuer.
+   */
+  readonly envName?: string;
 }
 
 /**
