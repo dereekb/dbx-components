@@ -199,7 +199,7 @@
             "command": "npx nx run demo-api:build-base:production"
           },
           {
-            "//": "ci-deploy calls build-base directly and bypasses `build` entirely, so it runs none of build's commands or dependsOn targets - the CLI copy has to be repeated here or the deployed function ships without it.",
+            "description": "ci-deploy calls build-base directly and bypasses `build` entirely, so it runs none of build's commands or dependsOn targets - the CLI copy has to be repeated here or the deployed function ships without it.",
             "command": "npx nx run demo-api:copy-cli-artifact"
           },
           {
