@@ -14,6 +14,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
     <dbx-content-box>
       <h2>Reset Password</h2>
       <dbx-firebase-password-reset [oobCode]="oobCodeSignal()">
+        @if (!oobCodeSignal()) {
+          <p hint class="dbx-hint">Enter the reset code from your password reset email along with your new password.</p>
+        }
         <div class="dbx-pt2">
           <div>Custom Content Example</div>
         </div>

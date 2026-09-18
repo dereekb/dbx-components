@@ -14,6 +14,12 @@ import { type FirebaseAuthOobCode, firebaseAuthErrorToReadableError } from '@der
  * Reads an optional `oobCode` from input and presents a new password form.
  * When no `oobCode` is supplied, the form additionally prompts the user to enter the reset code.
  * On submit, calls {@link DbxFirebaseAuthService.completePasswordReset} to finalize the reset.
+ *
+ * Content projection slots:
+ * - `[hint]` — instructions rendered above the form. Only shown while the form is visible, so it disappears with the form once the reset completes.
+ * - `[success]` — rendered below the success message once the reset completes (e.g. a "Back to Log In" link).
+ * - `[error]` — rendered inside the action error display.
+ * - default — rendered below the form while it is visible.
  */
 @Component({
   selector: 'dbx-firebase-password-reset',
@@ -30,10 +36,26 @@ export class DbxFirebasePasswordResetComponent {
    */
   readonly oobCode = input<Maybe<FirebaseAuthOobCode>>();
 
+  /**
+   * Placeholder for the reset code field shown when no `oobCode` is supplied.
+   *
+   * Defaults to {@link DEFAULT_DBX_FIREBASE_PASSWORD_RESET_OOB_CODE_PLACEHOLDER}.
+   */
+  readonly oobCodePlaceholder = input<Maybe<string>>();
+
+  /**
+   * Hint shown under the reset code field when no `oobCode` is supplied.
+   *
+   * Defaults to {@link DEFAULT_DBX_FIREBASE_PASSWORD_RESET_OOB_CODE_HINT}.
+   */
+  readonly oobCodeHint = input<Maybe<string>>();
+
   readonly resetCompleteSignal = signal(false);
 
   readonly formConfigSignal = computed<DbxFirebasePasswordResetFormConfig>(() => ({
-    showOobCodeInput: !this.oobCode()
+    showOobCodeInput: !this.oobCode(),
+    oobCodePlaceholder: this.oobCodePlaceholder(),
+    oobCodeHint: this.oobCodeHint()
   }));
 
   readonly handleResetAction: WorkUsingObservable<DbxFirebasePasswordResetFormValue> = (value: DbxFirebasePasswordResetFormValue) => {

@@ -1,5 +1,6 @@
 import { mapIterable, addToSet, removeFromSet, type Maybe, type ArrayOrValue, filterMaybeArrayValues } from '@dereekb/util';
 import { Injectable, InjectionToken, type Type, inject } from '@angular/core';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type FirebaseLoginMethodCategory, type FirebaseLoginMethodType, type KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
 import { type DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from './login.password';
@@ -10,6 +11,10 @@ import { type DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PA
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN = new InjectionToken<DbxFirebaseAuthLoginProvider[]>('DefaultDbxFirebaseAuthLoginProviders');
 export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new InjectionToken<Type<unknown>>('DefaultDbxFirebaseAuthLoginTermsComponentClass');
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN = new InjectionToken<DbxFirebaseAuthLoginPasswordConfig>('DefaultDbxFirebaseAuthLoginPasswordConfig');
+/**
+ * Anchor to the app's password reset page, offered from the "Send Recovery Email" view to users that already hold a reset code.
+ */
+export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN = new InjectionToken<ClickableAnchor>('DefaultDbxFirebaseAuthLoginPasswordResetAnchor');
 
 export interface DbxFirebaseAuthLoginProvider<D = unknown> {
   /**
@@ -101,17 +106,20 @@ export class DbxFirebaseAuthLoginService {
 
   private _enableAll = false;
   private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
+  private _passwordResetAnchor: Maybe<ClickableAnchor>;
   private _enabled = new Set<FirebaseLoginMethodType>();
 
   constructor() {
     const defaultProviders = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, { optional: true });
     const passwordConfig = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, { optional: true });
+    const passwordResetAnchor = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN, { optional: true });
 
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
     }
 
     this._passwordConfig = passwordConfig ?? DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG;
+    this._passwordResetAnchor = passwordResetAnchor;
   }
 
   /**
@@ -230,5 +238,18 @@ export class DbxFirebaseAuthLoginService {
 
   setPasswordConfig(passwordConfig: DbxFirebaseAuthLoginPasswordConfig) {
     this._passwordConfig = passwordConfig;
+  }
+
+  /**
+   * Anchor to the app's password reset page, or undefined when the app has not configured one.
+   *
+   * @returns The configured password reset anchor, if any.
+   */
+  getPasswordResetAnchor(): Maybe<ClickableAnchor> {
+    return this._passwordResetAnchor;
+  }
+
+  setPasswordResetAnchor(passwordResetAnchor: Maybe<ClickableAnchor>) {
+    this._passwordResetAnchor = passwordResetAnchor;
   }
 }
