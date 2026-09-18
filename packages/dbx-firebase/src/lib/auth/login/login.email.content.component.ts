@@ -11,7 +11,7 @@ import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 /**
@@ -19,6 +19,10 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
  */
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
+  /**
+   * Anchor to the app's password reset page. When set, the recovery view offers an "Already have a recovery code?" link to it.
+   */
+  readonly passwordResetAnchor?: Maybe<ClickableAnchor>;
 }
 
 /**
@@ -33,7 +37,21 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
  */
 @Component({
   templateUrl: './login.email.content.component.html',
-  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailForgeFormComponent, DbxFirebaseEmailRecoveryForgeFormComponent, DbxFormSourceDirective]
+  imports: [
+    NgTemplateOutlet,
+    DbxErrorComponent,
+    DbxLinkComponent,
+    DbxActionErrorDirective,
+    DbxActionFormDirective,
+    MatButtonModule,
+    DbxActionModule,
+    DbxButtonComponent,
+    DbxButtonSpacerDirective,
+    DbxContentPitDirective,
+    DbxFirebaseEmailForgeFormComponent,
+    DbxFirebaseEmailRecoveryForgeFormComponent,
+    DbxFormSourceDirective
+  ]
 })
 export class DbxFirebaseLoginEmailContentComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
@@ -57,6 +75,8 @@ export class DbxFirebaseLoginEmailContentComponent {
       this.openRecovery();
     }
   };
+
+  readonly passwordResetAnchor: Maybe<ClickableAnchor> = this.config.passwordResetAnchor;
 
   readonly doneOrCancelled = new EventEmitter<boolean>();
 

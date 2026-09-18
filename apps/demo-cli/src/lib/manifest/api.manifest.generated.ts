@@ -63,7 +63,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.5.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.5.1' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1295,7 +1295,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).' }
     ],
     read: 'system',
-    serviceFactory: { exportName: 'notificationBoxFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+    serviceFactory: { exportName: 'notificationBoxFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
+    compositeKey: { from: '*', encoding: 'two-way' }
   },
   {
     modelType: 'notificationLoggedEventDay',
@@ -1350,7 +1351,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' }
     ],
     read: 'system',
-    serviceFactory: { exportName: 'notificationSummaryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+    serviceFactory: { exportName: 'notificationSummaryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
+    compositeKey: { from: '*', encoding: 'two-way' }
   },
   {
     modelType: 'notificationUser',

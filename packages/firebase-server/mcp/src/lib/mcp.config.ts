@@ -336,6 +336,18 @@ export interface McpCliTokenMintResult {
    * SHA-256 of the artifact behind {@link downloadUrl}, so the caller can verify what it fetched.
    */
   readonly downloadSha256?: string;
+  /**
+   * Name of the CLI env the credential should be redeemed into, from `CliTokenApiModuleConfig.envName`.
+   *
+   * Load-bearing for the rendered `handoffCommand`, not decorative. `dbx-cli auth handoff` resolves
+   * the issuer to POST the claim to from the ACTIVE env — so on a machine with no active env the
+   * bare command fails `AUTH_HANDOFF_NO_ISSUER`, and on one active against a different env it aims
+   * the claim at the wrong issuer. A built-in env NAME is only a default template until something
+   * instantiates it, so it cannot be relied on to already exist. The deployment is the only party
+   * that knows which env it is; passing it through is what lets the tool render a command the target
+   * machine can run unmodified.
+   */
+  readonly envName?: string;
 }
 
 /**

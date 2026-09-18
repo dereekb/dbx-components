@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-firebase/oidc",
-  "version": "14.5.1",
+  "version": "14.6.0",
   "sideEffects": false,
   "peerDependencies": {
     "@angular/common": "22.1.4",
@@ -8,14 +8,14 @@
     "@angular/forms": "22.1.4",
     "@angular/material": "^22.1.4",
     "@angular/router": "22.1.4",
-    "@dereekb/dbx-core": "14.5.1",
-    "@dereekb/dbx-firebase": "14.5.1",
-    "@dereekb/dbx-form": "14.5.1",
-    "@dereekb/dbx-web": "14.5.1",
-    "@dereekb/firebase": "14.5.1",
-    "@dereekb/rxjs": "14.5.1",
-    "@dereekb/util": "14.5.1",
-    "@dereekb/vitest": "14.5.1",
+    "@dereekb/dbx-core": "14.6.0",
+    "@dereekb/dbx-firebase": "14.6.0",
+    "@dereekb/dbx-form": "14.6.0",
+    "@dereekb/dbx-web": "14.6.0",
+    "@dereekb/firebase": "14.6.0",
+    "@dereekb/rxjs": "14.6.0",
+    "@dereekb/util": "14.6.0",
+    "@dereekb/vitest": "14.6.0",
     "@ng-forge/dynamic-forms": "1.2.0-next.8",
     "rxjs": "^7.8.2"
   }

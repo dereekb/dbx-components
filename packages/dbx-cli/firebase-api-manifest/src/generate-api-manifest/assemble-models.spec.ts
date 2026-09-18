@@ -334,6 +334,7 @@ const DECLARED_SOURCE = `/**
  *
  * @dbxModel
  * @dbxModelServerOnly
+ * @dbxModelCompositeKey from=OpenRouterPromptVersion encoding=two-way
  */
 export interface OpenRouterPrompt {
     /**
@@ -389,6 +390,12 @@ describe('assembleModels (declaration-sourced packages)', () => {
     const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
     expect(prompt?.description).toBe('A prompt.');
     expect(prompt?.serverOnly).toBe(true);
+  });
+
+  it('carries the composite-key declaration through and omits it when undeclared', () => {
+    const prompt = models.find((m) => m.modelType === 'openRouterPrompt');
+    expect(prompt?.compositeKey).toEqual({ from: ['OpenRouterPromptVersion'], encoding: 'two-way' });
+    expect(models.find((m) => m.modelType === 'openRouterPromptVersion')).not.toHaveProperty('compositeKey');
   });
 
   it('builds fields from the interface when the converter literal is unavailable', () => {

@@ -20,6 +20,7 @@ import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/db
 import { Node, SyntaxKind, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
 import type {
   ModelExtraction,
+  ModelExtractionCompositeKey,
   ModelExtractionConverter,
   ModelExtractionConverterField,
   ModelExtractionEnum,
@@ -38,6 +39,7 @@ const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';
 const MCP_TOOL_NAME_SEGMENT_TAG = 'dbxModelMcpToolNameSegment';
 const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
+const COMPOSITE_KEY_MODEL_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
 
 const IDENTITY_FN = 'firestoreModelIdentity';
 // the declared-type counterparts of IDENTITY_FN, which is all a .d.ts retains of the call
@@ -232,6 +234,7 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
   const dbxModelRead = readDbxModelReadTag(jsDocs);
   const dbxModelServerOnly = jsDocsHaveTag(jsDocs, 'dbxModelServerOnly');
   const mcpToolNameSegment = readMcpToolNameSegmentTag(jsDocs);
+  const compositeKey = readDbxModelCompositeKeyTag(jsDocs);
   const extendsNames = decl.getExtends().map(resolveExtendsName);
   const props: ModelExtractionInterfaceProp[] = [];
   for (const prop of decl.getProperties()) {
@@ -257,7 +260,8 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
     props,
     ...(dbxModelRead === undefined ? {} : { dbxModelRead }),
     ...(dbxModelServerOnly ? { dbxModelServerOnly: true } : {}),
-    ...(mcpToolNameSegment === undefined ? {} : { mcpToolNameSegment })
+    ...(mcpToolNameSegment === undefined ? {} : { mcpToolNameSegment }),
+    ...(compositeKey === undefined ? {} : { compositeKey })
   };
 }
 
@@ -291,6 +295,64 @@ function readDbxModelReadTag(jsDocs: readonly JSDoc[]): 'system' | 'owner' | 'ad
         result = firstToken;
       }
     }
+  }
+  return result;
+}
+
+/**
+ * Reads the first well-formed `@dbxModelCompositeKey from=<...> encoding=<...>` tag. Both parts are
+ * required — a tag missing `from=` or carrying an unknown encoding is dropped so the manifest never
+ * publishes a composite-key declaration a consumer could not act on.
+ *
+ * @param jsDocs - JSDoc blocks attached to the interface declaration.
+ * @returns The parsed tag, or `undefined` when absent or malformed.
+ */
+function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ModelExtractionCompositeKey | undefined {
+  let result: ModelExtractionCompositeKey | undefined;
+  for (const doc of jsDocs) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelCompositeKey') continue;
+      if (result !== undefined) continue;
+      result = parseCompositeKeyTagValue(tag.getCommentText() ?? '');
+    }
+  }
+  return result;
+}
+
+/**
+ * Parses the `from=<...> encoding=<...>` tokens of a `@dbxModelCompositeKey` tag.
+ *
+ * @param raw - The tag text after the tag name.
+ * @returns The declaration, or `undefined` when `from=` is missing/empty or the encoding is not
+ *   `one-way` / `two-way`.
+ */
+function parseCompositeKeyTagValue(raw: string): ModelExtractionCompositeKey | undefined {
+  let from: readonly string[] | '*' | undefined;
+  let encoding: 'one-way' | 'two-way' | undefined;
+  for (const token of raw.trim().split(/\s+/)) {
+    const eq = token.indexOf('=');
+    if (eq <= 0) continue;
+    const key = token.slice(0, eq);
+    const value = token.slice(eq + 1);
+    if (key === 'from') {
+      from = parseCompositeKeyFromValue(value);
+    } else if (key === 'encoding' && (value === 'one-way' || value === 'two-way')) {
+      encoding = value;
+    }
+  }
+  return from !== undefined && encoding !== undefined ? { from, encoding } : undefined;
+}
+
+function parseCompositeKeyFromValue(value: string): readonly string[] | '*' | undefined {
+  let result: readonly string[] | '*' | undefined;
+  if (value === '*') {
+    result = '*';
+  } else {
+    const names = value
+      .split(',')
+      .map((x) => x.trim())
+      .filter((x) => COMPOSITE_KEY_MODEL_NAME_PATTERN.test(x));
+    result = names.length > 0 ? names : undefined;
   }
   return result;
 }

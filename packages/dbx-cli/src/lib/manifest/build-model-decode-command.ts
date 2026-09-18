@@ -1,8 +1,9 @@
+import { flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import type { Argv, CommandModule } from 'yargs';
 import { findCliModelManifestEntry } from '../api/expand-keys';
 import { CliError, outputResult } from '../util/output';
 import { wrapSyncCommandHandler } from '../util/handler';
-import type { CliModelManifest, CliModelManifestEntry } from './types';
+import type { CliModelCompositeKeyEncoding, CliModelManifest, CliModelManifestEntry } from './types';
 
 /**
  * Default command name for the model-decode command. Top-level so it stays
@@ -38,13 +39,46 @@ export interface DecodedKeySegment {
 }
 
 /**
- * Result of decoding a Firestore model key into its model + id components.
+ * Segments of a decoded Firestore key — the leaf, its ancestor chain, and any prefixes the manifest
+ * could not resolve.
  */
-export interface DecodedKey {
+export interface DecodedKeySegments {
   readonly key: string;
   readonly leaf: DecodedKeySegment;
   readonly ancestors: readonly DecodedKeySegment[];
   readonly unresolvedPrefixes: readonly string[];
+}
+
+/**
+ * A composite-key model whose document id is derived from the decoded key, with that document's
+ * ready-to-use key (e.g. decoding a `District` key also yields the `jobDistrict` key
+ * `jd/<flattened district key>`).
+ */
+export interface DerivedCompositeKey {
+  /**
+   * The derived document's full key (`<collectionPrefix>/<flattened source key>`).
+   */
+  readonly key: string;
+  readonly modelType: string;
+  readonly modelName: string;
+  readonly collectionPrefix: string;
+  readonly encoding: CliModelCompositeKeyEncoding;
+}
+
+/**
+ * Result of decoding a Firestore model key into its model + id components.
+ */
+export interface DecodedKey extends DecodedKeySegments {
+  /**
+   * Composite-key models derived from this key. Empty when the leaf prefix is unresolved or no
+   * model declares this leaf as a composite-key source.
+   */
+  readonly derivedKeys: readonly DerivedCompositeKey[];
+  /**
+   * When the leaf is itself a `two-way` composite-key model, the source key recovered from its id,
+   * decoded. Absent for `one-way` models and when the id does not parse as a flattened key.
+   */
+  readonly compositeSource?: DecodedKeySegments;
 }
 
 /**
@@ -105,8 +139,83 @@ function runHandler(manifest: CliModelManifest, argv: ModelDecodeArgv): void {
 
 /**
  * Splits `rawKey` on `/`, resolves each `[prefix, id]` pair against the
- * manifest, and returns the leaf segment + ancestor chain. Throws
+ * manifest, and returns the leaf segment + ancestor chain, plus the
+ * composite-key relationships declared on the manifest: the keys of models
+ * derived from this key (`derivedKeys`) and, for a two-way composite-key
+ * leaf, the recovered source key (`compositeSource`). Throws
  * {@link CliError} for malformed inputs.
+ *
+ * Mirrors the `@dereekb/firebase-server/mcp` `model-decode` tool; both
+ * implementations must stay in lockstep on segment count, resolution order,
+ * and composite-key output.
+ *
+ * @param rawKey - The Firestore key string.
+ * @param manifest - The generated model manifest.
+ * @returns The decoded key with leaf, ancestors, unresolved prefixes, and composite-key relationships.
+ * @throws {CliError} When `rawKey` is empty or does not parse into an even number of `prefix/id` segments.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManifest): DecodedKey {
+  const segments = decodeFirestoreModelKeySegments(rawKey, manifest);
+  const leafEntry = segments.leaf.modelType == null ? undefined : findCliModelManifestEntry(segments.leaf.prefix, manifest);
+  const derivedKeys = leafEntry == null ? [] : findCompositeKeyModelsDerivedFrom(leafEntry, manifest).map((entry) => toDerivedCompositeKey(segments.key, entry));
+  const compositeSource = leafEntry?.compositeKey?.encoding === 'two-way' ? decodeTwoWayCompositeSource(segments.leaf.id, manifest) : undefined;
+
+  return {
+    ...segments,
+    derivedKeys,
+    ...(compositeSource == null ? {} : { compositeSource })
+  };
+}
+
+/**
+ * Resolves the manifest entries whose `compositeKey.from` names `source` — the models whose document
+ * id is derived from a `source` document's key. A wildcard `from=*` matches every model except
+ * `source` itself.
+ *
+ * @param source - The manifest entry of the decoded key's leaf model.
+ * @param manifest - The generated model manifest.
+ * @returns The composite-key entries derived from `source`, in manifest order.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function findCompositeKeyModelsDerivedFrom(source: CliModelManifestEntry, manifest: CliModelManifest): CliModelManifestEntry[] {
+  return manifest.filter((entry) => entry.compositeKey != null && entry.modelType !== source.modelType && (entry.compositeKey.from === '*' || entry.compositeKey.from.some((name) => name === source.modelName || name === source.identityConst || name === source.modelType)));
+}
+
+function toDerivedCompositeKey(sourceKey: string, entry: CliModelManifestEntry): DerivedCompositeKey {
+  const encoding = entry.compositeKey?.encoding ?? 'one-way';
+  const flatId = encoding === 'two-way' ? twoWayFlatFirestoreModelKey(sourceKey) : flatFirestoreModelKey(sourceKey);
+
+  return {
+    key: `${entry.collectionPrefix}/${flatId}`,
+    modelType: entry.modelType,
+    modelName: entry.modelName,
+    collectionPrefix: entry.collectionPrefix,
+    encoding
+  };
+}
+
+function decodeTwoWayCompositeSource(flatId: string, manifest: CliModelManifest): DecodedKeySegments | undefined {
+  let result: DecodedKeySegments | undefined;
+
+  if (flatId.includes('_')) {
+    const sourceKey = inferKeyFromTwoWayFlatFirestoreModelKey(flatId);
+    const segmentCount = sourceKey.split('/').filter((s) => s.length > 0).length;
+
+    if (segmentCount >= 2 && segmentCount % 2 === 0) {
+      result = decodeFirestoreModelKeySegments(sourceKey, manifest);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Splits `rawKey` on `/` and resolves each `[prefix, id]` pair against the
+ * manifest — the segment walk shared by {@link decodeFirestoreModelKey} and
+ * the two-way composite-source decode.
  *
  * @param rawKey - The Firestore key string.
  * @param manifest - The generated model manifest.
@@ -115,7 +224,7 @@ function runHandler(manifest: CliModelManifest, argv: ModelDecodeArgv): void {
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManifest): DecodedKey {
+export function decodeFirestoreModelKeySegments(rawKey: string, manifest: CliModelManifest): DecodedKeySegments {
   const trimmed = rawKey.trim();
   if (trimmed.length === 0) {
     throw new CliError({
@@ -187,6 +296,16 @@ export function renderDecodedKey(decoded: DecodedKey): string {
   if (decoded.unresolvedPrefixes.length > 0) {
     const suffix = decoded.unresolvedPrefixes.length === 1 ? '' : 'es';
     lines.push('', `Unresolved prefix${suffix}: ${decoded.unresolvedPrefixes.join(', ')}. Run \`model-info\` to list known models.`);
+  }
+
+  if (decoded.compositeSource != null) {
+    const source = decoded.compositeSource;
+    const sourceModel = source.leaf.modelName ?? `<unknown — prefix '${source.leaf.prefix}' not in manifest>`;
+    lines.push('', `Composite source (two-way): ${source.key} → ${sourceModel}`);
+  }
+
+  if (decoded.derivedKeys.length > 0) {
+    lines.push('', 'Derived keys:', ...decoded.derivedKeys.map((derived) => `- ${derived.modelName} (${derived.encoding}) — ${derived.key}`));
   }
 
   return lines.join('\n') + '\n';

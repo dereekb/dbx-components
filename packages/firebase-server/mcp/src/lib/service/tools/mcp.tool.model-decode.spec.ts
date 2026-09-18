@@ -32,6 +32,26 @@ const MANIFEST: ReadonlyArray<McpManifestModelEntry> = [
     sourcePackage: 'demo-firebase',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbookEntry.ts',
     fields: []
+  },
+  {
+    modelType: 'guestbookSummary',
+    modelName: 'GuestbookSummary',
+    identityConst: 'guestbookSummaryIdentity',
+    collectionPrefix: 'gbs',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+    fields: [],
+    compositeKey: { from: ['Guestbook'], encoding: 'one-way' }
+  },
+  {
+    modelType: 'notificationBox',
+    modelName: 'NotificationBox',
+    identityConst: 'notificationBoxIdentity',
+    collectionPrefix: 'nb',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
+    fields: [],
+    compositeKey: { from: '*', encoding: 'two-way' }
   }
 ];
 
@@ -53,7 +73,62 @@ describe('createModelDecodeTool', () => {
       }
 
       expect(tool.inputSchema).toMatchObject({ type: 'object', required: ['key'] });
-      expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['key', 'leaf', 'ancestors', 'unresolvedPrefixes'] });
+      expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['key', 'leaf', 'ancestors', 'unresolvedPrefixes', 'derivedKeys'] });
+    });
+  });
+
+  describe('composite keys', () => {
+    it('lists the composite-key models derived from the decoded key with ready-to-use keys', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+      const result = await tool.staticHandler!({ key: 'gb/abc123' }, makeCtx());
+      const output = unwrap(result);
+
+      expect(output.derivedKeys).toEqual([
+        { key: 'gbs/gbabc123', modelType: 'guestbookSummary', modelName: 'GuestbookSummary', collectionPrefix: 'gbs', encoding: 'one-way' },
+        { key: 'nb/gb_abc123', modelType: 'notificationBox', modelName: 'NotificationBox', collectionPrefix: 'nb', encoding: 'two-way' }
+      ]);
+      expect(output.compositeSource).toBeUndefined();
+    });
+
+    it('flattens the full subcollection path for a derived key', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+      const output = unwrap(await tool.staticHandler!({ key: 'gb/abc/gbe/xyz' }, makeCtx()));
+
+      // GuestbookSummary is derived from Guestbook only; the wildcard NotificationBox still applies.
+      expect(output.derivedKeys).toEqual([{ key: 'nb/gb_abc_gbe_xyz', modelType: 'notificationBox', modelName: 'NotificationBox', collectionPrefix: 'nb', encoding: 'two-way' }]);
+    });
+
+    it('never derives a model from its own key', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+      const output = unwrap(await tool.staticHandler!({ key: 'nb/gb_abc123' }, makeCtx()));
+
+      expect(output.derivedKeys).toEqual([]);
+    });
+
+    it('recovers and decodes the source key behind a two-way composite-key leaf', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+      const output = unwrap(await tool.staticHandler!({ key: 'nb/gb_abc_gbe_xyz' }, makeCtx()));
+
+      expect(output.leaf.modelType).toBe('notificationBox');
+      expect(output.compositeSource?.key).toBe('gb/abc/gbe/xyz');
+      expect(output.compositeSource?.leaf).toMatchObject({ prefix: 'gbe', id: 'xyz', modelType: 'guestbookEntry' });
+      expect(output.compositeSource?.ancestors).toHaveLength(1);
+      expect(output.compositeSource?.unresolvedPrefixes).toEqual([]);
+    });
+
+    it('omits compositeSource for a one-way leaf and for an id that is not a flattened key', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+
+      expect(unwrap(await tool.staticHandler!({ key: 'gbs/gbabc123' }, makeCtx())).compositeSource).toBeUndefined();
+      expect(unwrap(await tool.staticHandler!({ key: 'nb/plainid' }, makeCtx())).compositeSource).toBeUndefined();
+      expect(unwrap(await tool.staticHandler!({ key: 'nb/gb_abc_gbe' }, makeCtx())).compositeSource).toBeUndefined();
+    });
+
+    it('returns no derived keys for an unresolved leaf prefix', async () => {
+      const tool = createModelDecodeTool({ manifest: MANIFEST });
+      const output = unwrap(await tool.staticHandler!({ key: 'zz/abc' }, makeCtx()));
+
+      expect(output.derivedKeys).toEqual([]);
     });
   });
 

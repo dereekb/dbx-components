@@ -150,6 +150,26 @@ describe('dbx_model_decode', () => {
       expect(text).toContain('prefix: `totallybogus`');
     });
 
+    it('lists composite-key models derived from the key with their flattened keys', () => {
+      // NotificationBox / NotificationSummary declare `@dbxModelCompositeKey from=* encoding=two-way`.
+      const result = runModelDecode({ key: 'sf/abc123' });
+      expect(result.isError).toBeFalsy();
+      const text = result.content[0].text;
+      expect(text).toContain('**Derived keys:**');
+      expect(text).toContain('- NotificationBox (two-way) — `nb/sf_abc123`');
+      expect(text).toContain('- NotificationSummary (two-way) — `ns/sf_abc123`');
+    });
+
+    it('recovers the source key behind a two-way composite-key leaf id', () => {
+      const result = runModelDecode({ key: 'nb/sf_abc123' });
+      expect(result.isError).toBeFalsy();
+      const text = result.content[0].text;
+      expect(text).toContain('**Leaf:** NotificationBox');
+      expect(text).toContain('**Composite source (two-way):** `sf/abc123` → StorageFile');
+      // A model is never derived from its own key.
+      expect(text).not.toContain('- NotificationBox (two-way) — `nb/nb_sf_abc123`');
+    });
+
     it('returns isError for an odd-segment key', () => {
       const result = runModelDecode({ key: 'sf/abc/extra' });
       expect(result.isError).toBe(true);

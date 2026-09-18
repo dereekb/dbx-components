@@ -247,6 +247,60 @@ export declare const openRouterPromptIdentity: import("@dereekb/firebase").RootF
     });
   });
 
+  describe('@dbxModelCompositeKey tag', () => {
+    it('captures a single-source one-way declaration', () => {
+      const source = `
+        /**
+         * Geographic summary of a district.
+         * @dbxModel
+         * @dbxModelCompositeKey from=District encoding=one-way
+         */
+        export interface JobDistrict { d: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'job.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'JobDistrict')?.compositeKey).toEqual({ from: ['District'], encoding: 'one-way' });
+    });
+
+    it('captures a multi-source list and the wildcard form', () => {
+      const source = `
+        /**
+         * @dbxModel
+         * @dbxModelCompositeKey from=Region,District encoding=two-way
+         */
+        export interface WorkerRegion { r: string; }
+        /**
+         * @dbxModel
+         * @dbxModelCompositeKey from=* encoding=two-way
+         */
+        export interface NotificationBox { m: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'WorkerRegion')?.compositeKey).toEqual({ from: ['Region', 'District'], encoding: 'two-way' });
+      expect(interfaces.find((i) => i.name === 'NotificationBox')?.compositeKey).toEqual({ from: '*', encoding: 'two-way' });
+    });
+
+    it('omits the declaration when the tag is absent or malformed', () => {
+      const source = `
+        /** @dbxModel */
+        export interface Plain { n: string; }
+        /**
+         * @dbxModel
+         * @dbxModelCompositeKey encoding=one-way
+         */
+        export interface MissingFrom { n: string; }
+        /**
+         * @dbxModel
+         * @dbxModelCompositeKey from=District encoding=sideways
+         */
+        export interface BadEncoding { n: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'x.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'Plain')).not.toHaveProperty('compositeKey');
+      expect(interfaces.find((i) => i.name === 'MissingFrom')).not.toHaveProperty('compositeKey');
+      expect(interfaces.find((i) => i.name === 'BadEncoding')).not.toHaveProperty('compositeKey');
+    });
+  });
+
   describe('firestoreField nested converter resolution', () => {
     const SOURCE = `import { firestoreModelIdentity, snapshotConverterFunctions, firestoreSubObject, firestoreObjectArray, firestoreNumber } from '@dereekb/firebase';
 

@@ -1,8 +1,9 @@
 import { inject, type EnvironmentProviders, makeEnvironmentProviders, provideAppInitializer, type Provider, type Type } from '@angular/core';
 import { type FirebaseLoginMethodType } from './login';
 import { type DbxFirebaseAuthLoginPasswordConfig } from './login.password';
-import { type DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
+import { type DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
 import { type Maybe } from '@dereekb/util';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG, type DbxFirebaseLoginTermsOfServiceUrlsConfig } from './login.terms';
 import { defaultFirebaseAuthLoginProvidersFactory } from './firebase.login.providers.default';
 
@@ -31,6 +32,14 @@ export interface ProvideDbxFirebaseLoginConfig {
   readonly passwordConfig?: DbxFirebaseAuthLoginPasswordConfig;
 
   /**
+   * Optional anchor to the app's password reset page (the page hosting `dbx-firebase-password-reset`).
+   *
+   * When set, the "Send Recovery Email" view offers an "Already have a recovery code?" link to it so a user holding an
+   * unexpired code can skip requesting another email.
+   */
+  readonly passwordResetAnchor?: Maybe<ClickableAnchor>;
+
+  /**
    * Providers to register ALONGSIDE the library defaults — a custom login method (a third-party
    * OAuth provider bridged through a custom token, say) that the default catalog has no entry for.
    *
@@ -51,7 +60,7 @@ export interface ProvideDbxFirebaseLoginConfig {
  * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): EnvironmentProviders {
-  const { termsOfServiceUrls: loginTerms, enabledLoginMethods, loginTermsComponentClass, passwordConfig, additionalProviders } = config;
+  const { termsOfServiceUrls: loginTerms, enabledLoginMethods, loginTermsComponentClass, passwordConfig, passwordResetAnchor, additionalProviders } = config;
 
   const providers: (EnvironmentProviders | Provider)[] = [
     // Default login providers
@@ -92,6 +101,14 @@ export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): 
     providers.push({
       provide: DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN,
       useValue: passwordConfig
+    });
+  }
+
+  // Password reset anchor
+  if (passwordResetAnchor) {
+    providers.push({
+      provide: DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN,
+      useValue: passwordResetAnchor
     });
   }
 

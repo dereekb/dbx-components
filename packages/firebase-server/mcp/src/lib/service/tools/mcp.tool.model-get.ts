@@ -1,8 +1,10 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, flatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { type ModelAccessMultiReadResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { isCompositeKeyModelDerivedFrom, type McpManifestModelEntry } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
+import { findModelEntry } from './mcp.tool.model-info';
 import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
 // MARK: Constants
@@ -62,6 +64,13 @@ export interface CreateModelGetToolDeps {
    * `prefix/id` keys.
    */
   readonly resolveIdentity: McpModelGetResolveIdentity;
+  /**
+   * Frozen model catalog. When present, a key whose leaf model is a declared composite-key source of
+   * the requested root model (`@dbxModelCompositeKey from=…`) is flattened into that model's id
+   * instead of being passed verbatim — e.g. `model-get jobDistrict` accepts a `District` key
+   * `rc/…/rcsrd/<id>` and reads `jd/<flattened district key>`. Omit to disable the rewrite.
+   */
+  readonly manifest?: readonly McpManifestModelEntry[];
 }
 
 /**
@@ -80,6 +89,8 @@ export interface ModelGetToolInput {
  * - Accepts an array of keys; values containing `/` are treated as full keys and passed verbatim
  *   while bare ids are promoted to `${collectionName}/${id}` for root models.
  * - Nested (subcollection) models reject bare ids since a parent path is required.
+ * - When a manifest is supplied, a root composite-key model also accepts its declared source
+ *   model's key and flattens it into the document id (see {@link CreateModelGetToolDeps.manifest}).
  * - Auto-chunks at {@link MCP_MODEL_GET_BATCH_SIZE} keys per backend call, mirroring
  *   `getMultipleModelsOverHttpChunked` on the CLI side.
  *
@@ -95,7 +106,7 @@ export interface ModelGetToolInput {
 export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => modelGetToolHandler(args, ctx, deps);
   const name = MODEL_GET_TOOL_NAME;
-  const description = 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys.';
+  const description = `Fetch one or more Firestore model documents by key or bare id. Values containing \`/\` are treated as full keys; bare ids are auto-promoted to \`<collectionName>/<id>\` for root models. Subcollection models require full keys.${deps.manifest == null ? '' : ' For a root composite-key model (`@dbxModelCompositeKey`), a source model key is accepted in place of the flattened id and rewritten automatically.'}`;
 
   return buildStaticToolDefinition({
     name,
@@ -124,7 +135,7 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
       throw new Error(`Unknown modelType: ${input.modelType}`);
     }
 
-    const resolvedKeys = resolveKeys(input.keys, identity);
+    const resolvedKeys = resolveKeys(input.keys, identity, deps.manifest);
     const merged = await readInChunks({ modelType: input.modelType, keys: resolvedKeys, auth: ctx.auth, readDocuments: deps.readDocuments });
 
     result = {
@@ -160,13 +171,13 @@ function parseModelGetInput(args: Record<string, unknown>): ModelGetToolInput {
   return { modelType, keys: normalizedKeys };
 }
 
-function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdentity): FirestoreModelKey[] {
+function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdentity, manifest: Maybe<readonly McpManifestModelEntry[]>): FirestoreModelKey[] {
   const isRoot = identity.type === 'root';
   const resolved: FirestoreModelKey[] = [];
 
   for (const value of keys) {
     if (value.includes('/')) {
-      resolved.push(value);
+      resolved.push((isRoot ? flattenCompositeSourceKey(value, identity, manifest) : undefined) ?? value);
     } else if (isRoot) {
       resolved.push(`${identity.collectionName}/${value}`);
     } else {
@@ -175,6 +186,36 @@ function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdenti
   }
 
   return resolved;
+}
+
+/**
+ * Rewrites `key` into the requested composite-key model's document key when `key`'s leaf model is one
+ * of that model's declared sources.
+ *
+ * @param key - A full `prefix/id` key supplied by the caller.
+ * @param identity - The identity of the requested (root) model.
+ * @param manifest - The model catalog, when wired.
+ * @returns The rewritten `<collectionName>/<flattened key>`, or `undefined` — leave the key alone — when
+ *   the manifest is absent, the key already belongs to the requested collection, the requested model
+ *   declares no composite key, or the key's leaf model is not one of its sources.
+ */
+function flattenCompositeSourceKey(key: string, identity: FirestoreModelIdentity, manifest: Maybe<readonly McpManifestModelEntry[]>): Maybe<FirestoreModelKey> {
+  let result: Maybe<FirestoreModelKey>;
+  const target = manifest == null ? undefined : manifest.find((entry) => entry.modelType === identity.modelType);
+
+  if (manifest != null && target?.compositeKey != null && !key.startsWith(`${identity.collectionName}/`)) {
+    const segments = key.split('/').filter((s) => s.length > 0);
+    const leafPrefix = segments.length >= 2 && segments.length % 2 === 0 ? segments[segments.length - 2] : undefined;
+    const sourceEntry = leafPrefix == null ? undefined : findModelEntry(leafPrefix, manifest);
+    const isSource = sourceEntry != null && isCompositeKeyModelDerivedFrom(sourceEntry, target);
+
+    if (isSource) {
+      const flatId = target.compositeKey.encoding === 'two-way' ? twoWayFlatFirestoreModelKey(key) : flatFirestoreModelKey(key);
+      result = `${identity.collectionName}/${flatId}`;
+    }
+  }
+
+  return result;
 }
 
 interface ReadInChunksInput {
@@ -211,7 +252,7 @@ const MODEL_GET_INPUT_SCHEMA = {
     keys: {
       type: 'array',
       minItems: 1,
-      description: 'Full keys ("prefix/id") or bare ids (root models only).',
+      description: 'Full keys ("prefix/id") or bare ids (root models only). For a root composite-key model, the source model key (e.g. a District key for jobDistrict) is also accepted and flattened into the document id.',
       items: { type: 'string', minLength: 1 }
     }
   },

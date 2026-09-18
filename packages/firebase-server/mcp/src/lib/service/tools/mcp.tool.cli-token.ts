@@ -48,6 +48,10 @@ export interface CliTokenToolOutput {
   readonly downloadUrl?: string;
   readonly downloadSha256?: string;
   /**
+   * Name of the CLI env the credential is redeemed into, when the app configured one.
+   */
+  readonly envName?: string;
+  /**
    * The exact command to run once the CLI is on the machine.
    */
   readonly handoffCommand: string;
@@ -112,18 +116,32 @@ async function cliTokenToolHandler(args: Record<string, unknown>, ctx: McpStatic
   };
 }
 
+/**
+ * Renders the tool's output, including the command the target machine runs verbatim.
+ *
+ * `--env` is appended whenever the mint supplied an `envName`. Without it the rendered command is
+ * only correct on a machine that already has the right env ACTIVE — `auth handoff` takes the issuer
+ * to redeem against from the active env, so a bare machine fails `AUTH_HANDOFF_NO_ISSUER` and a
+ * machine pointed at another env sends the claim to the wrong issuer. Naming the env also
+ * instantiates it from its built-in default template, which a name alone does not do.
+ *
+ * @param minted - The mint result from the app-supplied minter.
+ * @returns The tool output payload.
+ */
 function buildOutput(minted: McpCliTokenMintResult): CliTokenToolOutput {
   const cliName = minted.cliName ?? '<cli>';
+  const envArgument = minted.envName == null ? '' : ` --env ${minted.envName}`;
 
   return {
     claimCode: minted.claimCode,
     claimExpiresAt: minted.claimExpiresAt,
     expiresAt: minted.expiresAt,
     scope: minted.scope,
-    handoffCommand: `${cliName} auth handoff ${minted.claimCode}`,
+    handoffCommand: `${cliName} auth handoff ${minted.claimCode}${envArgument}`,
     ...(minted.cliName == null ? {} : { cliName: minted.cliName }),
     ...(minted.downloadUrl == null ? {} : { downloadUrl: minted.downloadUrl }),
-    ...(minted.downloadSha256 == null ? {} : { downloadSha256: minted.downloadSha256 })
+    ...(minted.downloadSha256 == null ? {} : { downloadSha256: minted.downloadSha256 }),
+    ...(minted.envName == null ? {} : { envName: minted.envName })
   };
 }
 
@@ -160,7 +178,17 @@ function renderText(output: CliTokenToolOutput): string {
     lines.push('## 2. Log it in', '');
   }
 
-  lines.push('```sh', `./${output.handoffCommand}`, '```', '', `- **claim code expires:** ${output.claimExpiresAt} (one-time use)`, `- **credential expires:** ${output.expiresAt}`, `- **scopes:** \`${output.scope}\``, '', '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._');
+  lines.push(
+    '```sh',
+    `./${output.handoffCommand}`,
+    '```',
+    '',
+    `- **claim code expires:** ${output.claimExpiresAt} (one-time use)`,
+    `- **credential expires:** ${output.expiresAt}`,
+    `- **scopes:** \`${output.scope}\``,
+    '',
+    '_The claim code is single-use and short-lived; the credential it unwraps is capped at one hour. Re-run this tool for a fresh one rather than trying to extend either._'
+  );
 
   return lines.join('\n');
 }
@@ -198,6 +226,7 @@ const CLI_TOKEN_OUTPUT_SCHEMA = {
     cliName: { type: 'string' },
     downloadUrl: { type: 'string' },
     downloadSha256: { type: 'string' },
+    envName: { type: 'string' },
     handoffCommand: { type: 'string' }
   }
 } as const;

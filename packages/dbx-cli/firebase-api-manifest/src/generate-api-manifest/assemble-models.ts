@@ -396,7 +396,7 @@ interface BuildManifestEntryInput {
  * Builds the runtime {@link CliModelManifestEntry} for one resolved
  * (identity, interface, converter) triple, applying every optional field
  * (group, parent identity, singleton document id, example key, description,
- * MCP segment, read level, service factory) only when present.
+ * MCP segment, read level, service factory, composite key) only when present.
  *
  * @param input - The resolved identity, model name, narrowed collection prefix, tagged interface, built fields, source, and registries.
  * @returns The assembled manifest entry.
@@ -428,7 +428,8 @@ function buildManifestEntry(input: BuildManifestEntryInput): CliModelManifestEnt
     ...(iface.mcpToolNameSegment ? { mcpToolNameSegment: iface.mcpToolNameSegment } : {}),
     ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
     ...(iface.dbxModelServerOnly ? { serverOnly: true } : {}),
-    ...(serviceFactory ? { serviceFactory } : {})
+    ...(serviceFactory ? { serviceFactory } : {}),
+    ...(iface.compositeKey ? { compositeKey: iface.compositeKey } : {})
   };
 }
 

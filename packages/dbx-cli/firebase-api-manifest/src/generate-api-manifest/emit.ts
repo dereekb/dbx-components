@@ -165,7 +165,8 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
     entry.mcpToolNameSegment ? `mcpToolNameSegment: ${JSON.stringify(entry.mcpToolNameSegment)}` : undefined,
     entry.read ? `read: ${JSON.stringify(entry.read)}` : undefined,
     entry.serverOnly ? 'serverOnly: true' : undefined,
-    entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined
+    entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined,
+    entry.compositeKey ? `compositeKey: { from: ${JSON.stringify(entry.compositeKey.from)}, encoding: ${JSON.stringify(entry.compositeKey.encoding)} }` : undefined
   ];
   return `  { ${fields.filter(Boolean).join(', ')} }`;
 }

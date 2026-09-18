@@ -42,6 +42,15 @@
       <button mat-flat-button (click)="onCancelReset()">Cancel Recovery</button>
     </div>
     <dbx-error dbxActionError></dbx-error>
+    @if (passwordResetAnchor) {
+      <dbx-content-pit class="dbx-firebase-login-email-content-recovery-code-prompt">
+        <span>
+          Already have a recovery code? Reset
+          <dbx-link [anchor]="passwordResetAnchor">here</dbx-link>
+          .
+        </span>
+      </dbx-content-pit>
+    }
   </div>
 </ng-template>
 

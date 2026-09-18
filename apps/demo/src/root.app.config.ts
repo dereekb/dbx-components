@@ -403,7 +403,8 @@ export const APP_CONFIG: ApplicationConfig = {
       termsOfServiceUrls: {
         tosUrl: '/tos/terms',
         privacyUrl: '/tos/privacy'
-      }
+      },
+      passwordResetAnchor: { ref: 'demo.auth.reset' }
     }),
     // Enables client-side impersonation ("view as another user"), consumed by dbxAuthImpersonationQuerySync (?imp=<uid>).
     provideDbxFirebaseAuthImpersonation(),

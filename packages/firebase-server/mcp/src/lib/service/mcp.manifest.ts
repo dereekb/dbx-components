@@ -107,6 +107,64 @@ export interface McpManifestModelEntry {
     readonly exportName: string;
     readonly sourceFile: string;
   };
+  /**
+   * Declared `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` on the
+   * model interface — this model's document id is a flattened encoding of a source model's key
+   * (structural mirror of `@dereekb/dbx-cli`'s `CliModelCompositeKey`). Absent when the model omits
+   * the tag.
+   *
+   * Drives `model-decode`'s `derivedKeys` / `compositeSource` output and lets `model-get` accept a
+   * source model key in place of the flattened id.
+   */
+  readonly compositeKey?: McpManifestModelCompositeKey;
+}
+
+/**
+ * Flat-key encoding declared by a `@dbxModelCompositeKey` tag.
+ *
+ * - `one-way` — `flatFirestoreModelKey()`: slashes removed; the source key cannot be recovered.
+ * - `two-way` — `twoWayFlatFirestoreModelKey()`: slashes replaced with underscores; the source key
+ *   is recoverable with `inferKeyFromTwoWayFlatFirestoreModelKey()`.
+ */
+export type McpManifestModelCompositeKeyEncoding = 'one-way' | 'two-way';
+
+/**
+ * Composite-key declaration carried on a {@link McpManifestModelEntry}.
+ */
+export interface McpManifestModelCompositeKey {
+  /**
+   * `'*'` when any model's key may be the source, or the source model names as written in the tag
+   * — each an interface name, identity const, or modelType, resolved against the manifest.
+   */
+  readonly from: readonly string[] | '*';
+  readonly encoding: McpManifestModelCompositeKeyEncoding;
+}
+
+/**
+ * Resolves the manifest entries whose `compositeKey.from` names `source` — the models whose document
+ * id is derived from a `source` document's key. A wildcard `from=*` matches every model except
+ * `source` itself (a model's id is never derived from its own key).
+ *
+ * @param source - The manifest entry of the decoded key's leaf model.
+ * @param manifest - The full model manifest.
+ * @returns The composite-key entries derived from `source`, in manifest order.
+ */
+export function findCompositeKeyModelsDerivedFrom(source: McpManifestModelEntry, manifest: readonly McpManifestModelEntry[]): McpManifestModelEntry[] {
+  return manifest.filter((entry) => isCompositeKeyModelDerivedFrom(source, entry));
+}
+
+/**
+ * Whether `candidate` is a composite-key model whose document id is derived from a `source`
+ * document's key — `candidate.compositeKey.from` names `source` (by interface name, identity const,
+ * or modelType) or is the wildcard `*`. A model is never derived from its own key.
+ *
+ * @param source - The manifest entry of the source model.
+ * @param candidate - The manifest entry to test.
+ * @returns `true` when `candidate`'s id is a flattened `source` key.
+ */
+export function isCompositeKeyModelDerivedFrom(source: McpManifestModelEntry, candidate: McpManifestModelEntry): boolean {
+  const from = candidate.compositeKey?.from;
+  return from != null && candidate.modelType !== source.modelType && (from === '*' || from.some((name) => name === source.modelName || name === source.identityConst || name === source.modelType));
 }
 
 /**

@@ -97,6 +97,45 @@ https://cloud.google.com/build/docs/deploying-builds/deploy-firebase
 
 You may also need to deploy from your own device/account first, as the first deployment configures the different services using permissions your service account doesn't have access to. Once you've deployed once no further configuration will be necessary and your service worker account used by your CI can deploy properly.
 
+#### Firestore indexes/rules deploy IAM
+
+If your CI's `ci-deploy-firebase-indexes-*` / `ci-deploy-firebase-rules-*` targets
+fail with something like:
+
+```
+Error: Request to https://serviceusage.googleapis.com/v1/projects/<project>/services/firestore.googleapis.com
+had HTTP Error: 403, Permission denied to get service [firestore.googleapis.com]
+```
+
+your deploy service account is missing IAM roles beyond its default set.
+Rather than granting extra roles to the default
+`firebase-adminsdk-fbsvc@<project>.iam.gserviceaccount.com` account (it backs
+the Admin SDK and other runtime code paths, so widening its roles widens what
+those paths can do too), create a dedicated service account for CI deploys and
+use that for `GOOGLE_SERVICE_ACCOUNT_JSON` / `GOOGLE_APPLICATION_CREDENTIALS`
+instead:
+
+```
+gcloud iam service-accounts create ci-deploy \
+  --display-name="CI Deploy" --project=<project-id>
+```
+
+Then grant it the roles below, per project (prod and staging are separate GCP
+projects with separate service accounts — create and grant on both):
+
+```
+gcloud projects add-iam-policy-binding <project-id> \
+  --member="serviceAccount:ci-deploy@<project-id>.iam.gserviceaccount.com" \
+  --role="roles/firebase.developAdmin" --condition=None
+```
+
+Repeat for `roles/clouddeploymentmanager.serviceAgent`,
+`roles/firebasestorage.serviceAgent`, `roles/firebasestorage.viewer`, and
+`roles/serviceusage.serviceUsageViewer` (narrowly covers the error above;
+`firebase.developAdmin` already implies it, but it's harmless to hold explicitly).
+Also confirm the API itself is enabled — a 403 on the enablement check can mask
+that it isn't: `gcloud services enable firestore.googleapis.com --project=<project-id>`.
+
 ### NPM_TOKEN
 This one is only necessary if you are deploying to NPM.
 
