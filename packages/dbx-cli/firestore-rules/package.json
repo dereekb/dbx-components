@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli-firestore-rules",
-  "version": "14.5.1",
+  "version": "14.6.0",
   "sideEffects": false,
   "private": true,
   "type": "module",
@@ -8,6 +8,6 @@
     "eslint": "10.9.1"
   },
   "peerDependencies": {
-    "@dereekb/util": "14.5.1"
+    "@dereekb/util": "14.6.0"
   }
 }

@@ -1,3 +1,23 @@
+# [14.6.0](https://github.com/dereekb/dbx-components/compare/v14.5.1-dev...v14.6.0) (2026-09-18)
+
+### Bug Fixes
+
+- **demo-api:** drop the "//" key from ci-deploy's commands entry ([0ca125a5](https://github.com/dereekb/dbx-components/commit/0ca125a574fabb87a6d82ddcfb192b63c96082d6))
+- **firebase-server:** carry envName into the cli-token handoff command ([e46425f5](https://github.com/dereekb/dbx-components/commit/e46425f5e4551b6cb4f148021c6d518ca8402aff))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([7244f332](https://github.com/dereekb/dbx-components/commit/7244f332283be4b078c80014f3b1da73f394aeb0))
+
+### Documentation
+
+- **setup:** document firestore deploy IAM roles in checklist ([a90dffba](https://github.com/dereekb/dbx-components/commit/a90dffba619c6e8c7e264354182f8e4f43a52b18))
+
+### Features
+
+- **dbx-firebase:** polish password reset form + recovery-code link ([392fc28b](https://github.com/dereekb/dbx-components/commit/392fc28be78a28c2eeed086b54e6bdcc1b68c003))
+- **mcp:** surface composite keys in model-decode and model-get ([0c9d88f2](https://github.com/dereekb/dbx-components/commit/0c9d88f265671c5744023bf7354da54221618cd1))
+
 ## [14.5.1](https://github.com/dereekb/dbx-components/compare/v14.5.0-dev...v14.5.1) (2026-09-16)
 
 ### Build System
