@@ -187,6 +187,39 @@ export interface CliModelManifestEntry {
     readonly exportName: string;
     readonly sourceFile: string;
   };
+  /**
+   * Declared `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` on the
+   * model interface — this model's document id is a flattened encoding of a source model's key.
+   * Absent when the model omits the tag.
+   *
+   * Consumed by `model-decode` (to publish the derived key when a source key is decoded, and to
+   * recover the source key from a two-way id) and by `model-get` (to accept a source key in place
+   * of the flattened id).
+   */
+  readonly compositeKey?: CliModelCompositeKey;
+}
+
+/**
+ * Flat-key encoding declared by a `@dbxModelCompositeKey` tag.
+ *
+ * - `one-way` — `flatFirestoreModelKey()`: slashes removed; the source key cannot be recovered
+ *   from the id.
+ * - `two-way` — `twoWayFlatFirestoreModelKey()`: slashes replaced with underscores; recover the
+ *   source key with `inferKeyFromTwoWayFlatFirestoreModelKey()`.
+ */
+export type CliModelCompositeKeyEncoding = 'one-way' | 'two-way';
+
+/**
+ * Composite-key declaration carried on a {@link CliModelManifestEntry}.
+ */
+export interface CliModelCompositeKey {
+  /**
+   * `'*'` when any model's key may be the source (framework models such as `NotificationBox`), or
+   * the source model names as written in the tag — each an interface name, identity const, or
+   * modelType, resolved against the manifest at decode time.
+   */
+  readonly from: readonly string[] | '*';
+  readonly encoding: CliModelCompositeKeyEncoding;
 }
 
 /**
@@ -407,6 +440,11 @@ export interface McpManifestModelEntry {
    * client read grant in `firestore.rules` either) rather than a missing role it could be granted.
    */
   readonly serverOnly?: boolean;
+  /**
+   * Composite-key declaration (mirror of {@link CliModelManifestEntry.compositeKey}). Lets the
+   * runtime `model-decode` publish derived keys and `model-get` accept a source key.
+   */
+  readonly compositeKey?: CliModelCompositeKey;
 }
 
 /**

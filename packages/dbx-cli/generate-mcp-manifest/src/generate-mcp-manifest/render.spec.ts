@@ -305,6 +305,14 @@ describe('renderMcpManifest', () => {
       const result = render([makeEntry({})], [makeModelEntry({})]);
       expect(result.models?.[0]).not.toHaveProperty('mcpToolNameSegment');
     });
+
+    it('projects compositeKey when present and omits it when absent', () => {
+      const withComposite = render([makeEntry({})], [makeModelEntry({ compositeKey: { from: ['District'], encoding: 'one-way' } })]);
+      expect(withComposite.models?.[0]).toMatchObject({ compositeKey: { from: ['District'], encoding: 'one-way' } });
+
+      const without = render([makeEntry({})], [makeModelEntry({})]);
+      expect(without.models?.[0]).not.toHaveProperty('compositeKey');
+    });
   });
 
   describe('enum manifest', () => {

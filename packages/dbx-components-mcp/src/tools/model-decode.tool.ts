@@ -19,6 +19,10 @@
  *     up via the model registry, and returns the leaf model + id plus any
  *     ancestor chain for subcollection paths (e.g.
  *     `"nb/abc/nbn/def"` → NotificationBoxNotification under NotificationBox).
+ *     Also lists every composite-key model (`@dbxModelCompositeKey`) whose
+ *     document id is a flattened form of the key, with the ready-to-use key,
+ *     and — for a two-way composite-key leaf — the source key recovered from
+ *     its id.
  */
 import type { Tool } from '@modelcontextprotocol/server';
 import { type } from 'arktype';
@@ -34,7 +38,7 @@ const DBX_MODEL_DECODE_TOOL: Tool = {
     '',
     'Document mode — pass `data` as a JSON string (copied straight from the Firestore console) or an already-parsed object to identify the model, expand abbreviated field names, decode enum integer values, and surface foreign-key relationships. Optionally pass `model` to skip detection and target a specific model by interface name (`"StorageFile"`), identity constant (`"storageFileIdentity"`), `modelType` (`"storageFile"`), or collection prefix (`"sf"`).',
     '',
-    'Key mode — pass just `key` (e.g. `"jwr/hkzQa9W6MpaP99RTlQJcImbWdZm2"`) to resolve the model identity and id from the collection prefix alone, no document required. Subcollection paths like `"nb/abc/nbn/def"` are walked end-to-end so the leaf model is reported alongside its parent chain.',
+    'Key mode — pass just `key` (e.g. `"jwr/hkzQa9W6MpaP99RTlQJcImbWdZm2"`) to resolve the model identity and id from the collection prefix alone, no document required. Subcollection paths like `"nb/abc/nbn/def"` are walked end-to-end so the leaf model is reported alongside its parent chain. Composite-key models derived from the key (`@dbxModelCompositeKey from=…`) are listed with their ready-to-use flattened keys, and a two-way composite-key leaf reports the source key recovered from its id.',
     '',
     'At least one of `data` or `key` is required.'
   ].join('\n'),
@@ -201,6 +205,59 @@ interface DecodedKeyPath {
   readonly unresolvedPrefixes: readonly string[];
 }
 
+interface DerivedCompositeKey {
+  readonly key: string;
+  readonly model: FirebaseModel;
+  readonly encoding: 'one-way' | 'two-way';
+}
+
+interface CompositeSource {
+  readonly key: string;
+  readonly path: DecodedKeyPath;
+}
+
+/**
+ * Lists every registered composite-key model whose id is derived from `leafModel`'s key. A wildcard
+ * `from=*` matches every model except the leaf model itself.
+ *
+ * @param rawKey - The trimmed key being decoded.
+ * @param leafModel - The resolved leaf model.
+ * @returns The derived composite keys in registry order.
+ */
+function findDerivedCompositeKeys(rawKey: string, leafModel: FirebaseModel): readonly DerivedCompositeKey[] {
+  const out: DerivedCompositeKey[] = [];
+  for (const model of FIREBASE_MODELS) {
+    const compositeKey = model.compositeKey;
+    if (!compositeKey || model.modelType === leafModel.modelType) continue;
+    const matches = compositeKey.from === '*' || compositeKey.from.some((name) => name === leafModel.name || name === leafModel.identityConst || name === leafModel.modelType);
+    if (!matches) continue;
+    // Same encodings as `flatFirestoreModelKey` / `twoWayFlatFirestoreModelKey` in @dereekb/firebase.
+    const flatId = compositeKey.encoding === 'two-way' ? rawKey.replaceAll('/', '_') : rawKey.replaceAll('/', '');
+    out.push({ key: `${model.collectionPrefix}/${flatId}`, model, encoding: compositeKey.encoding });
+  }
+  return out;
+}
+
+/**
+ * Recovers the source key behind a two-way composite-key leaf's id (`inferKeyFromTwoWayFlatFirestoreModelKey`)
+ * and decodes it. Returns `undefined` when the leaf is not a two-way composite-key model or its id
+ * does not recover to a well-formed key.
+ *
+ * @param leaf - The resolved leaf segment.
+ * @returns The recovered source key and its decoded path, when applicable.
+ */
+function decodeCompositeSource(leaf: DecodedSegment): CompositeSource | undefined {
+  let result: CompositeSource | undefined;
+  if (leaf.model?.compositeKey?.encoding === 'two-way' && leaf.id.includes('_')) {
+    const sourceKey = leaf.id.replaceAll('_', '/');
+    const decoded = decodeKeyPath(sourceKey, undefined);
+    if (!('error' in decoded)) {
+      result = { key: sourceKey, path: decoded };
+    }
+  }
+  return result;
+}
+
 function decodeKeyPath(key: string, hint: string | undefined): DecodedKeyPath | { readonly error: string } {
   const trimmed = key.trim();
   if (trimmed.length === 0) {
@@ -295,8 +352,40 @@ function formatUnresolved(unresolvedPrefixes: readonly string[]): readonly strin
   return ['', `_Unresolved ${label}: ${list}. Run \`dbx_model_lookup\` to browse known models._`];
 }
 
+/**
+ * Renders the "Composite source" section for a two-way composite-key leaf — the source key its id
+ * was flattened from, and that key's model.
+ *
+ * @param source - The recovered source, when applicable.
+ * @returns The markdown lines, or `[]` when the leaf is not a two-way composite-key model.
+ */
+function formatCompositeSource(source: CompositeSource | undefined): readonly string[] {
+  if (!source) return [];
+  const sourceModel = source.path.leaf.model ? source.path.leaf.model.name : `_unknown_ (prefix \`${source.path.leaf.prefix}\`)`;
+  return ['', `**Composite source (two-way):** \`${source.key}\` → ${sourceModel}`];
+}
+
+/**
+ * Renders the "Derived keys" section — one bullet per composite-key model whose id is a flattened
+ * form of the decoded key, with the ready-to-use key.
+ *
+ * @param derived - The derived composite keys.
+ * @returns The markdown lines, or `[]` when no model is derived from the key.
+ */
+function formatDerivedKeys(derived: readonly DerivedCompositeKey[]): readonly string[] {
+  if (derived.length === 0) return [];
+  const out: string[] = ['', '**Derived keys:**'];
+  for (const entry of derived) {
+    out.push(`- ${entry.model.name} (${entry.encoding}) — \`${entry.key}\``);
+  }
+  return out;
+}
+
 function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
-  const lines = ['_Model decoded from key prefix._', '', ...formatLeaf(input.leaf), ...formatAncestors(input.ancestors), ...formatUnresolved(input.unresolvedPrefixes), '', `_Key:_ \`${rawKey}\``];
+  const trimmedKey = rawKey.trim();
+  const derived = input.leaf.model ? findDerivedCompositeKeys(trimmedKey, input.leaf.model) : [];
+  const compositeSource = decodeCompositeSource(input.leaf);
+  const lines = ['_Model decoded from key prefix._', '', ...formatLeaf(input.leaf), ...formatAncestors(input.ancestors), ...formatUnresolved(input.unresolvedPrefixes), ...formatCompositeSource(compositeSource), ...formatDerivedKeys(derived), '', `_Key:_ \`${rawKey}\``];
   return lines.join('\n');
 }
 

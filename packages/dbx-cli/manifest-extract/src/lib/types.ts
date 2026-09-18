@@ -184,6 +184,28 @@ export interface ModelExtractionInterface {
    * type in generated tool names (e.g. the collection prefix). Absent when the tag is omitted or invalid.
    */
   readonly mcpToolNameSegment?: string;
+  /**
+   * Parsed `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` tag. Absent
+   * when the tag is omitted or malformed (no `from=`, or an encoding other than `two-way` / `one-way`).
+   */
+  readonly compositeKey?: ModelExtractionCompositeKey;
+}
+
+/**
+ * Parsed `@dbxModelCompositeKey` tag on a `@dbxModel`-tagged interface whose document id is a
+ * flattened encoding of another model's key.
+ */
+export interface ModelExtractionCompositeKey {
+  /**
+   * `'*'` for the wildcard form (any model may be the source), or the ordered list of source
+   * model names exactly as written (interface name, identity const, or modelType).
+   */
+  readonly from: readonly string[] | '*';
+  /**
+   * `'one-way'` for `flatFirestoreModelKey` (slashes removed), `'two-way'` for
+   * `twoWayFlatFirestoreModelKey` (slashes replaced with underscores, recoverable).
+   */
+  readonly encoding: 'one-way' | 'two-way';
 }
 
 /**

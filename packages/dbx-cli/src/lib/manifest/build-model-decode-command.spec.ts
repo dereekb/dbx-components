@@ -33,6 +33,27 @@ const MANIFEST: CliModelManifest = [
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'notification.ts',
     fields: []
+  },
+  {
+    modelType: 'profileSummary',
+    modelName: 'ProfileSummary',
+    identityConst: 'profileSummaryIdentity',
+    collectionPrefix: 'ps',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'profile.ts',
+    fields: [],
+    compositeKey: { from: ['Profile'], encoding: 'one-way' }
+  },
+  {
+    modelType: 'notificationSummary',
+    modelName: 'NotificationSummary',
+    modelGroup: 'Notification',
+    identityConst: 'notificationSummaryIdentity',
+    collectionPrefix: 'ns',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'notification.ts',
+    fields: [],
+    compositeKey: { from: '*', encoding: 'two-way' }
   }
 ];
 
@@ -161,6 +182,33 @@ describe('decodeFirestoreModelKey()', () => {
     expect(decoded.leaf.modelName).toBe('NotificationBox');
     expect(decoded.unresolvedPrefixes).toEqual(['unknown']);
   });
+
+  it('lists composite-key models derived from the key with their flattened keys', () => {
+    const decoded = decodeFirestoreModelKey('p/abc123', MANIFEST);
+    expect(decoded.derivedKeys).toEqual([
+      { key: 'ps/pabc123', modelType: 'profileSummary', modelName: 'ProfileSummary', collectionPrefix: 'ps', encoding: 'one-way' },
+      { key: 'ns/p_abc123', modelType: 'notificationSummary', modelName: 'NotificationSummary', collectionPrefix: 'ns', encoding: 'two-way' }
+    ]);
+    expect(decoded.compositeSource).toBeUndefined();
+  });
+
+  it('recovers the source key behind a two-way composite-key leaf and never derives a model from itself', () => {
+    const decoded = decodeFirestoreModelKey('ns/nb_abc_nbn_def', MANIFEST);
+    expect(decoded.compositeSource?.key).toBe('nb/abc/nbn/def');
+    expect(decoded.compositeSource?.leaf.modelName).toBe('Notification');
+    expect(decoded.compositeSource?.ancestors).toHaveLength(1);
+    expect(decoded.derivedKeys).toEqual([]);
+  });
+
+  it('omits compositeSource for one-way leaves and ids that are not flattened keys', () => {
+    expect(decodeFirestoreModelKey('ps/pabc123', MANIFEST).compositeSource).toBeUndefined();
+    expect(decodeFirestoreModelKey('ns/plainid', MANIFEST).compositeSource).toBeUndefined();
+    expect(decodeFirestoreModelKey('ns/nb_abc_nbn', MANIFEST).compositeSource).toBeUndefined();
+  });
+
+  it('returns no derived keys for an unresolved leaf prefix', () => {
+    expect(decodeFirestoreModelKey('bogus/abc', MANIFEST).derivedKeys).toEqual([]);
+  });
 });
 
 describe('renderDecodedKey()', () => {
@@ -169,5 +217,17 @@ describe('renderDecodedKey()', () => {
     const text = renderDecodedKey(decoded);
     expect(text).toContain("Model: <unknown — prefix 'bogus' not in manifest>");
     expect(text).toContain('Unresolved prefix: bogus');
+  });
+
+  it('renders derived keys and the recovered composite source', () => {
+    const derived = renderDecodedKey(decodeFirestoreModelKey('p/abc123', MANIFEST));
+    expect(derived).toContain('Derived keys:');
+    expect(derived).toContain('- ProfileSummary (one-way) — ps/pabc123');
+    expect(derived).toContain('- NotificationSummary (two-way) — ns/p_abc123');
+    expect(derived).not.toContain('Composite source');
+
+    const source = renderDecodedKey(decodeFirestoreModelKey('ns/p_abc123', MANIFEST));
+    expect(source).toContain('Composite source (two-way): p/abc123 → Profile');
+    expect(source).not.toContain('Derived keys:');
   });
 });

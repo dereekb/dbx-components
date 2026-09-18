@@ -251,12 +251,15 @@ export class McpServerFactoryService {
 
       const staticTools: McpToolDefinition[] = [];
       const getService = this.modelApiGetService;
+      const modelManifest = this._cachedManifestModels;
+      const enumManifest = this._cachedManifestEnums;
 
       if (getService != null) {
         staticTools.push(
           createModelGetTool({
             readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
-            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
+            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth),
+            ...(modelManifest == null ? {} : { manifest: modelManifest })
           }),
           createModelRolesTool({
             readRoleMaps: (params) => getService.readRoleMaps(params),
@@ -279,9 +282,6 @@ export class McpServerFactoryService {
           );
         }
       }
-
-      const modelManifest = this._cachedManifestModels;
-      const enumManifest = this._cachedManifestEnums;
 
       if (modelManifest != null && modelManifest.length > 0) {
         staticTools.push(createModelInfoTool({ manifest: modelManifest, ...(enumManifest == null ? {} : { enums: enumManifest }) }), createModelDecodeTool({ manifest: modelManifest }));

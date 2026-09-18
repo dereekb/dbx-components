@@ -226,6 +226,7 @@ function extractFromFile(file, content) {
     if (extendedNames.has(EXTERNAL_ID_KEYED_BY_ID_MARKER)) entry.externalIdKeyedById = true;
     if (BUCKET_KEYED_BY_ID_SUFFIXES.some((s) => hasNameWithSuffix(extendedNames, s))) entry.bucketKeyedById = true;
     if (iface.tags.dbxModelOrganizationalGroupRoot) entry.organizationalGroupRoot = true;
+    if (iface.tags.dbxModelCompositeKey) entry.compositeKey = iface.tags.dbxModelCompositeKey;
     const aggregatesFrom = Array.isArray(iface.tags.dbxModelAggregatesFrom) ? iface.tags.dbxModelAggregatesFrom : [];
     if (aggregatesFrom.length > 0) entry.aggregatesFrom = aggregatesFrom;
     const archetypeOverrides = Array.isArray(iface.tags.dbxModelArchetypes) ? iface.tags.dbxModelArchetypes : [];
@@ -802,6 +803,12 @@ function parseJsdocBlock(body) {
       }
     } else if (tag === 'dbxModelOrganizationalGroupRoot') {
       tags.dbxModelOrganizationalGroupRoot = true;
+    } else if (tag === 'dbxModelCompositeKey') {
+      // `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` — only a
+      // well-formed declaration (both parts present) is published; the ts-morph extractor's
+      // validators own the malformed-tag findings.
+      const parsed = parseCompositeKeyTagValue(value);
+      if (parsed) tags.dbxModelCompositeKey = parsed;
     } else if (tag === 'dbxModelArchetype') {
       // `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` — explicit override
       // for the heuristic-driven archetype tag. Repeatable; one occurrence per slug.
@@ -815,6 +822,37 @@ function parseJsdocBlock(body) {
     }
   }
   return { description: description && description.length > 0 ? description : undefined, tags };
+}
+
+/**
+ * Parses a `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` tag value
+ * (or the wildcard `from=*`) into `{ from, encoding }`. Returns `undefined` when either part is
+ * missing or the encoding is not `two-way` / `one-way`.
+ *
+ * @param value - raw tag value text (everything after `@dbxModelCompositeKey`)
+ * @returns parsed declaration, or `undefined` when malformed
+ */
+function parseCompositeKeyTagValue(value) {
+  let from;
+  let encoding;
+  for (const token of value.trim().split(/\s+/)) {
+    const eq = token.indexOf('=');
+    if (eq <= 0) continue;
+    const key = token.slice(0, eq);
+    const v = token.slice(eq + 1);
+    if (key === 'from' && v === '*') {
+      from = '*';
+    } else if (key === 'from') {
+      const names = v
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => /^[A-Za-z][A-Za-z0-9_$]*$/.test(x));
+      if (names.length > 0) from = names;
+    } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) {
+      encoding = v;
+    }
+  }
+  return from !== undefined && encoding !== undefined ? { from, encoding } : undefined;
 }
 
 /**

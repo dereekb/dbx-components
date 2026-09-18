@@ -1,8 +1,17 @@
+import { type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity } from '@dereekb/firebase';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { createModelGetTool, MCP_MODEL_GET_BATCH_SIZE, MODEL_GET_TOOL_NAME } from './mcp.tool.model-get';
+import { type McpManifestModelEntry } from '../mcp.manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+
+const COMPOSITE_MANIFEST: ReadonlyArray<McpManifestModelEntry> = [
+  { modelType: 'region', modelName: 'Region', identityConst: 'regionIdentity', collectionPrefix: 'rcsr', sourcePackage: 'demo-firebase', sourceFile: 'region.ts', fields: [] },
+  { modelType: 'district', modelName: 'District', identityConst: 'districtIdentity', collectionPrefix: 'rcsrd', parentIdentityConst: 'regionIdentity', sourcePackage: 'demo-firebase', sourceFile: 'region.ts', fields: [] },
+  { modelType: 'jobDistrict', modelName: 'JobDistrict', identityConst: 'jobDistrictIdentity', collectionPrefix: 'jd', sourcePackage: 'demo-firebase', sourceFile: 'job.ts', fields: [], compositeKey: { from: ['District'], encoding: 'one-way' } },
+  { modelType: 'workerRegion', modelName: 'WorkerRegion', identityConst: 'workerRegionIdentity', collectionPrefix: 'wkr', sourcePackage: 'demo-firebase', sourceFile: 'worker.ts', fields: [], compositeKey: { from: ['Region'], encoding: 'two-way' } }
+];
 
 interface RecordedCall {
   readonly modelType: string;
@@ -49,6 +58,56 @@ describe('createModelGetTool', () => {
 
       expect(tool.inputSchema).toMatchObject({ type: 'object', required: ['modelType', 'keys'] });
       expect(tool.outputSchema).toMatchObject({ type: 'object', required: ['results', 'errors'] });
+    });
+  });
+
+  describe('composite-key source rewriting', () => {
+    function makeTool(calls: RecordedCall[], identity: FirestoreModelIdentity, manifest: Maybe<ReadonlyArray<McpManifestModelEntry>>) {
+      return createModelGetTool({
+        readDocuments: async (modelType, keys) => {
+          calls.push({ modelType, keys });
+          return { results: keys.map((key) => ({ key, data: null })), errors: [] };
+        },
+        resolveIdentity: () => identity,
+        ...(manifest == null ? {} : { manifest })
+      });
+    }
+
+    it('flattens a declared source key into the composite model id (one-way)', async () => {
+      const calls: RecordedCall[] = [];
+      const tool = makeTool(calls, makeIdentity('jobDistrict', 'jd'), COMPOSITE_MANIFEST);
+
+      await tool.staticHandler!({ modelType: 'jobDistrict', keys: ['rcsr/reg1/rcsrd/dist1'] }, makeCtx());
+
+      expect(calls).toEqual([{ modelType: 'jobDistrict', keys: ['jd/rcsrreg1rcsrddist1'] }]);
+    });
+
+    it('flattens with underscores for a two-way composite model', async () => {
+      const calls: RecordedCall[] = [];
+      const tool = makeTool(calls, makeIdentity('workerRegion', 'wkr'), COMPOSITE_MANIFEST);
+
+      await tool.staticHandler!({ modelType: 'workerRegion', keys: ['rcsr/reg1'] }, makeCtx());
+
+      expect(calls).toEqual([{ modelType: 'workerRegion', keys: ['wkr/rcsr_reg1'] }]);
+    });
+
+    it('leaves keys already in the composite collection, non-source keys, and bare ids alone', async () => {
+      const calls: RecordedCall[] = [];
+      const tool = makeTool(calls, makeIdentity('jobDistrict', 'jd'), COMPOSITE_MANIFEST);
+
+      await tool.staticHandler!({ modelType: 'jobDistrict', keys: ['jd/already', 'rcsr/reg1', 'bareid', 'zz/unknown'] }, makeCtx());
+
+      expect(calls).toEqual([{ modelType: 'jobDistrict', keys: ['jd/already', 'rcsr/reg1', 'jd/bareid', 'zz/unknown'] }]);
+    });
+
+    it('does not rewrite when the requested model declares no composite key or no manifest is wired', async () => {
+      const withoutComposite: RecordedCall[] = [];
+      await makeTool(withoutComposite, makeIdentity('district', 'rcsrd', 'nested'), COMPOSITE_MANIFEST).staticHandler!({ modelType: 'district', keys: ['rcsr/reg1/rcsrd/dist1'] }, makeCtx());
+      expect(withoutComposite).toEqual([{ modelType: 'district', keys: ['rcsr/reg1/rcsrd/dist1'] }]);
+
+      const withoutManifest: RecordedCall[] = [];
+      await makeTool(withoutManifest, makeIdentity('jobDistrict', 'jd'), undefined).staticHandler!({ modelType: 'jobDistrict', keys: ['rcsr/reg1/rcsrd/dist1'] }, makeCtx());
+      expect(withoutManifest).toEqual([{ modelType: 'jobDistrict', keys: ['rcsr/reg1/rcsrd/dist1'] }]);
     });
   });
 

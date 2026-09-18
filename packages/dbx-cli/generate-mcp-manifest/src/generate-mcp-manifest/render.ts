@@ -278,7 +278,8 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     ...(entry.mcpToolNameSegment == null ? {} : { mcpToolNameSegment: entry.mcpToolNameSegment }),
     ...(entry.read == null ? {} : { read: entry.read }),
     ...(entry.serverOnly == null ? {} : { serverOnly: entry.serverOnly }),
-    ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory })
+    ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory }),
+    ...(entry.compositeKey == null ? {} : { compositeKey: entry.compositeKey })
   };
   return projected;
 }
