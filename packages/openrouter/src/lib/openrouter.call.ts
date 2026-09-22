@@ -2,7 +2,7 @@ import { type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
-import { type OpenRouterGenerationId, type OpenRouterRunError, type OpenRouterRunUsage } from './openrouter.type';
+import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunError, type OpenRouterRunUsage, isOpenRouterSystemOneModelId } from './openrouter.type';
 
 /**
  * A model config split into the part that goes on the request and the part that controls how the
@@ -119,15 +119,59 @@ export interface OpenRouterCallModelInputParams<TTools extends readonly Tool[] =
 }
 
 /**
+ * Raised when a request naming a System One model is sent down the completion arm.
+ *
+ * Its own error type rather than a generic one because the fix is specific and mechanical — the call
+ * goes to `openRouterDecision` — and an error a reader can act on without opening the source is worth
+ * a named class.
+ */
+export class OpenRouterSystemOneModelOnCompletionArmError extends Error {
+  readonly model: OpenRouterModelId;
+
+  constructor(model: OpenRouterModelId) {
+    super(`\`${model}\` is a System One model. It answers only \`POST /systemone\` and cannot serve a completion — build an \`OpenRouterDecisionRequest\` and call \`openRouterDecision\` instead of \`callModelForOpenRouterRequest\`.`);
+    this.name = 'OpenRouterSystemOneModelOnCompletionArmError';
+    this.model = model;
+  }
+}
+
+/**
+ * Refuses a config whose model cannot serve a completion.
+ *
+ * Asserted rather than assumed, for the same reason {@link sendOpenRouterResponsesRequest} asserts its
+ * response is not an event stream: the alternative failure is unreadable. A Jev slug on `/responses`
+ * comes back as a provider-level error naming neither the model class nor the route that would have
+ * served it, from inside a sweep, on a request whose config was accepted when it was written.
+ *
+ * @param config - The merged model config.
+ * @throws {OpenRouterSystemOneModelOnCompletionArmError} When the config names a System One model.
+ */
+function assertOpenRouterCompletionModel(config: Maybe<OpenRouterModelConfig>): void {
+  const model = [config?.model, ...(config?.models ?? [])].filter(Boolean).find((x) => isOpenRouterSystemOneModelId(x));
+
+  if (model != null) {
+    throw new OpenRouterSystemOneModelOnCompletionArmError(model);
+  }
+}
+
+/**
  * Converts a built request into the `/responses` request body.
  *
  * This is the whole wire body minus the SDK-only keys (`tools`/`state`/`stopWhen` on the `callModel`
  * path), so both dispatch paths assemble the request the same way and cannot drift.
  *
+ * It is also where a System One model is refused, because it is the ONE point every dispatch path
+ * converges on — `openRouterCallModelInput`, `sendOpenRouterResponsesRequest` and
+ * `openRouterModelResultForRequest` all build their body here — so no route to the completion arm can
+ * be added later that quietly skips the check.
+ *
  * @param request - The built request.
  * @returns The request body, in the SDK's camelCase request surface.
+ * @throws {OpenRouterSystemOneModelOnCompletionArmError} When the config names a System One model.
  */
 export function openRouterResponsesRequestBody(request: OpenRouterPromptRequest): Record<string, unknown> {
+  assertOpenRouterCompletionModel(request.config);
+
   const { requestConfig } = splitOpenRouterModelConfig(request.config);
 
   return filterUndefinedValues<Record<string, unknown>>({

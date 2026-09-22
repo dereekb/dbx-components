@@ -5,7 +5,7 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterDecisionQuestions, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterChoiceQuestion, openRouterFileSearchTool, openRouterGeneration, openRouterNoulQuestion, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import {
   OPENROUTER_RUN_TASK_MAX_AGE,
@@ -19,7 +19,7 @@ import {
   openRouterPromptVersionFirestoreCollectionGroup,
   openRouterRunTaskFirestoreCollection
 } from '@dereekb/openrouter/firebase';
-import { type FakeOpenRouterClient, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
+import { type FakeOpenRouterClient, type FakeOpenRouterDecisionReply, type FakeOpenRouterReply, type FakeOpenRouterReplyFactory, type FakeStorageContext, fakeOpenRouterClient, fakeStorageContext } from '../test/openrouter.fake';
 import { openRouterPromptServerActions } from './openrouter.action.server';
 import { type OpenRouterFileAttachmentMode } from './openrouter.file.attachment';
 import { OpenRouterPromptResolutionError, openRouterPromptService } from './openrouter.prompt.service';
@@ -29,6 +29,13 @@ import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadc
 
 const TEST_PROMPT_KEY = 'test-prompt';
 const TEST_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', provider: { only: ['openai'], allowFallbacks: false, requireParameters: true } };
+const TEST_DECISION_MODEL_CONFIG: OpenRouterModelConfig = { model: OPENROUTER_JEV_1_13_MODEL_ID };
+const TEST_DECISION_QUESTIONS: OpenRouterDecisionQuestions = {
+  urgent: openRouterNoulQuestion('`ticket.body` needs action today.'),
+  team: openRouterChoiceQuestion('Which team should own `ticket`?', { billing: 'money', access: 'sign-in' })
+};
+const TEST_DECISION_STATE = { ticket: { body: 'I was charged twice and need a refund before Friday.' } };
+const TEST_DECISION_ANSWERS = { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'billing', probabilities: { billing: 0.95, access: 0.05 } } };
 
 /**
  * Set to run the `live end-to-end` block against the real API. Every other block runs against a fake
@@ -88,6 +95,10 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       readonly promptDocument: OpenRouterPromptDocument;
       readonly collections: ReturnType<typeof buildCollections>;
       readonly taskData: (key: string) => Promise<Maybe<OpenRouterRunTask>>;
+      /**
+       * Every request url the fake received, in order.
+       */
+      readonly urls: () => string[];
     }
 
     function buildCollections() {
@@ -115,6 +126,14 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
        * Explicit file attachment mode. Unset means the service's default, which is `signedUrl`.
        */
       readonly fileAttachmentMode?: OpenRouterFileAttachmentMode;
+      /**
+       * Questions to publish on the version, making the prompt a DECISION prompt.
+       */
+      readonly questions?: OpenRouterDecisionQuestions;
+      /**
+       * What the fake System One model should answer a DECISION request with.
+       */
+      readonly decisionReply?: FakeOpenRouterDecisionReply;
     }
 
     async function buildStack(config?: BuildStackConfig): Promise<TestStack> {
@@ -125,10 +144,20 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       const actions = openRouterPromptServerActions(actionsContext);
 
       const promptDocument = await actions.createOpenRouterPrompt({ key: promptKey, name: 'Test Prompt' });
-      const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, promptKey), instructions: 'You are a test.', config: (config?.config ?? TEST_MODEL_CONFIG) as Record<string, unknown>, activate: true });
+      // A decision version carries questions and a System One model instead of instructions and a chat
+      // model — the two arms are exclusive, and publishing the wrong pairing is refused by the action.
+      const decision = config?.questions != null;
+      const publish = await actions.createOpenRouterPromptVersion({
+        prompt: firestoreModelKey(openRouterPromptIdentity, promptKey),
+        instructions: decision ? undefined : 'You are a test.',
+        config: (config?.config ?? (decision ? TEST_DECISION_MODEL_CONFIG : TEST_MODEL_CONFIG)) as Record<string, unknown>,
+        questions: config?.questions as Maybe<Record<string, unknown>>,
+        activate: true
+      });
       await publish(promptDocument);
 
-      const fake = fakeOpenRouterClient(config?.reply ?? { text: 'ok' });
+      const baseReply = config?.reply ?? { text: 'ok' };
+      const fake = fakeOpenRouterClient(config?.decisionReply == null ? baseReply : typeof baseReply === 'function' ? async (body, index) => ({ ...(await baseReply(body, index)), decision: config.decisionReply }) : { ...baseReply, decision: config.decisionReply });
       const storage = fakeStorageContext();
       const terminal: OpenRouterRunTaskExecutionResult[] = [];
 
@@ -152,7 +181,8 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         terminal,
         promptDocument,
         collections,
-        taskData: (key: string) => collections.openRouterRunTaskCollection.documentAccessor().loadDocumentForId(key).snapshotData()
+        taskData: (key: string) => collections.openRouterRunTaskCollection.documentAccessor().loadDocumentForId(key).snapshotData(),
+        urls: () => fake.urls
       };
     }
 
@@ -537,6 +567,73 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY, version: 1 })).instructions).toBe('from store');
       });
 
+      it('should not let a newer definition overtake a store-locked prompt', async () => {
+        // The lever's whole point: the prompt's content is maintained at runtime, so code bumping its
+        // version must not decide what is served.
+        const { promptService, actions } = buildServiceWithDefinition(2, 'from newer code');
+        const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
+
+        const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        await publish(promptDocument);
+
+        // Unlocked, code wins — the control for the assertion below.
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from newer code');
+
+        const lock = await actions.updateOpenRouterPrompt({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), storeLocked: true });
+        await lock(promptDocument);
+        promptService.clearCachedPrompt(DEFINED_KEY);
+
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from store');
+      });
+
+      it('should still stand in with a definition when a store-locked prompt has nothing published', async () => {
+        // Deliberately LENIENT. The lock prevents being overwritten, not being served — otherwise a
+        // fresh emulator or a never-seeded project could not serve the prompt at all.
+        const { promptService, actions } = buildServiceWithDefinition(1, 'from code');
+        const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
+        const lock = await actions.updateOpenRouterPrompt({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), storeLocked: true });
+        await lock(promptDocument);
+
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from code');
+      });
+
+      it('should skip a store-locked prompt when seeding, and say so', async () => {
+        const { promptService, actions } = buildServiceWithDefinition(2, 'from newer code');
+        const promptDocument = await actions.createOpenRouterPrompt({ key: DEFINED_KEY, name: 'Defined' });
+
+        const publish = await actions.createOpenRouterPromptVersion({ prompt: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), instructions: 'from store', config: TEST_MODEL_CONFIG as Record<string, unknown>, activate: true });
+        await publish(promptDocument);
+
+        const lock = await actions.updateOpenRouterPrompt({ key: firestoreModelKey(openRouterPromptIdentity, DEFINED_KEY), storeLocked: true });
+        await lock(promptDocument);
+        promptService.clearCachedPrompt(DEFINED_KEY);
+
+        const result = await actions.seedOpenRouterPrompts({ promptKeys: [DEFINED_KEY] });
+
+        expect(result.versionsPublished).toBe(0);
+        expect(result.skipped).toBe(1);
+        // Reported rather than silent: a definition that never lands otherwise looks exactly like a
+        // seed that ran and had nothing to do.
+        expect(result.warnings.some((x) => x.includes('store-locked'))).toBe(true);
+        expect((await promptService.resolvePrompt({ promptKey: DEFINED_KEY })).instructions).toBe('from store');
+      });
+
+      it('should set the lock from a definition, but only when it creates the prompt', async () => {
+        const collections = buildCollections();
+        const lockedDefinition: OpenRouterPromptDefinition = { promptKey: 'locked-on-create', version: 1, name: 'Locked', instructions: 'from code', config: TEST_MODEL_CONFIG, storeLocked: true };
+        const promptService = openRouterPromptService({ collections, definitions: [lockedDefinition], cacheDuration: 1 });
+        const actionsContext = { ...firebaseServerActionsContext(), ...collections, firestoreContext: f.firestoreContext, openRouterPromptService: promptService };
+        const actions = openRouterPromptServerActions(actionsContext);
+
+        const created = await actions.seedOpenRouterPrompts({ promptKeys: ['locked-on-create'] });
+        expect(created.promptsCreated).toBe(1);
+        expect((await promptService.loadPrompt('locked-on-create'))?.sl).toBe(true);
+
+        // And the lock it just set takes effect: a second seed of the same definition is now refused.
+        const again = await actions.seedOpenRouterPrompts({ promptKeys: ['locked-on-create'] });
+        expect(again.skipped).toBe(1);
+      });
+
       it('should serve a definition to a pinned caller when that version was never stored', async () => {
         // This is what lets a run enqueued against a definition still dispatch: enqueue records the
         // definition's version, and dispatch re-resolves pinned to it.
@@ -812,6 +909,125 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect(task?.at).toBe(3);
         expect(stack.fake.callCount).toBe(3);
         expect(task?.e?.message).toBe('nope');
+      });
+    });
+
+    describe('decision runs', () => {
+      it('should dispatch a decision run to the systemone route and store its answers', async () => {
+        const stack = await buildStack({ promptKey: 'decision-run', questions: TEST_DECISION_QUESTIONS, decisionReply: { answers: TEST_DECISION_ANSWERS } });
+
+        await stack.service.enqueueRunTask({ key: 'decide_ok', promptKey: 'decision-run', state: TEST_DECISION_STATE });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        // The URL, not just the body: a decision answered off `/responses` would produce a perfectly
+        // shaped failure with nothing pointing at the route as the cause.
+        expect(stack.urls()[0]).toBe('https://openrouter.ai/api/v1/systemone');
+        expect(Object.keys(stack.fake.requests[0]).sort()).toEqual(['model', 'questions', 'session_id', 'state', 'trace']);
+        expect(stack.fake.requests[0]['model']).toBe(OPENROUTER_JEV_1_13_MODEL_ID);
+
+        const task = await stack.taskData('decide_ok');
+        expect(task?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(task?.an?.['urgent']).toEqual({ type: 'noul', noul: 0.9 });
+        // Answers land on `an`, never on the completion arm's `o` / `j`.
+        expect(task?.o).toBeFalsy();
+        expect(task?.u?.cost).toBeGreaterThan(0);
+      });
+
+      it('should merge a run`s own questions over the version`s stored ones', async () => {
+        const stack = await buildStack({ promptKey: 'decision-merge', questions: TEST_DECISION_QUESTIONS, decisionReply: { answers: { ...TEST_DECISION_ANSWERS, extra: { type: 'noul', noul: 0.1 } } } });
+
+        await stack.service.enqueueRunTask({ key: 'decide_merge', promptKey: 'decision-merge', state: TEST_DECISION_STATE, questions: { extra: openRouterNoulQuestion('`ticket.body` mentions a date.') } });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        expect(Object.keys(stack.fake.requests[0]['questions'] as object).sort()).toEqual(['extra', 'team', 'urgent']);
+        expect((await stack.taskData('decide_merge'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+      });
+
+      it('should fail a run whose reply left the declared answer space, without spending retries on it', async () => {
+        // A membership fault is a defect in the reply, not a transient one — asking again three times
+        // reaches the same answer three times.
+        const stack = await buildStack({ promptKey: 'decision-fault', questions: TEST_DECISION_QUESTIONS, maxAttempts: 3, decisionReply: { answers: { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'nonexistent-team' } } } });
+
+        await stack.service.enqueueRunTask({ key: 'decide_fault', promptKey: 'decision-fault', state: TEST_DECISION_STATE });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('decide_fault');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.e?.message).toContain('choice-off-option');
+      });
+    });
+
+    describe('immediate execution', () => {
+      it('should finish a run inside the enqueue call, with no sweep at all', async () => {
+        const stack = await buildStack();
+
+        const result = await stack.service.enqueueRunTask({ key: 'immediate_ok', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(result.created).toBe(true);
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(stack.fake.callCount).toBe(1);
+        // The document is written either way, so a consumer's readRunTask contract does not change shape
+        // depending on whether the inline attempt happened to succeed.
+        expect((await stack.taskData('immediate_ok'))?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+      });
+
+      it('should leave a retryable failure QUEUED for the sweep rather than throwing out of the enqueue', async () => {
+        // The case the flag exists for: OpenRouter is down, and the run has to survive this process.
+        let callIndex = 0;
+        const stack = await buildStack({
+          maxAttempts: 3,
+          reply: () => {
+            callIndex += 1;
+            return callIndex === 1 ? { status: 503 } : { text: 'recovered' };
+          }
+        });
+
+        const result = await stack.service.enqueueRunTask({ key: 'immediate_retry', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.QUEUED);
+        expect((await stack.taskData('immediate_retry'))?.s).toBe(OpenRouterRunTaskState.QUEUED);
+
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('immediate_retry');
+        expect(task?.s).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(task?.o).toBe('recovered');
+      });
+
+      it('should fail a deterministic error on the first attempt rather than queueing it', async () => {
+        // Three sweep ticks would only reach the same 400 more slowly.
+        const stack = await buildStack({ maxAttempts: 3, reply: { status: 400 } });
+
+        const result = await stack.service.enqueueRunTask({ key: 'immediate_permanent', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.FAILED);
+
+        const task = await stack.taskData('immediate_permanent');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+      });
+
+      it('should not run a task it did not win the lease on', async () => {
+        const stack = await buildStack();
+
+        await stack.service.enqueueRunTask({ key: 'immediate_idempotent', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+        // Re-entering the checkpoint reuses the finished run, so there is nothing claimable and nothing
+        // is asked a second time.
+        const second = await stack.service.enqueueRunTask({ key: 'immediate_idempotent', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(second.created).toBe(false);
+        expect(second.execution).toBeUndefined();
+        expect(stack.fake.callCount).toBe(1);
+      });
+
+      it('should run a decision immediately too', async () => {
+        const stack = await buildStack({ promptKey: 'decision-immediate', questions: TEST_DECISION_QUESTIONS, decisionReply: { answers: TEST_DECISION_ANSWERS } });
+
+        const result = await stack.service.enqueueRunTask({ key: 'decide_now', promptKey: 'decision-immediate', state: TEST_DECISION_STATE, immediate: true });
+
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.COMPLETE);
+        expect(result.execution?.decision?.answers['urgent']).toEqual({ type: 'noul', noul: 0.9 });
+        expect(stack.urls()[0]).toBe('https://openrouter.ai/api/v1/systemone');
       });
     });
 

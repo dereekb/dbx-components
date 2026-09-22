@@ -1,5 +1,37 @@
 import { type Maybe } from '@dereekb/util';
+import { type OpenRouterDecisionAnswers, type OpenRouterDecisionQuestions } from '@dereekb/openrouter';
 import { type OpenRouterRunTask, OpenRouterRunTaskState } from '@dereekb/openrouter/firebase';
+
+/**
+ * Whether a run task is a DECISION run.
+ *
+ * Reads the state field, which is the discriminator — see `OpenRouterRunTask.st`.
+ *
+ * @param task - The run task.
+ * @returns True when the task asks a decision rather than a completion.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isOpenRouterDecisionRunTask(task: Maybe<OpenRouterRunTask>): boolean {
+  return task?.st != null;
+}
+
+/**
+ * Reads the answers off a completed decision run.
+ *
+ * The type parameter is the caller's own question map, which is what lets a consumer read
+ * `answers.urgency.noul` rather than walking an untyped record. It is an ASSERTION, not a check: the
+ * answers were membership-checked against the declared questions when they were written, so the only
+ * way this lies is a caller naming a different question map than the run used.
+ *
+ * @param task - The run task.
+ * @returns The answers, or undefined when the run is not a completed decision.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function openRouterRunTaskDecisionAnswers<Q extends OpenRouterDecisionQuestions = OpenRouterDecisionQuestions>(task: Maybe<OpenRouterRunTask>): Maybe<OpenRouterDecisionAnswers<Q>> {
+  return task?.an as Maybe<OpenRouterDecisionAnswers<Q>>;
+}
 
 /**
  * How a caller should proceed given a run task's current state.

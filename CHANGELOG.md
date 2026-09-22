@@ -1,3 +1,15 @@
+# [14.8.0](https://github.com/dereekb/dbx-components/compare/v14.7.0-dev...v14.8.0) (2026-09-22)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([a0f2cdc3](https://github.com/dereekb/dbx-components/commit/a0f2cdc3148a859bea66334ecb5fac409ab6f394))
+
+### Features
+
+- **dbx-web:** let dbxColor reach popover, prompt, and dialog buttons ([a10b5a2c](https://github.com/dereekb/dbx-components/commit/a10b5a2c733130a63452c865e0bd619fa125414c))
+- **openrouter:** add System One (Jev) decisions support ([d2868efe](https://github.com/dereekb/dbx-components/commit/d2868efe19e5040bdc37d4dc3241c48788353872))
+- **util:** add scaleLatLngBound and centerLatLngBoundOn ([9894e05c](https://github.com/dereekb/dbx-components/commit/9894e05c974cbfa8470b8fa9a53cf36434a67c0c))
+
 # [14.7.0](https://github.com/dereekb/dbx-components/compare/v14.6.0-dev...v14.7.0) (2026-09-22)
 
 ### Bug Fixes

@@ -419,8 +419,10 @@ demoApiFunctionContextFactory((f) => {
 
           const result = await p.seed({ definitions: bumpedPromptDefinitions });
 
-          expect(result.versionsPublished).toBe(0);
-          expect(result.skipped).toBe(demoPromptDefinitions.length);
+          // Archiving is per-prompt, not a halt on the run: only the archived prompt is skipped, and its
+          // siblings in the registry still publish their bumped versions.
+          expect(result.skipped).toBe(1);
+          expect(result.versionsPublished).toBe(demoPromptDefinitions.length - 1);
 
           const prompt = await p.loadPrompt();
           expect(prompt.s).toBe(OpenRouterPromptState.ARCHIVED);

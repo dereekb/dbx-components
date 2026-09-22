@@ -63,7 +63,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.6.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.7.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -582,7 +582,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'description', typeText: 'Maybe<string>' },
       { name: 'tags', typeText: 'Maybe<string[]>' },
       { name: 'state', typeText: 'Maybe<OpenRouterPromptState>', description: 'New lifecycle state.' },
-      { name: 'activeVersion', typeText: 'Maybe<OpenRouterPromptVersionNumber>', description: 'Version to serve to unpinned callers.\n\nMust already exist — promoting a version that was never published would leave every unpinned caller\nfailing to resolve.' }
+      { name: 'activeVersion', typeText: 'Maybe<OpenRouterPromptVersionNumber>', description: 'Version to serve to unpinned callers.\n\nMust already exist — promoting a version that was never published would leave every unpinned caller\nfailing to resolve.' },
+      {
+        name: 'storeLocked',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Whether the prompt is locked to the store, so a code definition can neither seed it nor overtake it.\n\nThe one write that turns the lever on and off, and it is deliberately here rather than only on a\ndefinition: locking a prompt is an operator's decision about who maintains its content, and an\noperator has to be able to take that decision back."
+      }
     ]
   },
   {
@@ -600,6 +606,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'instructions', typeText: 'Maybe<string>', description: 'System prompt.' },
       { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
       { name: 'config', typeText: 'Maybe<Record<string, unknown>>', description: 'Model configuration. Passthrough JSON — validated against `OpenRouterModelConfig` but stored as-is.' },
+      {
+        name: 'questions',
+        typeText: 'Maybe<Record<string, unknown>>',
+        description:
+          'The questions this version declares, making it a DECISION prompt.\n\nPassthrough JSON, validated against the declaration guards before the version is written — an\neleven-level Score or a question with blank instructions is refused here rather than at the wire.\nA version carrying questions must also name a System One model in its config.'
+      },
       { name: 'notes', typeText: 'Maybe<string>', description: 'Why this version was created.' },
       { name: 'activate', typeText: 'Maybe<boolean>', description: 'Whether to promote this version to `activeVersion` on creation.\n\nDefaults to false: publishing and promoting are separate acts, so a version can be tested by a\npinned caller before it becomes what everyone gets.' }
     ],
@@ -625,6 +637,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'instructions', typeText: 'Maybe<string>', description: 'System prompt.' },
       { name: 'messages', typeText: 'Maybe<OpenRouterPromptVersionMessageParams[]>', description: 'Static seed messages.' },
       { name: 'config', typeText: 'Maybe<Record<string, unknown>>', description: 'Model configuration. Passthrough JSON — validated against `OpenRouterModelConfig` but stored as-is.' },
+      { name: 'questions', typeText: 'Maybe<Record<string, unknown>>', description: 'The questions this version declares, making it a DECISION prompt. See\n{@link CreateOpenRouterPromptVersionParams.questions}.' },
       { name: 'notes', typeText: 'Maybe<string>', description: 'Why the version says what it says.' }
     ],
     resultTypeDescription: 'Result of updating a version.',
@@ -1476,7 +1489,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 's', longName: 'state', tsType: 'OpenRouterPromptState', optional: false, description: 'Lifecycle state.', enumRef: 'OpenRouterPromptState' },
       { name: 'av', longName: 'activeVersion', tsType: 'Maybe<OpenRouterPromptVersionNumber>', optional: true, description: 'Version served when a caller does not pin one.' },
       { name: 'lv', longName: 'latestVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'Highest version number allocated so far — the allocator for the next one.' },
-      { name: 't', longName: 'tags', tsType: 'Maybe<string[]>', optional: true, description: 'Free-form tags for grouping.' }
+      { name: 't', longName: 'tags', tsType: 'Maybe<string[]>', optional: true, description: 'Free-form tags for grouping.' },
+      { name: 'sl', longName: 'storeLocked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether this prompt is locked to the store, so a code definition can neither seed it nor overtake it.' }
     ],
     read: 'admin-only',
     serviceFactory: { exportName: 'openRouterPromptFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
@@ -1498,6 +1512,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'i', longName: 'instructions', tsType: 'Maybe<string>', optional: true, description: 'System prompt.' },
       { name: 'm', longName: 'messages', tsType: 'Maybe<OpenRouterPromptVersionMessage[]>', optional: true, description: "Static seed messages, emitted before the caller's dynamic input." },
       { name: 'c', longName: 'config', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: 'Model configuration.' },
+      { name: 'q', longName: 'questions', tsType: 'Maybe<OpenRouterDecisionQuestions>', optional: true, description: 'The questions this version declares, when it is a DECISION prompt.' },
       { name: 'nt', longName: 'notes', tsType: 'Maybe<string>', optional: true, description: 'Why this version was published.' },
       { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: 'Model key of whoever published it.' },
       { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' }
@@ -1525,12 +1540,15 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'at', longName: 'attempts', tsType: 'number', optional: false, description: 'Number of attempts made.' },
       { name: 'pk', longName: 'promptKey', tsType: 'OpenRouterPromptKey', optional: false, description: 'Prompt this run uses.' },
       { name: 'pv', longName: 'promptVersion', tsType: 'OpenRouterPromptVersionNumber', optional: false, description: 'The resolved prompt version. Recorded rather than re-resolved so a retry cannot silently switch prompt text mid-run.' },
-      { name: 'in', longName: 'input', tsType: 'OpenRouterInputMessage[]', optional: false, description: 'The call input.' },
+      { name: 'in', longName: 'input', tsType: 'Maybe<OpenRouterInputMessage[]>', optional: true, description: 'The call input.' },
       { name: 'fp', longName: 'files', tsType: 'Maybe<OpenRouterFileReference[]>', optional: true, description: 'Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.' },
       { name: 'fa', longName: 'fileAnnotations', tsType: 'Maybe<OpenRouterFileAnnotation[]>', optional: true, description: 'Cached `file-parser` annotations, resubmitted on retries and chained calls so an already-parsed PDF is not parsed again. See {@link OpenRouterFileAnnotation} for what a re-parse costs.' },
       { name: 'co', longName: 'configOverrides', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: "Per-run overrides applied on top of the version's config. Passthrough JSON, for the reason {@link OpenRouterModelConfig} states." },
+      { name: 'st', longName: 'state', tsType: 'Maybe<OpenRouterStorableDecisionState>', optional: true, description: 'The content to judge, on a DECISION run.' },
+      { name: 'q', longName: 'questions', tsType: 'Maybe<OpenRouterDecisionQuestions>', optional: true, description: "Questions declared by the caller for THIS run, merged over the version's own stored questions." },
       { name: 'o', longName: 'outputText', tsType: 'Maybe<string>', optional: true, description: 'The output text.' },
       { name: 'j', longName: 'outputJson', tsType: 'Maybe<Record<string, unknown>>', optional: true, description: 'The output parsed as JSON, when it parsed as an object.' },
+      { name: 'an', longName: 'answers', tsType: 'Maybe<OpenRouterDecisionAnswers>', optional: true, description: 'The answers, on a completed DECISION run.' },
       { name: 'gi', longName: 'generationIds', tsType: 'Maybe<OpenRouterGenerationId[]>', optional: true, description: 'Generation ids produced, for auditing via `getGeneration` / `listGenerationContent`.' },
       { name: 'u', longName: 'usage', tsType: 'Maybe<OpenRouterRunUsage>', optional: true, description: 'Token and cost usage.' },
       { name: 'e', longName: 'error', tsType: 'Maybe<OpenRouterRunError>', optional: true, description: 'Why the run failed.' },

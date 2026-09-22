@@ -4,6 +4,7 @@ import { type FilterSource, type PresetFilterSource, type FilterSourceConnector 
 import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type DbxPopoverConfigSizing } from '../popover/popover.service';
+import { type DbxButtonStyle } from '../../button/button';
 
 /**
  * Configuration for the filter popover component, defining custom and preset filter components along with display options.
@@ -26,9 +27,30 @@ export interface DbxFilterComponentConfig<F extends object = object, P extends s
    */
   readonly customizeButtonText?: string;
   /**
+   * Custom presets button text. If not defined, defaults to "Presets"
+   */
+  readonly presetsButtonText?: string;
+  /**
    * Custom close button text. If not defined, defaults to "Close"
    */
   readonly closeButtonText?: string;
+  /**
+   * (Optional) Style for the "Customize"/"Presets" switch buttons in the popover header.
+   *
+   * Defaults to {@link DEFAULT_FILTER_POPOVER_SWITCH_BUTTON_STYLE}.
+   *
+   * Only the style is configurable here; the button text comes from {@link customizeButtonText} / {@link presetsButtonText}.
+   */
+  readonly switchButtonStyle?: Maybe<DbxButtonStyle>;
+  /**
+   * (Optional) Style for the close button in the popover header.
+   *
+   * Defaults to {@link DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE}. Set a `color` here to paint the close button with an
+   * arbitrary {@link DbxColorInput} (including a registered color template) rather than the default accent palette.
+   *
+   * Only the style is configurable here; the button text comes from {@link closeButtonText}.
+   */
+  readonly closeButtonStyle?: Maybe<DbxButtonStyle>;
   /**
    * Whether or not to show the close button. Defaults to the value of !closeOnFilterChange
    */

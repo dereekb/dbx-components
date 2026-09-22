@@ -4,10 +4,10 @@
     @if (showSwitchButtons) {
       @switch (showPresetSignal()) {
         @case (true) {
-          <button mat-flat-button color="accent" (click)="showCustom()">{{ customizeButtonText }}</button>
+          <dbx-button [buttonStyle]="switchButtonStyle" [text]="customizeButtonText" (buttonClick)="showCustom()"></dbx-button>
         }
         @case (false) {
-          <button mat-flat-button color="accent" (click)="showPresets()">Presets</button>
+          <dbx-button [buttonStyle]="switchButtonStyle" [text]="presetsButtonText" (buttonClick)="showPresets()"></dbx-button>
         }
       }
     }
@@ -15,7 +15,7 @@
       @if (showSwitchButtons) {
         <dbx-button-spacer></dbx-button-spacer>
       }
-      <button mat-stroked-button color="accent" (click)="close()">{{ closeButtonText }}</button>
+      <dbx-button [buttonStyle]="closeButtonStyle" [text]="closeButtonText" (buttonClick)="close()"></dbx-button>
     }
   </dbx-popover-header>
   <!-- Content -->

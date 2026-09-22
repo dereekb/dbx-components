@@ -1,10 +1,12 @@
 import { type FirebaseStorageContext } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays } from '@dereekb/util';
+import { type Maybe, type Milliseconds, MS_IN_MINUTE, addMilliseconds, concatArraysUnique, filterMaybeArrayValues, filterUndefinedValues, filterUniqueValues, mergeArrays, randomNumberFactory } from '@dereekb/util';
 import {
   type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
   type OpenRouterCore,
+  type OpenRouterDecisionQuestions,
+  type OpenRouterDecisionResult,
   type OpenRouterDeferredToolResolution,
   type OpenRouterFileReference,
   type OpenRouterInput,
@@ -15,8 +17,11 @@ import {
   type OpenRouterRequestTrace,
   type OpenRouterRunError,
   type OpenRouterRunTaskKey,
+  type OpenRouterStorableDecisionState,
   type Tool,
   callModelForOpenRouterRequest,
+  openRouterDecision,
+  openRouterDecisionRequest,
   openRouterFunctionCallOutputItems,
   openRouterInputMessages,
   openRouterPromptRequest
@@ -45,6 +50,11 @@ import { firestoreOpenRouterStateAccessor } from './openrouter.state.accessor';
  * itself, and short enough that a crashed sweep's work resumes on the next tick or two.
  */
 export const DEFAULT_OPENROUTER_LEASE_DURATION: Milliseconds = MS_IN_MINUTE * 10;
+
+/**
+ * Distinguishes one immediate run's lease from another's, and from a sweep's.
+ */
+const randomImmediateRunId = /* @__PURE__ */ randomNumberFactory({ min: 0, max: 1_000_000_000, round: 'floor' });
 
 /**
  * Default number of attempts before a task is marked FAILED.
@@ -105,6 +115,30 @@ export interface OpenRouterEnqueueRunTaskParams {
    * that is already in flight or already finished.
    */
   readonly restart?: Maybe<boolean>;
+  /**
+   * The content to judge, making this a DECISION run.
+   *
+   * Presence of this is what sends the run to `POST /systemone` instead of `/responses`, and it is the
+   * only discriminator: which surface a request needs is a property of the request, and a second field
+   * declaring it is a second thing that can disagree.
+   */
+  readonly state?: Maybe<OpenRouterStorableDecisionState>;
+  /**
+   * Questions declared for THIS run, merged over the prompt version's own stored questions.
+   */
+  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  /**
+   * Whether to run the task immediately rather than leaving it for the next sweep.
+   *
+   * The document is written either way, so a consumer's `readRunTask(key)` contract does not change
+   * shape depending on whether the inline attempt happened to succeed — which is the whole reason this
+   * is a flag on the queue rather than a separate inline call. What it buys is the queue's durability
+   * without the queue's latency: the common case answers within this call, and a run that fails
+   * RETRYABLY (OpenRouter down, a 429, a dropped connection) is left QUEUED for the sweep to pick up. A
+   * deterministic failure still reaches FAILED on the first attempt, because three sweep ticks would
+   * only reach the same answer more slowly.
+   */
+  readonly immediate?: Maybe<boolean>;
 }
 
 /**
@@ -118,6 +152,14 @@ export interface OpenRouterEnqueueRunTaskResult {
    */
   readonly created: boolean;
   readonly task: OpenRouterRunTask;
+  /**
+   * What the immediate attempt did, when one was asked for and actually ran.
+   *
+   * Absent when `immediate` was not set, and also when it was but the task was not claimable — an
+   * already-running or already-finished run reached through an idempotent re-enqueue. A caller reads the
+   * document rather than assuming this is present.
+   */
+  readonly execution?: Maybe<OpenRouterRunTaskExecutionResult>;
 }
 
 /**
@@ -212,6 +254,10 @@ export interface OpenRouterRunTaskExecutionResult {
   readonly key: OpenRouterRunTaskKey;
   readonly state: OpenRouterRunTaskState;
   readonly result?: Maybe<OpenRouterCallResult>;
+  /**
+   * What a DECISION run produced. Present instead of `result`, never alongside it.
+   */
+  readonly decision?: Maybe<OpenRouterDecisionResult>;
   readonly error?: Maybe<unknown>;
 }
 
@@ -354,7 +400,7 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
   }
 
   async function enqueueRunTask(params: OpenRouterEnqueueRunTaskParams): Promise<OpenRouterEnqueueRunTaskResult> {
-    const { key, promptKey, version, input, files, configOverrides, continueFrom, restart } = params;
+    const { key, promptKey, version, input, files, configOverrides, continueFrom, restart, state, questions, immediate } = params;
     const document = runTaskDocument(key);
     const existing = await document.snapshotData();
 
@@ -381,6 +427,8 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
         in: openRouterInputMessages(input),
         fp: files,
         co: configOverrides,
+        st: state,
+        q: questions,
         msg: history
       };
 
@@ -388,7 +436,42 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
       await document.accessor.set(task);
     }
 
-    return { key, document, created, task };
+    let execution: Maybe<OpenRouterRunTaskExecutionResult>;
+
+    if (immediate) {
+      execution = await runEnqueuedRunTaskNow(document);
+    }
+
+    return { key, document, created, task, execution };
+  }
+
+  /**
+   * Runs a just-enqueued task in this process, through the same claim-and-execute the sweep uses.
+   *
+   * Leased first, and not as a formality: an overlapping sweep tick can reach a QUEUED document between
+   * the write above and this line, and the lease is what stops the two from running the same call twice
+   * and billing for both. A task the claim does not win is left alone — its other owner will finish it —
+   * and no execution is reported.
+   *
+   * Nothing thrown here escapes as an enqueue failure. `executeRunTask` already records a failed attempt
+   * on the document and classifies whether it may be retried, so the state is on the document and the
+   * caller's queue write succeeded either way. Throwing instead would make `immediate: true` a strictly
+   * more fragile enqueue than `immediate: false`, which is the opposite of the point.
+   *
+   * @param document - The enqueued run task.
+   * @returns What the attempt did, or undefined when the task was not claimable.
+   */
+  async function runEnqueuedRunTaskNow(document: OpenRouterRunTaskDocument): Promise<Maybe<OpenRouterRunTaskExecutionResult>> {
+    const now = new Date();
+    const leaseCutoff = addMilliseconds(now, -defaultLeaseDuration);
+    const claimed = await claimRunTask(document, `openRouterRunTaskImmediate_${now.getTime()}_${randomImmediateRunId()}`, now, leaseCutoff);
+    let result: Maybe<OpenRouterRunTaskExecutionResult>;
+
+    if (claimed != null) {
+      result = await executeRunTask(claimed);
+    }
+
+    return result;
   }
 
   async function historyForRunTask(key: OpenRouterRunTaskKey): Promise<Maybe<OpenRouterInputMessage[]>> {
@@ -509,6 +592,67 @@ export function openRouterRunTaskService(config: OpenRouterRunTaskServiceConfig)
   }
 
   async function executeRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask): Promise<OpenRouterRunTaskExecutionResult> {
+    let executionResult: OpenRouterRunTaskExecutionResult;
+
+    // A decision run has no files to attach, no tools to loop, and nothing to defer, so it shares none
+    // of the completion path below except the failure recording — which is the part that matters, since
+    // it is what gives a decision the same retry and classification story a completion has.
+    if (task.st == null) {
+      executionResult = await executeCompletionRunTaskData(document, task);
+    } else {
+      executionResult = await executeDecisionRunTaskData(document, task, task.st);
+    }
+
+    return executionResult;
+  }
+
+  /**
+   * Runs a DECISION task: resolve the version, merge its questions with the run's own, ask, and record.
+   *
+   * @param document - The run task document.
+   * @param task - The task data.
+   * @param state - The content to judge.
+   * @returns What the attempt did.
+   */
+  async function executeDecisionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask, state: OpenRouterStorableDecisionState): Promise<OpenRouterRunTaskExecutionResult> {
+    const key = document.id;
+    let executionResult: OpenRouterRunTaskExecutionResult;
+
+    try {
+      const resolved = await promptService.resolvePrompt({ promptKey: task.pk, version: task.pv });
+      const request = openRouterDecisionRequest({ prompt: resolved, state, questions: task.q, overrides: task.co, sessionId: key, trace: { runTaskKey: key } satisfies OpenRouterRequestTrace });
+      const decision = await openRouterDecision({ client, request });
+
+      await document.update({
+        s: OpenRouterRunTaskState.COMPLETE,
+        fat: new Date(),
+        an: decision.answers,
+        gi: concatArraysUnique(task.gi, decision.generationIds),
+        u: decision.usage,
+        e: null,
+        lat: null,
+        lo: null
+      });
+      executionResult = { key, state: OpenRouterRunTaskState.COMPLETE, decision };
+    } catch (e) {
+      // A malformed declaration and an off-shape reply both land here, and both are correctly
+      // classified as PERMANENT by `isRetryableOpenRouterError` — neither carries a retryable status, so
+      // neither spends the attempt budget reaching the same answer three times.
+      const failure = await recordFailure({ document, task, error: { code: openRouterErrorCode(e), message: openRouterErrorMessage(e) }, cause: e, at: new Date() });
+      executionResult = { ...failure, error: e };
+    }
+
+    return executionResult;
+  }
+
+  /**
+   * Runs a COMPLETION task.
+   *
+   * @param document - The run task document.
+   * @param task - The task data.
+   * @returns What the attempt did.
+   */
+  async function executeCompletionRunTaskData(document: OpenRouterRunTaskDocument, task: OpenRouterRunTask): Promise<OpenRouterRunTaskExecutionResult> {
     const key = document.id;
     let executionResult: OpenRouterRunTaskExecutionResult;
 

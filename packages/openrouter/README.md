@@ -13,7 +13,7 @@ queue drained by a sweeper the app mounts on a schedule it already runs.
 
 | Entry | Purpose |
 |---|---|
-| `@dereekb/openrouter` | Config types, request builder, `callModel` wrapper, deferred-tool helpers, embeddings. Pure — no I/O. |
+| `@dereekb/openrouter` | Config types, request builder, `callModel` wrapper, deferred-tool helpers, embeddings, **decisions**. Pure — no I/O. |
 | `@dereekb/openrouter/firebase` | The `OpenRouterPrompt`, `OpenRouterPromptVersion` and `OpenRouterRunTask` models. |
 | `@dereekb/openrouter/firebase-server` | Prompt service, run-task queue + sweep, Firestore `StateAccessor`, server actions. |
 
@@ -45,6 +45,143 @@ one run onto another's history.
 
 Short calls skip all of it: `callModelForPrompt(...)` runs inline and returns the result with no
 document.
+
+## Decisions (System One / Jev)
+
+OpenRouter has **two** inference surfaces, and this package serves both. `/responses` asks a model for
+prose and validates the reply back into a shape. **System One** (`POST /systemone`, the `typesafe/jev-*`
+models) inverts that: the caller declares the answer space up front as typed questions, and the model
+returns a position inside it plus a calibrated distribution. `(state, questions) → answers`. There is no
+reply to parse, so there is no off-shape reply to recover from.
+
+Three primitives, and no others:
+
+| Primitive | Asks | Answers |
+|---|---|---|
+| `openRouterChoiceQuestion(instructions, options)` | which of these options? | `choice`, guaranteed one of the declared options; `probabilities` over every option summing to 1 (a free full ranking); `confidence` |
+| `openRouterScoreQuestion(instructions, levels)` | which level on this rubric? | a `score` that may land BETWEEN two levels, the distribution, `confidence` |
+| `openRouterNoulQuestion(instructions, means?)` | is this true? | `noul` 0..1 — the probability IS the uncertainty, so there is no separate confidence |
+
+```ts
+const questions = {
+  team: openRouterChoiceQuestion('Which team should own `ticket`?', {
+    billing: { what: 'Charges, invoices, refunds', not_for: 'Anything about signing in' },
+    access: { what: 'Sign-in, passwords, permissions', not_for: 'Anything about money' },
+    other: { what: 'Anything the other options do not cover' }
+  }),
+  spam: openRouterNoulQuestion('`ticket` is unsolicited marketing rather than a real request.')
+};
+
+const result = await decideForPrompt({ client, promptService, promptKey: 'demo-support-triage', state: { ticket } });
+result.answers.team.choice;   // typed to the declared option names
+result.answers.spam.noul;     // 0..1
+```
+
+**Declare every question one state could need in ONE call.** Each is evaluated independently against the
+same state, so the question map is both the batching unit and the cost unit: the state is sent and billed
+once, and a speculative question the caller may discard costs only its own tokens.
+
+**Membership is the transport's guarantee.** `readOpenRouterDecisionAnswers` checks every answer against
+the question that asked it, so no consumer re-checks: past that point a `choice` is one of the declared
+options, a `score` is inside the declared range, a `noul` is a probability. An answer that left its space
+raises `OpenRouterDecisionAnswerFaultError` — a defect in the RESPONSE, never a judgement the model made.
+"None of these fits" is said through a Noul the caller declared for it, and lands as an *answer*.
+
+A Choice is only ever RELATIVE — its probabilities are normalised over the options supplied, so something
+always wins even when nothing fits. When "nothing fits" is an outcome you act on, pair it with a Noul,
+which is absolute and may be low for every option.
+
+### Writing a question
+
+- **One snap judgement per question.** A judgement weighing several factors is several questions combined
+  in your own code.
+- **Write the COMPLETE question in `instructions`** — the question id is never sent, so a descriptive key
+  is no substitute. A blank one is refused at declaration.
+- **Point at named state with backticked dot-paths** — `` `phrase` ``, `` `ticket.sender.email` ``,
+  `` `messages[0].text` ``. Prefer an object state so each part has a name to point at.
+  `openRouterDecisionStatePaths` reads them back so a spec can pin that a declaration names keys its
+  state has (documented and inspectable, never enforced — backticks also quote literals).
+- **Score levels are SITUATIONS, not degrees.** "Broken feature, but a workaround exists" gives the model
+  something to match against; "moderately severe" does not. Every level is evaluated separately and the
+  model never sees a level's number or its neighbours, so numbers in the descriptions do not help.
+- **Choice options are CONTRASTIVE** — the same keys on every option (`{what, not_for, examples}`) so the
+  model compares like with like. Include an explicit `other` when the set may not cover the input.
+- **Filter in code first.** Accuracy falls as a state grows with material unrelated to the decision; a
+  wide state is not a free hedge.
+
+Every declaration surface takes `string | object | array` and the wire carries it VERBATIM — start with
+strings, and reach for structure only for guidance prose would blur or for data that is already JSON.
+
+### Limits, enforced at declaration
+
+| Limit | Value | Past it |
+|---|---|---|
+| Choice options | ≤ 255 | Narrow in two stages. Never truncate — an option removed is one the model can never pick, and nothing reports it was missing. |
+| Score levels | 2 .. 10 | MERGE the levels that cannot be told apart. The trap: a 0..8 band is nine levels and legal, a 0..10 scale is eleven and 400s at the wire. |
+| Context | 64k tokens per request | Filter in code first. |
+| Price | $0.042 / Mtok input; output reported but **not billed** | `usage.cost` is synchronous and final. |
+
+`validateOpenRouterDecisionQuestions` fails at the DECLARATION, naming the question — not as a 4xx about
+a request body — and runs at version create / update / seed, so a malformed question map is refused when
+it is written rather than every time it is asked.
+
+### Routing: the model id is the discriminator
+
+System One models are **not listed by `GET /models`**, so nothing can be learned about one from the
+catalog, and a wrong guess does not produce an error anyone can read. The slug is therefore checked on
+**both** arms and neither can be entered with the other's model:
+
+- `validateOpenRouterModelConfig(config)` errors on a `typesafe/…` slug, naming `openRouterDecision`.
+  It already runs at publish time, so a Jev slug typed into a stored version is refused when written.
+- `validateOpenRouterModelConfig(config, { decision: true })` errors on a chat slug.
+- `openRouterResponsesRequestBody` throws `OpenRouterSystemOneModelOnCompletionArmError`. It is the one
+  point every completion dispatch path builds its body, so no route can be added later that skips it.
+
+`OPENROUTER_JEV_1_13_MODEL_ID` is a **versioned** slug, deliberately not the moving `jev-latest` alias:
+an answer is only reproducible against the model that gave it, which is the same reason versions exist.
+The reply reports the model that actually served it (`typesafe/jev-1.13-20260917`), so read `result.model`
+rather than assuming the slug you asked for.
+
+### Where a decision lives
+
+A decision prompt is an ordinary `OpenRouterPrompt` whose version carries `q` (questions) instead of
+`m` (messages), and whose config names a System One model. The two are mutually exclusive — a decision
+has no prose output for instructions and seed messages to shape.
+
+Stored questions are the STATIC half of the answer space; a caller may declare further questions per call
+and they merge over the stored ones by id. That is what lets a fixed taxonomy be tuned by an operator
+while a per-call candidate set still comes from code.
+
+| Call | When |
+|---|---|
+| `decideForPrompt(...)` | The default. No document, no sweep — a Jev call answers in about a hundred milliseconds, has no tools and nothing to defer, so the queue buys nothing on the happy path. |
+| `enqueueRunTask({ state, questions, immediate: true })` | When a FAILURE has to survive this process. Same run-it-now latency, plus a document: a retryable failure (OpenRouter down, a 429) is left QUEUED for the sweep, and a deterministic one still reaches FAILED on the first attempt. |
+
+`immediate` writes the document either way, so `readRunTask(key)` behaves the same whether or not the
+inline attempt succeeded — which is the point of it being a queue flag rather than a second inline call.
+It is not decisions-specific; a completion run can use it too.
+
+## Store-locking a prompt
+
+`storeLocked` (`sl`) on an `OpenRouterPrompt` says the STORE owns this prompt's content: a code
+definition can neither seed it nor overtake it. It is the counterpart of a version's `lk` — that locks a
+version against edits, this locks a prompt against its own definition — and it applies to any prompt,
+not just a decision.
+
+Set it on a prompt whose content is maintained at runtime. A decision is the motivating case, because its
+questions are exactly the thing an operator tunes, and a later `version` bump in code would otherwise
+publish straight over that work.
+
+- **Seeding** skips a locked prompt and says so in the run's `warnings`, beside the existing rule that
+  never resurrects an `ARCHIVED` one.
+- **Resolution** stops preferring a definition whose version has moved ahead of the store.
+- It is deliberately **lenient**: a definition may still STAND IN when the store holds no version at all,
+  which is what keeps a fresh emulator or a never-seeded project able to serve the prompt with no manual
+  step. The lock prevents being *overwritten*, not being served.
+
+Turn it on through `openRouterPrompt.update`, or declare `storeLocked` on a definition to set it when the
+prompt is first created. A definition cannot lock a prompt it did not create — that would let code seize
+one an operator is already maintaining.
 
 ## Managing prompts
 
@@ -224,6 +361,11 @@ Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
 
 - `openrouter.filesearch.spike.spec.ts` — the `file_search` passthrough probes. Deliberately cheap: a
   free model by default, and the file_search probe fails at the store lookup before anything is billed.
+- `openrouter.decision.spike.spec.ts` — the System One probes. Cheap for a different reason: input is
+  $0.042/Mtok and output is not billed at all. They pin what only a real call can settle — that all three
+  primitives answer in the declared shape, that `usage.cost` arrives synchronously (which is why a
+  decision needs no broadcast reconciliation), and that the wire is snake_case where the SDK decodes to
+  camelCase.
 - the `live end-to-end` block in `openrouter.runtask.emulator.spec.ts` — publishes a version, enqueues a
   run, drains it with the real sweeper against the real API, then resolves the stored generation id
   through `openRouterGeneration`. This is the plan's end-to-end bullet minus its MCP transport: no app in
@@ -236,6 +378,7 @@ Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
 | `OPENROUTER_TEST_MODEL_ID` | Model for the general probe and the end-to-end run. Defaults to `nvidia/nemotron-nano-9b-v2:free`. |
 | `OPENROUTER_FILE_SEARCH_MODEL_ID` | Model for the file_search probe. Must be an OpenAI model. |
 | `OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID` | A real `vs_…`; upgrades the probe to the full grounded assertion. |
+| `OPENROUTER_TEST_DECISION_MODEL_ID` | System One model for the decision probes. Defaults to `typesafe/jev-1.13`. Its own knob because the two arms cannot share one value. |
 
 ## CJS / ESM
 

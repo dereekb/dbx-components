@@ -10,8 +10,9 @@ import { type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type DbxFilterComponentConfig } from './filter.config';
 import { DbxPopoverInteractionModule } from '../popover';
-import { MatButtonModule } from '@angular/material/button';
+import { DbxButtonComponent } from '../../button/button.component';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
+import { type DbxButtonStyle } from '../../button/button';
 
 /**
  * Configuration for opening a filter popover, extending the base filter config with origin positioning.
@@ -29,6 +30,16 @@ export interface DbxFilterPopoverComponentConfig<F extends object = object> exte
 export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 
 /**
+ * Default style for the popover header's "Customize"/"Presets" switch buttons.
+ */
+export const DEFAULT_FILTER_POPOVER_SWITCH_BUTTON_STYLE: DbxButtonStyle = { type: 'flat', color: 'accent' };
+
+/**
+ * Default style for the popover header's close button.
+ */
+export const DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE: DbxButtonStyle = { type: 'stroked', color: 'accent' };
+
+/**
  * Popover component that renders custom and/or preset filter components with toggling support.
  *
  * Use the static `openPopover` method to programmatically open the filter popover.
@@ -44,7 +55,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
  */
 @Component({
   templateUrl: './filter.popover.component.html',
-  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective]
+  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentConfig<F>> {
   readonly config: DbxFilterComponentConfig<F> = this.popover.data as DbxFilterComponentConfig<F>;
@@ -55,6 +66,10 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
   readonly showCloseButton = this.config.showCloseButton ?? !(this.config.closeOnFilterChange ?? true);
   readonly closeButtonText = this.config.closeButtonText ?? 'Close';
   readonly customizeButtonText = this.config.customizeButtonText ?? 'Customize';
+  readonly presetsButtonText = this.config.presetsButtonText ?? 'Presets';
+
+  readonly switchButtonStyle = this.config.switchButtonStyle ?? DEFAULT_FILTER_POPOVER_SWITCH_BUTTON_STYLE;
+  readonly closeButtonStyle = this.config.closeButtonStyle ?? DEFAULT_FILTER_POPOVER_CLOSE_BUTTON_STYLE;
 
   /**
    * Whether or not to display buttons to toggle between custom and preset filters.
@@ -110,7 +125,27 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   static openPopover<F extends object>(
     popupService: DbxPopoverService,
-    { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentConfig<F>,
+    {
+      width,
+      height,
+      isResizable,
+      origin,
+      header,
+      icon,
+      customFilterComponentClass,
+      presetFilterComponentClass,
+      customFilterComponentConfig,
+      presetFilterComponentConfig,
+      connector,
+      initialFilterObs,
+      closeOnFilterChange,
+      customizeButtonText,
+      presetsButtonText,
+      showCloseButton,
+      closeButtonText,
+      switchButtonStyle,
+      closeButtonStyle
+    }: DbxFilterPopoverComponentConfig<F>,
     popoverKey?: DbxPopoverKey
   ): NgPopoverRef {
     return popupService.open({
@@ -124,8 +159,11 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         header,
         icon,
         customizeButtonText,
+        presetsButtonText,
         showCloseButton,
         closeButtonText,
+        switchButtonStyle,
+        closeButtonStyle,
         customFilterComponentClass,
         presetFilterComponentClass,
         customFilterComponentConfig,
