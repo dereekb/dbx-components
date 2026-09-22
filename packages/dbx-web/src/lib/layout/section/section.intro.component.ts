@@ -1,6 +1,12 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { MatButtonModule } from '@angular/material/button';
+import { DbxButtonComponent } from '../../button/button.component';
+import { type DbxButtonStyle } from '../../button/button';
+
+/**
+ * Default style for the intro action button.
+ */
+export const DEFAULT_INTRO_ACTION_SECTION_BUTTON_STYLE: DbxButtonStyle = { type: 'raised', color: 'accent' };
 
 /**
  * Displays an introductory message with a call-to-action button. When the button is clicked,
@@ -38,7 +44,7 @@ import { MatButtonModule } from '@angular/material/button';
               <ng-content select="[info]"></ng-content>
             </div>
             <div>
-              <button mat-raised-button color="accent" (click)="actionClicked()">{{ action() }}</button>
+              <dbx-button [buttonStyle]="buttonStyleSignal()" [text]="action()" (buttonClick)="actionClicked()"></dbx-button>
             </div>
           </div>
         }
@@ -48,12 +54,22 @@ import { MatButtonModule } from '@angular/material/button';
       }
     </div>
   `,
-  imports: [MatButtonModule]
+  imports: [DbxButtonComponent]
 })
 export class DbxIntroActionSectionComponent {
   readonly hint = input<Maybe<string>>();
   readonly showIntro = input<Maybe<boolean>>(true);
   readonly action = input<Maybe<string>>();
+
+  /**
+   * (Optional) Style for the action button.
+   *
+   * Defaults to {@link DEFAULT_INTRO_ACTION_SECTION_BUTTON_STYLE}. Set a `color` here to paint the button with an
+   * arbitrary {@link DbxColorInput} (including a registered color template) rather than the default accent palette.
+   */
+  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
+
+  readonly buttonStyleSignal = computed(() => this.buttonStyle() ?? DEFAULT_INTRO_ACTION_SECTION_BUTTON_STYLE);
 
   readonly showAction = output<void>();
 

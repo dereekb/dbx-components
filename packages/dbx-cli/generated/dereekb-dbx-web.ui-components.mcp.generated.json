@@ -1802,6 +1802,12 @@
           "type": "Maybe<string>",
           "description": "",
           "required": false
+        },
+        {
+          "name": "buttonStyle",
+          "type": "Maybe<DbxButtonStyle>",
+          "description": "(Optional) Style for the action button.\n\nDefaults to {@link DEFAULT_INTRO_ACTION_SECTION_BUTTON_STYLE}. Set a `color` here to paint the button with an\narbitrary {@link DbxColorInput} (including a registered color template) rather than the default accent palette.",
+          "required": false
         }
       ],
       "outputs": [
