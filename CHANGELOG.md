@@ -1,3 +1,18 @@
+# [14.7.0](https://github.com/dereekb/dbx-components/compare/v14.6.0-dev...v14.7.0) (2026-09-22)
+
+### Bug Fixes
+
+- **dbx-cli:** persist rotated refresh token and pick document fields ([7cf53b14](https://github.com/dereekb/dbx-components/commit/7cf53b14ed1f04fc9e73b0e6babb607754557beb))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([231a297c](https://github.com/dereekb/dbx-components/commit/231a297cab2c8be13b991033950ec93a38369e78))
+- regenerate demo-cli manifests + bump @openrouter/sdk ([7ad6a08b](https://github.com/dereekb/dbx-components/commit/7ad6a08bab35611684fd7457c75fe29a88161aaa))
+
+### Features
+
+- **dbx-firebase:** pre-fill login from route query params ([ea6ee076](https://github.com/dereekb/dbx-components/commit/ea6ee076fc096f3de33c0f186e8358d67131e4f7))
+
 # [14.6.0](https://github.com/dereekb/dbx-components/compare/v14.5.1-dev...v14.6.0) (2026-09-18)
 
 ### Bug Fixes
