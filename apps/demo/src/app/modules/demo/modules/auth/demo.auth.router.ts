@@ -17,7 +17,7 @@ export const AUTH_STATE: Ng2StateDeclaration = {
 
 export const AUTH_LOGIN_STATE: Ng2StateDeclaration = {
   name: 'demo.auth.login',
-  url: '/login',
+  url: '/login?email&password',
   component: DemoAuthLoginComponent
 };
 

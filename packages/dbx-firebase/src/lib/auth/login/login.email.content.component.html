@@ -25,7 +25,7 @@
       <dbx-button class="dbx-button-wide" [text]="buttonText" [raised]="true" color="primary" dbxActionButton></dbx-button>
       <dbx-button-spacer></dbx-button-spacer>
       <span class="dbx-spacer"></span>
-      <button mat-flat-button (click)="onCancel()">Cancel</button>
+      <dbx-button text="Cancel" [flat]="true" color="grey" (buttonClick)="onCancel()"></dbx-button>
     </div>
     <dbx-error dbxActionError></dbx-error>
   </ng-container>
@@ -39,7 +39,7 @@
     <div class="dbx-flex">
       <dbx-button class="dbx-button-wide" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton></dbx-button>
       <span class="dbx-spacer"></span>
-      <button mat-flat-button (click)="onCancelReset()">Cancel Recovery</button>
+      <dbx-button text="Cancel Recovery" [flat]="true" color="grey" (buttonClick)="onCancelReset()"></dbx-button>
     </div>
     <dbx-error dbxActionError></dbx-error>
     @if (passwordResetAnchor) {
@@ -58,6 +58,12 @@
 <ng-template #resetPasswordSent>
   <div class="dbx-firebase-login-email-content-recovery-sent" role="status">
     <p class="dbx-hint">A recovery email was sent to the specified address. Please check your email for next steps.</p>
-    <button mat-raised-button (click)="clickedRecoveryAcknowledged()">Ok</button>
+    @if (hasPasswordResetAnchor) {
+      <dbx-anchor [anchor]="passwordResetAnchor">
+        <dbx-button text="Enter Recovery Code" [raised]="true" color="primary"></dbx-button>
+      </dbx-anchor>
+    } @else {
+      <dbx-button text="Ok" [raised]="true" (buttonClick)="clickedRecoveryAcknowledged()"></dbx-button>
+    }
   </div>
 </ng-template>

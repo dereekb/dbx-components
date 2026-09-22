@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "source": "@dereekb/util/fetch",
+  "module": "@dereekb/util/fetch",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "to-bracket-notation-search-param-tuples",
+      "name": "toBracketNotationSearchParamTuples",
+      "kind": "function",
+      "category": "url",
+      "module": "@dereekb/util/fetch",
+      "subpath": "fetch.url",
+      "signature": "toBracketNotationSearchParamTuples(input: Maybe<object>): UrlSearchParamsKeyValueTuple[]",
+      "description": "Expands a potentially nested object into bracket-notation query key/value tuples.\n\nArrays are addressed by index and object properties by key, recursively, so every leaf\ngets its own fully-qualified parameter. Nullish leaves are omitted rather than emitted\nas the strings `\"null\"`/`\"undefined\"`; all other leaves are stringified.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<object>",
+          "description": "- The object to expand.",
+          "optional": false
+        }
+      ],
+      "returns": "The bracket-notation key/value tuples.",
+      "tags": [
+        "url",
+        "query",
+        "search",
+        "params",
+        "bracket",
+        "notation",
+        "nested",
+        "expand",
+        "tuples",
+        "encode",
+        "to",
+        "param",
+        "tobracketnotationsearchparamtuples"
+      ],
+      "example": "toBracketNotationSearchParamTuples({ calendarsToLoad: [{ credentialId: 1, externalId: 'a@b.com' }] });\n// => [['calendarsToLoad[0][credentialId]', '1'], ['calendarsToLoad[0][externalId]', 'a@b.com']]",
+      "relatedSlugs": [
+        "make-url-search-params",
+        "make-url-search-params-string"
+      ]
+    },
+    {
+      "slug": "make-url-search-params",
+      "name": "makeUrlSearchParams",
+      "kind": "function",
+      "category": "url",
+      "module": "@dereekb/util/fetch",
+      "subpath": "fetch.url",
+      "signature": "makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): URLSearchParams",
+      "description": "Creates URLSearchParams from the input objects. The input objects are merged together.",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>",
+          "description": "- One or more objects (or nullish values) whose key-value pairs become search parameters.",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "Maybe<MakeUrlSearchParamsOptions>",
+          "description": "- Optional configuration for filtering, omitting keys, and space encoding.",
+          "optional": true
+        }
+      ],
+      "returns": "A URLSearchParams instance built from the merged and filtered input.",
+      "tags": [
+        "url",
+        "query",
+        "search",
+        "params",
+        "urlsearchparams",
+        "encode",
+        "merge",
+        "filter",
+        "omit",
+        "querystring",
+        "make",
+        "makeurlsearchparams"
+      ],
+      "relatedSlugs": [
+        "make-url-search-params-string",
+        "update-url-search-params",
+        "to-bracket-notation-search-param-tuples",
+        "merge-make-url-search-params-options"
+      ]
+    },
+    {
+      "slug": "make-url-search-params-string",
+      "name": "makeUrlSearchParamsString",
+      "kind": "function",
+      "category": "url",
+      "module": "@dereekb/util/fetch",
+      "subpath": "fetch.url",
+      "signature": "makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string",
+      "description": "Creates a URL query string from the input objects.\n\nEquivalent to `makeUrlSearchParams(...).toString()`, but respects the\n{@link MakeUrlSearchParamsOptions.useUrlSearchSpaceHandling} option to produce\nRFC 3986 percent-encoded output (`%20` for spaces) instead of the\n`application/x-www-form-urlencoded` default (`+` for spaces).",
+      "params": [
+        {
+          "name": "input",
+          "type": "Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>",
+          "description": "- Objects to encode as query parameters.",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "Maybe<MakeUrlSearchParamsOptions>",
+          "description": "- Encoding options.",
+          "optional": true
+        }
+      ],
+      "returns": "The encoded query string (without a leading `?`)",
+      "tags": [
+        "url",
+        "query",
+        "search",
+        "params",
+        "string",
+        "querystring",
+        "encode",
+        "percent",
+        "space",
+        "stringify",
+        "make",
+        "makeurlsearchparamsstring"
+      ],
+      "relatedSlugs": [
+        "make-url-search-params",
+        "update-url-search-params"
+      ]
+    },
+    {
+      "slug": "update-url-search-params",
+      "name": "updateUrlSearchParams",
+      "kind": "function",
+      "category": "url",
+      "module": "@dereekb/util/fetch",
+      "subpath": "fetch.url",
+      "signature": "updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string",
+      "description": "Updates or adds query parameters on an existing URL string.\n\nParses the URL's existing query string, merges in the new parameters (new values\noverride existing keys), and returns the rebuilt URL. Respects all\n{@link MakeUrlSearchParamsOptions} such as `omitKeys`, `filterEmptyValues`, and\n`useUrlSearchSpaceHandling`.",
+      "params": [
+        {
+          "name": "url",
+          "type": "string",
+          "description": "- The URL string to update.",
+          "optional": false
+        },
+        {
+          "name": "params",
+          "type": "Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>",
+          "description": "- New search parameters to merge into the URL.",
+          "optional": false
+        },
+        {
+          "name": "options",
+          "type": "Maybe<MakeUrlSearchParamsOptions>",
+          "description": "- Optional configuration for filtering, omitting keys, and space encoding.",
+          "optional": true
+        }
+      ],
+      "returns": "The URL string with updated query parameters.",
+      "tags": [
+        "url",
+        "query",
+        "search",
+        "params",
+        "update",
+        "merge",
+        "append",
+        "override",
+        "querystring",
+        "encode",
+        "updateurlsearchparams"
+      ],
+      "example": "// Add params to a URL with no query string\nupdateUrlSearchParams('https://example.com/form', { name: 'Alice', age: 30 });\n// => 'https://example.com/form?name=Alice&age=30'\n\n// Override an existing param\nupdateUrlSearchParams('https://example.com?page=1&sort=asc', { page: 2 });\n// => 'https://example.com?page=2&sort=asc'\n\n// Use percent-encoded spaces for redirect URLs\nupdateUrlSearchParams('https://example.com', { scope: 'openid profile' }, { useUrlSearchSpaceHandling: true });\n// => 'https://example.com?scope=openid%20profile'",
+      "relatedSlugs": [
+        "make-url-search-params",
+        "make-url-search-params-string",
+        "merge-slash-paths"
+      ]
+    },
+    {
+      "slug": "merge-make-url-search-params-options",
+      "name": "mergeMakeUrlSearchParamsOptions",
+      "kind": "function",
+      "category": "url",
+      "module": "@dereekb/util/fetch",
+      "subpath": "fetch.url",
+      "signature": "mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>): MakeUrlSearchParamsOptions",
+      "description": "Merges an array of MakeUrlSearchParamsOptions into a single MakeUrlSearchParamsOptions value.",
+      "params": [
+        {
+          "name": "options",
+          "type": "ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>",
+          "description": "- One or more options objects whose omitKeys sets are combined.",
+          "optional": false
+        }
+      ],
+      "returns": "A single MakeUrlSearchParamsOptions with the union of all omitKeys.",
+      "tags": [
+        "url",
+        "query",
+        "search",
+        "params",
+        "options",
+        "merge",
+        "omit",
+        "keys",
+        "config",
+        "make",
+        "mergemakeurlsearchparamsoptions"
+      ],
+      "relatedSlugs": [
+        "make-url-search-params"
+      ]
+    }
+  ]
+}

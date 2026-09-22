@@ -5,7 +5,9 @@
       @if (signInErrorMessage(); as signInErrorMessage) {
         <p class="app-login-view-signin-error" role="alert" [dbxTextColor]="'warn'">{{ signInErrorMessage }}</p>
       }
-      <dbx-firebase-login></dbx-firebase-login>
+      <div dbxFirebaseLoginPrefill>
+        <dbx-firebase-login></dbx-firebase-login>
+      </div>
       <p>
         Need an account? Register
         <dbx-link (click)="mode.set('register')">here</dbx-link>
