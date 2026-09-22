@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createCliTokenCacheStore, isTokenExpired, type CliTokenEntry } from './token.cache';
+import { createCliTokenCacheStore, didRotateRefreshToken, isTokenExpired, mergeRefreshedTokenEntry, type CliTokenEntry } from './token.cache';
 
 describe('isTokenExpired', () => {
   it('returns true when entry is undefined', () => {
@@ -76,5 +76,62 @@ describe('createCliTokenCacheStore', () => {
     await tokens.remove('dev');
     expect(await tokens.get('dev')).toBeUndefined();
     expect(await tokens.get('prod')).toEqual({ accessToken: 'b', expiresAt: 2 });
+  });
+});
+
+const REFRESHABLE_ENTRY: CliTokenEntry = {
+  accessToken: 'old-access',
+  refreshToken: 'old-refresh',
+  expiresAt: 1000,
+  tokenType: 'Bearer',
+  scope: 'openid offline_access',
+  sessionExpiresAt: 2000,
+  rotationDisabled: false
+};
+
+describe('mergeRefreshedTokenEntry', () => {
+  it('adopts the rotated refresh token so the spent one is never persisted', () => {
+    const updated = mergeRefreshedTokenEntry({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 60 }, nowMs: 10_000 });
+
+    expect(updated.refreshToken).toBe('new-refresh');
+    expect(updated.accessToken).toBe('new-access');
+  });
+
+  it('derives expiresAt from expires_in relative to now', () => {
+    const updated = mergeRefreshedTokenEntry({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a', expires_in: 60 }, nowMs: 10_000 });
+    expect(updated.expiresAt).toBe(70_000);
+  });
+
+  it('keeps the previous refresh token when the provider omits one (non-rotating grant)', () => {
+    const updated = mergeRefreshedTokenEntry({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a', expires_in: 60 }, nowMs: 0 });
+    expect(updated.refreshToken).toBe('old-refresh');
+  });
+
+  it('falls back to the previous tokenType and scope when omitted', () => {
+    const updated = mergeRefreshedTokenEntry({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a' }, nowMs: 0 });
+
+    expect(updated.tokenType).toBe('Bearer');
+    expect(updated.scope).toBe('openid offline_access');
+  });
+
+  it('preserves session metadata the refresh response does not carry', () => {
+    const updated = mergeRefreshedTokenEntry({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a' }, nowMs: 0 });
+
+    expect(updated.sessionExpiresAt).toBe(2000);
+    expect(updated.rotationDisabled).toBe(false);
+  });
+});
+
+describe('didRotateRefreshToken', () => {
+  it('is true when the provider issued a different refresh token', () => {
+    expect(didRotateRefreshToken({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a', refresh_token: 'new-refresh' } })).toBe(true);
+  });
+
+  it('is false when the provider returned the same refresh token', () => {
+    expect(didRotateRefreshToken({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a', refresh_token: 'old-refresh' } })).toBe(false);
+  });
+
+  it('is false when the provider returned no refresh token', () => {
+    expect(didRotateRefreshToken({ entry: REFRESHABLE_ENTRY, refreshed: { access_token: 'a' } })).toBe(false);
   });
 });

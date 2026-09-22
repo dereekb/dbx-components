@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { CliError, buildErrorOutput, configureCliSecretPatterns, DEFAULT_CLI_HTTP_TIMEOUT_MS, DEFAULT_CLI_SECRET_PATTERNS, getCliTimeoutMs, sanitizeString, setCliTimeoutMs, tracedFetch } from './output';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { CliError, buildErrorOutput, configureCliSecretPatterns, configureOutputOptions, DEFAULT_CLI_HTTP_TIMEOUT_MS, DEFAULT_CLI_SECRET_PATTERNS, getCliTimeoutMs, outputResult, sanitizeString, setCliTimeoutMs, tracedFetch } from './output';
 
 describe('output util', () => {
   beforeEach(() => {
@@ -86,6 +86,70 @@ describe('output util', () => {
 
       await tracedFetch(fetcher, 'http://localhost/api');
       expect(capturedSignal).toBeUndefined();
+    });
+  });
+
+  describe('outputResult pick', () => {
+    function captureOutput(fn: () => void): any {
+      const original = console.log;
+      let captured = '';
+      console.log = (value: string) => {
+        captured = value;
+      };
+
+      try {
+        fn();
+      } finally {
+        console.log = original;
+      }
+
+      return JSON.parse(captured);
+    }
+
+    afterEach(() => {
+      configureOutputOptions({});
+    });
+
+    it('picks top-level fields when the command supplies no applyPick', () => {
+      configureOutputOptions({ pick: 'a' });
+      const output = captureOutput(() => outputResult({ a: 1, b: 2 }));
+      expect(output.data).toEqual({ a: 1 });
+    });
+
+    it('routes the pick into the document payload of a { key, data } read envelope', () => {
+      configureOutputOptions({ pick: 'n' });
+      const result = { key: 'pr/abc', data: { uid: 'abc', n: 'Name', extra: 'drop-me' } };
+      const output = captureOutput(() => outputResult(result, undefined, { applyPick: (r, pick) => ({ ...r, data: pick(r.data) }) }));
+
+      // The wrapper survives and the document is reduced — picking document fields against the
+      // wrapper would have emitted `{}`, which reads as an empty document.
+      expect(output.data.key).toBe('pr/abc');
+      expect(output.data.data).toEqual({ n: 'Name' });
+    });
+
+    it('routes the pick into every entry of a { results, errors } read envelope', () => {
+      configureOutputOptions({ pick: 'n' });
+      const result = {
+        results: [
+          { key: 'pr/a', data: { uid: 'a', n: 'A', extra: 1 } },
+          { key: 'pr/b', data: { uid: 'b', n: 'B', extra: 2 } }
+        ],
+        errors: [{ key: 'pr/c', error: 'nope' }]
+      };
+      const output = captureOutput(() => outputResult(result, undefined, { applyPick: (r, pick) => ({ ...r, results: r.results.map((entry) => ({ ...entry, data: pick(entry.data) })) }) }));
+
+      expect(output.data.results).toEqual([
+        { key: 'pr/a', data: { n: 'A' } },
+        { key: 'pr/b', data: { n: 'B' } }
+      ]);
+      expect(output.data.errors).toEqual([{ key: 'pr/c', error: 'nope' }]);
+    });
+
+    it('leaves the result untouched when no pick is configured', () => {
+      configureOutputOptions({});
+      const result = { key: 'pr/abc', data: { uid: 'abc', n: 'Name' } };
+      const output = captureOutput(() => outputResult(result, undefined, { applyPick: (r, pick) => ({ ...r, data: pick(r.data) }) }));
+      expect(output.data).toEqual(result);
     });
   });
 });

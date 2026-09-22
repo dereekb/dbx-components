@@ -1,4 +1,4 @@
-import { type AsyncKeyedValueCache, type Maybe, expirationDetails } from '@dereekb/util';
+import { type AsyncKeyedValueCache, type Maybe, type OidcTokenResponse, expirationDetails } from '@dereekb/util';
 import { createMemoizedJsonFileAsyncKeyedValueCache } from '@dereekb/nestjs';
 
 /**
@@ -79,4 +79,52 @@ export function createCliTokenCacheStore(input: CreateCliTokenCacheStoreInput): 
  */
 export function isTokenExpired(entry: Maybe<CliTokenEntry>, nowMs: number = Date.now(), bufferMs: number = 60_000): boolean {
   return expirationDetails({ expiresFromDate: entry?.expiresAt, expiresIn: -bufferMs, now: new Date(nowMs) }).hasExpired();
+}
+
+/**
+ * Input for {@link mergeRefreshedTokenEntry}.
+ */
+export interface MergeRefreshedTokenEntryInput {
+  readonly entry: CliTokenEntry;
+  readonly refreshed: OidcTokenResponse;
+  /**
+   * The current time in unix epoch milliseconds, used to derive `expiresAt`. Defaults to `Date.now()`.
+   */
+  readonly nowMs?: number;
+}
+
+/**
+ * Folds an OIDC refresh response into the cached entry it was obtained with.
+ *
+ * EVERY refresh must persist the result of this merge. A refresh CONSUMES the supplied refresh
+ * token whenever the grant rotates, so keeping the old entry leaves the cache holding a spent
+ * credential and strands the session on the next refresh — with replay detection on the provider
+ * side, reusing the spent token can revoke the whole grant. Centralized so the refresh call sites
+ * (auth middleware, `auth check`, `doctor`) cannot drift apart on this.
+ *
+ * @param input - The entry that was refreshed and the token response it produced.
+ * @returns The updated entry to persist. Fields the provider omits fall back to the previous entry.
+ */
+export function mergeRefreshedTokenEntry(input: MergeRefreshedTokenEntryInput): CliTokenEntry {
+  const { entry, refreshed, nowMs = Date.now() } = input;
+
+  return {
+    ...entry,
+    accessToken: refreshed.access_token,
+    refreshToken: refreshed.refresh_token ?? entry.refreshToken,
+    tokenType: refreshed.token_type ?? entry.tokenType,
+    scope: refreshed.scope ?? entry.scope,
+    expiresAt: nowMs + (refreshed.expires_in ?? 0) * 1000
+  };
+}
+
+/**
+ * Whether a refresh response rotated the refresh token it was obtained with.
+ *
+ * @param input - The entry that was refreshed and the token response it produced.
+ * @returns `true` when the provider issued a DIFFERENT refresh token, meaning the old one is spent.
+ */
+export function didRotateRefreshToken(input: Pick<MergeRefreshedTokenEntryInput, 'entry' | 'refreshed'>): boolean {
+  const { entry, refreshed } = input;
+  return refreshed.refresh_token != null && refreshed.refresh_token !== entry.refreshToken;
 }

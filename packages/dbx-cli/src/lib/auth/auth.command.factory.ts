@@ -6,7 +6,7 @@ import { type CliEnvConfig, type CliEnvDefault, type OidcCliTokenEndpointAuthMet
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
-import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
+import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired, mergeRefreshedTokenEntry } from '../config/token.cache';
 import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
 import { claimCliHandoff } from './cli-handoff.client';
 import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
@@ -801,17 +801,10 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         refreshToken: entry.refreshToken
       });
 
-      const expiresAt = Date.now() + (refreshed.expires_in ?? 0) * 1000;
-      await tokens.set(envName, {
-        ...entry,
-        accessToken: refreshed.access_token,
-        refreshToken: refreshed.refresh_token ?? entry.refreshToken,
-        tokenType: refreshed.token_type ?? entry.tokenType,
-        scope: refreshed.scope ?? entry.scope,
-        expiresAt
-      });
+      const updated = mergeRefreshedTokenEntry({ entry, refreshed });
+      await tokens.set(envName, updated);
 
-      outputResult({ env: envName, refreshed: true, expiresAt });
+      outputResult({ env: envName, refreshed: true, expiresAt: updated.expiresAt });
     })
   };
 

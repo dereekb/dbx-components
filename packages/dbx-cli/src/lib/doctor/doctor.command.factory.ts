@@ -5,12 +5,13 @@ import { type CliEnvConfig, type CliEnvDefault } from '../config/env';
 import { resolveCliEnv } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
-import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
+import { discoverOidcMetadata } from '../auth/oidc.client';
 import { CALL_MODEL_API_PATH } from '../api/call-model.client';
 import { outputResult, tracedFetch } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { withEnv } from '../util/args';
 import { createCliBuildDriftDoctorCheck } from './build-drift.check';
+import { createTokenRefreshDoctorCheck } from './token-refresh.check';
 
 export interface DoctorCheckInput {
   readonly cliName: string;
@@ -86,41 +87,7 @@ export function defaultDoctorChecks(input: DefaultDoctorChecksInput = {}): Docto
       }
       return result;
     },
-    async ({ cliName, envName, env }) => {
-      let result: DoctorCheckResult;
-      // `clientSecret` is absent for a public (PKCE) client, so requiring it here would report a
-      // correctly-configured env as having incomplete credentials.
-      if (!envName || !env?.clientId) {
-        result = { name: 'token-refresh-round-trip', ok: false, suggestion: 'Env credentials are incomplete.' };
-      } else {
-        const paths = buildCliPaths({ cliName });
-        const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
-        const entry = await tokens.get(envName);
-
-        if (entry?.refreshToken) {
-          try {
-            const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-            await refreshAccessToken({
-              tokenEndpoint: meta.token_endpoint,
-              clientId: env.clientId,
-              clientSecret: env.clientSecret,
-              refreshToken: entry.refreshToken
-            });
-            result = { name: 'token-refresh-round-trip', ok: true };
-          } catch (e) {
-            result = { name: 'token-refresh-round-trip', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
-          }
-        } else {
-          result = {
-            name: 'token-refresh-round-trip',
-            ok: false,
-            detail: { reason: 'no-refresh-token' },
-            suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
-          };
-        }
-      }
-      return result;
-    },
+    createTokenRefreshDoctorCheck(),
     async ({ env }) => {
       let result: DoctorCheckResult;
       if (env?.apiBaseUrl) {

@@ -4,6 +4,7 @@ import { CLI_READ_VIA_VALUES, DEFAULT_CLI_READ_VIA, cliReadResultMeta, coerceCli
 import { outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { isStdinPositionalSentinel, readStdinTokens } from '../util/stdin';
+import { type GetMultipleModelsOverHttpResultEntry } from './call-model.client';
 import { CLI_READ_VIA_EPILOGUE } from './get.command';
 import { parseGetManyArgs } from './get-args.helper';
 
@@ -72,6 +73,9 @@ export const GET_MANY_COMMAND: CommandModule = {
     const resolved = await resolveCliReadSource({ context, via: coerceCliReadVia(argv.via), modelType });
     const result = resolved.models ? await getMultipleModelsOverFirestore({ models: resolved.models, modelType, keys }) : await context.getMultipleModels(modelType, keys);
 
-    outputResult(result, cliReadResultMeta(resolved));
+    // `--pick` names fields of each DOCUMENT; `errors` entries carry no payload and pass through.
+    outputResult(result, cliReadResultMeta(resolved), {
+      applyPick: (r, pick) => ({ ...r, results: r.results.map((entry: GetMultipleModelsOverHttpResultEntry) => ({ ...entry, data: pick(entry.data) })) })
+    });
   })
 };
