@@ -1,6 +1,9 @@
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { MS_IN_DAY, type Maybe, type Milliseconds } from '@dereekb/util';
 import {
+  type OpenRouterDecisionAnswers,
+  type OpenRouterDecisionQuestions,
+  type OpenRouterStorableDecisionState,
   type OpenRouterFileAnnotation,
   type OpenRouterFileReference,
   type OpenRouterGenerationId,
@@ -23,7 +26,6 @@ import {
   type FirestoreCollectionWithParent,
   type FirestoreContext,
   type FirestoreModelKey,
-  firestoreArray,
   firestoreDate,
   firestoreEnum,
   firestoreModelIdentity,
@@ -156,6 +158,25 @@ export interface OpenRouterPrompt {
    * @dbxModelVariable tags
    */
   t?: Maybe<string[]>;
+  /**
+   * Whether this prompt is locked to the store, so a code definition can neither seed it nor overtake
+   * it.
+   *
+   * The counterpart of {@link OpenRouterPromptVersion.lk}: that locks a VERSION against edits, this
+   * locks a PROMPT against its own code definition. Both exist for the same reason — something a past
+   * decision depended on must keep saying what it said — but they defend against different writers.
+   *
+   * Set it on a prompt whose content is maintained at RUNTIME rather than in code. A decision prompt is
+   * the motivating case, because its questions are the thing an operator tunes, but nothing here is
+   * decision-specific and any prompt may be locked.
+   *
+   * Deliberately LENIENT: a definition may still stand in when the store holds no version at all, which
+   * is what keeps a fresh environment — a new emulator, a test, a project that has never been seeded —
+   * able to serve the prompt with no manual step first. What the lock prevents is being OVERWRITTEN.
+   *
+   * @dbxModelVariable storeLocked
+   */
+  sl?: Maybe<boolean>;
 }
 
 /**
@@ -179,7 +200,8 @@ export const openRouterPromptConverter = snapshotConverterFunctions<OpenRouterPr
     s: firestoreEnum<OpenRouterPromptState>({ default: OpenRouterPromptState.DRAFT }),
     av: optionalFirestoreNumber(),
     lv: firestoreNumber({ default: 0 }),
-    t: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true })
+    t: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true }),
+    sl: optionalFirestoreBoolean()
   }
 });
 
@@ -314,6 +336,21 @@ export interface OpenRouterPromptVersion {
    */
   by?: Maybe<FirestoreModelKey>;
   /**
+   * The questions this version declares, when it is a DECISION prompt.
+   *
+   * Presence is what makes a version a decision: one carrying questions is asked through
+   * `openRouterDecision` against a System One model, and one without is a completion. The two are
+   * mutually exclusive — a decision has no prose output for `i` and `m` to shape.
+   *
+   * Stored as a JSON STRING for the reason `c` is, only more forcefully. A question's criteria may be
+   * arbitrary structured JSON, and Firestore forbids an array inside an array — so a Score whose levels
+   * are `{what, signals: [...]}` objects, or any criteria carrying a list, fails the write outright as a
+   * native map. A native map structurally cannot hold a legal question set.
+   *
+   * @dbxModelVariable questions
+   */
+  q?: Maybe<OpenRouterDecisionQuestions>;
+  /**
    * Whether the version is locked against further edits.
    *
    * Set on the outgoing version when the next one is created, and never unset — a version a past run
@@ -353,6 +390,7 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     i: optionalFirestoreString(),
     m: optionalFirestoreArray<OpenRouterPromptVersionMessage>({ dontStoreIfEmpty: true }),
     c: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
+    q: optionalFirestoreJsonStringField<OpenRouterDecisionQuestions>(),
     nt: optionalFirestoreString(),
     by: optionalFirestoreString(),
     lk: optionalFirestoreBoolean()
@@ -643,9 +681,34 @@ export interface OpenRouterRunTask {
   /**
    * The call input.
    *
+   * Optional because a DECISION run has none: it carries a state and an answer space rather than
+   * messages. Exactly one of `in` and `st` is meaningful on any given task.
+   *
    * @dbxModelVariable input
    */
-  in: OpenRouterInputMessage[];
+  in?: Maybe<OpenRouterInputMessage[]>;
+  /**
+   * The content to judge, on a DECISION run.
+   *
+   * PRESENCE OF THIS FIELD IS THE DISCRIMINATOR. A task carrying a state is dispatched to
+   * `POST /systemone` and one without it to `/responses` — no separate kind enum, because which surface
+   * a request needs is a property of the request, and a second field saying so is a second thing that
+   * can disagree with it.
+   *
+   * Passthrough JSON for the reason {@link OpenRouterPromptVersion.q} states.
+   *
+   * @dbxModelVariable state
+   */
+  st?: Maybe<OpenRouterStorableDecisionState>;
+  /**
+   * Questions declared by the caller for THIS run, merged over the version's own stored questions.
+   *
+   * Only the dynamic half is stored: the static half already lives on the version, and copying it here
+   * would let a run cite a version whose questions it does not actually use.
+   *
+   * @dbxModelVariable questions
+   */
+  q?: Maybe<OpenRouterDecisionQuestions>;
   /**
    * Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.
    *
@@ -678,6 +741,19 @@ export interface OpenRouterRunTask {
    * @dbxModelVariable outputJson
    */
   j?: Maybe<Record<string, unknown>>;
+  /**
+   * The answers, on a completed DECISION run.
+   *
+   * Written instead of `o` / `j`, not alongside them: a decision produces no text, and storing an
+   * answer map as `outputJson` would make a reader guess which kind of run it is holding from the
+   * shape of a loose object.
+   *
+   * Already membership-checked against the declared questions when it is written — see
+   * `readOpenRouterDecisionAnswers` — so a reader does not re-check one.
+   *
+   * @dbxModelVariable answers
+   */
+  an?: Maybe<OpenRouterDecisionAnswers>;
   /**
    * Generation ids produced, for auditing via `getGeneration` / `listGenerationContent`.
    *
@@ -748,12 +824,15 @@ export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterR
     at: firestoreNumber({ default: 0 }),
     pk: firestoreString({ default: '' }),
     pv: firestoreNumber({ default: 0 }),
-    in: firestoreArray<OpenRouterInputMessage>({}),
+    in: optionalFirestoreArray<OpenRouterInputMessage>({}),
     fp: optionalFirestoreArray<OpenRouterFileReference>({ dontStoreIfEmpty: true }),
     fa: optionalFirestoreArray<OpenRouterFileAnnotation>({ dontStoreIfEmpty: true }),
     co: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
+    st: optionalFirestoreJsonStringField<OpenRouterStorableDecisionState>(),
+    q: optionalFirestoreJsonStringField<OpenRouterDecisionQuestions>(),
     o: optionalFirestoreString(),
     j: optionalFirestoreJsonStringField<Record<string, unknown>>(),
+    an: optionalFirestoreJsonStringField<OpenRouterDecisionAnswers>(),
     gi: optionalFirestoreArray<OpenRouterGenerationId>({ filterUnique: true, dontStoreIfEmpty: true }),
     u: optionalFirestoreJsonStringField<OpenRouterRunUsage>(),
     e: optionalFirestoreJsonStringField<OpenRouterRunError>(),
@@ -807,7 +886,8 @@ export function openRouterResolvedPromptForVersion(promptKey: OpenRouterPromptKe
     version: version.v,
     instructions: version.i,
     messages: version.m?.map(({ r, c }) => ({ role: r, content: c })),
-    config: version.c ?? {}
+    config: version.c ?? {},
+    questions: version.q
   };
 }
 

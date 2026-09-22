@@ -1,5 +1,5 @@
 import { type Maybe, mergeObjects } from '@dereekb/util';
-import { type OpenRouterModelId } from './openrouter.type';
+import { type OpenRouterModelId, isOpenRouterSystemOneModelId } from './openrouter.type';
 
 /**
  * Reasoning effort accepted by OpenRouter's `reasoning.effort`.
@@ -305,6 +305,10 @@ export function mergeOpenRouterModelConfig(configs: Maybe<OpenRouterModelConfig>
 
 /**
  * Result of validating an {@link OpenRouterModelConfig}.
+ *
+ * Also the package's general validation shape — `validateOpenRouterDecisionQuestions` and
+ * `validateOpenRouterDecisionRequest` report through it too, so a caller publishing a prompt can gather
+ * config problems and question problems into one surface rather than branching on which produced them.
  */
 export interface OpenRouterModelConfigValidation {
   /**
@@ -322,21 +326,60 @@ export interface OpenRouterModelConfigValidation {
 }
 
 /**
+ * Options for {@link validateOpenRouterModelConfig}.
+ */
+export interface ValidateOpenRouterModelConfigOptions {
+  /**
+   * Whether the config belongs to a DECISION rather than a completion.
+   *
+   * Only the model check differs, and it inverts: a decision requires a System One model and a
+   * completion refuses one. Defaults to false.
+   */
+  readonly decision?: Maybe<boolean>;
+}
+
+/**
  * Validates a merged model config, catching the misconfigurations that fail silently at runtime
  * rather than loudly.
  *
  * @param config - The merged config to check.
+ * @param options - Which arm the config is for.
  * @returns The validation result.
  */
-export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfig>): OpenRouterModelConfigValidation {
+export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfig>, options?: Maybe<ValidateOpenRouterModelConfigOptions>): OpenRouterModelConfigValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const decision = options?.decision === true;
 
   if (config == null) {
     errors.push('No model config was provided.');
   } else {
     if (!config.model && !config.models?.length) {
       errors.push('No `model` (or `models` fallback chain) was specified.');
+    }
+
+    // OpenRouter has TWO inference surfaces and the model slug is the only thing that says which one a
+    // request belongs to — System One models are absent from `GET /models`, so nothing can be learned
+    // about one from the catalog. Checked here because this runs at publish time: a Jev slug typed into
+    // a stored prompt version is refused when it is written, rather than failing in a sweep days later
+    // with an error that names neither the prompt nor the reason.
+    const declaredModels = [config.model, ...(config.models ?? [])].filter(Boolean) as OpenRouterModelId[];
+    const systemOneModels = declaredModels.filter((x) => isOpenRouterSystemOneModelId(x));
+
+    if (decision) {
+      declaredModels
+        .filter((x) => !isOpenRouterSystemOneModelId(x))
+        .forEach((model) => {
+          errors.push(`\`${model}\` is not a System One model, and only a System One model answers a decision. Name a \`typesafe/…\` model (see DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID).`);
+        });
+
+      if (config.models?.length) {
+        warnings.push('`models` has no meaning on a decision: the decisions route takes a single `model` and no fallback chain, so every entry here is dropped.');
+      }
+    } else {
+      systemOneModels.forEach((model) => {
+        errors.push(`\`${model}\` is a System One model, which answers only \`POST /systemone\` and cannot serve a completion. Ask it through \`openRouterDecision\` rather than \`callModelForOpenRouterRequest\`, or name a chat model here.`);
+      });
     }
 
     const format = config.text?.format;

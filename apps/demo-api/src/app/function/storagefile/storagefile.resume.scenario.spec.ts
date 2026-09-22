@@ -4,6 +4,7 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { type CreateStorageFileSignedUploadUrlParams, type CreateStorageFileSignedUploadUrlResult, type NotificationKey, type StorageFileDocument, StorageFileProcessingState, StorageFileState, type StoragePath, onCallCreateModelParams, storageFileIdentity } from '@dereekb/firebase';
+import { type OpenRouterPromptKey } from '@dereekb/openrouter';
 import { OpenRouterRunTaskState, openRouterPromptVersionId } from '@dereekb/openrouter/firebase';
 import { openRouterRunTaskSweep } from '@dereekb/openrouter/firebase-server';
 import { DEMO_RESUME_CHECK_PROMPT_KEY, DEMO_RESUME_CHECK_PROMPT_VERSION, ProfileResumeState, USER_RESUME_FILE_PURPOSE, type UserResumeFileMetadata, userResumeFileUploadsFilePath } from 'demo-firebase';
@@ -88,8 +89,8 @@ demoApiFunctionContextFactory((f) => {
          * Package logic now: the definitions the prompt service resolves against carry everything the
          * stored prompt needs, so there is nothing app-shaped left to write.
          */
-        async function seedPrompts() {
-          return f.openRouterPromptServerActions.seedOpenRouterPrompts({});
+        async function seedPrompts(promptKeys?: OpenRouterPromptKey[]) {
+          return f.openRouterPromptServerActions.seedOpenRouterPrompts({ promptKeys });
         }
 
         /**
@@ -184,8 +185,11 @@ demoApiFunctionContextFactory((f) => {
           });
 
           it('should seed the resume-check prompt at the version the code declares, idempotently', async () => {
-            const first = await seedPrompts();
-            const second = await seedPrompts();
+            // Narrowed to the resume-check key: this scenario is about THIS prompt's write address, so the
+            // counts stay exact as the app's definition registry grows. Whole-registry seeding has its own
+            // coverage in openrouter.crud.spec.ts.
+            const first = await seedPrompts([DEMO_RESUME_CHECK_PROMPT_KEY]);
+            const second = await seedPrompts([DEMO_RESUME_CHECK_PROMPT_KEY]);
 
             expect(first.considered).toBe(1);
             expect(first.promptsCreated).toBe(1);

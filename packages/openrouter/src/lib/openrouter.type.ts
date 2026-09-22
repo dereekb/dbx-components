@@ -11,6 +11,72 @@ import { type Maybe } from '@dereekb/util';
 export type OpenRouterModelId = string;
 
 /**
+ * A model slug naming a SYSTEM ONE model — OpenRouter's second inference surface, served by
+ * `POST /systemone` rather than `/responses`.
+ *
+ * A System One model does not take messages and does not answer with prose. The caller declares the
+ * answer space up front as typed questions and the model returns a position inside it plus a calibrated
+ * distribution. See `openrouter.decision.ts`.
+ */
+export type OpenRouterSystemOneModelId = OpenRouterModelId;
+
+/**
+ * The namespace every System One model slug lives under.
+ */
+export const OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE = 'typesafe';
+
+/**
+ * Jev 1.13, the System One model this package pins by default.
+ *
+ * A VERSIONED slug rather than one of the moving aliases (`jev-latest`, `jev-preview`), for the same
+ * reason {@link OpenRouterPromptVersionNumber} exists: a decision's answer is only reproducible against
+ * the exact model that produced it, and an alias silently moves out from under a stored prompt. Point a
+ * prompt at an alias deliberately, never by default.
+ */
+export const OPENROUTER_JEV_1_13_MODEL_ID: OpenRouterSystemOneModelId = 'typesafe/jev-1.13';
+
+/**
+ * The newest STABLE Jev. A moving alias — see {@link OPENROUTER_JEV_1_13_MODEL_ID}.
+ */
+export const OPENROUTER_JEV_LATEST_MODEL_ID: OpenRouterSystemOneModelId = 'typesafe/jev-latest';
+
+/**
+ * The newest Jev, stable or not. A moving alias — see {@link OPENROUTER_JEV_1_13_MODEL_ID}.
+ */
+export const OPENROUTER_JEV_PREVIEW_MODEL_ID: OpenRouterSystemOneModelId = 'typesafe/jev-preview';
+
+/**
+ * The System One model a decision uses when its config names none.
+ */
+export const DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID: OpenRouterSystemOneModelId = OPENROUTER_JEV_1_13_MODEL_ID;
+
+/**
+ * Matches the bare System One slugs OpenRouter maps into the `typesafe/` namespace.
+ */
+const OPENROUTER_BARE_SYSTEM_ONE_MODEL_REGEX = /^jev(-|$)/;
+
+/**
+ * Whether a model slug names a System One model.
+ *
+ * This is the ONLY discriminator available, and it is the reason this function exists rather than a
+ * lookup: System One models are NOT listed by `GET /models`, so nothing can be learned about one from
+ * the catalog. A caller that guessed wrong does not get an error it can read — a Jev slug sent to
+ * `/responses` fails at the provider, and a chat slug sent to `/systemone` is refused by the route.
+ *
+ * Both forms are recognised: the namespaced slug (`typesafe/jev-1.13`) and the bare one (`jev-1.13`,
+ * `jev-latest`), which the SDK documents itself as mapping onto the `typesafe/` namespace.
+ *
+ * @param model - The model slug to test.
+ * @returns True when the slug names a System One model.
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isOpenRouterSystemOneModelId(model: Maybe<OpenRouterModelId>): boolean {
+  const slug = model?.trim().toLowerCase();
+  return slug == null || slug === '' ? false : slug.startsWith(`${OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE}/`) || OPENROUTER_BARE_SYSTEM_ONE_MODEL_REGEX.test(slug);
+}
+
+/**
  * A generation id returned by OpenRouter for a completed request.
  *
  * See the note on {@link OpenRouterModelId} regarding the twin in `@dereekb/nestjs/openrouter`.

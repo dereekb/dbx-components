@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterModelConfig } from './openrouter.config';
+import { type OpenRouterDecisionQuestions } from './openrouter.decision.question';
 import { type OpenRouterInputRole } from './openrouter.input';
 import { type OpenRouterPromptKey, type OpenRouterPromptVersionNumber } from './openrouter.type';
 
@@ -48,6 +49,18 @@ export interface OpenRouterResolvedPrompt {
    * The version's model config.
    */
   readonly config: OpenRouterModelConfig;
+  /**
+   * The questions this prompt declares, when it is a DECISION prompt.
+   *
+   * Present makes a prompt a decision: a version carrying questions is asked through
+   * `openRouterDecision` rather than `callModelForOpenRouterRequest`, and its config names a System One
+   * model rather than a chat one. The two are mutually exclusive by construction — a decision has no
+   * prose output for `instructions` and `messages` to shape.
+   *
+   * These are the STATIC half of a decision's answer space, the counterpart of `messages`. A caller may
+   * declare further questions per call; they merge over these by id. See `openRouterDecisionRequest`.
+   */
+  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
 }
 
 /**
@@ -91,4 +104,16 @@ export interface OpenRouterPromptDefinition extends OpenRouterResolvedPrompt {
    * What this prompt is for, used when this definition is published to Firestore.
    */
   readonly description?: Maybe<string>;
+  /**
+   * Whether the prompt this definition creates is locked to the store from the moment it exists.
+   *
+   * Takes effect ONLY on create — it is the initial value of the prompt's own `storeLocked` flag, not a
+   * standing instruction. A definition cannot lock a prompt it did not create, because doing so would
+   * let code silently seize a prompt an operator is already maintaining.
+   *
+   * Declare it for a prompt whose content is EXPECTED to be tuned at runtime — a decision's questions
+   * being the motivating case — so a fresh environment is seeded once and then left alone, with no
+   * per-environment manual step to remember.
+   */
+  readonly storeLocked?: Maybe<boolean>;
 }

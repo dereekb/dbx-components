@@ -43,6 +43,14 @@ export interface UpdateOpenRouterPromptParams extends InferredTargetModelParams 
    * failing to resolve.
    */
   readonly activeVersion?: Maybe<OpenRouterPromptVersionNumber>;
+  /**
+   * Whether the prompt is locked to the store, so a code definition can neither seed it nor overtake it.
+   *
+   * The one write that turns the lever on and off, and it is deliberately here rather than only on a
+   * definition: locking a prompt is an operator's decision about who maintains its content, and an
+   * operator has to be able to take that decision back.
+   */
+  readonly storeLocked?: Maybe<boolean>;
 }
 
 export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetModelParamsType.merge(
@@ -51,7 +59,8 @@ export const updateOpenRouterPromptParamsType = /* @__PURE__ */ inferredTargetMo
     'description?': clearable('string'),
     'tags?': clearable('string[]'),
     'state?': clearable('number'),
-    'activeVersion?': clearable('number')
+    'activeVersion?': clearable('number'),
+    'storeLocked?': clearable('boolean')
   })
 ) as Type<UpdateOpenRouterPromptParams>;
 
@@ -100,6 +109,14 @@ export interface CreateOpenRouterPromptVersionParams {
    */
   readonly config?: Maybe<Record<string, unknown>>;
   /**
+   * The questions this version declares, making it a DECISION prompt.
+   *
+   * Passthrough JSON, validated against the declaration guards before the version is written — an
+   * eleven-level Score or a question with blank instructions is refused here rather than at the wire.
+   * A version carrying questions must also name a System One model in its config.
+   */
+  readonly questions?: Maybe<Record<string, unknown>>;
+  /**
    * Why this version was created.
    */
   readonly notes?: Maybe<string>;
@@ -117,6 +134,7 @@ export const createOpenRouterPromptVersionParamsType = /* @__PURE__ */ type({
   'instructions?': clearable('string'),
   'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
   'config?': clearable('object'),
+  'questions?': clearable('object'),
   'notes?': clearable('string'),
   'activate?': clearable('boolean')
 }) as Type<CreateOpenRouterPromptVersionParams>;
@@ -145,6 +163,11 @@ export interface UpdateOpenRouterPromptVersionParams extends InferredTargetModel
    */
   readonly config?: Maybe<Record<string, unknown>>;
   /**
+   * The questions this version declares, making it a DECISION prompt. See
+   * {@link CreateOpenRouterPromptVersionParams.questions}.
+   */
+  readonly questions?: Maybe<Record<string, unknown>>;
+  /**
    * Why the version says what it says.
    */
   readonly notes?: Maybe<string>;
@@ -155,6 +178,7 @@ export const updateOpenRouterPromptVersionParamsType = /* @__PURE__ */ inferredT
     'instructions?': clearable('string'),
     'messages?': clearable(openRouterPromptVersionMessageParamsType.array()),
     'config?': clearable('object'),
+    'questions?': clearable('object'),
     'notes?': clearable('string')
   })
 ) as Type<UpdateOpenRouterPromptVersionParams>;

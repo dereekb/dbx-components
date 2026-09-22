@@ -1,7 +1,7 @@
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type FirestoreContextReference, type FirestoreModelKey, firestoreModelId, firestoreModelKeyParentKey, getDocumentSnapshotDataTuples } from '@dereekb/firebase';
 import { type Maybe, runAsyncTasksForValues } from '@dereekb/util';
-import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, validateOpenRouterModelConfig } from '@dereekb/openrouter';
+import { type OpenRouterDecisionQuestions, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, validateOpenRouterDecisionQuestions, validateOpenRouterModelConfig } from '@dereekb/openrouter';
 import {
   type CreateOpenRouterPromptVersionParams,
   type CreateOpenRouterPromptVersionResult,
@@ -200,7 +200,7 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
   const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
 
   return firebaseServerActionTransformFunctionFactory(updateOpenRouterPromptParamsType, async (params) => {
-    const { name, description, tags, state, activeVersion } = params;
+    const { name, description, tags, state, activeVersion, storeLocked } = params;
 
     return async (document: OpenRouterPromptDocument) => {
       await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
@@ -222,7 +222,7 @@ export function updateOpenRouterPromptFactory(context: OpenRouterPromptServerAct
           }
         }
 
-        await inTransaction.update({ n: name ?? undefined, d: description, t: tags, s: state ?? undefined, av: activeVersion, uat: new Date() });
+        await inTransaction.update({ n: name ?? undefined, d: description, t: tags, s: state ?? undefined, av: activeVersion, sl: storeLocked, uat: new Date() });
       });
 
       openRouterPromptService.clearCachedPrompt(document.id);
@@ -254,7 +254,7 @@ export function readOpenRouterPromptFactory(context: OpenRouterPromptServerActio
       // that exists only in code, while `readPrompt` always answers with something servable or throws.
       const [prompt, resolution] = await Promise.all([openRouterPromptService.loadPrompt(promptKey), openRouterPromptService.readPrompt({ promptKey, version })]);
       const { resolved, source } = resolution;
-      const validation = validateOpenRouterModelConfig(resolved.config);
+      const validation = validateOpenRouterModelConfig(resolved.config, { decision: resolved.questions != null });
 
       const result: ReadOpenRouterPromptResult = {
         prompt: prompt ?? null,
@@ -283,14 +283,23 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
   const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionFactory, openRouterPromptService } = context;
 
   return firebaseServerActionTransformFunctionFactory(createOpenRouterPromptVersionParamsType, async (params) => {
-    const { instructions, messages, config, notes, activate } = params;
+    const { instructions, messages, config, questions, notes, activate } = params;
 
     return async (document: OpenRouterPromptDocument): Promise<CreateOpenRouterPromptVersionResult> => {
       const modelConfig = (config ?? undefined) as Maybe<OpenRouterModelConfig>;
-      const validation = validateOpenRouterModelConfig(modelConfig ?? {});
+      const modelQuestions = (questions ?? undefined) as Maybe<OpenRouterDecisionQuestions>;
+      const validation = validateOpenRouterModelConfig(modelConfig ?? {}, { decision: modelQuestions != null });
 
       if (!validation.valid) {
         throw new Error(`Cannot create a version of OpenRouterPrompt "${document.id}": ${validation.errors.join(' ')}`);
+      }
+
+      if (modelQuestions != null) {
+        const questionValidation = validateOpenRouterDecisionQuestions(modelQuestions);
+
+        if (!questionValidation.valid) {
+          throw new Error(`Cannot create a version of OpenRouterPrompt "${document.id}": ${questionValidation.errors.join(' ')}`);
+        }
       }
 
       const result = await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
@@ -320,6 +329,7 @@ export function createOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
           i: instructions,
           m: messages?.map(({ role, content }) => ({ r: role, c: content })),
           c: modelConfig,
+          q: modelQuestions,
           nt: notes
         };
 
@@ -353,10 +363,11 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
   const { firebaseServerActionTransformFunctionFactory, openRouterPromptCollection, openRouterPromptVersionCollectionGroup, openRouterPromptService } = context;
 
   return firebaseServerActionTransformFunctionFactory(updateOpenRouterPromptVersionParamsType, async (params) => {
-    const { instructions, messages, config, notes } = params;
+    const { instructions, messages, config, questions, notes } = params;
 
     return async (document: OpenRouterPromptVersionDocument): Promise<UpdateOpenRouterPromptVersionResult> => {
       const inputConfig = config as Maybe<OpenRouterModelConfig>;
+      const inputQuestions = questions as Maybe<OpenRouterDecisionQuestions>;
 
       const validation = await openRouterPromptCollection.firestoreContext.runTransaction(async (transaction) => {
         const inTransaction = openRouterPromptVersionCollectionGroup.documentAccessorForTransaction(transaction).loadDocument(document.documentRef);
@@ -374,15 +385,27 @@ export function updateOpenRouterPromptVersionFactory(context: OpenRouterPromptSe
         // touches only the instructions must not be judged against an empty config and refused for
         // naming no model. An explicitly null config is judged as the empty config it would leave behind,
         // which is exactly the refusal that should happen.
-        const result = validateOpenRouterModelConfig((config === undefined ? version.c : inputConfig) ?? {});
+        // The same "judge what it will SAY" rule applied to the questions: an omitted `questions` leaves
+        // the version's own, so an edit touching only the instructions is still judged as the decision
+        // it remains rather than as a completion that names a System One model.
+        const nextQuestions = questions === undefined ? version.q : inputQuestions;
+        const result = validateOpenRouterModelConfig((config === undefined ? version.c : inputConfig) ?? {}, { decision: nextQuestions != null });
 
         if (!result.valid) {
           throw new Error(`Cannot update OpenRouterPromptVersion "${document.key}": ${result.errors.join(' ')}`);
         }
 
+        if (nextQuestions != null) {
+          const questionValidation = validateOpenRouterDecisionQuestions(nextQuestions);
+
+          if (!questionValidation.valid) {
+            throw new Error(`Cannot update OpenRouterPromptVersion "${document.key}": ${questionValidation.errors.join(' ')}`);
+          }
+        }
+
         // Undefined fields are stripped before the write, so an omitted field is left as it was. `null`
         // is passed through for the fields that can meaningfully carry nothing.
-        await inTransaction.update({ i: instructions, m: messages == null ? messages : messages.map(({ role, content }) => ({ r: role, c: content })), c: inputConfig, nt: notes });
+        await inTransaction.update({ i: instructions, m: messages == null ? messages : messages.map(({ role, content }) => ({ r: role, c: content })), c: inputConfig, q: inputQuestions, nt: notes });
         return result;
       });
 
@@ -482,13 +505,26 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
         throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": the definition declares version ${version}, which is not an integer >= 1.`);
       }
 
-      const validation = validateOpenRouterModelConfig(config);
+      const decision = definition.questions != null;
+      const validation = validateOpenRouterModelConfig(config, { decision });
 
       if (!validation.valid) {
         throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": ${validation.errors.join(' ')}`);
       }
 
       validation.warnings.forEach((warning) => warnings.push(`${promptKey}: ${warning}`));
+
+      if (decision) {
+        // A malformed question map is refused HERE rather than at the wire. The limits it enforces are
+        // quiet ones — an eleven-level Score looks entirely reasonable and is rejected by the route — so
+        // a seed that published one would produce a prompt that resolves, validates, and then fails
+        // every time it is asked.
+        const questionValidation = validateOpenRouterDecisionQuestions(definition.questions);
+
+        if (!questionValidation.valid) {
+          throw new Error(`Cannot seed OpenRouterPrompt "${promptKey}": ${questionValidation.errors.join(' ')}`);
+        }
+      }
     });
 
     /**
@@ -506,10 +542,18 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
       // reseed silently undoing it is the same class of bug as reverting an operator's rename. Decided
       // from the prompt alone, so an archived definition costs no further read.
       const archived = prompt?.s === OpenRouterPromptState.ARCHIVED;
+      // A STORE-LOCKED prompt is the same rule pointed at a different writer: its content is maintained
+      // at runtime, so code publishing over it would silently discard an operator's work. Reported as a
+      // warning rather than skipped in silence, because a definition whose version has moved ahead and
+      // never lands otherwise looks exactly like a seed that ran and did nothing.
+      const storeLocked = prompt?.sl === true;
 
       let outcome: SeedOpenRouterPromptOutcome;
 
       if (archived) {
+        outcome = 'skipped';
+      } else if (storeLocked) {
+        warnings.push(`${promptKey}: the prompt is store-locked, so the definition declaring version ${version} was not published. Unset \`storeLocked\` to let code seed it again.`);
         outcome = 'skipped';
       } else {
         const versionCollection = openRouterPromptVersionCollectionFactory(promptDocument);
@@ -533,6 +577,7 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
             i: definition.instructions,
             m: definition.messages?.map(({ role, content }) => ({ r: role, c: content })),
             c: definition.config,
+            q: definition.questions,
             nt: `Seeded from the code definition declaring version ${version}.`
           };
 
@@ -550,7 +595,10 @@ export function seedOpenRouterPromptsFactory(context: OpenRouterPromptServerActi
           await versionWriteAccessor.loadDocumentForId(targetVersionId).accessor.set(versionData);
 
           if (prompt == null) {
-            await promptWriteDocument.accessor.set({ cat: new Date(), n: definition.name, d: definition.description, s: OpenRouterPromptState.ACTIVE, lv: version, av: version });
+            // `storeLocked` is written ONLY here, on create. A definition cannot lock a prompt it did
+            // not create: doing so would let code seize one an operator is already maintaining, which
+            // is the exact thing the flag exists to prevent in the other direction.
+            await promptWriteDocument.accessor.set({ cat: new Date(), n: definition.name, d: definition.description, s: OpenRouterPromptState.ACTIVE, lv: version, av: version, sl: definition.storeLocked });
           } else {
             // `n`/`d`/`t` are deliberately untouched: they are operator-editable through
             // updateOpenRouterPrompt, and a scheduled reseed reverting a rename is a silent regression.

@@ -24,6 +24,21 @@ export interface FakeOpenRouterToolCall {
 }
 
 /**
+ * What the fake System One model should answer with, when the request went to `/systemone`.
+ */
+export interface FakeOpenRouterDecisionReply {
+  /**
+   * The answers, keyed by question id, in the WIRE shape (`{ type, noul }`, `{ type, choice }`, …).
+   *
+   * Deliberately untyped: a fixture has to be able to produce replies the declaration types forbid,
+   * which is the only way the membership check gets exercised at all.
+   */
+  readonly answers?: Maybe<Record<string, unknown>>;
+  readonly inputTokens?: Maybe<number>;
+  readonly outputTokens?: Maybe<number>;
+}
+
+/**
  * What the fake model should answer with on one turn.
  */
 export interface FakeOpenRouterReply {
@@ -50,6 +65,14 @@ export interface FakeOpenRouterReply {
    * Thrown instead of answered, for the transport-failure path.
    */
   readonly throws?: Maybe<Error>;
+  /**
+   * An HTTP status to answer with instead of a success, for the retryable-vs-permanent classification.
+   */
+  readonly status?: Maybe<number>;
+  /**
+   * What to answer a DECISION request with. Ignored on a request that went to `/responses`.
+   */
+  readonly decision?: Maybe<FakeOpenRouterDecisionReply>;
 }
 
 /**
@@ -66,7 +89,45 @@ export interface FakeOpenRouterClient {
    * Every request body sent, in order, serialized exactly as OpenRouter would have received it.
    */
   readonly requests: Record<string, unknown>[];
+  /**
+   * Every request URL sent, in order, positionally matching {@link FakeOpenRouterClient.requests}.
+   *
+   * Recorded because the body alone cannot tell a completion from a decision, and because a fake that
+   * never looks at the URL stays green no matter which route the SDK resolves — which is how this
+   * vendor's decisions endpoint was once shipped 404ing on every live call with a fully green suite.
+   */
+  readonly urls: string[];
   readonly callCount: number;
+}
+
+/**
+ * The path a System One (decisions) request goes to.
+ */
+export const FAKE_OPENROUTER_SYSTEM_ONE_PATH = '/systemone';
+
+/**
+ * Builds a `DecisionsResponse` JSON body in the WIRE shape the SDK's inbound schema parses.
+ *
+ * Note the snake_case token counts: the SDK decodes those to camelCase, so a fake emitting the decoded
+ * names would hide the rename the usage mapper reads through.
+ *
+ * @param reply - What the fake System One model should answer with.
+ * @param index - The call ordinal, used to make a distinct generation id.
+ * @returns The response body.
+ */
+export function fakeOpenRouterDecisionResponseBody(reply: Maybe<FakeOpenRouterDecisionReply>, index: number): Record<string, unknown> {
+  return {
+    id: `gen_dec_${index}`,
+    model: 'typesafe/jev-1.13-20260917',
+    provider: 'TypeSafe',
+    answers: reply?.answers ?? {},
+    usage: {
+      input_tokens: reply?.inputTokens ?? 100,
+      output_tokens: reply?.outputTokens ?? 20,
+      // Input alone at Jev's $0.042/Mtok rate — output is reported but not billed.
+      cost: ((reply?.inputTokens ?? 100) * 0.042) / 1_000_000
+    }
+  };
 }
 
 const FAKE_MODEL = 'openai/gpt-5.1';
@@ -146,6 +207,7 @@ export function fakeOpenRouterResponseBody(reply: FakeOpenRouterReply, index: nu
  */
 export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | FakeOpenRouterReply): FakeOpenRouterClient {
   const requests: Record<string, unknown>[] = [];
+  const urls: string[] = [];
   const factory: FakeOpenRouterReplyFactory = typeof replyFactory === 'function' ? replyFactory : () => replyFactory;
 
   const httpClient = new HTTPClient({
@@ -154,6 +216,7 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
       const body = (await request.clone().json()) as Record<string, unknown>;
       const index = requests.length;
       requests.push(body);
+      urls.push(request.url);
 
       const reply = await factory(body, index);
 
@@ -165,7 +228,18 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
         throw reply.throws;
       }
 
-      return new Response(JSON.stringify(fakeOpenRouterResponseBody(reply, index)), { status: 200, headers: { 'content-type': 'application/json' } });
+      const status = reply.status ?? 200;
+
+      if (status !== 200) {
+        return new Response(JSON.stringify({ error: { code: status, message: `fake failure ${status}` } }), { status, headers: { 'content-type': 'application/json' } });
+      }
+
+      // Branched on the URL rather than on the body, because the two surfaces are different ROUTES and
+      // answering a decision with a `/responses` body is exactly the mistake the branch exists to catch.
+      const isDecision = request.url.endsWith(FAKE_OPENROUTER_SYSTEM_ONE_PATH);
+      const responseBody = isDecision ? fakeOpenRouterDecisionResponseBody(reply.decision, index) : fakeOpenRouterResponseBody(reply, index);
+
+      return new Response(JSON.stringify(responseBody), { status: 200, headers: { 'content-type': 'application/json' } });
     }
   });
 
@@ -174,6 +248,7 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
   return {
     client,
     requests,
+    urls,
     get callCount() {
       return requests.length;
     }

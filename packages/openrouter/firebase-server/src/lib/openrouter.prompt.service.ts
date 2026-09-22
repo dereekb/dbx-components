@@ -206,8 +206,14 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
         resolved = definition;
         source = 'definition';
       }
-    } else if (definition != null && (storedActiveVersion == null || definition.version > storedActiveVersion)) {
+    } else if (definition != null && (storedActiveVersion == null || (definition.version > storedActiveVersion && prompt?.sl !== true))) {
       // Unpinned, and code is either standing in for the store or ahead of it.
+      //
+      // A STORE-LOCKED prompt (`sl`) cannot be overtaken: past this point the store is the source of
+      // truth, and a definition whose version has moved ahead is ignored rather than served. It can
+      // still STAND IN when the store holds nothing at all, which is what keeps a fresh environment —
+      // an emulator, a test, a project that has never been seeded — able to serve the prompt with no
+      // manual step first. The lock defends against being overwritten, not against being served.
       resolved = definition;
       source = 'definition';
     } else if (storedActiveVersion != null) {
@@ -229,7 +235,9 @@ export function openRouterPromptService(config: OpenRouterPromptServiceConfig): 
     }
 
     if (rejectInvalidConfig) {
-      const validation = validateOpenRouterModelConfig(resolved.config);
+      // Which arm the version belongs to is read off the version itself: a version carrying questions is
+      // a decision and needs a System One model, one without is a completion and must not have one.
+      const validation = validateOpenRouterModelConfig(resolved.config, { decision: resolved.questions != null });
 
       if (!validation.valid) {
         throw new OpenRouterPromptResolutionError(promptKey, `has an invalid config: ${validation.errors.join(' ')}`, resolved.version);
