@@ -63,16 +63,16 @@ export type UrlSearchParamsKeyValueTuple = [string, string];
  * @param input - The object to expand.
  * @returns The bracket-notation key/value tuples.
  *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, bracket, notation, nested, expand, tuples, encode
+ * @dbxUtilRelated make-url-search-params, make-url-search-params-string
+ *
  * @example
  * ```typescript
  * toBracketNotationSearchParamTuples({ calendarsToLoad: [{ credentialId: 1, externalId: 'a@b.com' }] });
  * // => [['calendarsToLoad[0][credentialId]', '1'], ['calendarsToLoad[0][externalId]', 'a@b.com']]
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory url
- * @dbxUtilTags url, query, search, params, bracket, notation, nested, expand, tuples, encode
- * @dbxUtilRelated make-url-search-params, make-url-search-params-string
  */
 export function toBracketNotationSearchParamTuples(input: Maybe<object>): UrlSearchParamsKeyValueTuple[] {
   const tuples: UrlSearchParamsKeyValueTuple[] = [];
@@ -156,6 +156,11 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
  * @param options - Optional configuration for filtering, omitting keys, and space encoding.
  * @returns The URL string with updated query parameters.
  *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, update, merge, append, override, querystring, encode
+ * @dbxUtilRelated make-url-search-params, make-url-search-params-string, merge-slash-paths
+ *
  * @example
  * ```typescript
  * // Add params to a URL with no query string
@@ -170,11 +175,6 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
  * updateUrlSearchParams('https://example.com', { scope: 'openid profile' }, { useUrlSearchSpaceHandling: true });
  * // => 'https://example.com?scope=openid%20profile'
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory url
- * @dbxUtilTags url, query, search, params, update, merge, append, override, querystring, encode
- * @dbxUtilRelated make-url-search-params, make-url-search-params-string, merge-slash-paths
  */
 export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
   const [basePath, existingQuery] = url.split('?', 2);

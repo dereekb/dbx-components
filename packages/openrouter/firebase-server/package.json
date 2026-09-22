@@ -15,7 +15,7 @@
     "@dereekb/util": "14.6.0",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.0",
-    "@openrouter/sdk": "^1.2.26",
+    "@openrouter/sdk": "^1.3.0",
     "arktype": "^2.2.0",
     "date-fns": "^4.1.0",
     "express": "^5.2.1",
