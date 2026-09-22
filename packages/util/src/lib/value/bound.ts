@@ -1,7 +1,7 @@
 import { type Maybe } from '../value/maybe.type';
 import { type Rectangle, rectangleOverlapsRectangle, type Vector } from './vector';
 import { type Writable } from 'ts-essentials';
-import { latLngPointFunction, type LatLngPoint, type LatLngPointInput, type LatLngPrecision, type LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE, copyLatLngPoint } from './point';
+import { latLngPointFunction, type LatLngPoint, type LatLngPointInput, type LatLngPrecision, type LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE, copyLatLngPoint, capLatValue, MIN_LONGITUDE_VALUE, MAX_LONGITUDE_VALUE } from './point';
 import { type DecisionFunction } from './decision';
 import { asArray, type ArrayOrValue, firstValue } from '../array';
 
@@ -452,6 +452,74 @@ export function extendLatLngBound(bound: LatLngBound, extendWith: ExtendLatLngBo
 /**
  * A decision function that checks whether a point or bound satisfies a spatial condition against a reference bound.
  */
+/**
+ * Scales a bound about its center point, growing it for a scale above 1 and shrinking it below 1.
+ *
+ * Use it to put a margin around a bound that was fitted tightly to its contents, so what sits on the very edge is not
+ * flush against it. The scale is proportional to the bound's own span rather than an absolute distance, so the margin
+ * stays visually consistent across bounds of different sizes.
+ *
+ * Latitude and longitude are each clamped to their valid range, so scaling a bound that already spans the globe
+ * returns the same extent rather than an impossible one. Like {@link latLngBoundCenterPoint}, this does not account
+ * for a bound that wraps the antimeridian.
+ *
+ * @param bound - Bound to scale.
+ * @param scale - Multiplier applied to the bound's span. `1` returns an equivalent bound, `1.2` is 20% wider and taller.
+ * @returns The scaled bound, sharing the input's center.
+ *
+ * @example
+ * ```ts
+ * const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 10, lng: 10 });
+ * scaleLatLngBound(bound, 1.2);
+ * // sw: { lat: -1, lng: -1 }, ne: { lat: 11, lng: 11 }
+ * ```
+ */
+export function scaleLatLngBound(bound: LatLngBound, scale: number): LatLngBound {
+  const center = latLngBoundCenterPoint(bound);
+  const diff = diffLatLngBoundPoints(bound);
+  const halfLat = (diff.lat / 2) * scale;
+  const halfLng = (diff.lng / 2) * scale;
+  const capLngValue = (lng: number) => Math.min(Math.max(lng, MIN_LONGITUDE_VALUE), MAX_LONGITUDE_VALUE);
+
+  return {
+    sw: { lat: capLatValue(center.lat - halfLat), lng: capLngValue(center.lng - halfLng) },
+    ne: { lat: capLatValue(center.lat + halfLat), lng: capLngValue(center.lng + halfLng) }
+  };
+}
+
+/**
+ * Recenters a bound on a point, growing it symmetrically so it still contains everything it did before.
+ *
+ * Moving a bound's center would normally push part of it out of view. This instead takes the greater distance from
+ * the new center to each opposing edge and mirrors it, so the result is centered on `center` and is a superset of
+ * `bound`. Use it when a view has to be anchored on something specific — a person's address, a selected marker —
+ * without dropping the content the bound was built to cover.
+ *
+ * Latitude and longitude are each clamped to their valid range. Like {@link latLngBoundCenterPoint}, this does not
+ * account for a bound that wraps the antimeridian.
+ *
+ * @param bound - Bound whose content must remain covered.
+ * @param center - Point the result is centered on.
+ * @returns A bound centered on `center` that contains `bound`.
+ *
+ * @example
+ * ```ts
+ * const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 10, lng: 10 });
+ * centerLatLngBoundOn(bound, { lat: 2, lng: 2 });
+ * // sw: { lat: -6, lng: -6 }, ne: { lat: 10, lng: 10 }
+ * ```
+ */
+export function centerLatLngBoundOn(bound: LatLngBound, center: LatLngPoint): LatLngBound {
+  const halfLat = Math.max(Math.abs(bound.ne.lat - center.lat), Math.abs(center.lat - bound.sw.lat));
+  const halfLng = Math.max(Math.abs(bound.ne.lng - center.lng), Math.abs(center.lng - bound.sw.lng));
+  const capLngValue = (lng: number) => Math.min(Math.max(lng, MIN_LONGITUDE_VALUE), MAX_LONGITUDE_VALUE);
+
+  return {
+    sw: { lat: capLatValue(center.lat - halfLat), lng: capLngValue(center.lng - halfLng) },
+    ne: { lat: capLatValue(center.lat + halfLat), lng: capLngValue(center.lng + halfLng) }
+  };
+}
+
 export type LatLngBoundCheckFunction = DecisionFunction<LatLngBoundOrPoint>;
 
 /**

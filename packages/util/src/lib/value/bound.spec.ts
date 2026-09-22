@@ -1,6 +1,21 @@
 import { type LatLngBound, isSameLatLngBound } from '@dereekb/util';
 import { isSameLatLngPoint, latLngPoint } from './point';
-import { boundToRectangle, isLatLngBound, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, latLngBound, latLngBoundCenterPoint, latLngBoundFromInput, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+import {
+  boundToRectangle,
+  isLatLngBound,
+  isLatLngBoundWithinLatLngBound,
+  isLatLngPointWithinLatLngBound,
+  latLngBound,
+  latLngBoundCenterPoint,
+  latLngBoundFromInput,
+  latLngBoundFullyWrapsMap,
+  latLngBoundFunction,
+  latLngBoundStrictlyWrapsMap,
+  centerLatLngBoundOn,
+  overlapsLatLngBoundFunction,
+  scaleLatLngBound,
+  TOTAL_SPAN_OF_LONGITUDE
+} from './bound';
 
 describe('isLatLngBound()', () => {
   const point = latLngPoint(20, 20);
@@ -330,5 +345,75 @@ describe('boundToRectangle()', () => {
       expect(rect.tr.x).toBeGreaterThan(TOTAL_SPAN_OF_LONGITUDE / 2);
       expect(rect.tr.x).toBe(ne.lng + TOTAL_SPAN_OF_LONGITUDE / 2);
     });
+  });
+});
+
+describe('scaleLatLngBound()', () => {
+  const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 10, lng: 10 });
+
+  it('should return an equivalent bound for a scale of 1.', () => {
+    const result = scaleLatLngBound(bound, 1);
+    expect(isSameLatLngBound(result, bound)).toBe(true);
+  });
+
+  it('should grow the bound about its center for a scale above 1.', () => {
+    const result = scaleLatLngBound(bound, 1.2);
+    expect(result.sw.lat).toBeCloseTo(-1);
+    expect(result.sw.lng).toBeCloseTo(-1);
+    expect(result.ne.lat).toBeCloseTo(11);
+    expect(result.ne.lng).toBeCloseTo(11);
+  });
+
+  it('should shrink the bound about its center for a scale below 1.', () => {
+    const result = scaleLatLngBound(bound, 0.5);
+    expect(result.sw.lat).toBeCloseTo(2.5);
+    expect(result.ne.lat).toBeCloseTo(7.5);
+  });
+
+  it('should retain the center point.', () => {
+    const center = latLngBoundCenterPoint(bound);
+    const result = latLngBoundCenterPoint(scaleLatLngBound(bound, 1.5));
+    expect(result.lat).toBeCloseTo(center.lat);
+    expect(result.lng).toBeCloseTo(center.lng);
+  });
+
+  it('should clamp to the valid latitude range instead of exceeding the poles.', () => {
+    const wide = latLngBound({ lat: -80, lng: -10 }, { lat: 80, lng: 10 });
+    const result = scaleLatLngBound(wide, 4);
+    expect(result.sw.lat).toBe(-90);
+    expect(result.ne.lat).toBe(90);
+  });
+});
+
+describe('centerLatLngBoundOn()', () => {
+  const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 10, lng: 10 });
+
+  it('should return an equivalent bound when already centered.', () => {
+    const result = centerLatLngBoundOn(bound, latLngBoundCenterPoint(bound));
+    expect(isSameLatLngBound(result, bound)).toBe(true);
+  });
+
+  it('should center the result on the input point.', () => {
+    const center = { lat: 2, lng: 2 };
+    const result = latLngBoundCenterPoint(centerLatLngBoundOn(bound, center));
+    expect(result.lat).toBeCloseTo(center.lat);
+    expect(result.lng).toBeCloseTo(center.lng);
+  });
+
+  it('should still contain the original bound.', () => {
+    const result = centerLatLngBoundOn(bound, { lat: 2, lng: 2 });
+    expect(isLatLngBoundWithinLatLngBound(bound, result)).toBe(true);
+  });
+
+  it('should mirror the greater distance to each edge.', () => {
+    const result = centerLatLngBoundOn(bound, { lat: 2, lng: 2 });
+    expect(result.sw.lat).toBeCloseTo(-6);
+    expect(result.ne.lat).toBeCloseTo(10);
+  });
+
+  it('should contain the original bound when centered outside of it.', () => {
+    const outside = { lat: 20, lng: 20 };
+    const result = centerLatLngBoundOn(bound, outside);
+    expect(isLatLngBoundWithinLatLngBound(bound, result)).toBe(true);
   });
 });
