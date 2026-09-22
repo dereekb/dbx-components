@@ -3,7 +3,7 @@ import { type CliEnvDefault, readEnvTokenEntry } from '../config/env';
 import { type CliEnvConfigComplete, resolveCliEnvOrThrow } from '../config/env.resolve';
 import { createCliFirestoreSessionCacheStore } from '../config/firestore-session.cache';
 import { buildCliPaths } from '../config/paths';
-import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
+import { type CliTokenEntry, createCliTokenCacheStore, didRotateRefreshToken, isTokenExpired, mergeRefreshedTokenEntry } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { type CliContext, createCliContext, getCliContext, setCliContext } from '../context/cli.context';
 import { type CliFirestoreBinding } from '../firestore/firestore.models';
@@ -172,28 +172,20 @@ async function refreshTokenEntry(input: RefreshTokenEntryInput): Promise<CliToke
   }
 
   const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-  const suppliedRefreshToken = entry.refreshToken;
   const refreshed = await refreshAccessToken({
     tokenEndpoint: meta.token_endpoint,
     clientId: env.clientId,
     clientSecret: env.clientSecret,
-    refreshToken: suppliedRefreshToken
+    refreshToken: entry.refreshToken
   });
 
-  const updated: CliTokenEntry = {
-    ...entry,
-    accessToken: refreshed.access_token,
-    refreshToken: refreshed.refresh_token ?? entry.refreshToken,
-    tokenType: refreshed.token_type ?? entry.tokenType,
-    scope: refreshed.scope ?? entry.scope,
-    expiresAt: Date.now() + (refreshed.expires_in ?? 0) * 1000
-  };
+  const updated: CliTokenEntry = mergeRefreshedTokenEntry({ entry, refreshed });
 
   if (updated.fromEnv) {
     // Service tokens do not rotate, so a one-shot env-sourced invocation is durable without
     // persisting. If a *rotating* refresh token was supplied, the rotation is lost on exit —
     // warn that env credentials should be non-rotating service tokens.
-    if (refreshed.refresh_token != null && refreshed.refresh_token !== suppliedRefreshToken) {
+    if (didRotateRefreshToken({ entry, refreshed })) {
       process.stderr.write('Warning: the refresh token supplied via environment rotated on use; the rotated token cannot be persisted for a one-shot invocation. Use a non-rotating service token (auth login --service-token).\n');
     }
   } else {

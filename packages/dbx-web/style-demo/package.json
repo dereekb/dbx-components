@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/dbx-web/style-demo",
-  "version": "14.6.0",
+  "version": "14.7.0",
   "sideEffects": false,
   "peerDependencies": {
     "@angular/common": "22.1.4",
     "@angular/core": "22.1.4",
     "@angular/material": "^22.1.4",
-    "@dereekb/dbx-core": "14.6.0",
-    "@dereekb/dbx-web": "14.6.0",
-    "@dereekb/util": "14.6.0",
-    "@dereekb/vitest": "14.6.0"
+    "@dereekb/dbx-core": "14.7.0",
+    "@dereekb/dbx-web": "14.7.0",
+    "@dereekb/util": "14.7.0",
+    "@dereekb/vitest": "14.7.0"
   },
   "devDependencies": {
     "@angular/platform-browser": "22.1.4",

@@ -373,6 +373,34 @@ function stringifyEnvelope(value: unknown): string {
 }
 
 /**
+ * Applies the configured `--pick` filter to the document payload(s) carried by a command result.
+ *
+ * Returns `unknown` rather than `T` because picking REDUCES each payload — the reduced value is a
+ * partial view of the document and does not satisfy the result's own type.
+ *
+ * @param data - The full command result.
+ * @param pick - Reduces a document to the configured fields. Apply it to each payload, not the wrapper.
+ * @returns The result with its payload(s) reduced, wrapper fields intact.
+ */
+export type CliOutputPickApplier<T> = (data: T, pick: (value: unknown) => unknown) => unknown;
+
+/**
+ * Per-command output overrides for {@link outputResult}.
+ */
+export interface CliOutputResultOptions<T> {
+  /**
+   * Redirects the `--pick` filter into the result's document payload(s).
+   *
+   * Read commands wrap documents in an envelope (`{ key, data }`, `{ results, errors }`), so the
+   * default top-level pick can only ever match the wrapper's own keys — a pick naming real document
+   * fields silently yields `{}`, which is indistinguishable from an empty document. Supplied by the
+   * command because only it knows its envelope shape. Commands whose result *is* the payload
+   * (the common case) omit this and keep the top-level behavior.
+   */
+  readonly applyPick?: CliOutputPickApplier<T>;
+}
+
+/**
  * Prints a successful command result as a `{ ok: true, data, meta? }` JSON envelope on stdout.
  *
  * Also writes a full unfiltered dump to disk when `dumpDir` is configured, then applies any
@@ -381,12 +409,23 @@ function stringifyEnvelope(value: unknown): string {
  *
  * @param data - The command result to emit.
  * @param meta - Optional additional metadata to attach to the envelope.
+ * @param options - Optional per-command overrides — see {@link CliOutputResultOptions}.
  */
-export function outputResult<T>(data: T, meta?: Record<string, unknown>): void {
+export function outputResult<T>(data: T, meta?: Record<string, unknown>, options?: CliOutputResultOptions<T>): void {
   dumpResponse(data, meta);
 
-  const outputData = _outputOptions.pick ? pickFields(data, _outputOptions.pick) : data;
-  const output: CliSuccessOutput<typeof outputData> = { ok: true, data: outputData, ...(meta ? { meta } : {}) };
+  const pick = _outputOptions.pick;
+  let outputData: unknown;
+
+  if (!pick) {
+    outputData = data;
+  } else if (options?.applyPick) {
+    outputData = options.applyPick(data, (value) => pickFields(value, pick));
+  } else {
+    outputData = pickFields(data, pick);
+  }
+
+  const output: CliSuccessOutput<unknown> = { ok: true, data: outputData, ...(meta ? { meta } : {}) };
   console.log(stringifyEnvelope(output));
 }
 

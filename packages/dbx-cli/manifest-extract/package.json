@@ -1,20 +1,20 @@
 {
   "name": "@dereekb/dbx-cli/manifest-extract",
-  "version": "14.6.0",
+  "version": "14.7.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/date": "14.6.0",
-    "@dereekb/dbx-cli": "14.6.0",
-    "@dereekb/firebase": "14.6.0",
-    "@dereekb/model": "14.6.0",
-    "@dereekb/nestjs": "14.6.0",
-    "@dereekb/oauth-resource": "14.6.0",
-    "@dereekb/rxjs": "14.6.0",
-    "@dereekb/util": "14.6.0",
+    "@dereekb/date": "14.7.0",
+    "@dereekb/dbx-cli": "14.7.0",
+    "@dereekb/firebase": "14.7.0",
+    "@dereekb/model": "14.7.0",
+    "@dereekb/nestjs": "14.7.0",
+    "@dereekb/oauth-resource": "14.7.0",
+    "@dereekb/rxjs": "14.7.0",
+    "@dereekb/util": "14.7.0",
     "ts-morph": "^28.0.0"
   },
   "devDependencies": {
-    "@dereekb/firebase": "14.6.0"
+    "@dereekb/firebase": "14.7.0"
   }
 }

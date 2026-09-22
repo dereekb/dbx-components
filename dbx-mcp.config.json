@@ -123,6 +123,14 @@
         "out": "packages/dbx-cli/generated/dereekb-util.utils.mcp.generated.json"
       },
       {
+        "project": "packages/util/fetch",
+        "source": "@dereekb/util/fetch",
+        "module": "@dereekb/util/fetch",
+        "include": ["src/lib/**/*.ts"],
+        "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+        "out": "packages/dbx-cli/generated/dereekb-util-fetch.utils.mcp.generated.json"
+      },
+      {
         "project": "packages/date",
         "source": "@dereekb/date",
         "module": "@dereekb/date",

@@ -63,6 +63,11 @@ export type UrlSearchParamsKeyValueTuple = [string, string];
  * @param input - The object to expand.
  * @returns The bracket-notation key/value tuples.
  *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, bracket, notation, nested, expand, tuples, encode
+ * @dbxUtilRelated make-url-search-params, make-url-search-params-string
+ *
  * @example
  * ```typescript
  * toBracketNotationSearchParamTuples({ calendarsToLoad: [{ credentialId: 1, externalId: 'a@b.com' }] });
@@ -95,6 +100,11 @@ export function toBracketNotationSearchParamTuples(input: Maybe<object>): UrlSea
  * @param input - One or more objects (or nullish values) whose key-value pairs become search parameters.
  * @param options - Optional configuration for filtering, omitting keys, and space encoding.
  * @returns A URLSearchParams instance built from the merged and filtered input.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, urlsearchparams, encode, merge, filter, omit, querystring
+ * @dbxUtilRelated make-url-search-params-string, update-url-search-params, to-bracket-notation-search-param-tuples, merge-make-url-search-params-options
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
   const { omitKeys, filterEmptyValues: filterValues, useBracketNotation } = options ?? {};
@@ -114,13 +124,18 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
  * Creates a URL query string from the input objects.
  *
  * Equivalent to `makeUrlSearchParams(...).toString()`, but respects the
- * {@link MakeUrlSearchParamsOptions.usePercentEncoding} option to produce
+ * {@link MakeUrlSearchParamsOptions.useUrlSearchSpaceHandling} option to produce
  * RFC 3986 percent-encoded output (`%20` for spaces) instead of the
  * `application/x-www-form-urlencoded` default (`+` for spaces).
  *
  * @param input - Objects to encode as query parameters.
  * @param options - Encoding options.
  * @returns The encoded query string (without a leading `?`)
+ *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, string, querystring, encode, percent, space, stringify
+ * @dbxUtilRelated make-url-search-params, update-url-search-params
  */
 export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
   const params = makeUrlSearchParams(input, options);
@@ -140,6 +155,11 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
  * @param params - New search parameters to merge into the URL.
  * @param options - Optional configuration for filtering, omitting keys, and space encoding.
  * @returns The URL string with updated query parameters.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, update, merge, append, override, querystring, encode
+ * @dbxUtilRelated make-url-search-params, make-url-search-params-string, merge-slash-paths
  *
  * @example
  * ```typescript
@@ -185,6 +205,11 @@ export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Ma
  *
  * @param options - One or more options objects whose omitKeys sets are combined.
  * @returns A single MakeUrlSearchParamsOptions with the union of all omitKeys.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory url
+ * @dbxUtilTags url, query, search, params, options, merge, omit, keys, config
+ * @dbxUtilRelated make-url-search-params
  */
 export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>): MakeUrlSearchParamsOptions {
   const omitKeys = new Set<ObjectKey>();

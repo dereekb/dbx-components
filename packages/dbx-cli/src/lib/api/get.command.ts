@@ -79,6 +79,7 @@ export const GET_COMMAND: CommandModule = {
     const resolved = await resolveCliReadSource({ context, via: coerceCliReadVia(argv.via), modelType });
     const result = resolved.models ? await getModelOverFirestore({ models: resolved.models, modelType, key }) : await context.getModel(modelType, key);
 
-    outputResult(result, cliReadResultMeta(resolved));
+    // `--pick` names fields of the DOCUMENT, not of the `{ key, data }` read envelope.
+    outputResult(result, cliReadResultMeta(resolved), { applyPick: (r, pick) => ({ ...r, data: pick(r.data) }) });
   })
 };

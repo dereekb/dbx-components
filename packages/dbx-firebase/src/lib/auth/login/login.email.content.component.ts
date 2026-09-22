@@ -10,8 +10,7 @@ import { type DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxAnchorComponent, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 /**
@@ -20,9 +19,17 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
   /**
-   * Anchor to the app's password reset page. When set, the recovery view offers an "Already have a recovery code?" link to it.
+   * Anchor to the app's password reset page. When set, the recovery view offers an "Already have a recovery code?" link to it,
+   * and acknowledging a sent recovery email navigates there instead of returning to the login form.
    */
   readonly passwordResetAnchor?: Maybe<ClickableAnchor>;
+  /**
+   * Values to pre-populate the login form with, from a {@link DbxFirebaseLoginPrefill}.
+   *
+   * The username also seeds the recovery form, so a user that arrives with their address filled in and then follows
+   * "Forgot Password?" is not asked for it a second time.
+   */
+  readonly defaultValue?: Maybe<DbxFirebaseEmailFormValue>;
 }
 
 /**
@@ -40,10 +47,10 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
   imports: [
     NgTemplateOutlet,
     DbxErrorComponent,
+    DbxAnchorComponent,
     DbxLinkComponent,
     DbxActionErrorDirective,
     DbxActionFormDirective,
-    MatButtonModule,
     DbxActionModule,
     DbxButtonComponent,
     DbxButtonSpacerDirective,
@@ -62,8 +69,8 @@ export class DbxFirebaseLoginEmailContentComponent {
     passwordConfig: this.config.passwordConfig
   };
 
-  private readonly _emailFormValueSignal = signal<Maybe<DbxFirebaseEmailFormValue>>(undefined);
-  private readonly _recoveryFormValueSignal = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(undefined);
+  private readonly _emailFormValueSignal = signal<Maybe<DbxFirebaseEmailFormValue>>(this.config.defaultValue);
+  private readonly _recoveryFormValueSignal = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(this.config.defaultValue?.username ? { email: this.config.defaultValue.username } : undefined);
   private readonly _emailModeSignal = signal<DbxFirebaseLoginEmailContentMode>('login');
 
   readonly emailFormValueSignal = this._emailFormValueSignal.asReadonly();
@@ -144,6 +151,15 @@ export class DbxFirebaseLoginEmailContentComponent {
   readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (_x) => {
     this._emailModeSignal.set('recoversent');
   };
+
+  /**
+   * Whether the sent-recovery view sends the user on to the password reset page rather than back to the login form.
+   *
+   * @returns True when a password reset page is configured to land on.
+   */
+  get hasPasswordResetAnchor(): boolean {
+    return this.passwordResetAnchor != null;
+  }
 
   clickedRecoveryAcknowledged() {
     this._emailModeSignal.set('login');

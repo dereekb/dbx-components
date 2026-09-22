@@ -53,7 +53,23 @@ export interface LoadUtilRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.utils.mcp.generated.json', 'dereekb-date.utils.mcp.generated.json', 'dereekb-rxjs.utils.mcp.generated.json', 'dereekb-model.utils.mcp.generated.json'] as const;
+/**
+ * The bundled `@dereekb/*` utils manifests to load at startup. Must stay in step with the `utils.scan` entries in
+ * `dbx-mcp.config.json` — a generated manifest that is missing from this list is silently invisible to
+ * `dbx_util_lookup`/`dbx_util_search` no matter how well its exports are tagged.
+ *
+ * Loading is non-strict, so naming a file that a given workspace has not generated warns and skips rather than
+ * failing server startup.
+ */
+export const DEFAULT_BUNDLED_FILENAMES = [
+  'dereekb-util.utils.mcp.generated.json',
+  'dereekb-util-fetch.utils.mcp.generated.json',
+  'dereekb-date.utils.mcp.generated.json',
+  'dereekb-rxjs.utils.mcp.generated.json',
+  'dereekb-model.utils.mcp.generated.json',
+  'dereekb-firebase.utils.mcp.generated.json',
+  'dereekb-firebase-server.utils.mcp.generated.json'
+] as const;
 
 const DEFAULT_BUNDLED_PATHS: BundledUtilManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

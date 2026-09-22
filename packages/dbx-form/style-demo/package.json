@@ -1,17 +1,17 @@
 {
   "name": "@dereekb/dbx-form/style-demo",
-  "version": "14.6.0",
+  "version": "14.7.0",
   "sideEffects": false,
   "peerDependencies": {
     "@angular/common": "22.1.4",
     "@angular/core": "22.1.4",
     "@angular/material": "^22.1.4",
-    "@dereekb/dbx-core": "14.6.0",
-    "@dereekb/dbx-form": "14.6.0",
-    "@dereekb/dbx-web": "14.6.0",
-    "@dereekb/rxjs": "14.6.0",
-    "@dereekb/util": "14.6.0",
-    "@dereekb/vitest": "14.6.0",
+    "@dereekb/dbx-core": "14.7.0",
+    "@dereekb/dbx-form": "14.7.0",
+    "@dereekb/dbx-web": "14.7.0",
+    "@dereekb/rxjs": "14.7.0",
+    "@dereekb/util": "14.7.0",
+    "@dereekb/vitest": "14.7.0",
     "@ng-forge/dynamic-forms": "1.2.0-next.8",
     "rxjs": "^7.8.2"
   }

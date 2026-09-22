@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { type DbxFirebaseLoginMode, DbxFirebaseExternalConnectionService, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
+import { type DbxFirebaseLoginMode, DbxFirebaseExternalConnectionService, DbxFirebaseLoginComponent, DbxFirebaseLoginPrefillDirective, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 import {
   USER_EXTERNAL_CONNECTION_EXTERNAL_ACCOUNT_IN_USE_ERROR_CODE,
   USER_EXTERNAL_CONNECTION_SIGN_IN_DENIED_ERROR_CODE,
@@ -41,7 +41,7 @@ export const DEMO_EXTERNAL_CONNECTION_SIGN_IN_ERROR_FALLBACK_MESSAGE = 'That sig
 @Component({
   selector: 'app-login-view',
   templateUrl: './login.view.component.html',
-  imports: [DbxFirebaseLoginComponent, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent, DbxTextColorDirective]
+  imports: [DbxFirebaseLoginComponent, DbxFirebaseLoginPrefillDirective, DbxLinkComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent, DbxTextColorDirective]
 })
 export class DemoAuthLoginViewComponent {
   private readonly _externalConnectionService = inject(DbxFirebaseExternalConnectionService);
