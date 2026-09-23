@@ -2,12 +2,11 @@ import { randomBytes } from 'node:crypto';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { type Maybe, type Seconds, unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { type OidcEntry, type OidcScope, OIDC_ENTRY_CLI_TOKEN_CLAIM_TYPE } from '@dereekb/firebase';
-import { assertEndpointOidcScope, badRequestError, clientIpsMatch, forbiddenError, type FirebaseServerAuthData, notFoundError, oidcScopesFromRequestAuth, unauthenticatedError } from '@dereekb/firebase-server';
+import { assertEndpointOidcScope, badRequestError, clientIpsMatch, forbiddenError, type FirebaseServerAuthData, notFoundError, oidcScopesFromRequestAuth, oidcSessionExpiresAtFromRequestAuth, unauthenticatedError } from '@dereekb/firebase-server';
 import { OidcModuleConfig } from '../oidc.config';
 import { OidcService } from '../service/oidc.service';
 import { OidcEncryptionService } from '../service/oidc.encryption.service';
 import { OidcServerFirestoreCollections } from '../model/model';
-import { DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '../service/oidc.session-ttl';
 import {
   CLI_TOKEN_ADMIN_PREDICATE,
   CLI_TOKEN_CLAIM_CODE_BYTES,
@@ -408,15 +407,8 @@ function parentGrantId(auth: Maybe<FirebaseServerAuthData>): Maybe<string> {
  * @returns Remaining seconds on the parent grant, or `undefined`.
  */
 function parentGrantRemainingSeconds(auth: Maybe<FirebaseServerAuthData>): Maybe<Seconds> {
-  const claims = (auth as Maybe<{ oidcValidatedToken?: Record<string, unknown>; token?: Record<string, unknown> }>) ?? {};
-  const raw = claims.oidcValidatedToken?.[DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM] ?? claims.token?.[DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM];
-  let result: Maybe<Seconds>;
-
-  if (typeof raw === 'number' && Number.isFinite(raw)) {
-    result = raw - unixDateTimeSecondsNumberForNow();
-  }
-
-  return result;
+  const expiresAt = oidcSessionExpiresAtFromRequestAuth(auth);
+  return expiresAt == null ? undefined : expiresAt - unixDateTimeSecondsNumberForNow();
 }
 
 /**

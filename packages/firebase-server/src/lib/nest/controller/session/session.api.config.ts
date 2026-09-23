@@ -50,6 +50,17 @@ export const MAX_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS: Milliseconds = 7 * 24 *
  */
 export const FIREBASE_CUSTOM_TOKEN_EXCHANGE_WINDOW_MILLIS: Milliseconds = 60 * 60 * 1000;
 
+/**
+ * Default grace allowed below {@link MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS} when checking the
+ * caller's remaining lifetime (2 minutes).
+ *
+ * A session cannot be shorter than that App Check floor, so a caller whose own credential ends sooner
+ * is refused rather than handed a session that outlives it. The leeway covers the unavoidable delay
+ * between minting a credential and using it: a credential minted to last exactly the floor can still
+ * open a session for this long afterwards, and that session outlives it by at most this much.
+ */
+export const DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS: Milliseconds = 2 * 60 * 1000;
+
 // MARK: Admin Predicate
 /**
  * Signature for the predicate that authorizes a caller to open a direct-Firestore session.
@@ -96,6 +107,13 @@ export abstract class SessionApiModuleConfig {
    * Defaults to {@link DEFAULT_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS}.
    */
   readonly appCheckTokenTtlMillis?: Milliseconds;
+  /**
+   * Grace allowed below {@link MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS} when checking an OIDC
+   * caller's remaining lifetime. A caller with less than `floor - leeway` left is refused.
+   *
+   * Defaults to {@link DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS}.
+   */
+  readonly callerExpiryLeewayMillis?: Milliseconds;
   /**
    * OIDC scope term an OIDC caller must hold to open a session. Defaults to
    * {@link FIRESTORE_SESSION_OIDC_SCOPE}. Pass `null` to disable scope enforcement entirely (the admin

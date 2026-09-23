@@ -3,8 +3,17 @@ import { type Maybe } from '@dereekb/util';
 import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { MISSING_ENDPOINT_OIDC_SCOPE_ERROR_CODE } from '../api.scope';
-import { DEFAULT_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS, MAX_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS, MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS, type FirestoreSessionAdminPredicate, type SessionApiModuleConfig, firestoreSessionAppCheckTtlMillis } from './session.api.config';
-import { FIRESTORE_SESSION_FORBIDDEN_ERROR_CODE, FirestoreSessionApiService } from './session.api.service';
+import { DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '../api.session-expiry';
+import {
+  DEFAULT_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS,
+  DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS,
+  MAX_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS,
+  MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS,
+  type FirestoreSessionAdminPredicate,
+  type SessionApiModuleConfig,
+  firestoreSessionAppCheckTtlMillis
+} from './session.api.config';
+import { FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE, FIRESTORE_SESSION_FORBIDDEN_ERROR_CODE, FirestoreSessionApiService } from './session.api.service';
 
 // MARK: Helpers
 const TEST_UID = 'testuid';
@@ -13,6 +22,17 @@ const TEST_APP_ID = '1:1234567890:web:abcdef';
 function authWithScope(scope: Maybe<string>, uid: string = TEST_UID): FirebaseServerAuthData {
   return { uid, token: scope == null ? {} : { scope } } as unknown as FirebaseServerAuthData;
 }
+
+/**
+ * Builds an OIDC caller whose own grant expires `remainingMillis` from now, carried the way the bearer
+ * middleware attaches it (`oidcValidatedToken`).
+ */
+function oidcAuthExpiringIn(remainingMillis: number): FirebaseServerAuthData {
+  const expiresAt = Math.floor((Date.now() + remainingMillis) / 1000);
+  return { uid: TEST_UID, token: { scope: FIRESTORE_SESSION_OIDC_SCOPE }, oidcValidatedToken: { scope: FIRESTORE_SESSION_OIDC_SCOPE, [DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM]: expiresAt } } as unknown as FirebaseServerAuthData;
+}
+
+const MINUTE_MILLIS = 60 * 1000;
 
 interface MakeServiceInput {
   readonly config?: Maybe<SessionApiModuleConfig>;
@@ -150,6 +170,72 @@ describe('FirestoreSessionApiService', () => {
 
       expect(expiresAt).toBeGreaterThanOrEqual(before + shortTtl);
       expect(expiresAt).toBeLessThan(before + shortTtl + 5000);
+    });
+
+    describe('caller-bounded lifetime', () => {
+      it('should cap the App Check ttl and expiresAt at the caller expiry', async () => {
+        const remaining = 45 * MINUTE_MILLIS;
+        const { service, createAppCheckToken } = makeService({ adminPredicate: () => true, config: { appCheckAppId: TEST_APP_ID } });
+        const before = Date.now();
+        const result = await service.createFirestoreSession(oidcAuthExpiringIn(remaining));
+
+        const requestedTtl = createAppCheckToken.mock.calls[0][1].ttlMillis as number;
+        expect(requestedTtl).toBeLessThanOrEqual(remaining);
+        expect(requestedTtl).toBeGreaterThan(remaining - 5000);
+
+        const expiresAt = new Date(result.expiresAt).getTime();
+        expect(expiresAt).toBeLessThanOrEqual(before + remaining);
+        expect(expiresAt).toBeGreaterThan(before + remaining - 5000);
+      });
+
+      it('should not lengthen the session for a caller that outlives the configured ttl', async () => {
+        const { service, createAppCheckToken } = makeService({ adminPredicate: () => true, config: { appCheckAppId: TEST_APP_ID } });
+        await service.createFirestoreSession(oidcAuthExpiringIn(24 * 60 * MINUTE_MILLIS));
+
+        expect(createAppCheckToken).toHaveBeenCalledWith(TEST_APP_ID, { ttlMillis: DEFAULT_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS });
+      });
+
+      it('should cap expiresAt at the caller expiry even without App Check', async () => {
+        const remaining = 40 * MINUTE_MILLIS;
+        const { service } = makeService({ adminPredicate: () => true });
+        const before = Date.now();
+        const result = await service.createFirestoreSession(oidcAuthExpiringIn(remaining));
+
+        expect(new Date(result.expiresAt).getTime()).toBeLessThanOrEqual(before + remaining);
+      });
+
+      it('should mint within the leeway, clamping the App Check ttl to the floor', async () => {
+        const remaining = MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS - DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS / 2;
+        const { service, createAppCheckToken } = makeService({ adminPredicate: () => true, config: { appCheckAppId: TEST_APP_ID } });
+        const before = Date.now();
+        const result = await service.createFirestoreSession(oidcAuthExpiringIn(remaining));
+
+        expect(createAppCheckToken).toHaveBeenCalledWith(TEST_APP_ID, { ttlMillis: MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS });
+        expect(new Date(result.expiresAt).getTime()).toBeLessThanOrEqual(before + remaining);
+      });
+
+      it('should refuse a caller with less than the floor minus the leeway remaining', async () => {
+        const remaining = MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS - DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS - MINUTE_MILLIS;
+        const { service, createCustomToken, createAppCheckToken } = makeService({ adminPredicate: () => true, config: { appCheckAppId: TEST_APP_ID } });
+        const code = await codeOfRejection(() => service.createFirestoreSession(oidcAuthExpiringIn(remaining)));
+
+        expect(code).toBe(FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE);
+        expect(createCustomToken).not.toHaveBeenCalled();
+        expect(createAppCheckToken).not.toHaveBeenCalled();
+      });
+
+      it('should refuse a caller whose credential already expired', async () => {
+        const { service } = makeService({ adminPredicate: () => true });
+        const code = await codeOfRejection(() => service.createFirestoreSession(oidcAuthExpiringIn(-MINUTE_MILLIS)));
+        expect(code).toBe(FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE);
+      });
+
+      it('should honor a configured leeway', async () => {
+        const remaining = MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS - 3 * MINUTE_MILLIS;
+        const { service } = makeService({ adminPredicate: () => true, config: { callerExpiryLeewayMillis: 5 * MINUTE_MILLIS } });
+        const result = await service.createFirestoreSession(oidcAuthExpiringIn(remaining));
+        expect(result.customToken).toBe('custom-token');
+      });
     });
 
     it('should honor an app-supplied requiredScope override', async () => {

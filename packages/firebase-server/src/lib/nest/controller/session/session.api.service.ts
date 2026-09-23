@@ -6,12 +6,30 @@ import { FIREBASE_APP_TOKEN } from '../../firebase/firebase.module';
 import { forbiddenError, unauthenticatedError } from '../../../function/error';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { assertEndpointOidcScope, oidcScopesFromRequestAuth } from '../api.scope';
-import { DEFAULT_FIRESTORE_SESSION_REQUIRED_OIDC_SCOPE, FIREBASE_CUSTOM_TOKEN_EXCHANGE_WINDOW_MILLIS, FIRESTORE_SESSION_ADMIN_PREDICATE, FIRESTORE_SESSION_API_PATH, type FirestoreSessionAdminPredicate, SessionApiModuleConfig, firestoreSessionAppCheckTtlMillis } from './session.api.config';
+import { oidcSessionExpiresAtFromRequestAuth } from '../api.session-expiry';
+import {
+  DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS,
+  DEFAULT_FIRESTORE_SESSION_REQUIRED_OIDC_SCOPE,
+  FIREBASE_CUSTOM_TOKEN_EXCHANGE_WINDOW_MILLIS,
+  FIRESTORE_SESSION_ADMIN_PREDICATE,
+  FIRESTORE_SESSION_API_PATH,
+  type FirestoreSessionAdminPredicate,
+  MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS,
+  SessionApiModuleConfig,
+  firestoreSessionAppCheckTtlMillis
+} from './session.api.config';
 
 /**
  * Error code thrown when the caller is not authorized to open a direct-Firestore session.
  */
 export const FIRESTORE_SESSION_FORBIDDEN_ERROR_CODE = 'FIRESTORE_SESSION_FORBIDDEN_ERROR';
+
+/**
+ * Error code thrown when the caller's own OIDC credential expires too soon to back a session — less
+ * than {@link MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS} minus the configured leeway remains. The
+ * client should re-authenticate (or mint a fresh CLI handoff) and try again.
+ */
+export const FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE = 'FIRESTORE_SESSION_CALLER_EXPIRING_ERROR';
 
 /**
  * A short-lived credential bundle that lets a headless client connect directly to Firestore as the
@@ -59,6 +77,20 @@ export interface FirestoreSessionResult {
  *
  * The custom token is ALWAYS minted for `auth.uid`; there is no way to ask for someone else's session,
  * so a granted session is exactly as privileged as the caller already is under Firestore rules.
+ *
+ * ## Lifetime
+ *
+ * A session never outlives the OIDC credential that opened it (read from the caller's
+ * `dbx_session_expires_at` claim): the App Check TTL and the reported `expiresAt` are both capped at
+ * the caller's expiry. The App Check token cannot be shorter than
+ * {@link MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS}, so a caller with less than that floor (minus
+ * {@link SessionApiModuleConfig.callerExpiryLeewayMillis}) remaining is refused with
+ * {@link FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE}. Inside the leeway the attestation may outlive
+ * the caller by at most the leeway.
+ *
+ * The Firebase custom token's one-hour exchange window is fixed by Firebase and cannot be shortened;
+ * the capped `expiresAt` is what stops a well-behaved client from reusing the session past its caller.
+ * A caller with no expiry claim (a non-OIDC Firebase ID token) is not bounded.
  */
 @Injectable()
 export class FirestoreSessionApiService {
@@ -117,6 +149,23 @@ export class FirestoreSessionApiService {
     });
 
     const now = Date.now();
+    const callerExpiresAtSeconds = oidcSessionExpiresAtFromRequestAuth(auth);
+    const callerExpiresAtMillis: Maybe<number> = callerExpiresAtSeconds == null ? undefined : callerExpiresAtSeconds * 1000;
+
+    if (callerExpiresAtMillis != null) {
+      const leewayMillis = this._config?.callerExpiryLeewayMillis ?? DEFAULT_FIRESTORE_SESSION_CALLER_EXPIRY_LEEWAY_MILLIS;
+      const minimumRemainingMillis = MIN_FIRESTORE_SESSION_APP_CHECK_TTL_MILLIS - leewayMillis;
+      const remainingMillis = callerExpiresAtMillis - now;
+
+      if (remainingMillis < minimumRemainingMillis) {
+        throw forbiddenError({
+          status: 403,
+          code: FIRESTORE_SESSION_CALLER_EXPIRING_ERROR_CODE,
+          message: `The calling credential expires in ${Math.max(0, Math.floor(remainingMillis / 60000))} minute(s), but a direct-Firestore session needs at least ${Math.ceil(minimumRemainingMillis / 60000)}. Re-authenticate and try again.`
+        });
+      }
+    }
+
     const customToken = await this._app.auth().createCustomToken(uid);
 
     let appCheckToken: Maybe<string>;
@@ -125,14 +174,16 @@ export class FirestoreSessionApiService {
     const appCheckAppId = this._config?.appCheckAppId;
 
     if (appCheckAppId) {
-      const ttlMillis = firestoreSessionAppCheckTtlMillis(this._config?.appCheckTokenTtlMillis);
+      const configuredTtlMillis = firestoreSessionAppCheckTtlMillis(this._config?.appCheckTokenTtlMillis);
+      // never ask for an attestation that outlives the caller; the floor clamp applies inside the leeway
+      const ttlMillis = callerExpiresAtMillis == null ? configuredTtlMillis : firestoreSessionAppCheckTtlMillis(Math.min(configuredTtlMillis, callerExpiresAtMillis - now));
       const created = await this._app.appCheck().createToken(appCheckAppId, { ttlMillis });
       appCheckToken = created.token;
       appCheckTtlMillis = created.ttlMillis ?? ttlMillis;
     }
 
-    // the session lives only as long as its shortest-lived credential
-    const expiresAtMillis = Math.min(now + FIREBASE_CUSTOM_TOKEN_EXCHANGE_WINDOW_MILLIS, ...(appCheckTtlMillis == null ? [] : [now + appCheckTtlMillis]));
+    // the session lives only as long as its shortest-lived credential, and never past the caller's own
+    const expiresAtMillis = Math.min(now + FIREBASE_CUSTOM_TOKEN_EXCHANGE_WINDOW_MILLIS, ...(appCheckTtlMillis == null ? [] : [now + appCheckTtlMillis]), ...(callerExpiresAtMillis == null ? [] : [callerExpiresAtMillis]));
 
     return {
       uid,
