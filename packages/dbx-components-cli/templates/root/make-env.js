@@ -13,6 +13,10 @@
  *
  * MAILGUN_DOMAIN_staging=staging.components.dereekb.com
  * MAILGUN_API_KEY=todo
+ *
+ * The suffixed keys (MAILGUN_DOMAIN_staging) belong in the environment (CircleCI, .env.local), NEVER in the .env template or
+ * the .env.<specifier> files. Every template key is written to the generated .env, and the Firebase CLI rejects any key
+ * that is not uppercase. A non-secret per-environment value goes in .env.<specifier> under its plain key instead.
  */
 const fs = require('fs');
 const { parse, stringify } = require('envfile');
@@ -46,12 +50,27 @@ function assertHasNoEmptyValues(source, values, ignoreKeys = new Set()) {
   }
 }
 
+// The Firebase CLI refuses to deploy an env file with any key outside this pattern.
+const FIREBASE_ENV_KEY_REGEX = /^[A-Z_][A-Z0-9_]*$/;
+
+function assertHasOnlyValidKeys(source, values) {
+  const invalidKeys = Object.keys(values).filter((key) => !FIREBASE_ENV_KEY_REGEX.test(key));
+
+  // throw error with all failed keys.
+  if (invalidKeys.length) {
+    throw new Error(
+      `The ${invalidKeys.length} environment variable key(s) ${invalidKeys.map((x) => `"${x}"`).join(', ')} in ${source} are not valid Firebase env keys. Keys must start with an uppercase letter or underscore and contain only uppercase letters, digits, and underscores. Environment-specific values (KEY_prod) belong in the environment, or under the plain key in .env.<specifier>.`
+    );
+  }
+}
+
 // NOTE: If run within nx, remember that nx adds all variables within .env to the environment and, thus, process.env.
 // Variables that are within bash take prority.
 const templateFilePath = '.env';
 const templateEnv = fs.readFileSync(templateFilePath).toString();
 const template = parse(templateEnv);
 
+assertHasOnlyValidKeys(templateFilePath, template);
 assertHasNoEmptyValues(templateFilePath, template, keysToIgnore);
 
 // Also attempt to read an overriding template file with the name .env.<environment>
@@ -64,6 +83,7 @@ if (fs.existsSync(specifierTemplateOverridesFilePath)) {
   const specifierTemplateOverridesEnv = fs.readFileSync(specifierTemplateOverridesFilePath).toString();
   specifierTemplateOverrides = parse(specifierTemplateOverridesEnv);
 
+  assertHasOnlyValidKeys(specifierTemplateOverridesFilePath, specifierTemplateOverrides);
   assertHasNoEmptyValues(specifierTemplateOverridesFilePath, specifierTemplateOverrides, keysToIgnore);
 }
 
