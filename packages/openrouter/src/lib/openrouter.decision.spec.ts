@@ -3,11 +3,8 @@ import { fakeOpenRouterDecisionClient } from '../test/openrouter.fake';
 import { validateOpenRouterModelConfig } from './openrouter.config';
 import { OpenRouterSystemOneModelOnCompletionArmError, openRouterResponsesRequestBody } from './openrouter.call';
 import {
-  type OpenRouterDecisionAnswer,
-  type OpenRouterDecisionQuestions,
   OpenRouterDecisionAnswerFaultError,
   OpenRouterDecisionDeclarationError,
-  openRouterDecision,
   openRouterDecisionRequest,
   openRouterDecisionRequestBody,
   openRouterDecisionWireQuestion,
@@ -16,7 +13,8 @@ import {
   splitOpenRouterDecisionModelConfig,
   validateOpenRouterDecisionRequest
 } from './openrouter.decision';
-import { openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
+import { openRouterDecision } from './openrouter.decision.call';
+import { type OpenRouterDecisionAnswer, type OpenRouterDecisionQuestions, openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 const JEV = OPENROUTER_JEV_1_13_MODEL_ID;
@@ -36,7 +34,7 @@ describe('openRouterDecisionWireQuestion()', () => {
   });
 
   it('should carry Score levels as an ordered criteria array', () => {
-    const wire = openRouterDecisionWireQuestion(QUESTIONS.heat) as { criteria: unknown[] };
+    const wire = openRouterDecisionWireQuestion(QUESTIONS.heat) as unknown as { criteria: unknown[] };
     expect(wire.criteria).toEqual(['idle', 'soon', 'now']);
   });
 

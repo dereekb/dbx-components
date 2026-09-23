@@ -14,6 +14,7 @@ queue drained by a sweeper the app mounts on a schedule it already runs.
 | Entry | Purpose |
 |---|---|
 | `@dereekb/openrouter` | Config types, request builder, `callModel` wrapper, deferred-tool helpers, embeddings, **decisions**. Pure — no I/O. |
+| `@dereekb/openrouter/decision` | The decision layer WITHOUT `@openrouter/sdk`: questions, validation, the request body, the answer reader, model ids. See [below](#loading-without-the-sdk). |
 | `@dereekb/openrouter/firebase` | The `OpenRouterPrompt`, `OpenRouterPromptVersion` and `OpenRouterRunTask` models. |
 | `@dereekb/openrouter/firebase-server` | Prompt service, run-task queue + sweep, Firestore `StateAccessor`, server actions. |
 
@@ -141,6 +142,25 @@ catalog, and a wrong guess does not produce an error anyone can read. The slug i
 an answer is only reproducible against the model that gave it, which is the same reason versions exist.
 The reply reports the model that actually served it (`typesafe/jev-1.13-20260917`), so read `result.model`
 rather than assuming the slug you asked for.
+
+### Loading without the SDK
+
+The root entry re-exports SDK values (`callModel`, `responsesSend`, `systemOneCreate`, …), so importing
+ANY value from `@dereekb/openrouter` evaluates `@openrouter/sdk` — a real cold-start cost, and one a test
+runner that isolates each spec file pays once per file. `@dereekb/openrouter/decision` carries everything a
+decision is built from and read with, and loads nothing under `@openrouter/sdk`:
+
+- `openRouterChoiceQuestion` / `openRouterScoreQuestion` / `openRouterNoulQuestion`, the answer and
+  confidence helpers, and `validateOpenRouterDecisionQuestions`;
+- `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the `/systemone` body, wire mapping
+  included), `readOpenRouterDecisionAnswers` and its `OpenRouterDecisionAnswerFaultError`,
+  `openRouterRunUsageFromDecisionsUsage`, `validateOpenRouterDecisionRequest`;
+- the model config and the model ids, `isOpenRouterSystemOneModelId` among them.
+
+What it does NOT carry is `openRouterDecision` — the transport, and the one `systemOneCreate` caller. A
+consumer that owns its transport (its own timeout, retry policy or error shape) builds the body here, sends
+it through its own lazily-loaded client, and reads the reply here. The two entries share one built chunk,
+so a class has one identity whichever entry it was imported through.
 
 ### Where a decision lives
 

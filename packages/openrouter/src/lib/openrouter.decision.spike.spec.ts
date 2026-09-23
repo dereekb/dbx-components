@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { OpenRouterCore } from '@openrouter/sdk/core';
-import { openRouterDecision, openRouterDecisionRequest } from './openrouter.decision';
+import { openRouterDecisionRequest } from './openrouter.decision';
+import { openRouterDecision } from './openrouter.decision.call';
 import { openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
