@@ -1,6 +1,5 @@
-import { type Maybe } from '@dereekb/util';
 import { whereDateIsOnOrBefore } from '../../common/firestore/query/constraint.template';
-import { type FirestoreQueryConstraint, orderBy, where, limit } from '../../common/firestore/query/constraint';
+import { type FirestoreQueryConstraint, orderBy, where } from '../../common/firestore/query/constraint';
 import { type FirebaseAuthOwnershipKey } from '../../common/auth/auth';
 import { type StorageFile } from '../storagefile/storagefile';
 import { type FormSpace, FormSpaceProcessingState } from './formspace';
@@ -22,7 +21,6 @@ import { formSpaceStorageFileGroupId } from './formspace.util';
  * This is the backstop sweep: submission normally creates the task inline, so a space that is still sitting
  * here is one whose task creation was lost.
  *
- * @param limitCount - Maximum number of results. Omit for unbounded.
  * @returns Firestore query constraints for FormSpaces queued for processing.
  *
  * @dbxModelFirebaseIndex
@@ -32,17 +30,11 @@ import { formSpaceStorageFileGroupId } from './formspace.util';
  *
  * @example
  * ```ts
- * const constraints = formSpacesQueuedForProcessingQuery(100);
+ * const constraints = formSpacesQueuedForProcessingQuery();
  * ```
  */
-export function formSpacesQueuedForProcessingQuery(limitCount?: Maybe<number>): FirestoreQueryConstraint[] {
-  const constraints: FirestoreQueryConstraint[] = [where<FormSpace>('ps', '==', FormSpaceProcessingState.QUEUED_FOR_PROCESSING)];
-
-  if (limitCount != null) {
-    constraints.push(limit(limitCount));
-  }
-
-  return constraints;
+export function formSpacesQueuedForProcessingQuery(): FirestoreQueryConstraint[] {
+  return [where<FormSpace>('ps', '==', FormSpaceProcessingState.QUEUED_FOR_PROCESSING)];
 }
 
 /**
@@ -56,10 +48,6 @@ export interface FormSpacesDueForExpirationQueryInput {
    * clock lets a space that ages mid-sweep join a page not yet reached, making the pass unbounded.
    */
   readonly before: Date;
-  /**
-   * Maximum number of results per page.
-   */
-  readonly limit?: Maybe<number>;
 }
 
 /**
@@ -69,7 +57,7 @@ export interface FormSpacesDueForExpirationQueryInput {
  * whose type does not expire, or one that has already been submitted or expired and had `eat` cleared — is
  * not matched. That absence IS the exclusion mechanism; there is no second flag to keep in step.
  *
- * @param input - The pinned cutoff and page size.
+ * @param input - The pinned cutoff.
  * @returns Firestore query constraints for FormSpaces due for expiration.
  *
  * @dbxModelFirebaseIndex
@@ -79,17 +67,11 @@ export interface FormSpacesDueForExpirationQueryInput {
  *
  * @example
  * ```ts
- * const constraints = formSpacesDueForExpirationQuery({ before: new Date(), limit: 50 });
+ * const constraints = formSpacesDueForExpirationQuery({ before: new Date() });
  * ```
  */
 export function formSpacesDueForExpirationQuery(input: FormSpacesDueForExpirationQueryInput): FirestoreQueryConstraint[] {
-  const constraints: FirestoreQueryConstraint[] = [orderBy<FormSpace>('eat', 'asc'), whereDateIsOnOrBefore<FormSpace>('eat', input.before)];
-
-  if (input.limit != null) {
-    constraints.push(limit(input.limit));
-  }
-
-  return constraints;
+  return [orderBy<FormSpace>('eat', 'asc'), whereDateIsOnOrBefore<FormSpace>('eat', input.before)];
 }
 
 /**
