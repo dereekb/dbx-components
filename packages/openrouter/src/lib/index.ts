@@ -1,6 +1,7 @@
 export * from './openrouter.call';
 export * from './openrouter.config';
 export * from './openrouter.decision';
+export * from './openrouter.decision.call';
 export * from './openrouter.decision.question';
 export * from './openrouter.embedding';
 export * from './openrouter.generation';

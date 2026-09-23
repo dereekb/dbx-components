@@ -18,6 +18,8 @@ export const DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES = 50;
  * Parameters for directly creating a new StorageFile document (no upload initialization).
  *
  * Typically used server-side or for testing. Validated with {@link createStorageFileParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface CreateStorageFileParams {}
 
@@ -28,6 +30,8 @@ export const createStorageFileParamsType = /* @__PURE__ */ type({}) as Type<Crea
  *
  * Scans the uploads folder (or a custom path) and runs the upload determination/initialization
  * pipeline for each file found. Validated with {@link initializeAllStorageFilesFromUploadsParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface InitializeAllStorageFilesFromUploadsParams {
   readonly maxFilesToInitialize?: Maybe<number>;
@@ -64,6 +68,8 @@ export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreate
  *
  * The file is run through the upload type determination pipeline and, if matched,
  * creates a corresponding StorageFile document. Validated with {@link initializeStorageFileFromUploadParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface InitializeStorageFileFromUploadParams extends Pick<StoragePath, 'pathString'> {
   readonly bucketId?: Maybe<StorageBucketId>;
@@ -87,6 +93,8 @@ export const initializeStorageFileFromUploadParamsType = /* @__PURE__ */ type({
  * those flags. `ARCHIVED` and `DO_NOT_PROCESS` files cannot be processed at all.
  *
  * Validated with {@link processStorageFileParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface ProcessStorageFileParams extends TargetModelParams {
   /**
@@ -136,6 +144,11 @@ export interface ProcessAllQueuedStorageFilesResult {
   readonly storageFilesFailedStarting: number;
 }
 
+/**
+ * Parameters for updating a StorageFile.
+ *
+ * @dbxModelApiParams
+ */
 export interface UpdateStorageFileParams extends TargetModelParams {
   readonly sdat?: Maybe<Date>;
 }
@@ -144,6 +157,11 @@ export const updateStorageFileParamsType = targetModelParamsType.merge({
   'sdat?': clearable(ARKTYPE_DATE_DTO_TYPE)
 }) as Type<UpdateStorageFileParams>;
 
+/**
+ * Parameters for deleting a StorageFile.
+ *
+ * @dbxModelApiParams
+ */
 export interface DeleteStorageFileParams extends TargetModelParams {
   readonly force?: Maybe<boolean>;
 }
@@ -184,6 +202,8 @@ export interface DownloadStorageFileOptions {
  *
  * Extends {@link DownloadStorageFileOptions} with target model key.
  * Validated with {@link downloadStorageFileParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface DownloadStorageFileParams extends TargetModelParams, DownloadStorageFileOptions {}
 
@@ -256,6 +276,8 @@ export interface DownloadMultipleStorageFileErrorItem {
  *   ]
  * };
  * ```
+ *
+ * @dbxModelApiParams
  */
 export interface DownloadMultipleStorageFilesParams extends DownloadStorageFileOptions {
   readonly files: DownloadMultipleStorageFilesFileParams[];
@@ -293,6 +315,8 @@ export interface DownloadMultipleStorageFilesResult {
  * Unlike {@link DownloadStorageFileParams}, no signed URL is minted — only the object's
  * {@link StorageMetadata} (size, md5Hash, generation, content headers, custom metadata, etc.) is returned.
  * `asAdmin` only selects the read role used for permission gating. Validated with {@link readStorageFileMetadataParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface ReadStorageFileMetadataParams extends TargetModelParams {
   readonly asAdmin?: Maybe<boolean>;
@@ -344,6 +368,8 @@ export interface ReadMultipleStorageFileMetadataErrorItem {
  * Parameters for batch-reading the Cloud Storage metadata of multiple StorageFiles.
  *
  * `asAdmin` selects the read role for the whole batch. Validated with {@link readMultipleStorageFilesMetadataParamsType}.
+ *
+ * @dbxModelApiParams
  */
 export interface ReadMultipleStorageFilesMetadataParams {
   readonly files: ReadMultipleStorageFilesMetadataFileParams[];
@@ -408,6 +434,8 @@ export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH = 200;
  * `/uploads/u/{uid}/...` namespace. Once uploaded, the existing
  * `StorageFileInitializeFromUploadService` flow picks the file up and creates
  * the matching `StorageFile` document.
+ *
+ * @dbxModelApiParams
  */
 export interface CreateStorageFileSignedUploadUrlParams {
   /**
@@ -526,6 +554,11 @@ export const createStorageFileGroupParamsType = /* @__PURE__ */ type({
   'storageFileId?': clearable(firestoreModelIdType)
 }) as Type<CreateStorageFileGroupParams>;
 
+/**
+ * Parameters for syncing a StorageFile with its StorageFileGroups.
+ *
+ * @dbxModelApiParams
+ */
 export interface SyncStorageFileWithGroupsParams extends TargetModelParams {
   readonly force?: Maybe<boolean>;
 }
@@ -559,6 +592,11 @@ export const updateStorageFileGroupEntryParamsType = /* @__PURE__ */ type({
   'n?': clearable('string > 0')
 }) as Type<UpdateStorageFileGroupEntryParams>;
 
+/**
+ * Parameters for updating a StorageFileGroup.
+ *
+ * @dbxModelApiParams
+ */
 export interface UpdateStorageFileGroupParams extends TargetModelParams {
   readonly entries?: Maybe<UpdateStorageFileGroupEntryParams[]>;
 }
@@ -567,6 +605,11 @@ export const updateStorageFileGroupParamsType = targetModelParamsType.merge({
   'entries?': clearable(updateStorageFileGroupEntryParamsType.array())
 }) as Type<UpdateStorageFileGroupParams>;
 
+/**
+ * Parameters for regenerating a StorageFileGroup's content.
+ *
+ * @dbxModelApiParams
+ */
 export interface RegenerateStorageFileGroupContentParams extends TargetModelParams {
   readonly force?: Maybe<boolean>;
 }

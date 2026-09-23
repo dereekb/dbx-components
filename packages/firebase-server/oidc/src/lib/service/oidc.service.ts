@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '@dereekb/firebase-server';
 import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC, type Client } from 'oidc-provider';
 import { DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
 import {
   DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA,
   DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM,
-  DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM,
   DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM,
   parseRequestedSessionTtlSeconds,
   readRemainingGrantSeconds,

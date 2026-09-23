@@ -123,6 +123,8 @@ export const updateNotificationUserNotificationBoxRecipientParamsType = updateNo
 
 /**
  * Used for updating the NotificationUser.
+ *
+ * @dbxModelApiParams
  */
 export interface UpdateNotificationUserParams extends TargetModelParams {
   readonly gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
@@ -150,6 +152,8 @@ export interface ResyncNotificationUserResult {
  * The check always inspects the user's configuration, their notification box subscriptions, and whatever
  * read-only diagnostics each configured delivery method's send service offers. Actually dispatching a
  * test message is opt-in via `sendProbe`, since that delivers real mail/SMS to the user.
+ *
+ * @dbxModelApiParams
  */
 export interface NotificationUserHealthCheckParams extends TargetModelParams {
   /**
@@ -271,6 +275,8 @@ export const createNotificationSummaryParamsType = /* @__PURE__ */ type({
 
 /**
  * Used for updating the NotificationSummary.
+ *
+ * @dbxModelApiParams
  */
 export interface UpdateNotificationSummaryParams extends TargetModelParams {
   readonly flagAllRead?: Maybe<boolean>;
@@ -339,6 +345,8 @@ export { targetModelParamsType as updateNotificationBoxParamsType } from '../../
 
 /**
  * Used to create/update a notification box recipient.
+ *
+ * @dbxModelApiParams
  */
 export interface UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams, TargetModelParams {
   readonly key: FirestoreModelKey;
@@ -376,6 +384,8 @@ export const notificationRecipientParamsType = /* @__PURE__ */ type({
 
 /**
  * Used for sending the notification immediately, if it has not already been sent.
+ *
+ * @dbxModelApiParams
  */
 export interface SendNotificationParams extends TargetModelParams {
   readonly ignoreSendAtThrottle?: Maybe<boolean>;

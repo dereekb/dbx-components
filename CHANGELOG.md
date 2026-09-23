@@ -1,3 +1,19 @@
+# [14.9.0](https://github.com/dereekb/dbx-components/compare/v14.8.0-dev...v14.9.0) (2026-09-23)
+
+### Bug Fixes
+
+- **firebase-server:** bound firestore session by caller expiry ([e452003e](https://github.com/dereekb/dbx-components/commit/e452003e425346cbc99191d6193468b257b3f219))
+- **firebase:** drop limit from formspace sweep queries ([5f433755](https://github.com/dereekb/dbx-components/commit/5f433755a2c9786d2f2ecb65ef121bb3ae86958f))
+- **firebase:** tag notification/storagefile params @dbxModelApiParams ([cfe75dd5](https://github.com/dereekb/dbx-components/commit/cfe75dd51e91e00fc1495f71c5eabd03da851d25))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([878301a7](https://github.com/dereekb/dbx-components/commit/878301a72305d6fcbcbd3b87b7c64af52c52e86e))
+
+### Features
+
+- **openrouter:** add SDK-free @dereekb/openrouter/decision entry ([5570109d](https://github.com/dereekb/dbx-components/commit/5570109d34363e031cc143782c370c6d064e1584))
+
 # [14.8.0](https://github.com/dereekb/dbx-components/compare/v14.7.0-dev...v14.8.0) (2026-09-22)
 
 ### Build System

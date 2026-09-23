@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   type OpenRouterDecisionChoiceAnswer,
   type OpenRouterDecisionEntry,
   type OpenRouterDecisionQuestions,
   type OpenRouterDecisionScoreLevels,
+  type OpenRouterDecisionStructuredCriterion,
+  type OpenRouterDecisionStructuredInstructions,
+  type OpenRouterDecisionStructuredLevel,
   OPENROUTER_DECISION_CHOICE_OPTIONS_MAX,
   OPENROUTER_DECISION_SCORE_LEVELS_MAX,
   asOpenRouterDecisionConfidenceBand,
@@ -120,6 +123,45 @@ describe('asOpenRouterDecisionConfidenceBand()', () => {
     expect(asOpenRouterDecisionConfidenceBand(0.74)).toBe('medium');
     expect(asOpenRouterDecisionConfidenceBand(0.5)).toBe('medium');
     expect(asOpenRouterDecisionConfidenceBand(0.49)).toBe('low');
+  });
+
+  it('should read a non-finite confidence as low rather than medium', () => {
+    // NaN fails every threshold comparison, so without a guard it would fall through to `medium`.
+    expect(asOpenRouterDecisionConfidenceBand(Number.NaN)).toBe('low');
+    expect(asOpenRouterDecisionConfidenceBand(Number.POSITIVE_INFINITY)).toBe('low');
+    expect(asOpenRouterDecisionConfidenceBand(Number.NEGATIVE_INFINITY)).toBe('low');
+  });
+});
+
+describe('structured declaration shapes', () => {
+  // Typed through their own names, as a caller declaring a taxonomy in code would type them. The shapes
+  // are `type` aliases so that each is assignable to the object arm of `OpenRouterDecisionEntry`; an
+  // `interface` has no implicit index signature and these declarations would stop compiling.
+  const instructions: OpenRouterDecisionStructuredInstructions = { question: 'which team owns this ticket?', inspect: ['ticket.body'] };
+  const billing: OpenRouterDecisionStructuredCriterion = { what: 'charges, invoices, refunds', not_for: 'plan changes' };
+  const sales: OpenRouterDecisionStructuredCriterion = { what: 'plan changes and upgrades' };
+  const minor: OpenRouterDecisionStructuredLevel = { what: 'cosmetic, no workaround needed' };
+  const major: OpenRouterDecisionStructuredLevel = { what: 'broken feature, a workaround exists', signals: ['error messages'] };
+
+  it('should be assignable to OpenRouterDecisionEntry', () => {
+    expectTypeOf<OpenRouterDecisionStructuredInstructions>().toExtend<OpenRouterDecisionEntry>();
+    expectTypeOf<OpenRouterDecisionStructuredCriterion>().toExtend<OpenRouterDecisionEntry>();
+    expectTypeOf<OpenRouterDecisionStructuredLevel>().toExtend<OpenRouterDecisionEntry>();
+
+    const entries: OpenRouterDecisionEntry[] = [instructions, billing, minor];
+    expect(entries).toHaveLength(3);
+  });
+
+  it('should be accepted by the question builders and passed through by identity', () => {
+    const choice = openRouterChoiceQuestion(instructions, { billing, sales });
+    const score = openRouterScoreQuestion(instructions, [minor, major]);
+    const noul = openRouterNoulQuestion(instructions, { true: billing, false: sales });
+
+    expect(choice.instructions).toBe(instructions);
+    expect(choice.options.billing).toBe(billing);
+    expect(score.levels[1]).toBe(major);
+    expect(noul.means?.true).toBe(billing);
+    expect(validateOpenRouterDecisionQuestions({ choice, score, noul }).valid).toBe(true);
   });
 });
 

@@ -22,6 +22,7 @@ import {
   isFormSpaceEditable,
   isFormSpaceFileAccessibleByUser,
   isFormSpaceReopenable,
+  limit,
   iterateFirestoreDocumentSnapshotPairs,
   type LockFormSpaceParams,
   lockFormSpaceParamsType,
@@ -629,7 +630,7 @@ export function processAllQueuedFormSpacesFactory(context: FormSpaceServerAction
   const queueFormSpaceForProcessing = _queueFormSpaceForProcessingFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(processAllQueuedFormSpacesParamsType, async (params) => {
-    const { limit } = params;
+    const { limit: totalSnapshotsLimit } = params;
 
     return async () => {
       let formSpacesVisited = 0;
@@ -651,8 +652,9 @@ export function processAllQueuedFormSpacesFactory(context: FormSpaceServerAction
             formSpacesFailedStarting++;
           }
         },
-        constraintsFactory: () => formSpacesQueuedForProcessingQuery(limit),
+        constraintsFactory: () => formSpacesQueuedForProcessingQuery(),
         queryFactory: formSpaceCollection,
+        totalSnapshotsLimit,
         batchSize: undefined,
         performTasksConfig: {
           maxParallelTasks: 10
@@ -694,7 +696,7 @@ export function expireAllExpiredFormSpacesFactory(context: FormSpaceServerAction
     return async () => {
       const startedAt = Date.now();
       const budget = maxRunTimeMs ?? DEFAULT_FORM_SPACE_EXPIRATION_SWEEP_MAX_RUN_TIME;
-      const limit = pageSize ?? DEFAULT_FORM_SPACE_EXPIRATION_SWEEP_PAGE_SIZE;
+      const pageLimit = pageSize ?? DEFAULT_FORM_SPACE_EXPIRATION_SWEEP_PAGE_SIZE;
       const cutoff = before ?? new Date(startedAt);
 
       let formSpacesExpired = 0;
@@ -714,7 +716,7 @@ export function expireAllExpiredFormSpacesFactory(context: FormSpaceServerAction
           break;
         }
 
-        const documents = await formSpaceCollection.queryDocument(formSpacesDueForExpirationQuery({ before: cutoff, limit })).getDocs();
+        const documents = await formSpaceCollection.queryDocument([...formSpacesDueForExpirationQuery({ before: cutoff }), limit(pageLimit)]).getDocs();
 
         if (documents.length === 0) {
           break;

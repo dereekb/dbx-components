@@ -30,13 +30,18 @@ export type OpenRouterDecisionEntry = string | Readonly<Record<string, unknown>>
  *
  * `inspect` and `compare` name parts of the state, in the same backticked dot-path convention prose
  * instructions use.
+ *
+ * A `type` alias, not an `interface`, and deliberately so for all three structured shapes: an interface
+ * has no implicit index signature, so a value typed as one is NOT assignable to the
+ * `Readonly<Record<string, unknown>>` arm of {@link OpenRouterDecisionEntry} — a structured entry
+ * declared through its own name would then be refused by the very builders it exists to feed.
  */
-export interface OpenRouterDecisionStructuredInstructions {
+export type OpenRouterDecisionStructuredInstructions = {
   readonly question: string;
   readonly focus?: Maybe<string>;
   readonly inspect?: Maybe<string | ReadonlyArray<string>>;
   readonly compare?: Maybe<ReadonlyArray<string>>;
-}
+};
 
 /**
  * A structured Choice option.
@@ -44,11 +49,11 @@ export interface OpenRouterDecisionStructuredInstructions {
  * CONTRASTIVE by design: use the SAME keys on every option of a question so the model compares like
  * with like. `not_for` is where an option's boundary against its neighbours goes.
  */
-export interface OpenRouterDecisionStructuredCriterion {
+export type OpenRouterDecisionStructuredCriterion = {
   readonly what: string;
   readonly not_for?: Maybe<string>;
   readonly examples?: Maybe<ReadonlyArray<string>>;
-}
+};
 
 /**
  * A structured Score level.
@@ -57,11 +62,11 @@ export interface OpenRouterDecisionStructuredCriterion {
  * model something to match the state against, where "moderately severe" does not. Use the same keys on
  * every level of a question.
  */
-export interface OpenRouterDecisionStructuredLevel {
+export type OpenRouterDecisionStructuredLevel = {
   readonly what: string;
   readonly signals?: Maybe<ReadonlyArray<string>>;
   readonly examples?: Maybe<ReadonlyArray<string>>;
-}
+};
 
 /**
  * The declared options of a Choice, keyed by the option name the answer will quote.
@@ -311,7 +316,9 @@ export function openRouterDecisionChoiceOptionNames<O extends string = string>(q
  * Reads a confidence as a band.
  *
  * An ABSENT confidence reads `low` rather than throwing: the model is not required to report one, and a
- * caller that branches on the band should treat "did not say" the same as "not sure".
+ * caller that branches on the band should treat "did not say" the same as "not sure". A non-finite one
+ * (`NaN`, `Infinity`) reads `low` for the same reason — a garbled number is not a report of certainty,
+ * and without the guard `NaN` fails every comparison below and falls through to `medium`.
  *
  * @param confidence - The reported confidence, if any.
  * @returns The band.
@@ -321,7 +328,7 @@ export function openRouterDecisionChoiceOptionNames<O extends string = string>(q
 export function asOpenRouterDecisionConfidenceBand(confidence: Maybe<number>): OpenRouterDecisionConfidenceBand {
   let result: OpenRouterDecisionConfidenceBand;
 
-  if (confidence == null || confidence < OPENROUTER_DECISION_CONFIDENCE_MEDIUM) {
+  if (confidence == null || !Number.isFinite(confidence) || confidence < OPENROUTER_DECISION_CONFIDENCE_MEDIUM) {
     result = 'low';
   } else if (confidence >= OPENROUTER_DECISION_CONFIDENCE_HIGH) {
     result = 'high';

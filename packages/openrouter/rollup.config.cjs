@@ -4,6 +4,10 @@ const applyVisualizer = require('../../rollup.visualizer.config.cjs');
 const options = {
   importPath: '@dereekb/openrouter',
   main: './src/index.ts',
+  // `@dereekb/openrouter/decision`: the decision layer without the SDK (see src/decision.ts). A second
+  // input of THIS build rather than a child project, because the root entry re-exports the same modules —
+  // rollup emits them once, as a chunk both entries import, so there is one copy and one class identity.
+  additionalEntryPoints: ['./src/decision.ts'],
   outputPath: '../../dist/packages/openrouter',
   tsConfig: './tsconfig.lib.json',
   project: './package.json',

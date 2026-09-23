@@ -12,13 +12,7 @@ export const DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM = 'dbx_session_ttl';
  */
 export const DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA = 'dbx_max_session_ttl';
 
-/**
- * Access-token `extra` claim carrying the grant's resolved expiry as unix seconds.
- *
- * Baked on at issuance (`extraTokenClaims`) and read back by `verifyAccessToken` and the
- * `GET /oidc/session` route so clients can surface the session lifetime without decoding the token.
- */
-export const DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM = 'dbx_session_expires_at';
+// `DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM` is declared in the core `@dereekb/firebase-server` layer so non-OIDC endpoints can read it.
 
 /**
  * Access-token `extra` claim flagging whether the grant's refresh token rotation is disabled.

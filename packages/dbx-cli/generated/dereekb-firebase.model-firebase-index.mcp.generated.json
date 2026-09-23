@@ -187,7 +187,7 @@
       "name": "formSpacesQueuedForProcessingQuery",
       "module": "@dereekb/firebase",
       "subpath": "model/formspace/formspace.query",
-      "signature": "formSpacesQueuedForProcessingQuery(limitCount?: Maybe<number>): FirestoreQueryConstraint[]",
+      "signature": "formSpacesQueuedForProcessingQuery(): FirestoreQueryConstraint[]",
       "description": "Returns query constraints for FormSpaces awaiting a processing task (`ps == QUEUED_FOR_PROCESSING`).\n\nThis is the backstop sweep: submission normally creates the task inline, so a space that is still sitting\nhere is one whose task creation was lost.",
       "model": "FormSpace",
       "collection": "fsp",
@@ -196,14 +196,7 @@
       "manual": false,
       "skip": false,
       "category": "sweep",
-      "params": [
-        {
-          "name": "limitCount",
-          "type": "Maybe<number>",
-          "description": "- Maximum number of results. Omit for unbounded.",
-          "optional": true
-        }
-      ],
+      "params": [],
       "returns": "Firestore query constraints for FormSpaces queued for processing.",
       "tags": [
         "sweep",
@@ -225,10 +218,21 @@
         "normally",
         "creates"
       ],
-      "constraintSequences": [],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "ps",
+              "operator": "=="
+            }
+          ]
+        }
+      ],
       "derivedComposites": [],
       "derivedFieldOverrides": [],
-      "example": "const constraints = formSpacesQueuedForProcessingQuery(100);"
+      "example": "const constraints = formSpacesQueuedForProcessingQuery();"
     },
     {
       "slug": "form-spaces-due-for-expiration-query",
@@ -248,7 +252,7 @@
         {
           "name": "input",
           "type": "FormSpacesDueForExpirationQueryInput",
-          "description": "- The pinned cutoff and page size.",
+          "description": "- The pinned cutoff.",
           "optional": false
         }
       ],
@@ -273,10 +277,27 @@
         "note",
         "firestore"
       ],
-      "constraintSequences": [],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "orderBy",
+              "fieldPath": "eat",
+              "direction": "asc"
+            },
+            {
+              "kind": "where",
+              "fieldPath": "eat",
+              "operator": "<=",
+              "fromHelper": "whereDateIsOnOrBefore"
+            }
+          ]
+        }
+      ],
       "derivedComposites": [],
       "derivedFieldOverrides": [],
-      "example": "const constraints = formSpacesDueForExpirationQuery({ before: new Date(), limit: 50 });"
+      "example": "const constraints = formSpacesDueForExpirationQuery({ before: new Date() });"
     },
     {
       "slug": "storage-files-for-form-space-query",

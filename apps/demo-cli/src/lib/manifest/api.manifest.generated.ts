@@ -63,7 +63,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.7.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.8.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -850,7 +850,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'purpose', typeText: 'StorageFilePurpose', description: 'The resolved {@link StorageFilePurpose}.' }
     ]
   },
-  { model: 'storageFile', verb: 'delete', specifier: '_', paramsTypeName: 'DeleteStorageFileParams', paramsValidator: deleteStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }] },
+  {
+    model: 'storageFile',
+    verb: 'delete',
+    specifier: '_',
+    paramsTypeName: 'DeleteStorageFileParams',
+    paramsValidator: deleteStorageFileParamsType,
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for deleting a StorageFile.',
+    paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }]
+  },
   {
     model: 'storageFile',
     verb: 'read',
@@ -929,7 +939,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'errors', typeText: 'ReadMultipleStorageFileMetadataErrorItem[]' }
     ]
   },
-  { model: 'storageFile', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileParams', paramsValidator: updateStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'sdat', typeText: 'Maybe<Date>' }] },
+  {
+    model: 'storageFile',
+    verb: 'update',
+    specifier: '_',
+    paramsTypeName: 'UpdateStorageFileParams',
+    paramsValidator: updateStorageFileParamsType,
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for updating a StorageFile.',
+    paramsFields: [{ name: 'sdat', typeText: 'Maybe<Date>' }]
+  },
   {
     model: 'storageFile',
     verb: 'update',
@@ -966,6 +986,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'SyncStorageFileWithGroupsResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for syncing a StorageFile with its StorageFileGroups.',
     paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }],
     resultFields: [
       { name: 'storageFilesGroupsCreated', typeText: 'number' },
@@ -980,6 +1001,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: updateStorageFileGroupParamsType,
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for updating a StorageFileGroup.',
     paramsFields: [{ name: 'entries', typeText: 'Maybe<UpdateStorageFileGroupEntryParams[]>' }]
   },
   {
@@ -991,6 +1013,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'RegenerateStorageFileGroupContentResult',
     groupName: 'StorageFile',
     sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: "Parameters for regenerating a StorageFileGroup's content.",
     paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }],
     resultFields: [{ name: 'contentStorageFilesFlaggedForProcessing', typeText: 'number' }]
   },

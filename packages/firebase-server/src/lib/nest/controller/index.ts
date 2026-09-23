@@ -1,5 +1,6 @@
 export * from './auth.context.server';
 export * from './api.scope';
+export * from './api.session-expiry';
 export * from './request.ip';
 export * from './download';
 export * from './model';

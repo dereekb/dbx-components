@@ -2,7 +2,8 @@ import { All, Controller, Get, HttpStatus, Inject, Req, Res } from '@nestjs/comm
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
 import { OidcProviderConfigService } from '../service/oidc.config.service';
-import { DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '../service/oidc.session-ttl';
+import { DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '@dereekb/firebase-server';
+import { DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM } from '../service/oidc.session-ttl';
 
 // MARK: Provider Controller
 /**
