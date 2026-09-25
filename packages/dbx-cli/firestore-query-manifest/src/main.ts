@@ -6,6 +6,9 @@
  *   1. For each `--component <dir>`, run `buildModelFirebaseIndexManifest` — the SAME extractor
  *      that drives `firestore.indexes.json` — so the runtime catalog and the emitted indexes can
  *      never disagree about what exists or what it takes.
+ *      With `--packages`, also merge the pre-built manifests bundled in the installed
+ *      `@dereekb/dbx-components-mcp` — the framework's own query factories, which a published
+ *      tarball ships no source for — binding each against its installed package's barrel.
  *   2. Drop `@dbxModelFirebaseIndexSpecFilesOnly` factories: they serve test callers, and a shipped
  *      CLI must not offer to invoke them.
  *   3. Confirm each identifier is exported from the component's barrel chain. A miss warns
@@ -27,7 +30,9 @@
  * discovery, and two writers on one generated file can never run concurrently.
  *
  * Flags:
- *   --component=<dir>   (required, REPEATABLE) `-firebase` component root to scan.
+ *   --component=<dir>   (REPEATABLE) `-firebase` component root to scan.
+ *   --packages          Also merge the framework query manifests bundled in `@dereekb/dbx-components-mcp`.
+ *                        At least one of --component / --packages is required.
  *   --output=<path>     (required) path to the manifest TS file to write.
  *   --project=<name>    Project name for the banner; also derives the constant name
  *                        (`demo-cli` → `DEMO_CLI_FIRESTORE_QUERY_MANIFEST`).
@@ -45,13 +50,15 @@ import { isAbsolute, relative, resolve } from 'node:path';
 import packageJson from '../package.json' with { type: 'json' };
 import { writeGeneratedTsFile } from '../../src/lib/scan-helpers/emit-generated-ts.js';
 import { annotateQueryEntryMode } from './annotate-query-mode.js';
-import { bindQueryFactories } from './bind-factories.js';
+import { bindPackageQueryFactories, bindQueryFactories } from './bind-factories.js';
 import { renderQueryManifest } from './emit.js';
+import { findPackageQueryEntries } from './find-package-query-entries.js';
 import { findQueryEntries } from './find-query-entries.js';
 import type { BoundQueryEntry } from './types.js';
 
 interface Flags {
   readonly components: readonly string[];
+  readonly packages: boolean;
   readonly output: string | undefined;
   readonly project: string | undefined;
   readonly rules: string | undefined;
@@ -65,7 +72,7 @@ const GENERATOR = `@dereekb/dbx-cli-firestore-query-manifest@${packageJson.versi
 async function main(): Promise<void> {
   const flags = parseFlags(process.argv.slice(2));
 
-  if (flags.components.length === 0 || !flags.output) {
+  if ((flags.components.length === 0 && !flags.packages) || !flags.output) {
     printUsageAndExit();
     return;
   }
@@ -93,6 +100,29 @@ async function main(): Promise<void> {
     const bound = bindQueryFactories({ componentRoot, entries: found.entries });
     collected.push(...bound.bound);
     warnings.push(...bound.warnings);
+  }
+
+  let packageEntryCount = 0;
+
+  if (flags.packages) {
+    const found = await findPackageQueryEntries({ cwd: WORKSPACE_ROOT });
+
+    if (found.kind === 'failure') {
+      console.error(found.message);
+      process.exit(1);
+      return;
+    }
+
+    droppedSpecOnly += found.droppedSpecOnly;
+
+    // a package the workspace also scans as a --component (the framework monorepo itself) already
+    // contributed these from source — keep that copy, which binds against the real barrel
+    const collectedKeys = new Set(collected.map((x) => queryEntryKey(x.entry)));
+    const packageEntries = found.entries.filter((x) => !collectedKeys.has(queryEntryKey(x)));
+    const bound = bindPackageQueryFactories({ cwd: WORKSPACE_ROOT, entries: packageEntries });
+    collected.push(...bound.bound);
+    warnings.push(...bound.warnings);
+    packageEntryCount = packageEntries.length;
   }
 
   for (const warning of warnings) {
@@ -130,7 +160,7 @@ async function main(): Promise<void> {
   }
 
   const boundCount = collected.filter((x) => x.bound).length;
-  console.log(`Summary: ${flags.components.length} component(s) · ${collected.length} entries · ${boundCount} bound · ${collected.length - boundCount} unbound · ${droppedSpecOnly} spec-only dropped · rules: ${queryModes.summary}`);
+  console.log(`Summary: ${flags.components.length} component(s) · ${flags.packages ? `${packageEntryCount} package entries · ` : ''}${collected.length} entries · ${boundCount} bound · ${collected.length - boundCount} unbound · ${droppedSpecOnly} spec-only dropped · rules: ${queryModes.summary}`);
 
   if (flags.strict && boundCount < collected.length) {
     console.error(`[strict] ${collected.length - boundCount} factor(y|ies) failed to bind — failing build.`);
@@ -186,6 +216,18 @@ function applyQueryModes(input: { readonly collected: readonly BoundQueryEntry[]
   return result;
 }
 
+/**
+ * Identity of a catalog entry across sources: the same factory from the same module.
+ *
+ * @param entry - The entry to key.
+ * @param entry.module - The module the factory is exported from.
+ * @param entry.name - The factory identifier.
+ * @returns The `module#name` key.
+ */
+function queryEntryKey(entry: { readonly module: string; readonly name: string }): string {
+  return `${entry.module}#${entry.name}`;
+}
+
 function resolveWorkspacePath(value: string): string {
   return isAbsolute(value) ? value : resolve(WORKSPACE_ROOT, value);
 }
@@ -201,11 +243,14 @@ function parseFlags(argv: readonly string[]): Flags {
   let output: string | undefined;
   let project: string | undefined;
   let rules: string | undefined;
+  let packages = false;
   let strict = false;
   let check = false;
 
   for (const arg of argv) {
-    if (arg === '--strict') {
+    if (arg === '--packages') {
+      packages = true;
+    } else if (arg === '--strict') {
       strict = true;
     } else if (arg === '--check') {
       check = true;
@@ -222,7 +267,7 @@ function parseFlags(argv: readonly string[]): Flags {
     }
   }
 
-  return { components, output, project, rules, strict, check };
+  return { components, packages, output, project, rules, strict, check };
 }
 
 function printUsageAndExit(): void {
@@ -231,12 +276,16 @@ function printUsageAndExit(): void {
 Usage:
   node dist/packages/dbx-cli/firestore-query-manifest/main.js \
     --project=<name> \
-    --component=<component-dir> [--component=<component-dir> ...] \
+    [--component=<component-dir> ...] [--packages] \
     --output=<path-to-query.manifest.generated.ts> \
     [--rules=<path-to-firestore.rules>] [--strict] [--check]
 
 Required flags:
   --component=<dir>  A "-firebase" component root to scan. Repeatable.
+  --packages         Also merge the framework query manifests bundled in the installed
+                     @dereekb/dbx-components-mcp (e.g. the @dereekb/firebase notification queries),
+                     which a published package ships no scannable source for.
+                     At least one of --component / --packages is required.
   --output=<path>    Path to the manifest TS file to write (workspace-relative ok).
 
 Optional:

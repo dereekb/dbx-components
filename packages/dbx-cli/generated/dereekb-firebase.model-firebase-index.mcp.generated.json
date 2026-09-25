@@ -805,6 +805,54 @@
       ]
     },
     {
+      "slug": "notifications-newest-first-query",
+      "name": "notificationsNewestFirstQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationsNewestFirstQuery(): FirestoreQueryConstraint[]",
+      "description": "Query constraints for listing the {@link Notification} documents in one {@link NotificationBox}, newest first.\n\nRun against a single box's notification collection — this is how an admin finds the notifications sent to a\nmodel (e.g. every notification for a profile) when their ids are auto-generated and not otherwise known. Pair it\nwith a limit; a busy box can hold many notifications between cleanup sweeps.",
+      "model": "Notification",
+      "collection": "nbn",
+      "isNested": true,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "lookup",
+      "params": [],
+      "returns": "Array of Firestore query constraints ordering notifications by creation date, newest first.",
+      "tags": [
+        "lookup",
+        "notification",
+        "notifications",
+        "newest",
+        "first",
+        "query",
+        "notificationsnewestfirstquery",
+        "constraints",
+        "listing",
+        "link",
+        "documents",
+        "one",
+        "notificationbox",
+        "run",
+        "against"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "orderBy",
+              "fieldPath": "cat",
+              "direction": "desc"
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
       "slug": "notification-logged-event-days-older-than-query",
       "name": "notificationLoggedEventDaysOlderThanQuery",
       "module": "@dereekb/firebase",

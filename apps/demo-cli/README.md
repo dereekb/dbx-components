@@ -84,8 +84,11 @@ demo-cli firestore-queries --json
 `firestore-queries` never asks for a login.
 
 `MODE` is how the query must be invoked, resolved from `firestore.rules` at generation time by the
-`--rules=firestore.rules` flag on `generate-firestore-query-manifest`. All three demo entries are
-`model` — run them directly. `gbe` is queried at `COLLECTION_GROUP` scope and the rules declare
+`--rules=firestore.rules` flag on `generate-firestore-query-manifest`. The demo's own entries are
+`model` — run them directly. The catalog also scans `packages/firebase`, so the framework queries are
+listed too: `notifications-newest-first-query` is `parent-child` (a box's notifications, run under
+`--parent nb/<boxId>`), and framework queries over collections the demo rules keep closed are
+`unavailable`. `gbe` is queried at `COLLECTION_GROUP` scope and the rules declare
 `match /{path=**}/gbe/{guestbookEntry}` for exactly that reason; drop that block and the entry turns
 `parent-child`, meaning it runs only under `--parent gb/<guestbookId>`.
 
@@ -117,17 +120,22 @@ demo-cli model guestbook get <id> --via api
 
 The demo is deliberately set up so the divergence is visible:
 
-- **Model-level — reconciled.** `sys`, `nbn`, `nbnw`, `nbnle`, `nbnlep`, `prp` have no client read
-  grant in `firestore.rules`. They are tagged `@dbxModelServerOnly` with `serverOnly: true` on their
-  service configs, so `demo-cli get sys/<id>` now fails `MODEL_IS_SERVER_ONLY` on **every** `--via`
-  value. This is a **breaking change**: those reads succeeded for a sysadmin before, by way of the
-  model API bypassing the rules entirely.
+- **Model-level — reconciled.** `sys` and `prp` have no client read grant in `firestore.rules`.
+  They are tagged `@dbxModelServerOnly` with `serverOnly: true` on their service configs, so
+  `demo-cli get sys/<id>` now fails `MODEL_IS_SERVER_ONLY` on **every** `--via` value. This is a
+  **breaking change**: those reads succeeded for a sysadmin before, by way of the model API
+  bypassing the rules entirely.
 - **`orp` / `orpv` are readable by a system admin**, and are the counter-example. They are operational
   configuration rather than plumbing, and an admin who can edit a prompt has to be able to read back
   what they wrote — so the rules grant the read and neither model is tagged. Prefer
   `demo-cli model openRouterPrompt read` over `get orp/<key>`: the prompt document holds only version
   pointers, while the read resolves the version actually being served and reports whether it came from
   the store or from a code definition.
+- **`nbn`, `nbnw`, `nbnle` and `nbnlep` are admin-readable, but `read`-only.** A box's notifications
+  (send states, attempt count) and its archived weeks and logged events are what an operator reads to
+  find out why a message was or was not delivered, so the rules grant a system admin the read and
+  each model is tagged `@dbxModelRead admin-only`. List a box's notifications with
+  `demo-cli firestore-query notifications-newest-first-query --parent nb/<boxId> --limit 10`.
 - **`orrt` is admin-readable, but `read`-only.** It is the execution record an operator reaches for
   when a run fails. Both the rules and its role map grant `read` alone: the sweep owns every write
   (claim, lease, state transition), so a client write would move a task out from under the sweep
@@ -153,13 +161,7 @@ dbx_model_server_only_validate_app {
 }
 ```
 
-Expected today: **0 errors, 4 warnings** — every resolvable leg agrees, and the warnings are the two
-known gaps:
-
-| Warning | Model(s) | Why it is accepted |
-| --- | --- | --- |
-| `MODEL_SERVER_ONLY_NOT_IN_MANIFEST` | `notificationLoggedEventDayPage`, `openRouterPrompt`, `openRouterPromptVersion` | The api-manifest generator's model discovery walks packages reached via the app's functions config, and these are not reached (or their interface is untagged). The **runtime** gate still refuses them; only the CLI's local pre-transport refusal is missed, so the read costs one round-trip to an API that refuses it. |
-| `MODEL_SERVER_ONLY_NO_INTERFACE` | `notificationLoggedEventDayPage` | `NotificationLoggedEventDayPageDocumentData` is a `type` alias over `PagedItemPageData<NotificationItem>`, so there is no interface to carry `@dbxModelServerOnly`. The runtime flag is the whole declaration for it. |
+Expected today: **0 errors, 0 warnings** — every model's tag, runtime flag, and rules verdict agree.
 
 `apps/demo-api/src/test/tests/firestore.rules.spec.ts` is the dynamic oracle for the same semantics —
 it drives the real rules engine via `@firebase/rules-unit-testing`.

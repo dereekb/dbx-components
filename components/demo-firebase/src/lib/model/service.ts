@@ -385,10 +385,6 @@ export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFa
  * @dbxModelServiceFactory notification
  */
 export const notificationFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Notification, NotificationDocument, NotificationRoles>({
-  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbn`, so no client can read it there.
-  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
-  // never consults the rules — would hand the document to a client anyway.
-  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<Notification, NotificationDocument>, context: DemoFirebaseContext, _model: NotificationDocument): PromiseOrValue<GrantedRoleMap<NotificationRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -399,10 +395,6 @@ export const notificationFirebaseModelServiceFactory = firebaseModelServiceFacto
  * @dbxModelServiceFactory notificationWeek
  */
 export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationWeek, NotificationWeekDocument, NotificationWeekRoles>({
-  // SERVER-ONLY: firestore.rules has `allow read: if false` for `nbnw`, so no client can read it there.
-  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
-  // never consults the rules — would hand the document to a client anyway.
-  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationWeek, NotificationWeekDocument>, context: DemoFirebaseContext, _model: NotificationWeekDocument): PromiseOrValue<GrantedRoleMap<NotificationWeekRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -413,10 +405,6 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
  * @dbxModelServiceFactory notificationLoggedEventDay
  */
 export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDay, NotificationLoggedEventDayDocument, NotificationLoggedEventDayRoles>({
-  // SERVER-ONLY: firestore.rules has no match block for `nbnle`, so no client can read it there.
-  // Without this flag the model API — which authorizes via roleMapForModel under the Admin SDK and
-  // never consults the rules — would hand the document to a client anyway.
-  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDay, NotificationLoggedEventDayDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
   },
@@ -427,10 +415,6 @@ export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseMod
  * @dbxModelServiceFactory notificationLoggedEventDayPage
  */
 export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayRoles>({
-  // SERVER-ONLY: firestore.rules has no match block for `nbnlep`, so no client can read it there.
-  // `NotificationLoggedEventDayPageDocumentData` is a type alias, not an interface, so there is no
-  // declaration to carry `@dbxModelServerOnly` — this flag is the whole declaration for this model.
-  serverOnly: true,
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayPageDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — pages are framework-internal
   },

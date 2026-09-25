@@ -32,9 +32,10 @@ describe('scanFirestoreRules()', () => {
       uec: ['allowed', 'denied'],
       sf: ['allowed', 'unmatched'],
       sfg: ['allowed', 'unmatched'],
-      // written-down refusals
-      nbn: ['denied', 'denied'],
-      nbnw: ['denied', 'denied']
+      nbn: ['allowed', 'allowed'],
+      nbnw: ['allowed', 'allowed'],
+      nbnle: ['allowed', 'allowed'],
+      nbnlep: ['allowed', 'allowed']
     };
 
     for (const [collection, [get, list]] of Object.entries(expected)) {
@@ -72,8 +73,8 @@ describe('scanFirestoreRules()', () => {
       expect(firestoreRulesAccessForCollection(scan, 'nbn').collectionGroup).toBe(false);
     });
 
-    it('reports exactly the two written-down server-only collections', () => {
-      expect(serverOnlyCollections(scan)).toEqual(['nbn', 'nbnw']);
+    it('reports no written-down server-only collection', () => {
+      expect(serverOnlyCollections(scan)).toEqual([]);
     });
 
     it('resolves nested match paths through their parent', () => {

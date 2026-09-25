@@ -6,6 +6,7 @@
  */
 
 import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome } from '../../firestore-indexes/src/model-firebase-index-build-manifest.js';
+import type { ModelFirebaseIndexEntry } from '../../firestore-indexes/src/model-firebase-index-schema.js';
 import type { CliFirestoreQueryScope } from '../../src/lib/manifest/types.js';
 import type { CollectedQueryEntry } from './types.js';
 
@@ -42,39 +43,72 @@ export async function findQueryEntries(input: FindQueryEntriesInput): Promise<Fi
 
   if (outcome.kind === 'success') {
     const dispatcherNames = new Set(outcome.dispatcherSummaries.map((x) => x.name));
-    const all = outcome.manifest.entries;
-    const kept = all.filter((x) => x.specOnly !== true);
-
-    result = {
-      kind: 'success',
-      droppedSpecOnly: all.length - kept.length,
-      entries: kept.map((entry) => ({
-        slug: entry.slug,
-        name: entry.name,
-        module: entry.module,
-        subpath: entry.subpath,
-        model: entry.model,
-        collection: entry.collection,
-        isNested: entry.isNested,
-        scope: entry.scope as CliFirestoreQueryScope,
-        signature: entry.signature,
-        params: entry.params.map((p) => ({ name: p.name, type: p.type, optional: p.optional, ...(p.description ? { description: p.description } : {}) })),
-        ...(entry.description ? { description: entry.description } : {}),
-        ...(entry.category ? { category: entry.category } : {}),
-        ...(entry.tags.length > 0 ? { tags: entry.tags } : {}),
-        ...(entry.example ? { example: entry.example } : {}),
-        ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: entry.relatedSlugs } : {}),
-        ...(entry.manual ? { manual: true } : {}),
-        ...(entry.skip ? { skip: true } : {}),
-        ...(entry.excluded ? { excluded: true } : {}),
-        ...(dispatcherNames.has(entry.name) ? { dispatcher: true } : {})
-      }))
-    };
+    result = { kind: 'success', ...collectQueryEntries({ entries: outcome.manifest.entries, dispatcherNames }) };
   } else {
     result = { kind: 'failure', message: describeFailure(componentRoot, outcome) };
   }
 
   return result;
+}
+
+/**
+ * Input for {@link collectQueryEntries}.
+ */
+export interface CollectQueryEntriesInput {
+  readonly entries: readonly ModelFirebaseIndexEntry[];
+  /**
+   * Names of the factories the extractor recognised as dispatchers. Empty for a pre-built package
+   * manifest, which does not carry dispatcher summaries.
+   */
+  readonly dispatcherNames?: ReadonlySet<string>;
+}
+
+/**
+ * Result of {@link collectQueryEntries}.
+ */
+export interface CollectQueryEntriesResult {
+  readonly entries: readonly CollectedQueryEntry[];
+  readonly droppedSpecOnly: number;
+}
+
+/**
+ * Maps model-firebase-index manifest entries onto catalog entries, dropping
+ * `@dbxModelFirebaseIndexSpecFilesOnly` factories.
+ *
+ * Shared by the component scan and the pre-built package manifests, so an entry reads the same
+ * whichever source it came from.
+ *
+ * @param input - The manifest entries and the dispatcher names.
+ * @returns The catalog entries and how many spec-only entries were dropped.
+ */
+export function collectQueryEntries(input: CollectQueryEntriesInput): CollectQueryEntriesResult {
+  const { entries: all, dispatcherNames = new Set<string>() } = input;
+  const kept = all.filter((x) => x.specOnly !== true);
+
+  return {
+    droppedSpecOnly: all.length - kept.length,
+    entries: kept.map((entry) => ({
+      slug: entry.slug,
+      name: entry.name,
+      module: entry.module,
+      subpath: entry.subpath,
+      model: entry.model,
+      collection: entry.collection,
+      isNested: entry.isNested,
+      scope: entry.scope as CliFirestoreQueryScope,
+      signature: entry.signature,
+      params: entry.params.map((p) => ({ name: p.name, type: p.type, optional: p.optional, ...(p.description ? { description: p.description } : {}) })),
+      ...(entry.description ? { description: entry.description } : {}),
+      ...(entry.category ? { category: entry.category } : {}),
+      ...(entry.tags.length > 0 ? { tags: entry.tags } : {}),
+      ...(entry.example ? { example: entry.example } : {}),
+      ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: entry.relatedSlugs } : {}),
+      ...(entry.manual ? { manual: true } : {}),
+      ...(entry.skip ? { skip: true } : {}),
+      ...(entry.excluded ? { excluded: true } : {}),
+      ...(dispatcherNames.has(entry.name) ? { dispatcher: true } : {})
+    }))
+  };
 }
 
 /**

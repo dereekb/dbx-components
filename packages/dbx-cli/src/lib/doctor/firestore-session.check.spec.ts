@@ -8,7 +8,7 @@ const BINDING = { collections: () => ({}), models: (() => ({})) as never } as Cl
 const MODEL_MANIFEST = [
   { modelType: 'guestbook', collectionPrefix: 'gb' },
   { modelType: 'systemState', collectionPrefix: 'sys', serverOnly: true },
-  { modelType: 'notification', collectionPrefix: 'nbn', serverOnly: true }
+  { modelType: 'profilePrivate', collectionPrefix: 'prp', serverOnly: true }
 ] as unknown as CliModelManifest;
 
 const QUERY_MANIFEST = [{ slug: 'a', factory: () => [] }, { slug: 'b', factory: () => [] }, { slug: 'c' }] as unknown as CliFirestoreQueryManifest;
