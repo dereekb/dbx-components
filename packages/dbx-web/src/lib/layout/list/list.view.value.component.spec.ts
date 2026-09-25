@@ -593,6 +593,40 @@ describe('DbxValueListViewContentComponent', () => {
         expect(renderedSequence(fixture.nativeElement)).toEqual(['^|a', 'Alpha', 'a|b', 'Beta', 'b|$']);
       });
 
+      it('should update a separator when its neighbouring items change', async () => {
+        const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
+          componentClass: TestSeparatorComponent,
+          showSeparator: (previous, next) => previous != null && next != null
+        };
+
+        fixture.componentRef.setInput('separatorConfig', separatorConfig);
+        fixture.componentRef.setInput(
+          'items',
+          makeConfiguredItems([
+            { key: 'a', name: 'Alpha', category: 'first' },
+            { key: 'b', name: 'Beta', category: 'first' }
+          ])
+        );
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(renderedSequence(fixture.nativeElement)).toEqual(['Alpha', 'a|b', 'Beta']);
+
+        // insert 'c' between 'a' and 'b'; the separator in front of the reused 'b' row must now read c|b
+        fixture.componentRef.setInput(
+          'items',
+          makeConfiguredItems([
+            { key: 'a', name: 'Alpha', category: 'first' },
+            { key: 'c', name: 'Charlie', category: 'first' },
+            { key: 'b', name: 'Beta', category: 'first' }
+          ])
+        );
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(renderedSequence(fixture.nativeElement)).toEqual(['Alpha', 'a|c', 'Charlie', 'c|b', 'Beta']);
+      });
+
       it('should NOT destroy item components when data updates with same keys and separators are shown', async () => {
         const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
           componentClass: TestSeparatorComponent,

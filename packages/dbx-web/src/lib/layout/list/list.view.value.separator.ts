@@ -77,6 +77,10 @@ export function dbxValueListItemSeparatorDecisionFunction<T>(decisionFunction: (
  * config is the input config without `showSeparator`, with a {@link DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR} provider added
  * ahead of the config's own providers.
  *
+ * Each call returns configs with a fresh `init` wrapper (which still calls the input config's `init`).
+ * `dbx-injection` ignores `providers` when comparing configs, so without it a reused separator would keep the neighbour
+ * items it was created with; the new `init` makes the separator re-create with its current neighbours.
+ *
  * @param items - The rendered items, in display order.
  * @param separatorConfig - The separator configuration. When not provided, no separators are rendered.
  * @returns The separator injection configs for each position around the items.
@@ -93,7 +97,7 @@ export function dbxValueListItemSeparatorConfigs<T, I extends DbxValueListItem<T
   if (separatorConfig == null) {
     result = [];
   } else {
-    const { showSeparator, ...injectionConfig } = separatorConfig;
+    const { showSeparator, init, ...injectionConfig } = separatorConfig;
     result = [];
 
     for (let i = 0; i <= items.length; i += 1) {
@@ -104,7 +108,7 @@ export function dbxValueListItemSeparatorConfigs<T, I extends DbxValueListItem<T
       if (showSeparator(previous, next)) {
         const context: DbxValueListItemSeparatorContext<T, I> = { previous, next };
         const providers: StaticProvider[] = [{ provide: DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR, useValue: context }, ...(injectionConfig.providers ?? [])];
-        separator = { ...injectionConfig, providers } as DbxInjectionComponentConfig;
+        separator = { ...injectionConfig, providers, init: (instance: unknown) => init?.(instance) } as DbxInjectionComponentConfig;
       }
 
       result.push(separator);

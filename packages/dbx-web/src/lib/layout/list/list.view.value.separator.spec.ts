@@ -86,6 +86,26 @@ describe('dbxValueListItemSeparatorConfigs()', () => {
     expect(context.next).toBe(items[1]);
     expect((separator?.providers ?? []).some((x) => (x as ValueProvider).provide === EXTRA_TOKEN)).toBe(true);
   });
+  it('should give each computed separator a new init that still calls the config init', () => {
+    const initialized: unknown[] = [];
+    const config: DbxValueListViewSeparatorConfig<TestValue> = {
+      componentClass: TestSeparatorComponent,
+      init: (instance) => initialized.push(instance),
+      showSeparator: (previous, next) => previous != null && next != null
+    };
+
+    const items = makeItems('a', 'b');
+    const first = dbxValueListItemSeparatorConfigs(items, config)[1];
+    const second = dbxValueListItemSeparatorConfigs(items, config)[1];
+
+    // a new init per computation makes dbx-injection re-create the separator with its current neighbours
+    expect(first?.init).toBeDefined();
+    expect(first?.init).not.toBe(second?.init);
+
+    const instance = new TestSeparatorComponent();
+    first?.init?.(instance);
+    expect(initialized).toEqual([instance]);
+  });
 });
 
 describe('dbxValueListItemSeparatorDecisionFunction()', () => {
