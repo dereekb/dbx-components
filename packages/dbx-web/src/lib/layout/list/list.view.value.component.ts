@@ -4,6 +4,7 @@ import { shareReplay, map, type Observable, switchMap, of } from 'rxjs';
 import { type DbxValueListItem, type AbstractDbxValueListViewConfig, type DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
+import { type DbxValueListViewSeparatorConfig, dbxValueListItemSeparatorConfigs } from './list.view.value.separator';
 import { DbxListView } from './list.view';
 import { type Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { type DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
@@ -28,7 +29,8 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
 
 /**
  * Renders a single group of list items within a {@link DbxValueListViewContentComponent}. Displays an optional header,
- * a list of items using `mat-list-item`, and an optional footer.
+ * a list of items using `mat-list-item`, and an optional footer. When the content component has a separator config,
+ * separators are injected between (and around) the group's items wherever its `showSeparator` function returns true.
  *
  * @example
  * ```html
@@ -45,6 +47,11 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
         </div>
       }
       @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+        @if (separatorsSignal()[$index]; as separator) {
+          <div class="dbx-list-view-item-separator">
+            <dbx-injection [config]="separator"></dbx-injection>
+          </div>
+        }
         <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
           <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)" (keydown.enter)="onClickItem(item)">
             @if (item.icon) {
@@ -58,6 +65,11 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
             }
           </a>
         </dbx-anchor>
+      }
+      @if (trailingSeparatorSignal(); as trailingSeparator) {
+        <div class="dbx-list-view-item-separator">
+          <dbx-injection [config]="trailingSeparator"></dbx-injection>
+        </div>
       }
       @if (footerConfigSignal()) {
         <div class="dbx-list-view-group-footer">
@@ -79,6 +91,8 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   readonly trackByFunctionSignal = toSignal(this.dbxValueListViewContentComponent.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
 
   readonly itemsSignal = computed(() => this.group()?.items ?? []);
+  readonly separatorsSignal = computed(() => dbxValueListItemSeparatorConfigs<T, I>(this.itemsSignal(), this.dbxValueListViewContentComponent.separatorConfig()));
+  readonly trailingSeparatorSignal = computed(() => this.separatorsSignal()[this.itemsSignal().length]);
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
   readonly footerConfigSignal = computed(() => this.group()?.footerConfig);
   readonly cssClassSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
@@ -143,6 +157,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
   readonly emitAllClicks = input<Maybe<boolean>>();
   readonly stickyHeaders = input<Maybe<boolean>>(false);
+  readonly separatorConfig = input<Maybe<DbxValueListViewSeparatorConfig<T, I>>>();
 
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
@@ -190,11 +205,12 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
 @Component({
   selector: 'dbx-list-view',
   template: `
-    <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-list-view-content>
+    <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true" [separatorConfig]="separatorConfigSignal()"></dbx-list-view-content>
   `,
   imports: [DbxValueListViewContentComponent]
 })
 export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
   readonly emitAllClicksSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.emitAllClicks);
   readonly stickyHeadersSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.stickyHeaders);
+  readonly separatorConfigSignal: Signal<Maybe<DbxValueListViewSeparatorConfig<T, I>>> = computed(() => this.config()?.separatorConfig);
 }

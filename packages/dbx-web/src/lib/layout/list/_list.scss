@@ -194,7 +194,10 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-content {
-    max-height: 100%;
+    // The list's own scroll container. Override point (`--dbx-list-content-max-height`) caps the scroll
+    // area at a fixed height — set it on the list wrapper host (or any ancestor) when the list sizes to its
+    // rows (e.g. with `.dbx-list-auto-height`) and should scroll past a limit instead of growing.
+    max-height: var(--dbx-list-content-max-height, 100%);
     overflow: auto;
     box-sizing: border-box;
 
@@ -369,6 +372,14 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  // A separator (a list view's `separatorConfig`) supplies its own vertical spacing, so the row right
+  // before it drops its bottom gap (the card-list gap, or the hairline row spacing). Otherwise the
+  // separator sits closer to the row below it than to the row above it.
+  .dbx-list .dbx-list-view-group-content > dbx-anchor:has(+ .dbx-list-view-item-separator) .dbx-list-view-item.mat-mdc-list-item,
+  .dbx-list mat-selection-list > .dbx-list-view-item:has(+ .dbx-list-view-item-separator) {
+    margin-bottom: 0;
+  }
+
   // Opts a list out of the default medium-rounded rows back to square (0). Custom properties inherit, so
   // applying this on a `dbx-list` / `dbx-anchor-list` host (or any ancestor) squares selection and nav rows
   // alike by zeroing both the `.dbx-list` (`--dbx-list-item-border-radius`) and `.dbx-anchor-list`
@@ -434,6 +445,157 @@ $list-item-padded-min-height: 42px;
       font-size: 0.75em;
       opacity: 0.8;
     }
+  }
+
+  // Detail list-row layout — a bold title followed by any number of secondary lines, framed by a
+  // leading slot (icon tile, or a full-height `.item-leading-block`) and a trailing slot (button,
+  // text action, …). The row supplies its own padding, so pair it with `dbx-list-item-p0` on the
+  // value-list view. A view's built-in meta (e.g. the `DbxListViewMetaIconComponent` chevron) still
+  // renders after the trailing slot.
+  //
+  // Override points (all inherit, so set them on the row, the list wrapper host, or any ancestor):
+  //   --dbx-list-detail-item-padding            → row padding (`--dbx-padding-3`)
+  //   --dbx-list-detail-item-gap                → gap between leading / content / trailing (`--dbx-padding-3`)
+  //   --dbx-list-detail-item-line-gap           → gap between the title and each line (2px)
+  //   --dbx-list-detail-item-line-icon-size     → leading `<mat-icon>` size inside `.item-line` (18px)
+  //   --dbx-list-detail-item-leading-block-width → `.item-leading-block` width (112px)
+  //   --dbx-list-detail-item-divider-color      → `.item-trailing-divided` hairline (`--mat-sys-outline-variant`)
+  /// @dbx-utility list-detail-item
+  /// @intent detail list-row layout — flex row of a leading slot, a content column (bold `.item-title` + `.item-line` rows with optional leading icons) and a trailing slot, paired with nested `.item-leading` / `.item-leading-block` / `.item-content` / `.item-title` / `.item-line` / `.item-trailing` / `.item-trailing-divided` helpers; the row pads itself, so pair with `dbx-list-item-p0` on the view
+  /// @role layout
+  /// @see-also dbx-list-two-line-item, dbx-list-item-p0, dbx-list-detail-item-highlight
+  .dbx-list-detail-item {
+    --dbx-list-detail-item-padding-resolved: var(--dbx-list-detail-item-padding, var(--dbx-padding-3));
+
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--dbx-list-detail-item-gap, var(--dbx-padding-3));
+    min-width: 0;
+    padding: var(--dbx-list-detail-item-padding-resolved);
+    box-sizing: border-box;
+
+    .item-leading {
+      flex: none;
+      align-self: center;
+    }
+
+    .item-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--dbx-list-detail-item-line-gap, 2px);
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .item-title {
+      font: var(--mat-sys-title-medium);
+      font-weight: 600;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .item-line {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-1);
+      font: var(--mat-sys-body-medium);
+      color: var(--mat-sys-on-surface-variant);
+
+      > .mat-icon {
+        flex: none;
+        width: var(--dbx-list-detail-item-line-icon-size, 18px);
+        height: var(--dbx-list-detail-item-line-icon-size, 18px);
+        font-size: var(--dbx-list-detail-item-line-icon-size, 18px);
+      }
+    }
+
+    .item-trailing {
+      display: flex;
+      flex: none;
+      align-items: center;
+    }
+  }
+
+  /// @dbx-utility list-detail-item-leading-block
+  /// @intent full-height leading column for a `.dbx-list-detail-item` (e.g. a weekday / date / status block) — bleeds out to the row's top, bottom and start edges so a `[dbxColor]` + `.dbx-color-bg` wash fills the row edge; size via `--dbx-list-detail-item-leading-block-width`
+  /// @role layout
+  /// @parent list-detail-item
+  /// @see-also dbx-list-detail-item, dbx-color-bg
+  .dbx-list-detail-item .item-leading-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    align-self: stretch;
+    gap: var(--dbx-padding-1);
+    width: var(--dbx-list-detail-item-leading-block-width, 112px);
+    margin: calc(-1 * var(--dbx-list-detail-item-padding-resolved)) 0 calc(-1 * var(--dbx-list-detail-item-padding-resolved)) calc(-1 * var(--dbx-list-detail-item-padding-resolved));
+    padding: var(--dbx-list-detail-item-padding-resolved);
+    box-sizing: border-box;
+  }
+
+  /// @dbx-utility list-detail-item-trailing-divided
+  /// @intent trailing slot of a `.dbx-list-detail-item` set off from the content by a hairline start border — for a trailing button column; recolor via `--dbx-list-detail-item-divider-color`
+  /// @role layout
+  /// @parent list-detail-item
+  /// @see-also dbx-list-detail-item
+  .dbx-list-detail-item .item-trailing-divided {
+    align-self: stretch;
+    padding-left: var(--dbx-list-detail-item-gap, var(--dbx-padding-3));
+    border-left: 1px solid var(--dbx-list-detail-item-divider-color, var(--mat-sys-outline-variant));
+  }
+
+  // A "…" marker between two runs of `.dbx-list-detail-item` rows — e.g. before a date that doesn't
+  // follow the previous row. Render it from a list view's `separatorConfig` (the list injects the
+  // separator component between the two rows, outside the list rows), so it never picks up row hover /
+  // ripple / card styling. Its `.item-leading` column shares `--dbx-list-detail-item-leading-block-width`,
+  // so the marker icon lines up under an `.item-leading-block` column. The space above and below it is
+  // `--dbx-list-detail-item-gap-marker-padding` (`--dbx-padding-3`); the row before a separator drops its
+  // own bottom gap, so the marker stays centered between the two rows.
+  /// @dbx-utility list-detail-item-gap
+  /// @intent non-interactive "…" gap marker between runs of `.dbx-list-detail-item` rows (e.g. non-consecutive dates) — a compact muted row whose `.item-leading` column lines up with `.item-leading-block`; render it as the separator component of a list view's `separatorConfig` so it sits between rows without row styling
+  /// @role layout
+  /// @parent list-detail-item
+  /// @see-also dbx-list-detail-item, dbx-list-detail-item-leading-block
+  .dbx-list-detail-item-gap {
+    display: flex;
+    align-items: center;
+    gap: var(--dbx-list-detail-item-gap, var(--dbx-padding-3));
+    // Equal space above and below so the marker sits centered between the two rows.
+    padding: var(--dbx-list-detail-item-gap-marker-padding, var(--dbx-padding-3)) 0;
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+
+    .item-leading {
+      display: flex;
+      flex: none;
+      justify-content: center;
+      width: var(--dbx-list-detail-item-leading-block-width, 112px);
+    }
+  }
+
+  /// @dbx-utility list-detail-item-highlight
+  /// @intent flag a `.dbx-list-detail-item` row as urgent — a rounded tonal wash of `--dbx-list-detail-item-highlight-color` (default `--dbx-notice-color`) at `--dbx-list-detail-item-highlight-tone` (default 14%); inside a `.dbx-list` the hosting list row paints the wash instead, so it also spans the view's built-in meta slot (e.g. the chevron)
+  /// @role state
+  /// @parent list-detail-item
+  /// @see-also dbx-list-detail-item
+  .dbx-list-detail-item-highlight {
+    background: color-mix(in srgb, var(--dbx-list-detail-item-highlight-color, var(--dbx-notice-color)) var(--dbx-list-detail-item-highlight-tone, 14%), transparent);
+    border-radius: var(--mat-sys-corner-medium, 12px);
+  }
+
+  // Inside a list row the wash has to cover the whole row — including the view's meta slot, which
+  // renders outside the item template — so the hosting `.mat-mdc-list-item` paints it via `:has()` and
+  // the item itself stays clear. Qualified with `.dbx-list .dbx-list-view` so it ties the hover/focus
+  // corner rule and wins by source order.
+  .dbx-list-view-item .dbx-list-detail-item-highlight {
+    background: none;
+  }
+
+  .dbx-list .dbx-list-view .dbx-list-view-item.mat-mdc-list-item:has(.dbx-list-detail-item-highlight) {
+    --mat-list-list-item-container-color: color-mix(in srgb, var(--dbx-list-detail-item-highlight-color, var(--dbx-notice-color)) var(--dbx-list-detail-item-highlight-tone, 14%), transparent);
+    --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
   }
 
   /// @dbx-utility list-no-hover-effects

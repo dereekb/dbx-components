@@ -2,6 +2,7 @@ import { forwardRef, InjectionToken, type Provider, type StaticProvider, type Ty
 import { type ClickableAnchor, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { map, type Observable } from 'rxjs';
 import { type Configurable, type DecisionFunction, type Maybe, type ModelKeyRef, type UniqueModel } from '@dereekb/util';
+import { type DbxValueListViewSeparatorConfig } from './list.view.value.separator';
 
 /**
  * Injection token that provides the current {@link DbxValueListItem} to dynamically injected item components.
@@ -90,6 +91,15 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
   readonly metaConfig?: DbxInjectionComponentConfig<any>;
+  /**
+   * (Optional) Separator component injected between two neighbouring items when its `showSeparator` function returns
+   * true. Separators are evaluated within each group, in display order.
+   *
+   * Rendered by the list, selection list, and accordion views. The grid view ignores it.
+   *
+   * @see DbxValueListViewSeparatorConfig
+   */
+  readonly separatorConfig?: Maybe<DbxValueListViewSeparatorConfig<T, I>>;
   /**
    * Whether group headers should stick to the top of the scroll container.
    *

@@ -1,7 +1,7 @@
 import { DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION, DbxValueListViewContentComponent } from './list.view.value.component';
 import { type DbxValueListItem, type DbxValueListItemConfig, addConfigToValueListItems, type AbstractDbxValueListViewConfig, dbxValueListItemKeyForItemValue } from './list.view.value';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, input, type OnDestroy } from '@angular/core';
+import { Component, inject, input, type OnDestroy } from '@angular/core';
 import { type Observable, of } from 'rxjs';
 import { type ListLoadingStateContext } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
@@ -11,6 +11,7 @@ import { DbxRouterWebProviderConfig } from '../../router/provider/router.provide
 import { DbxListTitleGroupDirective } from './group/list.view.value.group.title.directive';
 import { type DbxListTitleGroupTitleDelegate, type DbxListTitleGroupData } from './group/list.view.value.group.title';
 import { AbstractDbxValueListViewItemComponent } from './list.view.value.item.directive';
+import { DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR, type DbxValueListItemSeparatorContext, type DbxValueListViewSeparatorConfig } from './list.view.value.separator';
 
 // MARK: Test Types
 interface TestItem {
@@ -50,6 +51,21 @@ class TestItemComponent extends AbstractDbxValueListViewItemComponent<TestItem> 
   }
 }
 
+// MARK: Test Separator Component
+/**
+ * Renders the keys of the two items it sits between, using `^` / `$` for a missing leading / trailing item.
+ */
+@Component({
+  selector: 'dbx-test-separator',
+  template: `
+    <span class="test-separator">{{ label }}</span>
+  `
+})
+class TestSeparatorComponent {
+  readonly context = inject<DbxValueListItemSeparatorContext<TestItem>>(DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR);
+  readonly label = `${this.context.previous?.itemValue.key ?? '^'}|${this.context.next?.itemValue.key ?? '$'}`;
+}
+
 // MARK: Mock DbxListView
 class MockDbxListView extends DbxListView<TestItem> {
   readonly disabled$: Observable<boolean> = of(false);
@@ -76,25 +92,27 @@ class MockDbxListView extends DbxListView<TestItem> {
 @Component({
   selector: 'dbx-test-list-host',
   template: `
-    <dbx-list-view-content [items]="items()"></dbx-list-view-content>
+    <dbx-list-view-content [items]="items()" [separatorConfig]="separatorConfig()"></dbx-list-view-content>
   `,
   imports: [DbxValueListViewContentComponent]
 })
 class TestListHostComponent {
   readonly items = input<Maybe<DbxValueListItemConfig<TestItem>[]>>();
+  readonly separatorConfig = input<Maybe<DbxValueListViewSeparatorConfig<TestItem>>>();
 }
 
 // MARK: Test Host With Grouping
 @Component({
   selector: 'dbx-test-grouped-list-host',
   template: `
-    <dbx-list-view-content [dbxListTitleGroup]="groupDelegate()" [items]="items()"></dbx-list-view-content>
+    <dbx-list-view-content [dbxListTitleGroup]="groupDelegate()" [items]="items()" [separatorConfig]="separatorConfig()"></dbx-list-view-content>
   `,
   imports: [DbxValueListViewContentComponent, DbxListTitleGroupDirective]
 })
 class TestGroupedListHostComponent {
   readonly items = input<Maybe<DbxValueListItemConfig<TestItem>[]>>();
   readonly groupDelegate = input<Maybe<DbxListTitleGroupTitleDelegate<TestItem, TestGroupKey, TestGroupData>>>();
+  readonly separatorConfig = input<Maybe<DbxValueListViewSeparatorConfig<TestItem>>>();
 }
 
 // MARK: Helpers
@@ -197,7 +215,7 @@ describe('DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION', () => {
 describe('DbxValueListViewContentComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TestListHostComponent, TestGroupedListHostComponent, TestItemComponent],
+      imports: [TestListHostComponent, TestGroupedListHostComponent, TestItemComponent, TestSeparatorComponent],
       providers: [
         { provide: DbxListView, useClass: MockDbxListView },
         { provide: DbxRouterWebProviderConfig, useValue: MOCK_ROUTER_WEB_PROVIDER_CONFIG }
@@ -494,6 +512,159 @@ describe('DbxValueListViewContentComponent', () => {
 
       const itemElements = fixture.nativeElement.querySelectorAll('.test-item-name');
       expect(itemElements.length).toBe(2);
+    });
+  });
+
+  describe('separators', () => {
+    /**
+     * Returns the rendered separator labels and item names, in document order.
+     */
+    function renderedSequence(element: HTMLElement): string[] {
+      return Array.from(element.querySelectorAll('.test-separator, .test-item-name')).map((x) => x.textContent ?? '');
+    }
+
+    describe('ungrouped list', () => {
+      let fixture: ComponentFixture<TestListHostComponent>;
+
+      beforeEach(() => {
+        fixture = TestBed.createComponent(TestListHostComponent);
+      });
+
+      afterEach(() => {
+        fixture.destroy();
+      });
+
+      it('should not render separators when no separator config is set', async () => {
+        const items: TestItem[] = [
+          { key: 'a', name: 'Alpha', category: 'first' },
+          { key: 'b', name: 'Beta', category: 'second' }
+        ];
+
+        fixture.componentRef.setInput('items', makeConfiguredItems(items));
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(fixture.nativeElement.querySelectorAll('.dbx-list-view-item-separator').length).toBe(0);
+      });
+
+      it('should render a separator only between the items showSeparator approves', async () => {
+        const items: TestItem[] = [
+          { key: 'a', name: 'Alpha', category: 'first' },
+          { key: 'b', name: 'Beta', category: 'first' },
+          { key: 'c', name: 'Charlie', category: 'second' }
+        ];
+
+        const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
+          componentClass: TestSeparatorComponent,
+          showSeparator: (previous, next) => previous != null && next != null && previous.itemValue.category !== next.itemValue.category
+        };
+
+        fixture.componentRef.setInput('separatorConfig', separatorConfig);
+        fixture.componentRef.setInput('items', makeConfiguredItems(items));
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(renderedSequence(fixture.nativeElement)).toEqual(['Alpha', 'Beta', 'b|c', 'Charlie']);
+      });
+
+      it('should call showSeparator for the leading and trailing positions with the missing side undefined', async () => {
+        const items: TestItem[] = [
+          { key: 'a', name: 'Alpha', category: 'first' },
+          { key: 'b', name: 'Beta', category: 'first' }
+        ];
+
+        const calls: string[] = [];
+        const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
+          componentClass: TestSeparatorComponent,
+          showSeparator: (previous, next) => {
+            calls.push(`${previous?.itemValue.key ?? '^'}|${next?.itemValue.key ?? '$'}`);
+            return true;
+          }
+        };
+
+        fixture.componentRef.setInput('separatorConfig', separatorConfig);
+        fixture.componentRef.setInput('items', makeConfiguredItems(items));
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(calls).toContain('^|a');
+        expect(calls).toContain('a|b');
+        expect(calls).toContain('b|$');
+        expect(renderedSequence(fixture.nativeElement)).toEqual(['^|a', 'Alpha', 'a|b', 'Beta', 'b|$']);
+      });
+
+      it('should NOT destroy item components when data updates with same keys and separators are shown', async () => {
+        const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
+          componentClass: TestSeparatorComponent,
+          showSeparator: (previous, next) => previous != null && next != null
+        };
+
+        fixture.componentRef.setInput('separatorConfig', separatorConfig);
+        fixture.componentRef.setInput(
+          'items',
+          makeConfiguredItems([
+            { key: 'a', name: 'Alpha Before', category: 'first' },
+            { key: 'b', name: 'Beta Before', category: 'first' }
+          ])
+        );
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        const instanceA1 = TEST_ITEM_INSTANCE_TRACKER.get('a');
+        const instanceB1 = TEST_ITEM_INSTANCE_TRACKER.get('b');
+        testItemDestroyCount = 0;
+
+        fixture.componentRef.setInput(
+          'items',
+          makeConfiguredItems([
+            { key: 'a', name: 'Alpha After', category: 'first' },
+            { key: 'b', name: 'Beta After', category: 'first' }
+          ])
+        );
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(testItemDestroyCount).toBe(0);
+        expect(TEST_ITEM_INSTANCE_TRACKER.get('a')).toBe(instanceA1);
+        expect(TEST_ITEM_INSTANCE_TRACKER.get('b')).toBe(instanceB1);
+        // the reused item components keep their original rendering; the separator is still rendered between them.
+        const separatorLabels = Array.from(fixture.nativeElement.querySelectorAll('.test-separator')).map((x) => (x as HTMLElement).textContent);
+        expect(separatorLabels).toEqual(['a|b']);
+      });
+    });
+
+    describe('grouped list', () => {
+      let fixture: ComponentFixture<TestGroupedListHostComponent>;
+
+      beforeEach(() => {
+        fixture = TestBed.createComponent(TestGroupedListHostComponent);
+      });
+
+      afterEach(() => {
+        fixture.destroy();
+      });
+
+      it('should evaluate separators within each group', async () => {
+        const items: TestItem[] = [
+          { key: 'a', name: 'Alpha', category: 'alpha' },
+          { key: 'b', name: 'Beta', category: 'beta' },
+          { key: 'c', name: 'Charlie', category: 'alpha' }
+        ];
+
+        const separatorConfig: DbxValueListViewSeparatorConfig<TestItem> = {
+          componentClass: TestSeparatorComponent,
+          showSeparator: (previous, next) => previous != null && next != null
+        };
+
+        fixture.componentRef.setInput('groupDelegate', makeTestGroupDelegate());
+        fixture.componentRef.setInput('separatorConfig', separatorConfig);
+        fixture.componentRef.setInput('items', makeConfiguredItems(items));
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        // alpha group renders [a, c] and beta group renders [b]; only a|c are neighbours within a group.
+        expect(renderedSequence(fixture.nativeElement)).toEqual(['Alpha', 'a|c', 'Charlie', 'Beta']);
+      });
     });
   });
 });
