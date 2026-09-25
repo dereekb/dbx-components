@@ -5,8 +5,9 @@ import { DbxFilterSourceDirective } from './filter.source.directive';
 import { DbxFilterSourceConnectorDirective } from './filter.connector.directive';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { DbxFilterConnectSourceDirective } from './filter.connect.source.directive';
+import { DbxFilterMapMergeSourceDirective } from './filter.map.merge.source.directive';
 
-const importsAndExports = [DbxFilterSourceDirective, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterSourceConnectorDirective, DbxFilterMapDirective, DbxFilterMapSourceDirective];
+const importsAndExports = [DbxFilterSourceDirective, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterSourceConnectorDirective, DbxFilterMapDirective, DbxFilterMapSourceDirective, DbxFilterMapMergeSourceDirective];
 
 @NgModule({
   imports: importsAndExports,

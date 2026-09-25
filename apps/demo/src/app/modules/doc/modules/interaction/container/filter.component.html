@@ -15,6 +15,25 @@
       <p>Another example.</p>
       <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForDateFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
     </doc-feature-example>
+    <doc-feature-example
+      header="Merged Filters"
+      hint="Two filter popover buttons that each own a separate FilterMap key, merged together into a single filter. Each button only edits its own fields, so saving one never clears the other. The filters are saved to localStorage by DbxFilterStorageService and restored when the page loads.">
+      <dbx-content-border>
+        <p>Date Filter Value: {{ mergedDateFilterSignal() | json }}</p>
+        <p>Filters Filter Value: {{ mergedAttributesFilterSignal() | json }}</p>
+        <p>Merged Filter Value (FilterMap.mergedFilterForKeys): {{ mergedFilterSignal() | json }}</p>
+      </dbx-content-border>
+      <p>Each button is connected to its own key with dbxFilterMapSourceConnector.</p>
+      <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForMergedDateFilterSignal()" [dbxFilterMapSourceConnector]="mergedDateFilterKey"></doc-interaction-test-date-filter-popover-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <doc-interaction-test-attributes-filter-popover-button [buttonDisplayStyle]="displayForMergedAttributesFilterSignal()" [dbxFilterMapSourceConnector]="mergedAttributesFilterKey"></doc-interaction-test-attributes-filter-popover-button>
+      <p>dbxFilterMapMergeSource provides the merged filter as a FilterSource, so child components can inject it like any other filter.</p>
+      <dbx-content-border [dbxFilterMapMergeSource]="mergedFilterKeys">
+        <doc-interaction-test-merged-filter-view></doc-interaction-test-merged-filter-view>
+      </dbx-content-border>
+      <p>Resetting sets both filters back to their defaults and removes the saved filters.</p>
+      <dbx-button (buttonClick)="resetMergedFilters()" icon="restart_alt" text="Reset Filters"></dbx-button>
+    </doc-feature-example>
     <doc-feature-example header="dbx-filter-popover-button (custom filter only)" hint="When only a custom filter component is configured the popover opens directly to that filter's form, and the preset/customize switch buttons are hidden.">
       <dbx-content-border>
         <p>Filter Value: {{ formFilterSignal() | json }}</p>
