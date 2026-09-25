@@ -458,7 +458,7 @@ $list-item-padded-min-height: 42px;
   //   --dbx-list-detail-item-gap                → gap between leading / content / trailing (`--dbx-padding-3`)
   //   --dbx-list-detail-item-line-gap           → gap between the title and each line (2px)
   //   --dbx-list-detail-item-line-icon-size     → leading `<mat-icon>` size inside `.item-line` (18px)
-  //   --dbx-list-detail-item-leading-block-width → `.item-leading-block` width (112px)
+  //   --dbx-list-detail-item-leading-block-width → `.item-leading-block` minimum width (112px)
   //   --dbx-list-detail-item-divider-color      → `.item-trailing-divided` hairline (`--mat-sys-outline-variant`)
   /// @dbx-utility list-detail-item
   /// @intent detail list-row layout — flex row of a leading slot, a content column (bold `.item-title` + `.item-line` rows with optional leading icons) and a trailing slot, paired with nested `.item-leading` / `.item-leading-block` / `.item-content` / `.item-title` / `.item-line` / `.item-trailing` / `.item-trailing-divided` helpers; the row pads itself, so pair with `dbx-list-item-p0` on the view
@@ -518,7 +518,7 @@ $list-item-padded-min-height: 42px;
   }
 
   /// @dbx-utility list-detail-item-leading-block
-  /// @intent full-height leading column for a `.dbx-list-detail-item` (e.g. a weekday / date / status block) — bleeds out to the row's top, bottom and start edges so a `[dbxColor]` + `.dbx-color-bg` wash fills the row edge; size via `--dbx-list-detail-item-leading-block-width`
+  /// @intent full-height leading column for a `.dbx-list-detail-item` (e.g. a weekday / date / status block) — bleeds out to the row's top, bottom and start edges so a `[dbxColor]` + `.dbx-color-bg` wash fills the row edge; never shrinks below `--dbx-list-detail-item-leading-block-width` (112px), so every row's block stays the same width and only grows when its own content is wider
   /// @role layout
   /// @parent list-detail-item
   /// @see-also dbx-list-detail-item, dbx-color-bg
@@ -529,7 +529,10 @@ $list-item-padded-min-height: 42px;
     align-items: flex-start;
     align-self: stretch;
     gap: var(--dbx-padding-1);
-    width: var(--dbx-list-detail-item-leading-block-width, 112px);
+    // Don't let the flex row shrink the block toward its content width on narrow views, which gives each
+    // row a different width; it only grows past the minimum when its own content is wider.
+    flex: none;
+    min-width: var(--dbx-list-detail-item-leading-block-width, 112px);
     margin: calc(-1 * var(--dbx-list-detail-item-padding-resolved)) 0 calc(-1 * var(--dbx-list-detail-item-padding-resolved)) calc(-1 * var(--dbx-list-detail-item-padding-resolved));
     padding: var(--dbx-list-detail-item-padding-resolved);
     box-sizing: border-box;
