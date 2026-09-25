@@ -1,8 +1,8 @@
-import { isSameDateDay } from '@dereekb/date';
+import { isSameDateDay, toJsDate } from '@dereekb/date';
 import { type ClickableFilterPreset, type ClickableFilterPresetOrPartialPreset, type ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { type ValueSelectionOption } from '@dereekb/dbx-form';
-import { type FilterWithPreset } from '@dereekb/rxjs';
-import { filterUndefinedValues, getValueFromGetter, type LabeledValue, type Maybe } from '@dereekb/util';
+import { type FilterJsonConverter, type FilterWithPreset } from '@dereekb/rxjs';
+import { filterUndefinedValues, getValueFromGetter, type ISO8601DateString, type LabeledValue, type Maybe } from '@dereekb/util';
 import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
 
 export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'week' | 'next_week' | 'next_two_weeks' | 'next_five_business_days' | 'noicon' | 'delete';
@@ -147,6 +147,22 @@ export interface DocInteractionTestMergedFilter extends DocInteractionTestFilter
   minPrice?: Maybe<number>;
   categories?: Maybe<DocInteractionTestCategory[]>;
 }
+
+/**
+ * DocInteractionTestMergedFilter with its Date fields as ISO 8601 strings, so it can be saved as JSON.
+ */
+export interface DocInteractionTestMergedFilterJson extends Omit<DocInteractionTestMergedFilter, 'date' | 'toDate'> {
+  readonly date?: Maybe<ISO8601DateString>;
+  readonly toDate?: Maybe<ISO8601DateString>;
+}
+
+/**
+ * Converts a DocInteractionTestMergedFilter to and from JSON.
+ */
+export const DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER: FilterJsonConverter<DocInteractionTestMergedFilter, DocInteractionTestMergedFilterJson> = {
+  toJson: (filter) => filterUndefinedValues({ ...filter, date: filter.date?.toISOString(), toDate: filter.toDate?.toISOString() }),
+  fromJson: (json) => filterUndefinedValues({ ...json, date: json.date ? toJsDate(json.date) : undefined, toDate: json.toDate ? toJsDate(json.toDate) : undefined })
+};
 
 export const DOC_INTERACTION_TEST_MIN_PRICE_OPTIONS: ValueSelectionOption<number>[] = [
   { label: 'Any', clear: true },

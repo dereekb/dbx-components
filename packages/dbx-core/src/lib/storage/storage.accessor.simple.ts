@@ -43,29 +43,6 @@ export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorage
 }
 
 /**
- * Matches a full ISO 8601 UTC date string, as produced by `Date.prototype.toJSON()`.
- */
-export const STRINGIFY_WITH_DATES_ISO_DATE_STRING_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
-
-/**
- * {@link SimpleStorageAccessorConverter} that uses `JSON.stringify`/`JSON.parse` for conversion, and revives
- * ISO 8601 UTC date strings back into `Date` values when parsing.
- *
- * Use when the stored value contains `Date` fields that should be `Date` instances again when read back.
- *
- * @typeParam T - The type of value being converted.
- */
-export class StringifyWithDatesSimpleStorageAccessorConverter<T> implements SimpleStorageAccessorConverter<T> {
-  stringifyValue(value: T): StoredDataString {
-    return JSON.stringify(value);
-  }
-
-  parseValue(data: StoredDataString): T {
-    return JSON.parse(data, (_key, value: unknown) => (typeof value === 'string' && STRINGIFY_WITH_DATES_ISO_DATE_STRING_REGEX.test(value) ? new Date(value) : value));
-  }
-}
-
-/**
  * Composes a {@link StorageAccessor} and a {@link SimpleStorageAccessorConverter} into a single
  * {@link SimpleStorageAccessorDelegate} implementation.
  *

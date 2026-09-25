@@ -1,11 +1,11 @@
-import { Component, type OnDestroy, inject } from '@angular/core';
+import { Component, type OnDestroy, inject, viewChildren } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterMapMergeSourceDirective, DbxFilterStorageService, clean } from '@dereekb/dbx-core';
+import { DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterMapMergeSourceDirective, DbxFilterMapStorageDirective, type DbxFilterMapStorageConfig } from '@dereekb/dbx-core';
 import { FilterMap, type FilterMapKey } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
 import { forkJoin, map, of, type Observable } from 'rxjs';
-import { type DocInteractionTestFilter, type DocInteractionTestMergedFilter, DOC_INTERACTION_TEST_PRESETS, docInteractionTestAttributesFilterSelectionCount, refreshDocInteractionTestDatePresetFilter } from '../component/filter';
+import { type DocInteractionTestFilter, type DocInteractionTestMergedFilter, type DocInteractionTestMergedFilterJson, DOC_INTERACTION_TEST_PRESETS, docInteractionTestAttributesFilterSelectionCount, refreshDocInteractionTestDatePresetFilter, DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER } from '../component/filter';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective, DbxButtonComponent, type DbxButtonDisplayStylePair } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -87,6 +87,7 @@ function displayForAttributesFilter(filter: Maybe<DocInteractionTestMergedFilter
     DocInteractionTestAttributesFilterPopoverButtonComponent,
     DocInteractionTestMergedFilterViewComponent,
     DbxFilterMapMergeSourceDirective,
+    DbxFilterMapStorageDirective,
     DbxButtonComponent,
     JsonPipe
   ]
@@ -94,7 +95,6 @@ function displayForAttributesFilter(filter: Maybe<DocInteractionTestMergedFilter
 export class DocInteractionFilterComponent implements OnDestroy {
   readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);
   readonly mergedFilterMap = inject(FilterMap<DocInteractionTestMergedFilter>);
-  readonly dbxFilterStorageService = inject(DbxFilterStorageService);
 
   readonly presets = DOC_INTERACTION_TEST_PRESETS;
 
@@ -107,25 +107,23 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly mergedAttributesFilterKey: FilterMapKey = 'mergedAttributes';
   readonly mergedFilterKeys: FilterMapKey[] = [this.mergedDateFilterKey, this.mergedAttributesFilterKey];
 
-  // each merged key loads its saved filter as its default, then saves every change
-  readonly mergedDateFilterStorage = clean(
-    this.dbxFilterStorageService.persistFilterMapKey<DocInteractionTestMergedFilter>({
-      filterMap: this.mergedFilterMap,
-      key: this.mergedDateFilterKey,
-      storageKey: 'doc.filter.merged.date',
-      defaultFilter: {},
-      mapLoadedFilter: refreshDocInteractionTestDatePresetFilter
-    })
-  );
+  // saved to localStorage by the dbxFilterMapStorage directive on each button
+  readonly mergedDateFilterStorageConfig: DbxFilterMapStorageConfig<DocInteractionTestMergedFilter, DocInteractionTestMergedFilterJson> = {
+    key: this.mergedDateFilterKey,
+    storageKey: 'doc.filter.merged.date',
+    defaultFilter: {},
+    jsonConverter: DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER,
+    mapLoadedFilter: refreshDocInteractionTestDatePresetFilter
+  };
 
-  readonly mergedAttributesFilterStorage = clean(
-    this.dbxFilterStorageService.persistFilterMapKey<DocInteractionTestMergedFilter>({
-      filterMap: this.mergedFilterMap,
-      key: this.mergedAttributesFilterKey,
-      storageKey: 'doc.filter.merged.attributes',
-      defaultFilter: {}
-    })
-  );
+  readonly mergedAttributesFilterStorageConfig: DbxFilterMapStorageConfig<DocInteractionTestMergedFilter, DocInteractionTestMergedFilterJson> = {
+    key: this.mergedAttributesFilterKey,
+    storageKey: 'doc.filter.merged.attributes',
+    defaultFilter: {},
+    jsonConverter: DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER
+  };
+
+  readonly mergedFilterStorages = viewChildren(DbxFilterMapStorageDirective);
 
   readonly filter$ = this.filterMap.filterForKey(this.buttonFilterKey);
   readonly formFilter$ = this.filterMap.filterForKey(this.formFilterKey);
@@ -187,7 +185,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
   }
 
   resetMergedFilters(): void {
-    forkJoin([this.mergedDateFilterStorage.reset(), this.mergedAttributesFilterStorage.reset()]).subscribe();
+    forkJoin(this.mergedFilterStorages().map((x) => x.reset())).subscribe();
   }
 
   ngOnDestroy(): void {

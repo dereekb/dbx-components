@@ -1,7 +1,8 @@
 import { filterMaybe } from '../rxjs/value';
+import { skipReplayedValues } from '../rxjs/rxjs';
 import { type ObservableOrValue } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
-import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, type Subscription, finalize, concat, of } from 'rxjs';
+import { BehaviorSubject, type Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, type Subscription, finalize, concat, of } from 'rxjs';
 import { type FilterSource, type FilterSourceConnector } from './filter';
 import { combineFilters, type MergeFiltersFunction } from './filter.merge';
 import { type Destroyable, type IndexNumber, type IndexRef, type Maybe } from '@dereekb/util';
@@ -238,7 +239,7 @@ class FilterMapItem<F> {
    */
   readonly filter$: Observable<Maybe<F>> = this._setFilter.pipe(
     // the source's current value is older than the set filter, so only values the source emits afterwards replace it
-    switchMap((setFilter) => (setFilter == null ? this._source.initialFilter$ : concat(of(setFilter), skipReplayedValues(this._source.initialFilter$)))),
+    switchMap((setFilter) => (setFilter == null ? this._source.initialFilter$ : concat(of(setFilter), this._source.initialFilter$.pipe(skipReplayedValues())))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -307,30 +308,4 @@ class FilterMapItem<F> {
     this._obs.complete();
     this._setFilter.complete();
   }
-}
-
-/**
- * Returns an observable that ignores the values the input observable emits synchronously while it is being subscribed to,
- * such as the latest value replayed by shareReplay().
- *
- * @param obs - Observable to subscribe to.
- * @returns Observable of only the values emitted after subscribing.
- */
-function skipReplayedValues<T>(obs: Observable<T>): Observable<T> {
-  return new Observable<T>((subscriber) => {
-    let subscribing = true;
-
-    const subscription = obs.subscribe({
-      next: (x) => {
-        if (!subscribing) {
-          subscriber.next(x);
-        }
-      },
-      error: (e) => subscriber.error(e),
-      complete: () => subscriber.complete()
-    });
-
-    subscribing = false;
-    return subscription;
-  });
 }

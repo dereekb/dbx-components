@@ -1,3 +1,4 @@
+import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
 /**
@@ -75,4 +76,31 @@ export abstract class FilterSourceConnector<F = unknown> {
    * Connects with the input filter source to begin receiving filter updates.
    */
   abstract connectWithSource(filterSource: FilterSource<F>): void;
+}
+
+/**
+ * Converts a filter to and from a JSON-safe value, e.g. to save it to storage.
+ *
+ * Declare one alongside a filter type that has fields JSON cannot represent, such as Date or Set fields.
+ *
+ * @typeParam F - The filter type.
+ * @typeParam J - The JSON-safe value the filter is converted to.
+ *
+ * @example
+ * ```ts
+ * const MY_FILTER_JSON_CONVERTER: FilterJsonConverter<MyFilter, MyFilterJson> = {
+ *   toJson: (filter) => ({ ...filter, date: filter.date?.toISOString() }),
+ *   fromJson: (json) => ({ ...json, date: json.date ? new Date(json.date) : undefined })
+ * };
+ * ```
+ */
+export interface FilterJsonConverter<F, J = unknown> {
+  /**
+   * Converts the filter to a JSON-safe value.
+   */
+  readonly toJson: (filter: F) => J;
+  /**
+   * Converts a JSON value back to the filter. Returns null/undefined if the value is not a valid filter.
+   */
+  readonly fromJson: (json: J) => Maybe<F>;
 }

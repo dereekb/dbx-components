@@ -8,6 +8,7 @@ export * from './filter.map.directive';
 export * from './filter.map.instance.directive';
 export * from './filter.map.merge.source.directive';
 export * from './filter.map.source.directive';
+export * from './filter.map.storage.directive';
 export * from './filter.preset';
 export * from './filter.module';
 export * from './filter.source.directive';
