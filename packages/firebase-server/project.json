@@ -100,7 +100,7 @@
     "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "cd ./dist/packages/firebase-server && npm publish --access public"
+        "command": "cd ./dist/packages/firebase-server && npm publish --access public --tag latest"
       }
     },
     "run-tests": {
