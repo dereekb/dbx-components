@@ -316,6 +316,95 @@
       ]
     },
     {
+      "slug": "list-detail-item-schedule-todo",
+      "category": "list",
+      "summary": "Shared .dbx-list-detail-item row (bold title + lines between leading/trailing slots) rendering a hover-free, button-only Schedule list with a full-height date block and \"…\" separatorConfig gap markers between non-consecutive days, and a row-clickable To Do list with the built-in chevron, an urgent highlight, and an empty state.",
+      "header": ".dbx-list-detail-item Schedule + To Do Lists",
+      "className": "DocListDetailItemExampleComponent",
+      "selector": "doc-list-detail-item-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "One shared row utility — bold title + lines between leading/trailing slots — powering a hover-free, button-only schedule list and a row-clickable to do list.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-detail-item",
+        "dbx-list-no-hover-effects",
+        "dbx-list-card-items-list",
+        "dbx-list-empty-content",
+        "dbx-list-detail-item-gap",
+        "dbx-anchor",
+        "dbx-button",
+        "dbx-chip",
+        "dbx-icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  Both panels render\n  <code>.dbx-list-detail-item</code>\n  rows: an\n  <code>.item-content</code>\n  column of one bold\n  <code>.item-title</code>\n  followed by any number of\n  <code>.item-line</code>\n  rows (a leading\n  <code>&lt;mat-icon&gt;</code>\n  is sized for you), framed by an\n  <code>.item-leading</code>\n  and an\n  <code>.item-trailing</code>\n  slot. The row pads itself, so each view sets\n  <code>dbx-list-item-p0</code>\n  on its host.\n</p>\n<p>\n  <strong>Your Schedule</strong>\n  is hover-free and button-only. The wrapper host applies\n  <code>dbx-list-no-hover-effects dbx-list-card-items-list</code>\n  , and the view's\n  <code>mapValuesToItemValues</code>\n  drops\n  <code>anchor</code>\n  so the row is never a click target and the list turns its ripple off — only the\n  <code>&lt;dbx-anchor&gt;</code>\n  -wrapped button inside the\n  <code>.item-trailing-divided</code>\n  slot reacts. The date column is an\n  <code>.item-leading-block</code>\n  that bleeds to the row's edges, painted by\n  <code>[dbxColor]</code>\n  +\n  <code>[dbxColorTone]</code>\n  +\n  <code>.dbx-color-bg</code>\n  .\n</p>\n<p>\n  When a day doesn't follow the previous one, a \"…\"\n  <code>.dbx-list-detail-item-gap</code>\n  marker sits between them. The view config sets a\n  <code>separatorConfig</code>\n  : a separator component plus a\n  <code>showSeparator(previous, next)</code>\n  function that returns true when the next day isn't the following calendar day. The list calls it for each pair of neighbouring rows (and once before the first and after the last row, with the missing side undefined), and injects the component through\n  <code>dbx-injection</code>\n  wherever it returns true. The component reads both rows from\n  <code>DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR</code>\n  to label the gap. Separators sit outside the list rows, so the marker picks up no row hover, ripple or card styling, and its icon column shares the date block's width so it lines up underneath.\n</p>\n<p>\n  <strong>To Do</strong>\n  keeps the default hover and ripple, and the whole row is the click target (the view keeps\n  <code>anchor</code>\n  ). The view's\n  <code>metaConfig: DbxListViewMetaIconComponent.metaConfig('chevron_right')</code>\n  adds the built-in chevron, so the rows need no\n  <code>.item-trailing</code>\n  slot. The urgent row adds\n  <code>.dbx-list-detail-item-highlight</code>\n  , which paints the hosting list row through\n  <code>:has()</code>\n  so the wash also covers the chevron (tune it with\n  <code>--dbx-list-detail-item-highlight-color</code>\n  /\n  <code>--dbx-list-detail-item-highlight-tone</code>\n  ). With no items the list shows its projected\n  <code>&lt;dbx-list-empty-content empty&gt;</code>\n  .\n</p>\n<p>\n  Both lists size to their rows and cap their height with\n  <code>--dbx-list-content-max-height</code>\n  set on the wrapper host, so\n  <code>.dbx-list-content</code>\n  — the list's own scroll container — scrolls past the limit instead of the card growing (and a paged list's load-more keeps working).\n</p>\n<p>\n  Last clicked:\n  <code>{{ clickedKey() ?? '(none)' }}</code>\n</p>",
+      "snippet": "<div class=\"dbx-button-wrap-group dbx-mb3\">\n  @for (option of todoPresentationOptions; track option.presentation) {\n    <button mat-stroked-button (click)=\"todoPresentationSignal.set(option.presentation)\" [disabled]=\"todoPresentationSignal() === option.presentation\">{{ option.label }}</button>\n  }\n</div>\n<div gdColumns=\"7fr 5fr\" gdColumns.lt-md=\"1fr\" gdGap=\"var(--dbx-padding-3)\">\n  <mat-card appearance=\"outlined\">\n    <mat-card-content>\n      <h3 class=\"dbx-text-headline-small dbx-m0\">Your Schedule</h3>\n      <p class=\"dbx-hint dbx-mb3\">{{ bookedCount }} upcoming weekdays booked</p>\n      <doc-schedule-day-item-list class=\"doc-list-detail-item-list\" [state]=\"scheduleState\"></doc-schedule-day-item-list>\n    </mat-card-content>\n  </mat-card>\n  <mat-card appearance=\"outlined\">\n    <mat-card-content>\n      <h3 class=\"dbx-text-headline-small dbx-m0\">To Do</h3>\n      @if (todoCountLabelSignal(); as todoCountLabel) {\n        <p class=\"dbx-hint dbx-mb3\">{{ todoCountLabel }}</p>\n      }\n      <doc-todo-item-list class=\"doc-list-detail-item-list\" [state]=\"todoStateSignal()\">\n        <dbx-list-empty-content empty>\n          <div class=\"dbx-flex-column dbx-flex-center dbx-text-center dbx-pv4\">\n            <dbx-icon-tile class=\"dbx-mb3\" icon=\"task_alt\" [round]=\"true\" dbxColor=\"primary\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n            <div class=\"dbx-text-title-medium\">You're all caught up</div>\n            <div class=\"dbx-hint\">No action items right now. We'll let you know if something needs your attention.</div>\n          </div>\n        </dbx-list-empty-content>\n      </doc-todo-item-list>\n    </mat-card-content>\n  </mat-card>\n</div>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocScheduleDayItemListComponent",
+          "role": "list",
+          "selector": "doc-schedule-day-item-list",
+          "classSource": "@Component({\n  selector: 'doc-schedule-day-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-no-hover-effects dbx-list-card-items-list'\n  }\n})\nexport class DocScheduleDayItemListComponent extends AbstractDbxSelectionListWrapperDirective<ScheduleDayItemValue> {\n  constructor() {\n    super({\n      componentClass: DocScheduleDayItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocScheduleDayItemListViewComponent",
+          "role": "view",
+          "selector": "doc-schedule-day-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-schedule-day-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocScheduleDayItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  }\n})\nexport class DocScheduleDayItemListViewComponent extends AbstractDbxSelectionListViewDirective<ScheduleDayItemValue> {\n  // Drop `anchor` (the trailing button owns it; the row stays non-clickable and ripple-free).\n  // Separate two days with a \"…\" gap whenever the next day isn't the following calendar day.\n  readonly config: DbxSelectionValueListViewConfig<ScheduleDayItemValueWithSelection> = {\n    componentClass: DocScheduleDayItemListViewItemComponent,\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, anchor: undefined }))),\n    separatorConfig: {\n      componentClass: DocScheduleDayGapComponent,\n      showSeparator: dbxValueListItemSeparatorDecisionFunction<ScheduleDayItemValue>((previous, next) => previous != null && next != null && skippedDaysBetweenScheduleDays(previous.day, next.day) > 0)\n    }\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocScheduleDayItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-schedule-day-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-schedule-day-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-detail-item\">\n      <div class=\"item-leading-block dbx-color-bg\" [dbxColor]=\"stateColor\" [dbxColorTone]=\"14\">\n        <span class=\"dbx-text-label-medium dbx-uppercase dbx-tracked-wide\">{{ dayLabel }}</span>\n        <span class=\"dbx-text-title-large\">{{ dateLabel }}</span>\n        @if (session) {\n          <dbx-chip [color]=\"stateColor\" [tone]=\"100\" [small]=\"true\">BOOKED</dbx-chip>\n        } @else {\n          <dbx-chip [color]=\"stateColor\" [small]=\"true\">\n            <span class=\"dbx-dot\"></span>\n            <span class=\"dbx-pl1\">OPEN</span>\n          </dbx-chip>\n        }\n      </div>\n      <div class=\"item-content\">\n        @if (session; as session) {\n          <span class=\"item-title\">{{ session.title }}</span>\n          <span class=\"item-line\">\n            <mat-icon>location_on</mat-icon>\n            {{ session.locationName }}\n          </span>\n          <span class=\"item-line\">\n            <mat-icon>calendar_today</mat-icon>\n            {{ session.dateRange }}\n          </span>\n          <span class=\"item-line\">\n            <mat-icon>schedule</mat-icon>\n            {{ session.timeRange }}\n          </span>\n        } @else {\n          <span class=\"item-title\">Nothing booked</span>\n          <span class=\"item-line\">This day is still free.</span>\n        }\n      </div>\n      <div class=\"item-trailing item-trailing-divided\">\n        <dbx-anchor [anchor]=\"anchor\">\n          @if (session) {\n            <dbx-button class=\"dbx-nowrap\" [stroked]=\"true\" text=\"View Details\"></dbx-button>\n          } @else {\n            <dbx-button class=\"dbx-nowrap\" [tonal]=\"true\" color=\"primary\" text=\"Browse sessions\"></dbx-button>\n          }\n        </dbx-anchor>\n      </div>\n    </div>\n  `,\n  imports: [MatIconModule, DbxAnchorComponent, DbxButtonComponent, DbxChipDirective, DbxColorDirective]\n})\nexport class DocScheduleDayItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<ScheduleDayItemValue> {\n  get dayLabel(): string {\n    return this.itemValue.dayLabel;\n  }\n\n  get dateLabel(): string {\n    return this.itemValue.dateLabel;\n  }\n\n  get session(): Maybe<ScheduleDaySession> {\n    return this.itemValue.session;\n  }\n\n  get stateColor(): DbxThemeColor {\n    return this.itemValue.state === 'booked' ? 'success' : 'notice';\n  }\n\n  get anchor(): ClickableAnchor {\n    return this.itemValue.anchor;\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocScheduleDayGapComponent",
+          "role": "separator",
+          "selector": "doc-schedule-day-gap",
+          "classSource": "@Component({\n  selector: 'doc-schedule-day-gap',\n  template: `\n    <div class=\"dbx-list-detail-item-gap\">\n      <span class=\"item-leading\"><mat-icon>more_vert</mat-icon></span>\n      <span>{{ label }}</span>\n    </div>\n  `,\n  imports: [MatIconModule]\n})\nexport class DocScheduleDayGapComponent {\n  readonly separator = inject<DbxValueListItemSeparatorContext<ScheduleDayItemValue>>(DBX_VALUE_LIST_VIEW_ITEM_SEPARATOR);\n\n  get label(): string {\n    const { previous, next } = this.separator;\n    const skippedDays = previous && next ? skippedDaysBetweenScheduleDays(previous.itemValue.day, next.itemValue.day) : 0;\n    return `${skippedDays} ${skippedDays === 1 ? 'day' : 'days'} skipped`;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "ScheduleDayItemValue",
+          "role": "data",
+          "classSource": "export interface ScheduleDayItemValue {\n  readonly key: string;\n  /**\n   * The schedule day. Days are weekdays, sorted ascending.\n   */\n  readonly day: ISO8601DayString;\n  /**\n   * Short weekday label, e.g. `Fri`.\n   */\n  readonly dayLabel: string;\n  /**\n   * Short date label, e.g. `Sep 25`.\n   */\n  readonly dateLabel: string;\n  readonly state: ScheduleDayItemState;\n  /**\n   * The booked session. Only set when {@link state} is `'booked'`.\n   */\n  readonly session?: Maybe<ScheduleDaySession>;\n  /**\n   * Fired by the row's trailing button — \"View Details\" for a booked day, \"Browse sessions\" for an open day.\n   */\n  readonly anchor: ClickableAnchor;\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTodoItemListComponent",
+          "role": "list",
+          "selector": "doc-todo-item-list",
+          "classSource": "@Component({\n  selector: 'doc-todo-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-auto-height'\n  }\n})\nexport class DocTodoItemListComponent extends AbstractDbxSelectionListWrapperDirective<TodoItemValue> {\n  constructor() {\n    super({\n      componentClass: DocTodoItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTodoItemListViewComponent",
+          "role": "view",
+          "selector": "doc-todo-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-todo-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocTodoItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  }\n})\nexport class DocTodoItemListViewComponent extends AbstractDbxSelectionListViewDirective<TodoItemValue> {\n  // Drop `icon` (template paints its own tile); keep `anchor` so the whole row is the click target.\n  readonly config: DbxSelectionValueListViewConfig<TodoItemValueWithSelection> = {\n    componentClass: DocTodoItemListViewItemComponent,\n    metaConfig: DbxListViewMetaIconComponent.metaConfig('chevron_right'),\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, itemValue: value, icon: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTodoItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-todo-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-todo-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-detail-item\" [class.dbx-list-detail-item-highlight]=\"highlight\">\n      <dbx-icon-tile class=\"item-leading\" [icon]=\"icon\" [round]=\"true\" [dbxColor]=\"highlight ? 'notice' : 'grey'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n      <div class=\"item-content\">\n        <span class=\"item-title\">{{ title }}</span>\n        <span class=\"item-line\">{{ detail }}</span>\n        @if (chip; as chip) {\n          <span class=\"item-line dbx-pt1\">\n            <dbx-chip [color]=\"chip.color\" [small]=\"true\">{{ chip.text }}</dbx-chip>\n          </span>\n        }\n      </div>\n    </div>\n  `,\n  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent]\n})\nexport class DocTodoItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TodoItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get detail(): string {\n    return this.itemValue.detail;\n  }\n\n  get chip(): Maybe<TodoItemChip> {\n    return this.itemValue.chip;\n  }\n\n  get highlight(): boolean {\n    return this.itemValue.highlight === true;\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "TodoItemValue",
+          "role": "data",
+          "classSource": "export interface TodoItemValue {\n  readonly key: string;\n  readonly icon: string;\n  readonly title: string;\n  readonly detail: string;\n  readonly chip?: Maybe<TodoItemChip>;\n  /**\n   * Whether to paint the row with the urgent `.dbx-list-detail-item-highlight` wash.\n   */\n  readonly highlight?: Maybe<boolean>;\n  /**\n   * Whole-row click target.\n   */\n  readonly anchor: ClickableAnchor;\n}"
+        }
+      ]
+    },
+    {
       "slug": "list-progress-with-button",
       "category": "list",
       "summary": "Two-line list with template-painted icon tile, progress bar, and trailing button.",

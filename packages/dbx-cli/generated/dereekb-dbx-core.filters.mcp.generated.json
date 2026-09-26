@@ -85,6 +85,31 @@
     },
     {
       "kind": "directive",
+      "slug": "map-merge-source",
+      "selector": "[dbxFilterMapMergeSource]",
+      "className": "DbxFilterMapMergeSourceDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Provides a read-only {@link FilterSource} that merges the filters of several keys in an ancestor {@link FilterMap} into one filter. Lets separate filter controls (e.g. a date popover and an attributes popover) each own a key while children consume a single combined filter.\n\nKeys later in the array win when two keys set the same field, and the merged filter has no `preset`. Every key needs a value (e.g. a default filter) before the merged filter emits.",
+      "inputs": [
+        {
+          "name": "dbxFilterMapMergeSource",
+          "type": "Maybe<FilterMapKey[]>",
+          "description": "The map keys to merge, in priority order."
+        }
+      ],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <my-date-filter-button [dbxFilterMapSourceConnector]=\"'date'\"></my-date-filter-button>\n  <my-attributes-filter-button [dbxFilterMapSourceConnector]=\"'attributes'\"></my-attributes-filter-button>\n  <div [dbxFilterMapMergeSource]=\"['date', 'attributes']\">\n    <my-filtered-list></my-filtered-list>\n  </div>\n</div>",
+      "relatedSlugs": [
+        "map",
+        "map-source",
+        "map-source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ]
+    },
+    {
+      "kind": "directive",
       "slug": "map-source",
       "selector": "[dbxFilterMapSource]",
       "className": "DbxFilterMapSourceDirective",
@@ -102,6 +127,31 @@
       "relatedSlugs": [
         "map",
         "map-source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ]
+    },
+    {
+      "kind": "directive",
+      "slug": "map-storage",
+      "selector": "[dbxFilterMapStorage]",
+      "className": "DbxFilterMapStorageDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Saves the filter of a keyed entry in an ancestor {@link FilterMap} to storage (localStorage by default), and loads it again when the page loads. The saved filter becomes the key's default filter, and every later change to the key is saved.\n\nUse {@link reset} to set the key back to its default filter and remove the saved filter.\n\nRequires {@link provideDbxFilterStorage}.",
+      "inputs": [
+        {
+          "name": "dbxFilterMapStorage",
+          "type": "Maybe<DbxFilterMapStorageConfig<F, J>>",
+          "description": "The key to save and how to save it."
+        }
+      ],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <my-filter-button [dbxFilterMapSourceConnector]=\"'list'\" [dbxFilterMapStorage]=\"{ key: 'list', storageKey: 'my.list.filter', defaultFilter: {} }\"></my-filter-button>\n</div>",
+      "relatedSlugs": [
+        "map",
+        "map-source-connector",
+        "map-merge-source"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"
