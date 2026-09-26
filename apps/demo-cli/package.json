@@ -1,17 +1,17 @@
 {
   "name": "@dereekb/demo-cli",
-  "version": "14.9.0",
+  "version": "14.10.0",
   "type": "module",
   "private": true,
   "bin": {
     "demo-cli": "index.js"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.9.0",
-    "@dereekb/firebase": "14.9.0",
-    "@dereekb/firebase-server": "14.9.0",
-    "@dereekb/openrouter": "14.9.0",
-    "@dereekb/util": "14.9.0",
+    "@dereekb/dbx-cli": "14.10.0",
+    "@dereekb/firebase": "14.10.0",
+    "@dereekb/firebase-server": "14.10.0",
+    "@dereekb/openrouter": "14.10.0",
+    "@dereekb/util": "14.10.0",
     "arktype": "^2.2.0",
     "demo-firebase": "*",
     "firebase": "^12.18.0",
@@ -19,7 +19,7 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@dereekb/oauth-resource": "14.9.0",
+    "@dereekb/oauth-resource": "14.10.0",
     "@types/yargs": "^17.0.35",
     "firebase": "^12.18.0"
   }
