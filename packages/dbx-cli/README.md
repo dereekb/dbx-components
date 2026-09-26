@@ -159,6 +159,14 @@ evidence (`list`, `collectionGroup`, `reason`, `parentPaths`) — the answer and
 **Absence of the flag reads as `unknown`, not `model`** — a CLI generated without it behaves exactly
 as it did before the field existed.
 
+A downstream workspace also passes `--packages` to catalog the query factories the installed
+`@dereekb/*` packages declare — `notifications-newest-first-query`, for one, which is how an admin
+lists a NotificationBox's notifications (`firestore-query notifications-newest-first-query --parent
+nb/<boxId>`). A published package ships `.d.ts` only, so these come from the pre-built manifests
+bundled in `@dereekb/dbx-components-mcp` — the same source `dbx-cli-generate-firestore-indexes
+--packages` merges — and each entry binds against its installed package's barrel. A package the
+workspace also scans with `--component` keeps its source-scanned entries.
+
 Note that `MODE` classifies on how you *invoke* the query, not purely on what the rules permit. A
 `COLLECTION`-scope entry over a subcollection is fully permitted and still cannot run unscoped, so
 it is `parent-child` rather than `model`; a pure permission verdict would call it runnable and be

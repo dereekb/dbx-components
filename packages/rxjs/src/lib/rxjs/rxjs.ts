@@ -1,5 +1,5 @@
 import { type Getter, type Maybe } from '@dereekb/util';
-import { combineLatest, type Observable, type MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize, of, mergeMap, from } from 'rxjs';
+import { combineLatest, Observable, type MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize, of, mergeMap, from } from 'rxjs';
 
 /**
  * Combines `startWith` and {@link tapFirst} to initialize an observable pipe with a side-effect on the first emission.
@@ -34,6 +34,40 @@ export function tapFirst<T>(tap: (value: T) => void, skipFirst = false): MonoTyp
     tap(value);
     return i === 0 && !skipFirst;
   });
+}
+
+/**
+ * RxJS operator that ignores the values the source emits synchronously while it is being subscribed to, such as the
+ * current value of a BehaviorSubject or the latest value replayed by `shareReplay()`. Only values emitted afterwards pass through.
+ *
+ * @returns Operator that skips the values replayed on subscription.
+ *
+ * @example
+ * ```ts
+ * const value = new BehaviorSubject(1);
+ * value.pipe(skipReplayedValues()).subscribe(console.log);
+ * value.next(2);
+ * // Output: 2
+ * ```
+ */
+export function skipReplayedValues<T>(): MonoTypeOperatorFunction<T> {
+  return (source) =>
+    new Observable<T>((subscriber) => {
+      let subscribing = true;
+
+      const subscription = source.subscribe({
+        next: (x) => {
+          if (!subscribing) {
+            subscriber.next(x);
+          }
+        },
+        error: (e) => subscriber.error(e),
+        complete: () => subscriber.complete()
+      });
+
+      subscribing = false;
+      return subscription;
+    });
 }
 
 /**

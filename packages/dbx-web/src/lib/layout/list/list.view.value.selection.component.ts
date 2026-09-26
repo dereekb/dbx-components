@@ -9,6 +9,7 @@ import { DbxValueListViewContentComponent, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPO
 import { MatIconModule } from '@angular/material/icon';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { dbxValueListItemSeparatorConfigs } from './list.view.value.separator';
 
 /**
  * Configuration for a {@link DbxSelectionValueListViewComponent}. Extends the base config with an option for single or multiple selection.
@@ -35,17 +36,27 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   template: `
     @switch (selectionMode()) {
       @case ('view') {
-        <dbx-list-view-content [items]="items()" [stickyHeaders]="stickyHeaders()"></dbx-list-view-content>
+        <dbx-list-view-content [items]="items()" [stickyHeaders]="stickyHeaders()" [separatorConfig]="separatorConfig()"></dbx-list-view-content>
       }
       @default {
         <mat-selection-list [disabled]="disabledSignal()" [multiple]="multiple()" (selectionChange)="matSelectionChanged($event)">
           @for (item of items(); track trackByFunctionSignal()($index, item)) {
+            @if (separatorsSignal()[$index]; as separator) {
+              <div class="dbx-list-view-item-separator">
+                <dbx-injection [config]="separator"></dbx-injection>
+              </div>
+            }
             <mat-list-option class="dbx-list-view-item" [selected]="item.selected" [disabled]="item.disabled" [value]="item.itemValue" (click)="onClickValue(item.itemValue)">
               @if (item.icon) {
                 <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
               }
               <dbx-injection [config]="item.config"></dbx-injection>
             </mat-list-option>
+          }
+          @if (trailingSeparatorSignal(); as trailingSeparator) {
+            <div class="dbx-list-view-item-separator">
+              <dbx-injection [config]="trailingSeparator"></dbx-injection>
+            </div>
           }
         </mat-selection-list>
       }
@@ -60,6 +71,12 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   readonly multiple = input<Maybe<boolean>>();
   readonly selectionMode = input<Maybe<DbxListSelectionMode>>();
   readonly trackByFunctionSignal = toSignal(this.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
+
+  /**
+   * Separators for the 'select' mode list, which renders its items without grouping. The 'view' mode list renders its own.
+   */
+  readonly separatorsSignal = computed(() => dbxValueListItemSeparatorConfigs<T, I>(this.items() ?? [], this.separatorConfig()));
+  readonly trailingSeparatorSignal = computed(() => this.separatorsSignal()[(this.items() ?? []).length]);
 
   constructor() {
     super();
@@ -102,7 +119,7 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
 @Component({
   selector: 'dbx-selection-list-view',
   template: `
-    <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true"></dbx-selection-list-view-content>
+    <dbx-selection-list-view-content [selectionMode]="selectionModeSignal()" [multiple]="multipleSignal()" [items]="itemsSignal()" [stickyHeaders]="stickyHeadersSignal() ?? true" [separatorConfig]="separatorConfigSignal()"></dbx-selection-list-view-content>
   `,
   imports: [DbxSelectionValueListViewContentComponent]
 })
@@ -116,4 +133,5 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
   readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'select' });
   readonly multipleSignal = computed(() => this.config()?.multiple ?? true);
   readonly stickyHeadersSignal = computed(() => this.config()?.stickyHeaders);
+  readonly separatorConfigSignal = computed(() => this.config()?.separatorConfig);
 }

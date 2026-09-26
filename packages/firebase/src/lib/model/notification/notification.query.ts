@@ -4,7 +4,7 @@
  * Firestore query constraint builders for notification model documents.
  * Used by the server-side action service to find documents that need processing.
  */
-import { type FirestoreQueryConstraint, where } from '../../common/firestore';
+import { type FirestoreQueryConstraint, orderBy, where } from '../../common/firestore';
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationLoggedEventDay, type NotificationUser } from './notification';
 import { toISODateString, toISO8601DayStringForUTC } from '@dereekb/date';
 import { type NotificationBoxSendExclusion } from './notification.id';
@@ -127,6 +127,24 @@ export function notificationsReadyForCleanupQuery(): FirestoreQueryConstraint[] 
     where<Notification>('d', '==', true)
     // orderByDocumentId('asc') // todo: consider using orderby to get notificationboxes sorted
   ];
+}
+
+/**
+ * Query constraints for listing the {@link Notification} documents in one {@link NotificationBox}, newest first.
+ *
+ * Run against a single box's notification collection — this is how an admin finds the notifications sent to a
+ * model (e.g. every notification for a profile) when their ids are auto-generated and not otherwise known. Pair it
+ * with a limit; a busy box can hold many notifications between cleanup sweeps.
+ *
+ * @returns Array of Firestore query constraints ordering notifications by creation date, newest first.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel Notification
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ */
+export function notificationsNewestFirstQuery(): FirestoreQueryConstraint[] {
+  return [orderBy<Notification>('cat', 'desc')];
 }
 
 // MARK: NotificationLoggedEventDay

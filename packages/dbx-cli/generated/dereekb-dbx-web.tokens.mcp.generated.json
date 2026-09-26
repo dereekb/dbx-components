@@ -1454,6 +1454,154 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-content-max-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "list content max height"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `100%`.",
+      "defaults": {
+        "light": "100%"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-divider-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "list detail item divider color"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-outline-variant)`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline-variant)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list detail item gap",
+        "list detail item gap spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-gap-marker-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list detail item gap marker padding",
+        "list detail item gap marker padding spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-highlight-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "list detail item highlight color"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-notice-color)`.",
+      "defaults": {
+        "light": "var(--dbx-notice-color)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-highlight-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list detail item highlight tone"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `14%`.",
+      "defaults": {
+        "light": "14%"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-leading-block-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "list detail item leading block width"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `112px`.",
+      "defaults": {
+        "light": "112px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-line-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list detail item line gap",
+        "list detail item line gap spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `2px`.",
+      "defaults": {
+        "light": "2px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-line-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "list detail item line icon size"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `18px`.",
+      "defaults": {
+        "light": "18px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list detail item padding",
+        "list detail item padding spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-detail-item-padding-resolved",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list detail item padding resolved",
+        "list detail item padding resolved spacing"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-detail-item-padding, var(--dbx-padding-3))"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-empty-content-padding",
       "source": "dbx-web",
       "role": "spacing",

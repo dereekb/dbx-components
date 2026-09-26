@@ -1,6 +1,6 @@
 {
   "name": "demo-api",
-  "version": "14.9.0",
+  "version": "14.10.0",
   "dependencies": {
     "mailgun.js": "^12.0.0"
   },
@@ -8,17 +8,17 @@
     "node": ">=24.0.0"
   },
   "peerDependencies": {
-    "@dereekb/calcom": "14.9.0",
-    "@dereekb/date": "14.9.0",
-    "@dereekb/discord": "14.9.0",
-    "@dereekb/firebase": "14.9.0",
-    "@dereekb/firebase-server": "14.9.0",
-    "@dereekb/model": "14.9.0",
-    "@dereekb/nestjs": "14.9.0",
-    "@dereekb/openrouter": "14.9.0",
-    "@dereekb/util": "14.9.0",
-    "@dereekb/zoho": "14.9.0",
-    "@dereekb/zoom": "14.9.0",
+    "@dereekb/calcom": "14.10.0",
+    "@dereekb/date": "14.10.0",
+    "@dereekb/discord": "14.10.0",
+    "@dereekb/firebase": "14.10.0",
+    "@dereekb/firebase-server": "14.10.0",
+    "@dereekb/model": "14.10.0",
+    "@dereekb/nestjs": "14.10.0",
+    "@dereekb/openrouter": "14.10.0",
+    "@dereekb/util": "14.10.0",
+    "@dereekb/zoho": "14.10.0",
+    "@dereekb/zoom": "14.10.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
     "@nestjs/common": "^12.0.1",
@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@cantoo/pdf-lib": ">=2.6.5 <2.11.0",
-    "@dereekb/oauth-resource": "14.9.0",
+    "@dereekb/oauth-resource": "14.10.0",
     "adm-zip": "0.6.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.18.0",

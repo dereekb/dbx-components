@@ -63,7 +63,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.8.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.9.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1289,8 +1289,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'tpr', longName: 'taskCheckpoints', tsType: 'NotificationTaskCheckpointString[]', optional: false, description: 'Completed checkpoint strings for multi-step task notifications.' },
       { name: 'ut', longName: 'uniqueTask', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
     ],
-    read: 'system',
-    serverOnly: true,
+    read: 'admin-only',
     serviceFactory: { exportName: 'notificationFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1345,8 +1344,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }],
-    read: 'system',
-    serverOnly: true,
+    read: 'admin-only',
     serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
@@ -1466,8 +1464,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedIsArray: true
       }
     ],
-    read: 'system',
-    serverOnly: true,
+    read: 'admin-only',
     serviceFactory: { exportName: 'notificationWeekFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {

@@ -128,14 +128,19 @@ service cloud.firestore {
       allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read
 
       match /nbn/{notification} {
-        // not allowed to read queued notifications
-        allow read: if false;
+        allow read: if userClaimsIsSysAdmin(); // system admins can read
       }
 
       match /nbnw/{notificationWeek} {
+        allow read: if userClaimsIsSysAdmin(); // system admins can read
+      }
 
-        // no need to view notification weeks
-        allow read: if false;
+      match /nbnle/{notificationLoggedEventDay} {
+        allow read: if userClaimsIsSysAdmin(); // system admins can read
+
+        match /nbnlep/{notificationLoggedEventDayPage} {
+          allow read: if userClaimsIsSysAdmin(); // system admins can read
+        }
       }
     }
 

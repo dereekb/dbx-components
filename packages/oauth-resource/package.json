@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/oauth-resource",
-  "version": "14.9.0",
+  "version": "14.10.0",
   "sideEffects": false,
   "type": "module",
   "exports": {
@@ -16,8 +16,8 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/firebase": "14.9.0",
-    "@dereekb/util": "14.9.0",
+    "@dereekb/firebase": "14.10.0",
+    "@dereekb/util": "14.10.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "firebase": "^12.18.0",

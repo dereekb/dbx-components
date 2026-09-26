@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoho",
-  "version": "14.9.0",
+  "version": "14.10.0",
   "sideEffects": false,
   "type": "module",
   "bin": {
@@ -17,13 +17,13 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "14.9.0",
-    "@dereekb/dbx-cli": "14.9.0",
-    "@dereekb/firebase": "14.9.0",
-    "@dereekb/model": "14.9.0",
-    "@dereekb/nestjs": "14.9.0",
-    "@dereekb/rxjs": "14.9.0",
-    "@dereekb/util": "14.9.0",
+    "@dereekb/date": "14.10.0",
+    "@dereekb/dbx-cli": "14.10.0",
+    "@dereekb/firebase": "14.10.0",
+    "@dereekb/model": "14.10.0",
+    "@dereekb/nestjs": "14.10.0",
+    "@dereekb/rxjs": "14.10.0",
+    "@dereekb/util": "14.10.0",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.0",
     "express": "^5.2.1",

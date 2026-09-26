@@ -752,8 +752,7 @@ export interface NotificationSendCheckpoints {
  * @see `NotificationServerActions.sendQueuedNotifications` in `@dereekb/firebase-server/model` for the send pipeline
  *
  * @dbxModel
- * @dbxModelRead system
- * @dbxModelServerOnly
+ * @dbxModelRead admin-only
  */
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
@@ -980,8 +979,7 @@ export const NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT = 5000;
  * Used for historical browsing of past notifications per box.
  *
  * @dbxModel
- * @dbxModelRead system
- * @dbxModelServerOnly
+ * @dbxModelRead admin-only
  */
 export interface NotificationWeek {
   /**
@@ -1136,8 +1134,7 @@ export const NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER: PagedItemConverter<No
  * items are distributed across pages by {@link makePagedItemFirestoreCollection}.
  *
  * @dbxModel
- * @dbxModelRead system
- * @dbxModelServerOnly
+ * @dbxModelRead admin-only
  */
 export interface NotificationLoggedEventDay {
   /**

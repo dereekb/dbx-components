@@ -3,7 +3,20 @@ import { type ApplicationConfig, inject, type Injector, provideAppInitializer, p
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
-import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
+import {
+  type AuthTransitionHookOptions,
+  DBX_KNOWN_APP_CONTEXT_STATES,
+  enableHasAuthRoleHook,
+  enableHasAuthStateHook,
+  enableIsLoggedInHook,
+  provideDbxAppAuth,
+  provideDbxAppContextState,
+  provideDbxAppEnvironment,
+  provideDbxAssetLoader,
+  provideDbxFilterStorage,
+  provideDbxStorage,
+  provideDbxUIRouterService
+} from '@dereekb/dbx-core';
 import {
   DbxFirebaseAnalyticsUserSource,
   type DbxFirebaseAuthServiceDelegate,
@@ -292,6 +305,7 @@ export const APP_CONFIG: ApplicationConfig = {
     provideDbxAppContextState(),
     provideDbxUIRouterService(),
     provideDbxStorage(),
+    provideDbxFilterStorage(),
     provideDbxAssetLoader(),
     provideDbxAppAuth({
       dbxAppAuthRoutes: {

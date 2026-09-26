@@ -4,6 +4,8 @@ import { callbackTest } from '@dereekb/util/test';
 
 interface TestFilter {
   test?: boolean;
+  name?: string;
+  preset?: string;
 }
 
 describe('FilterMap', () => {
@@ -171,6 +173,167 @@ describe('FilterMap', () => {
             expect(filter).toBe(testFilterA);
             done();
           });
+      })
+    );
+  });
+
+  describe('setFilterForKey()', () => {
+    it(
+      'should set the filter for the key.',
+      callbackTest((done) => {
+        filterMap.addDefaultFilterObs(testKey, of({ test: false }));
+
+        filterMap
+          .filterForKey(testKey)
+          .pipe(
+            filter((x) => x.test === true),
+            first()
+          )
+          .subscribe((x) => {
+            expect(x).toEqual({ test: true });
+            done();
+          });
+
+        filterMap.setFilterForKey(testKey, { test: true });
+      })
+    );
+
+    it(
+      'should use the set filter instead of the default filter if it is set before the key is subscribed to.',
+      callbackTest((done) => {
+        filterMap.addDefaultFilterObs(testKey, of({ test: false }));
+        filterMap.setFilterForKey(testKey, { test: true });
+
+        filterMap
+          .filterForKey(testKey)
+          .pipe(first())
+          .subscribe((x) => {
+            expect(x).toEqual({ test: true });
+            done();
+          });
+      })
+    );
+
+    it(
+      'should replace the value from the filter observables.',
+      callbackTest((done) => {
+        const writes = new Subject<TestFilter>();
+        filterMap.addFilterObs(testKey, writes);
+        writes.next({ name: 'a' });
+
+        filterMap
+          .filterForKey(testKey)
+          .pipe(
+            filter((x) => x.name === 'b'),
+            first()
+          )
+          .subscribe((x) => {
+            expect(x).toEqual({ name: 'b' });
+            done();
+          });
+
+        filterMap.setFilterForKey(testKey, { name: 'b' });
+      })
+    );
+
+    it(
+      'should be replaced by the next value from the filter observables.',
+      callbackTest((done) => {
+        const writes = new Subject<TestFilter>();
+        filterMap.addDefaultFilterObs(testKey, of({}));
+        filterMap.addFilterObs(testKey, writes);
+
+        filterMap
+          .filterForKey(testKey)
+          .pipe(
+            filter((x) => x.name === 'c'),
+            first()
+          )
+          .subscribe((x) => {
+            expect(x).toEqual({ name: 'c' });
+            done();
+          });
+
+        writes.next({ name: 'a' });
+        filterMap.setFilterForKey(testKey, { name: 'b' });
+        writes.next({ name: 'c' });
+      })
+    );
+
+    it(
+      'should keep the set filter when another filter observable is removed.',
+      callbackTest((done) => {
+        const writes = new Subject<TestFilter>();
+        const values: TestFilter[] = [];
+
+        filterMap.addFilterObs(testKey, writes);
+        filterMap.filterForKey(testKey).subscribe((x) => values.push(x));
+
+        writes.next({ name: 'a' });
+        filterMap.setFilterForKey(testKey, { name: 'b' });
+        writes.complete();
+
+        expect(values[values.length - 1]).toEqual({ name: 'b' });
+        done();
+      })
+    );
+  });
+
+  describe('mergedFilterForKeys()', () => {
+    const otherKey = 'b';
+
+    it(
+      'should merge the filters of each key.',
+      callbackTest((done) => {
+        filterMap.addDefaultFilterObs(testKey, of({ test: true }));
+        filterMap.addDefaultFilterObs(otherKey, of({ name: 'b' }));
+
+        filterMap
+          .mergedFilterForKeys([testKey, otherKey])
+          .pipe(first())
+          .subscribe((filter) => {
+            expect(filter).toEqual({ test: true, name: 'b' });
+            done();
+          });
+      })
+    );
+
+    it(
+      'should not emit until every key has a filter.',
+      callbackTest((done) => {
+        filterMap.addDefaultFilterObs(testKey, of({ test: true }));
+
+        filterMap
+          .mergedFilterForKeys([testKey, otherKey])
+          .pipe(timeout({ first: 200, with: () => of(0) }), first())
+          .subscribe((filter) => {
+            expect(filter).toBe(0);
+            done();
+          });
+      })
+    );
+
+    it(
+      'should keep the fields of the other keys when a filter is added to one key.',
+      callbackTest((done) => {
+        const otherKeyFilter = new Subject<TestFilter>();
+
+        filterMap.addDefaultFilterObs(testKey, of({ test: true }));
+        filterMap.addDefaultFilterObs(otherKey, of({}));
+
+        filterMap
+          .mergedFilterForKeys([testKey, otherKey])
+          .pipe(
+            filter((x) => x.name != null),
+            first()
+          )
+          .subscribe((filter) => {
+            expect(filter).toEqual({ test: true, name: 'b' });
+            done();
+          });
+
+        filterMap.addFilterObs(otherKey, otherKeyFilter);
+        otherKeyFilter.next({ name: 'b', preset: 'b' });
       })
     );
   });

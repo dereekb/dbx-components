@@ -7,6 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxInjectionComponent, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MatAccordion } from '@angular/material/expansion';
 import { type DbxValueListItemGroup } from '../group/list.view.value.group';
+import { type DbxValueListViewSeparatorConfig, dbxValueListItemSeparatorConfigs } from '../list.view.value.separator';
 
 // MARK: Config
 /**
@@ -49,15 +50,25 @@ export interface DbxAccordionRenderGroupFooterEntry {
 }
 
 /**
+ * Render entry for a separator between (or around) items within the flat accordion list.
+ */
+export interface DbxAccordionRenderSeparatorEntry {
+  readonly type: 'separator';
+  readonly trackId: string;
+  readonly separatorConfig: DbxInjectionComponentConfig;
+}
+
+/**
  * Discriminated union of all render entry types used by the flat accordion list.
  */
-export type DbxAccordionRenderEntry<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> = DbxAccordionRenderItemEntry<T, I> | DbxAccordionRenderGroupHeaderEntry | DbxAccordionRenderGroupFooterEntry;
+export type DbxAccordionRenderEntry<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> = DbxAccordionRenderItemEntry<T, I> | DbxAccordionRenderGroupHeaderEntry | DbxAccordionRenderGroupFooterEntry | DbxAccordionRenderSeparatorEntry;
 
 /**
  * Flattens grouped accordion items into a single array of render entries with stable track IDs.
  *
  * @param groups - The grouped items to flatten.
  * @param trackByFn - The track-by function used to derive stable item identity.
+ * @param separatorConfig - (Optional) separator configuration. Separators are evaluated within each group.
  * @returns A flat array of render entries for use in a single `@for` loop.
  *
  * @example
@@ -65,7 +76,7 @@ export type DbxAccordionRenderEntry<T, I extends DbxValueListItem<T> = DbxValueL
  * const entries = flattenAccordionGroups(groups, trackByFn);
  * ```
  */
-export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(groups: DbxValueListItemGroup<unknown, T, I>[], trackByFn: TrackByFunction<DbxValueListItemConfig<T, I>>): DbxAccordionRenderEntry<T, I>[] {
+export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(groups: DbxValueListItemGroup<unknown, T, I>[], trackByFn: TrackByFunction<DbxValueListItemConfig<T, I>>, separatorConfig?: Maybe<DbxValueListViewSeparatorConfig<T, I>>): DbxAccordionRenderEntry<T, I>[] {
   const entries: DbxAccordionRenderEntry<T, I>[] = [];
 
   for (const group of groups) {
@@ -79,13 +90,31 @@ export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxVal
     }
 
     if (group.showGroupItems !== false) {
-      for (let i = 0; i < group.items.length; i++) {
-        const item = group.items[i];
-        entries.push({
-          type: 'item',
-          trackId: `__i__${group.id}__${trackByFn(i, item)}`,
-          item
-        });
+      const separators = dbxValueListItemSeparatorConfigs<T, I>(group.items, separatorConfig);
+
+      for (let i = 0; i <= group.items.length; i++) {
+        const item = group.items[i] as Maybe<DbxValueListItemConfig<T, I>>;
+        const separator = separators[i];
+
+        if (separator) {
+          const previous = group.items[i - 1] as Maybe<DbxValueListItemConfig<T, I>>;
+          const previousTrackId = previous ? trackByFn(i - 1, previous) : '';
+          const nextTrackId = item ? trackByFn(i, item) : '';
+
+          entries.push({
+            type: 'separator',
+            trackId: `__s__${group.id}__${previousTrackId}__${nextTrackId}`,
+            separatorConfig: separator
+          });
+        }
+
+        if (item) {
+          entries.push({
+            type: 'item',
+            trackId: `__i__${group.id}__${trackByFn(i, item)}`,
+            item
+          });
+        }
       }
     }
 
@@ -126,6 +155,11 @@ export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxVal
           @case ('item') {
             <div dbx-injection [config]="entry.item.config"></div>
           }
+          @case ('separator') {
+            <div class="dbx-list-view-item-separator">
+              <dbx-injection [config]="entry.separatorConfig"></dbx-injection>
+            </div>
+          }
           @case ('group-footer') {
             <div class="dbx-list-view-group dbx-list-view-group-footer">
               <dbx-injection [config]="entry.footerConfig"></dbx-injection>
@@ -149,7 +183,7 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
     const groups = this.groupsSignal() ?? [];
     const trackByFn = this.trackByFunctionSignal();
 
-    return flattenAccordionGroups<T, I>(groups as DbxValueListItemGroup<unknown, T, I>[], trackByFn);
+    return flattenAccordionGroups<T, I>(groups as DbxValueListItemGroup<unknown, T, I>[], trackByFn, this.separatorConfig());
   });
 }
 
@@ -175,7 +209,7 @@ export class DbxValueListAccordionViewContentComponent<T, I extends DbxValueList
 @Component({
   selector: 'dbx-list-accordion-view',
   template: `
-    <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? false"></dbx-list-accordion-view-content>
+    <dbx-list-accordion-view-content [items]="itemsSignal()" [multi]="config().multi" [emitAllClicks]="config().emitAllClicks" [stickyHeaders]="config().stickyHeaders ?? false" [separatorConfig]="config().separatorConfig"></dbx-list-accordion-view-content>
   `,
   imports: [DbxValueListAccordionViewContentComponent]
 })

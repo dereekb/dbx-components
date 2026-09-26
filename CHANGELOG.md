@@ -1,3 +1,25 @@
+# [14.10.0](https://github.com/dereekb/dbx-components/compare/v14.9.0-dev...v14.10.0) (2026-09-26)
+
+### Bug Fixes
+
+- **dbx-web:** keep detail-item leading block at a minimum width ([e2e81c29](https://github.com/dereekb/dbx-components/commit/e2e81c297961d77c9d72900fed7b12e17aab907f))
+- **dbx-web:** refresh list separators when their neighbours change ([82174c17](https://github.com/dereekb/dbx-components/commit/82174c173f39e20b17ed8caf31d771294e934f3d))
+- reject make-env keys the Firebase CLI would refuse ([8a503b1f](https://github.com/dereekb/dbx-components/commit/8a503b1fcff528b2dd832953edc2388f92d56089))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([2246ab8a](https://github.com/dereekb/dbx-components/commit/2246ab8abbfb31879670dac44521d0e2bff9b236))
+
+### Code Refactoring
+
+- **filter:** add dbxFilterMapStorage directive and JSON converters ([1b315c44](https://github.com/dereekb/dbx-components/commit/1b315c44f51fa897398a6641b17ac5c0e33cec28))
+
+### Features
+
+- **dbx-web:** add list separatorConfig and detail-item row utility ([bf149c1f](https://github.com/dereekb/dbx-components/commit/bf149c1fed12721b3df460992adcfc5fb1d0330e))
+- **filter:** add merged filter keys and filter storage ([dccb003b](https://github.com/dereekb/dbx-components/commit/dccb003ba9ad9de0d15f985c6f51be7e1d8e166f))
+- **firebase:** make notification models admin-readable and listable ([1facdede](https://github.com/dereekb/dbx-components/commit/1facdedefbb05ee7555be75f828b74787a83afd0))
+
 # [14.9.0](https://github.com/dereekb/dbx-components/compare/v14.8.0-dev...v14.9.0) (2026-09-23)
 
 ### Bug Fixes

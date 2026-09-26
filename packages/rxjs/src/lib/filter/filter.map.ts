@@ -1,8 +1,10 @@
 import { filterMaybe } from '../rxjs/value';
+import { skipReplayedValues } from '../rxjs/rxjs';
 import { type ObservableOrValue } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
-import { BehaviorSubject, type Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, type Subscription, finalize } from 'rxjs';
+import { BehaviorSubject, type Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, type Subscription, finalize, concat, of } from 'rxjs';
 import { type FilterSource, type FilterSourceConnector } from './filter';
+import { combineFilters, type MergeFiltersFunction } from './filter.merge';
 import { type Destroyable, type IndexNumber, type IndexRef, type Maybe } from '@dereekb/util';
 
 /**
@@ -47,6 +49,51 @@ export class FilterMap<F> implements Destroyable {
       switchMap((x) => x.filter$),
       filterMaybe()
     );
+  }
+
+  /**
+   * Returns an observable of the filters for all the given keys merged into a single filter.
+   *
+   * Lets several filter controls each own a separate key, so one control saving its filter never overwrites the fields set by another.
+   * Keys later in the array win when two keys set the same field. The `preset` field is removed from the merged result.
+   *
+   * Every key must have a value (for example, a default added with {@link addDefaultFilterObs}) before the merged filter emits.
+   *
+   * @param keys - Filter map keys to merge, in priority order.
+   * @param mergeFn - Function used to merge the filters. Defaults to {@link mergeFilters}.
+   * @returns Observable that emits the merged filter whenever any of the keys' filters change.
+   *
+   * @example
+   * ```ts
+   * filterMap.addDefaultFilterObs('date', of({}));
+   * filterMap.addDefaultFilterObs('attributes', of({}));
+   *
+   * filterMap.mergedFilterForKeys(['date', 'attributes']).subscribe((filter) => console.log(filter));
+   * ```
+   */
+  mergedFilterForKeys(keys: FilterMapKey[], mergeFn?: MergeFiltersFunction<F>): Observable<F> {
+    const filterObs = keys.map((key) => this.filterForKey(key) as Observable<Partial<F & object>>);
+    return combineFilters<F & object>(filterObs, mergeFn as MergeFiltersFunction<F & object> | undefined) as Observable<F>;
+  }
+
+  /**
+   * Sets the filter for the given key.
+   *
+   * The filter becomes the key's value the same way an emission from one of the key's filter observables would,
+   * and stays the key's value until one of those observables emits a new filter.
+   *
+   * Use to update a key from outside its filter controls, e.g. a "Clear" button that resets the key.
+   *
+   * @param key - Filter map key.
+   * @param filter - Filter to set.
+   *
+   * @example
+   * ```ts
+   * filterMap.setFilterForKey('users', { active: true });
+   * ```
+   */
+  setFilterForKey(key: FilterMapKey, filter: F): void {
+    this._itemForKey(key).setFilter(filter);
   }
 
   /**
@@ -177,13 +224,25 @@ class FilterMapItem<F> {
   private _i = 0;
   private readonly _source = new FilterSourceInstance<F>();
   private readonly _obs = new BehaviorSubject<FilterMapItemObs<F>[]>([]);
+  private readonly _setFilter = new BehaviorSubject<Maybe<F>>(undefined);
 
   private readonly _obs$: Observable<F> = this._obs.pipe(
     switchMap((x) => merge(...x.map((y) => y.obs))),
     distinctUntilChanged()
   );
 
-  readonly filter$ = this._source.initialFilter$;
+  /**
+   * The source's filter, or the filter from setFilter() until the source emits a new filter after it was set.
+   *
+   * The set filter is held rather than added as another filter observable, so it is not lost if nothing is subscribed yet,
+   * and does not replay over newer values when the key's filter observables change.
+   */
+  readonly filter$: Observable<Maybe<F>> = this._setFilter.pipe(
+    // the source's current value is older than the set filter, so only values the source emits afterwards replace it
+    switchMap((setFilter) => (setFilter == null ? this._source.initialFilter$ : concat(of(setFilter), this._source.initialFilter$.pipe(skipReplayedValues())))),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   constructor(dbxFilterMap: FilterMap<F>, key: FilterMapKey) {
     this._dbxFilterMap = dbxFilterMap;
@@ -200,6 +259,10 @@ class FilterMapItem<F> {
 
   setDefaultFilterObs(obs: Maybe<ObservableOrValue<F>>): void {
     this._source.setDefaultFilter(obs);
+  }
+
+  setFilter(filter: F): void {
+    this._setFilter.next(filter);
   }
 
   addFilterObs(obs: Observable<F>): void {
@@ -243,5 +306,6 @@ class FilterMapItem<F> {
     this._obs.value.forEach((x) => x.deleteOnComplete.unsubscribe());
     this._source.destroy();
     this._obs.complete();
+    this._setFilter.complete();
   }
 }

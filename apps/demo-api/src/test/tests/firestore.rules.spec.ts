@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds, firestoreRulesTestBuilder, readFirestoreRulesFile } from '@dereekb/firebase/test';
-import { collection, collectionGroup, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, collectionGroup, doc, getDoc, getDocs, orderBy, query, setDoc, where } from 'firebase/firestore';
 
 const OWNER_UID = 'rulestestowner';
 const OTHER_UID = 'rulestestother';
@@ -349,6 +349,89 @@ describe('firestore.rules', () => {
       it('should deny a token that carries the admin key with a non-1 value', async () => {
         // userClaimsIsSysAdmin() checks `a == 1`, not merely that the key is present
         await assertFails(getDoc(doc(f.firestoreForUser(ADMIN_UID, { a: 0 }), 'orrt', RUN_TASK_KEY)));
+      });
+    });
+
+    describe('Notification', () => {
+      const ADMIN_UID = 'rulestestsysadmin';
+      const ADMIN_TOKEN = { a: 1 };
+      const BOX_ID = 'rulestestbox';
+      const NOTIFICATION_ID = 'rulestestnotification';
+      const WEEK_ID = '202601';
+      const DAY_ID = '2026-01-05';
+      const PAGE_ID = '0';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'nb', BOX_ID), { m: 'pr/rulestestprofile', o: 'pr/rulestestprofile', r: [], w: 202601 });
+          await setDoc(doc(firestore, 'nb', BOX_ID, 'nbn', NOTIFICATION_ID), { cat: new Date(), d: false, es: 0 });
+          await setDoc(doc(firestore, 'nb', BOX_ID, 'nbnw', WEEK_ID), { w: 202601, n: [] });
+          await setDoc(doc(firestore, 'nb', BOX_ID, 'nbnle', DAY_ID), { d: DAY_ID });
+          await setDoc(doc(firestore, 'nb', BOX_ID, 'nbnle', DAY_ID, 'nbnlep', PAGE_ID), { i: [], c: 0 });
+        });
+      });
+
+      describe('nbn (Notification)', () => {
+        it('should allow a sys admin to read a notification', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbn', NOTIFICATION_ID)));
+        });
+
+        it("should allow a sys admin to list a box's notifications newest first", async () => {
+          await assertSucceeds(getDocs(query(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbn'), orderBy('cat', 'desc'))));
+        });
+
+        it('should deny a non-admin read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nb', BOX_ID, 'nbn', NOTIFICATION_ID)));
+        });
+
+        it('should deny an unauthenticated read', async () => {
+          await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'nb', BOX_ID, 'nbn', NOTIFICATION_ID)));
+        });
+
+        it('should deny a sys admin writing a notification', async () => {
+          // the grant is read-only: notifications are created and sent by the server, never a client session
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbn', NOTIFICATION_ID), { d: true }));
+        });
+      });
+
+      describe('nbnw (NotificationWeek)', () => {
+        it('should allow a sys admin to read a notification week', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnw', WEEK_ID)));
+        });
+
+        it("should allow a sys admin to list a box's notification weeks", async () => {
+          await assertSucceeds(getDocs(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnw')));
+        });
+
+        it('should deny a non-admin read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nb', BOX_ID, 'nbnw', WEEK_ID)));
+        });
+
+        it('should deny a sys admin writing a notification week', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnw', WEEK_ID), { n: [] }));
+        });
+      });
+
+      describe('nbnle (NotificationLoggedEventDay)', () => {
+        it('should allow a sys admin to read a logged event day', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnle', DAY_ID)));
+        });
+
+        it('should allow a sys admin to read a logged event day page', async () => {
+          await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnle', DAY_ID, 'nbnlep', PAGE_ID)));
+        });
+
+        it('should deny a non-admin read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nb', BOX_ID, 'nbnle', DAY_ID)));
+        });
+
+        it('should deny a non-admin page read', async () => {
+          await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nb', BOX_ID, 'nbnle', DAY_ID, 'nbnlep', PAGE_ID)));
+        });
+
+        it('should deny a sys admin writing a logged event day page', async () => {
+          await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'nb', BOX_ID, 'nbnle', DAY_ID, 'nbnlep', PAGE_ID), { c: 1 }));
+        });
       });
     });
 

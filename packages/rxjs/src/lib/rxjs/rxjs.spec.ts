@@ -1,8 +1,8 @@
 import { failTest, callbackTest } from '@dereekb/util/test';
 import { skipAllInitialMaybe } from './value';
 import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject, of, Subject, finalize, tap } from 'rxjs';
-import { preventComplete } from './rxjs';
+import { BehaviorSubject, of, Subject, finalize, tap, shareReplay } from 'rxjs';
+import { preventComplete, skipReplayedValues } from './rxjs';
 
 describe('skipAllInitialMaybe()', () => {
   it(
@@ -80,4 +80,44 @@ describe('preventComplete', () => {
       });
     })
   );
+});
+
+describe('skipReplayedValues()', () => {
+  it('should not emit the current value of a BehaviorSubject.', () => {
+    const value = new BehaviorSubject(1);
+    const values: number[] = [];
+
+    value.pipe(skipReplayedValues()).subscribe((x) => values.push(x));
+    expect(values).toEqual([]);
+
+    value.next(2);
+    expect(values).toEqual([2]);
+  });
+
+  it('should not emit the value replayed by shareReplay().', () => {
+    const value = new Subject<number>();
+    const shared = value.pipe(shareReplay(1));
+    const values: number[] = [];
+
+    shared.subscribe();
+    value.next(1);
+
+    shared.pipe(skipReplayedValues()).subscribe((x) => values.push(x));
+    expect(values).toEqual([]);
+
+    value.next(2);
+    expect(values).toEqual([2]);
+  });
+
+  it('should skip every synchronous value of a synchronous observable.', () => {
+    const values: number[] = [];
+    let completed = false;
+
+    of(1, 2, 3)
+      .pipe(skipReplayedValues())
+      .subscribe({ next: (x) => values.push(x), complete: () => (completed = true) });
+
+    expect(values).toEqual([]);
+    expect(completed).toBe(true);
+  });
 });

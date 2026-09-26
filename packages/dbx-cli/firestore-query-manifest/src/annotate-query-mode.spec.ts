@@ -39,8 +39,6 @@ describe('annotateQueryEntryMode()', () => {
     });
 
     it('marks a collection-group query over a root collection with no group rule unavailable', () => {
-      // `nbnw` sits under `nb/{notificationBox}` with no `{path=**}` block — the shape hellosubs'
-      // `jlja` has, except the demo rules also deny its read outright, so `sf` is used instead below
       const result = annotate([entry({ slug: 'sf-group-query', collection: 'sf', model: 'StorageFile', isNested: false, scope: 'COLLECTION_GROUP' })]);
 
       // `sf` is a ROOT collection: --parent cannot apply, so there is no path-scoped fallback
@@ -49,11 +47,19 @@ describe('annotateQueryEntryMode()', () => {
       expect(result.unavailableSlugs).toEqual(['sf-group-query']);
     });
 
-    it('marks a written-down `allow read: if false` collection unavailable as list-denied', () => {
-      const result = annotate([entry({ slug: 'notifications-query', collection: 'nbn', model: 'Notification' })]);
+    it('marks a written-down `allow list: if false` collection unavailable as list-denied', () => {
+      const result = annotate([entry({ slug: 'user-external-connections-query', collection: 'uec', model: 'UserExternalConnection', isNested: false, scope: 'COLLECTION' })]);
 
       expect(result.entries[0].queryMode).toBe('unavailable');
       expect(result.entries[0].rules).toMatchObject({ reason: 'list-denied', list: 'denied' });
+    });
+
+    it('marks a box-scoped COLLECTION query over the admin-readable `nbn` as parent-child', () => {
+      const result = annotate([entry({ slug: 'notifications-newest-first-query', name: 'notificationsNewestFirstQuery', collection: 'nbn', model: 'Notification', scope: 'COLLECTION' })]);
+
+      expect(result.entries[0].queryMode).toBe('parent-child');
+      expect(result.entries[0].rules).toMatchObject({ list: 'allowed', collectionGroup: false, parentPaths: ['nb/{notificationBox}'] });
+      expect(result.parentChildSlugs).toEqual(['notifications-newest-first-query']);
     });
 
     it('marks a collection the rules never name unavailable as list-unmatched', () => {
