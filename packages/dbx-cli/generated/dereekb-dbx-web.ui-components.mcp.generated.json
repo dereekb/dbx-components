@@ -809,6 +809,52 @@
       "minimalExample": "<dbx-progress-spinner-button [config]=\"cfg\"></dbx-progress-spinner-button>"
     },
     {
+      "slug": "browser-agent-view",
+      "category": "misc",
+      "kind": "component",
+      "selector": "dbx-browser-agent-view",
+      "className": "DbxBrowserAgentViewComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Renders the component of the first {@link DbxBrowserAgentViewEntry} whose match matches the current browser agent (OS, browser, and device), falling back to the config's default entry.\n\nAn optional override button lets the user pick another entry. Injected components can inject {@link DbxBrowserAgentViewContext} to read the detected agent or to switch entries.",
+      "inputs": [
+        {
+          "name": "config",
+          "type": "Maybe<DbxBrowserAgentViewConfig>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "showOverrideButton",
+          "type": "Maybe<boolean>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "widget",
+        "browser-agent-view-override-button"
+      ],
+      "example": "readonly config = makeDbxBrowserAgentViewConfigFromOsMap({\n  ios: { componentClass: IosInstructionsComponent },\n  android: { componentClass: AndroidInstructionsComponent },\n  default: { componentClass: BookmarkInstructionsComponent },\n  showOverrideButton: true\n});\n```\n\n```html\n<dbx-browser-agent-view [config]=\"config\" [(overrideKey)]=\"savedDeviceKey\"></dbx-browser-agent-view>",
+      "minimalExample": "<dbx-browser-agent-view [config]=\"config\"></dbx-browser-agent-view>"
+    },
+    {
+      "slug": "browser-agent-view-override-button",
+      "category": "misc",
+      "kind": "component",
+      "selector": "dbx-browser-agent-view-override-button",
+      "className": "DbxBrowserAgentViewOverrideButtonComponent",
+      "module": "@dereekb/dbx-web",
+      "description": "Button that opens a menu to manually select an entry of the parent {@link DbxBrowserAgentViewComponent}, or to return to the auto-detected entry.\n\nRendered by the view when `showOverrideButton` is enabled, but can also be placed inside the injected content to position it manually.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "browser-agent-view"
+      ],
+      "example": "<!-- inside a component injected by dbx-browser-agent-view -->\n<p>Follow these steps to add the app to your home screen.</p>\n<dbx-browser-agent-view-override-button></dbx-browser-agent-view-override-button>",
+      "minimalExample": "<dbx-browser-agent-view-override-button></dbx-browser-agent-view-override-button>"
+    },
+    {
       "slug": "page-title-info",
       "category": "navigation",
       "kind": "directive",

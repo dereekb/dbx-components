@@ -6,6 +6,7 @@
     "@angular/common": "22.1.4",
     "@angular/core": "22.1.4",
     "@angular/material": "^22.1.4",
+    "@dereekb/browser": "14.10.0",
     "@dereekb/date": "14.10.0",
     "@dereekb/dbx-analytics": "14.10.0",
     "@dereekb/dbx-core": "14.10.0",

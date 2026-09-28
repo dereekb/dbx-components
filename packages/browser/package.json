@@ -6,7 +6,8 @@
   "peerDependencies": {
     "@dereekb/util": "14.10.0",
     "@dereekb/rxjs": "14.10.0",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "bowser": "^2.14.1"
   },
   "exports": {
     "./oidc": {

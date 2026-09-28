@@ -76,6 +76,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Quiz',
     detail: 'dbx-form/quiz',
     ref: 'doc.extension.quiz'
+  },
+  {
+    icon: 'devices',
+    title: 'Browser Agent',
+    detail: 'dbx-browser-agent-view',
+    ref: 'doc.extension.browseragent'
   }
 ];
 

@@ -1,3 +1,4 @@
+export * from './browser';
 // export * from './calendar'; // nothing to export
 export * from './model';
 export * from './download';

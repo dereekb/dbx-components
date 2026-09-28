@@ -61,6 +61,7 @@
     "archiver": "^8.0.0",
     "arktype": "^2.2.0",
     "body-parser": "^2.2.2",
+    "bowser": "^2.14.1",
     "change-case-all": "^2.1.0",
     "cors": "^2.8.6",
     "date-fns": "^4.1.0",
