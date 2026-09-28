@@ -1067,6 +1067,93 @@
       ]
     },
     {
+      "slug": "card-image-caption",
+      "selector": ".dbx-card-image-captioned",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 301,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "absolute"
+        },
+        {
+          "property": "left",
+          "value": "0"
+        },
+        {
+          "property": "right",
+          "value": "0"
+        },
+        {
+          "property": "bottom",
+          "value": "0"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-padding-2) var(--dbx-padding-4)"
+        },
+        {
+          "property": "color",
+          "value": "white"
+        },
+        {
+          "property": "background",
+          "value": "color-mix(in srgb, var(--mat-sys-scrim, black) 55%, transparent)"
+        },
+        {
+          "property": "white-space",
+          "value": "nowrap"
+        },
+        {
+          "property": "overflow",
+          "value": "hidden"
+        },
+        {
+          "property": "text-overflow",
+          "value": "ellipsis"
+        }
+      ],
+      "role": "layout",
+      "intent": "single-line caption strip across the bottom of a `.dbx-card-image-captioned` image — light text on a translucent `--mat-sys-scrim` wash that stays readable over any picture in light and dark themes; long text ellipsizes. Pair with a type role utility such as `.dbx-text-title-small`.",
+      "seeAlso": [
+        "card-image-captioned",
+        "text-title-small"
+      ],
+      "parent": "card-image-captioned",
+      "selectorContext": ".dbx-card-image-captioned > .dbx-card-image-caption",
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--dbx-padding-4",
+        "--mat-sys-scrim"
+      ]
+    },
+    {
+      "slug": "card-image-captioned",
+      "selector": ".dbx-card-image-captioned",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 285,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "relative"
+        },
+        {
+          "property": "overflow",
+          "value": "hidden"
+        }
+      ],
+      "role": "layout",
+      "intent": "`mat-card-image` wrapper that overlays a `.dbx-card-image-caption` strip on the bottom of its `<img>` (e.g. a place name over a map popup hero) — put `mat-card-image` on this wrapper `<div>` instead of the `<img>`, so the wrapper keeps mat-card's rounded top corners and clips the image to them.",
+      "seeAlso": [
+        "card-image-caption",
+        "text-title-small"
+      ]
+    },
+    {
       "slug": "card-select",
       "selector": ".dbx-card-select",
       "source": "@dereekb/dbx-web",
@@ -2607,7 +2694,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 467,
+      "line": 632,
       "declarations": [
         {
           "property": "height",
@@ -2628,7 +2715,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 335,
+      "line": 338,
       "declarations": [
         {
           "property": "--dbx-list-card-items-list-gap",
@@ -2652,12 +2739,258 @@
       ]
     },
     {
+      "slug": "list-detail-item",
+      "selector": ".dbx-list-detail-item",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 467,
+      "declarations": [
+        {
+          "property": "--dbx-list-detail-item-padding-resolved",
+          "value": "var(--dbx-list-detail-item-padding, var(--dbx-padding-3))"
+        },
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "flex-direction",
+          "value": "row"
+        },
+        {
+          "property": "align-items",
+          "value": "stretch"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-list-detail-item-gap, var(--dbx-padding-3))"
+        },
+        {
+          "property": "min-width",
+          "value": "0"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-list-detail-item-padding-resolved)"
+        },
+        {
+          "property": "box-sizing",
+          "value": "border-box"
+        }
+      ],
+      "role": "layout",
+      "intent": "detail list-row layout — flex row of a leading slot, a content column (bold `.item-title` + `.item-line` rows with optional leading icons) and a trailing slot, paired with nested `.item-leading` / `.item-leading-block` / `.item-content` / `.item-title` / `.item-line` / `.item-trailing` / `.item-trailing-divided` helpers; the row pads itself, so pair with `dbx-list-item-p0` on the view",
+      "seeAlso": [
+        "dbx-list-two-line-item",
+        "dbx-list-item-p0",
+        "dbx-list-detail-item-highlight"
+      ],
+      "tokensRead": [
+        "--dbx-list-detail-item-gap",
+        "--dbx-list-detail-item-line-gap",
+        "--dbx-list-detail-item-line-icon-size",
+        "--dbx-list-detail-item-padding",
+        "--dbx-list-detail-item-padding-resolved",
+        "--dbx-padding-1",
+        "--dbx-padding-3",
+        "--mat-sys-body-medium",
+        "--mat-sys-on-surface",
+        "--mat-sys-on-surface-variant",
+        "--mat-sys-title-medium"
+      ],
+      "tokensSet": [
+        "--dbx-list-detail-item-padding-resolved"
+      ]
+    },
+    {
+      "slug": "list-detail-item-gap",
+      "selector": ".dbx-list-detail-item-gap",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 564,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-list-detail-item-gap, var(--dbx-padding-3))"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-list-detail-item-gap-marker-padding, var(--dbx-padding-3)) 0"
+        },
+        {
+          "property": "font",
+          "value": "var(--mat-sys-label-medium)"
+        },
+        {
+          "property": "color",
+          "value": "var(--mat-sys-on-surface-variant)"
+        }
+      ],
+      "role": "layout",
+      "intent": "non-interactive \"…\" gap marker between runs of `.dbx-list-detail-item` rows (e.g. non-consecutive dates) — a compact muted row whose `.item-leading` column lines up with `.item-leading-block`; render it as the separator component of a list view's `separatorConfig` so it sits between rows without row styling",
+      "seeAlso": [
+        "dbx-list-detail-item",
+        "dbx-list-detail-item-leading-block"
+      ],
+      "parent": "list-detail-item",
+      "tokensRead": [
+        "--dbx-list-detail-item-gap",
+        "--dbx-list-detail-item-gap-marker-padding",
+        "--dbx-list-detail-item-leading-block-width",
+        "--dbx-padding-3",
+        "--mat-sys-label-medium",
+        "--mat-sys-on-surface-variant"
+      ]
+    },
+    {
+      "slug": "list-detail-item-highlight",
+      "selector": ".dbx-list-detail-item-highlight",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 586,
+      "declarations": [
+        {
+          "property": "background",
+          "value": "color-mix(in srgb, var(--dbx-list-detail-item-highlight-color, var(--dbx-notice-color)) var(--dbx-list-detail-item-highlight-tone, 14%), transparent)"
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-medium, 12px)"
+        }
+      ],
+      "role": "state",
+      "intent": "flag a `.dbx-list-detail-item` row as urgent — a rounded tonal wash of `--dbx-list-detail-item-highlight-color` (default `--dbx-notice-color`) at `--dbx-list-detail-item-highlight-tone` (default 14%); inside a `.dbx-list` the hosting list row paints the wash instead, so it also spans the view's built-in meta slot (e.g. the chevron)",
+      "seeAlso": [
+        "dbx-list-detail-item"
+      ],
+      "parent": "list-detail-item",
+      "tokensRead": [
+        "--dbx-list-detail-item-highlight-color",
+        "--dbx-list-detail-item-highlight-tone",
+        "--dbx-notice-color",
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "slug": "list-detail-item-leading-block",
+      "selector": ".dbx-list-detail-item",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 525,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "flex-direction",
+          "value": "column"
+        },
+        {
+          "property": "justify-content",
+          "value": "center"
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start"
+        },
+        {
+          "property": "align-self",
+          "value": "stretch"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-1)"
+        },
+        {
+          "property": "flex",
+          "value": "none"
+        },
+        {
+          "property": "min-width",
+          "value": "var(--dbx-list-detail-item-leading-block-width, 112px)"
+        },
+        {
+          "property": "margin",
+          "value": "calc(-1 * var(--dbx-list-detail-item-padding-resolved)) 0 calc(-1 * var(--dbx-list-detail-item-padding-resolved)) calc(-1 * var(--dbx-list-detail-item-padding-resolved))"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-list-detail-item-padding-resolved)"
+        },
+        {
+          "property": "box-sizing",
+          "value": "border-box"
+        }
+      ],
+      "role": "layout",
+      "intent": "full-height leading column for a `.dbx-list-detail-item` (e.g. a weekday / date / status block) — bleeds out to the row's top, bottom and start edges so a `[dbxColor]` + `.dbx-color-bg` wash fills the row edge; never shrinks below `--dbx-list-detail-item-leading-block-width` (112px), so every row's block stays the same width and only grows when its own content is wider",
+      "seeAlso": [
+        "dbx-list-detail-item",
+        "dbx-color-bg"
+      ],
+      "parent": "list-detail-item",
+      "selectorContext": ".dbx-list-detail-item .item-leading-block",
+      "tokensRead": [
+        "--dbx-list-detail-item-leading-block-width",
+        "--dbx-list-detail-item-padding-resolved",
+        "--dbx-padding-1"
+      ]
+    },
+    {
+      "slug": "list-detail-item-trailing-divided",
+      "selector": ".dbx-list-detail-item",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 546,
+      "declarations": [
+        {
+          "property": "align-self",
+          "value": "stretch"
+        },
+        {
+          "property": "padding-left",
+          "value": "var(--dbx-list-detail-item-gap, var(--dbx-padding-3))"
+        },
+        {
+          "property": "border-left",
+          "value": "1px solid var(--dbx-list-detail-item-divider-color, var(--mat-sys-outline-variant))"
+        }
+      ],
+      "role": "layout",
+      "intent": "trailing slot of a `.dbx-list-detail-item` set off from the content by a hairline start border — for a trailing button column; recolor via `--dbx-list-detail-item-divider-color`",
+      "seeAlso": [
+        "dbx-list-detail-item"
+      ],
+      "parent": "list-detail-item",
+      "selectorContext": ".dbx-list-detail-item .item-trailing-divided",
+      "tokensRead": [
+        "--dbx-list-detail-item-divider-color",
+        "--dbx-list-detail-item-gap",
+        "--dbx-padding-3",
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
       "slug": "list-item-p0",
       "selector": ".dbx-list-item-p0",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 482,
+      "line": 647,
       "declarations": [
         {
           "property": "padding",
@@ -2677,7 +3010,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 297,
+      "line": 300,
       "declarations": [
         {
           "property": "min-height",
@@ -2706,7 +3039,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 306,
+      "line": 309,
       "declarations": [
         {
           "property": "min-height",
@@ -2732,7 +3065,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 442,
+      "line": 607,
       "declarations": [
         {
           "property": "cursor",
@@ -2749,7 +3082,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 454,
+      "line": 619,
       "declarations": [
         {
           "property": "padding",
@@ -2769,7 +3102,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 381,
+      "line": 392,
       "declarations": [
         {
           "property": "--dbx-list-item-border-radius",
@@ -2796,7 +3129,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 278,
+      "line": 281,
       "declarations": [],
       "role": "state",
       "intent": "pin `.dbx-list-view-group-header` rows to the top of the list while scrolling"
@@ -2807,7 +3140,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 398,
+      "line": 409,
       "declarations": [
         {
           "property": "display",
@@ -2834,7 +3167,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 255,
+      "line": 258,
       "declarations": [],
       "role": "spacing",
       "intent": "strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container"

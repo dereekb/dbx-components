@@ -10,6 +10,10 @@ import { MAPBOX_API_KEY, MapComponent } from 'ngx-mapbox-gl';
 export interface DocExtensionMapboxPopupExampleItem {
   readonly id: string;
   readonly name: string;
+  /**
+   * Card title. Defaults to the name. The name is shown as a caption over the hero image when there is one.
+   */
+  readonly title?: Maybe<string>;
   readonly icon: string;
   readonly tag: string;
   readonly description: string;
@@ -25,6 +29,7 @@ export const DOC_EXTENSION_MAPBOX_POPUP_EXAMPLE_ITEMS: DocExtensionMapboxPopupEx
   {
     id: 'capitol',
     name: 'Texas State Capitol',
+    title: 'Guided Capitol Tour',
     icon: 'account_balance',
     tag: 'Open today',
     description: 'Free guided tours leave from the south foyer every 30 minutes.',
@@ -44,17 +49,20 @@ export const DOC_EXTENSION_MAPBOX_POPUP_EXAMPLE_ITEMS: DocExtensionMapboxPopupEx
 ];
 
 /**
- * Content of the example item popup. Built from a mat-card, a dbx-chip, and a dbx-dialog-content-close.
+ * Content of the example item popup. Built from a mat-card, a dbx-chip, and a dbx-dialog-content-close. The hero image carries the item's name in a .dbx-card-image-caption strip.
  */
 @Component({
   template: `
     <mat-card>
       @if (heroImageSignal()) {
-        <img mat-card-image [src]="heroImageSignal()" [alt]="item().name" width="340" height="150" />
+        <div mat-card-image class="dbx-card-image-captioned">
+          <img [src]="heroImageSignal()" [alt]="item().name" width="340" height="150" />
+          <div class="dbx-card-image-caption dbx-text-title-small">{{ item().name }}</div>
+        </div>
       }
       <dbx-dialog-content-close [padded]="false" (close)="close()"></dbx-dialog-content-close>
       <mat-card-header>
-        <mat-card-title>{{ item().name }}</mat-card-title>
+        <mat-card-title>{{ item().title ?? item().name }}</mat-card-title>
         <mat-card-subtitle>{{ item().hours }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
