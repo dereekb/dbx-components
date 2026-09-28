@@ -21,7 +21,10 @@
       <dbx-content-border>
         <p>Date Filter Value: {{ mergedDateFilterSignal() | json }}</p>
         <p>Filters Filter Value: {{ mergedAttributesFilterSignal() | json }}</p>
-        <p>Merged Filter Value (FilterMap.mergedFilterForKeys): {{ mergedFilterSignal() | json }}</p>
+        <p>
+          Merged Filter Value (FilterMap.mergedFilterForKeys):
+          {{ mergedFilterSignal() | json }}
+        </p>
       </dbx-content-border>
       <p>Each button is connected to its own key with dbxFilterMapSourceConnector, and saves it with dbxFilterMapStorage.</p>
       <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForMergedDateFilterSignal()" [dbxFilterMapSourceConnector]="mergedDateFilterKey" [dbxFilterMapStorage]="mergedDateFilterStorageConfig"></doc-interaction-test-date-filter-popover-button>
@@ -33,6 +36,30 @@
       </dbx-content-border>
       <p>Resetting sets both filters back to their defaults and removes the saved filters.</p>
       <dbx-button (buttonClick)="resetMergedFilters()" icon="restart_alt" text="Reset Filters"></dbx-button>
+    </doc-feature-example>
+    <doc-feature-example header="URL Filters" hint="The dbxFilterMapRouteParams directive loads a FilterMap key's filter from the page's start/end query params, and writes every change back to the URL. The params are declared on this page's route as dynamic query params, so writing them does not reload the page.">
+      <dbx-content-border>
+        <p>Filter Value: {{ urlFilterSignal() | json }}</p>
+        <p>URL Params: {{ urlFilterParamsSignal() | json }}</p>
+      </dbx-content-border>
+      <p>Pick a date and the URL updates. Reload the page and the filter is loaded from the URL again. Picking the default filter (no date) removes the params.</p>
+      <doc-interaction-test-date-filter-popover-button [buttonDisplayStyle]="displayForUrlFilterSignal()" [dbxFilterMapSourceConnector]="urlFilterKey" [dbxFilterMapRouteParams]="urlFilterRouteParamsConfig"></doc-interaction-test-date-filter-popover-button>
+      <p>These anchors open this page with params in the URL, which sets the filter. A start on its own covers just that day.</p>
+      <dbx-anchor [anchor]="urlFilterNextWeekAnchor">
+        <dbx-button [flat]="true" color="primary" icon="date_range" text="Next Week"></dbx-button>
+      </dbx-anchor>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-anchor [anchor]="urlFilterStartOnlyAnchor">
+        <dbx-button [flat]="true" color="primary" icon="event" text="Tomorrow (start only)"></dbx-button>
+      </dbx-anchor>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-anchor [anchor]="urlFilterRemoveParamsAnchor">
+        <dbx-button icon="clear" text="Remove Params"></dbx-button>
+      </dbx-anchor>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-anchor [anchor]="urlFilterNewTabAnchor">
+        <dbx-button icon="open_in_new" text="Next Week In A New Tab"></dbx-button>
+      </dbx-anchor>
     </doc-feature-example>
     <doc-feature-example header="dbx-filter-popover-button (custom filter only)" hint="When only a custom filter component is configured the popover opens directly to that filter's form, and the preset/customize switch buttons are hidden.">
       <dbx-content-border>

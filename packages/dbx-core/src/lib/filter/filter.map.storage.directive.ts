@@ -48,7 +48,7 @@ export interface DbxFilterMapStorageConfig<F, J = unknown> {
  *
  * @dbxFilter
  * @dbxFilterSlug map-storage
- * @dbxFilterRelated map, map-source-connector, map-merge-source
+ * @dbxFilterRelated map, map-source-connector, map-merge-source, map-route-params
  * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
  *
  * @example

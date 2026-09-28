@@ -1617,6 +1617,122 @@
       ]
     },
     {
+      "slug": "date-or-day-string-range-to-date-range",
+      "name": "dateOrDayStringRangeToDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range.string",
+      "signature": "dateOrDayStringRangeToDateRange(range: DateOrDayStringRange): DateRange",
+      "description": "Converts a {@link DateOrDayStringRange} to a {@link DateRange} by parsing any string values to the start of their respective days.",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateOrDayStringRange",
+          "description": "- The range with Date or string values.",
+          "optional": false
+        }
+      ],
+      "returns": "A DateRange with concrete Date objects.",
+      "tags": [
+        "date",
+        "range",
+        "day",
+        "string",
+        "iso8601",
+        "parse",
+        "convert",
+        "to",
+        "or",
+        "dateordaystringrangetodaterange"
+      ],
+      "example": "const range = dateOrDayStringRangeToDateRange({ start: '2024-01-01', end: '2024-01-31' });\n// range.start and range.end are Date objects at start of day",
+      "relatedSlugs": [
+        "date-or-day-string-range-to-iso8601-day-string-range",
+        "iso8601-day-string-range-params-to-date-range"
+      ]
+    },
+    {
+      "slug": "date-or-day-string-range-to-iso8601-day-string-range",
+      "name": "dateOrDayStringRangeToISO8601DayStringRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range.string",
+      "signature": "dateOrDayStringRangeToISO8601DayStringRange(range: DateOrDayStringRange): ISO8601DayStringRange",
+      "description": "Converts a {@link DateOrDayStringRange} to an {@link ISO8601DayStringRange} by formatting any Date values as ISO 8601 day strings using the system timezone.",
+      "params": [
+        {
+          "name": "range",
+          "type": "DateOrDayStringRange",
+          "description": "- The range with Date or string values.",
+          "optional": false
+        }
+      ],
+      "returns": "A range with both start and end as ISO 8601 day strings.",
+      "tags": [
+        "date",
+        "range",
+        "day",
+        "string",
+        "iso8601",
+        "params",
+        "url",
+        "query",
+        "route",
+        "format",
+        "convert",
+        "to",
+        "or",
+        "dateordaystringrangetoiso8601daystringrange"
+      ],
+      "example": "const stringRange = dateOrDayStringRangeToISO8601DayStringRange({\n  start: new Date('2024-01-01T10:00:00Z'),\n  end: '2024-01-31'\n});\n// stringRange.start === '2024-01-01', stringRange.end === '2024-01-31'",
+      "relatedSlugs": [
+        "date-or-day-string-range-to-date-range",
+        "iso8601-day-string-range-params-to-date-range"
+      ]
+    },
+    {
+      "slug": "iso8601-day-string-range-params-to-date-range",
+      "name": "iso8601DayStringRangeParamsToDateRange",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.range.string",
+      "signature": "iso8601DayStringRangeParamsToDateRange(params: Maybe<ISO8601DayStringRangeParams>): Maybe<DateRange>",
+      "description": "Converts {@link ISO8601DayStringRangeParams} to a {@link DateRange}, reading the days in the system timezone.\n\nUnlike {@link dateOrDayStringRangeToDateRange}, the values are checked first, and the range ends at the end of the end day.\nA start that is missing or not a valid ISO 8601 day string returns undefined. An end that is missing, invalid, or before the\nstart is ignored, so the range covers just the start day.",
+      "params": [
+        {
+          "name": "params",
+          "type": "Maybe<ISO8601DayStringRangeParams>",
+          "description": "- The params to read, typically the current route's params.",
+          "optional": false
+        }
+      ],
+      "returns": "The date range, or undefined when there is no valid start day.",
+      "tags": [
+        "date",
+        "range",
+        "day",
+        "string",
+        "iso8601",
+        "params",
+        "url",
+        "query",
+        "route",
+        "parse",
+        "validate",
+        "convert",
+        "to",
+        "iso8601daystringrangeparamstodaterange"
+      ],
+      "example": "iso8601DayStringRangeParamsToDateRange({ start: '2026-10-14', end: '2026-10-20' });\n// { start: 2026-10-14T00:00:00, end: 2026-10-20T23:59:59.999 } (system timezone)\n\niso8601DayStringRangeParamsToDateRange({ start: '2026-10-14' });\n// { start: 2026-10-14T00:00:00, end: 2026-10-14T23:59:59.999 }\n\niso8601DayStringRangeParamsToDateRange({ start: 'tomorrow' });\n// undefined",
+      "relatedSlugs": [
+        "date-or-day-string-range-to-iso8601-day-string-range",
+        "date-or-day-string-range-to-date-range"
+      ]
+    },
+    {
       "slug": "date-range-days-count",
       "name": "dateRangeDaysCount",
       "kind": "function",

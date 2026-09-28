@@ -63,9 +63,14 @@ export const DOC_INTERACTION_IFRAME_STATE: Ng2StateDeclaration = {
 };
 
 export const DOC_INTERACTION_FILTER_STATE: Ng2StateDeclaration = {
-  url: '/filter',
+  url: '/filter?start&end',
   name: 'doc.interaction.filter',
-  component: DocInteractionFilterComponent
+  component: DocInteractionFilterComponent,
+  params: {
+    // read and written by the URL Filter example's dbxFilterMapRouteParams directive
+    start: { dynamic: true },
+    end: { dynamic: true }
+  }
 };
 
 export const DOC_INTERACTION_PROMPT_STATE: Ng2StateDeclaration = {

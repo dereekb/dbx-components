@@ -1,13 +1,23 @@
 import { Component, type OnDestroy, inject, viewChildren } from '@angular/core';
-import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterMapMergeSourceDirective, DbxFilterMapStorageDirective, type DbxFilterMapStorageConfig } from '@dereekb/dbx-core';
+import { dateOrDayStringRangeToISO8601DayStringRange, formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
+import { type ClickableAnchor, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterMapMergeSourceDirective, DbxFilterMapStorageDirective, type DbxFilterMapStorageConfig, DbxFilterMapRouteParamsDirective, type DbxFilterMapRouteParamsConfig, DbxRouterService } from '@dereekb/dbx-core';
 import { FilterMap, type FilterMapKey } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { startOfDay } from 'date-fns';
+import { addDays, addWeeks, startOfDay, startOfWeek } from 'date-fns';
 import { forkJoin, map, of, type Observable } from 'rxjs';
-import { type DocInteractionTestFilter, type DocInteractionTestMergedFilter, type DocInteractionTestMergedFilterJson, DOC_INTERACTION_TEST_PRESETS, docInteractionTestAttributesFilterSelectionCount, refreshDocInteractionTestDatePresetFilter, DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER } from '../component/filter';
+import {
+  type DocInteractionTestFilter,
+  type DocInteractionTestMergedFilter,
+  type DocInteractionTestMergedFilterJson,
+  DOC_INTERACTION_TEST_PRESETS,
+  docInteractionTestAttributesFilterSelectionCount,
+  refreshDocInteractionTestDatePresetFilter,
+  DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER,
+  docInteractionTestDateFilterFromParams,
+  docInteractionTestDateFilterToParams
+} from '../component/filter';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective, DbxButtonComponent, type DbxButtonDisplayStylePair } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxButtonSpacerDirective, DbxButtonComponent, type DbxButtonDisplayStylePair, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocInteractionTestFilterPopoverButtonComponent } from '../component/filter.popover.button.component';
@@ -88,13 +98,16 @@ function displayForAttributesFilter(filter: Maybe<DocInteractionTestMergedFilter
     DocInteractionTestMergedFilterViewComponent,
     DbxFilterMapMergeSourceDirective,
     DbxFilterMapStorageDirective,
+    DbxFilterMapRouteParamsDirective,
     DbxButtonComponent,
+    DbxAnchorComponent,
     JsonPipe
   ]
 })
 export class DocInteractionFilterComponent implements OnDestroy {
   readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);
   readonly mergedFilterMap = inject(FilterMap<DocInteractionTestMergedFilter>);
+  readonly dbxRouterService = inject(DbxRouterService);
 
   readonly presets = DOC_INTERACTION_TEST_PRESETS;
 
@@ -102,6 +115,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly formFilterKey: FilterMapKey = 'form';
   readonly menuFilterKey: FilterMapKey = 'menu';
   readonly listFilterKey: FilterMapKey = 'list';
+  readonly urlFilterKey: FilterMapKey = 'url';
 
   readonly mergedDateFilterKey: FilterMapKey = 'mergedDate';
   readonly mergedAttributesFilterKey: FilterMapKey = 'mergedAttributes';
@@ -125,10 +139,44 @@ export class DocInteractionFilterComponent implements OnDestroy {
 
   readonly mergedFilterStorages = viewChildren(DbxFilterMapStorageDirective);
 
+  // loaded from and written to the page's start/end query params by the dbxFilterMapRouteParams directive
+  readonly urlFilterRouteParamsConfig: DbxFilterMapRouteParamsConfig<DocInteractionTestFilter> = {
+    key: this.urlFilterKey,
+    defaultFilter: {},
+    filterFromParams: docInteractionTestDateFilterFromParams,
+    paramsFromFilter: docInteractionTestDateFilterToParams
+  };
+
+  readonly urlFilterNextWeekParams = dateOrDayStringRangeToISO8601DayStringRange({
+    start: startOfWeek(addWeeks(new Date(), 1), { weekStartsOn: 1 }),
+    end: addDays(startOfWeek(addWeeks(new Date(), 1), { weekStartsOn: 1 }), 4)
+  });
+
+  readonly urlFilterNextWeekAnchor: ClickableAnchor = {
+    ref: 'doc.interaction.filter',
+    refParams: { ...this.urlFilterNextWeekParams }
+  };
+  readonly urlFilterStartOnlyAnchor: ClickableAnchor = {
+    ref: 'doc.interaction.filter',
+    refParams: {
+      start: formatToISO8601DayStringForSystem(addDays(new Date(), 1)),
+      end: null
+    }
+  };
+  readonly urlFilterRemoveParamsAnchor: ClickableAnchor = {
+    ref: 'doc.interaction.filter',
+    refParams: { start: null, end: null }
+  };
+  readonly urlFilterNewTabAnchor: ClickableAnchor = {
+    url: `/doc/interaction/filter?start=${this.urlFilterNextWeekParams.start}&end=${this.urlFilterNextWeekParams.end}`,
+    target: '_blank'
+  };
+
   readonly filter$ = this.filterMap.filterForKey(this.buttonFilterKey);
   readonly formFilter$ = this.filterMap.filterForKey(this.formFilterKey);
   readonly menuFilter$ = this.filterMap.filterForKey(this.menuFilterKey);
   readonly listFilter$ = this.filterMap.filterForKey(this.listFilterKey);
+  readonly urlFilter$ = this.filterMap.filterForKey(this.urlFilterKey);
 
   readonly mergedDateFilter$ = this.mergedFilterMap.filterForKey(this.mergedDateFilterKey);
   readonly mergedAttributesFilter$ = this.mergedFilterMap.filterForKey(this.mergedAttributesFilterKey);
@@ -161,6 +209,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
   );
 
   readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplayStylePair>> = this.filter$.pipe(map(displayForDateFilter));
+  readonly displayForUrlFilter$: Observable<Maybe<DbxButtonDisplayStylePair>> = this.urlFilter$.pipe(map(displayForDateFilter));
   readonly displayForMergedDateFilter$: Observable<Maybe<DbxButtonDisplayStylePair>> = this.mergedDateFilter$.pipe(map(displayForDateFilter));
   readonly displayForMergedAttributesFilter$: Observable<DbxButtonDisplayStylePair> = this.mergedAttributesFilter$.pipe(map(displayForAttributesFilter));
 
@@ -168,6 +217,9 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly formFilterSignal = toSignal(this.formFilter$);
   readonly menuFilterSignal = toSignal(this.menuFilter$);
   readonly listFilterSignal = toSignal(this.listFilter$);
+  readonly urlFilterSignal = toSignal(this.urlFilter$);
+  readonly displayForUrlFilterSignal = toSignal(this.displayForUrlFilter$);
+  readonly urlFilterParamsSignal = toSignal(this.dbxRouterService.params$.pipe(map((params) => ({ start: params['start'], end: params['end'] }))));
   readonly displayForFilterSignal = toSignal(this.displayForFilter$);
   readonly displayForDateFilterSignal = toSignal(this.displayForDateFilter$);
 
