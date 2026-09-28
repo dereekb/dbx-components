@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/browser",
-  "version": "14.10.0",
+  "version": "14.11.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/util": "14.10.0",
-    "@dereekb/rxjs": "14.10.0",
+    "@dereekb/util": "14.11.0",
+    "@dereekb/rxjs": "14.11.0",
     "rxjs": "^7.8.2",
     "bowser": "^2.14.1"
   },
