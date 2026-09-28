@@ -5,6 +5,7 @@ export * from './field.util';
 export * from './value';
 export * from './selection';
 export * from './checklist';
+export * from './radio';
 export * from './component';
 export * from './texteditor';
 export * from './wrapper';

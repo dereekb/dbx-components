@@ -4,6 +4,7 @@ import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type FirebaseLoginMethodCategory, type FirebaseLoginMethodType, type KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
 import { type DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from './login.password';
+import { type DbxFirebaseLoginPasswordRecoveryViewsConfig } from './login.recovery';
 
 /**
  * Default providers to inject.
@@ -12,9 +13,13 @@ export const DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN = new InjectionToken<Db
 export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new InjectionToken<Type<unknown>>('DefaultDbxFirebaseAuthLoginTermsComponentClass');
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN = new InjectionToken<DbxFirebaseAuthLoginPasswordConfig>('DefaultDbxFirebaseAuthLoginPasswordConfig');
 /**
- * Anchor to the app's password reset page, offered from the "Send Recovery Email" view to users that already hold a reset code.
+ * Anchor to the app's password reset page, offered from the password recovery views to users that already hold a recovery code.
  */
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN = new InjectionToken<ClickableAnchor>('DefaultDbxFirebaseAuthLoginPasswordResetAnchor');
+/**
+ * Custom views to show in place of the default password recovery views of the email login.
+ */
+export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RECOVERY_VIEWS_TOKEN = new InjectionToken<DbxFirebaseLoginPasswordRecoveryViewsConfig>('DefaultDbxFirebaseAuthLoginPasswordRecoveryViews');
 
 export interface DbxFirebaseAuthLoginProvider<D = unknown> {
   /**
@@ -107,12 +112,14 @@ export class DbxFirebaseAuthLoginService {
   private _enableAll = false;
   private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
   private _passwordResetAnchor: Maybe<ClickableAnchor>;
+  private _passwordRecoveryViews: Maybe<DbxFirebaseLoginPasswordRecoveryViewsConfig>;
   private _enabled = new Set<FirebaseLoginMethodType>();
 
   constructor() {
     const defaultProviders = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, { optional: true });
     const passwordConfig = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, { optional: true });
     const passwordResetAnchor = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RESET_ANCHOR_TOKEN, { optional: true });
+    const passwordRecoveryViews = inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_RECOVERY_VIEWS_TOKEN, { optional: true });
 
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
@@ -120,6 +127,7 @@ export class DbxFirebaseAuthLoginService {
 
     this._passwordConfig = passwordConfig ?? DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG;
     this._passwordResetAnchor = passwordResetAnchor;
+    this._passwordRecoveryViews = passwordRecoveryViews;
   }
 
   /**
@@ -251,5 +259,18 @@ export class DbxFirebaseAuthLoginService {
 
   setPasswordResetAnchor(passwordResetAnchor: Maybe<ClickableAnchor>) {
     this._passwordResetAnchor = passwordResetAnchor;
+  }
+
+  /**
+   * Custom views to show in place of the default password recovery views, or undefined to use the defaults.
+   *
+   * @returns The configured password recovery views, if any.
+   */
+  getPasswordRecoveryViews(): Maybe<DbxFirebaseLoginPasswordRecoveryViewsConfig> {
+    return this._passwordRecoveryViews;
+  }
+
+  setPasswordRecoveryViews(passwordRecoveryViews: Maybe<DbxFirebaseLoginPasswordRecoveryViewsConfig>) {
+    this._passwordRecoveryViews = passwordRecoveryViews;
   }
 }

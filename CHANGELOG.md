@@ -1,3 +1,24 @@
+# [14.11.0](https://github.com/dereekb/dbx-components/compare/v14.10.0-dev...v14.11.0) (2026-09-28)
+
+### Bug Fixes
+
+- **dbx-firebase:** cap email login width, left-align recovery views ([2d184abe](https://github.com/dereekb/dbx-components/commit/2d184abee5daac4a95a1be72ebeb3c20779b0a7e))
+- **zoho:** add recruit deleteTag and clean up tags in tests ([4a5e6197](https://github.com/dereekb/dbx-components/commit/4a5e61972fc69ca04fca5bd3e842c87b885d42ac))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([593d8a13](https://github.com/dereekb/dbx-components/commit/593d8a13f58a6bfe19297824291837c8a1de61bd))
+- pass --tag latest to ci-publish-npmjs targets ([50862eb1](https://github.com/dereekb/dbx-components/commit/50862eb1b2cfbe1f98cda037b6c40809fc2d2420))
+
+### Features
+
+- **dbx-firebase:** customizable password recovery views + new defaults ([bf63d6c3](https://github.com/dereekb/dbx-components/commit/bf63d6c33e7587481519fba2b1e69edb376efa00))
+- **dbx-form:** add radio field, fix disabled look on wrapped fields ([e24273b6](https://github.com/dereekb/dbx-components/commit/e24273b6d8e5a2ac4629554453fa6fe00d6f7d18))
+- **dbx-web:** add browser agent detection and dbx-browser-agent-view ([0be0ad56](https://github.com/dereekb/dbx-components/commit/0be0ad56912da3d3c9d832a1c610ad9f660870f5))
+- **dbx-web:** add card image caption strip utility ([b7180ca6](https://github.com/dereekb/dbx-components/commit/b7180ca626d9a19999a023a22cce06fd3123aa5a))
+- **dbx-web:** add mapbox item popup anchored to markers ([26df21e1](https://github.com/dereekb/dbx-components/commit/26df21e1e0065ad5ab239acf1602a27898bbb983))
+- **demo:** add Mac, Linux, and ChromeOS browser agent examples ([58a05384](https://github.com/dereekb/dbx-components/commit/58a053848578a893eed8676ac1c42811a8089d64))
+
 # [14.10.0](https://github.com/dereekb/dbx-components/compare/v14.9.0-dev...v14.10.0) (2026-09-26)
 
 ### Bug Fixes

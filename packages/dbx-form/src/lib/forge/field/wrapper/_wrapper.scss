@@ -32,6 +32,7 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
   // The wrapper provides its own label (notched outline), hint, and error subscript.
   dbx-forge-form-field-wrapper {
     .slider-label,
+    .radio-label,
     mat-error,
     [matError],
     .mat-hint,

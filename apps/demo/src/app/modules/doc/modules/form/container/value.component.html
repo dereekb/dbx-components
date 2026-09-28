@@ -41,6 +41,11 @@
         <doc-forge-example-form forge [config]="forgeCheckboxFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
+    <doc-feature-example header="radioField()" hint="Used to pick exactly one value from a small set of options.">
+      <doc-feature-form-tabs forgeFn="dbxForgeRadioField()">
+        <doc-forge-example-form forge [config]="forgeRadioFieldConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+    </doc-feature-example>
     <doc-feature-example header="addressField()" hint="Used to configure an address.">
       <h4>Default Address</h4>
       <doc-feature-form-tabs forgeFn="dbxForgeAddressGroup()">

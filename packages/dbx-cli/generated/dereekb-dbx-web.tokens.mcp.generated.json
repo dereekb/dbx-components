@@ -1777,6 +1777,32 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-mapbox-popup-tip-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "mapbox popup tip color"
+      ],
+      "description": "Component-scoped override point (`mapbox`) read in `packages/dbx-web/src/lib/extension/mapbox/_mapbox.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-card-elevated-container-color, var(--mat-sys-surface-container-low))`.",
+      "defaults": {
+        "light": "var(--mat-card-elevated-container-color, var(--mat-sys-surface-container-low))"
+      },
+      "componentScope": "mapbox"
+    },
+    {
+      "cssVariable": "--dbx-mapbox-popup-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "mapbox popup width"
+      ],
+      "description": "Component-scoped override point (`mapbox`) read in `packages/dbx-web/src/lib/extension/mapbox/_mapbox.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `340px`.",
+      "defaults": {
+        "light": "340px"
+      },
+      "componentScope": "mapbox"
+    },
+    {
       "cssVariable": "--dbx-navbar-item-border-radius",
       "source": "dbx-web",
       "role": "radius",

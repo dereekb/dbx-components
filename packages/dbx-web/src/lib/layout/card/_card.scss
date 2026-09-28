@@ -277,6 +277,40 @@
       margin-top: var(--dbx-padding-2);
     }
   }
+
+  /// @dbx-utility card-image-captioned
+  /// @intent `mat-card-image` wrapper that overlays a `.dbx-card-image-caption` strip on the bottom of its `<img>` (e.g. a place name over a map popup hero) — put `mat-card-image` on this wrapper `<div>` instead of the `<img>`, so the wrapper keeps mat-card's rounded top corners and clips the image to them.
+  /// @role layout
+  /// @see-also card-image-caption, text-title-small
+  .dbx-card-image-captioned {
+    position: relative;
+    overflow: hidden;
+
+    > img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  /// @dbx-utility card-image-caption
+  /// @intent single-line caption strip across the bottom of a `.dbx-card-image-captioned` image — light text on a translucent `--mat-sys-scrim` wash that stays readable over any picture in light and dark themes; long text ellipsizes. Pair with a type role utility such as `.dbx-text-title-small`.
+  /// @role layout
+  /// @parent card-image-captioned
+  /// @see-also card-image-captioned, text-title-small
+  .dbx-card-image-captioned > .dbx-card-image-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--dbx-padding-2) var(--dbx-padding-4);
+    // light text on a dark scrim over imagery, the same in light and dark themes
+    color: white;
+    background: color-mix(in srgb, var(--mat-sys-scrim, black) 55%, transparent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 @mixin theme($theme-config) {

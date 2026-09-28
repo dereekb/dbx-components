@@ -1,0 +1,16 @@
+<div dbxAction [dbxActionHandler]="handleRecoveryAction" [dbxActionSuccessHandler]="handleRecoverySuccess">
+  <h3 class="dbx-firebase-login-email-content-recovery-title">Reset your password</h3>
+  <p class="dbx-firebase-login-email-content-recovery-subtitle">Enter your email address and we'll send you a link to reset your password.</p>
+  <dbx-firebase-email-recovery-forge-form dbxActionForm [dbxFormSource]="recoveryFormValueSignal()"></dbx-firebase-email-recovery-forge-form>
+  <dbx-button class="dbx-grow-button" text="Send Reset Link" [raised]="true" color="primary" dbxActionButton></dbx-button>
+  <dbx-error dbxActionError></dbx-error>
+  <div class="dbx-firebase-login-email-content-recovery-footer">
+    @if (passwordResetAnchorSignal(); as passwordResetAnchor) {
+      <p>
+        Having trouble?
+        <dbx-link [anchor]="passwordResetAnchor">Use a recovery code instead.</dbx-link>
+      </p>
+    }
+    <dbx-link [anchor]="backToLoginAnchor">Back to Log In</dbx-link>
+  </div>
+</div>

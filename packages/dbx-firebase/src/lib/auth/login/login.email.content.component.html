@@ -4,10 +4,10 @@
       <ng-container *ngTemplateOutlet="loginView"></ng-container>
     }
     @case ('recover') {
-      <ng-container *ngTemplateOutlet="resetPassword"></ng-container>
+      <dbx-injection [config]="recoveryViewConfig"></dbx-injection>
     }
     @case ('recoversent') {
-      <ng-container *ngTemplateOutlet="resetPasswordSent"></ng-container>
+      <dbx-injection [config]="recoverySentViewConfig"></dbx-injection>
     }
   }
 </div>
@@ -29,41 +29,4 @@
     </div>
     <dbx-error dbxActionError></dbx-error>
   </ng-container>
-</ng-template>
-
-<!-- Reset Password View -->
-<ng-template #resetPassword>
-  <div class="dbx-firebase-login-email-content-recovery" dbxAction [dbxActionHandler]="handleRecoveryAction" [dbxActionSuccessHandler]="handleRecoverySuccess">
-    <dbx-firebase-email-recovery-forge-form dbxActionForm [dbxFormSource]="recoveryFormValueSignal()"></dbx-firebase-email-recovery-forge-form>
-    <p class="dbx-hint">An email will be sent to the above address to help you reset your password.</p>
-    <div class="dbx-flex">
-      <dbx-button class="dbx-button-wide" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton></dbx-button>
-      <span class="dbx-spacer"></span>
-      <dbx-button text="Cancel Recovery" [flat]="true" color="grey" (buttonClick)="onCancelReset()"></dbx-button>
-    </div>
-    <dbx-error dbxActionError></dbx-error>
-    @if (passwordResetAnchor) {
-      <dbx-content-pit class="dbx-firebase-login-email-content-recovery-code-prompt">
-        <span>
-          Already have a recovery code? Reset
-          <dbx-link [anchor]="passwordResetAnchor">here</dbx-link>
-          .
-        </span>
-      </dbx-content-pit>
-    }
-  </div>
-</ng-template>
-
-<!-- Reset Password Sent -->
-<ng-template #resetPasswordSent>
-  <div class="dbx-firebase-login-email-content-recovery-sent" role="status">
-    <p class="dbx-hint">A recovery email was sent to the specified address. Please check your email for next steps.</p>
-    @if (hasPasswordResetAnchor) {
-      <dbx-anchor [anchor]="passwordResetAnchor">
-        <dbx-button text="Enter Recovery Code" [raised]="true" color="primary"></dbx-button>
-      </dbx-anchor>
-    } @else {
-      <dbx-button text="Ok" [raised]="true" (buttonClick)="clickedRecoveryAcknowledged()"></dbx-button>
-    }
-  </div>
 </ng-template>

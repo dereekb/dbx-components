@@ -8,6 +8,7 @@ import {
   dbxForgeDollarAmountField,
   dbxForgeToggleField,
   dbxForgeCheckboxField,
+  dbxForgeRadioField,
   dbxForgeNameField,
   dbxForgeEmailField,
   dbxForgeCityField,
@@ -20,7 +21,7 @@ import {
   dbxForgeValueSelectionField
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
-import { addSuffixFunction } from '@dereekb/util';
+import { addSuffixFunction, type Maybe } from '@dereekb/util';
 import { of } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
@@ -205,6 +206,59 @@ export class DocFormValueComponent {
         hint: 'contentLabel — explicit secondary label inside the box.',
         showLabelAt: 'wrapper',
         contentLabel: 'Helper text rendered via contentLabel'
+      })
+    ]
+  };
+
+  readonly forgeRadioFieldConfig: FormConfig = {
+    fields: [
+      dbxForgeRadioField<string>({
+        key: 'size',
+        label: 'Size',
+        hint: 'this is a radio field',
+        options: [
+          { label: 'Small', value: 's' },
+          { label: 'Medium', value: 'm' },
+          { label: 'Large', value: 'l' }
+        ]
+      }),
+      dbxForgeRadioField<string>({
+        key: 'requiredSize',
+        label: 'Required Size',
+        hint: 'this is a required radio field',
+        required: true,
+        options: [
+          { label: 'Small', value: 's' },
+          { label: 'Medium', value: 'm' },
+          { label: 'Large', value: 'l' }
+        ]
+      }),
+      dbxForgeRadioField<string>({
+        key: 'disabledSize',
+        label: 'Disabled Size',
+        hint: 'this is a disabled radio field',
+        disabled: true,
+        value: 'm',
+        options: [
+          { label: 'Small', value: 's' },
+          { label: 'Medium', value: 'm' },
+          { label: 'Large', value: 'l' }
+        ]
+      }),
+      dbxForgeRadioField<Maybe<number>>({
+        key: 'minPay',
+        label: 'Minimum Pay Rate',
+        hint: 'layout: \'vertical\' with nullable: true — the null "Any Pay Rate" option is the default and removes the key from the value.',
+        layout: 'vertical',
+        nullable: true,
+        value: null,
+        options: [
+          { label: 'Any Pay Rate', value: null },
+          { label: '$120+', value: 120 },
+          { label: '$150+', value: 150 },
+          { label: '$170+', value: 170 },
+          { label: '$200+', value: 200 }
+        ]
       })
     ]
   };

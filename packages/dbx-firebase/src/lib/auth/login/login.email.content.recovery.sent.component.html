@@ -1,0 +1,23 @@
+<dbx-icon-tile class="dbx-firebase-login-email-content-recovery-sent-icon" [icon]="'check'" [round]="true" dbxColor="success" [dbxColorTone]="18"></dbx-icon-tile>
+<h3 class="dbx-firebase-login-email-content-recovery-title">Check your email</h3>
+<p class="dbx-firebase-login-email-content-recovery-subtitle">
+  @if (recoveryEmailSentToSignal(); as email) {
+    We sent a password reset link to
+    <strong>{{ email }}</strong>
+    <!-- the sentence continues in its own element; Angular drops the whitespace-only text between the two elements -->
+    <span>. Please check your inbox and follow the instructions to reset your password.</span>
+  } @else {
+    We sent a password reset link to the specified address. Please check your inbox and follow the instructions to reset your password.
+  }
+</p>
+<div class="dbx-firebase-login-email-content-recovery-footer">
+  <p>
+    @if (passwordResetAnchorSignal(); as passwordResetAnchor) {
+      Didn't get the email? Check your spam folder or
+      <dbx-link [anchor]="passwordResetAnchor">use a recovery code instead.</dbx-link>
+    } @else {
+      Didn't get the email? Check your spam folder.
+    }
+  </p>
+  <dbx-link [anchor]="backToLoginAnchor">Back to Log In</dbx-link>
+</div>

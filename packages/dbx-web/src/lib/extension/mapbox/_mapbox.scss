@@ -1,0 +1,56 @@
+// MARK: Variables
+// Surface the popup's tail is painted with. Matches the surface of an elevated mat-card, the typical content of a dbx-mapbox-popup.
+$popup-tip-color: var(--dbx-mapbox-popup-tip-color, var(--mat-card-elevated-container-color, var(--mat-sys-surface-container-low)));
+
+// MARK: Mixin
+@mixin core() {
+  // dbx-mapbox-popup (@dereekb/dbx-web/mapbox). mapbox-gl renders the popup outside of the component's view, so these styles are global.
+  .mapboxgl-popup.dbx-mapbox-popup {
+    z-index: 3; // above markers, including a hovered marker
+    width: min(var(--dbx-mapbox-popup-width, 340px), 90vw);
+
+    // the content (e.g. a mat-card) provides the surface, shape, and elevation
+    .mapboxgl-popup-content {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    // mapbox-gl picks the anchor that fits, so the tail can point from any side
+    &.mapboxgl-popup-anchor-bottom,
+    &.mapboxgl-popup-anchor-bottom-left,
+    &.mapboxgl-popup-anchor-bottom-right {
+      .mapboxgl-popup-tip {
+        border-top-color: $popup-tip-color;
+      }
+    }
+
+    &.mapboxgl-popup-anchor-top,
+    &.mapboxgl-popup-anchor-top-left,
+    &.mapboxgl-popup-anchor-top-right {
+      .mapboxgl-popup-tip {
+        border-bottom-color: $popup-tip-color;
+      }
+    }
+
+    &.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+      border-right-color: $popup-tip-color;
+    }
+
+    &.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+      border-left-color: $popup-tip-color;
+    }
+
+    // dbx-dialog-content-close floats in the top-right corner of the content, like it does in a dialog. It sits on the card surface so it stays readable over a hero image.
+    .dbx-dialog-content-close > .dbx-dialog-content-close-button {
+      position: absolute;
+      top: var(--dbx-padding-2);
+      right: var(--dbx-padding-2);
+      z-index: 1;
+      background: $popup-tip-color;
+    }
+  }
+}
+
+@mixin theme($theme-config) {
+}

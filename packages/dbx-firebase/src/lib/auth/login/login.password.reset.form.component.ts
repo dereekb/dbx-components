@@ -97,7 +97,7 @@ export class DbxFirebasePasswordResetFormComponent extends AbstractConfigAsyncFo
           ? [
               dbxForgeTextField({
                 key: 'oobCode',
-                label: 'Reset Code',
+                label: 'Recovery Code',
                 required: true,
                 placeholder: oobCodePlaceholder,
                 hint: oobCodeHint,

@@ -21,8 +21,9 @@ import {
   type ZohoRecruitUpdateRecordData,
   type ZohoRecruitUpsertRecordData,
   ZOHO_ERROR_STATUS,
-  ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH,
-  type ZohoRecruitTag
+  type ZohoRecruitTag,
+  type ZohoRecruitTagId,
+  type ZohoRecruitTagName
 } from '@dereekb/zoho';
 import { type Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -939,19 +940,66 @@ describe('recruit.api', () => {
     });
 
     describe('tags', () => {
-      describe('createTagsForModule()', () => {
-        it('should create a new tag', async () => {
-          const randomId = randomNumber(100000000000000);
+      /**
+       * This tag gets created and deleted by the tests. Zoho Recruit limits the number of tags per module, so tests must not leave new tags behind.
+       */
+      const TEST_CREATE_TAG_NAME = `Create Tag`;
 
-          const result = await api.createTagsForModule({
+      async function deleteTagWithName(name: ZohoRecruitTagName) {
+        // look up the tag by name to get its id, then delete if it exists
+        const tagsResult = await api.getTagsForModule({ module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+        const existingTag = tagsResult.data.find((x) => x.name === name);
+
+        if (existingTag) {
+          await api.deleteTag({ id: existingTag.id });
+        }
+      }
+
+      describe('createTagsForModule()', () => {
+        describe('tag does not exist', () => {
+          beforeEach(async () => {
+            await deleteTagWithName(TEST_CREATE_TAG_NAME);
+          });
+
+          afterEach(async () => {
+            await deleteTagWithName(TEST_CREATE_TAG_NAME);
+          });
+
+          it('should create a new tag', async () => {
+            const result = await api.createTagsForModule({
+              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              tags: {
+                name: TEST_CREATE_TAG_NAME
+              }
+            });
+
+            expect(result.errorItems).toHaveLength(0);
+            expect(result.duplicateErrorItems).toHaveLength(0);
+            expect(result.successItems).toHaveLength(1);
+          });
+        });
+      });
+
+      describe('deleteTag()', () => {
+        let deleteTagId: ZohoRecruitTagId;
+
+        beforeEach(async () => {
+          const { successItems, duplicateErrorItems } = await api.createTagsForModule({
             module: ZOHO_RECRUIT_CANDIDATES_MODULE,
             tags: {
-              name: `Test ${randomId}`.substring(0, ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH)
+              name: TEST_CREATE_TAG_NAME
             }
           });
 
-          expect(result.errorItems).toHaveLength(0);
-          expect(result.successItems).toHaveLength(1);
+          deleteTagId = (successItems[0] ?? duplicateErrorItems[0]).result.details.id;
+        });
+
+        it('should delete a tag', async () => {
+          const result = await api.deleteTag({ id: deleteTagId });
+          expect(result.status).toBe('success');
+
+          const tagsResult = await api.getTagsForModule({ module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+          expect(tagsResult.data.find((x) => x.id === deleteTagId)).toBeUndefined();
         });
       });
 

@@ -53,6 +53,14 @@
       opacity: 0.38;
     }
 
+    // Checkbox and toggle fields configured with `styledBox: false` render without the
+    // form-field wrapper, which otherwise provides their disabled appearance. Their
+    // controls already get `pointer-events: none` above.
+    df-mat-checkbox:not(dbx-forge-form-field-wrapper *),
+    df-mat-toggle:not(dbx-forge-form-field-wrapper *) {
+      opacity: 0.38;
+    }
+
     // The expand trigger has no mat-form-field wrapping and needs both visual
     // and interaction disabling.
     dbx-forge-expand-field {
