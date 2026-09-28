@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
+import { type ClickableAnchor, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionErrorDirective, DbxActionModule, DbxButtonComponent, DbxErrorComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
@@ -28,6 +28,12 @@ export class DbxFirebaseLoginEmailContentRecoveryComponent {
 
   readonly recoveryFormValueSignal = toSignal(this.store.recoveryFormValue$);
   readonly passwordResetAnchorSignal = toSignal(this.store.passwordResetAnchor$);
+
+  readonly backToLoginAnchor: ClickableAnchor = {
+    onClick: () => {
+      this.returnToLogin();
+    }
+  };
 
   readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value, context) => {
     context.startWorkingWithPromise(this.store.sendPasswordReset(value));

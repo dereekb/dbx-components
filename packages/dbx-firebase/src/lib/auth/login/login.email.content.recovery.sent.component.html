@@ -4,7 +4,8 @@
   @if (recoveryEmailSentToSignal(); as email) {
     We sent a password reset link to
     <strong>{{ email }}</strong>
-    . Please check your inbox and follow the instructions to reset your password.
+    <!-- the sentence continues in its own element; Angular drops the whitespace-only text between the two elements -->
+    <span>. Please check your inbox and follow the instructions to reset your password.</span>
   } @else {
     We sent a password reset link to the specified address. Please check your inbox and follow the instructions to reset your password.
   }
@@ -18,5 +19,5 @@
       Didn't get the email? Check your spam folder.
     }
   </p>
-  <dbx-button text="Back to Log In" [basic]="true" (buttonClick)="returnToLogin()"></dbx-button>
+  <dbx-link [anchor]="backToLoginAnchor">Back to Log In</dbx-link>
 </div>

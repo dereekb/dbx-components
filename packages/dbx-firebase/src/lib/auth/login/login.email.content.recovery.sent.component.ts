@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxButtonComponent, DbxColorDirective, DbxIconTileComponent, DbxLinkComponent } from '@dereekb/dbx-web';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
+import { DbxColorDirective, DbxIconTileComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseLoginEmailContentStore } from './login.email.content.store';
 
 /**
@@ -18,13 +19,19 @@ import { DbxFirebaseLoginEmailContentStore } from './login.email.content.store';
     class: 'dbx-firebase-login-email-content-recovery-sent d-block',
     role: 'status'
   },
-  imports: [DbxButtonComponent, DbxColorDirective, DbxIconTileComponent, DbxLinkComponent]
+  imports: [DbxColorDirective, DbxIconTileComponent, DbxLinkComponent]
 })
 export class DbxFirebaseLoginEmailContentRecoverySentComponent {
   readonly store = inject(DbxFirebaseLoginEmailContentStore);
 
   readonly recoveryEmailSentToSignal = toSignal(this.store.recoveryEmailSentTo$);
   readonly passwordResetAnchorSignal = toSignal(this.store.passwordResetAnchor$);
+
+  readonly backToLoginAnchor: ClickableAnchor = {
+    onClick: () => {
+      this.returnToLogin();
+    }
+  };
 
   returnToLogin() {
     this.store.returnToLogin();

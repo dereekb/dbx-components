@@ -16,6 +16,9 @@ import { DbxFirebaseLoginEmailContentRecoveryComponent, DbxFirebaseLoginEmailCon
       <dbx-firebase-login-email-content-recovery></dbx-firebase-login-email-content-recovery>
     }
   `,
+  host: {
+    class: 'dbx-firebase-login-email-content d-block'
+  },
   providers: [DbxFirebaseLoginEmailContentStore],
   imports: [DbxFirebaseLoginEmailContentRecoveryComponent, DbxFirebaseLoginEmailContentRecoverySentComponent]
 })

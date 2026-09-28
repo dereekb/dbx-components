@@ -48,6 +48,10 @@ $login-button-icon-size: 24px;
     margin-bottom: 18px;
   }
 
+  .dbx-firebase-login-email-content {
+    max-width: var(--dbx-firebase-login-email-content-max-width, 440px);
+  }
+
   // MARK: Password Recovery
   .dbx-firebase-login-email-content-recovery-title {
     margin: 0 0 8px;
@@ -62,7 +66,7 @@ $login-button-icon-size: 24px;
     margin-top: 18px;
     padding-top: 12px;
     border-top: 1px solid var(--mat-sys-outline-variant);
-    text-align: center;
+    font: var(--mat-sys-body-medium);
     color: var(--mat-sys-on-surface-variant);
 
     p {
@@ -71,8 +75,6 @@ $login-button-icon-size: 24px;
   }
 
   .dbx-firebase-login-email-content-recovery-sent {
-    text-align: center;
-
     .dbx-firebase-login-email-content-recovery-sent-icon {
       display: inline-flex;
       margin-bottom: 12px;
