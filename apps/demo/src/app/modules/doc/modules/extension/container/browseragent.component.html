@@ -6,7 +6,7 @@
         <dbx-browser-agent-view [config]="osMapConfig"></dbx-browser-agent-view>
       </dbx-content-border>
     </doc-feature-example>
-    <doc-feature-example header="dbx-browser-agent-view custom entries" hint="Ordered entries with custom matches. iOS Safari and iOS Chrome show different content. The first matching entry wins.">
+    <doc-feature-example header="dbx-browser-agent-view custom entries" hint="Ordered entries with custom matches. iOS Safari and iOS Chrome show different content, and Mac Safari is matched before the Mac entry for other browsers. The first matching entry wins.">
       <p>Override Key: {{ customOverrideKey() ?? 'none' }}</p>
       <dbx-content-border>
         <dbx-browser-agent-view [config]="customConfig" [(overrideKey)]="customOverrideKey"></dbx-browser-agent-view>

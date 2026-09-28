@@ -89,6 +89,63 @@ export class DocExtensionBrowserAgentWindowsExampleComponent extends AbstractDoc
 @Component({
   template: `
     <h4>
+      <mat-icon>laptop_mac</mat-icon>
+      Mac
+    </h4>
+    <ol>
+      <li>Press Cmd + D to bookmark this page.</li>
+      <li>Or in Safari, choose File &gt; "Add to Dock".</li>
+    </ol>
+    @if (data?.note) {
+      <p>{{ data?.note }}</p>
+    }
+    <doc-extension-browser-agent-example-status></doc-extension-browser-agent-example-status>
+  `,
+  imports: [MatIcon, DocExtensionBrowserAgentExampleStatusComponent]
+})
+export class DocExtensionBrowserAgentMacosExampleComponent extends AbstractDocExtensionBrowserAgentExampleComponent {}
+
+@Component({
+  template: `
+    <h4>
+      <mat-icon>computer</mat-icon>
+      Linux
+    </h4>
+    <ol>
+      <li>Press Ctrl + D to bookmark this page.</li>
+      <li>Or use the install button in the address bar.</li>
+    </ol>
+    @if (data?.note) {
+      <p>{{ data?.note }}</p>
+    }
+    <doc-extension-browser-agent-example-status></doc-extension-browser-agent-example-status>
+  `,
+  imports: [MatIcon, DocExtensionBrowserAgentExampleStatusComponent]
+})
+export class DocExtensionBrowserAgentLinuxExampleComponent extends AbstractDocExtensionBrowserAgentExampleComponent {}
+
+@Component({
+  template: `
+    <h4>
+      <mat-icon>laptop_chromebook</mat-icon>
+      ChromeOS
+    </h4>
+    <ol>
+      <li>Click the install button in the address bar.</li>
+      <li>The app opens in its own window and is added to the launcher.</li>
+    </ol>
+    @if (data?.note) {
+      <p>{{ data?.note }}</p>
+    }
+    <doc-extension-browser-agent-example-status></doc-extension-browser-agent-example-status>
+  `,
+  imports: [MatIcon, DocExtensionBrowserAgentExampleStatusComponent]
+})
+export class DocExtensionBrowserAgentChromeosExampleComponent extends AbstractDocExtensionBrowserAgentExampleComponent {}
+
+@Component({
+  template: `
+    <h4>
       <mat-icon>devices</mat-icon>
       Other Devices
     </h4>

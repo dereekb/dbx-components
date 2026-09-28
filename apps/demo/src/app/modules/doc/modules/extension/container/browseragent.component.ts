@@ -4,7 +4,16 @@ import { DbxBrowserAgentService, DbxBrowserAgentViewComponent, type DbxBrowserAg
 import { type Maybe } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { type DocExtensionBrowserAgentExampleData, DocExtensionBrowserAgentAndroidExampleComponent, DocExtensionBrowserAgentDefaultExampleComponent, DocExtensionBrowserAgentIosExampleComponent, DocExtensionBrowserAgentWindowsExampleComponent } from '../component/browseragent.example.component';
+import {
+  type DocExtensionBrowserAgentExampleData,
+  DocExtensionBrowserAgentAndroidExampleComponent,
+  DocExtensionBrowserAgentChromeosExampleComponent,
+  DocExtensionBrowserAgentDefaultExampleComponent,
+  DocExtensionBrowserAgentIosExampleComponent,
+  DocExtensionBrowserAgentLinuxExampleComponent,
+  DocExtensionBrowserAgentMacosExampleComponent,
+  DocExtensionBrowserAgentWindowsExampleComponent
+} from '../component/browseragent.example.component';
 
 @Component({
   templateUrl: './browseragent.component.html',
@@ -17,6 +26,9 @@ export class DocExtensionBrowserAgentComponent {
     ios: { componentClass: DocExtensionBrowserAgentIosExampleComponent },
     android: { componentClass: DocExtensionBrowserAgentAndroidExampleComponent },
     windows: { componentClass: DocExtensionBrowserAgentWindowsExampleComponent },
+    macos: { componentClass: DocExtensionBrowserAgentMacosExampleComponent },
+    linux: { componentClass: DocExtensionBrowserAgentLinuxExampleComponent },
+    chromeos: { componentClass: DocExtensionBrowserAgentChromeosExampleComponent },
     default: { componentClass: DocExtensionBrowserAgentDefaultExampleComponent },
     showOverrideButton: true
   });
@@ -43,7 +55,24 @@ export class DocExtensionBrowserAgentComponent {
           data: { note: 'The Share button is in the address bar in Chrome.' } as DocExtensionBrowserAgentExampleData
         }
       },
-      makeDbxBrowserAgentViewEntryForOs('android', { componentClass: DocExtensionBrowserAgentAndroidExampleComponent })
+      makeDbxBrowserAgentViewEntryForOs('android', { componentClass: DocExtensionBrowserAgentAndroidExampleComponent }),
+      {
+        key: 'macos-safari',
+        label: 'Mac Safari',
+        icon: 'laptop_mac',
+        match: { os: 'macos', browser: 'safari' },
+        componentConfig: {
+          componentClass: DocExtensionBrowserAgentMacosExampleComponent,
+          data: { note: 'Safari can add this page to the Dock as a web app.' } as DocExtensionBrowserAgentExampleData
+        }
+      },
+      makeDbxBrowserAgentViewEntryForOs('macos', {
+        componentConfig: {
+          componentClass: DocExtensionBrowserAgentMacosExampleComponent,
+          data: { note: 'Chrome and Edge show an install button in the address bar.' } as DocExtensionBrowserAgentExampleData
+        },
+        label: 'Mac (Other Browsers)'
+      })
     ],
     defaultEntry: makeDbxBrowserAgentViewEntryForOs('default', { componentClass: DocExtensionBrowserAgentDefaultExampleComponent }),
     showOverrideButton: true
