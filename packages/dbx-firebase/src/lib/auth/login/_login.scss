@@ -48,8 +48,39 @@ $login-button-icon-size: 24px;
     margin-bottom: 18px;
   }
 
-  .dbx-firebase-login-email-content-recovery-code-prompt {
+  // MARK: Password Recovery
+  .dbx-firebase-login-email-content-recovery-title {
+    margin: 0 0 8px;
+  }
+
+  .dbx-firebase-login-email-content-recovery-subtitle {
+    margin: 0 0 18px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dbx-firebase-login-email-content-recovery-footer {
     margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+    text-align: center;
+    color: var(--mat-sys-on-surface-variant);
+
+    p {
+      margin: 0 0 8px;
+    }
+  }
+
+  .dbx-firebase-login-email-content-recovery-sent {
+    text-align: center;
+
+    .dbx-firebase-login-email-content-recovery-sent-icon {
+      display: inline-flex;
+      margin-bottom: 12px;
+
+      --dbx-icon-tile-width: 64px;
+      --dbx-icon-tile-height: 64px;
+      --dbx-icon-tile-icon-size: 36px;
+    }
   }
 }
 

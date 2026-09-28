@@ -53,6 +53,7 @@ export class DbxFirebaseLoginEmailComponent extends AbstractConfiguredDbxFirebas
       loginMode: 'login',
       passwordConfig: this.dbxFirebaseAuthLoginService.getPasswordConfig(),
       passwordResetAnchor: this.dbxFirebaseAuthLoginService.getPasswordResetAnchor(),
+      passwordRecoveryViews: this.dbxFirebaseAuthLoginService.getPasswordRecoveryViews(),
       defaultValue: prefill ? { username: prefill.email ?? '', password: prefill.password ?? '' } : undefined
     });
   }

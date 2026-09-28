@@ -1,17 +1,21 @@
-import { type DbxFirebaseEmailRecoveryFormValue, DbxFirebaseEmailRecoveryForgeFormComponent } from './login.email.recovery.forge.form.component';
-import { DBX_INJECTION_COMPONENT_DATA, type ClickableAnchor, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
-import { type WorkUsingObservable, type WorkUsingContext } from '@dereekb/rxjs';
+import { DBX_INJECTION_COMPONENT_DATA, DbxInjectionComponent, type ClickableAnchor, type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
-import { Component, EventEmitter, inject, signal } from '@angular/core';
+import { Component, EventEmitter, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { type DbxFirebaseLoginContext } from './login.context';
 import { type DbxFirebaseEmailFormValue, type DbxFirebaseEmailFormConfig, DbxFirebaseEmailForgeFormComponent } from './login.email.forge.form.component';
 import { type DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
-import { DbxActionErrorDirective, DbxActionModule, DbxAnchorComponent, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFirebaseLoginEmailContentStore } from './login.email.content.store';
+import { DbxFirebaseLoginEmailContentRecoveryComponent } from './login.email.content.recovery.component';
+import { DbxFirebaseLoginEmailContentRecoverySentComponent } from './login.email.content.recovery.sent.component';
+import { type DbxFirebaseLoginPasswordRecoveryViewsConfig } from './login.recovery';
 
 /**
  * Configuration for the email login content component, specifying mode and password rules.
@@ -19,10 +23,14 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
   /**
-   * Anchor to the app's password reset page. When set, the recovery view offers an "Already have a recovery code?" link to it,
-   * and acknowledging a sent recovery email navigates there instead of returning to the login form.
+   * Anchor to the app's password reset page. When set, the password recovery views offer a "use a recovery code instead"
+   * link to it for users that already hold a recovery code.
    */
   readonly passwordResetAnchor?: Maybe<ClickableAnchor>;
+  /**
+   * Custom views to show in place of the default password recovery views.
+   */
+  readonly passwordRecoveryViews?: Maybe<DbxFirebaseLoginPasswordRecoveryViewsConfig>;
   /**
    * Values to pre-populate the login form with, from a {@link DbxFirebaseLoginPrefill}.
    *
@@ -33,49 +41,32 @@ export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebase
 }
 
 /**
- * UI state of the email login content: login form, password recovery form, or recovery sent confirmation.
- */
-export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversent';
-
-/**
  * Full email login/registration flow component with login form, password recovery, and recovery confirmation states.
  *
- * Opened via the {@link DbxFirebaseLoginContext} injection context from the email login button.
+ * Opened via the {@link DbxFirebaseLoginContext} injection context from the email login button. Provides the
+ * {@link DbxFirebaseLoginEmailContentStore} that the password recovery views read from.
  */
 @Component({
   templateUrl: './login.email.content.component.html',
-  imports: [
-    NgTemplateOutlet,
-    DbxErrorComponent,
-    DbxAnchorComponent,
-    DbxLinkComponent,
-    DbxActionErrorDirective,
-    DbxActionFormDirective,
-    DbxActionModule,
-    DbxButtonComponent,
-    DbxButtonSpacerDirective,
-    DbxContentPitDirective,
-    DbxFirebaseEmailForgeFormComponent,
-    DbxFirebaseEmailRecoveryForgeFormComponent,
-    DbxFormSourceDirective
-  ]
+  providers: [DbxFirebaseLoginEmailContentStore],
+  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxInjectionComponent, DbxFirebaseEmailForgeFormComponent, DbxFormSourceDirective]
 })
 export class DbxFirebaseLoginEmailContentComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly config = inject<DbxFirebaseLoginEmailContentComponentConfig>(DBX_INJECTION_COMPONENT_DATA);
+  readonly store = inject(DbxFirebaseLoginEmailContentStore);
 
   readonly formConfig: DbxFirebaseEmailFormConfig = {
     loginMode: this.config.loginMode,
     passwordConfig: this.config.passwordConfig
   };
 
-  private readonly _emailFormValueSignal = signal<Maybe<DbxFirebaseEmailFormValue>>(this.config.defaultValue);
-  private readonly _recoveryFormValueSignal = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(this.config.defaultValue?.username ? { email: this.config.defaultValue.username } : undefined);
-  private readonly _emailModeSignal = signal<DbxFirebaseLoginEmailContentMode>('login');
+  readonly recoveryViewConfig: DbxInjectionComponentConfig = this.config.passwordRecoveryViews?.recoveryView ?? { componentClass: DbxFirebaseLoginEmailContentRecoveryComponent };
+  readonly recoverySentViewConfig: DbxInjectionComponentConfig = this.config.passwordRecoveryViews?.recoverySentView ?? { componentClass: DbxFirebaseLoginEmailContentRecoverySentComponent };
 
-  readonly emailFormValueSignal = this._emailFormValueSignal.asReadonly();
-  readonly recoveryFormValueSignal = this._recoveryFormValueSignal.asReadonly();
-  readonly emailModeSignal = this._emailModeSignal.asReadonly();
+  readonly emailFormValueSignal = toSignal(this.store.emailFormValue$);
+  readonly recoveryFormValueSignal = toSignal(this.store.recoveryFormValue$);
+  readonly emailModeSignal = toSignal(this.store.mode$, { initialValue: 'login' });
 
   readonly forgotAnchor: ClickableAnchor = {
     onClick: () => {
@@ -86,6 +77,13 @@ export class DbxFirebaseLoginEmailContentComponent {
   readonly passwordResetAnchor: Maybe<ClickableAnchor> = this.config.passwordResetAnchor;
 
   readonly doneOrCancelled = new EventEmitter<boolean>();
+
+  constructor() {
+    this.store.setup({
+      passwordResetAnchor: this.config.passwordResetAnchor,
+      defaultValue: this.config.defaultValue
+    });
+  }
 
   static openEmailLoginContext(dbxFirebaseLoginContext: DbxFirebaseLoginContext, config: DbxFirebaseLoginEmailContentComponentConfig): Promise<boolean> {
     return dbxFirebaseLoginContext.showContext({
@@ -114,10 +112,7 @@ export class DbxFirebaseLoginEmailContentComponent {
   }
 
   readonly handleLoginAction: WorkUsingObservable<DbxFirebaseEmailFormValue> = (value: DbxFirebaseEmailFormValue) => {
-    // TODO(signals): double check that this performs as we want to.
-
-    this._emailFormValueSignal.set(value);
-    this._recoveryFormValueSignal.set({ email: value.username }); // cache value for recovery
+    this.store.setEmailFormValue(value); // also caches the username for recovery
 
     let result;
 
@@ -138,39 +133,11 @@ export class DbxFirebaseLoginEmailContentComponent {
 
   // MARK: Recovery
   openRecovery() {
-    this._emailModeSignal.set('recover');
-  }
-
-  readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
-    this._recoveryFormValueSignal.set(value);
-    this._emailFormValueSignal.set({ username: value.email, password: '' });
-    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordReset(value.email));
-  };
-
-  // MARK: Recovering
-  readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (_x) => {
-    this._emailModeSignal.set('recoversent');
-  };
-
-  /**
-   * Whether the sent-recovery view sends the user on to the password reset page rather than back to the login form.
-   *
-   * @returns True when a password reset page is configured to land on.
-   */
-  get hasPasswordResetAnchor(): boolean {
-    return this.passwordResetAnchor != null;
-  }
-
-  clickedRecoveryAcknowledged() {
-    this._emailModeSignal.set('login');
+    this.store.openRecovery();
   }
 
   // MARK: Cancel
   onCancel() {
-    this.doneOrCancelled.next(false);
-  }
-
-  onCancelReset() {
     this.doneOrCancelled.next(false);
   }
 }
