@@ -24,6 +24,7 @@ import {
   zohoRecruitUpsertRecord,
   zohoRecruitFactory,
   zohoRecruitCreateTagsForModule,
+  zohoRecruitDeleteTag,
   zohoRecruitGetTagsForModule,
   zohoRecruitAddTagsToRecords,
   zohoRecruitGetEmailsForRecord,
@@ -337,6 +338,15 @@ export class ZohoRecruitApi {
    */
   get createTagsForModule() {
     return zohoRecruitCreateTagsForModule(this.recruitContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoRecruitDeleteTag}.
+   *
+   * @returns Bound delete tag function.
+   */
+  get deleteTag() {
+    return zohoRecruitDeleteTag(this.recruitContext);
   }
 
   /**

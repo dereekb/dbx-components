@@ -14,7 +14,7 @@ import {
   type ZohoRecruitMultiRecordResultEntry
 } from './recruit.api';
 import { ZOHO_DUPLICATE_DATA_ERROR_CODE } from '../zoho.error.api';
-import { type ZohoRecruitTagData, type ZohoRecruitTagName, type ZohoRecruitTagWithObjectDetails } from './recruit.tags';
+import { type ZohoRecruitTagData, type ZohoRecruitTagId, type ZohoRecruitTagName, type ZohoRecruitTagWithObjectDetails } from './recruit.tags';
 import { type FetchPage, type FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { zohoFetchPageFactory, type ZohoPageResult } from '../zoho.api.page';
 
@@ -90,6 +90,60 @@ export function zohoRecruitCreateTagsForModule(context: ZohoRecruitContext) {
     });
 }
 
+// MARK: Delete Tag
+/**
+ * Request for deleting a single tag by its id.
+ */
+export interface ZohoRecruitDeleteTagRequest {
+  readonly id: ZohoRecruitTagId;
+}
+
+/**
+ * Successful entry returned when a tag is deleted.
+ */
+export interface ZohoRecruitDeleteTagResponseSuccessEntry extends ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta {
+  readonly details: {
+    /**
+     * Id of the deleted tag.
+     *
+     * NOTE: Zoho Recruit returns this as a JSON number instead of a string, so large ids lose precision when parsed. Do not compare it against the requested {@link ZohoRecruitTagId}.
+     */
+    readonly id: number;
+  };
+}
+
+/**
+ * Raw API response from the delete tag endpoint. Uses a single `tags` object instead of an array.
+ */
+export interface ZohoRecruitDeleteTagResponse {
+  readonly tags: ZohoRecruitDeleteTagResponseSuccessEntry;
+}
+
+export type ZohoRecruitDeleteTagResult = ZohoRecruitDeleteTagResponseSuccessEntry;
+
+export type ZohoRecruitDeleteTagFunction = (input: ZohoRecruitDeleteTagRequest) => Promise<ZohoRecruitDeleteTagResult>;
+
+/**
+ * Creates a {@link ZohoRecruitDeleteTagFunction} bound to the given context.
+ *
+ * Deletes a single tag by id. The tag is removed from every record it was associated with.
+ *
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that deletes a tag by id.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/delete-tag.html
+ *
+ * @example
+ * ```typescript
+ * const deleteTag = zohoRecruitDeleteTag(context);
+ *
+ * const result = await deleteTag({ id: tagId });
+ * ```
+ */
+export function zohoRecruitDeleteTag(context: ZohoRecruitContext): ZohoRecruitDeleteTagFunction {
+  return (input: ZohoRecruitDeleteTagRequest) => context.fetchJson<ZohoRecruitDeleteTagResponse>(`/v2/settings/tags/${input.id}`, zohoRecruitApiFetchJsonInput('DELETE')).then((x) => x.tags);
+}
+
 // MARK: Get Tags
 /**
  * Request for fetching tags in a module, with optional pagination and personal tag filtering.
@@ -130,7 +184,7 @@ export type ZohoRecruitGetTagsFunction = (input: ZohoRecruitGetTagsRequest) => P
  */
 export function zohoRecruitGetTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTagsFunction {
   return (input: ZohoRecruitGetTagsRequest) =>
-    context.fetchJson<ZohoRecruitGetTagsResponse>(`/v2/settings/tags?${makeUrlSearchParams({ module: input.module, my_tags: input.my_tags })}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
+    context.fetchJson<ZohoRecruitGetTagsResponse>(`/v2/settings/tags?${makeUrlSearchParams({ module: input.module, my_tags: input.my_tags, page: input.page, per_page: input.per_page })}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
       // NOTE: This doesn't follow the api documentation, and instead is a normal page result except it has "tags" instead of "data".
 
       return {
