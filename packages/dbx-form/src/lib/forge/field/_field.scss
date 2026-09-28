@@ -4,6 +4,7 @@
 @use './value/date/date';
 @use './value/duration/duration';
 @use './texteditor/texteditor';
+@use './radio/radio';
 @use './wrapper/wrapper';
 
 @mixin all-field-core() {
@@ -13,6 +14,7 @@
   @include date.core();
   @include duration.core();
   @include texteditor.core();
+  @include radio.core();
   @include wrapper.core();
 }
 

@@ -3,6 +3,7 @@ import type { FieldWrapper, ValidationError } from '@ng-forge/dynamic-forms';
 import { DynamicTextPipe, interpolateParams, type WrapperFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';
 import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
+import { dbxForgeFieldDisabled } from '../../field.util';
 
 /**
  * Forge wrapper field component that renders child fields inside a Material-style
@@ -170,8 +171,15 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
   // Read-only field tree from the wrapped field
   private readonly formStateSignal = computed(() => this.fieldInputs()?.field);
 
+  // Form-level disabled state. FormOptions.disabled does not propagate to each field's FieldState.disabled().
+  private readonly _formDisabledSignal = dbxForgeFieldDisabled();
+
   // Disabled state
-  readonly isDisabledSignal = computed(() => this.formStateSignal()?.disabled());
+  readonly isDisabledSignal = computed(() => {
+    const formDisabled = this._formDisabledSignal();
+    const fieldDisabled = Boolean(this.formStateSignal()?.disabled());
+    return formDisabled || fieldDisabled;
+  });
 
   /**
    * Resolved notch label. Prefers a wrapper-level `props.label` override and

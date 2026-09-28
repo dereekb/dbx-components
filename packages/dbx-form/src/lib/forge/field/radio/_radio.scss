@@ -1,0 +1,7 @@
+@mixin core() {
+  .dbx-forge-radio-field-vertical .mat-mdc-radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

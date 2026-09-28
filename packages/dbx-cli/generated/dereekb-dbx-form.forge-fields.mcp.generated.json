@@ -177,6 +177,27 @@
       "configInterface": "DbxForgeComponentFieldConfig<T>"
     },
     {
+      "slug": "radio",
+      "factoryName": "dbxForgeRadioField",
+      "tier": "field-factory",
+      "produces": "T",
+      "arrayOutput": "no",
+      "description": "Radio button group for picking exactly one value, wrapped in a form-field container. Use for small static option sets where every option should be visible at once.\n\nThe wrapper provides the Material outlined form-field appearance (notched outline with floating label, hint/error subscript), matching the checkbox, toggle, and slider fields.\n\nOptions are passed at the top level of the config, not inside `props`. A `null` option value can represent an \"any\"/\"none\" choice; the form omits the key from its output when that option is selected.\nSet `nullable: true` alongside a `null` option, otherwise a `null` value (including `value: null` as the default) resolves to no selection instead of checking that option.",
+      "example": "dbxForgeRadioField<number>({\n  key: 'minPay',\n  label: 'Minimum Pay Rate',\n  layout: 'vertical',\n  options: [\n    { label: '$120+', value: 120 },\n    { label: '$150+', value: 150 }\n  ]\n})",
+      "properties": [
+        {
+          "name": "layout",
+          "type": "Maybe<DbxForgeRadioFieldLayout>",
+          "description": "How the radio buttons are laid out. Defaults to `'horizontal'`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "material-form-field-wrapped",
+      "ngFormType": "radio",
+      "generic": "<T = unknown>",
+      "configInterface": "DbxForgeRadioFieldConfig<T>"
+    },
+    {
       "slug": "value-selection",
       "factoryName": "dbxForgeValueSelectionField",
       "tier": "field-factory",
