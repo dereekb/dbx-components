@@ -27,6 +27,7 @@ import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, 
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
+import { DocExtensionMapboxPopupExampleComponent } from '../component/mapbox.popup.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
@@ -57,6 +58,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
     DbxMapboxMarkerComponent,
     DbxMapboxMarkersComponent,
     DocExtensionMapboxMarkersExampleComponent,
+    DocExtensionMapboxPopupExampleComponent,
     DbxMapboxMenuComponent,
     MatMenuTrigger,
     DbxBarDirective,

@@ -191,7 +191,9 @@ $default-notice-color: #f28600;
     // zip enabled by default
     'zip': 1,
     // help enabled by default
-    'help': 1
+    'help': 1,
+    // mapbox enabled by default
+    'mapbox': 1
   );
 
   @if ($input-dbx-theme-extension-config != null) {
@@ -223,4 +225,8 @@ $default-notice-color: #f28600;
 
 @function get-dbx-extension-help-enabled($theme-config) {
   @return get-dbx-extension-config-var($theme-config, 'help');
+}
+
+@function get-dbx-extension-mapbox-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'mapbox');
 }

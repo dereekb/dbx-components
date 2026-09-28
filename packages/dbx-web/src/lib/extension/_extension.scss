@@ -6,18 +6,21 @@
 @use './help/help';
 @use './pdf/pdf';
 @use './download/download';
+@use './mapbox/mapbox';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
   $zip-enabled: 1;
   $help-enabled: 1;
+  $mapbox-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
     $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
     $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
+    $mapbox-enabled: config.get-dbx-extension-mapbox-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -36,6 +39,10 @@
     @include help.core();
   }
 
+  @if ($mapbox-enabled == 1) {
+    @include mapbox.core();
+  }
+
   @include pdf.core();
   @include download.core();
 }
@@ -48,12 +55,14 @@
   $table-enabled: 1;
   $zip-enabled: 1;
   $help-enabled: 1;
+  $mapbox-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
     $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
     $zip-enabled: config.get-dbx-extension-zip-enabled($theme-config);
     $help-enabled: config.get-dbx-extension-help-enabled($theme-config);
+    $mapbox-enabled: config.get-dbx-extension-mapbox-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
@@ -70,6 +79,10 @@
 
   @if ($help-enabled == 1) {
     @include help.theme($theme-config);
+  }
+
+  @if ($mapbox-enabled == 1) {
+    @include mapbox.theme($theme-config);
   }
 
   @include pdf.theme($theme-config);
