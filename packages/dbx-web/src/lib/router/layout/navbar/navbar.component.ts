@@ -9,16 +9,29 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxAnchorComponent } from '../anchor';
 import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
 import { DbxButtonComponent } from '../../../button/button.component';
+import { type DbxButtonStyle } from '../../../button/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
+
+/**
+ * A {@link ClickableAnchorLinkSegueRef} used by {@link DbxNavbarComponent} that can also configure the navbar button while the anchor is active.
+ */
+export interface DbxNavbarClickableAnchorLinkSegueRef extends ClickableAnchorLinkSegueRef {
+  /**
+   * Button style used by the navbar button while this anchor is active. Replaces the navbar's buttonStyle.
+   *
+   * Has no effect on the tab bar.
+   */
+  readonly activeButton?: Maybe<DbxButtonStyle>;
+}
 
 /**
  * Internal representation of a navigation anchor with its selection state.
  */
 interface NavAnchorLink {
   readonly selected: boolean;
-  readonly anchor: ClickableAnchorLinkSegueRef;
+  readonly anchor: DbxNavbarClickableAnchorLinkSegueRef;
 }
 
 /**
@@ -54,6 +67,11 @@ export type NavbarButtonMode = 'menu' | 'rotate';
  * ```html
  * <dbx-navbar [anchors]="topNav"></dbx-navbar>
  * ```
+ *
+ * @example
+ * ```html
+ * <dbx-navbar mode="button" [showMenuCaret]="true" [buttonStyle]="{ type: 'flat', color: 'primary' }" [anchors]="topNav"></dbx-navbar>
+ * ```
  */
 @Component({
   selector: 'dbx-navbar',
@@ -72,6 +90,13 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
    */
   readonly showMenuCaret = input<boolean>(false);
 
+  /**
+   * Style passed to the button when the navbar renders as a button (the "button" and "icon" modes), such as a flat type and a color.
+   *
+   * The active anchor's activeButton style is used instead, if it has one. Has no effect on the tab bar.
+   */
+  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
+
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly navAlign = input<HorizontalConnectionPos>('center');
@@ -82,7 +107,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
   readonly mode = input<Maybe<NavbarMode>>();
   readonly buttonMode = input<NavbarButtonMode>('menu');
   readonly breakpoint = input<ScreenMediaWidthType>('large');
-  readonly anchors = input<Maybe<ClickableAnchorLinkSegueRef[]>>([]);
+  readonly anchors = input<Maybe<DbxNavbarClickableAnchorLinkSegueRef[]>>([]);
 
   readonly isBreakpointActive$ = this._dbxScreenMediaService.isBreakpointActive(toObservable(this.breakpoint));
 
@@ -129,6 +154,17 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
     shareReplay(1)
   );
 
+  /**
+   * The button style for the active anchor, falling back to the buttonStyle input.
+   *
+   * Always based on the active anchor, including in the "rotate" button mode where the button displays the next anchor.
+   */
+  readonly buttonStyle$: Observable<Maybe<DbxButtonStyle>> = combineLatest([toObservable(this.buttonStyle), this.selectedAnchor$]).pipe(
+    map(([buttonStyle, selectedAnchor]) => selectedAnchor?.anchor.activeButton ?? buttonStyle),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly buttonDisplay$: Observable<DbxButtonDisplay> = combineLatest([toObservable(this.defaultIcon), toObservable(this.icon), toObservable(this.defaultText), this.buttonNavAnchor$, this.mode$]).pipe(
     map(([defaultIcon, icon, defaultText, selectedAnchor, mode]) => {
       let content: DbxButtonDisplay;
@@ -155,6 +191,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
   );
   readonly anchorsSignal = toSignal(this.anchors$);
   readonly buttonDisplaySignal = toSignal(this.buttonDisplay$);
+  readonly buttonStyleSignal = toSignal(this.buttonStyle$);
   readonly hasNoAnchorsSignal = toSignal(this.hasNoAnchors$);
   readonly nextRotateAnchorSignal = toSignal(this.nextRotateAnchor$);
 

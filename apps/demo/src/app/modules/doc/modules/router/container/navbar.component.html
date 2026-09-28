@@ -41,6 +41,14 @@
         <p>You can optionally show a menu caret for button menus using [showMenuCaret]="true".</p>
         <dbx-navbar [showMenuCaret]="true" defaultIcon="add" defaultText="Default Text" [anchors]="iconButtonAnchors" mode="button"></dbx-navbar>
 
+        <h5>Button Style</h5>
+        <p>The button can be styled using [buttonStyle], which takes the same DbxButtonStyle as dbx-button.</p>
+        <dbx-navbar [showMenuCaret]="true" [buttonStyle]="flatButtonStyle" defaultIcon="add" defaultText="Default Text" [anchors]="iconButtonAnchors" mode="button"></dbx-navbar>
+
+        <h5>Active Anchor Button Style</h5>
+        <p>Anchors can set an activeButton style that is used instead of [buttonStyle] while that anchor is active. Switch between Nav Bar A and Nav Bar B to see it change.</p>
+        <dbx-navbar [showMenuCaret]="true" [buttonStyle]="flatButtonStyle" defaultIcon="add" defaultText="Default Text" [anchors]="activeButtonAnchors" mode="button"></dbx-navbar>
+
         <h5>Rotate Button Mode</h5>
         <p>The above uses the "menu" button mode, which is the default.</p>
         <p>There is an additional "rotate" button mode which shows the next anchor and when clicked will segue to that anchor instead.</p>
