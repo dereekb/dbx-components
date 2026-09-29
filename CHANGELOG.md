@@ -1,3 +1,20 @@
+# [14.12.0](https://github.com/dereekb/dbx-components/compare/v14.11.0-dev...v14.12.0) (2026-09-29)
+
+### Bug Fixes
+
+- **dbx-form:** style the forge form-field wrapper subscript ([039e2841](https://github.com/dereekb/dbx-components/commit/039e28413457ca0f9be1914a396b2b38d76db686))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([bb7a403c](https://github.com/dereekb/dbx-components/commit/bb7a403c1b630570d89eae54d64cbf165826eb69))
+
+### Features
+
+- **dbx-web:** add dbx-mapbox-circle for real-world radius circles ([530225e2](https://github.com/dereekb/dbx-components/commit/530225e2f682687a57902e46f334e46923d84922))
+- **dbx-web:** add navbar buttonStyle and per-anchor activeButton ([0e0dfc5a](https://github.com/dereekb/dbx-components/commit/0e0dfc5a770faff18ce7aece5c9805c3a7c6ac51))
+- **dbx-web:** open dbx-mapbox-menu on map long-press ([1346f82d](https://github.com/dereekb/dbx-components/commit/1346f82d4a5c7dd5d052431fe102ce682ba7a99c))
+- **filter:** add dbxFilterMapRouteParams and day string range params ([3c1e2a66](https://github.com/dereekb/dbx-components/commit/3c1e2a66053634d1d24229f0cc618676238e2058))
+
 # [14.11.0](https://github.com/dereekb/dbx-components/compare/v14.10.0-dev...v14.11.0) (2026-09-28)
 
 ### Bug Fixes

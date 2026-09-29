@@ -1,5 +1,5 @@
-import { isSameDateDay, toJsDate } from '@dereekb/date';
-import { type ClickableFilterPreset, type ClickableFilterPresetOrPartialPreset, type ClickablePartialFilterPreset } from '@dereekb/dbx-core';
+import { dateOrDayStringRangeToISO8601DayStringRange, iso8601DayStringRangeParamsToDateRange, isSameDateDay, toJsDate } from '@dereekb/date';
+import { type ClickableFilterPreset, type ClickableFilterPresetOrPartialPreset, type ClickablePartialFilterPreset, type SegueRefRawSegueParams } from '@dereekb/dbx-core';
 import { type ValueSelectionOption } from '@dereekb/dbx-form';
 import { type FilterJsonConverter, type FilterWithPreset } from '@dereekb/rxjs';
 import { filterUndefinedValues, getValueFromGetter, type ISO8601DateString, type LabeledValue, type Maybe } from '@dereekb/util';
@@ -160,8 +160,18 @@ export interface DocInteractionTestMergedFilterJson extends Omit<DocInteractionT
  * Converts a DocInteractionTestMergedFilter to and from JSON.
  */
 export const DOC_INTERACTION_TEST_MERGED_FILTER_JSON_CONVERTER: FilterJsonConverter<DocInteractionTestMergedFilter, DocInteractionTestMergedFilterJson> = {
-  toJson: (filter) => filterUndefinedValues({ ...filter, date: filter.date?.toISOString(), toDate: filter.toDate?.toISOString() }),
-  fromJson: (json) => filterUndefinedValues({ ...json, date: json.date ? toJsDate(json.date) : undefined, toDate: json.toDate ? toJsDate(json.toDate) : undefined })
+  toJson: (filter) =>
+    filterUndefinedValues({
+      ...filter,
+      date: filter.date?.toISOString(),
+      toDate: filter.toDate?.toISOString()
+    }),
+  fromJson: (json) =>
+    filterUndefinedValues({
+      ...json,
+      date: json.date ? toJsDate(json.date) : undefined,
+      toDate: json.toDate ? toJsDate(json.toDate) : undefined
+    })
 };
 
 export const DOC_INTERACTION_TEST_MIN_PRICE_OPTIONS: ValueSelectionOption<number>[] = [
@@ -214,4 +224,33 @@ export function refreshDocInteractionTestDatePresetFilter(filter: DocInteraction
   const preset = filter.preset ? DOC_INTERACTION_DATE_TEST_PRESETS.find((x) => x.preset === filter.preset) : undefined;
   const presetValue = preset ? (getValueFromGetter(preset.presetValue) as Maybe<DocInteractionTestFilter>) : undefined;
   return presetValue ? { ...presetValue, preset: filter.preset } : filter;
+}
+
+// MARK: URL Filter
+/**
+ * Reads the URL Filter example's date filter from the page's `start`/`end` query params.
+ *
+ * @param params - The route params.
+ * @returns The date filter, or undefined when the params have no valid start day.
+ */
+export function docInteractionTestDateFilterFromParams(params: SegueRefRawSegueParams): Maybe<DocInteractionTestFilter> {
+  const dateRange = iso8601DayStringRangeParamsToDateRange(params);
+  return dateRange ? { date: dateRange.start, toDate: startOfDay(dateRange.end) } : undefined;
+}
+
+/**
+ * Writes the URL Filter example's date filter as the page's `start`/`end` query params. A filter without a date removes them.
+ *
+ * @param filter - The date filter.
+ * @returns The query params.
+ */
+export function docInteractionTestDateFilterToParams(filter: DocInteractionTestFilter): SegueRefRawSegueParams {
+  return filter.date
+    ? {
+        ...dateOrDayStringRangeToISO8601DayStringRange({
+          start: filter.date,
+          end: filter.toDate ?? filter.date
+        })
+      }
+    : { start: null, end: null };
 }

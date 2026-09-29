@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { takeLast } from '@dereekb/util';
-import { DbxContentContainerDirective, DbxContentBorderDirective, DbxNavbarComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxNavbarComponent, type DbxButtonStyle, type DbxNavbarClickableAnchorLinkSegueRef } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { UIView } from '@uirouter/angular';
@@ -32,4 +32,11 @@ export class DocRouterNavbarComponent {
   ];
 
   iconButtonAnchors = takeLast(this.anchors, 2);
+
+  flatButtonStyle: DbxButtonStyle = { type: 'flat', color: 'primary' };
+
+  activeButtonAnchors: DbxNavbarClickableAnchorLinkSegueRef[] = [
+    { ...this.anchors[1], activeButton: { type: 'flat', color: 'accent' } },
+    { ...this.anchors[2], activeButton: { type: 'stroked', color: 'primary' } }
+  ];
 }

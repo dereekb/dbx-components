@@ -110,6 +110,31 @@
     },
     {
       "kind": "directive",
+      "slug": "map-route-params",
+      "selector": "[dbxFilterMapRouteParams]",
+      "className": "DbxFilterMapRouteParamsDirective",
+      "module": "@dereekb/dbx-core",
+      "description": "Loads the filter of a keyed entry in an ancestor {@link FilterMap} from the current route params, so a link can open the page on a specific filter.\n\nThe params' filter becomes the key's default filter when the page loads, and a later change to the params (such as a link to\nthe same page with other params) sets the key's filter. When {@link DbxFilterMapRouteParamsConfig.paramsFromFilter} is set,\nevery change to the key is also written back to the URL, so reloading the page keeps the filter.\n\nThe params must be declared on the current route (for UIRouter, as query params of an ancestor state, ideally `dynamic: true`\nso writing them does not reload the state). Do not use it together with {@link DbxFilterMapStorageDirective} on the same key,\nsince both set the key's default filter.",
+      "inputs": [
+        {
+          "name": "dbxFilterMapRouteParams",
+          "type": "Maybe<DbxFilterMapRouteParamsConfig<F>>",
+          "description": "The key to load and how to read and write its params."
+        }
+      ],
+      "outputs": [],
+      "example": "<div dbxFilterMap>\n  <my-filter-button [dbxFilterMapSourceConnector]=\"'list'\" [dbxFilterMapRouteParams]=\"routeParamsConfig\"></my-filter-button>\n</div>",
+      "relatedSlugs": [
+        "map",
+        "map-storage",
+        "map-source-connector"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-component-patterns"
+      ]
+    },
+    {
+      "kind": "directive",
       "slug": "map-source",
       "selector": "[dbxFilterMapSource]",
       "className": "DbxFilterMapSourceDirective",
@@ -151,7 +176,8 @@
       "relatedSlugs": [
         "map",
         "map-source-connector",
-        "map-merge-source"
+        "map-merge-source",
+        "map-route-params"
       ],
       "skillRefs": [
         "dbx__ref__dbx-component-patterns"

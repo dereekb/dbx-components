@@ -21,13 +21,15 @@ import {
   DbxMapboxMapStoreInjectionBlockDirective,
   DbxMapboxMarkerComponent,
   DbxMapboxMarkersComponent,
-  DbxMapboxMenuComponent
+  DbxMapboxMenuComponent,
+  isDbxMapboxLongPressEvent
 } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
 import { DocExtensionMapboxPopupExampleComponent } from '../component/mapbox.popup.example.component';
+import { DocExtensionMapboxLongPressExampleComponent } from '../component/mapbox.longpress.example.component';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
@@ -59,6 +61,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
     DbxMapboxMarkersComponent,
     DocExtensionMapboxMarkersExampleComponent,
     DocExtensionMapboxPopupExampleComponent,
+    DocExtensionMapboxLongPressExampleComponent,
     DbxMapboxMenuComponent,
     MatMenuTrigger,
     DbxBarDirective,
@@ -159,7 +162,7 @@ export class DocExtensionMapboxComponent implements OnInit {
   readonly clickSignal = toSignal(this.click$, { initialValue: undefined });
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClickSignal = toSignal(this.doubleClick$, { initialValue: undefined });
-  readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
+  readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), kind: x ? (isDbxMapboxLongPressEvent(x) ? `longpress (${x.source})` : 'rightclick') : undefined, point: x ? { x: Math.round(x.point.x), y: Math.round(x.point.y) } : undefined })));
   readonly rightClickSignal = toSignal(this.rightClick$, { initialValue: undefined });
   readonly boundWrapsAroundWorld$ = this.dbxMapboxMapStore.boundWrapsAroundWorld$;
   readonly boundWrapsAroundWorldSignal = toSignal(this.boundWrapsAroundWorld$, { initialValue: undefined });

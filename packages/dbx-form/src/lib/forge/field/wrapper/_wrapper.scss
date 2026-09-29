@@ -28,6 +28,41 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     animation-duration: 300ms;
   }
 
+  // Subscript (hint/error) layout and typography. The wrapper borrows Material's
+  // `mat-mdc-form-field-*` subscript classes, but Material only adds the stylesheet
+  // for them once a real mat-form-field has rendered on the page. Without these rules
+  // a page with no mat-form-field (e.g. a filter popover opened over a map) shows the
+  // hint as unstyled body text. The values mirror Material's own form-field rules; the
+  // 16px inline padding lines the subscript up with the wrapper content's padding.
+  .dbx-forge-form-field {
+    .mat-mdc-form-field-subscript-wrapper {
+      box-sizing: border-box;
+      width: 100%;
+      position: relative;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-font-smoothing: antialiased;
+      font-family: var(--mat-form-field-subscript-text-font, var(--mat-sys-body-small-font));
+      line-height: var(--mat-form-field-subscript-text-line-height, var(--mat-sys-body-small-line-height));
+      font-size: var(--mat-form-field-subscript-text-size, var(--mat-sys-body-small-size));
+      letter-spacing: var(--mat-form-field-subscript-text-tracking, var(--mat-sys-body-small-tracking));
+      font-weight: var(--mat-form-field-subscript-text-weight, var(--mat-sys-body-small-weight));
+    }
+
+    .mat-mdc-form-field-hint-wrapper,
+    .mat-mdc-form-field-error-wrapper {
+      padding: 0 16px;
+    }
+
+    .mat-mdc-form-field-hint-wrapper {
+      display: flex;
+    }
+
+    .mat-mdc-form-field-error {
+      display: block;
+      color: var(--mat-form-field-error-text-color, var(--mat-sys-error));
+    }
+  }
+
   // Forge form-field wrapper: suppress child field label/hint/error inside the wrapper.
   // The wrapper provides its own label (notched outline), hint, and error subscript.
   dbx-forge-form-field-wrapper {

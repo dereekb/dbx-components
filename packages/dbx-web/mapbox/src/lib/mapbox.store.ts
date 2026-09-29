@@ -29,10 +29,11 @@ import {
 } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { type MapService } from 'ngx-mapbox-gl';
-import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, type Observable, of, type Subscription, startWith, interval, first, combineLatest, EMPTY, type OperatorFunction, throttleTime } from 'rxjs';
-import { LngLatBounds, type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
+import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, type Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, type OperatorFunction, throttleTime, fromEvent } from 'rxjs';
+import { LngLatBounds, Point, type MapEventType, type MapEvents, type Map } from 'mapbox-gl';
 import {
   type DbxMapboxClickEvent,
+  type DbxMapboxRightClickEvent,
   type KnownMapboxStyle,
   type MapboxBearing,
   type MapboxEaseTo,
@@ -51,7 +52,8 @@ import {
 } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { mapboxViewportBoundFunction, type MapboxViewportBoundFunction } from './mapbox.util';
+import { mapboxClientPointToMapPoint, mapboxViewportBoundFunction, type MapboxViewportBoundFunction } from './mapbox.util';
+import { DBX_MAPBOX_LONG_PRESS_EVENT_TYPE, type DbxMapboxLongPressConfigInput, type DbxMapboxLongPressEvent, dbxMapboxLongPressTracker, isTouchSourcedMouseEvent, resolveDbxMapboxLongPressConfig, suppressNextClickEvent } from './mapbox.longpress';
 import { type FilterMapboxBoundConfig, type FilterMapboxBoundReadItemValueFunction, filterByMapboxViewportBound } from './mapbox.rxjs';
 
 export type MapboxMapLifecycleState = 'init' | 'load' | 'render' | 'idle';
@@ -110,9 +112,17 @@ export interface DbxMapboxStoreState {
    */
   readonly doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
-   * Latest contextmenu event.
+   * Latest right-click: a contextmenu event, or a long press.
    */
-  readonly rightClickEvent?: Maybe<DbxMapboxClickEvent>;
+  readonly rightClickEvent?: Maybe<DbxMapboxRightClickEvent>;
+  /**
+   * Latest long press event.
+   */
+  readonly longPressEvent?: Maybe<DbxMapboxLongPressEvent>;
+  /**
+   * Long press config for this map, over the app-wide DbxMapboxConfig.longPress. False turns the long press off for this map.
+   */
+  readonly longPressConfig?: DbxMapboxLongPressConfigInput;
   /**
    * Whether or not to retain content between resets.
    *
@@ -207,15 +217,149 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
               addListener('movestart', () => this._setMoveState('moving'));
               addListener('moveend', () => this._setMoveState('idle'));
 
-              addListener('zoomstart', () => this._setZoomState('zooming'));
+              // MARK: Long Press
+              const canvasContainer = map.getCanvasContainer();
+              const getLongPressConfig = () => resolveDbxMapboxLongPressConfig({ override: this.get().longPressConfig, base: this.dbxMapboxService.longPressConfig ?? false });
+
+              const longPressTracker = dbxMapboxLongPressTracker({
+                getConfig: getLongPressConfig,
+                onLongPress: (result) => {
+                  const mapPoint = mapboxClientPointToMapPoint({ container: canvasContainer, point: result.position });
+                  const point = new Point(mapPoint.x, mapPoint.y);
+
+                  // stop the pan the held pointer started, so the map does not move under the menu that opens
+                  map.stop();
+
+                  this._setLongPressEvent({
+                    type: DBX_MAPBOX_LONG_PRESS_EVENT_TYPE,
+                    target: map,
+                    source: result.source,
+                    originalEvent: result.startEvent,
+                    point,
+                    lngLat: map.unproject(point),
+                    duration: result.duration
+                  });
+                }
+              });
+
+              /**
+               * With the long press on, a contextmenu made by a touch (Android fires one after about half a second) is left to the long press, so the configured duration applies on every device.
+               *
+               * @param event - The contextmenu event.
+               * @returns True if the contextmenu should not open the right-click menu.
+               */
+              const isLongPressTouchContextMenu = (event: MouseEvent) => getLongPressConfig() != null && (longPressTracker.isTouchInteraction() || isTouchSourcedMouseEvent(event));
+              const touchClientPosition = (event: TouchEvent) => ({ x: event.touches[0].clientX, y: event.touches[0].clientY });
+
+              /**
+               * Cancels the pending long press when the user starts zooming, rotating or pitching. Only user gestures carry an originalEvent.
+               *
+               * @param event - The map event.
+               */
+              const cancelLongPressOnUserGesture = (event: { readonly type: string; readonly originalEvent?: unknown }) => {
+                if (event.originalEvent) {
+                  longPressTracker.cancel();
+                }
+              };
+
+              addListener('touchstart', (x) => {
+                const { originalEvent } = x;
+
+                if (originalEvent.touches.length === 1) {
+                  longPressTracker.start({ source: 'touch', position: touchClientPosition(originalEvent), event: originalEvent });
+                } else {
+                  longPressTracker.cancel();
+                }
+              });
+
+              addListener('touchmove', (x) => {
+                const { originalEvent } = x;
+
+                if (originalEvent.touches.length === 1) {
+                  longPressTracker.move('touch', touchClientPosition(originalEvent));
+                } else {
+                  longPressTracker.cancel();
+                }
+              });
+
+              addListener('touchend', (x) => {
+                const { originalEvent } = x;
+
+                // stops the lift of a press that fired from clicking the menu's backdrop, which would close the menu that just opened
+                if (originalEvent.touches.length === 0 && longPressTracker.end('touch') && originalEvent.cancelable) {
+                  originalEvent.preventDefault();
+                }
+              });
+
+              addListener('touchcancel', () => longPressTracker.end('touch'));
+
+              /**
+               * Removes the window mousemove listener of a pending mouse press.
+               */
+              let stopTrackingMouseMoves: Maybe<() => void>;
+
+              /**
+               * Feeds mouse moves to the tracker while a mouse press is pending.
+               *
+               * Mapbox sends no mousemove while a held left button drags the map, so the moves come from the window. The listener only exists during a press, and is added from the map's mousedown handler, which runs outside of Angular's zone.
+               */
+              const trackMouseMoves = () => {
+                stopTrackingMouseMoves?.();
+
+                const onMouseMove = (event: MouseEvent) => {
+                  if (longPressTracker.state === 'pending' && longPressTracker.source === 'mouse') {
+                    longPressTracker.move('mouse', { x: event.clientX, y: event.clientY });
+                  } else {
+                    stopTrackingMouseMoves?.();
+                  }
+                };
+
+                window.addEventListener('mousemove', onMouseMove, { passive: true });
+
+                stopTrackingMouseMoves = () => {
+                  window.removeEventListener('mousemove', onMouseMove);
+                  stopTrackingMouseMoves = undefined;
+                };
+              };
+
+              addListener('mousedown', (x) => {
+                const { originalEvent } = x;
+                // other buttons and modifier keys rotate, pitch, box zoom, or right-click on a Mac
+                const isPlainLeftButton = originalEvent.button === 0 && !originalEvent.ctrlKey && !originalEvent.metaKey && !originalEvent.altKey && !originalEvent.shiftKey;
+
+                if (!isPlainLeftButton) {
+                  longPressTracker.cancel();
+                } else if (longPressTracker.start({ source: 'mouse', position: { x: originalEvent.clientX, y: originalEvent.clientY }, event: originalEvent })) {
+                  trackMouseMoves();
+                }
+              });
+
+              addListener('pitchstart', cancelLongPressOnUserGesture);
+
+              addListener('zoomstart', (x) => {
+                this._setZoomState('zooming');
+                cancelLongPressOnUserGesture(x);
+              });
               addListener('zoomend', () => this._setZoomState('idle'));
 
-              addListener('rotatestart', () => this._setRotateState('rotating'));
+              addListener('rotatestart', (x) => {
+                this._setRotateState('rotating');
+                cancelLongPressOnUserGesture(x);
+              });
               addListener('rotateend', () => this._setRotateState('idle'));
 
-              addListener('click', (x) => this._setClickEvent(x));
+              addListener('click', (x) => {
+                // the click that ends a press that fired is not a click on the map
+                if (!longPressTracker.shouldSuppressClick()) {
+                  this._setClickEvent(x);
+                }
+              });
               addListener('dblclick', (x) => this._setDoubleClickEvent(x));
-              addListener('contextmenu', (x) => this._setRightClickEvent(x));
+              addListener('contextmenu', (x) => {
+                if (!isLongPressTouchContextMenu(x.originalEvent)) {
+                  this._setRightClickEvent(x);
+                }
+              });
 
               const refreshForResize = () => {
                 const { clientWidth: x, clientHeight: y } = map.getCanvas();
@@ -225,7 +369,34 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
               addListener('resize', refreshForResize);
               refreshForResize();
 
-              const subs: Subscription[] = [];
+              // stops iOS from showing its callout (the link/image menu) under a held finger
+              const previousTouchCallout = canvasContainer.style.getPropertyValue('-webkit-touch-callout');
+              canvasContainer.style.setProperty('-webkit-touch-callout', 'none');
+
+              const subs: Subscription[] = [
+                // the mouse may be released over the menu that opened, outside the map, where mapbox does not send mouseup
+                fromEvent<MouseEvent>(window, 'mouseup', { capture: true }).subscribe(() => {
+                  stopTrackingMouseMoves?.();
+
+                  if (longPressTracker.end('mouse')) {
+                    suppressNextClickEvent();
+                  }
+                }),
+                fromEvent(window, 'blur').subscribe(() => longPressTracker.cancel()),
+                // mapbox only blocks the browser's own menu in some configurations, so block a touch's contextmenu here too
+                fromEvent<MouseEvent>(canvasContainer, 'contextmenu').subscribe((event) => {
+                  if (isLongPressTouchContextMenu(event)) {
+                    event.preventDefault();
+                  } else {
+                    longPressTracker.cancel();
+                  }
+                }),
+                new Subscription(() => {
+                  stopTrackingMouseMoves?.();
+                  longPressTracker.destroy();
+                  canvasContainer.style.setProperty('-webkit-touch-callout', previousTouchCallout);
+                })
+              ];
 
               return {
                 service,
@@ -1053,8 +1224,17 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     shareReplay(1)
   );
 
-  readonly rightClickEvent$ = this.state$.pipe(
+  /**
+   * Latest right-click: a contextmenu event, or a long press. Use isDbxMapboxLongPressEvent() to tell them apart.
+   */
+  readonly rightClickEvent$: Observable<Maybe<DbxMapboxRightClickEvent>> = this.state$.pipe(
     map((x) => x.rightClickEvent),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly longPressEvent$: Observable<Maybe<DbxMapboxLongPressEvent>> = this.state$.pipe(
+    map((x) => x.longPressEvent),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -1063,6 +1243,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   readonly setMargin = this.updater((state, margin: Maybe<DbxMapboxMarginCalculationSizing>) => ({ ...state, margin: margin && (margin.rightMargin !== 0 || margin.leftMargin !== 0) ? margin : undefined }));
   readonly setMinimumVirtualViewportSize = this.updater((state, minimumVirtualViewportSize: Maybe<Partial<Vector>>) => ({ ...state, minimumVirtualViewportSize }));
   readonly setUseVirtualBound = this.updater((state, useVirtualBound: boolean) => ({ ...state, useVirtualBound }));
+  /**
+   * Sets the long press config for this map, over the app-wide DbxMapboxConfig.longPress. False turns the long press off for this map; undefined uses the app-wide config.
+   *
+   * Applies from the next press.
+   */
+  readonly setLongPressConfig = this.updater((state, longPressConfig: DbxMapboxLongPressConfigInput) => ({ ...state, longPressConfig }));
   readonly setBoundRefreshSettings = this.updater((state, boundRefreshSettings: Partial<DbxMapboxStoreBoundRefreshSettings>) => ({ ...state, boundRefreshSettings: { ...state.boundRefreshSettings, ...boundRefreshSettings } }));
 
   private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({
@@ -1074,7 +1260,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
     retainContent: state.retainContent,
     drawerContent: state.retainContent ? state.drawerContent : undefined,
     useVirtualBound: state.useVirtualBound,
-    boundRefreshSettings: state.boundRefreshSettings
+    boundRefreshSettings: state.boundRefreshSettings,
+    longPressConfig: state.longPressConfig
   }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
@@ -1085,6 +1272,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   private readonly _setClickEvent = this.updater((state, clickEvent: DbxMapboxClickEvent) => ({ ...state, clickEvent }));
   private readonly _setDoubleClickEvent = this.updater((state, doubleClickEvent: DbxMapboxClickEvent) => ({ ...state, doubleClickEvent }));
   private readonly _setRightClickEvent = this.updater((state, rightClickEvent: DbxMapboxClickEvent) => ({ ...state, rightClickEvent }));
+  private readonly _setLongPressEvent = this.updater((state, longPressEvent: DbxMapboxLongPressEvent) => ({ ...state, longPressEvent, rightClickEvent: longPressEvent }));
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
 
