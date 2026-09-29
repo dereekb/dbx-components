@@ -2735,6 +2735,12 @@
           "default": "false"
         },
         {
+          "name": "buttonStyle",
+          "type": "Maybe<DbxButtonStyle>",
+          "description": "Style passed to the button when the navbar renders as a button (the \"button\" and \"icon\" modes), such as a flat type and a color.\n\nThe active anchor's activeButton style is used instead, if it has one. Has no effect on the tab bar.",
+          "required": false
+        },
+        {
           "name": "fab",
           "type": "boolean",
           "description": "",
@@ -2789,7 +2795,7 @@
         },
         {
           "name": "anchors",
-          "type": "Maybe<ClickableAnchorLinkSegueRef[]>",
+          "type": "Maybe<DbxNavbarClickableAnchorLinkSegueRef[]>",
           "description": "",
           "required": false,
           "default": "[]"
