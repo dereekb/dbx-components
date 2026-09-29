@@ -405,6 +405,58 @@
       ]
     },
     {
+      "slug": "list-detail-item-grouped-todo",
+      "category": "list",
+      "summary": "Grouped To Do list: .dbx-list-detail-item rows split into titled sections by dbxListTitleGroup, urgent rows set apart by a colored icon tile instead of a background, no hover effects, the built-in chevron, content-derived row keys so changed text re-renders, and an empty state.",
+      "header": ".dbx-list-detail-item Grouped To Do List",
+      "className": "DocListDetailItemGroupedTodoExampleComponent",
+      "selector": "doc-list-detail-item-grouped-todo-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "The To Do recipe split into titled sections, with urgent rows marked by their icon tile color and no hover effects.",
+      "relatedSlugs": [
+        "dbx-list",
+        "dbx-list-detail-item",
+        "dbx-list-no-hover-effects",
+        "dbx-list-title-group-header",
+        "dbx-list-empty-content",
+        "dbx-chip",
+        "dbx-icon-tile",
+        "dbx-color"
+      ],
+      "info": "<p>\n  The same row recipe as the To Do list above, grouped by\n  <code>[dbxListTitleGroup]</code>\n  . The delegate maps each item to its section with\n  <code>groupValueForItem</code>\n  , gives each section its title with\n  <code>dataForGroupValue</code>\n  , and orders the sections with\n  <code>sortGroupsByData</code>\n  . The default\n  <code>dbx-list-title-group-header</code>\n  renders each title.\n</p>\n<p>\n  The rows carry no background. An \"Action needed\" row is set apart by its tonal\n  <code>dbx-icon-tile</code>\n  alone: the expired waiver's tile is\n  <code>warn</code>\n  and the rest are\n  <code>notice</code>\n  , while the \"Suggestions\" rows keep a grey tile.\n</p>\n<p>\n  The wrapper host adds\n  <code>dbx-list-no-hover-effects</code>\n  , so hovering a row doesn't add a state layer. The whole row stays the click target, and the view's\n  <code>metaConfig</code>\n  chevron is the only trailing affordance.\n</p>\n<p>\n  The view keys each row by its content (id, title, detail and chip) instead of its id. An item component keeps the item it was created with while its key stays the same, so an id-only key would leave the old text on screen when a count changes. Use\n  <strong>Finish a course</strong>\n  to watch the \"Courses in progress\" row update, then disappear.\n</p>\n<p>\n  Last clicked:\n  <code>{{ clickedIdSignal() ?? '(none)' }}</code>\n</p>",
+      "snippet": "<div class=\"dbx-button-wrap-group dbx-mb3\">\n  <button mat-stroked-button (click)=\"finishCourse()\" [disabled]=\"coursesInProgressSignal() === 0\">Finish a course</button>\n  <button mat-stroked-button (click)=\"reset()\">Reset</button>\n  <button mat-stroked-button (click)=\"showEmptySignal.set(!showEmptySignal())\">{{ showEmptySignal() ? 'Show to dos' : 'All caught up' }}</button>\n</div>\n<mat-card appearance=\"outlined\" style=\"max-width: 560px\">\n  <mat-card-content>\n    <h3 class=\"dbx-text-headline-small dbx-m0\">To Do</h3>\n    @if (countLabelSignal(); as countLabel) {\n      <p class=\"dbx-hint dbx-mb3\">{{ countLabel }}</p>\n    }\n    <doc-todo-group-item-list [dbxListTitleGroup]=\"groupDelegate\" [state]=\"stateSignal()\">\n      <dbx-list-empty-content empty>\n        <div class=\"dbx-flex-column dbx-flex-center dbx-text-center dbx-pv4\">\n          <dbx-icon-tile class=\"dbx-mb3\" icon=\"task_alt\" [round]=\"true\" dbxColor=\"primary\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n          <div class=\"dbx-text-title-medium\">You're all caught up</div>\n          <div class=\"dbx-hint\">No action items right now. We'll let you know if something needs your attention.</div>\n        </div>\n      </dbx-list-empty-content>\n    </doc-todo-group-item-list>\n  </mat-card-content>\n</mat-card>",
+      "uses": [
+        {
+          "kind": "component",
+          "className": "DocTodoGroupItemListComponent",
+          "role": "list",
+          "selector": "doc-todo-group-item-list",
+          "classSource": "@Component({\n  selector: 'doc-todo-group-item-list',\n  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxListWrapperComponentImportsModule],\n  host: {\n    class: 'dbx-list-auto-height dbx-list-no-hover-effects'\n  }\n})\nexport class DocTodoGroupItemListComponent extends AbstractDbxSelectionListWrapperDirective<TodoGroupItemValue> {\n  constructor() {\n    super({\n      componentClass: DocTodoGroupItemListViewComponent,\n      defaultSelectionMode: 'view'\n    });\n  }\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTodoGroupItemListViewComponent",
+          "role": "view",
+          "selector": "doc-todo-group-item-list-view",
+          "classSource": "@Component({\n  selector: 'doc-todo-group-item-list-view',\n  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,\n  imports: [DbxSelectionValueListViewComponentImportsModule],\n  providers: provideDbxListView(DocTodoGroupItemListViewComponent),\n  host: {\n    class: 'dbx-list-item-p0'\n  }\n})\nexport class DocTodoGroupItemListViewComponent extends AbstractDbxSelectionListViewDirective<TodoGroupItemValue> {\n  // An item component keeps the item it was created with while its key stays the same, so key each row by its content:\n  // a changed detail line (e.g. the course count) then renders a fresh row. Drop `icon` (the template paints its own\n  // tile); keep `anchor` so the whole row is the click target.\n  readonly config: DbxSelectionValueListViewConfig<TodoGroupItemValueWithSelection> = {\n    componentClass: DocTodoGroupItemListViewItemComponent,\n    metaConfig: DbxListViewMetaIconComponent.metaConfig('chevron_right'),\n    mapValuesToItemValues: (values) => of(values.map((value) => ({ ...value, key: [value.id, value.title, value.detail, value.chip?.text].join('|'), itemValue: value, icon: undefined })))\n  };\n}"
+        },
+        {
+          "kind": "component",
+          "className": "DocTodoGroupItemListViewItemComponent",
+          "role": "item",
+          "selector": "doc-todo-group-item-list-view-item",
+          "classSource": "@Component({\n  selector: 'doc-todo-group-item-list-view-item',\n  template: `\n    <div class=\"dbx-list-detail-item\">\n      <dbx-icon-tile class=\"item-leading\" [icon]=\"icon\" [round]=\"true\" [dbxColor]=\"tileColor\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n      <div class=\"item-content\">\n        <span class=\"item-title\">{{ title }}</span>\n        <span class=\"item-line\">{{ detail }}</span>\n        @if (chip; as chip) {\n          <span class=\"item-line dbx-pt1\">\n            <dbx-chip [color]=\"chip.color\" [small]=\"true\">{{ chip.text }}</dbx-chip>\n          </span>\n        }\n      </div>\n    </div>\n  `,\n  imports: [DbxChipDirective, DbxColorDirective, DbxIconTileComponent]\n})\nexport class DocTodoGroupItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<TodoGroupItemValue> {\n  get icon(): string {\n    return this.itemValue.icon;\n  }\n\n  get title(): string {\n    return this.itemValue.title;\n  }\n\n  get detail(): string {\n    return this.itemValue.detail;\n  }\n\n  get chip(): Maybe<TodoItemChip> {\n    return this.itemValue.chip;\n  }\n\n  /**\n   * Tile color of the row: an \"Action needed\" row's own color (notice by default), otherwise grey.\n   *\n   * @returns The row's tile color.\n   */\n  get tileColor(): DbxThemeColor {\n    return this.itemValue.group === 'action_needed' ? (this.itemValue.color ?? 'notice') : 'grey';\n  }\n}"
+        },
+        {
+          "kind": "interface",
+          "className": "TodoGroupItemValue",
+          "role": "data",
+          "classSource": "export interface TodoGroupItemValue {\n  readonly id: string;\n  readonly group: TodoGroupItemGroup;\n  readonly icon: string;\n  readonly title: string;\n  readonly detail: string;\n  /**\n   * Tile color of an `action_needed` row. Defaults to notice.\n   */\n  readonly color?: Maybe<DbxThemeColor>;\n  readonly chip?: Maybe<TodoItemChip>;\n  /**\n   * Whole-row click target.\n   */\n  readonly anchor: ClickableAnchor;\n}"
+        }
+      ]
+    },
+    {
       "slug": "list-progress-with-button",
       "category": "list",
       "summary": "Two-line list with template-painted icon tile, progress bar, and trailing button.",
