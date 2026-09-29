@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { latLngPoint, type LatLngPointInput, type Milliseconds } from '@dereekb/util';
+import { latLngPoint, type LatLngPointInput, type Maybe, type Milliseconds } from '@dereekb/util';
 import { type MapOptions } from 'mapbox-gl';
 import { type KnownMapboxStyle, type MapboxZoomLevel } from './mapbox';
+import { type DbxMapboxLongPressConfigInput, type DbxMapboxResolvedLongPressConfig, resolveDbxMapboxLongPressConfig } from './mapbox.longpress';
 
 export class DbxMapboxConfig {
   readonly defaultStyle?: MapOptions['style'];
@@ -16,6 +17,12 @@ export class DbxMapboxConfig {
    * the M3 default of 360px.
    */
   readonly drawerWidth?: string;
+  /**
+   * Long press that opens the map's right-click menu, for users that cannot right-click (touch screens).
+   *
+   * On by default with the default duration and tolerance. Set to false to turn it off.
+   */
+  readonly longPress?: DbxMapboxLongPressConfigInput;
 }
 
 export const DEFAULT_MAPBOX_STYLE: KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v12';
@@ -42,6 +49,15 @@ export class DbxMapboxService {
 
   get drawerWidth(): string {
     return this._config.drawerWidth ?? DEFAULT_MAPBOX_LAYOUT_DRAWER_WIDTH;
+  }
+
+  /**
+   * The app-wide long press config, or undefined when the long press is off.
+   *
+   * @returns The resolved config.
+   */
+  get longPressConfig(): Maybe<DbxMapboxResolvedLongPressConfig> {
+    return resolveDbxMapboxLongPressConfig({ base: this._config.longPress });
   }
 
   get mapboxMapStoreTimerRefreshPeriod(): number {

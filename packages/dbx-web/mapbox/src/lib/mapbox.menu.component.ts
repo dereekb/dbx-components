@@ -1,14 +1,16 @@
 import { filter, switchMap, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { Component, inject, signal, input, effect } from '@angular/core';
+import { Component, inject, signal, input } from '@angular/core';
 import { type Maybe, DestroyFunctionObject, isNotFalse } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { clean, cleanSubscription } from '@dereekb/dbx-core';
 import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { dbxMapboxRightClickEventClientPosition } from './mapbox.util';
+import { isTouchSourcedMouseEvent } from './mapbox.longpress';
 
 /**
- * Directive that connects a host MatMenuTrigger to a DbxMapboxMapStore and listens for right-clicks on the map.
+ * Directive that connects a host MatMenuTrigger to a DbxMapboxMapStore and opens the menu on a right-click, or a long press, on the map.
  *
  * The map dissapears if the mouse scrolls anywhere else on the map.
  */
@@ -27,28 +29,10 @@ export class DbxMapboxMenuComponent {
 
   readonly active = input<boolean, Maybe<boolean>>(true, { transform: isNotFalse });
 
-  readonly openCloseSignal = signal<Maybe<boolean>>(undefined);
   readonly posSignal = signal<{ x: string; y: string }>({ x: `0`, y: `0` });
-
-  protected readonly _openCloseEffect = effect(() => {
-    const openOrClose = this.openCloseSignal();
-
-    switch (openOrClose) {
-      case true:
-        this.matMenuTrigger.openMenu();
-        break;
-      case false:
-        this.matMenuTrigger.closeMenu();
-        break;
-      default:
-        break;
-    }
-  });
 
   readonly active$ = toObservable(this.active);
 
-  protected readonly _sub = cleanSubscription();
-  private readonly _menuCloseSub = cleanSubscription();
   private readonly _preventRightClick = new DestroyFunctionObject();
 
   constructor() {
@@ -62,23 +46,24 @@ export class DbxMapboxMenuComponent {
         )
         .subscribe((event) => {
           const menu = this.matMenuTrigger.menu;
-          const buttonEvent = event.originalEvent;
 
-          if (menu && buttonEvent) {
-            buttonEvent.preventDefault();
-
+          if (menu) {
             // update position of this component for menu to open at
+            const { x, y } = dbxMapboxRightClickEventClientPosition(event);
+
             this.posSignal.set({
-              x: `${buttonEvent.x}px`,
-              y: `${buttonEvent.y}px`
+              x: `${x}px`,
+              y: `${y}px`
             });
 
             // open menu
             this.matMenuTrigger.openMenu();
 
-            // prevent right clicks in the cdkOverlay while the menu is open
-            this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, () => {
-              this.matMenuTrigger.closeMenu();
+            // prevent right clicks in the cdkOverlay while the menu is open. A touch's contextmenu (sent while or after a finger is held) must not close the menu it just opened.
+            this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, (contextMenuEvent) => {
+              if (!isTouchSourcedMouseEvent(contextMenuEvent)) {
+                this.matMenuTrigger.closeMenu();
+              }
             });
           }
         })

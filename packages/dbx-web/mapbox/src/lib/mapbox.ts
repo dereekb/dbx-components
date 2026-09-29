@@ -1,5 +1,6 @@
 import { type LatLngPointInput, type LatLngBoundInput, type ZoomLevel, type ZoomLevelRange, type ExtendLatLngBoundInput } from '@dereekb/util';
 import type * as MapboxGl from 'mapbox-gl';
+import { type DbxMapboxLongPressEvent } from './mapbox.longpress';
 
 /**
  * List of styles that are defined here:
@@ -60,6 +61,13 @@ export type MapboxBearing = number;
 export type MapboxTileSize = 512 | 256;
 
 export type DbxMapboxClickEvent = MapboxGl.MapMouseEvent & MapboxEventData;
+
+/**
+ * The event that opens the map's right-click menu: a mouse contextmenu event, or a long press on the map.
+ *
+ * Use isDbxMapboxLongPressEvent() to tell them apart.
+ */
+export type DbxMapboxRightClickEvent = DbxMapboxClickEvent | DbxMapboxLongPressEvent;
 
 /**
  * Options for MapboxGl.Map.fitBounds()
