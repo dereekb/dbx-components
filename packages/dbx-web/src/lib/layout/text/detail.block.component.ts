@@ -7,6 +7,10 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
  *
  * Use the `[header]` content slot for extra header-level content and default content for the detail area.
  *
+ * The component provides the structure only. Add the `dbx-detail-block-tile` class for the tile styling: the icon in a
+ * round tile beside the content, an uppercase label, and `dbx-detail-block-tile-value` / `dbx-detail-block-tile-hint`
+ * lines for the value and its supporting text.
+ *
  * @dbxWebComponent
  * @dbxWebSlug detail-block
  * @dbxWebCategory text
@@ -20,6 +24,14 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
  * ```html
  * <dbx-detail-block header="Email" icon="mail">
  *   <p>{{ user.email }}</p>
+ * </dbx-detail-block>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-detail-block class="dbx-detail-block-tile" header="Hours" icon="schedule">
+ *   <span class="dbx-detail-block-tile-value">7:45 AM – 3:30 PM</span>
+ *   <span class="dbx-detail-block-tile-hint">Full day · 8 hrs</span>
  * </dbx-detail-block>
  * ```
  */

@@ -6,9 +6,10 @@ import { DocListProgressExampleComponent } from '../examples/list.progress.examp
 import { DocListAnchorButtonExampleComponent } from '../examples/list.anchor-button.example.component';
 import { DocListAnchorRowModifierExampleComponent } from '../examples/list.anchor-row-modifier.example.component';
 import { DocListDetailItemExampleComponent } from '../examples/list.detail-item.example.component';
+import { DocListDetailItemGroupedTodoExampleComponent } from '../examples/list.detail-item.grouped-todo.example.component';
 
 @Component({
   templateUrl: './list.component.html',
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocListStandardExampleComponent, DocListProgressExampleComponent, DocListAnchorButtonExampleComponent, DocListAnchorRowModifierExampleComponent, DocListDetailItemExampleComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocListStandardExampleComponent, DocListProgressExampleComponent, DocListAnchorButtonExampleComponent, DocListAnchorRowModifierExampleComponent, DocListDetailItemExampleComponent, DocListDetailItemGroupedTodoExampleComponent]
 })
 export class DocExamplesListComponent {}

@@ -1111,6 +1111,139 @@
       "componentScope": "text"
     },
     {
+      "cssVariable": "--dbx-detail-block-tile-background",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "detail block tile background"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-surface-container-high)`.",
+      "defaults": {
+        "light": "var(--mat-sys-surface-container-high)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-gap",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "detail block tile gap",
+        "detail block tile gap spacing"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-hint-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "detail block tile hint color"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface-variant)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface-variant)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-icon-color",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "detail block tile icon color",
+        "detail block tile icon color text"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface-variant)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface-variant)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "detail block tile icon size"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `16px`.",
+      "defaults": {
+        "light": "16px"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-label-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "detail block tile label color"
+      ],
+      "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(#{theming.$dbx-bg-color-var})"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-padding-bottom",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "detail block tile padding bottom",
+        "detail block tile padding bottom spacing"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-4)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-4)"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-shape",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "detail block tile shape"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `50%`.",
+      "defaults": {
+        "light": "50%"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "detail block tile size"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `28px`.",
+      "defaults": {
+        "light": "28px"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-detail-block-tile-text-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "detail block tile text color"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "componentScope": "text"
+    },
+    {
       "cssVariable": "--dbx-dialog-content-padding",
       "source": "dbx-web",
       "role": "spacing",
@@ -1286,7 +1419,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-shape, 50%)"
+        "light": "var(--dbx-detail-block-tile-shape, 50%)"
       },
       "componentScope": "text"
     },
@@ -1299,7 +1432,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, 14px))"
+        "light": "var(--dbx-detail-block-tile-icon-size, 16px)"
       },
       "componentScope": "text"
     },
@@ -1325,7 +1458,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-size, 32px)"
+        "light": "var(--dbx-detail-block-tile-size, 28px)"
       },
       "componentScope": "text"
     },
@@ -1352,7 +1485,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-size, 32px)"
+        "light": "var(--dbx-detail-block-tile-size, 28px)"
       },
       "componentScope": "text"
     },
@@ -1379,7 +1512,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-size, 32px)"
+        "light": "var(--dbx-detail-block-tile-size, 28px)"
       },
       "componentScope": "text"
     },

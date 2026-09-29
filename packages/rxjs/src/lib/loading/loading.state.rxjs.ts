@@ -28,8 +28,11 @@ import { filterMaybeStrict } from '../rxjs/value';
 /**
  * Wraps an observable output and maps the value to a {@link LoadingState}.
  *
- * Emits a loading state immediately, then emits a success result when the observable emits a value,
- * or an error result if the observable errors.
+ * Emits a success result when the observable emits a value, or an error result if the observable errors.
+ * If the observable has not emitted within 50ms, a loading state is emitted first.
+ *
+ * When those 50ms pass, the observable is subscribed to again to start it with the loading state. Share an
+ * observable that has side effects, such as one that calls a function, with shareReplay(1) so it only runs once.
  *
  * If firstOnly is provided, it will only take the first value the observable returns.
  *

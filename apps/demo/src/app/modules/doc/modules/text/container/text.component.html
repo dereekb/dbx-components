@@ -196,6 +196,60 @@
         </div>
       </div>
     </doc-feature-example>
+    <doc-feature-example
+      header="dbx-detail-block + .dbx-detail-block-tile"
+      hint="Add the dbx-detail-block-tile class to a dbx-detail-block to restyle the same structure: the icon sits in a round tile beside the content and the header becomes a small uppercase label. Use dbx-detail-block-tile-value and dbx-detail-block-tile-hint for the value and its supporting lines.">
+      <div style="max-width: 400px">
+        <dbx-detail-block class="dbx-detail-block-tile" icon="calendar_month" header="When">
+          <span class="dbx-detail-block-tile-value">09/28/2026 – 11/20/2026</span>
+          <span class="dbx-detail-block-tile-hint">40 days available</span>
+          <span class="dbx-detail-block-tile-hint">Next start: Sep 28, 7:45 AM (in 6 hours)</span>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="schedule" header="Hours">
+          <span class="dbx-detail-block-tile-value">7:45 AM – 3:30 PM</span>
+          <span class="dbx-detail-block-tile-hint">Full day · 8 hrs · MDT</span>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="location_on" header="Location">
+          <span class="dbx-detail-block-tile-value">Northeast High School</span>
+          <span class="dbx-detail-block-tile-hint">4800 Telluride St, Denver</span>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="description" header="About">
+          <span>{{ lorem }}</span>
+        </dbx-detail-block>
+      </div>
+      <p>Content in the [header] slot wraps onto its own line below the label, so it reads as the value. Without a header label the slot content takes the first line.</p>
+      <div style="max-width: 400px">
+        <dbx-detail-block class="dbx-detail-block-tile" icon="email" header="Email">
+          <dbx-anchor header [anchor]="testAnchor">Header slot anchor example</dbx-anchor>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="call">
+          <dbx-anchor header [anchor]="testAnchor">No header label example</dbx-anchor>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" header="No Icon Example">
+          <span>The content stays aligned with the blocks that have an icon.</span>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="attach_money" header="Aligned Header Cost" [alignHeader]="true">
+          <dbx-number-with-limit header [number]="numberLimitC"></dbx-number-with-limit>
+          <span>With alignHeader, the [header] slot content stays on the label's line.</span>
+        </dbx-detail-block>
+      </div>
+      <p>Use [dbxColor] to color the tile and the label. Add [dbxColorTone] for a tonal tile.</p>
+      <div style="max-width: 400px">
+        <dbx-detail-block class="dbx-detail-block-tile" icon="cancel" header="Cancelled" dbxColor="warn" [dbxColorTone]="14">
+          <span class="dbx-detail-block-tile-hint">Tonal warn tile using [dbxColorTone].</span>
+        </dbx-detail-block>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="check" header="Confirmed" dbxColor="success">
+          <span class="dbx-detail-block-tile-hint">Solid success tile.</span>
+        </dbx-detail-block>
+      </div>
+      <div style="max-width: 400px; --dbx-detail-block-tile-size: 40px; --dbx-detail-block-tile-icon-size: 22px; --dbx-detail-block-tile-shape: 8px; --dbx-detail-block-tile-gap: 16px">
+        <p class="dbx-hint">Custom tokens: larger tile (40px), bigger icon (22px), rounded-square shape (8px), wider gap (16px).</p>
+        <dbx-detail-block class="dbx-detail-block-tile" icon="settings" header="Custom Tokens">
+          <span class="dbx-detail-block-tile-value">Styled with --dbx-detail-block-tile-* CSS properties</span>
+          <span class="dbx-detail-block-tile-hint">Set on a parent element.</span>
+        </dbx-detail-block>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header="dbx-step-block" hint="Displays a numbered step badge on the left with content on the right. Supports a [header] content slot for custom header content. When no header or hint is provided, the badge centers vertically with the content.">
       <dbx-step-block [step]="1" header="Create Account" hint="Start by filling in the registration form.">
         <p>Enter your email and password to get started.</p>
