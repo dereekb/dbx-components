@@ -1,4 +1,6 @@
 export * from './mapbox.change.service';
+export * from './mapbox.circle';
+export * from './mapbox.circle.component';
 export * from './mapbox.injection.component';
 export * from './mapbox.injection.store.provide';
 export * from './mapbox.injection.store';

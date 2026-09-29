@@ -6,6 +6,7 @@ import { DbxMapboxMenuComponent } from './mapbox.menu.component';
 import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 import { DbxMapboxMarkersComponent } from './mapbox.markers.component';
+import { DbxMapboxCircleComponent } from './mapbox.circle.component';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
 import { DbxMapboxLayoutVirtualResizeSyncComponent } from './mapbox.layout.resize.sync.directive';
 import { DbxMapboxPopupComponent } from './mapbox.popup.component';
@@ -21,6 +22,7 @@ const importsAndExports = [
   DbxMapboxMenuComponent,
   DbxMapboxMarkerComponent,
   DbxMapboxMarkersComponent,
+  DbxMapboxCircleComponent,
   DbxMapboxPopupComponent,
   DbxMapboxMapStoreInjectionBlockDirective,
   // ngx-mapbox-gl

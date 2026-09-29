@@ -135,7 +135,7 @@
         <ng-template matTabContent>
           <doc-feature-example
             header="Long press"
-            hint="Touch screens cannot right-click, so holding a finger (or the left mouse button) still on the map opens the dbx-mapbox-menu too. The press is cancelled if the pointer moves more than a few pixels, a second finger touches, or the map is zoomed. The hold defaults to 2 seconds; set DbxMapboxConfig.longPress app-wide, or DbxMapboxMapStore.setLongPressConfig() for one map. rightClickEvent$ emits the long press, so existing menus get it for free; use isDbxMapboxLongPressEvent() to tell them apart.">
+            hint="Touch screens cannot right-click, so holding a finger (or the left mouse button) still on the map opens the dbx-mapbox-menu too. The press is cancelled if the pointer moves more than a few pixels, a second finger touches, or the map is zoomed. The hold defaults to 2 seconds; set DbxMapboxConfig.longPress app-wide, or DbxMapboxMapStore.setLongPressConfig() for one map. rightClickEvent$ emits the long press, so existing menus get it for free; use isDbxMapboxLongPressEvent() to tell them apart. Drop Pin Here adds a dbx-mapbox-marker; Measure From Here draws a dbx-mapbox-circle, a circle at a real-world radius (m, km or mi) with an optional label along its edge.">
             <doc-extension-mapbox-long-press-example></doc-extension-mapbox-long-press-example>
           </doc-feature-example>
         </ng-template>
