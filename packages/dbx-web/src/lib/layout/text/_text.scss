@@ -13,6 +13,19 @@ $dbx-detail-block-bottom-padding: var(--dbx-padding-3);
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
+$dbx-detail-block-tile-size: 28px;
+$dbx-detail-block-tile-icon-size: 16px;
+$dbx-detail-block-tile-shape: 50%;
+$dbx-detail-block-tile-font-size: 15px;
+$dbx-detail-block-tile-line-height: 20px;
+$dbx-detail-block-tile-label-font-size: 11px;
+$dbx-detail-block-tile-label-line-height: 15px;
+$dbx-detail-block-tile-label-font-weight: 600;
+$dbx-detail-block-tile-label-letter-spacing: 0.1em;
+$dbx-detail-block-tile-label-gap: 2px;
+$dbx-detail-block-tile-value-font-weight: 700;
+$dbx-detail-block-tile-hint-font-size: 13px;
+$dbx-detail-block-tile-hint-line-height: 18px;
 $dbx-icon-tile-default-icon-size: 24px;
 $dbx-step-block-badge-size: 32px;
 $dbx-step-block-gap: 16px;
@@ -21,6 +34,28 @@ $dbx-step-block-badge-font-size: 14px;
 $dbx-step-block-badge-icon-size: 18px;
 $dbx-step-block-header-font-weight: 500;
 $dbx-step-block-badge-font-weight: 600;
+
+// MARK: Internal
+// The `.dbx-icon-tile` body, shared with surfaces that make an element an icon tile without the class (the
+// `.dbx-detail-block-tile` header icon), so they compose it by setting the `--dbx-icon-tile-*` variables.
+@mixin icon-tile-body() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--dbx-icon-tile-border-radius, var(--mat-sys-corner-medium, 12px));
+  padding: var(--dbx-icon-tile-padding, 8px);
+  width: var(--dbx-icon-tile-width);
+  height: var(--dbx-icon-tile-height);
+  min-width: var(--dbx-icon-tile-min-width);
+  font-size: var(--dbx-icon-tile-font-size);
+  font-weight: var(--dbx-icon-tile-font-weight);
+
+  .mat-icon {
+    width: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+    height: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+    font-size: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+  }
+}
 
 // MARK: Mixin
 @mixin core() {
@@ -162,6 +197,117 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  // Tile styling for `<dbx-detail-block>`. The component only provides the structure (header row + content); this
+  // class restyles that same structure: the header's icon moves into a round tile beside the block, the header label
+  // becomes a small uppercase label, and the `[header]` slot content wraps onto its own line below the label so it
+  // reads as the block's value. Child combinators keep a nested (untiled) detail block inside the content untouched.
+  /// @dbx-utility detail-block-tile
+  /// @intent tile-styled detail block — add to a `<dbx-detail-block>` to draw its icon in a round tile beside the content, show the header as a small uppercase label, and show the `[header]` slot and body content as full-strength text below it. Pair with `.dbx-detail-block-tile-value` / `.dbx-detail-block-tile-hint` for the bold value and muted secondary lines, and with `[dbxColor]` (plus `[dbxColorTone]` for a tonal tile) to color the tile and label. Customize via the `--dbx-detail-block-tile-*` CSS variables.
+  /// @role layout
+  /// @parent detail-block
+  /// @see-also detail-block-tile-value, detail-block-tile-hint, icon-tile
+  .dbx-detail-block-tile {
+    position: relative;
+    min-height: var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size});
+    padding-left: calc(var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size}) + var(--dbx-detail-block-tile-gap, var(--dbx-padding-3)));
+    padding-bottom: var(--dbx-detail-block-tile-padding-bottom, var(--dbx-padding-4));
+    font-size: $dbx-detail-block-tile-font-size;
+    line-height: $dbx-detail-block-tile-line-height;
+    color: var(--dbx-detail-block-tile-text-color, var(--mat-sys-on-surface));
+
+    > .dbx-detail-block-header {
+      flex-wrap: wrap;
+      padding: 0; // the tile column replaces both the bottom padding and the no-icon offset
+
+      // the header icon is the tile itself: it composes the `.dbx-icon-tile` body through the `--dbx-icon-tile-*`
+      // variables, the same way `.dbx-step-block-badge` does, and pins it to the top of the tile column
+      > .mat-icon {
+        --dbx-icon-tile-padding: 0;
+        --dbx-icon-tile-border-radius: var(--dbx-detail-block-tile-shape, #{$dbx-detail-block-tile-shape});
+        --dbx-icon-tile-width: var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size});
+        --dbx-icon-tile-height: var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size});
+        --dbx-icon-tile-min-width: var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size});
+        --dbx-icon-tile-font-size: var(--dbx-detail-block-tile-icon-size, #{$dbx-detail-block-tile-icon-size});
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: var(--dbx-detail-block-tile-background, var(--mat-sys-surface-container-high));
+        color: var(--dbx-detail-block-tile-icon-color, var(--mat-sys-on-surface-variant));
+        @include icon-tile-body();
+      }
+
+      > .dbx-detail-block-header-label {
+        flex-basis: 100%;
+        padding: 0 0 $dbx-detail-block-tile-label-gap;
+        font-size: $dbx-detail-block-tile-label-font-size;
+        line-height: $dbx-detail-block-tile-label-line-height;
+        font-weight: $dbx-detail-block-tile-label-font-weight;
+        letter-spacing: $dbx-detail-block-tile-label-letter-spacing;
+        text-transform: uppercase;
+        color: var(--dbx-detail-block-tile-label-color, var(--mat-sys-outline));
+      }
+    }
+
+    // without a label, the `[header]` slot content is the first line, so center it on the tile
+    > .dbx-detail-block-header:not(:has(> .dbx-detail-block-header-label)) {
+      min-height: var(--dbx-detail-block-tile-size, #{$dbx-detail-block-tile-size});
+    }
+
+    // an aligned header keeps its `[header]` content on the label's line, pushed to the right
+    > .dbx-detail-block-header.dbx-detail-block-header-align {
+      flex-wrap: nowrap;
+
+      > .dbx-detail-block-header-label {
+        flex-basis: auto;
+        padding-bottom: 0;
+      }
+    }
+
+    > .dbx-detail-block-content {
+      padding-left: 0;
+      opacity: 1;
+      font-size: inherit;
+    }
+  }
+
+  // Colored tile. `[dbxColor]` only provides the color tokens (and the `.dbx-color` marker); the tile paints from them
+  // here, the same model (and `:not(.dbx-default)` guard) as `.dbx-icon-tile.dbx-color`. The block's text keeps
+  // `--dbx-detail-block-tile-text-color` so only the tile and the label take the color.
+  .dbx-detail-block-tile.dbx-color:not(.dbx-default) {
+    --dbx-detail-block-tile-label-color: var(#{theming.$dbx-bg-color-var});
+    color: var(--dbx-detail-block-tile-text-color, var(--mat-sys-on-surface)); // outranks the global `.dbx-color-tonal` text color
+
+    > .dbx-detail-block-header > .mat-icon {
+      @include style.dbx-color-surface();
+    }
+
+    &.dbx-color-tonal > .dbx-detail-block-header > .mat-icon {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
+  /// @dbx-utility detail-block-tile-value
+  /// @intent bold value line inside a `.dbx-detail-block-tile` — the headline fact under the label (a date range, a time span, a name)
+  /// @role text
+  /// @parent detail-block-tile
+  /// @see-also detail-block-tile-hint
+  .dbx-detail-block-tile-value {
+    display: block;
+    font-weight: $dbx-detail-block-tile-value-font-weight;
+  }
+
+  /// @dbx-utility detail-block-tile-hint
+  /// @intent muted secondary line inside a `.dbx-detail-block-tile` — smaller supporting text under the value (an address, a day count, a timezone)
+  /// @role text
+  /// @parent detail-block-tile
+  /// @see-also detail-block-tile-value
+  .dbx-detail-block-tile-hint {
+    display: block;
+    font-size: $dbx-detail-block-tile-hint-font-size;
+    line-height: $dbx-detail-block-tile-hint-line-height;
+    color: var(--dbx-detail-block-tile-hint-color, var(--mat-sys-on-surface-variant));
+  }
+
   /// @dbx-utility step-block
   /// @intent step row — `<dbx-step-block>` body that lays out a numbered/iconic badge alongside content with a configurable `--dbx-step-block-gap` and `--dbx-step-block-padding`
   /// @role layout
@@ -199,22 +345,7 @@ $dbx-step-block-badge-font-weight: 600;
   /// @component DbxIconTileComponent
   /// @scope component-class
   .dbx-icon-tile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--dbx-icon-tile-border-radius, var(--mat-sys-corner-medium, 12px));
-    padding: var(--dbx-icon-tile-padding, 8px);
-    width: var(--dbx-icon-tile-width);
-    height: var(--dbx-icon-tile-height);
-    min-width: var(--dbx-icon-tile-min-width);
-    font-size: var(--dbx-icon-tile-font-size);
-    font-weight: var(--dbx-icon-tile-font-weight);
-
-    .mat-icon {
-      width: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
-      height: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
-      font-size: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
-    }
+    @include icon-tile-body();
   }
 
   // Colored tile surface. `[dbxColor]` only provides the color tokens (and the

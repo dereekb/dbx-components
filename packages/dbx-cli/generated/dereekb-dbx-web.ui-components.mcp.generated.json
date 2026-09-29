@@ -2277,7 +2277,7 @@
       "selector": "dbx-detail-block",
       "className": "DbxDetailBlockComponent",
       "module": "@dereekb/dbx-web",
-      "description": "A structured content block with a header row (icon + label) and a detail content area below.\n\nUse the `[header]` content slot for extra header-level content and default content for the detail area.",
+      "description": "A structured content block with a header row (icon + label) and a detail content area below.\n\nUse the `[header]` content slot for extra header-level content and default content for the detail area.\n\nThe component provides the structure only. Add the `dbx-detail-block-tile` class for the tile styling: the icon in a\nround tile beside the content, an uppercase label, and `dbx-detail-block-tile-value` / `dbx-detail-block-tile-hint`\nlines for the value and its supporting text.",
       "inputs": [
         {
           "name": "icon",
