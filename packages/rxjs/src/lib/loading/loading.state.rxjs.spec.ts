@@ -1,9 +1,59 @@
 import { type Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
-import { BehaviorSubject, map, of, first, switchMap, delay } from 'rxjs';
+import { BehaviorSubject, map, of, first, switchMap, delay, defer, shareReplay, lastValueFrom, toArray, type Observable } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { type LoadingState, beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateWithDefinedValue, isLoadingStateLoading, successResult } from './loading.state';
-import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
+import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, loadingStateFromObs, mapLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 import { callbackTest } from '@dereekb/util/test';
+
+describe('loadingStateFromObs()', () => {
+  /**
+   * Source that emits 1 after the given delay and counts how many times it is subscribed to.
+   */
+  function countedSource(delayMs: number) {
+    const counter = { subscriptions: 0 };
+    const source: Observable<number> = defer(() => {
+      counter.subscriptions += 1;
+      return of(1).pipe(delay(delayMs));
+    });
+
+    return { counter, source };
+  }
+
+  it('should emit only the success result when the source emits within 50ms', async () => {
+    const { source } = countedSource(0);
+    const states = await lastValueFrom(loadingStateFromObs(source).pipe(toArray()));
+
+    expect(states.length).toBe(1);
+    expect(states[0].value).toBe(1);
+  });
+
+  it('should emit a loading state before the success result when the source does not emit within 50ms', async () => {
+    const { source } = countedSource(100);
+    const states = await lastValueFrom(loadingStateFromObs(source).pipe(toArray()));
+
+    expect(states.length).toBe(2);
+    expect(isLoadingStateLoading(states[0])).toBe(true);
+    expect(isLoadingStateFinishedLoading(states[1])).toBe(true);
+    expect(states[1].value).toBe(1);
+  });
+
+  it('should subscribe to a shared source once when it does not emit within 50ms', async () => {
+    const { counter, source } = countedSource(100);
+    const states = await lastValueFrom(loadingStateFromObs(source.pipe(shareReplay(1))).pipe(toArray()));
+
+    expect(counter.subscriptions).toBe(1);
+    expect(states.at(-1)?.value).toBe(1);
+  });
+
+  it('should subscribe to an unshared source again when it does not emit within 50ms', async () => {
+    const { counter, source } = countedSource(100);
+    const states = await lastValueFrom(loadingStateFromObs(source).pipe(toArray()));
+
+    // the 50ms timeout re-subscribes to the source to start it with the loading state
+    expect(counter.subscriptions).toBe(2);
+    expect(states.at(-1)?.value).toBe(1);
+  });
+});
 
 describe('mapLoadingState()', () => {
   it(
