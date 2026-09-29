@@ -1,3 +1,18 @@
+# [14.13.0](https://github.com/dereekb/dbx-components/compare/v14.12.0-dev...v14.13.0) (2026-09-29)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([fd12e026](https://github.com/dereekb/dbx-components/commit/fd12e0265032de02d082a9b9ebafc22f157e6ce7))
+
+### Features
+
+- **dbx-web:** add dbx-detail-block-tile styling class ([da7b0f0a](https://github.com/dereekb/dbx-components/commit/da7b0f0a4eb7deb69fc990cf14668be64781b2ff))
+- **demo:** add a grouped To Do list example ([184410ef](https://github.com/dereekb/dbx-components/commit/184410ef63c170386bd9f32896d7de97aef8c894))
+
+### Tests
+
+- **rxjs:** cover loadingStateFromObs() re-subscribing after 50ms ([bdae3fa6](https://github.com/dereekb/dbx-components/commit/bdae3fa6e1af9b0064c1dd9f25e4a7e3466f9b83))
+
 # [14.12.0](https://github.com/dereekb/dbx-components/compare/v14.11.0-dev...v14.12.0) (2026-09-29)
 
 ### Bug Fixes
