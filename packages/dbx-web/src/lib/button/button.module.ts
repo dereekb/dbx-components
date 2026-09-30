@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { DbxButtonComponent } from './button.component';
 import { DbxButtonSpacerDirective } from './button.spacer.directive';
+import { DbxButtonFloatingDirective } from './button.floating.directive';
 import { DbxCoreButtonModule } from '@dereekb/dbx-core';
 import { DbxIconButtonComponent } from './icon';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
@@ -11,6 +12,7 @@ const importsAndExports = [
   // buttons
   DbxButtonComponent,
   DbxButtonSpacerDirective,
+  DbxButtonFloatingDirective,
   // progress
   DbxProgressSpinnerButtonComponent,
   DbxProgressBarButtonComponent

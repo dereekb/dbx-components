@@ -1,7 +1,7 @@
 import type { CustomValidator, DynamicText, ValidationError, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { type Maybe, type WebsiteDomain, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
+import { type Maybe, type WebsiteDomain, type WebsiteUrlRelativePathFunctionsConfig, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails, websiteUrlRelativePathFunctions } from '@dereekb/util';
 import { type DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput } from './field';
-import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
+import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_BASE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY, type IsWebsiteUrlValidatorConfig } from '../../validator/website';
 
 // MARK: Pattern
 /**
@@ -185,6 +185,65 @@ export function dbxForgeWebsiteUrlValidator(config?: DbxForgeWebsiteUrlValidator
     validationMessages: {
       [websiteUrlErrorKind]: resolvedWebsiteUrlMessage,
       [IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY]: resolvedExpectedDomainMessage
+    }
+  };
+}
+
+// MARK: Website With Base Url
+/**
+ * Configuration for {@link dbxForgeWebsiteUrlWithBaseUrlValidator}.
+ */
+export interface DbxForgeWebsiteUrlWithBaseUrlValidatorConfig extends WebsiteUrlRelativePathFunctionsConfig {
+  /**
+   * Optional override for the "is not a website url with the expected base url" error message.
+   */
+  readonly notWebsiteUrlWithExpectedBaseUrlMessage?: DynamicText;
+}
+
+/**
+ * Builds a forge validator input that checks a value is either a website url that starts with the configured base url,
+ * or only the relative path that follows the base url.
+ *
+ * Both forms are accepted so that values saved as either the full url or the relative path validate the same way.
+ *
+ * @param config - The base url, protocol configuration, and custom message.
+ * @returns A validator input with a custom validator and the associated validation message.
+ *
+ * @example
+ * ```ts
+ * instance.addValidation(dbxForgeWebsiteUrlWithBaseUrlValidator({ baseUrl: 'https://linkedin.com/in/' }));
+ * ```
+ */
+export function dbxForgeWebsiteUrlWithBaseUrlValidator(config: DbxForgeWebsiteUrlWithBaseUrlValidatorConfig): DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput {
+  const { notWebsiteUrlWithExpectedBaseUrlMessage } = config;
+  const { baseUrl, readRelativePath, toBaseUrl } = websiteUrlRelativePathFunctions(config);
+  const resolvedMessage = notWebsiteUrlWithExpectedBaseUrlMessage ?? `Value must be a ${baseUrl} url, or just the part after it.`;
+
+  const fn: CustomValidator = (ctx) => {
+    const value = ctx.value() as Maybe<string>;
+    let result: Maybe<ValidationError> = null;
+
+    if (value != null && value !== '') {
+      const reading = readRelativePath(value);
+      const isValid = reading != null && reading.relativePath !== '' && !/\s/.test(reading.relativePath) && isWebsiteUrlWithPrefix(`${toBaseUrl(reading.protocol)}${reading.relativePath}`);
+
+      if (!isValid) {
+        result = { kind: IS_NOT_WEBSITE_URL_WITH_EXPECTED_BASE_URL_VALIDATION_KEY };
+      }
+    }
+
+    return result;
+  };
+
+  return {
+    validators: [
+      {
+        type: 'custom',
+        fn
+      }
+    ],
+    validationMessages: {
+      [IS_NOT_WEBSITE_URL_WITH_EXPECTED_BASE_URL_VALIDATION_KEY]: resolvedMessage
     }
   };
 }

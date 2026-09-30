@@ -33,14 +33,43 @@ export class DocFormTemplateComponent {
       }),
       dbxForgeWebsiteUrlField({
         key: 'websiteWithoutPrefix',
-        label: 'Custom Label (Prefix Not Required)'
+        label: 'Custom Label (Prefix Not Required)',
+        requirePrefix: false
       }),
       dbxForgeWebsiteUrlField({
         key: 'websiteWithRequiredDomain',
-        label: 'Custom Label For Specific Domain (www.google.com)'
+        label: 'Custom Label For Specific Domain (www.google.com)',
+        validDomains: ['www.google.com']
       })
     ]
   };
+
+  readonly forgeWebsiteUrlWithBaseUrlFieldsConfig: FormConfig = {
+    fields: [
+      dbxForgeWebsiteUrlField({
+        key: 'linkedInUrl',
+        label: 'LinkedIn Profile',
+        hint: 'Type your username or paste your profile url. Saves the full url.',
+        baseUrl: 'https://linkedin.com/in/'
+      }),
+      dbxForgeWebsiteUrlField({
+        key: 'linkedInUrlAllowHttp',
+        label: 'LinkedIn Profile (Allow Http)',
+        hint: 'Pasting an http:// url keeps the http:// protocol.',
+        baseUrl: 'https://linkedin.com/in/',
+        allowHttp: true
+      }),
+      dbxForgeWebsiteUrlField({
+        key: 'linkedInUsername',
+        label: 'LinkedIn Username',
+        hint: 'Type your username or paste your profile url. Saves only the username.',
+        baseUrl: 'https://linkedin.com/in/',
+        valueMode: 'relative'
+      })
+    ]
+  };
+
+  readonly websiteUrlWithBaseUrlContent = { linkedInUrl: 'https://www.linkedin.com/in/dereekb/', linkedInUsername: 'dereekb' };
 
   readonly invalidVerifyContent = { username: 'test@test.com', password: 'verify', verifyPassword: 'other' };
 }

@@ -41,7 +41,9 @@ export interface DbxButtonStyle {
    */
   readonly customSpinnerColor?: Maybe<string>;
   /**
-   * Whether to render as a floating action button (FAB).
+   * Whether to render as a Material floating action button (FAB). A button with text renders as an extended FAB.
+   *
+   * Combined with an `icon` type (or `iconOnly`), renders a round icon button instead.
    */
   readonly fab?: Maybe<boolean>;
 }

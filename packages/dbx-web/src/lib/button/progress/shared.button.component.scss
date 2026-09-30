@@ -1,5 +1,6 @@
 :host {
-  button.mat-mdc-button {
+  button.mat-mdc-button,
+  button.mat-mdc-fab-base {
     // align the content
     .button-text {
       display: flex;

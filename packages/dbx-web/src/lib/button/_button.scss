@@ -189,6 +189,90 @@ $big-button-height: 46px; // 33% bigger
     justify-items: center;
   }
 
+  // Floating buttons. Applied by `[dbxButtonFloating]`, or usable directly. The host floats
+  // over the content — sticky (default) pins it to its scroll container's edge while its
+  // parent section is on screen; `.dbx-button-floating-fixed` pins it to the viewport.
+  // Offsets read `--dbx-button-floating-offset-x` / `-y` (set by the directive's offset
+  // inputs), falling back to the shared `--dbx-button-floating-offset`, then `padding-4`.
+  $button-floating-offset: var(--dbx-button-floating-offset, var(--dbx-padding-4));
+  $button-floating-offset-x: var(--dbx-button-floating-offset-x, #{$button-floating-offset});
+  $button-floating-offset-y: var(--dbx-button-floating-offset-y, #{$button-floating-offset});
+
+  /// @dbx-utility button-floating
+  /// @intent float a button (or a wrapper holding several buttons) over the content with `position: sticky` — pinned `offset-y` from the bottom of its scroll container while its parent section is on screen, right-aligned by default. Raised buttons get FAB-level elevation. Compose with `.dbx-button-floating-top` / `-left` / `-center` to reposition, or `.dbx-button-floating-fixed` to pin to the viewport. Sticky breaks when an ancestor between the host and the scroller sets `overflow`. Tune with `--dbx-button-floating-offset` (or `-offset-x` / `-offset-y`) and `--dbx-button-floating-z-index`
+  /// @role layout
+  /// @see-also button-floating-fixed, button-floating-top, button-floating-left, button-floating-center, content-pit-floating-button
+  .dbx-button-floating {
+    position: sticky;
+    z-index: var(--dbx-button-floating-z-index, 10);
+    bottom: $button-floating-offset-y;
+    display: flex;
+    gap: var(--dbx-padding-2);
+    width: fit-content;
+    margin-left: auto;
+
+    // FAB-level elevation for raised buttons so they read as floating above the content
+    --mat-button-protected-container-elevation-shadow: var(--mat-sys-level3);
+    --mat-button-protected-focus-container-elevation-shadow: var(--mat-sys-level3);
+    --mat-button-protected-pressed-container-elevation-shadow: var(--mat-sys-level3);
+    --mat-button-protected-hover-container-elevation-shadow: var(--mat-sys-level4);
+  }
+
+  /// @dbx-utility button-floating-fixed
+  /// @intent pin a `.dbx-button-floating` to the viewport with `position: fixed` — a classic floating action button, `offset-x` / `offset-y` from the bottom-right corner by default (composes with `-top` / `-left` / `-center`). Breaks when an ancestor sets `transform`, `filter` or `contain`, which re-anchors fixed positioning to that ancestor
+  /// @role layout
+  /// @parent button-floating
+  /// @see-also button-floating, button-floating-top, button-floating-left, button-floating-center
+  .dbx-button-floating-fixed {
+    position: fixed;
+    margin: 0;
+    right: $button-floating-offset-x;
+    bottom: $button-floating-offset-y;
+  }
+
+  // The position modifiers below are declared after the base + fixed rules so they win at equal specificity.
+
+  /// @dbx-utility button-floating-top
+  /// @intent pin a `.dbx-button-floating` to the top edge (`offset-y` from the top) instead of the bottom — in sticky mode place the host at the start of its section
+  /// @role layout
+  /// @parent button-floating
+  /// @see-also button-floating, button-floating-left, button-floating-center
+  .dbx-button-floating-top {
+    top: $button-floating-offset-y;
+    bottom: auto;
+  }
+
+  /// @dbx-utility button-floating-left
+  /// @intent align a `.dbx-button-floating` to the left edge instead of the right
+  /// @role layout
+  /// @parent button-floating
+  /// @see-also button-floating, button-floating-top, button-floating-center
+  .dbx-button-floating-left {
+    margin-left: 0;
+    margin-right: auto;
+
+    &.dbx-button-floating-fixed {
+      left: $button-floating-offset-x;
+      right: auto;
+    }
+  }
+
+  /// @dbx-utility button-floating-center
+  /// @intent horizontally center a `.dbx-button-floating` instead of right-aligning it
+  /// @role layout
+  /// @parent button-floating
+  /// @see-also button-floating, button-floating-top, button-floating-left
+  .dbx-button-floating-center {
+    margin-left: auto;
+    margin-right: auto;
+
+    &.dbx-button-floating-fixed {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+  }
+
   // dbx-color interactions
   // `DbxColorDirective` is a pure token provider — it sets `--dbx-bg-color-current` /
   // `--dbx-color-current` and adds the `.dbx-color` marker, but never paints the
@@ -280,6 +364,14 @@ $big-button-height: 46px; // 33% bigger
         --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
         --mat-button-tonal-state-layer-color: #{$contrast-value};
       }
+    }
+
+    // FABs / extended FABs (`fab` without `iconOnly` renders mat-fab, which reads the --mat-fab-* tokens)
+    .mat-mdc-fab-base.dbx-base-button {
+      --mat-fab-container-color: #{$color-value};
+      --mat-fab-foreground-color: #{$contrast-value};
+      --mat-fab-state-layer-color: #{$contrast-value};
+      --mat-fab-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
     }
   }
 

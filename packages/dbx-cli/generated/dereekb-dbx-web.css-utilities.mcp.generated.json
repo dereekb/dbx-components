@@ -585,6 +585,194 @@
       ]
     },
     {
+      "slug": "button-floating",
+      "selector": ".dbx-button-floating",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 205,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "sticky"
+        },
+        {
+          "property": "z-index",
+          "value": "var(--dbx-button-floating-z-index, 10)"
+        },
+        {
+          "property": "bottom",
+          "value": "$button-floating-offset-y"
+        },
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-2)"
+        },
+        {
+          "property": "width",
+          "value": "fit-content"
+        },
+        {
+          "property": "margin-left",
+          "value": "auto"
+        },
+        {
+          "property": "--mat-button-protected-container-elevation-shadow",
+          "value": "var(--mat-sys-level3)"
+        },
+        {
+          "property": "--mat-button-protected-focus-container-elevation-shadow",
+          "value": "var(--mat-sys-level3)"
+        },
+        {
+          "property": "--mat-button-protected-pressed-container-elevation-shadow",
+          "value": "var(--mat-sys-level3)"
+        },
+        {
+          "property": "--mat-button-protected-hover-container-elevation-shadow",
+          "value": "var(--mat-sys-level4)"
+        }
+      ],
+      "role": "layout",
+      "intent": "float a button (or a wrapper holding several buttons) over the content with `position: sticky` — pinned `offset-y` from the bottom of its scroll container while its parent section is on screen, right-aligned by default. Raised buttons get FAB-level elevation. Compose with `.dbx-button-floating-top` / `-left` / `-center` to reposition, or `.dbx-button-floating-fixed` to pin to the viewport. Sticky breaks when an ancestor between the host and the scroller sets `overflow`. Tune with `--dbx-button-floating-offset` (or `-offset-x` / `-offset-y`) and `--dbx-button-floating-z-index`",
+      "seeAlso": [
+        "button-floating-fixed",
+        "button-floating-top",
+        "button-floating-left",
+        "button-floating-center",
+        "content-pit-floating-button"
+      ],
+      "tokensRead": [
+        "--dbx-button-floating-z-index",
+        "--dbx-padding-2",
+        "--mat-sys-level3",
+        "--mat-sys-level4"
+      ],
+      "tokensSet": [
+        "--mat-button-protected-container-elevation-shadow",
+        "--mat-button-protected-focus-container-elevation-shadow",
+        "--mat-button-protected-hover-container-elevation-shadow",
+        "--mat-button-protected-pressed-container-elevation-shadow"
+      ]
+    },
+    {
+      "slug": "button-floating-center",
+      "selector": ".dbx-button-floating-center",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 265,
+      "declarations": [
+        {
+          "property": "margin-left",
+          "value": "auto"
+        },
+        {
+          "property": "margin-right",
+          "value": "auto"
+        }
+      ],
+      "role": "layout",
+      "intent": "horizontally center a `.dbx-button-floating` instead of right-aligning it",
+      "seeAlso": [
+        "button-floating",
+        "button-floating-top",
+        "button-floating-left"
+      ],
+      "parent": "button-floating"
+    },
+    {
+      "slug": "button-floating-fixed",
+      "selector": ".dbx-button-floating-fixed",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 226,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "fixed"
+        },
+        {
+          "property": "margin",
+          "value": "0"
+        },
+        {
+          "property": "right",
+          "value": "$button-floating-offset-x"
+        },
+        {
+          "property": "bottom",
+          "value": "$button-floating-offset-y"
+        }
+      ],
+      "role": "layout",
+      "intent": "pin a `.dbx-button-floating` to the viewport with `position: fixed` — a classic floating action button, `offset-x` / `offset-y` from the bottom-right corner by default (composes with `-top` / `-left` / `-center`). Breaks when an ancestor sets `transform`, `filter` or `contain`, which re-anchors fixed positioning to that ancestor",
+      "seeAlso": [
+        "button-floating",
+        "button-floating-top",
+        "button-floating-left",
+        "button-floating-center"
+      ],
+      "parent": "button-floating"
+    },
+    {
+      "slug": "button-floating-left",
+      "selector": ".dbx-button-floating-left",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 250,
+      "declarations": [
+        {
+          "property": "margin-left",
+          "value": "0"
+        },
+        {
+          "property": "margin-right",
+          "value": "auto"
+        }
+      ],
+      "role": "layout",
+      "intent": "align a `.dbx-button-floating` to the left edge instead of the right",
+      "seeAlso": [
+        "button-floating",
+        "button-floating-top",
+        "button-floating-center"
+      ],
+      "parent": "button-floating"
+    },
+    {
+      "slug": "button-floating-top",
+      "selector": ".dbx-button-floating-top",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 240,
+      "declarations": [
+        {
+          "property": "top",
+          "value": "$button-floating-offset-y"
+        },
+        {
+          "property": "bottom",
+          "value": "auto"
+        }
+      ],
+      "role": "layout",
+      "intent": "pin a `.dbx-button-floating` to the top edge (`offset-y` from the top) instead of the bottom — in sticky mode place the host at the start of its section",
+      "seeAlso": [
+        "button-floating",
+        "button-floating-left",
+        "button-floating-center"
+      ],
+      "parent": "button-floating"
+    },
+    {
       "slug": "button-form-field-height",
       "selector": ".dbx-button-form-field-height",
       "source": "@dereekb/dbx-web",
@@ -1511,7 +1699,7 @@
         }
       ],
       "role": "layout",
-      "intent": "recessed surface pit (\"negative elevation\") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
+      "intent": "recessed surface pit (\"negative elevation\") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`. Draws a thin 1px edge derived from its own background (a translucent ink of the active dbxColor + `on-surface` laid over the fill), so the edge follows dbxColor and background overrides — tune it with `--dbx-content-pit-border-width` (`0` removes it), `--dbx-content-pit-border-tone` (percentage), or `--dbx-content-pit-border-color`",
       "seeAlso": [
         "dbx-content-pit-scrollable",
         "dbx-content-border",

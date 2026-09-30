@@ -48,5 +48,13 @@
         <dbx-error dbxActionError></dbx-error>
       </div>
     </doc-feature-example>
+
+    <doc-feature-example header="Floating Save Button" hint="Pair dbxActionButton with dbxButtonFloating to keep a Save button floating on the page while editing. With dbxActionEnforceModified on the action, the button stays disabled until the form has unsaved changes.">
+      <doc-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified dbxActionSnackbarError>
+        <p>The Save button floats in the bottom-right corner of the page (dbxButtonFloatingMode="fixed"), raised above the docs chat widget with an offsetY, and is only enabled once this form is modified.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsModified]="isFormModified"></doc-action-form-example-form>
+        <dbx-button [dbxButtonFloating]="{ offsetY: 80 }" dbxButtonFloatingMode="fixed" fab color="primary" icon="save" text="Save" dbxActionButton></dbx-button>
+      </doc-action-example-tools>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

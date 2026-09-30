@@ -75,7 +75,7 @@
       "selector": "dbx-button",
       "className": "DbxButtonComponent",
       "module": "@dereekb/dbx-web",
-      "description": "Feature-rich button component that supports loading indicators, multiple Material button styles,\ncustom colors, icons, and floating action button (FAB) mode. Integrates with the dbxAction system\nfor automatic working/disabled state management.",
+      "description": "Feature-rich button component that supports loading indicators, multiple Material button styles,\ncustom colors, icons, and floating action button (FAB / extended FAB) mode. Integrates with the dbxAction system\nfor automatic working/disabled state management.",
       "inputs": [
         {
           "name": "bar",
@@ -165,7 +165,7 @@
         {
           "name": "fab",
           "type": "boolean",
-          "description": "",
+          "description": "Renders a Material FAB, or an extended FAB when the button has text. Combine with {@link iconOnly} for a round icon button.",
           "required": false,
           "default": "false"
         },
@@ -202,6 +202,52 @@
       ],
       "example": "<dbx-button [text]=\"'Save'\" raised [dbxAction]=\"saveAction\">\n</dbx-button>",
       "minimalExample": "<dbx-button text=\"Save\" raised [dbxAction]=\"saveAction\"></dbx-button>"
+    },
+    {
+      "slug": "button-floating",
+      "category": "button",
+      "kind": "directive",
+      "selector": "[dbxButtonFloating]",
+      "className": "DbxButtonFloatingDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Floats its host — typically a `dbx-button` with `dbxActionButton`, or a wrapper holding several buttons — over the content\nby applying the `.dbx-button-floating` utility classes.\n\nIn the default `'sticky'` mode the host stays pinned to the edge of its scroll container while its parent section is on\nscreen, which suits a Save button at the end of a long form. Place the host at the end of its section for bottom positions and\nat the start for top positions. Sticky stops working when an ancestor between the host and the scroll container sets\n`overflow`. In `'fixed'` mode the host is pinned to the viewport; fixed positioning is re-anchored to any ancestor that sets\n`transform`, `filter` or `contain`.\n\nSet `fab` on the `dbx-button` for the Material FAB presentation (an extended FAB when it has text). Pair with\n`dbxActionEnforceModified` on the action to keep a floating Save button disabled until the form has changes.",
+      "inputs": [
+        {
+          "name": "dbxButtonFloating",
+          "type": "Maybe<DbxButtonFloatingConfig | DbxButtonFloatingPosition | ''>",
+          "description": "Config for the floating button, or a {@link DbxButtonFloatingPosition} shorthand. Empty when used as a bare attribute.",
+          "required": false
+        },
+        {
+          "name": "dbxButtonFloatingMode",
+          "type": "Maybe<DbxButtonFloatingMode>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "dbxButtonFloatingPosition",
+          "type": "Maybe<DbxButtonFloatingPosition>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "dbxButtonFloatingOffset",
+          "type": "Maybe<DbxButtonFloatingOffset>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "button",
+        "button-spacer",
+        "content-pit"
+      ],
+      "skillRefs": [
+        "dbx__ref__dbx-ui-building-blocks"
+      ],
+      "example": "<div dbxAction dbxActionEnforceModified [dbxActionHandler]=\"handleSave\">\n  <my-form dbxActionForm></my-form>\n  <dbx-button dbxButtonFloating fab color=\"primary\" icon=\"save\" text=\"Save\" dbxActionButton></dbx-button>\n</div>",
+      "minimalExample": "<dbx-button dbxButtonFloating fab color=\"primary\" icon=\"save\" text=\"Save\" dbxActionButton></dbx-button>"
     },
     {
       "slug": "button-spacer",
@@ -757,7 +803,7 @@
       "selector": "dbx-progress-spinner-button,dbx-spinner-button",
       "className": "DbxProgressSpinnerButtonComponent",
       "module": "@dereekb/dbx-web",
-      "description": "Progress button that overlays a Material progress spinner on the button while working.\nSupports icon-only, FAB, and text button modes with automatic spinner sizing.",
+      "description": "Progress button that overlays a Material progress spinner on the button while working.\nSupports icon-only, FAB, extended FAB, and text button modes with automatic spinner sizing.\n\nA `fab` config renders a Material `mat-fab` — an extended FAB when the button has text — while `fab` + `iconOnly` renders a\nround icon button.",
       "inputs": [
         {
           "name": "config",

@@ -20,7 +20,15 @@ export interface DbxFirebaseStorageFileDownloadUrlPair {
 
 export type DbxFirebaseStorageFileDownloadUrlPairString = `${UnixDateTimeSecondsNumber}_${StorageFileSignedDownloadUrl}`;
 
-export type DbxFirebaseStorageFileDownloadUrlPairsRecord = Record<StorageFileId, DbxFirebaseStorageFileDownloadUrlPairString>;
+/**
+ * Key a cached download url is stored under.
+ *
+ * The StorageFileId for a url minted with the default options, and a variant of it for a url minted with others —
+ * see `dbxFirebaseStorageFileDownloadCacheKey()`.
+ */
+export type DbxFirebaseStorageFileDownloadCacheKey = string;
+
+export type DbxFirebaseStorageFileDownloadUrlPairsRecord = Record<DbxFirebaseStorageFileDownloadCacheKey, DbxFirebaseStorageFileDownloadUrlPairString>;
 
 export interface DbxFirebaseStorageFileDownloadUserCache {
   readonly uid: FirebaseAuthUserId;
@@ -42,7 +50,16 @@ export class DbxFirebaseStorageFileDownloadStorage {
   readonly authService = inject(DbxFirebaseAuthService);
   readonly storageAccessor = inject<StorageAccessor<DbxFirebaseStorageFileDownloadUserCache>>(DBX_FIREBASE_STORAGEFILE_DOWNLOAD_STORAGE_ACCESSOR_TOKEN);
 
-  addDownloadUrl({ id, downloadUrl, expiresAt, mimeType }: DbxFirebaseStorageFileDownloadUrlPair): Observable<void> {
+  /**
+   * Caches the download url pair.
+   *
+   * @param pair - The pair to cache.
+   * @param cacheKey - Key to store the pair under. Defaults to the pair's StorageFileId.
+   * @returns Observable that completes once the pair is stored.
+   */
+  addDownloadUrl(pair: DbxFirebaseStorageFileDownloadUrlPair, cacheKey?: Maybe<DbxFirebaseStorageFileDownloadCacheKey>): Observable<void> {
+    const { id, downloadUrl, expiresAt, mimeType } = pair;
+
     return this.getCurrentUserDownloadCache().pipe(
       mergeMap((cache) => {
         const { uid, pairs: currentPairs } = cache;
@@ -50,7 +67,7 @@ export class DbxFirebaseStorageFileDownloadStorage {
         const storageKey = this.getStorageKeyForUid(uid);
         const pairs: DbxFirebaseStorageFileDownloadUrlPairsRecord = {
           ...currentPairs,
-          [id]: `${expiresAt}_${mimeType}_${downloadUrl}`
+          [cacheKey ?? id]: `${expiresAt}_${mimeType}_${downloadUrl}`
         };
 
         return this.storageAccessor.set(storageKey, {
@@ -68,15 +85,16 @@ export class DbxFirebaseStorageFileDownloadStorage {
    * The pair may be expired.
    *
    * @param input - The Firestore model ID or key identifying the storage file.
+   * @param cacheKey - Key the pair was stored under. Defaults to the StorageFileId.
    * @returns Observable that emits the cached download URL pair, or undefined if not found.
    */
-  getDownloadUrlPair(input: FirestoreModelIdInput): Observable<DbxFirebaseStorageFileDownloadUrlPair | undefined> {
+  getDownloadUrlPair(input: FirestoreModelIdInput, cacheKey?: Maybe<DbxFirebaseStorageFileDownloadCacheKey>): Observable<DbxFirebaseStorageFileDownloadUrlPair | undefined> {
     const id = firestoreModelId(input);
     return this.authService.uid$.pipe(
       switchMap((uid) => {
         return this.getUserDownloadCache(uid).pipe(
           map((cache) => {
-            const pair = cache?.pairs[id];
+            const pair = cache?.pairs[cacheKey ?? id];
 
             let result: DbxFirebaseStorageFileDownloadUrlPair | undefined;
 

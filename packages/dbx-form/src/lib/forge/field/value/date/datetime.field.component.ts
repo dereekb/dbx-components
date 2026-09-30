@@ -133,6 +133,10 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
     .dbx-forge-required-marker {
       color: var(--mat-sys-error, red);
     }
+    .dbx-forge-field-label-disabled,
+    .dbx-forge-field-label-disabled .dbx-forge-required-marker {
+      color: var(--mat-form-field-outlined-disabled-label-text-color, color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent));
+    }
     .dbx-forge-datetime-desc {
       font-size: 12px;
       margin-top: 0;

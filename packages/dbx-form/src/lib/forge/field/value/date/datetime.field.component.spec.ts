@@ -2803,5 +2803,28 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
 
       fixture.destroy();
     });
+
+    it('should mark the field label as disabled while formOptions.disabled is true', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+
+      host.config = createConfig({ key: 'dt', label: 'Start Time', required: false });
+      host.formValue.set({ dt: addHours(startOfDay(new Date()), 10) });
+      await settle(fixture);
+
+      const label = () => fixture.nativeElement.querySelector('.dbx-forge-field-label') as Maybe<HTMLElement>;
+      expect(label()?.textContent).toContain('Start Time');
+      expect(label()?.classList).not.toContain('dbx-forge-field-label-disabled');
+
+      host.formOptions.set({ disabled: true });
+      await settle(fixture);
+      expect(label()?.classList).toContain('dbx-forge-field-label-disabled');
+
+      host.formOptions.set(undefined);
+      await settle(fixture);
+      expect(label()?.classList).not.toContain('dbx-forge-field-label-disabled');
+
+      fixture.destroy();
+    });
   });
 });

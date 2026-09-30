@@ -1,9 +1,13 @@
 :host {
   button {
-    // default to text-button container-height; per-variant overrides below read the matching mat token
-    min-height: var(--mat-button-text-container-height);
-    height: unset; // allow height to expand
     outline: none;
+
+    // default to text-button container-height; per-variant overrides below read the matching mat token.
+    // FABs keep mat-fab's fixed container size.
+    &:not(.mat-mdc-fab-base) {
+      min-height: var(--mat-button-text-container-height);
+      height: unset; // allow height to expand
+    }
 
     &.mat-mdc-unelevated-button {
       min-height: var(--mat-button-filled-container-height);
@@ -65,6 +69,34 @@
       // fix fab icon size
       .mat-mdc-progress-spinner {
         --mat-icon-button-icon-size: 48px;
+      }
+    }
+
+    // Material FAB (`fab` without `iconOnly`) / extended FAB (with text)
+    &.mat-mdc-fab-base {
+      // align by the FAB's middle instead of its content's baseline, so icon and text-only FABs line up inline
+      vertical-align: middle;
+
+      // the FAB icon is replaced by the spinner while working
+      mat-icon.mat-fab-icon {
+        transition: opacity 0.3s ease-in-out;
+
+        &.working {
+          opacity: 0;
+        }
+      }
+
+      // extended FAB leading icon matches mat-fab's 24px icon and 12px icon-label gap
+      mat-icon.mat-button-icon {
+        font-size: 1.5rem;
+        height: 1.5rem;
+        width: 1.5rem;
+        padding-right: 0;
+        margin-right: 12px;
+
+        &.is-mat-icon {
+          left: 0;
+        }
       }
     }
 

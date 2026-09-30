@@ -365,3 +365,25 @@ export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParamete
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition
  */
 export type ContentDispositionString = SuggestedString<'inline' | 'attachment'>;
+
+/**
+ * Whether the content disposition makes the response an attachment, which a browser downloads rather than displays —
+ * even inside an `<embed>` or `<iframe>`.
+ *
+ * @param contentDisposition - The content disposition to check.
+ * @returns Whether it is an `attachment` disposition.
+ */
+export function isAttachmentContentDisposition(contentDisposition: Maybe<ContentDispositionString>): boolean {
+  return contentDisposition != null && /^\s*attachment\s*(;|$)/i.test(contentDisposition);
+}
+
+/**
+ * Returns the `inline` counterpart of a content disposition, keeping its parameters (such as the `filename`).
+ *
+ * @param contentDisposition - The content disposition to convert. Defaults to a bare `inline` when unset.
+ * @returns The disposition with its type replaced by `inline`.
+ */
+export function inlineContentDisposition(contentDisposition: Maybe<ContentDispositionString>): ContentDispositionString {
+  const parametersIndex = contentDisposition?.indexOf(';') ?? -1;
+  return parametersIndex === -1 ? 'inline' : `inline${(contentDisposition as string).slice(parametersIndex)}`;
+}

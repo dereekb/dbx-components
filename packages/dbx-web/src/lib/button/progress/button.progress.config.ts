@@ -84,7 +84,9 @@ export interface DbxProgressButtonConfig {
    */
   readonly buttonTypeAttribute?: Maybe<string>;
   /**
-   * Whether to render as a floating action button (FAB).
+   * Whether to render as a Material floating action button (`mat-fab`). A button with text renders as an extended FAB.
+   *
+   * Combined with {@link iconOnly}, renders a round icon button instead.
    */
   readonly fab?: Maybe<boolean>;
   /**

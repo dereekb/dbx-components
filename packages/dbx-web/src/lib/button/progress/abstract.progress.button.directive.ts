@@ -51,7 +51,10 @@ export abstract class AbstractProgressButtonDirective {
     return completeConfig;
   });
 
-  readonly baseCssClassSignal = computed(() => {
+  /**
+   * CSS classes shared by every button presentation (custom class, full width, disabled), without the Material variant classes.
+   */
+  readonly commonCssClassSignal = computed(() => {
     const config = this.configSignal();
     const classes: CssClass[] = [config?.customClass ?? ''];
 
@@ -62,6 +65,16 @@ export abstract class AbstractProgressButtonDirective {
     if (config?.disabled) {
       classes.push('disabled');
     }
+
+    return classes;
+  });
+
+  /**
+   * {@link commonCssClassSignal} plus the Material variant classes for the configured {@link DbxButtonType}.
+   */
+  readonly baseCssClassSignal = computed(() => {
+    const config = this.configSignal();
+    const classes: CssClass[] = [...this.commonCssClassSignal()];
 
     let buttonType: DbxButtonType = 'basic';
 

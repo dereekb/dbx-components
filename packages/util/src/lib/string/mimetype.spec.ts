@@ -19,7 +19,9 @@ import {
   IMAGE_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
   DOCUMENT_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
   APPLICATION_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
-  CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD
+  CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD,
+  isAttachmentContentDisposition,
+  inlineContentDisposition
 } from './mimetype';
 
 describe('mimeTypeForImageFileExtension()', () => {
@@ -214,5 +216,41 @@ describe('lookup records', () => {
 
   it('CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD should contain expected entries', () => {
     expect(CALENDAR_FILE_EXTENSION_TO_MIME_TYPES_RECORD['ics']).toBe(TEXT_CALENDAR_MIME_TYPE);
+  });
+});
+
+describe('isAttachmentContentDisposition()', () => {
+  it('should return true for an attachment disposition', () => {
+    expect(isAttachmentContentDisposition('attachment')).toBe(true);
+    expect(isAttachmentContentDisposition('attachment; filename="resume.pdf"')).toBe(true);
+    expect(isAttachmentContentDisposition(' Attachment ;filename="resume.pdf"')).toBe(true);
+  });
+
+  it('should return false for an inline disposition', () => {
+    expect(isAttachmentContentDisposition('inline')).toBe(false);
+    expect(isAttachmentContentDisposition('inline; filename="attachment.pdf"')).toBe(false);
+  });
+
+  it('should return false for a type that only starts with attachment', () => {
+    expect(isAttachmentContentDisposition('attachments')).toBe(false);
+  });
+
+  it('should return false when unset', () => {
+    expect(isAttachmentContentDisposition(undefined)).toBe(false);
+    expect(isAttachmentContentDisposition(null)).toBe(false);
+  });
+});
+
+describe('inlineContentDisposition()', () => {
+  it('should keep the parameters of the input disposition', () => {
+    expect(inlineContentDisposition('attachment; filename="resume.pdf"')).toBe('inline; filename="resume.pdf"');
+  });
+
+  it('should return a bare inline disposition for one without parameters', () => {
+    expect(inlineContentDisposition('attachment')).toBe('inline');
+  });
+
+  it('should return a bare inline disposition when unset', () => {
+    expect(inlineContentDisposition(undefined)).toBe('inline');
   });
 });

@@ -760,6 +760,191 @@ export function hasHttpPrefix(input: string): input is BaseWebsiteUrl {
   return HTTP_OR_HTTPS_REGEX.test(input);
 }
 
+// MARK: Website Url Relative Path
+/**
+ * Configuration for {@link websiteUrlRelativePathFunctions}.
+ */
+export interface WebsiteUrlRelativePathFunctionsConfig {
+  /**
+   * The base url that relative paths are relative to.
+   *
+   * A trailing slash is added if it is missing.
+   *
+   * Example: `https://linkedin.com/in/`
+   */
+  readonly baseUrl: WebsiteUrlWithPrefix;
+  /**
+   * Whether or not an input with an `http://` prefix keeps the `http` protocol.
+   *
+   * When false, inputs with an `http://` prefix use the base url's protocol instead. Inputs with an `https://` prefix always keep the `https` protocol.
+   *
+   * Defaults to false.
+   */
+  readonly allowHttp?: Maybe<boolean>;
+}
+
+/**
+ * The result of reading a relative path from an input using {@link WebsiteUrlRelativePathFunctions}.
+ */
+export interface WebsiteUrlRelativePathReading {
+  /**
+   * The relative path, without any query parameters, leading slash, or trailing slash.
+   *
+   * Is an empty string if the input only contained the base url, or only the start of the base url with a protocol (e.g. `https://`).
+   */
+  readonly relativePath: string;
+  /**
+   * The protocol to use for the full url, if the input had a protocol.
+   *
+   * Is the input's protocol when it is allowed, otherwise it is the base url's protocol. Is undefined if the input had no protocol.
+   */
+  readonly protocol?: Maybe<KnownHttpWebsiteProtocol>;
+  /**
+   * Whether or not the input included the base url's domain, as opposed to only the relative path.
+   */
+  readonly hadBaseUrl: boolean;
+}
+
+/**
+ * Functions for converting between a website url that starts with a base url and the relative path that follows the base url.
+ *
+ * Created by {@link websiteUrlRelativePathFunctions}.
+ */
+export interface WebsiteUrlRelativePathFunctions {
+  /**
+   * The normalized base url. Always ends with a slash.
+   */
+  readonly baseUrl: WebsiteUrlWithPrefix;
+  /**
+   * Reads the relative path from the input, which may be a relative path, a url without a protocol, or a full url.
+   *
+   * An input that is only the start of the base url with a protocol (e.g. `https://` or `https://www.linked`) reads as an empty relative path.
+   *
+   * Returns undefined if the input is a url that does not start with the base url.
+   */
+  readonly readRelativePath: (input: string) => Maybe<WebsiteUrlRelativePathReading>;
+  /**
+   * Returns true if the input is the start of the base url, up to and including the whole base url, with or without a protocol.
+   *
+   * Examples for the base url `https://linkedin.com/in/`: `http:`, `https://`, `https://www.linked`, `linkedin.com/i`, `linkedin.com/in/`
+   */
+  readonly isPartialBaseUrl: (input: string) => boolean;
+  /**
+   * Returns the base url using the input protocol if it is allowed, otherwise the base url's protocol.
+   */
+  readonly toBaseUrl: (protocol?: Maybe<KnownHttpWebsiteProtocol>) => WebsiteUrlWithPrefix;
+  /**
+   * Converts the input relative path or url to a full website url.
+   *
+   * Returns undefined if the input is a url that does not start with the base url, or if the relative path is empty.
+   */
+  readonly toWebsiteUrl: (input: string) => Maybe<WebsiteUrlWithPrefix>;
+  /**
+   * Converts the input relative path or url to the relative path.
+   *
+   * Returns undefined if the input is a url that does not start with the base url.
+   */
+  readonly toRelativePath: (input: string) => Maybe<string>;
+}
+
+/**
+ * Creates {@link WebsiteUrlRelativePathFunctions} for the configured base url.
+ *
+ * Inputs may be the relative path (`dereekb`), a url without a protocol (`linkedin.com/in/dereekb`), or a full url (`https://www.linkedin.com/in/dereekb/?trk=abc`).
+ * Domains are compared case-insensitively and a leading `www.` is ignored. Query parameters and trailing slashes are removed from the relative path.
+ *
+ * @param config - The base url and protocol configuration.
+ * @returns Functions for reading relative paths and building full website urls.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, url, path, relative, base, slug, username, profile, factory
+ * @dbxUtilRelated isolate-website-path-function, website-url-details
+ *
+ * @example
+ * ```ts
+ * const linkedIn = websiteUrlRelativePathFunctions({ baseUrl: 'https://linkedin.com/in/' });
+ *
+ * linkedIn.toRelativePath('linkedin.com/in/dereekb'); // 'dereekb'
+ * linkedIn.toWebsiteUrl('dereekb'); // 'https://linkedin.com/in/dereekb'
+ * linkedIn.toWebsiteUrl('https://twitter.com/dereekb'); // undefined
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function websiteUrlRelativePathFunctions(config: WebsiteUrlRelativePathFunctionsConfig): WebsiteUrlRelativePathFunctions {
+  const { baseUrl: inputBaseUrl, allowHttp } = config;
+
+  const baseProtocol: KnownHttpWebsiteProtocol = readWebsiteProtocol(inputBaseUrl)?.toLowerCase() === 'http' ? 'http' : 'https';
+  const { domain: baseDomain, path: inputBasePath } = websiteDomainAndPathPair(removeWebProtocolPrefix(inputBaseUrl));
+  const basePath = inputBasePath.endsWith(SLASH_PATH_SEPARATOR) ? inputBasePath : `${inputBasePath}${SLASH_PATH_SEPARATOR}`;
+  const lowercaseBasePath = basePath.toLowerCase();
+  const baseDomainAndPath = `${baseDomain}${basePath}`;
+
+  const normalizeDomain = (domain: string) => domain.toLowerCase().replace(/^www\./, '');
+  const normalizedBaseDomain = normalizeDomain(baseDomain);
+  const trimSlashes = (path: string) => path.replace(/^\/+/, '').replace(/\/+$/, '');
+  const allowedProtocolOrBaseProtocol = (protocol: Maybe<string>): KnownHttpWebsiteProtocol => (protocol === 'https' || (protocol === 'http' && allowHttp === true) ? protocol : baseProtocol);
+
+  const lowercaseBaseUrlVariants = ['', 'www.'].flatMap((www) => {
+    const domainAndPath = `${www}${normalizedBaseDomain}${lowercaseBasePath}`;
+    return [domainAndPath, `http://${domainAndPath}`, `https://${domainAndPath}`];
+  });
+
+  const isPartialBaseUrl = (input: string): boolean => {
+    const lowercaseInput = input.trim().toLowerCase();
+    return lowercaseInput !== '' && lowercaseBaseUrlVariants.some((variant) => variant.startsWith(lowercaseInput));
+  };
+
+  const toBaseUrl = (protocol?: Maybe<KnownHttpWebsiteProtocol>): WebsiteUrlWithPrefix => `${allowedProtocolOrBaseProtocol(protocol)}://${baseDomainAndPath}`;
+
+  const readRelativePath = (input: string): Maybe<WebsiteUrlRelativePathReading> => {
+    const trimmedInput = input.trim();
+    const inputProtocol = readWebsiteProtocol(trimmedInput)?.toLowerCase();
+    const inputWithoutProtocol = removeWebProtocolPrefix(trimmedInput);
+    const { domain, path: pathWithQuery } = websiteDomainAndPathPair(inputWithoutProtocol);
+    const protocol = inputProtocol == null ? undefined : allowedProtocolOrBaseProtocol(inputProtocol);
+
+    let result: Maybe<WebsiteUrlRelativePathReading>;
+
+    if (protocol != null && isPartialBaseUrl(trimmedInput)) {
+      result = { relativePath: '', protocol, hadBaseUrl: true };
+    } else if (normalizeDomain(domain) === normalizedBaseDomain) {
+      const { path } = websitePathAndQueryPair(pathWithQuery);
+      const pathWithTrailingSlash = path.endsWith(SLASH_PATH_SEPARATOR) ? path : `${path}${SLASH_PATH_SEPARATOR}`;
+
+      if (pathWithTrailingSlash.toLowerCase().startsWith(lowercaseBasePath)) {
+        result = { relativePath: trimSlashes(pathWithTrailingSlash.slice(basePath.length)), protocol, hadBaseUrl: true };
+      }
+    } else {
+      const isOtherUrl = inputProtocol != null || hasUriScheme(trimmedInput) || (hasWebsiteDomain(domain) && inputWithoutProtocol.includes(SLASH_PATH_SEPARATOR));
+
+      if (!isOtherUrl) {
+        result = { relativePath: trimSlashes(websitePathAndQueryPair(trimmedInput).path), protocol, hadBaseUrl: false };
+      }
+    }
+
+    return result;
+  };
+
+  const toWebsiteUrl = (input: string): Maybe<WebsiteUrlWithPrefix> => {
+    const reading = readRelativePath(input);
+    return reading?.relativePath ? `${toBaseUrl(reading.protocol)}${reading.relativePath}` : undefined;
+  };
+
+  const toRelativePath = (input: string): Maybe<string> => readRelativePath(input)?.relativePath;
+
+  return {
+    baseUrl: toBaseUrl(baseProtocol),
+    readRelativePath,
+    isPartialBaseUrl,
+    toBaseUrl,
+    toWebsiteUrl,
+    toRelativePath
+  };
+}
+
 // MARK: MailToUrl
 /**
  * Object representation of a `mailto:` URL.

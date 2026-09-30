@@ -1,7 +1,7 @@
 <div class="dbx-forge-datetime-field-wrapper">
   <!-- Field Label -->
   @if (fieldLabelSignal()) {
-    <span class="dbx-forge-field-label">
+    <span class="dbx-forge-field-label" [class.dbx-forge-field-label-disabled]="isDisabledSignal()">
       {{ fieldLabelSignal() }}
       @if (isRequiredSignal()) {
         <span class="dbx-forge-required-marker">*</span>

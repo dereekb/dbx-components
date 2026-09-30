@@ -1,13 +1,13 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DbxActionDialogDirective, type DbxActionDialogFunction, DbxActionModule, DbxActionSnackbarErrorDirective, DbxAnchorComponent, DbxButtonComponent, type DbxButtonStyle, DbxWebFilePreviewService } from '@dereekb/dbx-web';
 import { firestoreModelId, type StorageFileDownloadUrl, type StorageFileId, type StorageFileKey, type StorageFilePublicDownloadUrl, type StoragePathInput } from '@dereekb/firebase';
-import { type ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, type DateOrUnixDateTimeSecondsNumber, isPast, type Maybe, MS_IN_SECOND } from '@dereekb/util';
-import { DbxFirebaseStorageFileDownloadService, type DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
+import { type ContentTypeMimeType, dateFromDateOrTimeSecondsNumber, type DateOrUnixDateTimeSecondsNumber, inlineContentDisposition, isAttachmentContentDisposition, isPast, type Maybe, MS_IN_SECOND } from '@dereekb/util';
+import { type DbxFirebaseStorageFileDownloadOptions, DbxFirebaseStorageFileDownloadService, type DbxFirebaseStorageFileDownloadServiceCustomSource } from '../service/storagefile.download.service';
 import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type MaybeObservableOrValue, maybeValueFromObservableOrValue, type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, interval, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, interval, map, type Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { type DbxFirebaseStorageFileDownloadUrlPair } from '../service/storagefile.download.storage.service';
 import { MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { isSameDate } from '@dereekb/date';
@@ -68,6 +68,25 @@ export interface DbxFirebaseStorageFileDownloadButtonSource {
    */
   readonly customSource?: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>;
   /**
+   * Options the download url is minted with — e.g. `{ responseDisposition: 'attachment; filename="report.pdf"' }`, so
+   * following the button's anchor saves the file instead of navigating the page to it.
+   *
+   * Passed to the download callable (or the {@link customSource}) in its params, and cached per variant. Ignored by
+   * {@link handleGetDownloadUrl}, which mints the url itself, and by a public storage path, which has no callable.
+   */
+  readonly downloadOptions?: Maybe<DbxFirebaseStorageFileDownloadOptions>;
+  /**
+   * Options the preview mints its own url with, instead of reusing the download url.
+   *
+   * Defaults to the {@link downloadOptions} with an `inline` disposition when those make the url an attachment: an
+   * `<embed>` of an attachment url downloads the file instead of rendering it. Otherwise the preview reuses the
+   * download url.
+   *
+   * A separate preview url is minted through the download service on click (with the {@link customSource} when set),
+   * so the preview button is available as soon as there is a key rather than after the download url is fetched.
+   */
+  readonly previewDownloadOptions?: Maybe<DbxFirebaseStorageFileDownloadOptions>;
+  /**
    * Optional custom work to use to get the download URL.
    *
    * If provided, customSource is ignored.
@@ -78,13 +97,36 @@ export interface DbxFirebaseStorageFileDownloadButtonSource {
    */
   readonly handleGetDownloadUrlSuccess?: (value: DbxFirebaseStorageFileDownloadUrlPair) => void;
   /**
-   * Optional custom error handler for the download URL.
+   * Optional custom error handler for the download URL. Also called when minting a separate preview url fails.
    */
   readonly handleGetDownloadUrlError?: (error: unknown) => void;
   /**
    * Called when the download details change.
    */
   readonly downloadDetailsChangeCallback?: Maybe<(downloadDetails: Maybe<DbxFirebaseStorageFileDownloadDetails>) => void>;
+}
+
+/**
+ * Resolves the options a separate preview url is minted with.
+ *
+ * See {@link DbxFirebaseStorageFileDownloadButtonSource.previewDownloadOptions}.
+ *
+ * @param downloadOptions - The options the download url is minted with.
+ * @param previewDownloadOptions - Explicit options for the preview url, which win when set.
+ * @returns The preview url's options, or undefined when the preview can reuse the download url.
+ */
+export function dbxFirebaseStorageFilePreviewDownloadOptions(downloadOptions: Maybe<DbxFirebaseStorageFileDownloadOptions>, previewDownloadOptions: Maybe<DbxFirebaseStorageFileDownloadOptions>): Maybe<DbxFirebaseStorageFileDownloadOptions> {
+  let result: Maybe<DbxFirebaseStorageFileDownloadOptions> = previewDownloadOptions;
+
+  if (result == null && isAttachmentContentDisposition(downloadOptions?.responseDisposition)) {
+    result = { ...downloadOptions, responseDisposition: inlineContentDisposition(downloadOptions?.responseDisposition) };
+  }
+
+  return result;
+}
+
+function isSameDbxFirebaseStorageFileDownloadOptions(a: Maybe<DbxFirebaseStorageFileDownloadOptions>, b: Maybe<DbxFirebaseStorageFileDownloadOptions>): boolean {
+  return a?.responseDisposition === b?.responseDisposition && a?.responseContentType === b?.responseContentType;
 }
 
 /**
@@ -130,10 +172,17 @@ export interface DbxFirebaseStorageFileDownloadButtonConfig {
       <dbx-button dbxActionButton [allowClickPropagation]="true" [buttonStyle]="buttonStyleSignal()" [icon]="iconSignal()" [text]="textSignal()"></dbx-button>
     </dbx-anchor>
     @if (showPreviewButtonSignal()) {
-      <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue dbxActionSnackbarError>
-        <span class="dbx-button-spacer"></span>
-        <dbx-button dbxActionButton [buttonStyle]="previewButtonStyleSignal()" [icon]="previewIconSignal()" [text]="previewTextSignal()"></dbx-button>
-      </ng-container>
+      <span class="dbx-button-spacer"></span>
+      @if (previewDownloadOptionsSignal()) {
+        <!-- mints the preview's own url on click, then opens the preview with it -->
+        <ng-container dbxAction [dbxActionValue]="storageFileKeySignal()" [dbxActionHandler]="handleOpenSeparatePreview" [dbxActionErrorHandler]="handleGetPreviewUrlError" dbxActionSnackbarError>
+          <dbx-button dbxActionButton [buttonStyle]="previewButtonStyleSignal()" [icon]="previewIconSignal()" [text]="previewTextSignal()"></dbx-button>
+        </ng-container>
+      } @else {
+        <ng-container dbxAction [dbxActionDialog]="handleOpenPreviewDialog" dbxActionHandlerValue dbxActionSnackbarError>
+          <dbx-button dbxActionButton [buttonStyle]="previewButtonStyleSignal()" [icon]="previewIconSignal()" [text]="previewTextSignal()"></dbx-button>
+        </ng-container>
+      }
     }
   `,
   imports: [DbxButtonComponent, DbxActionModule, DbxActionSnackbarErrorDirective, DbxActionDialogDirective, DbxAnchorComponent]
@@ -240,6 +289,12 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   );
 
   readonly storageFileKeySignal = toSignal(this.storageFileKey$);
+
+  readonly downloadOptions$: Observable<Maybe<DbxFirebaseStorageFileDownloadOptions>> = this.source$.pipe(
+    map((source) => source?.downloadOptions),
+    distinctUntilChanged(isSameDbxFirebaseStorageFileDownloadOptions),
+    shareReplay(1)
+  );
 
   readonly hasDownloadUrlSignal = computed(() => Boolean(this.downloadUrlSignal()));
 
@@ -403,11 +458,24 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   });
 
   // Preview
+  /**
+   * Options the preview mints its own url with, or undefined when it reuses the download url.
+   *
+   * Never set for a derived public url, which has no callable to mint a second url with.
+   */
+  readonly previewDownloadOptionsSignal = computed(() => {
+    const source = this.source();
+    return this.usesPublicDownloadUrlSignal() ? undefined : dbxFirebaseStorageFilePreviewDownloadOptions(source?.downloadOptions, source?.previewDownloadOptions);
+  });
+
   readonly showPreviewButtonSignal = computed(() => {
     const showPreviewButton = this.showPreviewButton();
     const config = this.configSignal();
     const hasDownloadUrl = this.hasDownloadUrlSignal();
-    return hasDownloadUrl && (showPreviewButton ?? config.showPreviewButton ?? true);
+    const hasStorageFileKey = this.storageFileKeySignal() != null;
+    // a separate preview url is minted on click, so that preview only needs a key, not the download url
+    const canPreview = this.previewDownloadOptionsSignal() == null ? hasDownloadUrl : hasStorageFileKey;
+    return canPreview && (showPreviewButton ?? config.showPreviewButton ?? true);
   });
 
   readonly openCustomPreviewSignal = computed(() => {
@@ -415,13 +483,34 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     return config.openCustomPreview;
   });
 
-  readonly handleOpenPreviewDialog: DbxActionDialogFunction = () => {
-    const openPreview = this.openCustomPreviewSignal();
+  readonly handleOpenPreviewDialog: DbxActionDialogFunction = () => this._openPreviewDialog(this.downloadUrlSignal() as string, this.downloadMimeTypeSignal());
 
-    const srcUrl = this.downloadUrlSignal() as string;
-    const inputEmbedMimeType = this.embedMimeType();
-    const downloadMimeType = this.downloadMimeTypeSignal();
-    const embedMimeType = inputEmbedMimeType ?? downloadMimeType;
+  /**
+   * Mints (or reads from the cache) the preview's own url, then opens the preview with it.
+   *
+   * @param value - The StorageFileKey to preview.
+   * @param context - The preview action's work context.
+   */
+  readonly handleOpenSeparatePreview: WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey, context: WorkInstance<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>) => {
+    const customSource = this.source()?.customSource;
+    const previewDownloadOptions = this.previewDownloadOptionsSignal();
+
+    context.startWorkingWithObservable(
+      this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource, previewDownloadOptions).pipe(
+        tap((pair) => {
+          this._openPreviewDialog(pair.downloadUrl, pair.mimeType);
+        })
+      )
+    );
+  };
+
+  readonly handleGetPreviewUrlError = (error: unknown) => {
+    this.source()?.handleGetDownloadUrlError?.(error);
+  };
+
+  private _openPreviewDialog(srcUrl: string, mimeType: Maybe<ContentTypeMimeType>): MatDialogRef<unknown> {
+    const openPreview = this.openCustomPreviewSignal();
+    const embedMimeType = this.embedMimeType() ?? mimeType;
 
     return (
       openPreview?.(srcUrl, embedMimeType) ??
@@ -430,12 +519,13 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
         embedMimeType
       })
     );
-  };
+  }
 
   // Cached Url Effect
   // When the key changes, check the cache to see if it is already available, and populate the download url if it is.
-  readonly cachedUrlForStorageFileKey$ = this.storageFileKey$.pipe(
-    switchMap((key) => (key ? this.dbxFirebaseStorageFileDownloadService.getCachedDownloadPairForStorageFile(key) : of(null))),
+  // Reads the variant for the download options, so a url minted with other options is never restored onto the anchor.
+  readonly cachedUrlForStorageFileKey$ = combineLatest([this.storageFileKey$, this.downloadOptions$]).pipe(
+    switchMap(([key, downloadOptions]) => (key ? this.dbxFirebaseStorageFileDownloadService.getCachedDownloadPairForStorageFile(key, downloadOptions) : of(null))),
     shareReplay(1)
   );
 
@@ -521,7 +611,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   // Handlers
   readonly handleGetDownloadUrl: WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey, context: WorkInstance<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>) => {
     const source = this.source();
-    const { customSource, handleGetDownloadUrl } = source ?? {};
+    const { customSource, downloadOptions, handleGetDownloadUrl } = source ?? {};
 
     if (this.derivedPublicDownloadUrlSignal()) {
       // the url is derived on the client and already on the button, so the action has nothing to fetch. It
@@ -530,7 +620,7 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     } else if (handleGetDownloadUrl) {
       handleGetDownloadUrl(value, context);
     } else {
-      context.startWorkingWithObservable(this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource));
+      context.startWorkingWithObservable(this.dbxFirebaseStorageFileDownloadService.downloadPairForStorageFileUsingSource(value, customSource, downloadOptions));
     }
   };
 

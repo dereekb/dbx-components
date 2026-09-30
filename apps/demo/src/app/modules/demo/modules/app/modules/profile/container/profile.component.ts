@@ -1,4 +1,4 @@
-import { type OnInit, Component, inject } from '@angular/core';
+import { type OnInit, Component, computed, inject } from '@angular/core';
 import { type WorkUsingContext, type IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import {
   DbxFirebaseAuthService,
@@ -18,7 +18,7 @@ import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { ProfileResumeState, USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
+import { ProfileResumeState, USER_RESUME_FILE_UPLOADS_FILE_NAME, USER_RESUME_FILE_UPLOADS_MAX_FILE_SIZE_BYTES, userAvatarUploadsFilePath, userResumeFileUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction, TimeDistancePipe } from '@dereekb/dbx-core';
 
@@ -73,6 +73,22 @@ export class DemoProfileViewComponent implements OnInit {
   readonly archiveDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
     storageFileKey: this.profileDocumentStore.zipArchiveStorageFileKey$,
     customSource: dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs((x) => this.profileDocumentStore.downloadArchive({ ...x, key: undefined }))
+  };
+
+  readonly resumeDownloadButtonConfig: DbxFirebaseStorageFileDownloadButtonConfig = {
+    text: 'Start Resume Download',
+    downloadReadyText: 'Save Resume',
+    previewText: 'Preview Resume'
+  };
+
+  /**
+   * The resume downloads as an attachment, so following the saved url never navigates away from this page.
+   *
+   * The preview mints its own `inline` url from these options — an `<embed>` of an attachment url downloads the file
+   * instead of rendering it — so the preview button is available before the download url is fetched.
+   */
+  readonly resumeDownloadSource: DbxFirebaseStorageFileDownloadButtonSource = {
+    downloadOptions: { responseDisposition: `attachment; filename="${USER_RESUME_FILE_UPLOADS_FILE_NAME}"` }
   };
 
   readonly storageService = inject(DbxFirebaseStorageService);
@@ -133,6 +149,7 @@ export class DemoProfileViewComponent implements OnInit {
    * section follows the whole check by streaming the profile it already loads.
    */
   readonly resumeSignal = toSignal(this.profileData$.pipe(map((x) => x.resume)));
+  readonly resumeStorageFileKeySignal = computed(() => this.resumeSignal()?.storageFile);
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 

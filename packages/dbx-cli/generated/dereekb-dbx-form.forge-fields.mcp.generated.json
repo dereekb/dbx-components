@@ -124,6 +124,68 @@
       "configInterface": "DbxForgeUsernameLoginFieldUsernameConfigInput"
     },
     {
+      "slug": "website-url",
+      "factoryName": "dbxForgeWebsiteUrlField",
+      "tier": "field-factory",
+      "produces": "string",
+      "arrayOutput": "no",
+      "description": "Website url input with website url validation.\n\nDefaults to the key `'website'` and label `'Website Url'` unless overridden in the config.\n\nWhen a `baseUrl` is configured (e.g. `'https://linkedin.com/in/'`), the base url is shown as a prefix and the user only types the relative path\nthat follows it (e.g. a username). Pasting a full url, or a url without the protocol, removes the base url from the input. The `valueMode`\ndetermines whether the full url or only the relative path is saved. The `requirePrefix`, `allowPorts`, and `validDomains` validation options\nonly apply when no base url is configured.",
+      "example": "const field = dbxForgeWebsiteUrlField();\nconst linkedInField = dbxForgeWebsiteUrlField({ key: 'linkedIn', label: 'LinkedIn', baseUrl: 'https://linkedin.com/in/' });\nconst linkedInUsernameField = dbxForgeWebsiteUrlField({ key: 'linkedInUsername', label: 'LinkedIn', baseUrl: 'https://linkedin.com/in/', valueMode: 'relative' });",
+      "properties": [
+        {
+          "name": "autocomplete",
+          "type": "FieldAutocompleteAttributeOption",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "notWebsiteUrlMessage",
+          "type": "DynamicText",
+          "description": "Optional override for the \"is not a valid website url\" error message.",
+          "required": false
+        },
+        {
+          "name": "notWebsiteUrlWithPrefixMessage",
+          "type": "DynamicText",
+          "description": "Optional override for the \"is not a valid website url with an http/https prefix\" error message.",
+          "required": false
+        },
+        {
+          "name": "notWebsiteUrlWithExpectedDomainMessage",
+          "type": "DynamicText",
+          "description": "Optional override for the \"is not a valid website url with an expected domain\" error message.",
+          "required": false
+        },
+        {
+          "name": "valueMode",
+          "type": "DbxForgeWebsiteUrlFieldValueMode",
+          "description": "The value saved when a base url is configured.\n\n- `'url'`: the full website url, e.g. `https://linkedin.com/in/dereekb`\n- `'relative'`: only the relative path that follows the base url, e.g. `dereekb`\n\nDefaults to `'url'`.",
+          "required": false
+        },
+        {
+          "name": "notWebsiteUrlWithExpectedBaseUrlMessage",
+          "type": "DynamicText",
+          "description": "Optional override for the \"is not a website url with the expected base url\" error message.\n\nOnly used when a base url is configured.",
+          "required": false
+        },
+        {
+          "name": "type (props)",
+          "type": "DbxForgeTextFieldInputType",
+          "description": "HTML input type. Defaults to `'text'`.",
+          "required": false
+        },
+        {
+          "name": "valueMode (props)",
+          "type": "DbxForgeWebsiteUrlFieldValueMode",
+          "description": "The value saved when a base url is configured.\n\nDefaults to `'url'`.",
+          "required": false
+        }
+      ],
+      "wrapperPattern": "unwrapped",
+      "ngFormType": "websiteurl",
+      "configInterface": "DbxForgeWebsiteUrlFieldConfig"
+    },
+    {
       "slug": "checklist",
       "factoryName": "dbxForgeChecklistField",
       "tier": "field-factory",

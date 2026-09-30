@@ -1,3 +1,18 @@
+# [14.14.0](https://github.com/dereekb/dbx-components/compare/v14.13.0-dev...v14.14.0) (2026-09-30)
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([a1cfaae9](https://github.com/dereekb/dbx-components/commit/a1cfaae97331d9ba0b72dd770a6900a457344978))
+
+### Features
+
+- **dbx-firebase:** download options and inline preview for storagefile ([16b974b3](https://github.com/dereekb/dbx-components/commit/16b974b340a0b01929e5e7db956c36449f9838d3))
+- **dbx-form:** add an Auto option to the timezone field ([04d4a0ad](https://github.com/dereekb/dbx-components/commit/04d4a0ad3b91f80a48957d96f845476523de25ef))
+- **dbx-form:** add websiteurl field with base url slug input ([29ce44d7](https://github.com/dereekb/dbx-components/commit/29ce44d79a06fe324a8508a2acb71cb4ba8843ed))
+- **dbx-form:** allow customizing the timezone Auto option label ([0d825147](https://github.com/dereekb/dbx-components/commit/0d8251477cae5eb2bf3c930e26d54555d6909160))
+- **dbx-web:** add a background-derived border to dbx-content-pit ([1b8137d7](https://github.com/dereekb/dbx-components/commit/1b8137d709ff86a0b03bcdfb2c70864ed66a52e0))
+- **dbx-web:** add dbxButtonFloating and Material FAB rendering ([5bd3ae7e](https://github.com/dereekb/dbx-components/commit/5bd3ae7ec5afb9e017d2601162330bf14e1fa9c9))
+
 # [14.13.0](https://github.com/dereekb/dbx-components/compare/v14.12.0-dev...v14.13.0) (2026-09-29)
 
 ### Build System

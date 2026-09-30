@@ -431,6 +431,58 @@
       "componentScope": "button"
     },
     {
+      "cssVariable": "--dbx-button-floating-offset",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-4)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-4)"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-offset-x",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset x"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-button-floating-offset, var(--dbx-padding-4))`.",
+      "defaults": {
+        "light": "var(--dbx-button-floating-offset, var(--dbx-padding-4))"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-offset-y",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset y"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-button-floating-offset, var(--dbx-padding-4))`.",
+      "defaults": {
+        "light": "var(--dbx-button-floating-offset, var(--dbx-padding-4))"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-z-index",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating z index"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `10`.",
+      "defaults": {
+        "light": "10"
+      },
+      "componentScope": "button"
+    },
+    {
       "cssVariable": "--dbx-button-icon-color",
       "source": "dbx-web",
       "role": "text-color",
@@ -988,6 +1040,45 @@
       "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent)`.",
       "defaults": {
         "light": "color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent)"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-border-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "content pit border color"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} 50%, var(--mat-sys-on-surface)) var(--dbx-content-pit-border-tone, 8%), transparent)`.",
+      "defaults": {
+        "light": "color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} 50%, var(--mat-sys-on-surface)) var(--dbx-content-pit-border-tone, 8%), transparent)"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-border-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content pit border tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-border-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content pit border width"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px`.",
+      "defaults": {
+        "light": "1px"
       },
       "componentScope": "content"
     },

@@ -5,6 +5,7 @@ import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetai
 export const IS_NOT_WEBSITE_URL_VALIDATION_KEY = 'isNotWebsiteUrl';
 export const IS_NOT_WEBSITE_URL_WITH_PREFIX_VALIDATION_KEY = 'isNotWebsiteUrlWithPrefix';
 export const IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOMAIN_VALIDATION_KEY = 'isNotWebsiteUrlWithExpectedDomain';
+export const IS_NOT_WEBSITE_URL_WITH_EXPECTED_BASE_URL_VALIDATION_KEY = 'isNotWebsiteUrlWithExpectedBaseUrl';
 
 export interface IsNotWebsiteUrlErrorData {
   readonly value: string;
