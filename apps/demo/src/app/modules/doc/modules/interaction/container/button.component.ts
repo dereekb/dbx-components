@@ -1,6 +1,19 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type DbxButtonEcho, cleanSubscription } from '@dereekb/dbx-core';
-import { type DbxButtonStyle, type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
+import {
+  type DbxButtonFloatingPosition,
+  type DbxButtonStyle,
+  type DbxProgressButtonConfig,
+  DbxButtonFloatingDirective,
+  DbxContentContainerDirective,
+  DbxButtonComponent,
+  DbxButtonSpacerDirective,
+  DbxColorDirective,
+  DbxProgressSpinnerButtonComponent,
+  DbxProgressBarButtonComponent,
+  DbxContentPitDirective,
+  DbxAnchorComponent
+} from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -30,7 +43,8 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
     DbxProgressSpinnerButtonComponent,
     DbxProgressBarButtonComponent,
     DbxContentPitDirective,
-    DbxAnchorComponent
+    DbxAnchorComponent,
+    DbxButtonFloatingDirective
   ]
 })
 export class DocInteractionButtonComponent {
@@ -271,6 +285,17 @@ export class DocInteractionButtonComponent {
 
   // MARK: Custom Color Demos
   readonly customColorButtonStyle: DbxButtonStyle = { color: { color: '#1877F2', contrast: '#FFF' }, customTextColor: '#FFF' };
+
+  // MARK: Floating Demos
+  readonly floatingFillerParagraphs = Array.from({ length: 14 }, (_, i) => `Paragraph ${i + 1}. Scroll this area to see the floating button stay pinned to the edge of the scroll container, then settle at the end of the content.`);
+  readonly floatingPositions: DbxButtonFloatingPosition[] = ['bottom-right', 'bottom-left', 'bottom-center', 'top-right', 'top-left', 'top-center'];
+  readonly floatingPositionSignal = signal<DbxButtonFloatingPosition>('bottom-right');
+  readonly floatingPositionIsTopSignal = computed(() => this.floatingPositionSignal().startsWith('top-'));
+  readonly showFixedFloatingButtonSignal = signal(false);
+
+  toggleFixedFloatingButton() {
+    this.showFixedFloatingButtonSignal.update((x) => !x);
+  }
 
   constructor() {
     this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));

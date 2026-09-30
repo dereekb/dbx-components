@@ -431,6 +431,58 @@
       "componentScope": "button"
     },
     {
+      "cssVariable": "--dbx-button-floating-offset",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-4)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-4)"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-offset-x",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset x"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-button-floating-offset, var(--dbx-padding-4))`.",
+      "defaults": {
+        "light": "var(--dbx-button-floating-offset, var(--dbx-padding-4))"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-offset-y",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating offset y"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-button-floating-offset, var(--dbx-padding-4))`.",
+      "defaults": {
+        "light": "var(--dbx-button-floating-offset, var(--dbx-padding-4))"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-floating-z-index",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "button floating z index"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `10`.",
+      "defaults": {
+        "light": "10"
+      },
+      "componentScope": "button"
+    },
+    {
       "cssVariable": "--dbx-button-icon-color",
       "source": "dbx-web",
       "role": "text-color",

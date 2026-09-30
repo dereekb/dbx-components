@@ -52,6 +52,26 @@
         <dbx-button icon="settings" fab [iconOnly]="true" [working]="true"></dbx-button>
       </div>
 
+      <h4>fab</h4>
+      <p class="dbx-hint">Without iconOnly, fab renders a Material FAB. Passing text renders an extended FAB.</p>
+      <div class="dbx-button-wrap-group">
+        <dbx-button icon="add" fab></dbx-button>
+        <dbx-button icon="add" fab color="primary"></dbx-button>
+        <dbx-button icon="add" fab color="primary" [working]="true"></dbx-button>
+        <dbx-button icon="add" fab color="accent" [working]="workingPercentSignal()"></dbx-button>
+        <dbx-button icon="add" fab [disabled]="true"></dbx-button>
+      </div>
+
+      <p>(Extended)</p>
+      <div class="dbx-button-wrap-group">
+        <dbx-button icon="edit" text="Edit" fab></dbx-button>
+        <dbx-button icon="save" text="Save" fab color="primary"></dbx-button>
+        <dbx-button icon="save" text="Save" fab color="primary" [working]="true"></dbx-button>
+        <dbx-button icon="save" text="Save" fab color="accent" [working]="workingPercentSignal()"></dbx-button>
+        <dbx-button text="No Icon" fab color="primary"></dbx-button>
+        <dbx-button icon="save" text="Save" fab [disabled]="true"></dbx-button>
+      </div>
+
       <h4>With Colors (and spinning/working)</h4>
       <div class="dbx-button-wrap-group dbx-pb2">
         <dbx-button icon="settings" text="Default Button"></dbx-button>
@@ -317,6 +337,49 @@
         <dbx-progress-bar-button dbxColor="success" (btnClick)="clickBar7()" [config]="barButtonConfig6"></dbx-progress-bar-button>
         <dbx-progress-bar-button dbxColor="ok" (btnClick)="clickBar8()" [config]="barButtonConfig7"></dbx-progress-bar-button>
       </div>
+    </doc-feature-example>
+
+    <doc-feature-example
+      header="dbxButtonFloating"
+      hint="Directive that floats a button (or a wrapper holding several buttons) over the content by applying the .dbx-button-floating classes. The default sticky mode pins it to the edge of its scroll container while its section is on screen; fixed mode pins it to the viewport.">
+      <h4>Sticky (default)</h4>
+      <p>The Save button stays pinned to the bottom-right of the scrolling pit, then rests at the end of the content.</p>
+      <dbx-content-pit [scrollable]="'medium'">
+        <div class="dbx-content-pit-scrollable-content">
+          @for (paragraph of floatingFillerParagraphs; track $index) {
+            <p>{{ paragraph }}</p>
+          }
+          <dbx-button dbxButtonFloating fab color="primary" icon="save" text="Save"></dbx-button>
+        </div>
+      </dbx-content-pit>
+
+      <h4>Positions</h4>
+      <p>Set the edge and alignment with dbxButtonFloatingPosition, or pass the position as the dbxButtonFloating value. A sticky top position belongs at the start of its section, so it pins while the rest of the section scrolls beneath it.</p>
+      <div class="dbx-button-wrap-group">
+        @for (position of floatingPositions; track position) {
+          <dbx-button stroked [color]="floatingPositionSignal() === position ? 'primary' : undefined" [text]="position" (buttonClick)="floatingPositionSignal.set(position)"></dbx-button>
+        }
+      </div>
+      <dbx-content-pit [scrollable]="'medium'">
+        <div class="dbx-content-pit-scrollable-content">
+          @if (floatingPositionIsTopSignal()) {
+            <dbx-button [dbxButtonFloating]="floatingPositionSignal()" fab color="accent" icon="add" text="New"></dbx-button>
+          }
+          @for (paragraph of floatingFillerParagraphs; track $index) {
+            <p>{{ paragraph }}</p>
+          }
+          @if (!floatingPositionIsTopSignal()) {
+            <dbx-button [dbxButtonFloating]="floatingPositionSignal()" fab color="accent" icon="add" text="New"></dbx-button>
+          }
+        </div>
+      </dbx-content-pit>
+
+      <h4>Fixed</h4>
+      <p>dbxButtonFloatingMode="fixed" pins the button to the viewport, using the position selected above. Offsets are set with dbxButtonFloatingOffset or the --dbx-button-floating-offset token.</p>
+      <dbx-button stroked [text]="showFixedFloatingButtonSignal() ? 'Hide Fixed Button' : 'Show Fixed Button'" (buttonClick)="toggleFixedFloatingButton()"></dbx-button>
+      @if (showFixedFloatingButtonSignal()) {
+        <dbx-button [dbxButtonFloating]="floatingPositionSignal()" dbxButtonFloatingMode="fixed" fab color="primary" icon="save" text="Save" (buttonClick)="toggleFixedFloatingButton()"></dbx-button>
+      }
     </doc-feature-example>
 
     <doc-feature-example header="CSS" hint="CSS classes that provide styling support for buttons.">

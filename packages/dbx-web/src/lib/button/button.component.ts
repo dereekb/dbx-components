@@ -12,7 +12,7 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
 
 /**
  * Feature-rich button component that supports loading indicators, multiple Material button styles,
- * custom colors, icons, and floating action button (FAB) mode. Integrates with the dbxAction system
+ * custom colors, icons, and floating action button (FAB / extended FAB) mode. Integrates with the dbxAction system
  * for automatic working/disabled state management.
  *
  * @dbxWebComponent
@@ -118,6 +118,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly stroked = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  /**
+   * Renders a Material FAB, or an extended FAB when the button has text. Combine with {@link iconOnly} for a round icon button.
+   */
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly customContent = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly allowClickPropagation = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
@@ -222,7 +225,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
       hasTextContent,
-      buttonType: buttonType ?? (isIconOnlyButton ? 'icon' : 'basic'),
+      // An icon-only fab renders as a Material FAB rather than falling back to the icon button (set iconOnly for the round icon button).
+      buttonType: buttonType ?? (isIconOnlyButton && !fab ? 'icon' : 'basic'),
       barColor: 'accent',
       mode,
       spinnerColor,
