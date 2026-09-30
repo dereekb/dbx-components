@@ -9,10 +9,12 @@ import type { DbxForgeSearchableTextFieldConfig, DbxForgeSearchableTextFieldDef,
 import { dbxForgeSearchableTextField } from './searchable-text.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, inject } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
 import { DbxForgeFormContext, provideDbxForgeFormContext } from '../../../../forge/form/forge.context';
+import { DbxForgeSearchableTextFieldComponent } from './searchable-text.field.component';
 
 // MARK: Shared Stubs
 const stubSearch = (_text: string) => of([{ value: 'a' }]);
@@ -445,5 +447,60 @@ describe('DbxForgeSearchableTextFieldComponent', () => {
     expect(afterClear?.pick).toBeFalsy();
 
     fixture.destroy();
+  });
+
+  describe('skipDisplayCache', () => {
+    function createPinnedValueSearchableConfig(): FormConfig {
+      return {
+        fields: [
+          dbxForgeSearchableTextField({
+            key: 'pick',
+            label: 'Pinned Value',
+            props: {
+              searchOnEmptyText: true,
+              search: stubSearch,
+              displayForValue: (values: any[]) => of(values.map((v: any) => ({ ...v, label: v.meta?.pinned ? 'Pinned' : v.value })))
+            }
+          } as any) as any
+        ]
+      };
+    }
+
+    async function createSearchableTextComponent(): Promise<{ readonly fixture: ComponentFixture<SearchableTextTestHostComponent>; readonly component: any }> {
+      const fixture = TestBed.createComponent(SearchableTextTestHostComponent);
+      const context = fixture.componentInstance.context;
+      context.requireValid = false;
+      context.config = createPinnedValueSearchableConfig();
+
+      await settle(fixture);
+
+      const component = fixture.debugElement.query(By.directive(DbxForgeSearchableTextFieldComponent)).componentInstance;
+      return { fixture, component };
+    }
+
+    const pinnedValues = [{ value: 'a', meta: { pinned: true }, skipDisplayCache: true }, { value: 'a' }, { value: 'b' }];
+
+    it('should display a value that skips the cache separately from a value that shares its hash', async () => {
+      const { fixture, component } = await createSearchableTextComponent();
+
+      const firstDisplay = await firstValueFrom(component._getDisplayValuesForFieldValues(pinnedValues));
+      expect(firstDisplay.map((x: any) => x.label)).toEqual(['Pinned', 'a', 'b']);
+
+      // second pass reads 'a' and 'b' from the cache
+      const secondDisplay = await firstValueFrom(component._getDisplayValuesForFieldValues(pinnedValues));
+      expect(secondDisplay.map((x: any) => x.label)).toEqual(['Pinned', 'a', 'b']);
+
+      fixture.destroy();
+    });
+
+    it('should not write the display of a value that skips the cache to the cache', async () => {
+      const { fixture, component } = await createSearchableTextComponent();
+
+      await firstValueFrom(component._getDisplayValuesForFieldValues([pinnedValues[0]]));
+      const display = await firstValueFrom(component._getDisplayValuesForFieldValues([{ value: 'a' }]));
+      expect(display[0].label).toBe('a');
+
+      fixture.destroy();
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { type MapFunction, type PrimativeKey } from '@dereekb/util';
+import { type Maybe, type MapFunction, type PrimativeKey } from '@dereekb/util';
 import { type DbxInjectionComponentConfig, type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Observable } from 'rxjs';
 import { type SelectionDisplayValue, type SelectionValue, type SelectionValueHashFunction } from '../selection';
@@ -11,6 +11,12 @@ export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValu
    * Optional anchor metadata on the field.
    */
   readonly anchor?: ClickableAnchor;
+  /**
+   * Whether or not the display for this value should bypass the display cache.
+   *
+   * Displays are cached by the value's hash, so a search result that shares its value with another result but should be displayed differently (i.e. an "Auto" option pinned above the full list) should set this. Its display is then loaded separately and is neither read from nor written to the cache.
+   */
+  readonly skipDisplayCache?: Maybe<boolean>;
 }
 
 /**

@@ -18,7 +18,8 @@ import {
   dbxForgePhoneField,
   dbxForgeAddressGroup,
   dbxForgeAddressListField,
-  dbxForgeValueSelectionField
+  dbxForgeValueSelectionField,
+  dbxForgeTimezoneStringField
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, type Maybe } from '@dereekb/util';
@@ -261,6 +262,10 @@ export class DocFormValueComponent {
         ]
       })
     ]
+  };
+
+  readonly forgeTimezoneStringFieldConfig: FormConfig = {
+    fields: [dbxForgeTimezoneStringField()]
   };
 
   readonly forgePhoneFieldsConfig: FormConfig = {

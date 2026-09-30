@@ -1,9 +1,9 @@
 import { computed, Directive, input, type OnDestroy, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { type PrimativeKey, type Configurable } from '@dereekb/util';
+import { type Maybe, type PrimativeKey, type Configurable } from '@dereekb/util';
 import { type DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { type LoadingState, successResult, startWithBeginLoading } from '@dereekb/rxjs';
-import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../field/selection/searchable/searchable';
@@ -151,9 +151,11 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
     const anchorForValue = useAnchor && p?.anchorForValue;
     const defaultDisplay = mergeDbxInjectionComponentConfigs([DEFAULT_SEARCHABLE_FIELD_DISPLAY, display]);
 
+    type DisplayMapping = [number, H, SearchableValueFieldValue<T, M>, Maybe<ConfiguredSearchableValueFieldDisplayValue<T, M>>];
+
     return this._displayHashMap.pipe(
       mergeMap((displayMap) => {
-        const mappingResult = values.map((x) => [x, hashForValue(x.value)] as [SearchableValueFieldValue<T, M>, H]).map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, SearchableValueFieldValue<T, M>, ConfiguredSearchableValueFieldDisplayValue<T, M>]);
+        const mappingResult = values.map((x) => [x, hashForValue(x.value)] as [SearchableValueFieldValue<T, M>, H]).map(([x, hash], i) => [i, hash, x, x.skipDisplayCache ? undefined : displayMap.get(hash)] as DisplayMapping);
 
         const hasDisplay = mappingResult.filter((x) => Boolean(x[3]));
         const needsDisplay = mappingResult.filter((x) => !x[3]);
@@ -161,33 +163,54 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
         let obs: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>;
 
         if (needsDisplay.length > 0) {
-          const displayValuesObs = displayForValue(needsDisplay.map((x) => x[2]));
+          const loadDisplayValues = (group: DisplayMapping[], cacheResults: boolean): Observable<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>> => {
+            let groupObs: Observable<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>;
 
-          obs = displayValuesObs.pipe(
-            first(),
-            map((displayResults) => {
-              (displayResults as Configurable<SearchableValueFieldDisplayValue<T, M>>[]).forEach((x) => {
-                if (x.display) {
-                  x.display = mergeDbxInjectionComponentConfigs([defaultDisplay, x.display]);
-                } else {
-                  x.display = defaultDisplay;
-                }
+            if (group.length > 0) {
+              groupObs = displayForValue(group.map((x) => x[2])).pipe(
+                first(),
+                map((displayResults) => {
+                  (displayResults as Configurable<SearchableValueFieldDisplayValue<T, M>>[]).forEach((x) => {
+                    if (x.display) {
+                      x.display = mergeDbxInjectionComponentConfigs([defaultDisplay, x.display]);
+                    } else {
+                      x.display = defaultDisplay;
+                    }
 
-                if (!x.anchor && anchorForValue) {
-                  x.anchor = anchorForValue(x);
-                }
-              });
+                    if (!x.anchor && anchorForValue) {
+                      x.anchor = anchorForValue(x);
+                    }
+                  });
 
-              const displayResultsMapping: [ConfiguredSearchableValueFieldDisplayValue<T, M>, H][] = (displayResults as ConfiguredSearchableValueFieldDisplayValue<T, M>[]).map((x) => [x, hashForValue(x.value)]);
-              const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
+                  const displayResultsMapping: [ConfiguredSearchableValueFieldDisplayValue<T, M>, H][] = (displayResults as ConfiguredSearchableValueFieldDisplayValue<T, M>[]).map((x) => [x, hashForValue(x.value)]);
 
-              displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
+                  if (cacheResults) {
+                    displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
+                  }
 
-              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
-            })
+                  return new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
+                })
+              );
+            } else {
+              groupObs = of(new Map());
+            }
+
+            return groupObs;
+          };
+
+          // values that skip the cache are loaded separately so they cannot collide with a result that shares their hash
+          const cachedDisplayValues = loadDisplayValues(
+            needsDisplay.filter((x) => !x[2].skipDisplayCache),
+            true
           );
+          const uncachedDisplayValues = loadDisplayValues(
+            needsDisplay.filter((x) => x[2].skipDisplayCache),
+            false
+          );
+
+          obs = combineLatest([cachedDisplayValues, uncachedDisplayValues]).pipe(map(([cachedHashMap, uncachedHashMap]) => mappingResult.map((x) => (x[3] ?? (x[2].skipDisplayCache ? uncachedHashMap : cachedHashMap).get(x[1])) as ConfiguredSearchableValueFieldDisplayValue<T, M>)));
         } else {
-          obs = of(hasDisplay.map((x) => x[3]));
+          obs = of(hasDisplay.map((x) => x[3] as ConfiguredSearchableValueFieldDisplayValue<T, M>));
         }
 
         return obs;
