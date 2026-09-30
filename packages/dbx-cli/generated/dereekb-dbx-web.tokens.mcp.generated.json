@@ -992,6 +992,45 @@
       "componentScope": "content"
     },
     {
+      "cssVariable": "--dbx-content-pit-border-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "content pit border color"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} 50%, var(--mat-sys-on-surface)) var(--dbx-content-pit-border-tone, 8%), transparent)`.",
+      "defaults": {
+        "light": "color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} 50%, var(--mat-sys-on-surface)) var(--dbx-content-pit-border-tone, 8%), transparent)"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-border-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content pit border tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-border-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "content pit border width"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px`.",
+      "defaults": {
+        "light": "1px"
+      },
+      "componentScope": "content"
+    },
+    {
       "cssVariable": "--dbx-content-pit-opacity",
       "source": "dbx-web",
       "role": "misc",

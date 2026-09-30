@@ -1490,7 +1490,7 @@
         }
       ],
       "role": "layout",
-      "intent": "padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow.",
+      "intent": "padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Draws a thin 1px edge derived from its own background (a translucent ink of the active dbxColor + `on-surface` laid over the fill), so the edge follows dbxColor and background overrides. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow, or `--dbx-content-elevate-border-width` (`0` removes it) / `--dbx-content-elevate-border-tone` (percentage) / `--dbx-content-elevate-border-color` to tune the edge.",
       "seeAlso": [
         "dbx-content-border",
         "dbx-content-pit",
@@ -1511,7 +1511,7 @@
         }
       ],
       "role": "layout",
-      "intent": "recessed surface pit (\"negative elevation\") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
+      "intent": "recessed surface pit (\"negative elevation\") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`. Draws a thin 1px edge derived from its own background (a translucent ink of the active dbxColor + `on-surface` laid over the fill), so the edge follows dbxColor and background overrides — tune it with `--dbx-content-pit-border-width` (`0` removes it), `--dbx-content-pit-border-tone` (percentage), or `--dbx-content-pit-border-color`",
       "seeAlso": [
         "dbx-content-pit-scrollable",
         "dbx-content-border",

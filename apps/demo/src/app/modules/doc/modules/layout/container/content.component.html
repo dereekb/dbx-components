@@ -148,7 +148,13 @@
       <p>
         The pit's recessed wash tints toward the active dbxColor (primary by default). Apply
         <code>dbxColor</code>
-        to the pit (or an ancestor) to shift the recess toward another color context.
+        to the pit (or an ancestor) to shift the recess toward another color context. The thin edge is derived from the background, so it picks up the color too — tune it with
+        <code>--dbx-content-pit-border-width</code>
+        /
+        <code>--dbx-content-pit-border-tone</code>
+        /
+        <code>--dbx-content-pit-border-color</code>
+        .
       </p>
       <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center" class="dbx-mb4">
         <dbx-content-pit dbxColor="primary" style="width: 140px">

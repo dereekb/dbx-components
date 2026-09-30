@@ -63,7 +63,7 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-pit
-  /// @intent recessed surface pit ("negative elevation") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`
+  /// @intent recessed surface pit ("negative elevation") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`. Draws a thin 1px edge derived from its own background (a translucent ink of the active dbxColor + `on-surface` laid over the fill), so the edge follows dbxColor and background overrides — tune it with `--dbx-content-pit-border-width` (`0` removes it), `--dbx-content-pit-border-tone` (percentage), or `--dbx-content-pit-border-color`
   /// @role layout
   /// @see-also dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate, dbx-corners-none
   .dbx-content-pit {
@@ -276,6 +276,22 @@ $dbx-border-opacity-default: 20%;
   // surface where the tonal wash would clash).
   .dbx-content-pit {
     background: var(--dbx-content-pit-bg, color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent));
+  }
+
+  // Pit edge: a thin border that is a tonal step off the pit's own background rather than a fixed
+  // grey — the elevate stays borderless, its bright fill + lift shadow already set it apart. The
+  // border color is a translucent "ink" — the active dbxColor (`--dbx-bg-color-current`) blended
+  // half-and-half with `--mat-sys-on-surface` — at `--dbx-content-pit-border-tone` (default 8%).
+  // Because the background paints under the border (the default `border-box` clip), the edge renders
+  // as that ink laid over the pit's actual fill, so it tracks every background change: an applied
+  // `[dbxColor]` tints the edge more strongly than the fill, a `--dbx-content-pit-bg` override is
+  // followed automatically, and `on-surface` flips the step darker in light themes and lighter in
+  // dark themes. Override `--dbx-content-pit-border-width` for thickness (`0` removes it),
+  // `--dbx-content-pit-border-tone` for strength, or `--dbx-content-pit-border-color` to replace the
+  // color outright. Kept in `:where()` so specificity stays at 0 — any single-class border utility
+  // (`.dbx-color-border`, `.dbx-content-border`) or app class overrides it.
+  :where(.dbx-content-pit) {
+    border: var(--dbx-content-pit-border-width, 1px) solid var(--dbx-content-pit-border-color, color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} 50%, var(--mat-sys-on-surface)) var(--dbx-content-pit-border-tone, 8%), transparent));
   }
 
   // Elevated surface ("positive elevation"): the tonal mirror of the pit. It sits on
