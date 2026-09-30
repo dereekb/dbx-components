@@ -1,9 +1,33 @@
 import { inject, Injectable } from '@angular/core';
-import { StorageFileFunctions, type DownloadStorageFileParams, type StorageFileKey, type StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity, type DownloadStorageFileResult } from '@dereekb/firebase';
+import { StorageFileFunctions, type DownloadStorageFileOptions, type DownloadStorageFileParams, type StorageFileKey, type StorageFileId, firestoreModelId, firestoreModelKey, storageFileIdentity, type DownloadStorageFileResult } from '@dereekb/firebase';
 import { addMilliseconds, type Maybe, type Milliseconds, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, type Seconds, SECONDS_IN_MINUTE, unixDateTimeSecondsNumberForNow, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
-import { DbxFirebaseStorageFileDownloadStorage, type DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
+import { type DbxFirebaseStorageFileDownloadCacheKey, DbxFirebaseStorageFileDownloadStorage, type DbxFirebaseStorageFileDownloadUrlPair } from './storagefile.download.storage.service';
 import { first, firstValueFrom, from, interval, map, type Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 import { type LoadingState, throwErrorFromLoadingStateError, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+
+/**
+ * Options a StorageFile's download url is minted with, beyond its expiration — which the service owns, so it can
+ * cache the result.
+ *
+ * Urls minted with different options are different urls: an `inline` url renders a PDF where an `attachment` url
+ * downloads it. The service caches one url per variant (see {@link dbxFirebaseStorageFileDownloadCacheKey}).
+ */
+export type DbxFirebaseStorageFileDownloadOptions = Pick<DownloadStorageFileOptions, 'responseDisposition' | 'responseContentType'>;
+
+/**
+ * The cache key a StorageFile's download url is stored under for the given options.
+ *
+ * The bare StorageFileId when no options are set, so urls cached before options existed are still found.
+ *
+ * @param storageFileId - The StorageFile the url is for.
+ * @param options - The options the url is minted with.
+ * @returns The cache key.
+ */
+export function dbxFirebaseStorageFileDownloadCacheKey(storageFileId: StorageFileId, options?: Maybe<DbxFirebaseStorageFileDownloadOptions>): DbxFirebaseStorageFileDownloadCacheKey {
+  const responseDisposition = options?.responseDisposition;
+  const responseContentType = options?.responseContentType;
+  return responseDisposition || responseContentType ? `${storageFileId}|${responseDisposition ?? ''}|${responseContentType ?? ''}` : storageFileId;
+}
 
 export type DbxFirebaseStorageFileDownloadServiceCustomSourceDownloadFunction = (params: DownloadStorageFileParams, storageFileId: StorageFileId) => Promise<DownloadStorageFileResult>;
 
@@ -71,12 +95,13 @@ export class DbxFirebaseStorageFileDownloadService {
   /**
    * Returns an observable that returns the cached download URL pair for the StorageFile, and emits null once it expires.
    *
-   * @param storageFileIdOrKey
-   * @returns
+   * @param storageFileIdOrKey - The StorageFile to read the cached url for.
+   * @param options - The options the url was minted with. Each variant is cached separately.
+   * @returns Observable of the cached pair, which emits null once it expires.
    */
-  getCachedDownloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey): Observable<Maybe<DbxFirebaseStorageFileDownloadUrlPair>> {
+  getCachedDownloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey, options?: Maybe<DbxFirebaseStorageFileDownloadOptions>): Observable<Maybe<DbxFirebaseStorageFileDownloadUrlPair>> {
     const storageFileId = firestoreModelId(storageFileIdOrKey);
-    return this.storageFileDownloadStorage.getDownloadUrlPair(storageFileId).pipe(
+    return this.storageFileDownloadStorage.getDownloadUrlPair(storageFileId, dbxFirebaseStorageFileDownloadCacheKey(storageFileId, options)).pipe(
       switchMap((pair) => {
         let result: Observable<Maybe<DbxFirebaseStorageFileDownloadUrlPair>>;
 
@@ -112,15 +137,16 @@ export class DbxFirebaseStorageFileDownloadService {
   }
 
   /**
-   * Retrieves the download URL for the StorageFile using the default parameters.
+   * Retrieves the download URL for the StorageFile using the default source.
    *
    * These URLs are cached locally to prevent extra/redundant calls to the server.
    *
-   * @param storageFileIdOrKey
-   * @returns
+   * @param storageFileIdOrKey - The StorageFile to download.
+   * @param options - Options to mint the url with. Each variant is cached separately.
+   * @returns Observable that emits the cached or freshly downloaded URL pair.
    */
-  downloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
-    return this.downloadPairForStorageFileUsingSource(storageFileIdOrKey, undefined);
+  downloadPairForStorageFile(storageFileIdOrKey: StorageFileId | StorageFileKey, options?: Maybe<DbxFirebaseStorageFileDownloadOptions>): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
+    return this.downloadPairForStorageFileUsingSource(storageFileIdOrKey, undefined, options);
   }
 
   /**
@@ -132,18 +158,19 @@ export class DbxFirebaseStorageFileDownloadService {
    *
    * @param storageFileIdOrKey - The storage file ID or key to download.
    * @param source - Optional custom download source. Falls back to the default internal source if not provided.
+   * @param options - Options to mint the url with, passed to the source in its params. Each variant is cached separately.
    * @returns Observable that emits the cached or freshly downloaded URL pair.
    */
-  downloadPairForStorageFileUsingSource(storageFileIdOrKey: StorageFileId | StorageFileKey, source: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
+  downloadPairForStorageFileUsingSource(storageFileIdOrKey: StorageFileId | StorageFileKey, source: Maybe<DbxFirebaseStorageFileDownloadServiceCustomSource>, options?: Maybe<DbxFirebaseStorageFileDownloadOptions>): Observable<DbxFirebaseStorageFileDownloadUrlPair> {
     const storageFileId = firestoreModelId(storageFileIdOrKey);
-    const obs: Observable<DbxFirebaseStorageFileDownloadUrlPair> = this.getCachedDownloadPairForStorageFile(storageFileId).pipe(
+    const obs: Observable<DbxFirebaseStorageFileDownloadUrlPair> = this.getCachedDownloadPairForStorageFile(storageFileId, options).pipe(
       switchMap((cachedPair) => {
         let result: Observable<DbxFirebaseStorageFileDownloadUrlPair>;
 
         const downloadAndCacheResult = () => {
-          return from(this._createDownloadPairForStorageFileUsingSource(source, storageFileIdOrKey)).pipe(
+          return from(this._createDownloadPairForStorageFileUsingSource(source, storageFileIdOrKey, options ?? undefined)).pipe(
             tap((downloadUrlPair) => {
-              this.addPairForStorageFileToCache(downloadUrlPair);
+              this.addPairForStorageFileToCache(downloadUrlPair, options);
             })
           );
         };
@@ -167,9 +194,10 @@ export class DbxFirebaseStorageFileDownloadService {
    * Adds the given download URL pair to the cache.
    *
    * @param downloadUrlPair - The download URL pair to store in the local cache.
+   * @param options - The options the url was minted with. Each variant is cached separately.
    */
-  addPairForStorageFileToCache(downloadUrlPair: DbxFirebaseStorageFileDownloadUrlPair): void {
-    this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair).pipe(first()).subscribe();
+  addPairForStorageFileToCache(downloadUrlPair: DbxFirebaseStorageFileDownloadUrlPair, options?: Maybe<DbxFirebaseStorageFileDownloadOptions>): void {
+    this.storageFileDownloadStorage.addDownloadUrl(downloadUrlPair, dbxFirebaseStorageFileDownloadCacheKey(downloadUrlPair.id, options)).pipe(first()).subscribe();
   }
 
   /**

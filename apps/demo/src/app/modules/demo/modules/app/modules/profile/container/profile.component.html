@@ -90,6 +90,7 @@
       <div class="dbx-button-column">
         <dbx-firebase-storagefile-download-button [config]="avatarDownloadButtonConfig" [storageFileKey]="avatarStorageFileKeySignal()"></dbx-firebase-storagefile-download-button>
         <dbx-firebase-storagefile-download-button [config]="archiveDownloadButtonConfig" [source]="archiveDownloadSource"></dbx-firebase-storagefile-download-button>
+        <dbx-firebase-storagefile-download-button [config]="resumeDownloadButtonConfig" [storageFileKey]="resumeStorageFileKeySignal()" [source]="resumeDownloadSource"></dbx-firebase-storagefile-download-button>
       </div>
     </dbx-section>
   </dbx-loading>
