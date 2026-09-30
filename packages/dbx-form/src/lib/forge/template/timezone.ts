@@ -1,14 +1,17 @@
 import { type TimezoneString } from '@dereekb/util';
-import { timezoneStringSearchFunction, DISPLAY_FOR_TIMEZONE_STRING_VALUE, type TimezoneStringSearchableValueMeta } from '../../shared/template/timezone';
+import { timezoneStringSearchFunction, timezoneStringDisplayFunction, type TimezoneStringAutoValueConfig, type TimezoneStringSearchableValueMeta } from '../../shared/template/timezone';
 import { dbxForgeSearchableTextField, type DbxForgeSearchableTextFieldConfig } from '../field/selection/searchable/searchable-text.field';
 
 /**
  * Configuration for a forge timezone string field.
  *
- * Omits search-related properties that are internally configured.
+ * Omits search-related properties that are internally configured. The "Auto" option's label can be customized with `autoLabel`.
  */
 export interface DbxForgeTimezoneStringFieldConfig
-  extends Omit<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneStringSearchableValueMeta>, 'key' | 'search' | 'displayForValue' | 'searchOnEmptyText' | 'allowStringValues' | 'showClearValue'>, Partial<Pick<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneStringSearchableValueMeta>, 'key'>> {}
+  extends
+    Omit<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneStringSearchableValueMeta>, 'key' | 'search' | 'displayForValue' | 'searchOnEmptyText' | 'allowStringValues' | 'showClearValue'>,
+    Partial<Pick<DbxForgeSearchableTextFieldConfig<TimezoneString, TimezoneStringSearchableValueMeta>, 'key'>>,
+    TimezoneStringAutoValueConfig {}
 
 /**
  * Creates a forge searchable field for selecting a timezone.
@@ -24,20 +27,24 @@ export interface DbxForgeTimezoneStringFieldConfig
  * ```typescript
  * const field = dbxForgeTimezoneStringField();
  * const fieldWithKey = dbxForgeTimezoneStringField({ key: 'tz', label: 'Select Timezone' });
+ * const fieldWithAutoLabel = dbxForgeTimezoneStringField({ autoLabel: 'Use My Timezone' });
  * ```
  */
 export function dbxForgeTimezoneStringField(config: DbxForgeTimezoneStringFieldConfig = {}) {
+  const { autoLabel, ...fieldConfig } = config;
+  const autoValueConfig: TimezoneStringAutoValueConfig = { autoLabel };
+
   return dbxForgeSearchableTextField<TimezoneString, TimezoneStringSearchableValueMeta>({
     key: 'timezone',
     label: 'Timezone',
-    ...config,
+    ...fieldConfig,
     props: {
-      ...config.props,
+      ...fieldConfig.props,
       searchOnEmptyText: true,
       allowStringValues: false,
       showClearValue: true,
-      search: timezoneStringSearchFunction(),
-      displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
+      search: timezoneStringSearchFunction(autoValueConfig),
+      displayForValue: timezoneStringDisplayFunction(autoValueConfig)
     }
   });
 }

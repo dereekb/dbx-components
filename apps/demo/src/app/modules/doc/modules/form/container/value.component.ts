@@ -265,7 +265,7 @@ export class DocFormValueComponent {
   };
 
   readonly forgeTimezoneStringFieldConfig: FormConfig = {
-    fields: [dbxForgeTimezoneStringField()]
+    fields: [dbxForgeTimezoneStringField(), dbxForgeTimezoneStringField({ key: 'timezoneWithAutoLabel', label: 'Timezone With Custom Auto Label', hint: 'The Auto option label is customized with autoLabel.', autoLabel: 'Use My Timezone' })]
   };
 
   readonly forgePhoneFieldsConfig: FormConfig = {

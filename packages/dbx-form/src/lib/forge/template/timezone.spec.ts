@@ -49,6 +49,20 @@ describe('dbxForgeTimezoneStringField()', () => {
     expect(field.props?.showSelectedValue).toBeUndefined();
   });
 
+  it('should not pass autoLabel through to the field definition', () => {
+    const field = dbxForgeTimezoneStringField({ autoLabel: 'Use My Timezone' });
+    expect('autoLabel' in field).toBe(false);
+  });
+
+  it('should use the autoLabel for the auto option', async () => {
+    const field = dbxForgeTimezoneStringField({ autoLabel: 'Use My Timezone' });
+    const [autoValue] = await firstValueFrom(field.props!.search(''));
+    const [autoDisplay] = await firstValueFrom(field.props!.displayForValue([autoValue]));
+
+    expect(autoValue.meta?.auto).toBe(true);
+    expect(autoDisplay.label).toBe('Use My Timezone');
+  });
+
   it('should work with no arguments', () => {
     expect(() => dbxForgeTimezoneStringField()).not.toThrow();
   });

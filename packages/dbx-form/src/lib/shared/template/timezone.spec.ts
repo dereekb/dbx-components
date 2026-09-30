@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { timezoneInfoForSystem } from '@dereekb/date';
-import { AUTO_TIMEZONE_STRING_VALUE_LABEL, DISPLAY_FOR_TIMEZONE_STRING_VALUE, timezoneStringSearchFunction } from './timezone';
+import { DEFAULT_AUTO_TIMEZONE_STRING_VALUE_LABEL, DISPLAY_FOR_TIMEZONE_STRING_VALUE, timezoneStringDisplayFunction, timezoneStringSearchFunction } from './timezone';
 
 describe('timezoneStringSearchFunction()', () => {
   it('should return results for an empty search string', async () => {
@@ -53,6 +53,18 @@ describe('timezoneStringSearchFunction()', () => {
       expect(results[0].meta?.auto).toBe(true);
     });
 
+    it('should return the auto option first when searching for a custom label', async () => {
+      const searchFn = timezoneStringSearchFunction({ autoLabel: 'Use My Timezone' });
+      const results = await firstValueFrom(searchFn('use my'));
+      expect(results[0].meta?.auto).toBe(true);
+    });
+
+    it('should not return the auto option when searching for the default label while a custom label is configured', async () => {
+      const searchFn = timezoneStringSearchFunction({ autoLabel: 'Use My Timezone' });
+      const results = await firstValueFrom(searchFn('auto'));
+      expect(results.some((x) => x.meta?.auto)).toBe(false);
+    });
+
     it('should not return the auto option for a search that does not match its label', async () => {
       const searchFn = timezoneStringSearchFunction();
       const results = await firstValueFrom(searchFn('America'));
@@ -74,7 +86,27 @@ describe('DISPLAY_FOR_TIMEZONE_STRING_VALUE', () => {
     const results = await firstValueFrom(DISPLAY_FOR_TIMEZONE_STRING_VALUE([autoValue]));
 
     expect(results[0].value).toBe(autoValue.value);
-    expect(results[0].label).toBe(AUTO_TIMEZONE_STRING_VALUE_LABEL);
+    expect(results[0].label).toBe(DEFAULT_AUTO_TIMEZONE_STRING_VALUE_LABEL);
     expect(results[0].sublabel).toContain(autoValue.value);
+  });
+});
+
+describe('timezoneStringDisplayFunction()', () => {
+  it('should label the auto option with the configured auto label', async () => {
+    const autoLabel = 'Use My Timezone';
+    const searchFn = timezoneStringSearchFunction({ autoLabel });
+    const displayFn = timezoneStringDisplayFunction({ autoLabel });
+
+    const [autoValue] = await firstValueFrom(searchFn(''));
+    const results = await firstValueFrom(displayFn([autoValue]));
+
+    expect(results[0].label).toBe(autoLabel);
+    expect(results[0].sublabel).toContain(autoValue.value);
+  });
+
+  it('should not change the label of a regular timezone value', async () => {
+    const displayFn = timezoneStringDisplayFunction({ autoLabel: 'Use My Timezone' });
+    const results = await firstValueFrom(displayFn([{ value: 'America/Chicago' }]));
+    expect(results[0].label).toBe('America/Chicago');
   });
 });
