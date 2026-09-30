@@ -1,8 +1,8 @@
 import type { BaseValueField, DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatInputField, MatInputProps } from '@ng-forge/dynamic-forms-material';
-import { transformStringFunction, type TransformStringFunctionConfig } from '@dereekb/util';
+import { type Building, transformStringFunction, type TransformStringFunctionConfig } from '@dereekb/util';
 import type { FieldAutocompleteAttributeOptionRef } from '../../../../field/field.autocomplete';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeFieldHintValueRef } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeFieldFunctionFieldDefBuilderFunctionInstance, type DbxForgeFieldHintValueRef } from '../../field';
 import { configureForgeAutocompleteFieldMeta } from '../../field.util.meta';
 import { dbxForgeEmailValidator, dbxForgePatternValidator } from '../../field.util.validation';
 
@@ -52,6 +52,48 @@ export interface DbxForgeTextFieldConfig extends DbxForgeFieldFunctionDef<DbxFor
 }
 
 /**
+ * Config properties used by {@link configureForgeTextInputFieldDef}.
+ */
+export type DbxForgeTextInputFieldDefConfig = Pick<DbxForgeTextFieldConfig, 'idempotentTransform' | 'autocomplete' | 'pattern'>;
+
+/**
+ * Configures the shared text input behavior on a forge field definition that holds a string value.
+ *
+ * - Adds the `idempotentTransform` as an idempotent transform logic entry, then removes it from the config.
+ * - Configures the autocomplete attribute meta.
+ * - Adds the `pattern` validation, if a pattern is provided.
+ *
+ * Used by {@link dbxForgeTextField} and other text-based fields.
+ *
+ * @param x - The field definition builder instance.
+ * @param config - The in-progress field config.
+ */
+export function configureForgeTextInputFieldDef<C extends DbxForgeFieldFunctionDef<any> & DbxForgeTextInputFieldDefConfig>(x: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, string>, config: Building<C>): void {
+  const { pattern, idempotentTransform: transform } = config;
+
+  if (transform) {
+    x.addLogic([
+      {
+        type: 'transform',
+        transformType: 'idempotent',
+        transform: transformStringFunction(transform)
+      }
+    ]);
+
+    // remove the idempotentTransform
+    delete config.idempotentTransform;
+  }
+
+  // configure autocomplete
+  x.configure(configureForgeAutocompleteFieldMeta);
+
+  // configure pattern validation
+  if (pattern) {
+    x.addValidation(dbxForgePatternValidator({ pattern }));
+  }
+}
+
+/**
  * Single-line text input. Supports text/email/password input types, autocomplete attribute, regex pattern validation, and idempotent string transforms (trim, case changes, etc.).
  *
  * @param config - Text field configuration including key, label, validation, and transform options
@@ -82,31 +124,10 @@ export const dbxForgeTextField = dbxForgeFieldFunction<DbxForgeTextFieldConfig>(
     type: input.inputType ?? 'text'
   })),
   buildFieldDef: dbxForgeBuildFieldDef<DbxForgeTextFieldConfig, string>((x, config) => {
-    const { pattern, idempotentTransform: transform } = config;
-
-    if (transform) {
-      x.addLogic([
-        {
-          type: 'transform',
-          transformType: 'idempotent',
-          transform: transformStringFunction(transform)
-        }
-      ]);
-
-      // remove the idempotentTransform
-      delete config.idempotentTransform;
-    }
-
     if (config.inputType === 'email') {
       x.addValidation(dbxForgeEmailValidator());
     }
 
-    // configure autocomplete
-    x.configure(configureForgeAutocompleteFieldMeta);
-
-    // configure pattern validation
-    if (pattern) {
-      x.addValidation(dbxForgePatternValidator({ pattern }));
-    }
+    configureForgeTextInputFieldDef(x, config);
   })
 }) as DbxForgeFieldFunction<DbxForgeTextFieldConfig, MatInputField>;

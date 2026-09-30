@@ -20,7 +20,8 @@ import {
   isStandardInternetAccessibleWebsiteUrl,
   websiteUrlDetails,
   hasUriScheme,
-  readUriScheme
+  readUriScheme,
+  websiteUrlRelativePathFunctions
 } from './url';
 
 const domain = 'dereekb.com';
@@ -588,5 +589,202 @@ describe('removeHttpFromUrl()', () => {
   it('should remove https:// from the string', () => {
     const result = removeHttpFromUrl(`https://${domain}`);
     expect(result).toBe(domain);
+  });
+});
+
+describe('websiteUrlRelativePathFunctions()', () => {
+  const baseUrl = 'https://linkedin.com/in/';
+  const linkedIn = websiteUrlRelativePathFunctions({ baseUrl });
+
+  it('should keep the normalized base url', () => {
+    expect(linkedIn.baseUrl).toBe(baseUrl);
+  });
+
+  it('should add a trailing slash to the base url', () => {
+    const github = websiteUrlRelativePathFunctions({ baseUrl: 'https://github.com' });
+    expect(github.baseUrl).toBe('https://github.com/');
+    expect(github.toWebsiteUrl('dereekb')).toBe('https://github.com/dereekb');
+    expect(github.toRelativePath('github.com/dereekb/')).toBe('dereekb');
+  });
+
+  describe('readRelativePath()', () => {
+    it('should read a relative path', () => {
+      expect(linkedIn.readRelativePath('dereekb')).toEqual({ relativePath: 'dereekb', protocol: undefined, hadBaseUrl: false });
+    });
+
+    it('should read a relative path with a leading slash', () => {
+      expect(linkedIn.readRelativePath('/dereekb')?.relativePath).toBe('dereekb');
+    });
+
+    it('should read a relative path that contains a period', () => {
+      expect(linkedIn.readRelativePath('john.doe')?.relativePath).toBe('john.doe');
+    });
+
+    it('should trim the input', () => {
+      expect(linkedIn.readRelativePath('  dereekb  ')?.relativePath).toBe('dereekb');
+    });
+
+    it('should read an empty relative path from an empty input', () => {
+      expect(linkedIn.readRelativePath('')).toEqual({ relativePath: '', protocol: undefined, hadBaseUrl: false });
+    });
+
+    it('should read the relative path from a url without a protocol', () => {
+      expect(linkedIn.readRelativePath('linkedin.com/in/dereekb')).toEqual({ relativePath: 'dereekb', protocol: undefined, hadBaseUrl: true });
+    });
+
+    it('should read the relative path from a url with www and a trailing slash', () => {
+      expect(linkedIn.readRelativePath('www.linkedin.com/in/dereekb/')?.relativePath).toBe('dereekb');
+    });
+
+    it('should read the relative path from a full url with query parameters', () => {
+      expect(linkedIn.readRelativePath('https://www.linkedin.com/in/dereekb/?trk=abc')?.relativePath).toBe('dereekb');
+    });
+
+    it('should compare the domain and base path case-insensitively', () => {
+      expect(linkedIn.readRelativePath('https://WWW.LinkedIn.com/IN/Dereekb')?.relativePath).toBe('Dereekb');
+    });
+
+    it('should read an empty relative path from the base url', () => {
+      expect(linkedIn.readRelativePath('https://linkedin.com/in')).toEqual({ relativePath: '', protocol: 'https', hadBaseUrl: true });
+    });
+
+    it('should return undefined for a url on the base domain with a different path', () => {
+      expect(linkedIn.readRelativePath('linkedin.com/company/dereekb')).toBeUndefined();
+    });
+
+    it('should return undefined for a url on a different domain', () => {
+      expect(linkedIn.readRelativePath('https://twitter.com/dereekb')).toBeUndefined();
+    });
+
+    it('should return undefined for a url on a different domain without a protocol', () => {
+      expect(linkedIn.readRelativePath('twitter.com/dereekb')).toBeUndefined();
+    });
+
+    it('should return undefined for an input with a uri scheme', () => {
+      expect(linkedIn.readRelativePath('mailto:dereekb')).toBeUndefined();
+    });
+
+    it('should use the base protocol for an http url when http is not allowed', () => {
+      expect(linkedIn.readRelativePath('http://linkedin.com/in/dereekb')?.protocol).toBe('https');
+    });
+
+    it('should keep the http protocol when http is allowed', () => {
+      const linkedInAllowHttp = websiteUrlRelativePathFunctions({ baseUrl, allowHttp: true });
+      expect(linkedInAllowHttp.readRelativePath('http://linkedin.com/in/dereekb')?.protocol).toBe('http');
+    });
+
+    it('should read an empty relative path from only a protocol', () => {
+      expect(linkedIn.readRelativePath('http://')).toEqual({ relativePath: '', protocol: 'https', hadBaseUrl: true });
+      expect(linkedIn.readRelativePath('https://')).toEqual({ relativePath: '', protocol: 'https', hadBaseUrl: true });
+    });
+
+    it('should read the http protocol from only a protocol when http is allowed', () => {
+      const linkedInAllowHttp = websiteUrlRelativePathFunctions({ baseUrl, allowHttp: true });
+      expect(linkedInAllowHttp.readRelativePath('http://')).toEqual({ relativePath: '', protocol: 'http', hadBaseUrl: true });
+    });
+
+    it('should read an empty relative path from the start of the base url with a protocol', () => {
+      expect(linkedIn.readRelativePath('https://www.linked')).toEqual({ relativePath: '', protocol: 'https', hadBaseUrl: true });
+      expect(linkedIn.readRelativePath('https://linkedin.com')).toEqual({ relativePath: '', protocol: 'https', hadBaseUrl: true });
+    });
+
+    it('should return undefined for the start of the base url without a protocol', () => {
+      expect(linkedIn.readRelativePath('linkedin.com/i')).toBeUndefined();
+    });
+
+    it('should not have a protocol for an input without a protocol', () => {
+      expect(linkedIn.readRelativePath('www.linkedin.com/in/dereekb')?.protocol).toBeUndefined();
+    });
+
+    it('should keep the https protocol when the base url uses http', () => {
+      const httpBase = websiteUrlRelativePathFunctions({ baseUrl: 'http://linkedin.com/in/' });
+      expect(httpBase.readRelativePath('https://linkedin.com/in/dereekb')?.protocol).toBe('https');
+      expect(httpBase.toWebsiteUrl('dereekb')).toBe('http://linkedin.com/in/dereekb');
+    });
+  });
+
+  describe('isPartialBaseUrl()', () => {
+    it('should return true for the start of the base url with a protocol', () => {
+      expect(linkedIn.isPartialBaseUrl('h')).toBe(true);
+      expect(linkedIn.isPartialBaseUrl('http:')).toBe(true);
+      expect(linkedIn.isPartialBaseUrl('http://')).toBe(true);
+      expect(linkedIn.isPartialBaseUrl('https://www.linked')).toBe(true);
+      expect(linkedIn.isPartialBaseUrl('HTTPS://LinkedIn.com/in/')).toBe(true);
+    });
+
+    it('should return true for the start of the base url without a protocol', () => {
+      expect(linkedIn.isPartialBaseUrl('linkedin.com/i')).toBe(true);
+      expect(linkedIn.isPartialBaseUrl('www.linkedin.com/in/')).toBe(true);
+    });
+
+    it('should return false for an input that continues past the base url', () => {
+      expect(linkedIn.isPartialBaseUrl('linkedin.com/in/dereekb')).toBe(false);
+    });
+
+    it('should return false for an input that is not the start of the base url', () => {
+      expect(linkedIn.isPartialBaseUrl('dereekb')).toBe(false);
+      expect(linkedIn.isPartialBaseUrl('https://twitter.com')).toBe(false);
+    });
+
+    it('should return false for an empty input', () => {
+      expect(linkedIn.isPartialBaseUrl('')).toBe(false);
+    });
+  });
+
+  describe('toBaseUrl()', () => {
+    it('should return the base url for no protocol', () => {
+      expect(linkedIn.toBaseUrl()).toBe(baseUrl);
+    });
+
+    it('should return the base url with the base protocol when http is not allowed', () => {
+      expect(linkedIn.toBaseUrl('http')).toBe(baseUrl);
+    });
+
+    it('should return the base url with the http protocol when http is allowed', () => {
+      const linkedInAllowHttp = websiteUrlRelativePathFunctions({ baseUrl, allowHttp: true });
+      expect(linkedInAllowHttp.toBaseUrl('http')).toBe('http://linkedin.com/in/');
+    });
+  });
+
+  describe('toWebsiteUrl()', () => {
+    it('should convert a relative path to a website url', () => {
+      expect(linkedIn.toWebsiteUrl('dereekb')).toBe('https://linkedin.com/in/dereekb');
+    });
+
+    it('should convert a url without a protocol to a website url', () => {
+      expect(linkedIn.toWebsiteUrl('linkedin.com/in/dereekb')).toBe('https://linkedin.com/in/dereekb');
+    });
+
+    it('should canonicalize www to the base url domain', () => {
+      expect(linkedIn.toWebsiteUrl('https://www.linkedin.com/in/dereekb/?trk=abc')).toBe('https://linkedin.com/in/dereekb');
+    });
+
+    it('should use the https protocol for an http url when http is not allowed', () => {
+      expect(linkedIn.toWebsiteUrl('http://linkedin.com/in/dereekb')).toBe('https://linkedin.com/in/dereekb');
+    });
+
+    it('should keep the http protocol when http is allowed', () => {
+      const linkedInAllowHttp = websiteUrlRelativePathFunctions({ baseUrl, allowHttp: true });
+      expect(linkedInAllowHttp.toWebsiteUrl('http://www.linkedin.com/in/dereekb/')).toBe('http://linkedin.com/in/dereekb');
+    });
+
+    it('should return undefined for an empty relative path', () => {
+      expect(linkedIn.toWebsiteUrl('')).toBeUndefined();
+      expect(linkedIn.toWebsiteUrl('https://linkedin.com/in/')).toBeUndefined();
+    });
+
+    it('should return undefined for a url on a different domain', () => {
+      expect(linkedIn.toWebsiteUrl('https://twitter.com/dereekb')).toBeUndefined();
+    });
+  });
+
+  describe('toRelativePath()', () => {
+    it('should convert a website url to the relative path', () => {
+      expect(linkedIn.toRelativePath('https://linkedin.com/in/dereekb')).toBe('dereekb');
+    });
+
+    it('should return undefined for a url on a different domain', () => {
+      expect(linkedIn.toRelativePath('https://twitter.com/dereekb')).toBeUndefined();
+    });
   });
 });

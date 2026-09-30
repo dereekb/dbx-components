@@ -1,0 +1,28 @@
+<mat-form-field [appearance]="appearanceSignal()" [subscriptSizing]="subscriptSizingSignal()" [floatLabel]="floatLabelSignal()" [hideRequiredMarker]="hideRequiredMarkerSignal()" class="dbx-forge-websiteurl-field">
+  @if (label()) {
+    <mat-label>{{ label() | dynamicText | async }}</mat-label>
+  }
+  @if (prefixSignal(); as prefix) {
+    <span matTextPrefix class="dbx-forge-websiteurl-field-prefix">{{ prefix }}</span>
+  }
+  <input
+    matInput
+    [id]="inputIdSignal()"
+    [type]="inputTypeSignal()"
+    [formControl]="textCtrl"
+    [errorStateMatcher]="errorStateMatcher"
+    [required]="isRequiredSignal()"
+    [readonly]="isReadonlySignal()"
+    [placeholder]="(placeholder() | dynamicText | async) ?? ''"
+    [attr.tabindex]="tabIndex()"
+    [attr.aria-invalid]="ariaInvalidSignal()"
+    [attr.aria-required]="ariaRequiredSignal()"
+    [attr.aria-describedby]="ariaDescribedBySignal()"
+    (blur)="onBlur()"
+    (paste)="onPaste($event)" />
+  @if (errorsToDisplaySignal()[0]; as error) {
+    <mat-error [id]="errorIdSignal()">{{ error.message }}</mat-error>
+  } @else if (props()?.hint; as hint) {
+    <mat-hint [id]="hintIdSignal()">{{ hint | dynamicText | async }}</mat-hint>
+  }
+</mat-form-field>

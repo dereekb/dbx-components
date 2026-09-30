@@ -6,12 +6,14 @@ import { dateTimeFieldMapper } from './field/value/date/datetime.field.component
 import { fixedDateRangeFieldMapper } from './field/value/date/fixeddaterange.field.component';
 import { dateRangeFieldMapper } from './field/value/date/daterange.field.component';
 import { timeDurationFieldMapper } from './field/value/duration/duration.field.component';
+import { websiteUrlFieldMapper } from './field/value/website/website.field.component';
 import {
   FORGE_PHONE_FIELD_TYPE,
   FORGE_DATETIME_FIELD_TYPE,
   FORGE_FIXEDDATERANGE_FIELD_TYPE,
   FORGE_DATERANGE_FIELD_TYPE,
   FORGE_TIMEDURATION_FIELD_TYPE,
+  FORGE_WEBSITE_URL_FIELD_TYPE,
   DBX_FORGE_SEARCHABLE_TEXT_FIELD_TYPE_NAME,
   DBX_FORGE_SEARCHABLE_CHIP_FIELD_TYPE_NAME,
   FORGE_PICKABLE_CHIP_FIELD_TYPE,
@@ -62,6 +64,11 @@ export const DBX_FORGE_FIELD_TYPES: FieldTypeDefinition[] = [
     name: FORGE_TIMEDURATION_FIELD_TYPE,
     loadComponent: () => import('./field/value/duration/duration.field.component').then((m) => m.DbxForgeTimeDurationFieldComponent),
     mapper: timeDurationFieldMapper
+  },
+  {
+    name: FORGE_WEBSITE_URL_FIELD_TYPE,
+    loadComponent: () => import('./field/value/website/website.field.component').then((m) => m.DbxForgeWebsiteUrlFieldComponent),
+    mapper: websiteUrlFieldMapper
   },
   // -- Selection fields --
   {
@@ -163,7 +170,7 @@ export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
 
 /**
  * Registers ng-forge dynamic form field declarations with Material Design field types
- * and custom dbx field types (phone, datetime, fixeddaterange, timeduration,
+ * and custom dbx field types (phone, datetime, fixeddaterange, timeduration, website url,
  * searchable text, searchable chip, text editor, component).
  *
  * Pass additional field types from extension packages (e.g. `DBX_FORGE_CALENDAR_FIELD_TYPES`,

@@ -23,8 +23,14 @@
     </doc-feature-example>
     <doc-feature-example header="websiteUrlField()" hint="Creates field configurations pre-configured for a website url.">
       <h4>Website Url</h4>
-      <doc-feature-form-tabs forgeFn="dbxForgeWebsiteUrlField()">
-        <doc-forge-example-form forge [config]="forgeWebsiteUrlFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
+      <doc-feature-form-tabs #formTabsWebsiteUrl forgeFn="dbxForgeWebsiteUrlField()">
+        <doc-forge-example-form forge [config]="forgeWebsiteUrlFieldsConfig" [disabled]="formTabsWebsiteUrl.disabled()"></doc-forge-example-form>
+      </doc-feature-form-tabs>
+
+      <h4>Website Url With Base Url</h4>
+      <p>Only the part after the base url is typed. Pasting a full url, or a url without the protocol, removes the base url from the input. The valueMode determines whether the full url or only the relative path is saved.</p>
+      <doc-feature-form-tabs #formTabsWebsiteUrlWithBaseUrl forgeFn="dbxForgeWebsiteUrlField({ baseUrl: 'https://linkedin.com/in/' })">
+        <doc-forge-example-form forge [dbxFormSource]="websiteUrlWithBaseUrlContent" [config]="forgeWebsiteUrlWithBaseUrlFieldsConfig" [disabled]="formTabsWebsiteUrlWithBaseUrl.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>
   </doc-feature-layout>
