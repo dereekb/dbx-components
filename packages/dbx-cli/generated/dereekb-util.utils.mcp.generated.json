@@ -12370,6 +12370,44 @@
       ]
     },
     {
+      "slug": "website-url-relative-path-functions",
+      "name": "websiteUrlRelativePathFunctions",
+      "kind": "factory",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/url",
+      "signature": "websiteUrlRelativePathFunctions(config: WebsiteUrlRelativePathFunctionsConfig): WebsiteUrlRelativePathFunctions",
+      "description": "Creates {@link WebsiteUrlRelativePathFunctions} for the configured base url.\n\nInputs may be the relative path (`dereekb`), a url without a protocol (`linkedin.com/in/dereekb`), or a full url (`https://www.linkedin.com/in/dereekb/?trk=abc`).\nDomains are compared case-insensitively and a leading `www.` is ignored. Query parameters and trailing slashes are removed from the relative path.",
+      "params": [
+        {
+          "name": "config",
+          "type": "WebsiteUrlRelativePathFunctionsConfig",
+          "description": "- The base url and protocol configuration.",
+          "optional": false
+        }
+      ],
+      "returns": "Functions for reading relative paths and building full website urls.",
+      "tags": [
+        "string",
+        "url",
+        "path",
+        "relative",
+        "base",
+        "slug",
+        "username",
+        "profile",
+        "factory",
+        "website",
+        "functions",
+        "websiteurlrelativepathfunctions"
+      ],
+      "example": "const linkedIn = websiteUrlRelativePathFunctions({ baseUrl: 'https://linkedin.com/in/' });\n\nlinkedIn.toRelativePath('linkedin.com/in/dereekb'); // 'dereekb'\nlinkedIn.toWebsiteUrl('dereekb'); // 'https://linkedin.com/in/dereekb'\nlinkedIn.toWebsiteUrl('https://twitter.com/dereekb'); // undefined",
+      "relatedSlugs": [
+        "isolate-website-path-function",
+        "website-url-details"
+      ]
+    },
+    {
       "slug": "expand-flatten-tree-function",
       "name": "expandFlattenTreeFunction",
       "kind": "factory",
