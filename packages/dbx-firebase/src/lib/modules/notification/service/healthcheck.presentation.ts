@@ -5,18 +5,63 @@
  *
  * Issue codes are intentionally open-ended — apps and delivery providers emit their own — so the UI
  * needs a way to attach a label and an icon to a code it does not know about. Every issue already
- * carries its own user-facing `m` (message) and `f` (suggested fix), so a registered entry supplies
- * **presentation only, never copy**: an unregistered code still renders correctly, just with a
- * status-derived label and icon instead of a code-specific one.
+ * carries its own user-facing `m` (message) and `f` (suggested fix), so a registered entry never
+ * restates the finding: an unregistered code still renders correctly, just with a status-derived label
+ * and icon instead of a code-specific one.
+ *
+ * An entry may also say how to lay out the finding's structured detail (`d`) for an admin, and how to
+ * describe the admin's fix for it. Neither is part of the finding itself.
  */
 import { type ArrayOrValue, type Maybe, type Minutes, type Seconds } from '@dereekb/util';
 import { type DbxThemeColor } from '@dereekb/dbx-web';
-import { type NotificationHealthCheckIssueCode, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
+import { type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, type NotificationHealthCheckIssueData, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
+
+/**
+ * One labelled value from a finding's structured detail, for an admin reviewing it.
+ */
+export interface DbxFirebaseNotificationHealthCheckIssueDetail {
+  /**
+   * Short label for the value, e.g. `Unsubscribed`.
+   */
+  readonly label: string;
+  /**
+   * The value. A Date is rendered as a date.
+   */
+  readonly value: string | Date;
+}
+
+/**
+ * Lays out a finding's structured detail as labelled values.
+ *
+ * Given the detail as it was read, which can come from Firestore or straight from a function result, so a
+ * date in it may be a Date, a Firestore Timestamp, or a string. Read dates through
+ * {@link readNotificationHealthCheckIssueDataDate}.
+ */
+export type DbxFirebaseNotificationHealthCheckIssueDetailsFunction = (data: NotificationHealthCheckIssueData, issue: NotificationHealthCheckIssue) => DbxFirebaseNotificationHealthCheckIssueDetail[];
+
+/**
+ * How to present the admin's automatic fix for a finding.
+ */
+export interface DbxFirebaseNotificationHealthCheckAutofixPresentation {
+  /**
+   * Label for the fix button, e.g. `Resubscribe`.
+   */
+  readonly label?: Maybe<string>;
+  /**
+   * What the fix does, as a full sentence. Shown in the confirmation before it runs.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * Shown first in the confirmation of an {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} fix,
+   * saying what the recipient chose and when it is acceptable to override it.
+   */
+  readonly warning?: Maybe<string>;
+}
 
 /**
  * How a single {@link NotificationHealthCheckIssueCode} should be presented.
  *
- * Deliberately carries no message text: the issue itself is the authority on what to say.
+ * Deliberately carries no message text for the finding: the issue itself is the authority on what to say.
  */
 export interface DbxFirebaseNotificationHealthCheckPresentationEntry {
   /**
@@ -39,6 +84,19 @@ export interface DbxFirebaseNotificationHealthCheckPresentationEntry {
    * a warning when temporary), so the status is the more accurate source.
    */
   readonly color?: Maybe<DbxThemeColor>;
+  /**
+   * Lays out the finding's structured detail for an admin view, such as when an address unsubscribed and
+   * from which email.
+   *
+   * Only shown where the report is asked to show detail. A user-facing report leaves it out.
+   */
+  readonly details?: Maybe<DbxFirebaseNotificationHealthCheckIssueDetailsFunction>;
+  /**
+   * How to present the fix for a finding its provider marked as fixable.
+   *
+   * Without it, the fix still renders with a generic label and description.
+   */
+  readonly autofix?: Maybe<DbxFirebaseNotificationHealthCheckAutofixPresentation>;
 }
 
 /**
@@ -48,6 +106,85 @@ export interface DbxFirebaseNotificationHealthCheckIssuePresentation {
   readonly label: string;
   readonly icon: string;
   readonly color: DbxThemeColor;
+}
+
+/**
+ * A fully resolved presentation for a finding's automatic fix.
+ */
+export interface DbxFirebaseNotificationHealthCheckIssueAutofixPresentation {
+  readonly label: string;
+  readonly description: string;
+  /**
+   * Set only for an {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} fix.
+   */
+  readonly warning?: Maybe<string>;
+}
+
+/**
+ * The fix presentation for a finding whose entry does not describe its fix.
+ */
+export const DEFAULT_NOTIFICATION_HEALTH_CHECK_AUTOFIX_PRESENTATION: DbxFirebaseNotificationHealthCheckIssueAutofixPresentation & { readonly warning: string } = {
+  label: 'Fix',
+  description: 'Asks the delivery provider to fix this issue.',
+  warning: 'This fix overrides a choice the recipient made. Only continue if they have explicitly asked for it.'
+};
+
+/**
+ * Reads a date out of a finding's structured detail.
+ *
+ * The detail is stored as-is, so a date written as a Date is read back from Firestore as a Timestamp and
+ * arrives from a function result as an ISO string. This accepts all three.
+ *
+ * @param value - The value to read.
+ * @returns The date, or undefined when the value is not one.
+ */
+export function readNotificationHealthCheckIssueDataDate(value: unknown): Maybe<Date> {
+  let date: Maybe<Date>;
+
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof (value as Maybe<{ toDate?: unknown }>)?.toDate === 'function') {
+    date = (value as { toDate: () => Date }).toDate();
+  } else if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    date = Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+
+  return date;
+}
+
+/**
+ * Collects the details whose value is present, dropping the rest.
+ *
+ * @param details - Label and value pairs, where the value may be missing.
+ * @returns The details that have a value.
+ */
+function presentNotificationHealthCheckIssueDetails(details: { readonly label: string; readonly value: Maybe<string | Date> }[]): DbxFirebaseNotificationHealthCheckIssueDetail[] {
+  return details.filter((x): x is DbxFirebaseNotificationHealthCheckIssueDetail => x.value != null && x.value !== '');
+}
+
+/**
+ * Describes which mail an unsubscribe covers.
+ *
+ * Mailgun records an unsubscribe from everything with the `*` tag, and one from a category with that
+ * category's tag.
+ *
+ * @param tags - The unsubscribe record's tags.
+ * @returns A short description of what the address unsubscribed from.
+ */
+function mailgunUnsubscribeScope(tags: unknown): string {
+  const tagList = Array.isArray(tags) ? (tags as string[]) : [];
+  return tagList.length === 0 || tagList.includes('*') ? 'All email' : `Only email tagged ${tagList.join(', ')}`;
+}
+
+/**
+ * Formats the subject of the email that triggered a suppression.
+ *
+ * @param subject - The subject, if the triggering event was found.
+ * @returns The quoted subject, or undefined.
+ */
+function triggeringEmailSubject(subject: unknown): Maybe<string> {
+  return typeof subject === 'string' && subject ? `"${subject}"` : undefined;
 }
 
 /**
@@ -268,10 +405,60 @@ export const DEFAULT_NOTIFICATION_HEALTH_CHECK_PRESENTATION_ENTRIES: DbxFirebase
   { code: KnownNotificationHealthCheckIssueCode.PROBE_FAILED, label: 'Test Failed', icon: 'error' },
   { code: KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, label: 'Test Not Sent', icon: 'error' },
   // mailgun
-  { code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, label: 'Blocked After Bounce', icon: 'block' },
-  { code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT, label: 'Blocked After Spam Report', icon: 'report' },
-  { code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, label: 'Unsubscribed', icon: 'unsubscribe' },
-  { code: MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE, label: 'Recent Delivery Failed', icon: 'error' },
+  {
+    code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE,
+    label: 'Blocked After Bounce',
+    icon: 'block',
+    details: (d) =>
+      presentNotificationHealthCheckIssueDetails([
+        { label: 'Bounced', value: readNotificationHealthCheckIssueDataDate(d['createdAt']) },
+        { label: 'Server response', value: [d['code'], d['error']].filter((x) => x != null && x !== '').join(' ') }
+      ]),
+    autofix: {
+      label: 'Remove Block',
+      description: "Removes this address from the email provider's bounce list, so email is sent to it again. If the address still cannot receive mail, the next email will bounce and block it again."
+    }
+  },
+  {
+    code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT,
+    label: 'Blocked After Spam Report',
+    icon: 'report',
+    details: (d) =>
+      presentNotificationHealthCheckIssueDetails([
+        { label: 'Reported', value: readNotificationHealthCheckIssueDataDate(d['createdAt']) },
+        { label: 'Reported email', value: triggeringEmailSubject(d['subject']) }
+      ]),
+    autofix: {
+      label: 'Remove Block',
+      description: "Removes this address from the email provider's spam complaint list, so email is delivered to it again.",
+      warning: 'This address reported one of our emails as spam. Only remove the block if the recipient has explicitly asked to receive our email again.'
+    }
+  },
+  {
+    code: MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE,
+    label: 'Unsubscribed',
+    icon: 'unsubscribe',
+    details: (d) =>
+      presentNotificationHealthCheckIssueDetails([
+        { label: 'Unsubscribed', value: readNotificationHealthCheckIssueDataDate(d['createdAt']) },
+        { label: 'From', value: mailgunUnsubscribeScope(d['tags']) },
+        { label: 'Unsubscribed from email', value: triggeringEmailSubject(d['subject']) }
+      ]),
+    autofix: {
+      label: 'Resubscribe',
+      description: "Removes this address from the email provider's unsubscribe list, so email is delivered to it again."
+    }
+  },
+  {
+    code: MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE,
+    label: 'Recent Delivery Failed',
+    icon: 'error',
+    details: (d) =>
+      presentNotificationHealthCheckIssueDetails([
+        { label: 'Failed', value: readNotificationHealthCheckIssueDataDate(d['at']) },
+        { label: 'Severity', value: typeof d['severity'] === 'string' ? d['severity'] : undefined }
+      ])
+  },
   { code: MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_SUCCESS, label: 'Recently Delivered', icon: 'mark_email_read' },
   { code: MailgunNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, label: 'No Recent Activity', icon: 'history_toggle_off' },
   { code: MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE, label: 'Sending System Down', icon: 'dns' },

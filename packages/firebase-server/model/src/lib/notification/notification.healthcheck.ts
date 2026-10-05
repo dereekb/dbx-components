@@ -31,11 +31,15 @@ import {
   NotificationDeliveryMethod,
   type NotificationHealthCheck,
   type NotificationHealthCheckIssue,
+  type NotificationHealthCheckIssueAutofixResult,
+  NotificationHealthCheckIssueAutofixType,
   type NotificationHealthCheckProbe,
   NotificationHealthCheckStatus,
   type NotificationTemplateType,
   type NotificationUser,
   type NotificationUserDocument,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
   type NotificationUserNotificationBoxRecipientConfig,
@@ -43,7 +47,9 @@ import {
   KnownNotificationHealthCheckIssueCode,
   effectiveNotificationBoxRecipientTemplateConfig,
   isPendingNotificationHealthCheckProbe,
+  notificationDeliveryHealthCheckResultForMethod,
   notificationHealthCheckIssue,
+  notificationUserHealthCheckAutofixParamsType,
   notificationUserHealthCheckNextProbeAt,
   notificationUserHealthCheckNextRunAt,
   notificationUserHealthCheckNextVerifyAt,
@@ -52,10 +58,10 @@ import {
   rollupNotificationHealthCheckResultStatus
 } from '@dereekb/firebase';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront } from '@dereekb/util';
+import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront, unique } from '@dereekb/util';
 import { isAfter } from 'date-fns';
 import { type NotificationServerActionsContext } from './notification.action.server';
-import { notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError, notificationUserHealthCheckVerifyThrottledError } from './notification.error';
+import { notificationUserHealthCheckAutofixNotAllowedError, notificationUserHealthCheckAutofixUnavailableError, notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError, notificationUserHealthCheckVerifyThrottledError } from './notification.error';
 import { type NotificationSendServiceHealthCheckService } from './notification.healthcheck.service';
 
 /**
@@ -314,6 +320,93 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       return { healthCheck: returnedHealthCheck, probesDispatched, probesResolved };
     };
   });
+}
+
+// MARK: Autofix
+/**
+ * Factory for the `healthCheckAutofix` action on a {@link NotificationUser}.
+ *
+ * Fixes issues the user's stored health check reported as fixable, by handing them to the provider that
+ * reported them, then checks that delivery method again so the stored check shows whether the fix worked.
+ *
+ * Only the stored check is trusted to say what is fixable and how. It was written by the server, and it is
+ * what an admin reviewing the report sees, so the fix is limited to the issues on it and is applied to the
+ * delivery target it recorded. An {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} fix is refused
+ * unless the request explicitly allows it.
+ *
+ * Privileged, and unverifiable from here: the action cannot see who is calling, so the API layer is
+ * responsible for restricting it to admins. See {@link NotificationUserHealthCheckAutofixParams}.
+ *
+ * @param context - The notification server actions context.
+ * @returns A transform-and-validate function that fixes a notification user's delivery issues.
+ */
+export function notificationUserHealthCheckAutofixFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, notificationSendService } = context;
+  const notificationUserHealthCheck = notificationUserHealthCheckFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(notificationUserHealthCheckAutofixParamsType, async (params: NotificationUserHealthCheckAutofixParams) => {
+    const { method, codes: inputCodes, allowExplicitAutofix: inputAllowExplicitAutofix } = params;
+    const codes = unique(inputCodes);
+    const allowExplicitAutofix = inputAllowExplicitAutofix === true;
+
+    return async (notificationUserDocument: NotificationUserDocument): Promise<NotificationUserHealthCheckAutofixResult> => {
+      const now = new Date();
+      const { uid, hc: storedHealthCheck } = await assertSnapshotData(notificationUserDocument);
+      const storedMethodResult = notificationDeliveryHealthCheckResultForMethod(storedHealthCheck, method);
+      const target = storedMethodResult?.tg;
+      const healthCheckService = notificationSendServiceHealthCheckServiceForMethod(notificationSendService, method);
+
+      const fixableIssuesByCode = new Map((storedMethodResult?.is ?? []).filter((x) => x.af != null).map((x) => [x.c, x]));
+      const unfixableCodes = codes.filter((x) => !fixableIssuesByCode.has(x));
+
+      if (storedMethodResult == null) {
+        throw notificationUserHealthCheckAutofixUnavailableError({ method, codes, reason: 'this delivery method has not been checked yet. Run the health check first.' });
+      } else if (unfixableCodes.length > 0) {
+        throw notificationUserHealthCheckAutofixUnavailableError({ method, codes: unfixableCodes, reason: 'the most recent health check does not report them as fixable.' });
+      } else if (healthCheckService?.runAutofix == null || target == null) {
+        throw notificationUserHealthCheckAutofixUnavailableError({ method, codes, reason: 'the delivery provider cannot fix them.' });
+      }
+
+      const explicitCodes = codes.filter((x) => fixableIssuesByCode.get(x)?.af === NotificationHealthCheckIssueAutofixType.EXPLICIT);
+
+      if (explicitCodes.length > 0 && !allowExplicitAutofix) {
+        throw notificationUserHealthCheckAutofixNotAllowedError(explicitCodes);
+      }
+
+      const { results: providerResults } = await healthCheckService.runAutofix({ method, target, uid, codes, now });
+
+      // one result per requested code, in the order requested, even if the provider left one out
+      const providerResultsByCode = new Map(providerResults.map((x) => [x.code, x]));
+      const results: NotificationHealthCheckIssueAutofixResult[] = codes.map((code) => providerResultsByCode.get(code) ?? { code, fixed: false, message: 'The delivery provider did not report an outcome for this fix.' });
+
+      // Check the method again rather than editing the stored findings, so the report shows what the
+      // provider says now. Forced because the check was usually run moments ago, and evaluated against
+      // the same template type as the stored check so its other findings stay comparable.
+      const runHealthCheckForMethod = await notificationUserHealthCheck({ key: notificationUserDocument.key, methods: [method], notificationTemplateType: storedHealthCheck?.t, force: true });
+      const { healthCheck } = await runHealthCheckForMethod(notificationUserDocument);
+
+      return { results, healthCheck };
+    };
+  });
+}
+
+/**
+ * The provider health check service for a delivery method, if the method's send service has one.
+ *
+ * @param notificationSendService - The app's configured send service.
+ * @param method - The delivery method.
+ * @returns The method's health check service, or undefined when it has none.
+ */
+function notificationSendServiceHealthCheckServiceForMethod(notificationSendService: NotificationServerActionsContext['notificationSendService'], method: NotificationDeliveryMethod): Maybe<NotificationSendServiceHealthCheckService> {
+  const healthCheckServices: Record<NotificationDeliveryMethod, Maybe<NotificationSendServiceHealthCheckService>> = {
+    [NotificationDeliveryMethod.EMAIL]: notificationSendService.emailSendService?.healthCheckService,
+    [NotificationDeliveryMethod.TEXT]: notificationSendService.textSendService?.healthCheckService,
+    [NotificationDeliveryMethod.NOTIFICATION_SUMMARY]: notificationSendService.notificationSummarySendService?.healthCheckService,
+    // push delivery is not part of the send service yet
+    [NotificationDeliveryMethod.PUSH]: undefined
+  };
+
+  return healthCheckServices[method];
 }
 
 /**

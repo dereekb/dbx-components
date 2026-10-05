@@ -30,6 +30,8 @@ import {
   updateNotificationBoxRecipientParamsType,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type UpdateNotificationUserParams,
   updateNotificationUserParamsType,
   firestoreDummyKey,
@@ -134,7 +136,7 @@ import { type NotificationTemplateServiceInstance, type NotificationTemplateServ
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
-import { notificationUserHealthCheckFactory } from './notification.healthcheck';
+import { notificationUserHealthCheckAutofixFactory, notificationUserHealthCheckFactory } from './notification.healthcheck';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
@@ -226,6 +228,7 @@ export abstract class NotificationServerActions {
   abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
   abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
   abstract notificationUserHealthCheck(params: NotificationUserHealthCheckParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckResult>>>;
+  abstract notificationUserHealthCheckAutofix(params: NotificationUserHealthCheckAutofixParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckAutofixParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckAutofixResult>>>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract updateNotificationSummary(params: UpdateNotificationSummaryParams): AsyncNotificationSummaryUpdateAction<UpdateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
@@ -258,6 +261,7 @@ export function notificationServerActions(context: NotificationServerActionsCont
     resyncNotificationUser: resyncNotificationUserFactory(context),
     resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
     notificationUserHealthCheck: notificationUserHealthCheckFactory(context),
+    notificationUserHealthCheckAutofix: notificationUserHealthCheckAutofixFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
     updateNotificationSummary: updateNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),

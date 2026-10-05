@@ -5,7 +5,7 @@ import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbook
 import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallInvokeModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
 import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, type DemoOnCallInvokeModelMap, onCallWithDemoNestContext } from '../function.context';
-import { notificationUserUpdate, notificationUserResync, notificationUserHealthCheck } from '../notification/notificationuser.update';
+import { notificationUserUpdate, notificationUserResync, notificationUserHealthCheck, notificationUserHealthCheckAutofix } from '../notification/notificationuser.update';
 import { notificationBoxUpdate, notificationBoxRecipient } from '../notification/notificationbox.update';
 import { notificationSummaryUpdate } from '../notification/notificationsummary.update';
 import { guestbookSubscribeToNotifications, guestbookPublish } from '../guestbook/guestbook.update';
@@ -189,7 +189,8 @@ export const DEMO_INVOKE_MODEL_MAP: DemoOnCallInvokeModelMap = {
     entryDetails: guestbookEntryEntryDetails
   }),
   notificationUser: onCallSpecifierHandler({
-    healthCheck: notificationUserHealthCheck
+    healthCheck: notificationUserHealthCheck,
+    healthCheckAutofix: notificationUserHealthCheckAutofix
   })
 };
 

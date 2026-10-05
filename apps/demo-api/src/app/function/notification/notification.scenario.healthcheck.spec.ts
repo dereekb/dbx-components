@@ -5,22 +5,29 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
   type NotificationHealthCheckIssue,
   type NotificationHealthCheckProbe,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
   type UpdateNotificationUserParams,
+  FORBIDDEN_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
   NotificationBoxRecipientFlag,
   NotificationDeliveryMethod,
+  NotificationHealthCheckIssueAutofixType,
   NotificationHealthCheckStatus,
   KnownNotificationHealthCheckIssueCode,
   notificationDeliveryHealthCheckResultForMethod,
+  notificationHealthCheckIssue,
   notificationUserIdentity,
   onCallInvokeModelParams,
   onCallUpdateModelParams
 } from '@dereekb/firebase';
-import { type NotificationSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
+import { type NotificationSendServiceHealthCheckAutofixRequest, type NotificationSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { addMinutes, addSeconds } from 'date-fns';
 import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';
@@ -803,6 +810,144 @@ demoApiFunctionContextFactory((f) => {
                 expect(notificationDeliveryHealthCheckResultForMethod(second.healthCheck, NotificationDeliveryMethod.TEXT)?.pr?.s).toBe(NotificationHealthCheckStatus.OK);
               });
             });
+
+            describe('autofix', () => {
+              const FIXABLE_CODE = 'testFixable';
+              const EXPLICIT_FIXABLE_CODE = 'testExplicitFixable';
+              const UNFIXABLE_CODE = 'testUnfixable';
+
+              async function runHealthCheckAutofix(params: Omit<NotificationUserHealthCheckAutofixParams, 'key' | 'method'>): Promise<NotificationUserHealthCheckAutofixResult> {
+                const fullParams: NotificationUserHealthCheckAutofixParams = { key: nu.documentKey, method: NotificationDeliveryMethod.TEXT, ...params };
+                return u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, fullParams, 'healthCheckAutofix')) as Promise<NotificationUserHealthCheckAutofixResult>;
+              }
+
+              /**
+               * The codes the provider has fixed. It stops reporting an issue once it is fixed, the way a
+               * removed suppression stops showing up at the email provider.
+               */
+              let fixedCodes: Set<string>;
+              let autofixRequests: NotificationSendServiceHealthCheckAutofixRequest<string>[];
+
+              beforeEach(() => {
+                fixedCodes = new Set();
+                autofixRequests = [];
+
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    const issues = [
+                      notificationHealthCheckIssue(FIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Fixable.', autofix: NotificationHealthCheckIssueAutofixType.STANDARD }),
+                      notificationHealthCheckIssue(EXPLICIT_FIXABLE_CODE, NotificationHealthCheckStatus.ERROR, { message: 'Fixable when explicitly allowed.', autofix: NotificationHealthCheckIssueAutofixType.EXPLICIT }),
+                      notificationHealthCheckIssue(UNFIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Not fixable.' })
+                    ];
+
+                    return { issues: issues.filter((x) => !fixedCodes.has(x.c)) };
+                  },
+                  async runAutofix(request) {
+                    autofixRequests.push(request);
+                    request.codes.forEach((x) => fixedCodes.add(x));
+                    return { results: request.codes.map((code) => ({ code, fixed: true, message: 'Fixed.' })) };
+                  }
+                });
+              });
+
+              it('should fix the issue and check the delivery method again', async () => {
+                await runHealthCheck();
+
+                const result = await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+                const textIssueCodes = issueCodes(notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? []);
+
+                expect(result.results).toEqual([{ code: FIXABLE_CODE, fixed: true, message: 'Fixed.' }]);
+                expect(textIssueCodes).not.toContain(FIXABLE_CODE);
+                expect(textIssueCodes).toContain(UNFIXABLE_CODE);
+              });
+
+              it('should persist the check the fix ran afterwards', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                const { hc } = await assertSnapshotData(nu.document);
+                expect(issueCodes(notificationDeliveryHealthCheckResultForMethod(hc, NotificationDeliveryMethod.TEXT)?.is ?? [])).not.toContain(FIXABLE_CODE);
+              });
+
+              it('should apply the fix to the delivery target the stored check recorded', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                expect(autofixRequests).toHaveLength(1);
+                expect(autofixRequests[0].target).toBe(TEST_PHONE_NUMBER);
+                expect(autofixRequests[0].codes).toEqual([FIXABLE_CODE]);
+              });
+
+              it('should fix an explicit-only issue when it is explicitly allowed', async () => {
+                await runHealthCheck();
+
+                const result = await runHealthCheckAutofix({ codes: [EXPLICIT_FIXABLE_CODE], allowExplicitAutofix: true });
+
+                expect(result.results[0].fixed).toBe(true);
+                expect(issueCodes(notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? [])).not.toContain(EXPLICIT_FIXABLE_CODE);
+              });
+
+              it('should report a fix the provider did not answer for as not fixed', async () => {
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    return { issues: [notificationHealthCheckIssue(FIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Fixable.', autofix: NotificationHealthCheckIssueAutofixType.STANDARD })] };
+                  },
+                  async runAutofix() {
+                    return { results: [] };
+                  }
+                });
+
+                await runHealthCheck();
+                const result = await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                expect(result.results).toHaveLength(1);
+                expect(result.results[0].code).toBe(FIXABLE_CODE);
+                expect(result.results[0].fixed).toBe(false);
+              });
+
+              it('should fix nothing when an explicit-only fix in the request is not explicitly allowed', async () => {
+                await runHealthCheck();
+
+                // asserts state after the rejection, so it uses rejects.toThrow() rather than expectFail()
+                await expect(runHealthCheckAutofix({ codes: [FIXABLE_CODE, EXPLICIT_FIXABLE_CODE] })).rejects.toThrow();
+                expect(autofixRequests).toHaveLength(0);
+              });
+
+              itShouldFail('when an explicit-only fix is not explicitly allowed', async () => {
+                await runHealthCheck();
+                await expectFail(() => runHealthCheckAutofix({ codes: [EXPLICIT_FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE));
+              });
+
+              itShouldFail('when the issue is not marked as fixable', async () => {
+                await runHealthCheck();
+                await expectFail(() => runHealthCheckAutofix({ codes: [UNFIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the issue is no longer on the stored check', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                // the fix's own re-check no longer reports it, so there is nothing left to fix
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the delivery method has not been checked yet', async () => {
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the provider cannot fix issues', async () => {
+                await runHealthCheck();
+
+                // the stored check still marks the issue fixable, but the provider no longer offers a fix
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    return { issues: [] };
+                  }
+                });
+
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+            });
           });
 
           // scoped to its own describe: a model test context registers its beforeEach in the enclosing
@@ -889,6 +1034,12 @@ demoApiFunctionContextFactory((f) => {
 
                 return u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, fullParams, 'healthCheck')) as Promise<NotificationUserHealthCheckResult>;
               }
+
+              itShouldFail('to fix delivery issues when the caller is not an admin', async () => {
+                // the user's own NotificationUser, so the only thing missing is admin access
+                const params: NotificationUserHealthCheckAutofixParams = { key: nu2.documentKey, method: NotificationDeliveryMethod.TEXT, codes: ['testFixable'] };
+                await expectFail(() => u2.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, params, 'healthCheckAutofix')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              });
 
               it('should report a disabled sign-in account as an account-wide problem', async () => {
                 await f.authService.userContext(u2.uid).updateUser({ disabled: true });

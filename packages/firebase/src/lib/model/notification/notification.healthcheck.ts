@@ -15,7 +15,7 @@
  */
 import { filterMaybeArrayValues, type Maybe, type Minutes, type Seconds } from '@dereekb/util';
 import { addMinutes, addSeconds } from 'date-fns';
-import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreDate, optionalFirestoreField, optionalFirestoreString } from '../../common';
+import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreDate, optionalFirestoreEnum, optionalFirestoreField, optionalFirestoreString } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 
 /**
@@ -231,6 +231,27 @@ export type NotificationHealthCheckIssueCode = KnownNotificationHealthCheckIssue
 export type NotificationHealthCheckIssueData = Readonly<Record<string, any>>;
 
 /**
+ * How a {@link NotificationHealthCheckIssue} can be fixed automatically, when the provider that reported
+ * it is able to fix it.
+ *
+ * An autofix changes state outside the app, such as removing an address from a delivery provider's
+ * suppression list, so it is an admin action. See {@link NotificationUserHealthCheckAutofixParams}.
+ */
+export enum NotificationHealthCheckIssueAutofixType {
+  /**
+   * The fix can be applied whenever it is requested.
+   */
+  STANDARD = 's',
+  /**
+   * The fix overrides a choice the recipient made themselves, such as reporting a message as spam. It is
+   * only applied when the request explicitly allows it via
+   * {@link NotificationUserHealthCheckAutofixParams.allowExplicitAutofix}, and only should be when the
+   * recipient has asked for it.
+   */
+  EXPLICIT = 'e'
+}
+
+/**
  * A single finding produced by a health check.
  *
  * Field abbreviations:
@@ -239,6 +260,7 @@ export type NotificationHealthCheckIssueData = Readonly<Record<string, any>>;
  * - `m` — human-readable message
  * - `f` — suggested fix
  * - `d` — structured detail
+ * - `af` — how the issue can be fixed automatically
  */
 export interface NotificationHealthCheckIssue {
   /**
@@ -261,6 +283,10 @@ export interface NotificationHealthCheckIssue {
    * Structured detail backing the finding, for display or debugging.
    */
   d?: Maybe<NotificationHealthCheckIssueData>;
+  /**
+   * How the issue can be fixed automatically. Absent when it cannot be.
+   */
+  af?: Maybe<NotificationHealthCheckIssueAutofixType>;
 }
 
 /**
@@ -279,6 +305,10 @@ export interface NotificationHealthCheckIssueContent {
    * Structured detail backing the finding, for display or debugging.
    */
   readonly data?: Maybe<NotificationHealthCheckIssueData>;
+  /**
+   * How the issue can be fixed automatically, when the reporting provider can fix it.
+   */
+  readonly autofix?: Maybe<NotificationHealthCheckIssueAutofixType>;
 }
 
 /**
@@ -298,7 +328,26 @@ export interface NotificationHealthCheckIssueContent {
  * ```
  */
 export function notificationHealthCheckIssue(code: NotificationHealthCheckIssueCode, status: NotificationHealthCheckStatus, content: NotificationHealthCheckIssueContent): NotificationHealthCheckIssue {
-  return { c: code, s: status, m: content.message, f: content.fix, d: content.data };
+  return { c: code, s: status, m: content.message, f: content.fix, d: content.data, af: content.autofix };
+}
+
+/**
+ * The outcome of automatically fixing one {@link NotificationHealthCheckIssue}.
+ */
+export interface NotificationHealthCheckIssueAutofixResult {
+  /**
+   * The code of the issue the fix was applied to.
+   */
+  readonly code: NotificationHealthCheckIssueCode;
+  /**
+   * True when the issue is resolved, either because the fix was just applied or because there was
+   * nothing left to fix.
+   */
+  readonly fixed: boolean;
+  /**
+   * What was done, or why the fix could not be applied.
+   */
+  readonly message?: Maybe<string>;
 }
 
 /**
@@ -697,7 +746,8 @@ export const firestoreNotificationHealthCheckIssue = /* @__PURE__ */ firestoreSu
       s: firestoreEnum<NotificationHealthCheckStatus>({ default: NotificationHealthCheckStatus.UNKNOWN }),
       m: firestoreString({ default: '' }),
       f: optionalFirestoreString(),
-      d: optionalFirestoreField<NotificationHealthCheckIssueData>()
+      d: optionalFirestoreField<NotificationHealthCheckIssueData>(),
+      af: optionalFirestoreEnum<NotificationHealthCheckIssueAutofixType>()
     }
   }
 });

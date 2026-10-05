@@ -18,6 +18,7 @@ import {
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
   lockFormSpaceParamsType,
+  notificationUserHealthCheckAutofixParamsType,
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
@@ -63,7 +64,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.9.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.14.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -444,6 +445,33 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       },
       { name: 'probesDispatched', typeText: 'number', description: 'The number of probes dispatched by this run.' },
       { name: 'probesResolved', typeText: 'number', description: 'The number of previously-pending probes this run resolved to a final status.' }
+    ]
+  },
+  {
+    model: 'notificationUser',
+    verb: 'invoke',
+    specifier: 'healthCheckAutofix',
+    paramsTypeName: 'NotificationUserHealthCheckAutofixParams',
+    paramsValidator: notificationUserHealthCheckAutofixParamsType,
+    resultTypeName: 'NotificationUserHealthCheckAutofixResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription:
+      "Used for automatically fixing issues a notification delivery health check found for a user, such as\nremoving their address from a delivery provider's suppression list.\n\nPRIVILEGED — admin only. A fix changes state at the delivery provider, and can undo a choice the\nrecipient made, so the API layer must restrict who can call it:\n\n```ts\nassertIsAdminInRequest(request);\n```\n\nOnly issues on the user's STORED health check can be fixed, and only those the reporting provider marked\nas fixable (`af`). The fix is applied to the delivery target that check recorded, which is the one an\nadmin reviewing the check sees. The delivery method is checked again afterwards, so the result and the\nstored check both show whether the fix worked.",
+    paramsFields: [
+      { name: 'method', typeText: 'NotificationDeliveryMethod', description: 'The delivery method whose issues to fix.' },
+      { name: 'codes', typeText: 'NotificationHealthCheckIssueCode[]', description: 'The codes of the issues to fix. Each must be on the stored health check for this method and be marked\nfixable, or the whole call is refused.' },
+      {
+        name: 'allowExplicitAutofix',
+        typeText: 'Maybe<boolean>',
+        description:
+          'Allow fixing issues whose autofix is {@link NotificationHealthCheckIssueAutofixType.EXPLICIT}.\n\nThose fixes override a choice the recipient made, such as reporting a message as spam, so they are\nrefused unless this is set. Only set it when the recipient has explicitly asked for the fix.\n\nDefaults to false.'
+      }
+    ],
+    resultTypeDescription: 'The result of a `healthCheckAutofix` invocation.',
+    resultFields: [
+      { name: 'results', typeText: 'NotificationHealthCheckIssueAutofixResult[]', description: 'The outcome of each requested fix, in the order the codes were requested.' },
+      { name: 'healthCheck', typeText: 'NotificationHealthCheck', description: "The health check after the fixes were applied, with the fixed delivery method checked again.\n\nAlso persisted to the {@link NotificationUser}'s `hc` field." }
     ]
   },
   {

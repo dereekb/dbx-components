@@ -11,6 +11,10 @@ import {
   NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE,
+  type NotificationDeliveryMethod,
+  type NotificationHealthCheckIssueCode,
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
 } from '@dereekb/firebase';
@@ -178,6 +182,65 @@ export function notificationUserHealthCheckVerifyThrottledError(nextVerifyAt: Da
     data: {
       // serialized: the error's data travels to the client as JSON
       nextVerifyAt: nextVerifyAt.toISOString()
+    }
+  });
+}
+
+/**
+ * Input for {@link notificationUserHealthCheckAutofixUnavailableError}.
+ */
+export interface NotificationUserHealthCheckAutofixUnavailableErrorInput {
+  /**
+   * The delivery method the fix was requested for.
+   */
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * The requested issue codes that cannot be fixed.
+   */
+  readonly codes: NotificationHealthCheckIssueCode[];
+  /**
+   * Why they cannot be fixed.
+   */
+  readonly reason: string;
+}
+
+/**
+ * Creates an error indicating that a health check autofix asked for issues that cannot be fixed.
+ *
+ * Thrown by the {@link NotificationUser} health check autofix when a requested issue is not on the stored
+ * check, is not marked fixable, or the delivery method's provider has no autofix.
+ *
+ * @param input - The delivery method, the codes that cannot be fixed, and why.
+ * @returns A precondition conflict error with the autofix-unavailable error code.
+ */
+export function notificationUserHealthCheckAutofixUnavailableError(input: NotificationUserHealthCheckAutofixUnavailableErrorInput) {
+  const { method, codes, reason } = input;
+
+  return preconditionConflictError({
+    message: `The requested notification delivery issues cannot be fixed automatically: ${reason}`,
+    code: NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE,
+    data: {
+      method,
+      codes
+    }
+  });
+}
+
+/**
+ * Creates an error indicating that a health check autofix asked for an explicit-only fix without allowing it.
+ *
+ * Thrown by the {@link NotificationUser} health check autofix when a requested issue's autofix is
+ * {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} and `allowExplicitAutofix` was not set.
+ *
+ * @param codes - The requested issue codes that need explicit permission.
+ * @returns A precondition conflict error with the autofix-not-allowed error code.
+ */
+export function notificationUserHealthCheckAutofixNotAllowedError(codes: NotificationHealthCheckIssueCode[]) {
+  return preconditionConflictError({
+    message: `Fixing these notification delivery issues overrides a choice the recipient made, so it must be explicitly allowed: ${codes.join(', ')}`,
+    code: NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE,
+    data: {
+      codes
     }
   });
 }

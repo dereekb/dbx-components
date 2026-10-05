@@ -1,10 +1,13 @@
 import { Service, inject } from '@angular/core';
 import { type ArrayOrValue, type Maybe, asArray } from '@dereekb/util';
 import { type DbxThemeColor } from '@dereekb/dbx-web';
-import { type NotificationDeliveryMethod, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, NotificationHealthCheckStatus } from '@dereekb/firebase';
+import { type NotificationDeliveryMethod, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, NotificationHealthCheckIssueAutofixType, NotificationHealthCheckStatus } from '@dereekb/firebase';
 import {
+  type DbxFirebaseNotificationHealthCheckIssueAutofixPresentation,
+  type DbxFirebaseNotificationHealthCheckIssueDetail,
   type DbxFirebaseNotificationHealthCheckIssuePresentation,
   type DbxFirebaseNotificationHealthCheckPresentationEntry,
+  DEFAULT_NOTIFICATION_HEALTH_CHECK_AUTOFIX_PRESENTATION,
   DEFAULT_NOTIFICATION_HEALTH_CHECK_PRESENTATION_ENTRIES,
   DbxFirebaseNotificationHealthCheckPresentationServiceConfig,
   NOTIFICATION_DELIVERY_METHOD_ICONS,
@@ -86,6 +89,41 @@ export class DbxFirebaseNotificationHealthCheckPresentationService {
       icon: entry?.icon ?? this.iconForStatus(issue.s),
       color: entry?.color ?? this.colorForStatus(issue.s)
     };
+  }
+
+  /**
+   * Lays out a finding's structured detail for an admin view.
+   *
+   * @param issue - The finding.
+   * @returns The labelled values its registered entry picks out of `d`, or an empty array when the code
+   *   has no details layout or the finding carries no detail.
+   */
+  detailsForIssue(issue: NotificationHealthCheckIssue): DbxFirebaseNotificationHealthCheckIssueDetail[] {
+    const details = this._entries.get(issue.c)?.details;
+    return details != null && issue.d != null ? details(issue.d, issue) : [];
+  }
+
+  /**
+   * Resolves how to present the fix for a finding its provider marked as fixable.
+   *
+   * @param issue - The finding.
+   * @returns The fix's label and description, plus a warning for an explicit-only fix. Undefined when the
+   *   finding is not fixable.
+   */
+  autofixPresentationForIssue(issue: NotificationHealthCheckIssue): Maybe<DbxFirebaseNotificationHealthCheckIssueAutofixPresentation> {
+    let presentation: Maybe<DbxFirebaseNotificationHealthCheckIssueAutofixPresentation>;
+
+    if (issue.af != null) {
+      const autofix = this._entries.get(issue.c)?.autofix;
+
+      presentation = {
+        label: autofix?.label ?? DEFAULT_NOTIFICATION_HEALTH_CHECK_AUTOFIX_PRESENTATION.label,
+        description: autofix?.description ?? DEFAULT_NOTIFICATION_HEALTH_CHECK_AUTOFIX_PRESENTATION.description,
+        warning: issue.af === NotificationHealthCheckIssueAutofixType.EXPLICIT ? (autofix?.warning ?? DEFAULT_NOTIFICATION_HEALTH_CHECK_AUTOFIX_PRESENTATION.warning) : undefined
+      };
+    }
+
+    return presentation;
   }
 
   /**

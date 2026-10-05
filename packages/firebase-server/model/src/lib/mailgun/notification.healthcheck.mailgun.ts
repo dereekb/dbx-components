@@ -18,8 +18,19 @@
  * by a later verification, which the client polls for automatically. Nothing here ever asks the user to
  * come back and check for themselves.
  */
-import { type EmailAddress, type Maybe, type Minutes, type PromiseOrValue } from '@dereekb/util';
-import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, untrackableNotificationHealthCheckProbe, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode } from '@dereekb/firebase';
+import { type EmailAddress, type Maybe, type Minutes, type PromiseOrValue, filterUndefinedValues } from '@dereekb/util';
+import {
+  type FirebaseAuthUserId,
+  type NotificationHealthCheckIssue,
+  type NotificationHealthCheckIssueAutofixResult,
+  type NotificationHealthCheckProbe,
+  NotificationHealthCheckIssueAutofixType,
+  NotificationHealthCheckStatus,
+  notificationHealthCheckIssue,
+  untrackableNotificationHealthCheckProbe,
+  KnownNotificationHealthCheckIssueCode,
+  MailgunNotificationHealthCheckIssueCode
+} from '@dereekb/firebase';
 import {
   type MailgunDomainEvent,
   type MailgunEmailMessageSendResult,
@@ -28,16 +39,25 @@ import {
   type MailgunTemplateEmailRequest,
   MailgunEventName,
   MailgunEventSeverity,
+  MailgunSuppressionList,
   bareMailgunMessageId,
   mailgunDomainEventDate,
   mailgunDomainEventFailureReason,
   mailgunDomainState,
+  mailgunEventForRecipientNear,
   mailgunEventsForMessageId,
   mailgunRecentEventsForRecipient,
+  mailgunRemoveSuppressionForRecipient,
   mailgunSuppressionsForRecipient,
   mailgunValidateEmail
 } from '@dereekb/nestjs/mailgun';
-import { type NotificationEmailSendServiceHealthCheckService, type NotificationSendServiceHealthCheckRequest, type NotificationSendServiceHealthCheckResponse } from '../notification/notification.healthcheck.service';
+import {
+  type NotificationEmailSendServiceHealthCheckService,
+  type NotificationSendServiceHealthCheckAutofixRequest,
+  type NotificationSendServiceHealthCheckAutofixResponse,
+  type NotificationSendServiceHealthCheckRequest,
+  type NotificationSendServiceHealthCheckResponse
+} from '../notification/notification.healthcheck.service';
 
 /**
  * How long a dispatched probe may stay unresolved before it is reported as failed.
@@ -108,7 +128,32 @@ export interface MailgunNotificationEmailSendServiceHealthCheckServiceConfig {
    * Defaults to {@link DEFAULT_MAILGUN_HEALTH_CHECK_PROBE_TIMEOUT_MINUTES}.
    */
   readonly probeTimeoutMinutes?: Maybe<Minutes>;
+  /**
+   * Whether to look up the event that put an address on the unsubscribe or complaint list, so the
+   * finding can name the email it came from.
+   *
+   * On by default. Costs one Events API call per list the address is on, and only when it is on one.
+   */
+  readonly lookupSuppressionEvents?: Maybe<boolean>;
 }
+
+/**
+ * The suppression list each suppression issue code is fixed by removing the address from.
+ */
+const MAILGUN_SUPPRESSION_LIST_FOR_ISSUE_CODE: Readonly<Record<string, MailgunSuppressionList>> = {
+  [MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE]: MailgunSuppressionList.BOUNCES,
+  [MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT]: MailgunSuppressionList.COMPLAINTS,
+  [MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE]: MailgunSuppressionList.UNSUBSCRIBES
+};
+
+/**
+ * What a removal from each suppression list means, for the autofix result message.
+ */
+const MAILGUN_SUPPRESSION_LIST_FIXED_MESSAGES: Readonly<Record<MailgunSuppressionList, string>> = {
+  [MailgunSuppressionList.BOUNCES]: 'Removed the address from the bounce list.',
+  [MailgunSuppressionList.COMPLAINTS]: 'Removed the address from the spam complaint list.',
+  [MailgunSuppressionList.UNSUBSCRIBES]: 'Resubscribed the address.'
+};
 
 /**
  * Creates a {@link NotificationEmailSendServiceHealthCheckService} backed by the Mailgun API.
@@ -137,9 +182,29 @@ export interface MailgunNotificationEmailSendServiceHealthCheckServiceConfig {
  * ```
  */
 export function mailgunNotificationEmailSendServiceHealthCheckService(config: MailgunNotificationEmailSendServiceHealthCheckServiceConfig): NotificationEmailSendServiceHealthCheckService {
-  const { mailgunService, probeBuilder, recentEventsLimit, recentEventsWindowDays, validateAddress, probeTimeoutMinutes: inputProbeTimeoutMinutes } = config;
+  const { mailgunService, probeBuilder, recentEventsLimit, recentEventsWindowDays, validateAddress, probeTimeoutMinutes: inputProbeTimeoutMinutes, lookupSuppressionEvents: inputLookupSuppressionEvents } = config;
   const probeTimeoutMinutes = inputProbeTimeoutMinutes ?? DEFAULT_MAILGUN_HEALTH_CHECK_PROBE_TIMEOUT_MINUTES;
+  const lookupSuppressionEvents = inputLookupSuppressionEvents !== false;
   const mailgunApi = mailgunService.mailgunApi;
+
+  /**
+   * The subject of the email that triggered a suppression, when its event can still be found.
+   *
+   * @param event - The event that creates the suppression.
+   * @param suppression - The suppression record, if the address is on the list.
+   * @param target - The suppressed address.
+   * @returns The triggering email's subject, if found.
+   */
+  async function suppressionEventSubject(event: MailgunEventName, suppression: Maybe<{ readonly created_at: Date }>, target: EmailAddress): Promise<Maybe<string>> {
+    let subject: Maybe<string>;
+
+    if (lookupSuppressionEvents && suppression?.created_at != null) {
+      const suppressionEvent = await mailgunEventForRecipientNear(mailgunApi, target, { event, at: new Date(suppression.created_at) });
+      subject = suppressionEvent?.message?.headers?.subject || undefined;
+    }
+
+    return subject;
+  }
 
   return {
     supportsProbe: probeBuilder != null,
@@ -154,6 +219,13 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
         mailgunSuppressionsForRecipient(mailgunApi, target),
         mailgunRecentEventsForRecipient(mailgunApi, target, { limit: recentEventsLimit, begin }),
         validateAddress ? mailgunValidateEmail(mailgunApi, target) : Promise.resolve(undefined)
+      ]);
+
+      // which email led to a suppression, so whoever reviews it knows what the recipient reacted to
+      const [unsubscribeSubject, complaintSubject] = await Promise.all([
+        //
+        suppressionEventSubject(MailgunEventName.UNSUBSCRIBED, suppressions.unsubscribe, target),
+        suppressionEventSubject(MailgunEventName.COMPLAINED, suppressions.complaint, target)
       ]);
 
       const issues: NotificationHealthCheckIssue[] = [];
@@ -174,12 +246,15 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
       // MARK: suppressions
       const { bounce, complaint, unsubscribe } = suppressions;
 
+      // Each suppression is fixable by removing the address from its list. A complaint is the recipient
+      // reporting us as spam, so lifting it is EXPLICIT: it should only ever happen at their request.
       if (bounce) {
         issues.push(
           notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, NotificationHealthCheckStatus.ERROR, {
             message: 'Email to this address previously bounced, so our email provider is now blocking every message to it.',
             fix: 'Contact support to have the block removed. If the address has a typo, correct it on your account first.',
-            data: { address: bounce.address, code: bounce.code, error: bounce.error, createdAt: bounce.created_at }
+            data: { address: bounce.address, code: bounce.code, error: bounce.error, createdAt: bounce.created_at },
+            autofix: NotificationHealthCheckIssueAutofixType.STANDARD
           })
         );
       }
@@ -189,7 +264,8 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
           notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT, NotificationHealthCheckStatus.ERROR, {
             message: 'One of our emails was reported as spam from this address, so our email provider is now blocking every message to it.',
             fix: 'Contact support to have the block removed.',
-            data: { address: complaint.address, createdAt: complaint.created_at }
+            data: filterUndefinedValues({ address: complaint.address, createdAt: complaint.created_at, subject: complaintSubject }),
+            autofix: NotificationHealthCheckIssueAutofixType.EXPLICIT
           })
         );
       }
@@ -199,7 +275,8 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
           notificationHealthCheckIssue(MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, NotificationHealthCheckStatus.WARNING, {
             message: 'This address has unsubscribed from our email, so most messages will not be delivered to it.',
             fix: 'Contact support to resubscribe this address.',
-            data: { address: unsubscribe.address, tags: unsubscribe.tags, createdAt: unsubscribe.created_at }
+            data: filterUndefinedValues({ address: unsubscribe.address, tags: unsubscribe.tags, createdAt: unsubscribe.created_at, subject: unsubscribeSubject }),
+            autofix: NotificationHealthCheckIssueAutofixType.STANDARD
           })
         );
       }
@@ -245,6 +322,34 @@ export function mailgunNotificationEmailSendServiceHealthCheckService(config: Ma
       issues.push(...probeResult.issues);
 
       return { issues, probe: probeResult.probe };
+    },
+    async runAutofix(request: NotificationSendServiceHealthCheckAutofixRequest<EmailAddress>): Promise<NotificationSendServiceHealthCheckAutofixResponse> {
+      const { target, codes } = request;
+
+      const results: NotificationHealthCheckIssueAutofixResult[] = await Promise.all(
+        codes.map(async (code) => {
+          const list = MAILGUN_SUPPRESSION_LIST_FOR_ISSUE_CODE[code];
+          let result: NotificationHealthCheckIssueAutofixResult;
+
+          if (list == null) {
+            result = { code, fixed: false, message: 'This issue cannot be fixed automatically.' };
+          } else {
+            const removal = await mailgunRemoveSuppressionForRecipient(mailgunApi, target, list);
+
+            if (removal.notFound) {
+              result = { code, fixed: true, message: 'The address was no longer on the list.' };
+            } else if (removal.cleared) {
+              result = { code, fixed: true, message: MAILGUN_SUPPRESSION_LIST_FIXED_MESSAGES[list] };
+            } else {
+              result = { code, fixed: false, message: `The email provider could not remove the address${failureReasonSuffix(removal.error)}` };
+            }
+          }
+
+          return result;
+        })
+      );
+
+      return { results };
     }
   };
 }

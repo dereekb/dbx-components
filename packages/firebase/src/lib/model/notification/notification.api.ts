@@ -16,7 +16,7 @@ import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
-import { type NotificationHealthCheck, NotificationDeliveryMethod } from './notification.healthcheck';
+import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode, NotificationDeliveryMethod } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -252,6 +252,67 @@ export interface NotificationUserHealthCheckResult {
    * The number of previously-pending probes this run resolved to a final status.
    */
   readonly probesResolved: number;
+}
+
+/**
+ * Used for automatically fixing issues a notification delivery health check found for a user, such as
+ * removing their address from a delivery provider's suppression list.
+ *
+ * PRIVILEGED — admin only. A fix changes state at the delivery provider, and can undo a choice the
+ * recipient made, so the API layer must restrict who can call it:
+ *
+ * ```ts
+ * assertIsAdminInRequest(request);
+ * ```
+ *
+ * Only issues on the user's STORED health check can be fixed, and only those the reporting provider marked
+ * as fixable (`af`). The fix is applied to the delivery target that check recorded, which is the one an
+ * admin reviewing the check sees. The delivery method is checked again afterwards, so the result and the
+ * stored check both show whether the fix worked.
+ *
+ * @dbxModelApiParams
+ */
+export interface NotificationUserHealthCheckAutofixParams extends TargetModelParams {
+  /**
+   * The delivery method whose issues to fix.
+   */
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * The codes of the issues to fix. Each must be on the stored health check for this method and be marked
+   * fixable, or the whole call is refused.
+   */
+  readonly codes: NotificationHealthCheckIssueCode[];
+  /**
+   * Allow fixing issues whose autofix is {@link NotificationHealthCheckIssueAutofixType.EXPLICIT}.
+   *
+   * Those fixes override a choice the recipient made, such as reporting a message as spam, so they are
+   * refused unless this is set. Only set it when the recipient has explicitly asked for the fix.
+   *
+   * Defaults to false.
+   */
+  readonly allowExplicitAutofix?: Maybe<boolean>;
+}
+
+export const notificationUserHealthCheckAutofixParamsType = targetModelParamsType.merge({
+  method: type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY),
+  codes: type('string > 0').array().atLeastLength(1),
+  'allowExplicitAutofix?': clearable('boolean')
+}) as Type<NotificationUserHealthCheckAutofixParams>;
+
+/**
+ * The result of a `healthCheckAutofix` invocation.
+ */
+export interface NotificationUserHealthCheckAutofixResult {
+  /**
+   * The outcome of each requested fix, in the order the codes were requested.
+   */
+  readonly results: NotificationHealthCheckIssueAutofixResult[];
+  /**
+   * The health check after the fixes were applied, with the fixed delivery method checked again.
+   *
+   * Also persisted to the {@link NotificationUser}'s `hc` field.
+   */
+  readonly healthCheck: NotificationHealthCheck;
 }
 
 export interface ResyncAllNotificationUserParams {}
@@ -572,6 +633,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     };
     invoke: {
       healthCheck: [NotificationUserHealthCheckParams, NotificationUserHealthCheckResult];
+      healthCheckAutofix: [NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult];
     };
   };
   readonly notificationSummary: {
@@ -596,7 +658,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
-  notificationUser: ['update:_,resync', 'invoke:healthCheck'],
+  notificationUser: ['update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
   notification: ['update:send']
@@ -616,6 +678,7 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
     };
     invokeNotificationUser: {
       healthCheck: ModelFirebaseCrudFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult>;
+      healthCheckAutofix: ModelFirebaseCrudFunction<NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult>;
     };
   };
   abstract notificationSummary: {

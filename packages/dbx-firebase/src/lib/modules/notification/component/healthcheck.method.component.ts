@@ -4,9 +4,14 @@ import { type Maybe } from '@dereekb/util';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type DbxActionConfirmConfig, DbxActionConfirmDirective, DbxActionErrorDirective, DbxButtonComponent, DbxChipDirective, DbxColorDirective, DbxErrorComponent, DbxIconTileComponent } from '@dereekb/dbx-web';
-import { type NotificationDeliveryHealthCheckResult } from '@dereekb/firebase';
+import { type NotificationDeliveryHealthCheckResult, type NotificationHealthCheckIssueCode } from '@dereekb/firebase';
 import { DbxFirebaseNotificationHealthCheckPresentationService } from '../service/healthcheck.presentation.service';
-import { DbxFirebaseNotificationHealthCheckIssueComponent } from './healthcheck.issue.component';
+import { type DbxFirebaseNotificationHealthCheckIssueAutofixActionConfig, DbxFirebaseNotificationHealthCheckIssueComponent } from './healthcheck.issue.component';
+
+/**
+ * The automatic fix to offer for each finding in one delivery method's section, keyed by issue code.
+ */
+export type DbxFirebaseNotificationHealthCheckIssueAutofixActionMap = Readonly<Record<NotificationHealthCheckIssueCode, Maybe<DbxFirebaseNotificationHealthCheckIssueAutofixActionConfig>>>;
 
 /**
  * The "send a test message" action for one delivery method's section.
@@ -72,9 +77,9 @@ export interface DbxFirebaseNotificationHealthCheckMethodProbeActionConfig {
         <dbx-chip [small]="true" [color]="statusColorSignal()">{{ statusLabelSignal() }}</dbx-chip>
       </div>
 
-      @for (issue of resultValue.is; track $index) {
+      @for (issueSection of issueSectionsSignal(); track $index) {
         <div class="dbx-pt2">
-          <dbx-firebase-notification-healthcheck-issue [issue]="issue" [method]="resultValue.me"></dbx-firebase-notification-healthcheck-issue>
+          <dbx-firebase-notification-healthcheck-issue [issue]="issueSection.issue" [method]="resultValue.me" [showDetails]="showIssueDetails()" [autofixAction]="issueSection.autofixAction"></dbx-firebase-notification-healthcheck-issue>
         </div>
       }
 
@@ -131,6 +136,28 @@ export class DbxFirebaseNotificationHealthCheckMethodComponent {
    * Ignored unless the result reports that the method can actually be probed.
    */
   readonly probeAction = input<Maybe<DbxFirebaseNotificationHealthCheckMethodProbeActionConfig>>();
+
+  /**
+   * Whether each finding renders its structured detail, for an admin reviewing it.
+   */
+  readonly showIssueDetails = input<Maybe<boolean>>();
+
+  /**
+   * The automatic fix to offer for each finding in this section, keyed by issue code.
+   *
+   * Only findings the provider marked as fixable should have an entry.
+   */
+  readonly autofixActions = input<Maybe<DbxFirebaseNotificationHealthCheckIssueAutofixActionMap>>();
+
+  /**
+   * Each finding to render, paired with the fix offered for it.
+   *
+   * Paired up here rather than indexed in the template so the map lookup stays out of the view.
+   */
+  readonly issueSectionsSignal = computed(() => {
+    const autofixActions = this.autofixActions();
+    return (this.result()?.is ?? []).map((issue) => ({ issue, autofixAction: autofixActions?.[issue.c] }));
+  });
 
   readonly methodLabelSignal = computed(() => {
     const method = this.result()?.me;

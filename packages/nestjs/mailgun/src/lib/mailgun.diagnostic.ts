@@ -7,8 +7,12 @@
  * anything. They are all failure-tolerant: a missing suppression record or an
  * unreachable API surfaces as an absent/empty result rather than a thrown error, so a
  * diagnostic routine can report what it could learn instead of aborting.
+ *
+ * The one write here is {@link mailgunRemoveSuppressionForRecipient}, the remedy for a
+ * suppression the diagnosis found. It is failure-tolerant in the same way, reporting what
+ * happened instead of throwing.
  */
-import { type EmailAddress, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type EmailAddress, type Maybe, type Milliseconds, type Minutes } from '@dereekb/util';
 import { type MailgunApi } from './mailgun.api';
 import { type MailgunBounceSuppression, type MailgunComplaintSuppression, type MailgunDomainEvent, type MailgunEmailValidationResult, type MailgunEventsQuery, type MailgunUnsubscribeSuppression } from './mailgun.type';
 
@@ -47,6 +51,26 @@ export enum MailgunEventName {
 export enum MailgunEventSeverity {
   PERMANENT = 'permanent',
   TEMPORARY = 'temporary'
+}
+
+/**
+ * The domain suppression lists an address can be on.
+ *
+ * The values are the list names the Mailgun Suppressions API takes.
+ */
+export enum MailgunSuppressionList {
+  /**
+   * Addresses a previous message hard-bounced from.
+   */
+  BOUNCES = 'bounces',
+  /**
+   * Addresses that reported a message as spam.
+   */
+  COMPLAINTS = 'complaints',
+  /**
+   * Addresses that unsubscribed, from all mail or from specific tags.
+   */
+  UNSUBSCRIBES = 'unsubscribes'
 }
 
 /**
@@ -113,12 +137,72 @@ export async function mailgunSuppressionsForRecipient(api: MailgunApi, email: Em
 
   const [bounce, complaint, unsubscribe] = await Promise.all([
     //
-    readSuppression<MailgunBounceSuppression>(() => suppressions.get(domain, 'bounces', email)),
-    readSuppression<MailgunComplaintSuppression>(() => suppressions.get(domain, 'complaints', email)),
-    readSuppression<MailgunUnsubscribeSuppression>(() => suppressions.get(domain, 'unsubscribes', email))
+    readSuppression<MailgunBounceSuppression>(() => suppressions.get(domain, MailgunSuppressionList.BOUNCES, email)),
+    readSuppression<MailgunComplaintSuppression>(() => suppressions.get(domain, MailgunSuppressionList.COMPLAINTS, email)),
+    readSuppression<MailgunUnsubscribeSuppression>(() => suppressions.get(domain, MailgunSuppressionList.UNSUBSCRIBES, email))
   ]);
 
   return { bounce, complaint, unsubscribe };
+}
+
+/**
+ * The outcome of {@link mailgunRemoveSuppressionForRecipient}.
+ */
+export interface MailgunRemoveSuppressionForRecipientResult {
+  /**
+   * The list the address was removed from.
+   */
+  readonly list: MailgunSuppressionList;
+  /**
+   * True when the address is no longer on the list, either because it was just removed or because it was
+   * not on the list in the first place.
+   */
+  readonly cleared: boolean;
+  /**
+   * True when the address was not on the list to begin with.
+   */
+  readonly notFound?: Maybe<boolean>;
+  /**
+   * Why the removal failed, when it did.
+   */
+  readonly error?: Maybe<string>;
+}
+
+/**
+ * Removes an address from one of the domain's suppression lists, so Mailgun delivers to it again.
+ *
+ * An unsubscribe record is removed in full, including every tag it covers.
+ *
+ * Failure-tolerant like the read helpers in this module. Mailgun responds 404 when the address is not on
+ * the list, and that counts as cleared, since the goal (the address is not suppressed) is already met. Any
+ * other failure is returned as `cleared: false` with the error.
+ *
+ * @param api - The Mailgun API.
+ * @param email - The address to remove.
+ * @param list - The suppression list to remove it from.
+ * @returns What happened to the address on that list.
+ *
+ * @example
+ * ```ts
+ * const result = await mailgunRemoveSuppressionForRecipient(api, 'user@example.com', MailgunSuppressionList.UNSUBSCRIBES);
+ *
+ * if (!result.cleared) {
+ *   console.log(`could not resubscribe: ${result.error}`);
+ * }
+ * ```
+ */
+export async function mailgunRemoveSuppressionForRecipient(api: MailgunApi, email: EmailAddress, list: MailgunSuppressionList): Promise<MailgunRemoveSuppressionForRecipientResult> {
+  let result: MailgunRemoveSuppressionForRecipientResult;
+
+  try {
+    await api.suppressions.destroy(api.domain, list, email);
+    result = { list, cleared: true };
+  } catch (e) {
+    const notFound = (e as Maybe<{ status?: number }>)?.status === 404;
+    result = notFound ? { list, cleared: true, notFound } : { list, cleared: false, error: `${e}` };
+  }
+
+  return result;
 }
 
 /**
@@ -173,6 +257,75 @@ export async function mailgunRecentEventsForRecipient(api: MailgunApi, email: Em
   }
 
   return mailgunEventsForQuery(api, query);
+}
+
+/**
+ * The default distance from the reference time that {@link mailgunEventForRecipientNear} searches.
+ */
+export const DEFAULT_MAILGUN_EVENT_NEAR_WINDOW_MINUTES: Minutes = 60;
+
+/**
+ * Configuration for {@link mailgunEventForRecipientNear}.
+ */
+export interface MailgunEventForRecipientNearConfig {
+  /**
+   * The event name to look for, e.g. {@link MailgunEventName.UNSUBSCRIBED}.
+   */
+  readonly event: string;
+  /**
+   * The time the event is expected to have happened.
+   */
+  readonly at: Date;
+  /**
+   * How far either side of `at` to search.
+   *
+   * Defaults to {@link DEFAULT_MAILGUN_EVENT_NEAR_WINDOW_MINUTES}.
+   */
+  readonly windowMinutes?: Maybe<Minutes>;
+}
+
+/**
+ * Finds the recipient's event of a given kind closest to a point in time.
+ *
+ * Used to connect a suppression record to the event that created it. A suppression only records when it
+ * happened, while the `unsubscribed` / `complained` event that triggered it also carries the message it
+ * was triggered from, such as that message's subject.
+ *
+ * The search sends both `begin` and `end`, so Mailgun reads the range in ascending order and does not rely
+ * on the `ascending` flag. An empty result is normal. Mailgun keeps events only for the plan's retention
+ * period, and a suppression added through the API or the dashboard has no event at all.
+ *
+ * @param api - The Mailgun API.
+ * @param email - The recipient address.
+ * @param config - The event name, the time to search around, and the window.
+ * @returns The matching event closest to `at`, or undefined if there is none or the lookup failed.
+ */
+export async function mailgunEventForRecipientNear(api: MailgunApi, email: EmailAddress, config: MailgunEventForRecipientNearConfig): Promise<Maybe<MailgunDomainEvent>> {
+  const { event, at, windowMinutes: inputWindowMinutes } = config;
+  const windowMs = (inputWindowMinutes ?? DEFAULT_MAILGUN_EVENT_NEAR_WINDOW_MINUTES) * 60 * 1000;
+  const atTime = at.getTime();
+
+  const events = await mailgunEventsForQuery(api, {
+    recipient: email,
+    event,
+    begin: new Date(atTime - windowMs).toUTCString(),
+    end: new Date(atTime + windowMs).toUTCString(),
+    limit: 25
+  });
+
+  let closest: Maybe<MailgunDomainEvent>;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  events.forEach((x) => {
+    const distance = Math.abs(mailgunDomainEventDate(x).getTime() - atTime);
+
+    if (distance < closestDistance) {
+      closest = x;
+      closestDistance = distance;
+    }
+  });
+
+  return closest;
 }
 
 /**

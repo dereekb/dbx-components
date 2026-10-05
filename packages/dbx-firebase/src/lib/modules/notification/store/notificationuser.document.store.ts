@@ -26,4 +26,12 @@ export class NotificationUserDocumentStore extends AbstractDbxFirebaseDocumentSt
    * to run a check whose outcome is retained as state.
    */
   readonly healthCheck = firebaseDocumentStoreInvokeFunction(this, this.notificationFunctions.notificationUser.invokeNotificationUser.healthCheck);
+
+  /**
+   * Fixes issues the stored health check marked as fixable, then checks that delivery method again.
+   *
+   * Admin only on the server, since a fix changes state at the delivery provider. Use the
+   * DbxFirebaseNotificationUserHealthCheckStore to run a fix whose outcome is retained as state.
+   */
+  readonly healthCheckAutofix = firebaseDocumentStoreInvokeFunction(this, this.notificationFunctions.notificationUser.invokeNotificationUser.healthCheckAutofix);
 }

@@ -8,6 +8,8 @@ import {
   notificationUserHealthCheckNextProbeAtByMethod,
   notificationUserHealthCheckNextRunAt,
   notificationUserHealthCheckNextVerifyAt,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult
 } from '@dereekb/firebase';
@@ -23,6 +25,27 @@ import { NotificationUserDocumentStore } from './notificationuser.document.store
  * Params for a health check run. The store injects the NotificationUser key, so it is not required.
  */
 export type DbxFirebaseNotificationUserHealthCheckRunParams = DbxFirebaseDocumentStoreFunctionParamsInput<NotificationUserHealthCheckParams>;
+
+/**
+ * Params for a health check autofix. The store injects the NotificationUser key, so it is not required.
+ */
+export type DbxFirebaseNotificationUserHealthCheckAutofixParams = DbxFirebaseDocumentStoreFunctionParamsInput<NotificationUserHealthCheckAutofixParams>;
+
+/**
+ * Treats an autofix that left any issue unfixed as a failure.
+ *
+ * The server reports a fix the provider could not apply as an unfixed result rather than an error, so
+ * the other fixes in the same call still go through. A caller watching the action needs to see it fail,
+ * with the provider's reason, so the loading state is turned into an error carrying those reasons.
+ *
+ * @param state - The loading state of an autofix call.
+ * @returns The same state, or an error state when a fix was not applied.
+ */
+function healthCheckAutofixUnfixedResultsAsError(state: LoadingState<NotificationUserHealthCheckAutofixResult>): LoadingState<NotificationUserHealthCheckAutofixResult> {
+  const unfixed = state.value?.results.filter((x) => !x.fixed) ?? [];
+  const message = unfixed.map((x) => x.message ?? `${x.code} could not be fixed.`).join(' ');
+  return unfixed.length > 0 ? errorResult<NotificationUserHealthCheckAutofixResult>({ code: 'NOTIFICATION_HEALTH_CHECK_AUTOFIX_NOT_APPLIED', message }) : state;
+}
 
 /**
  * Counts down the seconds until the input time, once per second.
@@ -92,6 +115,13 @@ export interface DbxFirebaseNotificationUserHealthCheckStoreState {
    * so the stored one is read from the document instead.
    */
   readonly healthCheckResultState?: Maybe<LoadingState<NotificationUserHealthCheckResult>>;
+  /**
+   * The loading state of the most recent autofix made through this store.
+   *
+   * Only set once a fix has been dispatched. A fix that left any issue unfixed is an error state carrying
+   * the provider's reasons.
+   */
+  readonly healthCheckAutofixResultState?: Maybe<LoadingState<NotificationUserHealthCheckAutofixResult>>;
 }
 
 /**
@@ -156,6 +186,14 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  /**
+   * The loading state of the most recent {@link runHealthCheckAutofix} dispatch.
+   *
+   * Like {@link healthCheckResultState$}, a dispatch sets this to a loading state synchronously, so a
+   * caller that dispatches and then watches it is watching its own fix.
+   */
+  readonly healthCheckAutofixResultState$ = this.select((state) => state.healthCheckAutofixResultState).pipe(distinctUntilChanged(), shareReplay(1));
 
   // MARK: Throttle
   /**
@@ -257,6 +295,7 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
 
   // MARK: State Changes
   private readonly _setHealthCheckResultState = this.updater((state, healthCheckResultState: Maybe<LoadingState<NotificationUserHealthCheckResult>>) => ({ ...state, healthCheckResultState }));
+  private readonly _setHealthCheckAutofixResultState = this.updater((state, healthCheckAutofixResultState: Maybe<LoadingState<NotificationUserHealthCheckAutofixResult>>) => ({ ...state, healthCheckAutofixResultState }));
 
   // MARK: Effects
   /**
@@ -276,6 +315,29 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
           startWithBeginLoading(), // emit loading synchronously so a dispatcher can pick this run up off the state
           catchError((error) => of(errorResult<NotificationUserHealthCheckResult>(error))), // an error here would otherwise kill this effect's subscription
           tap((healthCheckResultState) => this._setHealthCheckResultState(healthCheckResultState))
+        )
+      )
+    )
+  );
+
+  /**
+   * Fixes issues the stored health check marked as fixable, and puts the outcome on
+   * {@link healthCheckAutofixResultState$}.
+   *
+   * Admin only on the server. The fix also checks the delivery method again, and the stored check is
+   * streamed into {@link healthCheck$}, so a fixed issue simply disappears from the report.
+   *
+   * While a fix is in flight further dispatches are ignored, so the state always reflects the fix that is
+   * actually happening.
+   */
+  readonly runHealthCheckAutofix = this.effect((input: Observable<DbxFirebaseNotificationUserHealthCheckAutofixParams>) =>
+    input.pipe(
+      exhaustMap((params) =>
+        this.notificationUserDocumentStore.healthCheckAutofix(params).pipe(
+          startWithBeginLoading(),
+          map(healthCheckAutofixUnfixedResultsAsError),
+          catchError((error) => of(errorResult<NotificationUserHealthCheckAutofixResult>(error))),
+          tap((healthCheckAutofixResultState) => this._setHealthCheckAutofixResultState(healthCheckAutofixResultState))
         )
       )
     )
@@ -303,10 +365,11 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
           // above and restarts this timer, while one that fails to reach the server leaves the value
           // unchanged and is simply retried on the next tick.
           switchMap((verification) => (verification == null ? EMPTY : timer(Math.max(0, verification.at.getTime() - Date.now()), (this._config?.verifyThrottleSeconds ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS) * MS_IN_SECOND).pipe(map(() => verification.methods)))),
-          withLatestFrom(this.healthCheckResultState$),
+          withLatestFrom(this.healthCheckResultState$, this.healthCheckAutofixResultState$),
           // A verification carries the whole stored check forward, so one racing a run the user started
-          // could write back a copy taken before that run's result landed. The user's run always wins.
-          filter(([, healthCheckResultState]) => healthCheckResultState?.loading !== true),
+          // could write back a copy taken before that run's result landed. The user's run always wins, as
+          // does an autofix, which ends in a run of its own.
+          filter(([, healthCheckResultState, healthCheckAutofixResultState]) => healthCheckResultState?.loading !== true && healthCheckAutofixResultState?.loading !== true),
           exhaustMap(([methods]) =>
             this.notificationUserDocumentStore.healthCheck({ verifyPendingProbesOnly: true, methods }).pipe(
               catchError(() => EMPTY) // nothing to report: the poll is invisible, and the next tick retries

@@ -1,14 +1,17 @@
 import {
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
   type ResyncNotificationUserParams,
   type ResyncNotificationUserResult,
   type UpdateNotificationUserParams,
+  notificationUserHealthCheckAutofixParamsType,
   notificationUserHealthCheckParamsType,
   updateNotificationUserParamsType,
   resyncNotificationUserParamsType
 } from '@dereekb/firebase';
-import { isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
+import { assertIsAdminInRequest, isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 import { type DemoInvokeModelFunction, type DemoUpdateModelFunction } from '../function.context';
 
@@ -75,5 +78,34 @@ export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUs
     });
 
     return notificationUserHealthCheck(notificationUserDocument);
+  }
+});
+
+/**
+ * Fixes notification delivery issues the user's stored health check marked as fixable, such as an address
+ * on the email provider's unsubscribe list, then checks that delivery method again.
+ *
+ * Admin only. A fix changes state at the delivery provider and can override a choice the recipient made,
+ * and the action cannot see who is calling, so this is where it is enforced.
+ */
+export const notificationUserHealthCheckAutofix: DemoInvokeModelFunction<NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult> = withApiDetails({
+  inputType: notificationUserHealthCheckAutofixParamsType,
+  mcp: {
+    visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
+  },
+  fn: async (request) => {
+    const { nest, data } = request;
+
+    assertIsAdminInRequest(request);
+
+    const notificationUserHealthCheckAutofix = await nest.notificationActions.notificationUserHealthCheckAutofix(data);
+    const notificationUserDocument = await nest.useModel('notificationUser', {
+      request,
+      key: data.key,
+      roles: 'read',
+      use: (x) => x.document
+    });
+
+    return notificationUserHealthCheckAutofix(notificationUserDocument);
   }
 });
