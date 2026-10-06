@@ -153,7 +153,7 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    *
    * Supports prefix matching: excluding `ab_123` also excludes child boxes like `ab_123_cd_456`.
    * Populated by server-side model logic (e.g., when a user loses access to a resource).
-   * Exclusions are synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
+   * Exclusions are applied live at send time, and are also synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
    *
    * Non-matching entries (where the user isn't associated with a matching box) are automatically removed.
    *
@@ -163,7 +163,9 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.
    *
-   * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply as a final override during notification delivery.
+   * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply live as a final override during notification delivery.
+   * Only its lock flag (`lk`) is synced to the boxes. Its `dm` disables delivery methods account-wide, and its `e`/`t` override the user's
+   * auth email and phone number for every notification.
    *
    * @dbxModelVariable globalConfig
    */
@@ -171,7 +173,7 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Direct/default config. Used when a recipient is added ad-hoc (by uid) to a notification that isn't associated with any of their subscribed boxes.
    *
-   * Acts as the fallback config when no per-box config (`bc`) matches.
+   * Acts as the fallback config when no per-box config (`bc`) matches. Ranks below `gc` and above the notification's own recipient config.
    *
    * @dbxModelVariable defaultConfig
    */
@@ -776,9 +778,9 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
   /**
    * Additional per-notification recipients with inline config overrides.
    *
-   * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution.
+   * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution, as the lowest config level.
    * For example, setting `st: true` opts a user into text/SMS for this notification's template type,
-   * unless overridden by the user's own {@link NotificationUser} config.
+   * unless overridden by the user's own {@link NotificationUser} config or their box recipient entry.
    *
    * @dbxModelVariable recipients
    */

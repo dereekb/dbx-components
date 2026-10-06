@@ -26,7 +26,6 @@ import {
   type NotificationBoxId,
   type NotificationBoxRecipient,
   NotificationBoxRecipientFlag,
-  type NotificationBoxRecipientTemplateConfig,
   type NotificationDeliveryHealthCheckResult,
   NotificationDeliveryMethod,
   type NotificationHealthCheck,
@@ -45,7 +44,12 @@ import {
   type NotificationUserNotificationBoxRecipientConfig,
   DEFAULT_NOTIFICATION_TEMPLATE_TYPE,
   KnownNotificationHealthCheckIssueCode,
-  effectiveNotificationBoxRecipientTemplateConfig,
+  ALL_NOTIFICATION_DELIVERY_METHODS,
+  isNotificationDeliveryMethodDisabled,
+  NotificationDeliveryMethodDecisionSource,
+  type NotificationExplicitOptInConfig,
+  resolveNotificationDeliveryMethodDecisions,
+  resolveNotificationUidRecipientDelivery,
   isPendingNotificationHealthCheckProbe,
   notificationDeliveryHealthCheckResultForMethod,
   notificationHealthCheckIssue,
@@ -100,17 +104,6 @@ interface NotificationDeliveryMethodContext<T = unknown> {
    * The resolved delivery target, if one could be determined.
    */
   readonly target?: Maybe<T>;
-  /**
-   * Reads the method's flag out of an effective template config.
-   */
-  readonly readTemplateConfigFlag: (config: NotificationBoxRecipientTemplateConfig) => Maybe<boolean>;
-  /**
-   * Whether the send pipeline requires this method to be *explicitly* enabled.
-   *
-   * Text/SMS defaults to opt-in only, so an absent config means "will not send" for text but
-   * "will send" for email — a distinction worth reporting plainly.
-   */
-  readonly requiresExplicitOptIn: boolean;
 }
 
 /**
@@ -120,7 +113,7 @@ interface NotificationDeliveryMethodContext<T = unknown> {
  * @returns A transform-and-validate function that runs a delivery health check for a notification user.
  */
 export function notificationUserHealthCheckFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationSendService, authService, notificationUserHealthCheckConfig } = context;
+  const { firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationSendService, authService, notificationUserHealthCheckConfig, appNotificationTemplateTypeInfoRecordService } = context;
   const probeThrottleMinutes = notificationUserHealthCheckConfig?.probeThrottleMinutes;
   const runThrottleMinutes = notificationUserHealthCheckConfig?.runThrottleMinutes;
   const verifyThrottleSeconds = notificationUserHealthCheckConfig?.verifyThrottleSeconds;
@@ -174,6 +167,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       }
 
       const notificationTemplateType = inputNotificationTemplateType || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
+      const explicitOptIn: Maybe<NotificationExplicitOptInConfig> = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType];
       const authDetails = await authService
         .userContext(uid)
         .loadDetails()
@@ -191,7 +185,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       const methodContextsToCheck = methodContexts.filter((x) => (requestedMethods ? requestedMethods.has(x.method) : true));
 
       // MARK: account-wide
-      const subscriptions = skipSubscriptionChecks ? undefined : await inspectNotificationUserSubscriptions({ notificationUser, notificationBoxCollection, notificationTemplateType });
+      const subscriptions = skipSubscriptionChecks ? undefined : await inspectNotificationUserSubscriptions({ notificationUser, notificationBoxCollection, notificationTemplateType, explicitOptIn });
       const disabledMethodsByBox = subscriptions?.issuesByMethod ?? new Map<NotificationDeliveryMethod, NotificationHealthCheckIssue[]>();
 
       const accountIssues: NotificationHealthCheckIssue[] = verifyPendingProbesOnly
@@ -226,7 +220,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // lose its probe explanation while still reporting the probe itself.
           const issues: NotificationHealthCheckIssue[] = verifyPendingProbesOnly
             ? (previousMethodResult?.is ?? []).filter((x) => !(willConsultProvider && isProbeIssueCode(x.c)))
-            : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType }), ...(disabledMethodsByBox.get(method) ?? [])];
+            : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType, explicitOptIn }), ...(disabledMethodsByBox.get(method) ?? [])];
 
           // keep any previously resolved probe visible unless the provider supplies a newer one
           let probe: Maybe<NotificationHealthCheckProbe> = previousProbe;
@@ -438,15 +432,16 @@ interface BuildNotificationDeliveryMethodContextsInput {
 /**
  * Builds the per-method view of what is configured and where each method would deliver to.
  *
- * Target resolution mirrors the send pipeline: a recipient's explicit override on their global or
- * default config wins, otherwise the value on their Firebase Auth record is used.
+ * Target resolution mirrors the send pipeline (see {@link resolveNotificationUidRecipientDelivery}): the override on the
+ * user's global config wins, otherwise the value on their Firebase Auth record is used. The default config's overrides
+ * (`dc.e` / `dc.t`) are ignored, since they only apply to a few direct sends.
  *
  * @param input - The user, the configured send service, and their auth contact details.
  * @returns One context per delivery method, in report order.
  */
 function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliveryMethodContextsInput): NotificationDeliveryMethodContext[] {
   const { notificationUser, notificationSendService, authEmail, authPhone, uid } = input;
-  const { gc, dc } = notificationUser;
+  const { gc } = notificationUser;
   const { emailSendService, textSendService, notificationSummarySendService, notificationSummaryIdForUidFunction } = notificationSendService;
 
   const emailContext: NotificationDeliveryMethodContext<EmailAddress> = {
@@ -454,9 +449,7 @@ function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliver
     label: 'Email',
     sendServiceConfigured: emailSendService != null,
     healthCheckService: emailSendService?.healthCheckService,
-    target: (gc.e ?? dc.e ?? authEmail) as Maybe<EmailAddress>,
-    readTemplateConfigFlag: (x) => x.se,
-    requiresExplicitOptIn: false
+    target: (gc.e ?? authEmail) as Maybe<EmailAddress>
   };
 
   const textContext: NotificationDeliveryMethodContext<E164PhoneNumber> = {
@@ -464,10 +457,7 @@ function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliver
     label: 'Text message',
     sendServiceConfigured: textSendService != null,
     healthCheckService: textSendService?.healthCheckService,
-    target: (gc.t ?? dc.t ?? authPhone) as Maybe<E164PhoneNumber>,
-    readTemplateConfigFlag: (x) => x.st,
-    // the send pipeline only texts recipients who have explicitly opted in
-    requiresExplicitOptIn: true
+    target: (gc.t ?? authPhone) as Maybe<E164PhoneNumber>
   };
 
   const summaryContext: NotificationDeliveryMethodContext<string> = {
@@ -475,18 +465,14 @@ function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliver
     label: 'In-app notification',
     sendServiceConfigured: notificationSummarySendService != null,
     healthCheckService: notificationSummarySendService?.healthCheckService,
-    target: notificationSummaryIdForUidFunction?.(uid),
-    readTemplateConfigFlag: (x) => x.sn,
-    requiresExplicitOptIn: false
+    target: notificationSummaryIdForUidFunction?.(uid)
   };
 
   const pushContext: NotificationDeliveryMethodContext<string> = {
     method: NotificationDeliveryMethod.PUSH,
     label: 'Push notification',
     // push delivery is not part of the send service yet
-    sendServiceConfigured: false,
-    readTemplateConfigFlag: (x) => x.sp,
-    requiresExplicitOptIn: true
+    sendServiceConfigured: false
   };
 
   return [emailContext, textContext, summaryContext, pushContext] as NotificationDeliveryMethodContext[];
@@ -571,20 +557,21 @@ interface NotificationDeliveryMethodConfigIssuesInput {
   readonly methodContext: NotificationDeliveryMethodContext;
   readonly notificationUser: NotificationUser;
   readonly notificationTemplateType: NotificationTemplateType;
+  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
 }
 
 /**
  * Evaluates the user's own configuration for a single delivery method.
  *
- * These mirror the gates in {@link expandNotificationRecipients}, so each finding corresponds to a real
- * reason the send pipeline would drop a message.
+ * Resolves the method the same way {@link expandNotificationRecipients} does for a direct send (see
+ * {@link resolveNotificationUidRecipientDelivery}), so each finding corresponds to a real reason the send pipeline would drop a message.
  *
- * @param input - The delivery method context, the user, and the template type being evaluated.
+ * @param input - The delivery method context, the user, the template type being evaluated and its opt-in rules.
  * @returns The findings for the method.
  */
 function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMethodConfigIssuesInput): NotificationHealthCheckIssue[] {
-  const { methodContext, notificationUser, notificationTemplateType } = input;
-  const { method, label, sendServiceConfigured, target, readTemplateConfigFlag, requiresExplicitOptIn } = methodContext;
+  const { methodContext, notificationUser, notificationTemplateType, explicitOptIn } = input;
+  const { method, label, sendServiceConfigured, target } = methodContext;
   const { gc, dc } = notificationUser;
 
   const issues: NotificationHealthCheckIssue[] = [];
@@ -593,6 +580,19 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
     issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_NOT_CONFIGURED, NotificationHealthCheckStatus.SKIPPED, { message: `${label} notifications are not enabled on this system.`, data: { method } }));
 
     return issues; // nothing else about this method is meaningful
+  }
+
+  // reported before the destination check, so someone who switched the method off is not asked to add a destination for it
+  if (isNotificationDeliveryMethodDisabled(gc, method)) {
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.ERROR, {
+        message: `You have switched off ${label.toLowerCase()} notifications.`,
+        fix: `Turn ${label.toLowerCase()} back on in your notification settings.`,
+        data: { method, scope: 'global', disabledDeliveryMethod: true }
+      })
+    );
+
+    return issues;
   }
 
   if (target == null) {
@@ -607,48 +607,51 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
     return issues; // every remaining check is about a destination that does not exist
   }
 
-  // per-template channel flags on the global and default configs
-  const globalTemplateFlag = readEffectiveTemplateConfigFlag(gc.c?.[notificationTemplateType], readTemplateConfigFlag);
-  const defaultTemplateFlag = readEffectiveTemplateConfigFlag(dc.c?.[notificationTemplateType], readTemplateConfigFlag);
+  if (isNotificationDeliveryMethodDisabled(dc, method)) {
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.WARNING, {
+        message: `${label} is switched off in your default settings, so notifications sent to you directly will not use it.`,
+        fix: `Turn ${label.toLowerCase()} back on in your default notification settings.`,
+        data: { method, scope: 'default', disabledDeliveryMethod: true }
+      })
+    );
 
-  if (globalTemplateFlag === false) {
-    issues.push(
-      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.ERROR, {
-        message: `${label} is switched off for you across every notification, which overrides all other settings.`,
-        fix: `Turn ${label.toLowerCase()} back on in your notification settings.`,
-        data: { method, notificationTemplateType, scope: 'global' }
-      })
-    );
-  } else if (defaultTemplateFlag === false) {
-    issues.push(
-      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
-        message: `${label} is switched off in your default settings for this kind of notification.`,
-        fix: `Turn ${label.toLowerCase()} back on for this notification type.`,
-        data: { method, notificationTemplateType, scope: 'default' }
-      })
-    );
-  } else if (requiresExplicitOptIn && globalTemplateFlag !== true && defaultTemplateFlag !== true) {
-    issues.push(
-      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
-        message: `${label} is only sent to people who have turned it on, and you have not turned it on.`,
-        fix: `Turn ${label.toLowerCase()} on in your notification settings.`,
-        data: { method, notificationTemplateType, requiresExplicitOptIn: true }
-      })
-    );
+    return issues;
+  }
+
+  // the opt-out flags are reported with the account findings, so only the method's own decision is evaluated here
+  const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, notificationUser: { gc, dc, x: [] } });
+  const decision = decisions[method];
+
+  if (!decision.send) {
+    if (decision.source === NotificationDeliveryMethodDecisionSource.CONFIG && decision.configIndex === 0) {
+      issues.push(
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, NotificationHealthCheckStatus.ERROR, {
+          message: `${label} is switched off for you across every notification, which overrides all other settings.`,
+          fix: `Turn ${label.toLowerCase()} back on in your notification settings.`,
+          data: { method, notificationTemplateType, scope: 'global' }
+        })
+      );
+    } else if (decision.source === NotificationDeliveryMethodDecisionSource.CONFIG) {
+      issues.push(
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
+          message: `${label} is switched off in your default settings for this kind of notification.`,
+          fix: `Turn ${label.toLowerCase()} back on for this notification type.`,
+          data: { method, notificationTemplateType, scope: 'default' }
+        })
+      );
+    } else if (decision.source === NotificationDeliveryMethodDecisionSource.DEFAULT) {
+      issues.push(
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
+          message: `${label} is only sent to people who have turned it on, and you have not turned it on.`,
+          fix: `Turn ${label.toLowerCase()} on in your notification settings.`,
+          data: { method, notificationTemplateType, requiresExplicitOptIn: true }
+        })
+      );
+    }
   }
 
   return issues;
-}
-
-/**
- * Resolves a single channel flag out of a template config, applying the `sd` send-default fallback.
- *
- * @param config - The template config to read, if the user has one for this template type.
- * @param readFlag - Selects the delivery method's flag out of an effective config.
- * @returns The flag's effective value, or undefined when the config leaves it unset.
- */
-function readEffectiveTemplateConfigFlag(config: Maybe<NotificationBoxRecipientTemplateConfig>, readFlag: (config: NotificationBoxRecipientTemplateConfig) => Maybe<boolean>): Maybe<boolean> {
-  return config ? readFlag(effectiveNotificationBoxRecipientTemplateConfig(config)) : undefined;
 }
 
 // MARK: Subscription Checks
@@ -656,6 +659,7 @@ interface InspectNotificationUserSubscriptionsInput {
   readonly notificationUser: NotificationUser;
   readonly notificationBoxCollection: NotificationServerActionsContext['notificationBoxCollection'];
   readonly notificationTemplateType: NotificationTemplateType;
+  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
 }
 
 interface InspectNotificationUserSubscriptionsResult {
@@ -680,8 +684,8 @@ interface InspectNotificationUserSubscriptionsResult {
  * @returns The account-wide findings plus any findings scoped to a single delivery method.
  */
 async function inspectNotificationUserSubscriptions(input: InspectNotificationUserSubscriptionsInput): Promise<InspectNotificationUserSubscriptionsResult> {
-  const { notificationUser, notificationBoxCollection, notificationTemplateType } = input;
-  const { uid, bc, ns } = notificationUser;
+  const { notificationUser, notificationBoxCollection, notificationTemplateType, explicitOptIn } = input;
+  const { uid, bc, ns, gc } = notificationUser;
 
   const sharedIssues: NotificationHealthCheckIssue[] = [];
   const issuesByMethod = new Map<NotificationDeliveryMethod, NotificationHealthCheckIssue[]>();
@@ -730,7 +734,7 @@ async function inspectNotificationUserSubscriptions(input: InspectNotificationUs
       unsyncedBoxIds.push(config.nb);
     }
 
-    collectDisabledMethodsForBoxRecipient({ boxRecipient, config, notificationTemplateType }).forEach((method) => {
+    collectDisabledMethodsForBoxRecipient({ boxRecipient, config, gc, notificationTemplateType, explicitOptIn }).forEach((method) => {
       const existing = disabledBoxIdsByMethod.get(method) ?? [];
       existing.push(config.nb);
       disabledBoxIdsByMethod.set(method, existing);
@@ -783,20 +787,23 @@ async function inspectNotificationUserSubscriptions(input: InspectNotificationUs
 interface CollectDisabledMethodsForBoxRecipientInput {
   readonly boxRecipient: Maybe<NotificationBoxRecipient>;
   readonly config: NotificationUserNotificationBoxRecipientConfig;
+  readonly gc: NotificationUser['gc'];
   readonly notificationTemplateType: NotificationTemplateType;
+  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
 }
 
 /**
  * Determines which delivery methods are switched off for a user within a single notification box.
  *
  * Reads the box's own recipient entry when present, since that is what the send pipeline consults,
- * and falls back to the user's mirrored config otherwise.
+ * and falls back to the user's mirrored config otherwise. Only methods the box entry decides are
+ * reported: a method the user's global config sets overrides the box entry at send time.
  *
- * @param input - The box's recipient entry, the user's mirrored config, and the template type.
- * @returns The delivery methods explicitly switched off for the user in this box.
+ * @param input - The box's recipient entry, the user's mirrored config, their global config, and the template type.
+ * @returns The delivery methods switched off for the user in this box.
  */
 function collectDisabledMethodsForBoxRecipient(input: CollectDisabledMethodsForBoxRecipientInput): NotificationDeliveryMethod[] {
-  const { boxRecipient, config, notificationTemplateType } = input;
+  const { boxRecipient, config, gc, notificationTemplateType, explicitOptIn } = input;
   const effectiveRecipient = boxRecipient ?? config;
 
   // a flagged or excluded recipient receives nothing at all from this box, which is reported
@@ -805,21 +812,12 @@ function collectDisabledMethodsForBoxRecipient(input: CollectDisabledMethodsForB
     return [];
   }
 
-  const templateConfig = effectiveRecipient.c?.[notificationTemplateType];
+  const decisions = resolveNotificationDeliveryMethodDecisions({ configs: [gc.c?.[notificationTemplateType], effectiveRecipient.c?.[notificationTemplateType]], explicitOptIn });
 
-  if (!templateConfig) {
-    return [];
-  }
-
-  const effective = effectiveNotificationBoxRecipientTemplateConfig(templateConfig);
-
-  return filterMaybeArrayValues([
-    //
-    effective.se === false ? NotificationDeliveryMethod.EMAIL : undefined,
-    effective.st === false ? NotificationDeliveryMethod.TEXT : undefined,
-    effective.sp === false ? NotificationDeliveryMethod.PUSH : undefined,
-    effective.sn === false ? NotificationDeliveryMethod.NOTIFICATION_SUMMARY : undefined
-  ]);
+  return ALL_NOTIFICATION_DELIVERY_METHODS.filter((method) => {
+    const decision = decisions[method];
+    return !decision.send && decision.source === NotificationDeliveryMethodDecisionSource.CONFIG && decision.configIndex === 1;
+  });
 }
 
 /**

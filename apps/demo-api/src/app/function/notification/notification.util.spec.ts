@@ -8,6 +8,7 @@ import {
   type NotificationBoxRecipient,
   NotificationBoxRecipientFlag,
   type NotificationBoxRecipientTemplateConfigArrayEntryParam,
+  NotificationDeliveryMethod,
   NotificationRecipientSendFlag,
   NotificationSendState,
   NotificationSendType,
@@ -150,6 +151,81 @@ demoApiFunctionContextFactory((f) => {
                 expect(summaryIdSummary.notificationSummaryId).toBe(notificationSummaryId);
               });
             });
+
+            describe('box recipient config', () => {
+              it('should still email and summarize a box recipient whose config only disables texts', async () => {
+                const r: NotificationBoxRecipient[] = [
+                  {
+                    uid: u.uid,
+                    i: 0,
+                    c: {
+                      [EXAMPLE_NOTIFICATION_TEMPLATE_TYPE]: { st: false }
+                    }
+                  }
+                ];
+
+                const notificationBox: DocumentDataWithIdAndKey<NotificationBox> = {
+                  ...baseNotificationBox,
+                  r,
+                  id: firestoreDummyKey(),
+                  key: firestoreDummyKey()
+                };
+
+                const result = await expandNotificationRecipients({
+                  notification: baseNotification,
+                  notificationBox,
+                  authService: f.authService,
+                  notificationSummaryIdForUid: f.notificationSendService.notificationSummaryIdForUidFunction,
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
+                });
+
+                expect(result.emails).toHaveLength(1);
+                expect(result.texts).toHaveLength(0);
+                expect(result.notificationSummaries).toHaveLength(1);
+              });
+            });
+          });
+
+          describe('NotificationUser contact overrides', () => {
+            demoNotificationUserContext({ f, u, init: true }, (nu) => {
+              const overrideEmail = 'override@example.com';
+              const overridePhone = '+12025550199';
+
+              async function expandListedRecipient() {
+                const notification: Notification = {
+                  ...baseNotification,
+                  r: [{ uid: u.uid, se: true, st: true }]
+                };
+
+                return expandNotificationRecipients({
+                  notification,
+                  authService: f.authService,
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
+                });
+              }
+
+              it('should send a single email and text to the default config overrides', async () => {
+                await nu.updateNotificationUser({ dc: { e: overrideEmail, t: overridePhone } });
+
+                const result = await expandListedRecipient();
+
+                expect(result.emails).toHaveLength(1);
+                expect(result.emails[0].emailAddress).toBe(overrideEmail);
+                expect(result.texts).toHaveLength(1);
+                expect(result.texts[0].phoneNumber).toBe(overridePhone);
+              });
+
+              it('should send a single email and text to the global config overrides', async () => {
+                await nu.updateNotificationUser({ dc: { e: 'dc@example.com', t: '+12025550100' }, gc: { e: overrideEmail, t: overridePhone } });
+
+                const result = await expandListedRecipient();
+
+                expect(result.emails).toHaveLength(1);
+                expect(result.emails[0].emailAddress).toBe(overrideEmail);
+                expect(result.texts).toHaveLength(1);
+                expect(result.texts[0].phoneNumber).toBe(overridePhone);
+              });
+            });
           });
 
           describe('scenarios', () => {
@@ -271,6 +347,10 @@ demoApiFunctionContextFactory((f) => {
                                       readonly checkOptOutFromFlag?: boolean;
                                       readonly checkSendExclusionFlag?: boolean;
                                       readonly isAssociatedWithNotificationBox?: boolean;
+                                      /**
+                                       * Skips checking the user's merged config against the expectation, for cases decided outside the per-type config (such as a disabled delivery method).
+                                       */
+                                      readonly skipConfigCheck?: boolean;
                                     }
 
                                     function describeNotificationShouldBeSentToUser(expectation: LikeNotificationShouldBeSentExpectation) {
@@ -392,7 +472,7 @@ demoApiFunctionContextFactory((f) => {
                                             }
                                           }
 
-                                          if (userNotificationUserRecipientConfig) {
+                                          if (userNotificationUserRecipientConfig && !expectation.skipConfigCheck) {
                                             const userGlobalConfig = notificationUser?.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
                                             const userDefaultConfig = notificationUser?.dc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
                                             const userNotificationUserRecipientConfigForTemplateType = userNotificationUserRecipientConfig.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
@@ -637,8 +717,9 @@ demoApiFunctionContextFactory((f) => {
                                             });
                                           });
 
+                                          // exclusions are applied live at send time
                                           describe('not synced', () => {
-                                            describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: true, text: false, notificationSummary: true });
+                                            describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: false, checkSendExclusionFlag: true });
                                           });
 
                                           describe('exclusion synced', () => {
@@ -647,6 +728,66 @@ demoApiFunctionContextFactory((f) => {
                                             });
 
                                             describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: false });
+                                          });
+                                        });
+                                      });
+
+                                      describe('global configuration (live, no resync)', () => {
+                                        function beforeEachUpdateNotificationUserGlobalConfig(gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams) {
+                                          beforeEach(async () => {
+                                            await nu.updateNotificationUser({
+                                              gc
+                                            });
+                                          });
+                                        }
+
+                                        describe('user opts into sms', () => {
+                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
+                                          describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: true, notificationSummary: true, checkGlobalConfig: true });
+                                        });
+
+                                        describe('user has disabled sending for all Like notifications', () => {
+                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, sd: false }] });
+                                          describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: false, checkGlobalConfig: true });
+                                        });
+
+                                        describe('user has opted out of all notifications', () => {
+                                          beforeEachUpdateNotificationUserGlobalConfig({ f: NotificationBoxRecipientFlag.OPT_OUT });
+                                          describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: false, checkOptOutFromFlag: true });
+                                        });
+
+                                        describe('user disabled texts while opted into sms', () => {
+                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }], dm: [NotificationDeliveryMethod.TEXT] });
+                                          describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: true, skipConfigCheck: true });
+                                        });
+
+                                        describe('user resets sms to the default', () => {
+                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
+                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: null }] });
+                                          describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: true, checkGlobalConfig: true });
+                                        });
+
+                                        describe('user sets a text number override', () => {
+                                          const overridePhone = '+12025550123';
+
+                                          beforeEachUpdateNotificationUserGlobalConfig({ t: overridePhone, configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
+
+                                          it('should text the override number', async () => {
+                                            const [notificationBox, notification] = await Promise.all([assertSnapshotDataWithKey(nb.document), assertSnapshotData(nbn.document)]);
+
+                                            const result = await expandNotificationRecipients({
+                                              notification,
+                                              notificationBox,
+                                              authService: f.authService,
+                                              notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor(),
+                                              notificationSummaryIdForUid: f.notificationSendService.notificationSummaryIdForUidFunction,
+                                              onlySendToExplicitlyEnabledRecipients: notification.ois,
+                                              onlyTextExplicitlyEnabledRecipients: notification.ots
+                                            });
+
+                                            expect(result.texts).toHaveLength(1);
+                                            expect(result.texts[0].phoneNumber).toBe(overridePhone);
+                                            expect(result.texts[0].boxRecipient).toBeDefined();
                                           });
                                         });
                                       });

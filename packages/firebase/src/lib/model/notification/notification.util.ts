@@ -4,17 +4,29 @@
  * Server-side utility functions for notification config resolution, exclusion management,
  * send state evaluation, and recipient merging.
  */
-import { type ArrayOrValue, asArray, type Configurable, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Configurable, type E164PhoneNumber, type EmailAddress, filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
 import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, NotificationSendType, type NotificationUser } from './notification';
-import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
+import {
+  type NotificationUserNotificationBoxRecipientConfig,
+  type NotificationBoxRecipient,
+  NotificationBoxRecipientFlag,
+  type NotificationUserDefaultNotificationBoxRecipientConfig,
+  type NotificationBoxRecipientTemplateConfigRecord,
+  type NotificationBoxRecipientTemplateConfig,
+  type NotificationDeliveryMethodDecisions,
+  type NotificationExplicitOptInConfig,
+  type NotificationRecipient,
+  type NotificationRecipientWithConfig,
+  NotificationDeliveryMethod,
+  resolveNotificationDeliveryMethodDecisions
+} from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
-import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
-import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion } from './notification.id';
+import { type FirebaseAuthDetails, type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion, type NotificationTemplateType } from './notification.id';
 
 // MARK: NotificationUser
 /**
- * Input for computing the effective {@link NotificationBoxRecipient} by merging the 3-level config hierarchy:
- * recipient entry → user's per-box config → user's global config.
+ * Input for computing the effective {@link NotificationBoxRecipient} from the recipient entry and the user's per-box config.
  */
 export interface EffectiveNotificationBoxRecipientConfigInput {
   readonly uid: FirebaseAuthUserId;
@@ -26,8 +38,10 @@ export interface EffectiveNotificationBoxRecipientConfigInput {
 }
 
 /**
- * Computes the effective {@link NotificationBoxRecipient} by merging configs from highest to lowest priority:
- * global config (`gc`) → per-box user config (`boxConfig`) → existing box recipient.
+ * Computes the effective {@link NotificationBoxRecipient} by merging the user's per-box config (`boxConfig`) over the existing box recipient.
+ *
+ * The global config (`gc`) is not copied into the box recipient, since it is applied live at send time (see
+ * {@link resolveNotificationUidRecipientDelivery}). Only its lock flag (`lk`) is synced.
  *
  * Filters template configs to only include types applicable to the notification box's model.
  * Used during the server-side sync process to update box recipient entries from user configs.
@@ -45,8 +59,7 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
   // retain only the relevant/applicable template types for the model associate with the notification box
   const c = filterOnlyApplicableTemplateTypes({
     ...recipient?.c,
-    ...notificationUserNotificationBoxConfig.c,
-    ...gc.c
+    ...notificationUserNotificationBoxConfig.c
   });
 
   const nextRecipient: NotificationBoxRecipient = {
@@ -55,11 +68,11 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
     uid, // index and uid are retained
     i: recipient?.i ?? notificationUserNotificationBoxConfig.i,
     // copy from NotificationUser
-    f: gc.f ?? notificationUserNotificationBoxConfig.f ?? recipient?.f,
+    f: notificationUserNotificationBoxConfig.f ?? recipient?.f,
     lk: gc.lk ?? notificationUserNotificationBoxConfig.lk, // lock state only comes from NotificationUser
-    // email and text overrides first come from global, then the NotificationBox specific config
-    e: gc.e ?? notificationUserNotificationBoxConfig.e,
-    t: gc.t ?? notificationUserNotificationBoxConfig.t,
+    // email and text overrides come from the NotificationBox specific config. The global overrides are applied at send time.
+    e: notificationUserNotificationBoxConfig.e,
+    t: notificationUserNotificationBoxConfig.t,
     // no custom name or notification summary allowed
     n: undefined,
     s: undefined, // should never be defined since uid is defined
@@ -68,6 +81,179 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
   };
 
   return nextRecipient;
+}
+
+/**
+ * Returns true if the box recipient entry currently receives notifications from its box: it is not flagged (`f`) and not excluded (`x`).
+ *
+ * @param recipient - The box recipient entry to check.
+ * @returns True if the entry is active.
+ */
+export function isActiveNotificationBoxRecipient(recipient: Pick<NotificationBoxRecipient, 'f' | 'x'>): boolean {
+  return !recipient.f && !recipient.x;
+}
+
+/**
+ * Returns the explicit opt-in rules for a notification: the notification's own `ois`/`ots` values, falling back to its template type's.
+ *
+ * @param notification - The notification whose overrides to read.
+ * @param typeInfo - The opt-in rules of the notification's template type, if known.
+ * @returns The opt-in rules to resolve the notification's recipients with.
+ */
+export function notificationExplicitOptInConfigForNotification(notification: Pick<Notification, 'ois' | 'ots'>, typeInfo?: Maybe<NotificationExplicitOptInConfig>): NotificationExplicitOptInConfig {
+  return {
+    onlySendToExplicitlyEnabledRecipients: notification.ois ?? typeInfo?.onlySendToExplicitlyEnabledRecipients,
+    onlyTextExplicitlyEnabledRecipients: notification.ots ?? typeInfo?.onlyTextExplicitlyEnabledRecipients
+  };
+}
+
+/**
+ * Which set of configs a uid recipient is resolved against. See {@link resolveNotificationUidRecipientDelivery}.
+ */
+export enum NotificationUidRecipientDeliveryScope {
+  /**
+   * The recipient has an active entry in the notification's box, so the box entry's config applies.
+   */
+  BOX = 'box',
+  /**
+   * The recipient is listed on the notification (or by the message function) without an active box entry, so the user's direct/default config (`dc`) applies.
+   */
+  DIRECT = 'direct'
+}
+
+/**
+ * Why a uid recipient receives nothing at all.
+ */
+export enum NotificationUidRecipientSuppression {
+  /**
+   * The recipient's NotificationUser opted out (`gc.f`, or `dc.f` for direct sends).
+   */
+  OPT_OUT = 'opt_out',
+  /**
+   * The recipient's NotificationUser excludes the notification's box (`x`).
+   */
+  EXCLUDED = 'excluded'
+}
+
+/**
+ * Input for {@link resolveNotificationUidRecipientDelivery}.
+ */
+export interface ResolveNotificationUidRecipientDeliveryInput {
+  readonly notificationTemplateType: NotificationTemplateType;
+  /**
+   * The opt-in rules that decide a method no config level sets. See {@link notificationExplicitOptInConfigForNotification}.
+   */
+  readonly explicitOptIn?: Maybe<NotificationExplicitOptInConfig>;
+  /**
+   * The recipient's NotificationUser, if one exists.
+   */
+  readonly notificationUser?: Maybe<Pick<NotificationUser, 'gc' | 'dc' | 'x'>>;
+  /**
+   * The notification's box, used to apply the user's box exclusions (`x`).
+   */
+  readonly notificationBoxId?: Maybe<NotificationBoxId>;
+  /**
+   * The recipient's entry in the notification's box, if any. Only an active entry (see {@link isActiveNotificationBoxRecipient}) puts the recipient in box scope.
+   */
+  readonly boxRecipient?: Maybe<NotificationBoxRecipient>;
+  /**
+   * The recipient as listed on the notification (`Notification.r`) or by the message function, if listed. Its inline config is the lowest config level.
+   */
+  readonly listedRecipient?: Maybe<NotificationRecipientWithConfig>;
+  /**
+   * The recipient's auth details, used as the final contact fallback.
+   */
+  readonly authDetails?: Maybe<Pick<FirebaseAuthDetails, 'email' | 'phoneNumber' | 'displayName'>>;
+}
+
+/**
+ * The resolved delivery of a notification to a uid recipient.
+ */
+export interface NotificationUidRecipientDelivery {
+  readonly scope: NotificationUidRecipientDeliveryScope;
+  /**
+   * Set when the recipient receives nothing at all. Every decision is then {@link NotificationDeliveryMethodDecisionSource.SUPPRESSED}.
+   */
+  readonly suppression?: Maybe<NotificationUidRecipientSuppression>;
+  readonly decisions: NotificationDeliveryMethodDecisions;
+  /**
+   * The resolved email address. Undefined when no override is configured and no auth details were provided.
+   */
+  readonly emailAddress?: Maybe<EmailAddress>;
+  /**
+   * The resolved text/SMS phone number. Undefined when no override is configured and no auth details were provided.
+   */
+  readonly phoneNumber?: Maybe<E164PhoneNumber>;
+  readonly name?: Maybe<string>;
+}
+
+/**
+ * Resolves whether, and where, a notification is delivered to a uid recipient. Shared by the send pipeline and the health check.
+ *
+ * The recipient is in {@link NotificationUidRecipientDeliveryScope.BOX} scope when it has an active box entry, otherwise
+ * {@link NotificationUidRecipientDeliveryScope.DIRECT} scope. Then, in order:
+ * 1. Suppression — box scope: `gc.f`, or `x` excludes the box. Direct scope: `gc.f ?? dc.f`, or `x` excludes the box. Every method is off.
+ * 2. Disabled methods — `gc.dm` (unioned with `dc.dm` in direct scope). The method is off, regardless of configs and opt-in defaults.
+ * 3. Configs, highest priority first, each made effective first — box scope: `[gc.c[T], entry.c[T], listed]`. Direct scope: `[gc.c[T], dc.c[T], listed]`.
+ * 4. Defaults — see {@link isNotificationDeliveryMethodEnabledByDefault}.
+ *
+ * Contact details resolve as `gc.e ?? (entry.e | dc.e) ?? listed.e ?? auth email`, and the same for the phone number via `t`.
+ *
+ * @param input - The recipient's NotificationUser, box entry, listed config and the notification's template type and opt-in rules.
+ * @returns The scope, suppression, per-method decisions and contact details.
+ */
+export function resolveNotificationUidRecipientDelivery(input: ResolveNotificationUidRecipientDeliveryInput): NotificationUidRecipientDelivery {
+  const { notificationTemplateType, explicitOptIn, notificationUser, notificationBoxId, boxRecipient, listedRecipient, authDetails } = input;
+  const gc = notificationUser?.gc;
+  const dc = notificationUser?.dc;
+
+  const isBoxScope = boxRecipient != null && isActiveNotificationBoxRecipient(boxRecipient);
+  const scope = isBoxScope ? NotificationUidRecipientDeliveryScope.BOX : NotificationUidRecipientDeliveryScope.DIRECT;
+  const scopeConfig: Maybe<Pick<NotificationRecipient, 'e' | 't'> & Pick<NotificationBoxRecipient, 'c'>> = isBoxScope ? boxRecipient : dc;
+
+  const isExcluded = notificationUser != null && notificationBoxId != null && !notificationSendExclusionCanSendFunction(notificationUser.x ?? [])(notificationBoxId);
+  const isOptedOut = Boolean(isBoxScope ? gc?.f : (gc?.f ?? dc?.f));
+
+  let suppression: Maybe<NotificationUidRecipientSuppression>;
+
+  if (isOptedOut) {
+    suppression = NotificationUidRecipientSuppression.OPT_OUT;
+  } else if (isExcluded) {
+    suppression = NotificationUidRecipientSuppression.EXCLUDED;
+  }
+
+  const disabledDeliveryMethods = isBoxScope ? gc?.dm : [...(gc?.dm ?? []), ...(dc?.dm ?? [])];
+
+  const decisions = resolveNotificationDeliveryMethodDecisions({
+    configs: [gc?.c?.[notificationTemplateType], scopeConfig?.c?.[notificationTemplateType], listedRecipient],
+    disabledDeliveryMethods,
+    explicitOptIn,
+    suppressed: suppression != null
+  });
+
+  return {
+    scope,
+    suppression,
+    decisions,
+    emailAddress: gc?.e ?? scopeConfig?.e ?? listedRecipient?.e ?? (authDetails?.email as Maybe<EmailAddress>),
+    phoneNumber: gc?.t ?? scopeConfig?.t ?? listedRecipient?.t ?? (authDetails?.phoneNumber as Maybe<E164PhoneNumber>),
+    name: authDetails?.displayName || boxRecipient?.n || listedRecipient?.n
+  };
+}
+
+/**
+ * Converts per-method decisions to the equivalent effective template config, with each channel flag set to whether it is sent.
+ *
+ * @param decisions - The per-method decisions to convert.
+ * @returns The effective template config.
+ */
+export function notificationDeliveryMethodDecisionsToTemplateConfig(decisions: NotificationDeliveryMethodDecisions): NotificationBoxRecipientTemplateConfig {
+  return {
+    se: decisions[NotificationDeliveryMethod.EMAIL].send,
+    st: decisions[NotificationDeliveryMethod.TEXT].send,
+    sp: decisions[NotificationDeliveryMethod.PUSH].send,
+    sn: decisions[NotificationDeliveryMethod.NOTIFICATION_SUMMARY].send
+  };
 }
 
 /**

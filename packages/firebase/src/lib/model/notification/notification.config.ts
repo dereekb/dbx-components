@@ -3,12 +3,22 @@
  *
  * Notification recipient configuration types and the bitwise encoding system for per-template channel preferences.
  *
- * Configuration follows a 3-level hierarchy (highest priority first):
- * 1. {@link NotificationUser.gc} — Global config override (applies at send time, not synced to boxes)
- * 2. {@link NotificationUserNotificationBoxRecipientConfig} — Per-box config on the user (synced to boxes)
- * 3. {@link NotificationBoxRecipientTemplateConfig} — Template defaults from the system configuration
+ * Each config level can enable/disable delivery per channel (email, text, push, summary) per template type. For a uid recipient,
+ * the send pipeline resolves each delivery method in this order (see `resolveNotificationUidRecipientDelivery()`):
  *
- * Each level can enable/disable delivery per channel (email, text, push, summary) per template type.
+ * 1. Suppression — the user opted out (`gc.f`, or `gc.f ?? dc.f` for direct sends), or their box exclusions (`NotificationUser.x`)
+ *    exclude the notification's box. Every method is off.
+ * 2. Disabled methods — the method is in `gc.dm` (unioned with `dc.dm` for direct sends). The method is off.
+ * 3. Configs, highest priority first, each level made effective first (its own `sd` fills its unset channels). The first level that sets
+ *    the method decides it:
+ *    - box recipients: {@link NotificationUser.gc} → the box's {@link NotificationBoxRecipient} entry (synced from the user's
+ *      {@link NotificationUserNotificationBoxRecipientConfig}) → the recipient as listed on the notification (`Notification.r`)
+ *    - direct recipients (listed, without an active box entry): {@link NotificationUser.gc} → {@link NotificationUser.dc} → the listed recipient
+ * 4. Defaults — email, push and in-app summaries are sent unless `onlySendToExplicitlyEnabledRecipients`; texts are only sent when
+ *    `onlyTextExplicitlyEnabledRecipients` is false. See {@link isNotificationDeliveryMethodEnabledByDefault}.
+ *
+ * The global config (`gc`) is applied live at send time and is never copied into the boxes, except for its lock flag (`lk`).
+ * Contact details resolve as `gc.e ?? (box entry | dc).e ?? listed.e ?? auth email`, and the same for the phone number via `t`.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
  */
 import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, type IndexNumber, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, KeyValueTypleValueFilter, mergeObjects, filterUndefinedValues, type Building } from '@dereekb/util';
@@ -538,7 +548,9 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
    */
   readonly dm?: Maybe<NotificationDeliveryMethod[]>;
   /**
-   * When the user first opted in to text messages. Evidence of SMS consent only; it never gates sending.
+   * When the user last opted in to text messages, having not been opted in before. Evidence of SMS consent only; it never gates sending.
+   *
+   * See {@link hasNotificationDeliveryMethodOptIn}.
    *
    * Server-managed and only set on the global config (`gc`). Clients cannot set it.
    *

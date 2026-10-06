@@ -251,11 +251,40 @@ demoApiFunctionContextFactory((f) => {
             });
           });
 
+          describe('with a phone number only on the default config', () => {
+            it('should report that there is no delivery target for text, since the default config override only applies to direct sends', async () => {
+              await updateNotificationUser({ dc: { t: '+12088888888' } });
+
+              const { healthCheck } = await runHealthCheck();
+
+              const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+              expect(textResult?.tg).toBeUndefined();
+              expect(issueCodes(textResult?.is ?? [])).toContain(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET);
+            });
+          });
+
+          describe('with texts switched off', () => {
+            it('should report the method as disabled instead of a missing delivery target', async () => {
+              await updateNotificationUser({ gc: { dm: [NotificationDeliveryMethod.TEXT] } });
+
+              const { healthCheck } = await runHealthCheck();
+
+              const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+              const issue = issueForCode(textResult?.is ?? [], KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY);
+
+              expect(textResult?.s).toBe(NotificationHealthCheckStatus.ERROR);
+              expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
+              expect(issue?.d?.['disabledDeliveryMethod']).toBe(true);
+              expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET);
+            });
+          });
+
           describe('with a phone number configured', () => {
             const t = '+12088888888';
 
             beforeEach(async () => {
-              await updateNotificationUser({ dc: { t } });
+              await updateNotificationUser({ gc: { t } });
             });
 
             it('should resolve the configured phone number as the delivery target', async () => {
@@ -277,7 +306,7 @@ demoApiFunctionContextFactory((f) => {
             });
 
             it('should not report an opt-in problem once text is turned on for the template type', async () => {
-              await updateNotificationUser({ dc: { t, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+              await updateNotificationUser({ dc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
 
               const { healthCheck } = await runHealthCheck();
 
@@ -289,7 +318,7 @@ demoApiFunctionContextFactory((f) => {
             it('should report the global config turning a method off as the decisive one', async () => {
               await updateNotificationUser({
                 gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false }] },
-                dc: { t, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] }
+                dc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] }
               });
 
               const { healthCheck } = await runHealthCheck();
@@ -437,7 +466,7 @@ demoApiFunctionContextFactory((f) => {
             const setTextHealthCheckService = (healthCheckService: NotificationTextSendServiceHealthCheckService) => setSendServiceHealthCheckService(f.notificationSendService.textSendService, healthCheckService);
 
             beforeEach(async () => {
-              await updateNotificationUser({ dc: { t: TEST_PHONE_NUMBER } });
+              await updateNotificationUser({ gc: { t: TEST_PHONE_NUMBER } });
             });
 
             it('should report that a channel with no provider health check could not be verified', async () => {
@@ -1000,6 +1029,16 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(issue?.s).toBe(NotificationHealthCheckStatus.WARNING);
                 expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
+              });
+
+              it('should not report a delivery method switched off for a subscription when the global config overrides it', async () => {
+                await nb.updateRecipient({ uid: u.uid, insert: true, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false }] });
+                await updateNotificationUser({ gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+
+                const { healthCheck } = await runHealthCheck();
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX);
               });
 
               it('should drop every subscription finding when subscription checks are skipped', async () => {

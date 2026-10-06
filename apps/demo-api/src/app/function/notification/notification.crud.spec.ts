@@ -4,6 +4,7 @@ import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuth
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
+  NotificationDeliveryMethod,
   type DocumentDataWithIdAndKey,
   type NotificationBox,
   type Notification,
@@ -382,10 +383,10 @@ demoApiFunctionContextFactory((f) => {
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].sd).toBe(false);
                               });
 
-                              it('updating the text or email on the global config should flag all notification box configs on NotificationUser for sync', async () => {
+                              it('updating the text or email on the global config should not flag the notification box configs for sync', async () => {
                                 let notificationUser = await assertSnapshotData(nu.document);
 
-                                const e = 'test@components.dereekb.com';
+                                const e = 'test@example.com';
                                 const t = '+1208888888';
 
                                 const params: UpdateNotificationUserParams = {
@@ -400,31 +401,21 @@ demoApiFunctionContextFactory((f) => {
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
-                                expect(notificationUser.ns).toBe(true); // should sync with the notification box
-
-                                const profileNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
-                                expect(profileNotificationBoxConfig.ns).toBe(true);
-
-                                const guestbookNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
-                                expect(guestbookNotificationBoxConfig.ns).toBe(true);
-
-                                expect(notificationUser.bc[0].ns).toBe(true);
+                                expect(notificationUser.ns).toBeFalsy(); // the global config is applied live at send time
+                                expect(notificationUser.bc.every((x) => !x.ns)).toBe(true);
                                 expect(notificationUser.gc.e).toBe(e);
                                 expect(notificationUser.gc.t).toBe(t);
                               });
 
-                              it('updating the global config should flag a sync on the relevant guestbooks', async () => {
+                              it('updating the template configs on the global config should not flag the notification box configs for sync', async () => {
                                 let notificationUser = await assertSnapshotData(nu.document);
-
-                                const e = 'test@components.dereekb.com';
-                                const t = '+1208888888';
 
                                 const params: UpdateNotificationUserParams = {
                                   key: nu.documentKey,
                                   gc: {
                                     configs: [
                                       {
-                                        type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, // should trigger all associated guestbook model NotificationBoxes
+                                        type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
                                         se: true,
                                         st: false // no text
                                       }
@@ -436,17 +427,42 @@ demoApiFunctionContextFactory((f) => {
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
-                                expect(notificationUser.ns).toBe(true); // should sync with the notification box
-
-                                const profileNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
-                                expect(profileNotificationBoxConfig.ns).toBeFalsy(); // updated config is not for profile
-
-                                const guestbookNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
-                                expect(guestbookNotificationBoxConfig.ns).toBe(true); // updated config is for guestbook
+                                expect(notificationUser.ns).toBeFalsy();
+                                expect(notificationUser.bc.every((x) => !x.ns)).toBe(true);
 
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(false);
+                              });
+
+                              it('updating the lock on the global config should flag all notification box configs for sync', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+
+                                const params: UpdateNotificationUserParams = {
+                                  key: nu.documentKey,
+                                  gc: {
+                                    lk: true
+                                  }
+                                };
+
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+
+                                expect(notificationUser.ns).toBe(true);
+
+                                const profileNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(profileNotificationBoxConfig.ns).toBe(true);
+
+                                const guestbookNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(guestbookNotificationBoxConfig.ns).toBe(true);
+
+                                // the lock syncs
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, { key: nu.documentKey } as ResyncNotificationUserParams, 'resync'));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+                                expect(notificationUser.ns).toBeFalsy();
+                                expect(notificationUser.bc.every((x) => !x.ns)).toBe(true);
                               });
 
                               describe('global config updated', () => {
@@ -467,23 +483,74 @@ demoApiFunctionContextFactory((f) => {
                                   await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
-                                it('should sync the global config to only the relevant NotificationBoxes', async () => {
+                                it('should not copy the global config into the NotificationBoxes on resync', async () => {
                                   let notificationBox = await assertSnapshotData(nb_g.document);
-
                                   expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).not.toBeDefined();
 
                                   const params: ResyncNotificationUserParams = {
                                     key: nu.documentKey
                                   };
 
-                                  const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
-                                  expect(result.notificationBoxesUpdated).toBe(1);
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'));
 
                                   notificationBox = await assertSnapshotData(nb_g.document);
+                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).not.toBeDefined();
+                                });
+                              });
 
-                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
-                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
-                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(false);
+                              describe('text message consent', () => {
+                                function updateGlobalConfig(gc: UpdateNotificationUserParams['gc']) {
+                                  return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, { key: nu.documentKey, gc } as UpdateNotificationUserParams));
+                                }
+
+                                const textOptIn = { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] };
+
+                                it('should set tcat on the first text opt-in', async () => {
+                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.gc.tcat).toBeFalsy();
+
+                                  await updateGlobalConfig(textOptIn);
+
+                                  notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.gc.tcat).toBeInstanceOf(Date);
+                                });
+
+                                it('should not change tcat on a second opt-in or an opt-out', async () => {
+                                  await updateGlobalConfig(textOptIn);
+                                  const { tcat } = (await assertSnapshotData(nu.document)).gc;
+                                  expect(tcat).toBeInstanceOf(Date);
+
+                                  await updateGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
+                                  expect((await assertSnapshotData(nu.document)).gc.tcat?.getTime()).toBe(tcat?.getTime());
+
+                                  await updateGlobalConfig({
+                                    configs: [
+                                      { type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false },
+                                      { type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: false }
+                                    ]
+                                  });
+                                  expect((await assertSnapshotData(nu.document)).gc.tcat?.getTime()).toBe(tcat?.getTime());
+                                });
+
+                                it('should set tcat when texts are re-enabled while a text config is on', async () => {
+                                  await updateGlobalConfig({ ...textOptIn, dm: [NotificationDeliveryMethod.TEXT] });
+                                  expect((await assertSnapshotData(nu.document)).gc.tcat).toBeFalsy();
+
+                                  await updateGlobalConfig({ dm: null });
+                                  expect((await assertSnapshotData(nu.document)).gc.tcat).toBeInstanceOf(Date);
+                                });
+
+                                it('should not set tcat from the default config', async () => {
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, { key: nu.documentKey, dc: textOptIn } as UpdateNotificationUserParams));
+
+                                  const notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.gc.tcat).toBeFalsy();
+                                  expect(notificationUser.dc.tcat).toBeFalsy();
+                                });
+
+                                it('should ignore a forged tcat value', async () => {
+                                  await updateGlobalConfig({ tcat: new Date(0) } as UpdateNotificationUserParams['gc']);
+                                  expect((await assertSnapshotData(nu.document)).gc.tcat).toBeFalsy();
                                 });
                               });
                             });

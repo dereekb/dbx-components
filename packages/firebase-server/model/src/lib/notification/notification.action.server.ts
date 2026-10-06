@@ -101,7 +101,10 @@ import {
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
   applyExclusionsToNotificationUserNotificationBoxRecipientConfigs,
-  type NotificationLoggedEventDayDocument
+  type NotificationLoggedEventDayDocument,
+  notificationExplicitOptInConfigForNotification,
+  hasNotificationDeliveryMethodOptIn,
+  NotificationDeliveryMethod
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -324,8 +327,10 @@ export function createNotificationUserFactory(context: NotificationServerActions
  * Factory for the `updateNotificationUser` action.
  *
  * Updates a {@link NotificationUser}'s default config (`dc`), global config (`gc`), and/or
- * box configs (`bc`). When the global config changes, iterates all box configs to propagate
- * effective recipient changes and marks affected entries for sync.
+ * box configs (`bc`). The global config is applied live at send time, so only a change to its lock
+ * flag (`lk`) marks the box configs for sync.
+ *
+ * Records SMS consent (`gc.tcat`) when the global config first opts in to text messages. See {@link hasNotificationDeliveryMethodOptIn}.
  *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that updates an existing notification user document.
@@ -350,40 +355,29 @@ export function updateNotificationUserFactory(context: NotificationServerActions
         }
 
         if (inputGc != null) {
-          const nextGc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
+          let nextGc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
+
+          // record SMS consent when the user opts in to text messages
+          if (!hasNotificationDeliveryMethodOptIn(notificationUser.gc, NotificationDeliveryMethod.TEXT) && hasNotificationDeliveryMethodOptIn(nextGc, NotificationDeliveryMethod.TEXT)) {
+            nextGc = { ...nextGc, tcat: new Date() };
+          }
 
           if (!areEqualPOJOValues(notificationUser.gc, nextGc)) {
             updateTemplate.gc = nextGc;
 
-            // iterate and update any box config that has the effective recipient change
-            updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
-              let updatedConfig = currentConfig;
+            // gc is applied live at send time, so only a lock change needs to be synced to the boxes
+            if (Boolean(notificationUser.gc.lk) !== Boolean(nextGc.lk)) {
+              updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
+                let updatedConfig = currentConfig;
 
-              // check item isn't already marked for sync or marked as removed
-              if (currentConfig.ns !== true && currentConfig.rm !== true) {
-                const currentEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                  uid: notificationUser.uid,
-                  appNotificationTemplateTypeInfoRecordService,
-                  gc: notificationUser.gc,
-                  boxConfig: currentConfig
-                });
-
-                const nextEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                  uid: notificationUser.uid,
-                  appNotificationTemplateTypeInfoRecordService,
-                  gc: nextGc,
-                  boxConfig: currentConfig
-                });
-
-                const effectiveConfigChanged = !areEqualPOJOValues(currentEffectiveRecipient, nextEffectiveRecipient);
-
-                if (effectiveConfigChanged) {
+                // check item isn't already marked for sync or marked as removed
+                if (currentConfig.ns !== true && currentConfig.rm !== true) {
                   updatedConfig = { ...currentConfig, ns: true };
                 }
-              }
 
-              return updatedConfig;
-            });
+                return updatedConfig;
+              });
+            }
           }
         }
 
@@ -1298,8 +1292,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t] as NotificationTemplateTypeInfo | undefined;
 
             isKnownTemplateType = templateTypeInfo != null;
-            onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
-            onlyTextExplicitlyEnabledRecipients = notification.ots ?? templateTypeInfo?.onlyTextExplicitlyEnabledRecipients;
+            ({ onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = notificationExplicitOptInConfigForNotification(notification, templateTypeInfo));
 
             if (!isConfiguredTemplateType) {
               // log the issue that an notification with an unconfigured type was queued
