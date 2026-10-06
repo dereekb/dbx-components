@@ -1,7 +1,6 @@
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
-import { type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
-import { readJsonFile, removeFile } from '@dereekb/nestjs';
-import { writeFile, mkdirSync } from 'node:fs';
+import { CLI_CONFIG_FILE_MODE, type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
+import { readJsonFile, removeFile, writeJsonFile } from '@dereekb/nestjs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -39,6 +38,28 @@ export interface ZohoCliCredentials {
 export interface ZohoCliProductConfig extends Partial<ZohoCliCredentials> {
   readonly apiUrl?: string;
   readonly orgId?: string;
+  /**
+   * Accounts datacenter the product's own OAuth client lives in. Falls back to the shared region, so it
+   * only needs setting for a dedicated-client product authorized in a different datacenter.
+   */
+  readonly region?: string;
+  /**
+   * Redirect URI the product's OAuth client was last authorized with by `auth login`, reused by the next one.
+   */
+  readonly redirectUri?: string;
+}
+
+/**
+ * The shared OAuth client block, used by every product without credentials of its own (except
+ * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS}).
+ */
+export interface ZohoCliSharedConfig extends ZohoCliCredentials {
+  readonly region?: string;
+  readonly apiMode?: string;
+  /**
+   * Redirect URI the shared OAuth client was last authorized with by `auth login`, reused by the next one.
+   */
+  readonly redirectUri?: string;
 }
 
 /**
@@ -60,10 +81,7 @@ export type ZohoCliOutputConfig = CliOutputConfig;
  * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`, `analytics`.
  */
 export interface ZohoCliConfig {
-  readonly shared: ZohoCliCredentials & {
-    readonly region?: string;
-    readonly apiMode?: string;
-  };
+  readonly shared: ZohoCliSharedConfig;
   readonly recruit?: ZohoCliProductConfig;
   readonly crm?: ZohoCliProductConfig;
   readonly desk?: ZohoCliProductConfig;
@@ -80,6 +98,7 @@ export interface ZohoCliResolvedProductCredentials extends ZohoCliCredentials {
   readonly apiMode: string;
   readonly apiUrl?: string;
   readonly orgId?: string;
+  readonly redirectUri?: string;
 }
 
 /**
@@ -124,72 +143,222 @@ function envVar(key: string, servicePrefix?: string): Maybe<string> {
 }
 
 /**
- * Loads the full CLI config, merging file config with environment variable overrides.
+ * A credential-carrying block of the config: `shared`, or one of the {@link ZOHO_CLI_PRODUCTS}.
+ */
+export type ZohoCliCredentialBlockKey = 'shared' | ZohoCliProduct;
+
+/**
+ * Every {@link ZohoCliCredentialBlockKey}, shared first.
+ */
+export const ZOHO_CLI_CREDENTIAL_BLOCK_KEYS: readonly ZohoCliCredentialBlockKey[] = ['shared', ...ZOHO_CLI_PRODUCTS];
+
+/**
+ * Where a block's credentials were resolved from by {@link loadCliConfig}.
  *
- * @returns The merged {@link ZohoCliConfig}, or `undefined` when no config file exists and no shared OAuth env vars are present.
+ * - `config`: the config file holds a refresh token for the block, so it wins over any env vars.
+ * - `env`: the file has none, and the block's `ZOHO_*_ACCOUNTS_REFRESH_TOKEN` env var supplied it.
+ * - `none`: neither holds a refresh token. A product block in this state may still inherit the shared client.
+ */
+export type ZohoCliCredentialSource = 'config' | 'env' | 'none';
+
+/**
+ * Credentials (and the datacenter they belong to) read for one block from either the file or the env.
+ */
+interface ZohoCliCredentialBlock extends Partial<ZohoCliCredentials> {
+  readonly region?: Maybe<string>;
+}
+
+/**
+ * Returns the env var prefix of a block's OAuth credentials: `ZOHO_ACCOUNTS_` for shared, and the
+ * product-specific `ZOHO_{PRODUCT}_ACCOUNTS_` otherwise.
+ *
+ * @param block - The credential block.
+ * @returns The env var name prefix, ending in `_`.
+ */
+function zohoCliEnvCredentialPrefix(block: ZohoCliCredentialBlockKey): string {
+  return block === 'shared' ? 'ZOHO_ACCOUNTS_' : `ZOHO_${block.toUpperCase()}_ACCOUNTS_`;
+}
+
+/**
+ * Returns the name of the env var holding a block's refresh token.
+ *
+ * @param block - The credential block.
+ * @returns E.g. `ZOHO_ACCOUNTS_REFRESH_TOKEN` or `ZOHO_SIGN_ACCOUNTS_REFRESH_TOKEN`.
+ */
+export function zohoCliRefreshTokenEnvVarName(block: ZohoCliCredentialBlockKey): string {
+  return `${zohoCliEnvCredentialPrefix(block)}REFRESH_TOKEN`;
+}
+
+/**
+ * Reads a block's credentials from its own env vars only — a product block never picks up the shared
+ * `ZOHO_ACCOUNTS_*` vars here, since the shared fallback is applied later by {@link resolveProductCredentials}.
+ *
+ * @param block - The credential block.
+ * @returns The env-sourced credentials; every field is `undefined` when its var is unset or empty.
+ */
+function readZohoCliEnvCredentials(block: ZohoCliCredentialBlockKey): ZohoCliCredentialBlock {
+  const prefix = zohoCliEnvCredentialPrefix(block);
+  const read = (key: string) => process.env[`${prefix}${key}`] || undefined;
+
+  return {
+    clientId: read('CLIENT_ID'),
+    clientSecret: read('CLIENT_SECRET'),
+    refreshToken: read('REFRESH_TOKEN'),
+    region: read('URL')
+  };
+}
+
+/**
+ * Decides where a block's credentials come from. The stored file block wins whenever it holds a
+ * refresh token — an `auth login` result must not be shadowed by a stale exported env var — and the
+ * env vars are the fallback.
+ *
+ * @param fileBlock - The block as stored in the config file.
+ * @param envBlock - The block's credentials read from its env vars.
+ * @returns The winning source.
+ */
+function zohoCliCredentialBlockSource(fileBlock: Maybe<ZohoCliCredentialBlock>, envBlock: ZohoCliCredentialBlock): ZohoCliCredentialSource {
+  let result: ZohoCliCredentialSource;
+
+  if (fileBlock?.refreshToken) {
+    result = 'config';
+  } else if (envBlock.refreshToken) {
+    result = 'env';
+  } else {
+    result = 'none';
+  }
+
+  return result;
+}
+
+/**
+ * Resolves a block's credentials AS A UNIT from whichever source wins.
+ *
+ * Never mixes the two: a file client id paired with an env refresh token is a grant Zoho rejects, so
+ * the env triple replaces the file's partial values outright. A file block without a refresh token —
+ * which is what step 1 of `auth setup` writes — counts as not logged in.
+ *
+ * @param fileBlock - The block as stored in the config file.
+ * @param envBlock - The block's credentials read from its env vars.
+ * @returns The resolved credentials and region.
+ */
+function resolveZohoCliCredentialBlock(fileBlock: Maybe<ZohoCliCredentialBlock>, envBlock: ZohoCliCredentialBlock): ZohoCliCredentialBlock {
+  let result: ZohoCliCredentialBlock;
+
+  if (zohoCliCredentialBlockSource(fileBlock, envBlock) === 'env') {
+    result = { ...envBlock, region: envBlock.region ?? fileBlock?.region };
+  } else {
+    result = { clientId: fileBlock?.clientId, clientSecret: fileBlock?.clientSecret, refreshToken: fileBlock?.refreshToken, region: fileBlock?.region };
+  }
+
+  return result;
+}
+
+/**
+ * Reports, per block, whether {@link loadCliConfig} sources its credentials from the config file or the env.
+ *
+ * @param fileConfig - The raw config file, from {@link loadCliConfigFile}.
+ * @returns The source of every {@link ZohoCliCredentialBlockKey}.
+ */
+export function zohoCliCredentialSources(fileConfig: Maybe<ZohoCliConfig>): Record<ZohoCliCredentialBlockKey, ZohoCliCredentialSource> {
+  return Object.fromEntries(ZOHO_CLI_CREDENTIAL_BLOCK_KEYS.map((block) => [block, zohoCliCredentialBlockSource(fileConfig?.[block], readZohoCliEnvCredentials(block))])) as Record<ZohoCliCredentialBlockKey, ZohoCliCredentialSource>;
+}
+
+/**
+ * Returns the blocks whose stored refresh token is shadowing a DIFFERENT one exported in the env.
+ *
+ * Since a stored login wins, an env var that disagrees with it is silently ignored; `doctor` warns
+ * about these so a stale export is not mistaken for the active credential.
+ *
+ * @param fileConfig - The raw config file, from {@link loadCliConfigFile}.
+ * @returns The shadowing blocks, in {@link ZOHO_CLI_CREDENTIAL_BLOCK_KEYS} order.
+ */
+export function zohoCliShadowedEnvCredentialBlocks(fileConfig: Maybe<ZohoCliConfig>): ZohoCliCredentialBlockKey[] {
+  return ZOHO_CLI_CREDENTIAL_BLOCK_KEYS.filter((block) => {
+    const storedRefreshToken = fileConfig?.[block]?.refreshToken;
+    const envRefreshToken = readZohoCliEnvCredentials(block).refreshToken;
+    return storedRefreshToken != null && storedRefreshToken !== '' && envRefreshToken != null && envRefreshToken !== storedRefreshToken;
+  });
+}
+
+/**
+ * Reads the config file as stored, with no env vars layered over it.
+ *
+ * What every write merges onto, so an env-sourced secret is never copied into the file — with stored
+ * credentials winning over env, a leaked env value would otherwise shadow the env forever.
+ *
+ * @returns The stored {@link ZohoCliConfig}, or `undefined` when no config file exists.
+ */
+export function loadCliConfigFile(): Promise<Maybe<ZohoCliConfig>> {
+  return readJsonFile<ZohoCliConfig>(getConfigFilePath());
+}
+
+/**
+ * Loads the full CLI config: the config file with environment variables as the fallback.
+ *
+ * Credentials resolve per block as a unit — a block whose stored refresh token is set uses the stored
+ * client and region, and only otherwise the env triple (see {@link resolveZohoCliCredentialBlock}).
+ * The remaining settings (`apiMode`, `apiUrl`, `orgId`) likewise prefer the file and fall back to env.
+ *
+ * @returns The resolved {@link ZohoCliConfig}, or `undefined` when no config file exists and no shared or per-product credential env var is set.
  */
 export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
-  const filePath = getConfigFilePath();
-  const fileConfig = await readJsonFile<ZohoCliConfig>(filePath);
-
-  // Check shared env vars
-  const envClientId = envVar('ACCOUNTS_CLIENT_ID');
-  const envClientSecret = envVar('ACCOUNTS_CLIENT_SECRET');
-  const envRefreshToken = envVar('ACCOUNTS_REFRESH_TOKEN');
-  const hasSharedEnvConfig = envClientId && envClientSecret && envRefreshToken;
+  const fileConfig = await loadCliConfigFile();
+  const envCredentials = Object.fromEntries(ZOHO_CLI_CREDENTIAL_BLOCK_KEYS.map((block) => [block, readZohoCliEnvCredentials(block)])) as Record<ZohoCliCredentialBlockKey, ZohoCliCredentialBlock>;
+  const hasEnvCredentials = Object.values(envCredentials).some((x) => x.clientId != null || x.clientSecret != null || x.refreshToken != null);
   let result: Maybe<ZohoCliConfig>;
 
-  if (!fileConfig && !hasSharedEnvConfig) {
+  if (!fileConfig && !hasEnvCredentials) {
     result = undefined;
   } else {
-    const shared = {
-      clientId: envClientId ?? fileConfig?.shared?.clientId ?? '',
-      clientSecret: envClientSecret ?? fileConfig?.shared?.clientSecret ?? '',
-      refreshToken: envRefreshToken ?? fileConfig?.shared?.refreshToken ?? '',
-      region: envVar('ACCOUNTS_URL') ?? fileConfig?.shared?.region,
-      apiMode: envVar('API_URL') ?? fileConfig?.shared?.apiMode
+    const sharedCredentials = resolveZohoCliCredentialBlock(fileConfig?.shared, envCredentials.shared);
+    const shared: ZohoCliSharedConfig = {
+      ...fileConfig?.shared,
+      clientId: sharedCredentials.clientId ?? '',
+      clientSecret: sharedCredentials.clientSecret ?? '',
+      refreshToken: sharedCredentials.refreshToken ?? '',
+      region: sharedCredentials.region ?? undefined,
+      apiMode: fileConfig?.shared?.apiMode ?? envVar('API_URL') ?? undefined
     };
 
-    // Build per-product overrides from env vars
-    const productConfigFromEnv = (product: string): Maybe<ZohoCliProductConfig> => {
+    const productConfig = (product: ZohoCliProduct): ZohoCliProductConfig | undefined => {
       const prefix = product.toUpperCase();
-      const apiUrl = envVar('API_URL', prefix);
-      const orgId = ZOHO_CLI_ORG_ID_PRODUCTS.has(product as ZohoCliProduct) ? envVar('ORG_ID', prefix) : undefined;
-      const fileProduct = fileConfig?.[product as ZohoCliProduct];
+      const fileProduct = fileConfig?.[product];
+      const envProduct = envCredentials[product];
+      // only the service-specific var: the shared ZOHO_API_URL already reaches every product through shared.apiMode
+      const envApiUrl = process.env[`ZOHO_${prefix}_API_URL`];
+      const envOrgId = ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? envVar('ORG_ID', prefix) : undefined;
+      const hasEnvProduct = envProduct.clientId != null || envProduct.clientSecret != null || envProduct.refreshToken != null || envProduct.region != null || envApiUrl != null || envOrgId != null;
+      let productResult: ZohoCliProductConfig | undefined;
 
-      // Only include env overrides that are actually service-specific (not the shared fallback)
-      const envSpecificClientId = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_ID`];
-      const envSpecificClientSecret = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_SECRET`];
-      const envSpecificRefreshToken = process.env[`ZOHO_${prefix}_ACCOUNTS_REFRESH_TOKEN`];
-      const hasEnvSpecific = envSpecificClientId || envSpecificClientSecret || envSpecificRefreshToken;
-
-      let productResult: Maybe<ZohoCliProductConfig>;
-
-      if (!fileProduct && !hasEnvSpecific && !orgId) {
+      if (!fileProduct && !hasEnvProduct) {
         productResult = undefined;
       } else {
+        const credentials = resolveZohoCliCredentialBlock(fileProduct, envProduct);
+
         productResult = {
-          clientId: envSpecificClientId ?? fileProduct?.clientId,
-          clientSecret: envSpecificClientSecret ?? fileProduct?.clientSecret,
-          refreshToken: envSpecificRefreshToken ?? fileProduct?.refreshToken,
-          apiUrl: apiUrl ?? fileProduct?.apiUrl,
-          orgId: orgId ?? fileProduct?.orgId
+          ...fileProduct,
+          clientId: credentials.clientId,
+          clientSecret: credentials.clientSecret,
+          refreshToken: credentials.refreshToken,
+          region: credentials.region ?? undefined,
+          apiUrl: fileProduct?.apiUrl ?? envApiUrl,
+          orgId: fileProduct?.orgId ?? envOrgId ?? undefined
         };
       }
 
       return productResult;
     };
 
-    // every product in ZOHO_CLI_PRODUCTS must be listed here — one left out is not merely
-    // un-overridden by env vars, it is dropped from the loaded config entirely, and the CLI then
-    // reports it as unconfigured no matter what is on disk
+    // every product in ZOHO_CLI_PRODUCTS must be listed here — one left out is dropped from the loaded
+    // config entirely, and the CLI then reports it as unconfigured no matter what is on disk
     result = {
       shared,
-      recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
-      crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
-      desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
-      sign: productConfigFromEnv('sign') ?? fileConfig?.sign,
-      analytics: productConfigFromEnv('analytics') ?? fileConfig?.analytics,
+      recruit: productConfig('recruit'),
+      crm: productConfig('crm'),
+      desk: productConfig('desk'),
+      sign: productConfig('sign'),
+      analytics: productConfig('analytics'),
       output: fileConfig?.output
     };
   }
@@ -201,7 +370,8 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
  * Resolves credentials for a specific product.
  * Uses product-specific credentials if available, otherwise falls back to shared — except for
  * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`), whose `clientId`/`clientSecret`/`refreshToken`
- * must come from the product's own config. `region`/`apiMode` may still inherit from shared for all products.
+ * must come from the product's own config. `region`/`apiMode` may still inherit from shared for all products,
+ * with a product's own `region` taking precedence.
  *
  * @param config - Loaded CLI configuration containing the shared block and any per-product overrides.
  * @param product - Target Zoho product whose credentials should be resolved.
@@ -225,9 +395,10 @@ export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCl
       clientId,
       clientSecret,
       refreshToken,
-      region: shared.region ?? 'us',
+      region: productConfig?.region ?? shared.region ?? 'us',
       apiMode: productConfig?.apiUrl ?? shared.apiMode ?? 'production',
-      orgId: productConfig?.orgId
+      orgId: productConfig?.orgId,
+      redirectUri: productConfig?.redirectUri ?? (allowSharedFallback ? shared.redirectUri : undefined)
     };
   }
 
@@ -237,20 +408,15 @@ export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCl
 /**
  * Saves the full CLI config to disk.
  *
- * Creates the config directory recursively if missing, then writes the JSON-serialized config to {@link getConfigFilePath}.
+ * Creates the config directory recursively if missing, then writes the JSON-serialized config to
+ * {@link getConfigFilePath} with owner-only (`0600`) permissions, since it holds client secrets and
+ * refresh tokens.
  *
  * @param config - Complete config object to persist; written verbatim with 2-space indentation.
+ * @returns Resolves once the file is written.
  */
-export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
-  const filePath = getConfigFilePath();
-  mkdirSync(getConfigDir(), { recursive: true });
-
-  return new Promise<void>((resolve, reject) => {
-    writeFile(filePath, JSON.stringify(config, null, 2), {}, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+export function saveCliConfig(config: ZohoCliConfig): Promise<void> {
+  return writeJsonFile({ filePath: getConfigFilePath(), dirPath: getConfigDir(), data: config, mode: CLI_CONFIG_FILE_MODE });
 }
 
 /**
@@ -274,7 +440,19 @@ function mergeConfigBlock<T extends object>(existing: Maybe<T>, updates: Maybe<T
 }
 
 /**
- * Merges new values into the existing config, preserving unmodified fields.
+ * Patch accepted by {@link mergeCliConfig}. Every block is optional, and the shared block may be
+ * partial — a step-1 `auth setup` stores the client without touching the stored refresh token.
+ */
+export type ZohoCliConfigUpdate = Partial<Omit<ZohoCliConfig, 'shared'>> & {
+  readonly shared?: Partial<ZohoCliSharedConfig>;
+};
+
+/**
+ * Merges new values into the stored config file, preserving unmodified fields.
+ *
+ * Merges onto the RAW file ({@link loadCliConfigFile}), never onto the env-layered config, so an
+ * env-sourced credential is not written to disk. `shared` may be omitted or partial, which leaves the
+ * stored values untouched (empty credentials are written when none are stored yet).
  *
  * Per-product blocks are shallow-merged via {@link mergeConfigBlock} when provided, so a key the
  * update carries as `undefined` leaves the stored value alone; output config is deep-merged via
@@ -288,10 +466,10 @@ function mergeConfigBlock<T extends object>(existing: Maybe<T>, updates: Maybe<T
  * @param updates - Partial config patch; only keys present in this object are touched.
  * @returns The fully merged config that was written to disk.
  */
-export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<ZohoCliConfig> {
-  const existing = await loadCliConfig();
+export async function mergeCliConfig(updates: ZohoCliConfigUpdate): Promise<ZohoCliConfig> {
+  const existing = await loadCliConfigFile();
   const merged: ZohoCliConfig = {
-    shared: mergeConfigBlock(existing?.shared, updates.shared) as ZohoCliConfig['shared'],
+    shared: { clientId: '', clientSecret: '', refreshToken: '', ...mergeConfigBlock<Partial<ZohoCliSharedConfig>>(existing?.shared, updates.shared) },
     recruit: mergeConfigBlock(existing?.recruit, updates.recruit),
     crm: mergeConfigBlock(existing?.crm, updates.crm),
     desk: mergeConfigBlock(existing?.desk, updates.desk),

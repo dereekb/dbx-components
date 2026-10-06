@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
 import type { Maybe } from '@dereekb/util';
-import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct } from '../config/cli.config';
+import { loadCliConfig, loadCliConfigFile, getConfigFilePath, getTokenCachePath, configuredProducts, zohoCliCredentialSources, zohoCliRefreshTokenEnvVarName, zohoCliShadowedEnvCredentialBlocks, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentialSource } from '../config/cli.config';
 import { createCliContext, toZohoCliProductApis, type ZohoCliProductApi, type ZohoCliProductApis } from '../context/cli.context';
 import { outputResult } from '../util/output';
 import { access, constants } from 'node:fs';
@@ -28,11 +28,14 @@ export const DOCTOR_COMMAND: CommandModule = {
   builder: (yargs: Argv) => yargs,
   handler: async () => {
     const config = await loadCliConfig();
+    const fileConfig = await loadCliConfigFile();
     const checks: DoctorCheck[] = [];
 
     checks.push(checkConfigLoaded(config));
-    const sharedCheck = checkSharedCredentials(config);
+    const sharedCheck = checkSharedCredentials(config, zohoCliCredentialSources(fileConfig).shared);
     if (sharedCheck) checks.push(sharedCheck);
+    const shadowCheck = checkShadowedEnvCredentials(fileConfig);
+    if (shadowCheck) checks.push(shadowCheck);
     checks.push(await checkTokenCacheDir());
 
     if (config) {
@@ -53,17 +56,39 @@ function checkConfigLoaded(config: Awaited<ReturnType<typeof loadCliConfig>>): D
   if (config) {
     return { name: 'config', status: 'pass', message: `Config loaded from ${getConfigFilePath()}` };
   }
-  return { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth setup' };
+  return { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth login' };
 }
 
-function checkSharedCredentials(config: Awaited<ReturnType<typeof loadCliConfig>>): DoctorCheck | undefined {
+function checkSharedCredentials(config: Awaited<ReturnType<typeof loadCliConfig>>, source: ZohoCliCredentialSource): DoctorCheck | undefined {
   if (config?.shared?.clientId && config?.shared?.clientSecret && config?.shared?.refreshToken) {
-    return { name: 'shared-credentials', status: 'pass', message: 'Shared credentials present' };
+    const from = source === 'env' ? 'environment variables' : 'config file';
+    return { name: 'shared-credentials', status: 'pass', message: `Shared credentials present (from ${from})` };
   }
   if (config) {
     return { name: 'shared-credentials', status: 'warn', message: 'Missing shared credentials. Per-product credentials may still work.' };
   }
   return undefined;
+}
+
+/**
+ * Warns when a stored login is shadowing a DIFFERENT refresh token exported in the environment.
+ *
+ * Stored credentials win over env vars, so the exported value is silently ignored — not a failure,
+ * but worth surfacing so a stale export is not mistaken for the credential in use.
+ *
+ * @param fileConfig - The raw config file.
+ * @returns The warning, or `undefined` when nothing is shadowed.
+ */
+export function checkShadowedEnvCredentials(fileConfig: Maybe<ZohoCliConfig>): DoctorCheck | undefined {
+  const shadowed = zohoCliShadowedEnvCredentialBlocks(fileConfig);
+  let result: DoctorCheck | undefined;
+
+  if (shadowed.length > 0) {
+    const envVarNames = shadowed.map((block) => zohoCliRefreshTokenEnvVarName(block)).join(', ');
+    result = { name: 'credential-precedence', status: 'warn', message: `The stored login for ${shadowed.join(', ')} takes precedence over a different refresh token set in ${envVarNames}; the env value is ignored.` };
+  }
+
+  return result;
 }
 
 async function checkTokenCacheDir(): Promise<DoctorCheck> {

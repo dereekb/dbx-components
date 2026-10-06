@@ -141,6 +141,10 @@ check "crm --help shows list" echo "$CRM_HELP" | grep -q "list"
 DESK_HELP=$(HOME="$TEST_HOME" $CLI desk --help 2>&1 || true)
 check "desk --help shows tickets" echo "$DESK_HELP" | grep -q "tickets"
 
+AUTH_LOGIN_HELP=$(HOME="$TEST_HOME" $CLI auth login --help 2>&1 || true)
+check "auth login --help shows --redirect-uri" echo "$AUTH_LOGIN_HELP" | grep -q "redirect-uri"
+check "auth login --help shows --listen" echo "$AUTH_LOGIN_HELP" | grep -q "listen"
+
 SIGN_HELP=$(HOME="$TEST_HOME" $CLI sign --help 2>&1 || true)
 check "sign --help shows documents" echo "$SIGN_HELP" | grep -q "documents"
 check "sign --help shows templates" echo "$SIGN_HELP" | grep -q "templates"

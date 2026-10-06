@@ -48,6 +48,22 @@ describe('resolveProductCredentials()', () => {
   });
 });
 
+describe('resolveProductCredentials() region', () => {
+  it('should prefer the product region over the shared one', () => {
+    const config: ZohoCliConfig = {
+      shared: { ...fullCreds, region: 'us' },
+      sign: { clientId: 'sign-id', clientSecret: 'sign-secret', refreshToken: 'sign-token', region: 'eu' }
+    };
+
+    expect(resolveProductCredentials(config, 'sign')?.region).toBe('eu');
+  });
+
+  it('should fall back to the shared region, then us', () => {
+    expect(resolveProductCredentials({ shared: { ...fullCreds, region: 'in' } }, 'crm')?.region).toBe('in');
+    expect(resolveProductCredentials({ shared: { ...fullCreds } }, 'crm')?.region).toBe('us');
+  });
+});
+
 describe('configuredProducts()', () => {
   it('should return products with fully resolvable credentials', () => {
     const config: ZohoCliConfig = { shared: { ...fullCreds } };

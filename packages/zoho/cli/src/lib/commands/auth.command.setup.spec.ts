@@ -17,8 +17,8 @@ vi.mock('node:os', async (importOriginal) => {
   return { ...actual, homedir: () => testHome };
 });
 
-import { getConfigFilePath, loadCliConfig, mergeCliConfig } from '../config/cli.config';
-import { buildAuthSetupContext, saveAuthSetupStep1Config, type AuthSetupArgv } from './auth.command';
+import { getConfigFilePath, loadCliConfig, loadCliConfigFile, mergeCliConfig } from '../config/cli.config';
+import { authSetupAuthorizationUrl, buildAuthSetupContext, saveAuthSetupStep1Config, type AuthSetupArgv } from './auth.command';
 
 const creds = {
   clientId: 'id',
@@ -32,7 +32,7 @@ const creds = {
  */
 async function runAuthSetupStep1(argv: AuthSetupArgv) {
   const existingConfig = await loadCliConfig();
-  return saveAuthSetupStep1Config(buildAuthSetupContext(argv, existingConfig), existingConfig);
+  return saveAuthSetupStep1Config(buildAuthSetupContext(argv, existingConfig));
 }
 
 describe('auth setup (step 1)', () => {
@@ -52,6 +52,10 @@ describe('auth setup (step 1)', () => {
   });
 
   afterEach(() => {
+    Object.keys(process.env)
+      .filter((key) => key.startsWith('ZOHO_'))
+      .forEach((key) => delete process.env[key]);
+
     clearedEnv.forEach(([key, value]) => {
       process.env[key] = value;
     });
@@ -117,5 +121,64 @@ describe('auth setup (step 1)', () => {
 
     expect(config?.shared?.clientId).toBe('id');
     expect(config?.shared?.refreshToken).toBe('token');
+  });
+
+  // the env-layered config used to be written back as the shared block, copying env secrets into the file
+  it('should not copy env credentials into the file on a product setup', async () => {
+    process.env['ZOHO_ACCOUNTS_CLIENT_ID'] = 'env-id';
+    process.env['ZOHO_ACCOUNTS_CLIENT_SECRET'] = 'env-secret';
+    process.env['ZOHO_ACCOUNTS_REFRESH_TOKEN'] = 'env-token';
+
+    await runAuthSetupStep1({ product: 'sign', clientId: 'sign-id', clientSecret: 'sign-secret', apiMode: 'production' });
+
+    expect(JSON.stringify(await loadCliConfigFile())).not.toContain('env-token');
+  });
+
+  it('should keep a stored refresh token when step 1 is re-run', async () => {
+    await mergeCliConfig({ shared: { ...creds } });
+
+    await runAuthSetupStep1({ clientId: 'id', clientSecret: 'secret', apiMode: 'production' });
+
+    expect((await loadCliConfigFile())?.shared?.refreshToken).toBe('token');
+  });
+});
+
+describe('authSetupAuthorizationUrl()', () => {
+  // without prompt=consent a re-consent comes back without a refresh token
+  it('should request offline access with a forced consent screen and no state', () => {
+    const { authorizationUrl, scopes } = authSetupAuthorizationUrl(buildAuthSetupContext({ clientId: 'client-id', clientSecret: 'secret', region: 'eu' }, undefined));
+    const url = new URL(authorizationUrl);
+
+    expect(url.origin).toBe('https://accounts.zoho.eu');
+    expect(url.searchParams.get('client_id')).toBe('client-id');
+    expect(url.searchParams.get('redirect_uri')).toBe('http://localhost/oauth');
+    expect(url.searchParams.get('access_type')).toBe('offline');
+    expect(url.searchParams.get('prompt')).toBe('consent');
+    expect(url.searchParams.has('state')).toBe(false);
+    expect(url.searchParams.get('scope')).toBe(scopes.join(','));
+  });
+
+  it('should request only the targeted product scopes', () => {
+    const { scopes } = authSetupAuthorizationUrl(buildAuthSetupContext({ product: 'sign', clientId: 'client-id', clientSecret: 'secret', scopes: 'recruit' }, undefined));
+
+    expect(scopes.some((x) => x.startsWith('ZohoSign.'))).toBe(true);
+    expect(scopes.some((x) => x.startsWith('ZohoRecruit.'))).toBe(false);
+  });
+});
+
+describe('buildAuthSetupContext() --code', () => {
+  it('should take the code and issuing datacenter from a pasted redirect URL', () => {
+    const ctx = buildAuthSetupContext({ code: 'http://localhost/oauth?code=1000.abc&location=eu&accounts-server=https%3A%2F%2Faccounts.zoho.eu', region: 'us' }, undefined);
+
+    expect(ctx.code).toBe('1000.abc');
+    expect(ctx.region).toBe('eu');
+    expect(ctx.accountsUrl).toBe('https://accounts.zoho.eu');
+  });
+
+  it('should accept a bare code', () => {
+    const ctx = buildAuthSetupContext({ code: '1000.abc', region: 'in' }, undefined);
+
+    expect(ctx.code).toBe('1000.abc');
+    expect(ctx.region).toBe('in');
   });
 });

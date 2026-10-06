@@ -1,29 +1,36 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials, type ZohoCliProductConfig } from '../config/cli.config';
-import { noop, type Maybe } from '@dereekb/util';
+import {
+  loadCliConfig,
+  loadCliConfigFile,
+  mergeCliConfig,
+  clearCliConfig,
+  maskSecret,
+  configuredProducts,
+  resolveProductCredentials,
+  getTokenCachePath,
+  zohoCliCredentialSources,
+  zohoCliRefreshTokenEnvVarName,
+  ZOHO_CLI_PRODUCTS,
+  ZOHO_CLI_ORG_ID_PRODUCTS,
+  ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS,
+  type ZohoCliConfig,
+  type ZohoCliProduct,
+  type ZohoCliCredentials,
+  type ZohoCliProductConfig,
+  type ZohoCliCredentialBlockKey,
+  type ZohoCliCredentialSource
+} from '../config/cli.config';
+import { DEFAULT_AUTH_LOGIN_REDIRECT_URI, ZOHO_CLI_REGION_CHOICES, exchangeZohoAuthorizationCode, loadZohoAuthUserEmail, parseZohoAuthRedirect, zohoCliScopesForProducts } from '../config/cli.oauth';
+import { noop, generateOAuthState, type Maybe } from '@dereekb/util';
+import { parseDurationStringToMilliseconds } from '@dereekb/date';
+import { openUrlInBrowser, parseLoopbackRedirectUri, promptLine, startLoopbackRedirectCapture, type LoopbackRedirectCapture } from '@dereekb/dbx-cli';
+import { zohoAccountsAuthorizeUrlFactory, zohoAccountsConfigApiUrl, zohoOAuthScopesFromScopeString, type ZohoOAuthScope } from '@dereekb/zoho';
+import { fileZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
 import { createCliContext, toZohoCliProductApis } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
 
-// MARK: Regions
-const ZOHO_ACCOUNTS_URLS: Record<string, string> = {
-  us: 'https://accounts.zoho.com',
-  eu: 'https://accounts.zoho.eu',
-  in: 'https://accounts.zoho.in',
-  au: 'https://accounts.zoho.com.au',
-  jp: 'https://accounts.zoho.jp'
-};
-
-// MARK: Scopes
-const ZOHO_SCOPES: Record<string, string[]> = {
-  recruit: ['ZohoRecruit.modules.ALL', 'ZohoRecruit.settings.all', 'ZohoRecruit.functions.execute.READ', 'ZohoRecruit.functions.execute.CREATE'],
-  crm: ['ZohoCRM.modules.ALL', 'ZohoCRM.settings.ALL', 'ZohoCRM.functions.execute.READ', 'ZohoCRM.functions.execute.CREATE'],
-  desk: ['Desk.tickets.ALL', 'Desk.tasks.ALL', 'Desk.contacts.ALL', 'Desk.settings.ALL', 'Desk.events.ALL', 'Desk.search.READ', 'Desk.articles.READ', 'Desk.basic.READ'],
-  sign: ['ZohoSign.documents.ALL', 'ZohoSign.templates.ALL'],
-  analytics: ['ZohoAnalytics.data.all', 'ZohoAnalytics.metadata.all', 'ZohoAnalytics.modeling.all']
-};
-
 /**
- * Redirect URI used when `--redirect-uri` is not given. Must match what the API console has registered.
+ * Redirect URI `auth setup` uses when `--redirect-uri` is not given. Must match what the API console has registered.
  */
 export const DEFAULT_AUTH_SETUP_REDIRECT_URI = 'http://localhost/oauth';
 
@@ -34,56 +41,35 @@ export const DEFAULT_AUTH_SETUP_REDIRECT_URI = 'http://localhost/oauth';
 const ORG_ID_OPTION_DESCRIBE = `Organization ID, for the products scoped by one (${Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).join(', ')})`;
 
 /**
- * Extracts the authorization code from a full redirect URL or returns the input as-is if it's already a code.
- *
- * Lets users paste either the raw `code` query value or the entire browser-redirected URL into `--code`.
- *
- * @param input - The user-supplied value (raw code, full `http(s)://...` URL, or `undefined`).
- * @returns The extracted authorization code, or `undefined` when `input` itself is `undefined`.
- * @throws {Error} When `input` is a URL that lacks a `code` query parameter, or when it starts with `http://`/`https://` but cannot be parsed as a URL.
+ * Where to create the OAuth client that `auth setup` / `auth login` authorize.
  */
-function parseCodeFromInput(input: string | undefined): string | undefined {
-  let result: string | undefined;
+const ZOHO_API_CONSOLE_URL = 'https://api-console.zoho.com/';
 
-  if (!input) {
-    result = undefined;
-  } else if (input.startsWith('http://') || input.startsWith('https://')) {
-    // If the input looks like a URL, extract the code query parameter
-    try {
-      const url = new URL(input);
-      const code = url.searchParams.get('code');
-
-      if (!code) {
-        throw new Error('No "code" parameter found in the provided URL.');
-      }
-
-      result = code;
-    } catch (e) {
-      if (e instanceof TypeError) {
-        throw new Error(`Invalid URL provided for --code: ${input}`, { cause: e });
-      }
-
-      throw e;
-    }
-  } else {
-    result = input;
-  }
-
-  return result;
+/**
+ * Lists the products that resolve credentials once a write has landed.
+ *
+ * Read back through {@link loadCliConfig} rather than off the merged file, since a product may still
+ * be configured through env vars the write deliberately did not copy.
+ *
+ * @param merged - The config file as just written.
+ * @returns The configured products.
+ */
+async function configuredProductsAfterSave(merged: ZohoCliConfig): Promise<ZohoCliProduct[]> {
+  return configuredProducts((await loadCliConfig()) ?? merged);
 }
 
 // MARK: Setup
 const authSetupCommand: CommandModule = {
   command: 'setup',
-  describe: 'Generate OAuth authorization URL, exchange code, or set refresh token directly',
+  describe: 'Generate OAuth authorization URL, exchange code, or set refresh token directly (see also: auth login)',
   builder: (yargs: Argv) =>
     yargs
-      .option('client-id', { type: 'string', describe: 'OAuth client ID (from https://api-console.zoho.com/)' })
+      .option('client-id', { type: 'string', describe: `OAuth client ID (from ${ZOHO_API_CONSOLE_URL})` })
       .option('client-secret', { type: 'string', describe: 'OAuth client secret' })
       .option('redirect-uri', { type: 'string', default: DEFAULT_AUTH_SETUP_REDIRECT_URI, describe: 'Redirect URI (must match API console config)' })
-      .option('region', { type: 'string', default: 'us', choices: ['us', 'eu', 'in', 'au', 'jp'] as const, describe: 'Zoho region' })
+      .option('region', { type: 'string', defaultDescription: 'the stored region, otherwise us', choices: ZOHO_CLI_REGION_CHOICES, describe: 'Zoho datacenter' })
       .option('scopes', { type: 'string', defaultDescription: '--product when given, otherwise recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign,analytics)' })
-      .option('code', { type: 'string', describe: 'Authorization code or the full redirect URL (code is extracted automatically)' })
+      .option('code', { type: 'string', describe: 'Authorization code or the full redirect URL (code and datacenter are extracted automatically)' })
       .option('token', { type: 'string', describe: 'Set a refresh token directly (skips OAuth code exchange)' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store credentials for a specific product instead of shared' })
       .option('org-id', { type: 'string', describe: ORG_ID_OPTION_DESCRIBE })
@@ -103,15 +89,15 @@ const authSetupCommand: CommandModule = {
       const ctx = buildAuthSetupContext(argv, existingConfig);
 
       if (!ctx.clientId || !ctx.clientSecret) {
-        throw new Error('--client-id and --client-secret are required. Get them from https://api-console.zoho.com/');
+        throw new Error(`--client-id and --client-secret are required. Get them from ${ZOHO_API_CONSOLE_URL}`);
       }
 
       if (ctx.token) {
-        await handleAuthSetupToken(ctx, existingConfig);
+        await handleAuthSetupToken(ctx);
       } else if (ctx.code) {
-        await handleAuthSetupCode(ctx, existingConfig);
+        await handleAuthSetupCode(ctx);
       } else {
-        await handleAuthSetupStep1(ctx, existingConfig);
+        await handleAuthSetupStep1(ctx);
       }
     } catch (e) {
       outputError(e);
@@ -141,6 +127,9 @@ export interface AuthSetupContext {
   readonly clientId: string | undefined;
   readonly clientSecret: string | undefined;
   readonly redirectUri: string;
+  /**
+   * Datacenter to authorize against — or, with `--code`, the datacenter the pasted redirect says issued the code.
+   */
   readonly region: string;
   readonly scopes: readonly string[];
   readonly code: string | undefined;
@@ -175,15 +164,20 @@ export function authSetupScopes(scopes: Maybe<string>, product: Maybe<ZohoCliPro
  * Resolves the parsed `auth setup` argv against the stored config into the context every step handler reads.
  *
  * @param argv - Parsed options for the run.
- * @param existingConfig - Config currently on disk, when any.
+ * @param existingConfig - Config currently loaded, when any.
  * @returns The resolved {@link AuthSetupContext}.
+ * @throws {Error} When `--code` is a redirect URL without a code, or names an unknown Zoho Accounts host.
  */
 export function buildAuthSetupContext(argv: AuthSetupArgv, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
-  const region = argv.region ?? existingConfig?.shared?.region ?? 'us';
   // When a product is targeted, prefer its own stored client credentials before falling back to shared.
   // Products with a dedicated OAuth client (e.g. sign) rely on this so their client is not sourced from shared.
   const product = argv.product;
   const productConfig = product ? existingConfig?.[product] : undefined;
+  const configuredRegion = argv.region ?? productConfig?.region ?? existingConfig?.shared?.region ?? 'us';
+  // the code must be exchanged with the datacenter that issued it, which the pasted redirect names
+  const parsedCode = argv.code ? parseZohoAuthRedirect({ pasted: argv.code, fallbackRegion: configuredRegion }) : undefined;
+  const region = parsedCode?.region ?? configuredRegion;
+
   return {
     product,
     clientId: argv.clientId ?? productConfig?.clientId ?? existingConfig?.shared?.clientId,
@@ -191,9 +185,9 @@ export function buildAuthSetupContext(argv: AuthSetupArgv, existingConfig: Maybe
     redirectUri: argv.redirectUri ?? DEFAULT_AUTH_SETUP_REDIRECT_URI,
     region,
     scopes: authSetupScopes(argv.scopes, product),
-    code: parseCodeFromInput(argv.code),
+    code: parsedCode?.code,
     token: argv.token,
-    accountsUrl: ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'],
+    accountsUrl: zohoAccountsConfigApiUrl(region),
     apiMode: argv.apiMode,
     orgId: argv.orgId
   };
@@ -207,10 +201,12 @@ export interface AuthProductConfigUpdateInput {
   readonly credentials?: Partial<ZohoCliCredentials>;
   readonly apiMode?: Maybe<string>;
   readonly orgId?: Maybe<string>;
+  readonly region?: Maybe<string>;
+  readonly redirectUri?: Maybe<string>;
 }
 
 /**
- * Builds the per-product block that a `--product`-targeted `auth setup` / `auth set` persists.
+ * Builds the per-product block that a `--product`-targeted `auth setup` / `auth set` / `auth login` persists.
  *
  * `orgId` is carried only for {@link ZOHO_CLI_ORG_ID_PRODUCTS} — for any other product the flag is
  * meaningless, and storing it would advertise a scope the product does not have. Every caller goes
@@ -226,17 +222,18 @@ export interface AuthProductConfigUpdateInput {
  * @param input.credentials - Credentials the run supplied, when any.
  * @param input.apiMode - `--api-mode` for the run, when given.
  * @param input.orgId - `--org-id` for the run, when given; kept only for an org-scoped product.
+ * @param input.region - Datacenter the product's client was authorized in, when known.
+ * @param input.redirectUri - Redirect URI the product's client was authorized with, when known.
  * @returns The product config patch to hand to `mergeCliConfig`.
  */
-export function authProductConfigUpdate({ product, credentials, apiMode, orgId }: AuthProductConfigUpdateInput): ZohoCliProductConfig {
-  return { ...credentials, apiUrl: apiMode ?? undefined, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? (orgId ?? undefined) : undefined };
+export function authProductConfigUpdate({ product, credentials, apiMode, orgId, region, redirectUri }: AuthProductConfigUpdateInput): ZohoCliProductConfig {
+  return { ...credentials, apiUrl: apiMode ?? undefined, orgId: ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? (orgId ?? undefined) : undefined, region: region ?? undefined, redirectUri: redirectUri ?? undefined };
 }
 
-async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials, existingShared: ZohoCliCredentials | undefined): Promise<ZohoCliConfig> {
+async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials): Promise<ZohoCliConfig> {
   if (ctx.product) {
     return mergeCliConfig({
-      shared: existingShared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-      [ctx.product]: authProductConfigUpdate({ product: ctx.product, credentials: creds, apiMode: ctx.apiMode, orgId: ctx.orgId })
+      [ctx.product]: authProductConfigUpdate({ product: ctx.product, credentials: creds, apiMode: ctx.apiMode, orgId: ctx.orgId, region: ctx.region })
     });
   }
   return mergeCliConfig({
@@ -245,54 +242,34 @@ async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials
   });
 }
 
-async function handleAuthSetupToken(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+async function handleAuthSetupToken(ctx: AuthSetupContext): Promise<void> {
   const creds: ZohoCliCredentials = { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string, refreshToken: ctx.token as string };
-  const merged = await mergeCredsConfig(ctx, creds, existingConfig?.shared);
+  const merged = await mergeCredsConfig(ctx, creds);
   outputResult({
     success: true,
     ...(ctx.product ? { product: ctx.product } : {}),
     refreshToken: maskSecret(ctx.token as string),
     configSaved: true,
-    configuredProducts: configuredProducts(merged)
+    configuredProducts: await configuredProductsAfterSave(merged)
   });
 }
 
-async function handleAuthSetupCode(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
-  const tokenUrl = `${ctx.accountsUrl}/oauth/v2/token`;
-  const params = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: ctx.clientId as string,
-    client_secret: ctx.clientSecret as string,
-    redirect_uri: ctx.redirectUri,
-    code: ctx.code as string
-  });
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString()
-  });
-  const body = await response.json();
-
-  if (body.error) {
-    throw new Error(`Token exchange failed: ${body.error}`);
-  }
-  const refreshToken = body.refresh_token;
-  if (!refreshToken) {
-    throw new Error('No refresh_token in response. The authorization code may have expired (valid for 2 minutes). Generate a new one.');
-  }
-
+async function handleAuthSetupCode(ctx: AuthSetupContext): Promise<void> {
+  const tokenResponse = await exchangeZohoAuthorizationCode({ clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string, region: ctx.region, code: ctx.code as string, redirectUri: ctx.redirectUri });
+  const refreshToken = tokenResponse.refresh_token;
   const creds: ZohoCliCredentials = { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string, refreshToken };
-  const merged = await mergeCredsConfig(ctx, creds, existingConfig?.shared);
+  const merged = await mergeCredsConfig(ctx, creds);
 
   outputResult({
     step: 2,
     success: true,
     product: ctx.product ?? 'shared',
+    region: ctx.region,
     refreshToken: maskSecret(refreshToken),
-    accessToken: body.access_token ? maskSecret(body.access_token) : null,
-    scope: body.scope,
+    accessToken: tokenResponse.access_token ? maskSecret(tokenResponse.access_token) : null,
+    scope: tokenResponse.scope,
     configSaved: true,
-    configuredProducts: configuredProducts(merged)
+    configuredProducts: await configuredProductsAfterSave(merged)
   });
 }
 
@@ -301,31 +278,25 @@ async function handleAuthSetupCode(ctx: AuthSetupContext, existingConfig: Maybe<
  *
  * Split out from {@link handleAuthSetupStep1} so the persistence is testable without the printed
  * authorization URL; step 1 is the run that must both store `--org-id` and leave an already stored
- * one alone when the flag is omitted.
+ * one alone when the flag is omitted. The stored refresh token is never written here, so re-running
+ * step 1 keeps a working one until step 2 replaces it.
  *
  * @param ctx - Resolved setup context for the run.
- * @param existingConfig - Config currently on disk, when any.
  * @returns The merged config that was written.
  */
-export async function saveAuthSetupStep1Config(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<ZohoCliConfig> {
+export async function saveAuthSetupStep1Config(ctx: AuthSetupContext): Promise<ZohoCliConfig> {
   let result: ZohoCliConfig;
 
   if (ctx.product) {
-    // Store the client under the product (preserving the shared client) so a dedicated-client product
-    // like sign does not clobber the shared recruit/crm/desk client. Region/apiMode stay on shared.
+    // Store the client under the product and leave shared alone, so a dedicated-client product like
+    // sign does not clobber the shared recruit/crm/desk client.
     result = await mergeCliConfig({
-      shared: {
-        clientId: existingConfig?.shared?.clientId ?? '',
-        clientSecret: existingConfig?.shared?.clientSecret ?? '',
-        refreshToken: existingConfig?.shared?.refreshToken ?? '',
-        region: ctx.region,
-        apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
-      },
       [ctx.product]: authProductConfigUpdate({
         product: ctx.product,
         credentials: { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string },
         apiMode: ctx.apiMode,
-        orgId: ctx.orgId
+        orgId: ctx.orgId,
+        region: ctx.region
       })
     });
   } else {
@@ -335,9 +306,8 @@ export async function saveAuthSetupStep1Config(ctx: AuthSetupContext, existingCo
       shared: {
         clientId: ctx.clientId as string,
         clientSecret: ctx.clientSecret as string,
-        refreshToken: existingConfig?.shared?.refreshToken ?? '',
         region: ctx.region,
-        apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
+        apiMode: ctx.apiMode
       },
       desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
     });
@@ -346,16 +316,29 @@ export async function saveAuthSetupStep1Config(ctx: AuthSetupContext, existingCo
   return result;
 }
 
-async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+/**
+ * Builds the authorization URL step 1 of `auth setup` prints.
+ *
+ * Built by `@dereekb/zoho`'s authorize URL factory, so it carries `access_type=offline` and
+ * `prompt=consent` — without the latter, a re-consent comes back with no refresh token. Step 1 sends
+ * no `state`: the code is pasted back by hand into a separate run that has no state to check against.
+ *
+ * @param ctx - Resolved setup context for the run.
+ * @returns The authorization URL and the scopes it requests.
+ * @throws {Error} When none of the requested products is a known one.
+ */
+export function authSetupAuthorizationUrl(ctx: AuthSetupContext): { readonly authorizationUrl: string; readonly scopes: ZohoOAuthScope[] } {
   // A product-targeted setup authorizes that product's own OAuth client, so the URL requests only
   // that product's scopes; the shared setup requests the combined scopes from --scopes.
-  const scopeStrings = ctx.product ? (ZOHO_SCOPES[ctx.product] ?? []) : ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
-  if (scopeStrings.length === 0) {
-    throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
-  }
-  const authUrl = `${ctx.accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(ctx.clientId as string)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(ctx.redirectUri)}`;
+  const scopes = zohoCliScopesForProducts(ctx.product ? [ctx.product] : ctx.scopes);
+  const authorizationUrl = zohoAccountsAuthorizeUrlFactory({ clientId: ctx.clientId as string, redirectUri: ctx.redirectUri, scopes, accountsApiUrl: ctx.region })();
+  return { authorizationUrl, scopes };
+}
 
-  await saveAuthSetupStep1Config(ctx, existingConfig);
+async function handleAuthSetupStep1(ctx: AuthSetupContext): Promise<void> {
+  const { authorizationUrl, scopes } = authSetupAuthorizationUrl(ctx);
+
+  await saveAuthSetupStep1Config(ctx);
 
   const productFlag = ctx.product ? `--product ${ctx.product} ` : '';
 
@@ -363,11 +346,12 @@ async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe
     step: 1,
     product: ctx.product ?? 'shared',
     instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
-    authorizationUrl: authUrl,
+    authorizationUrl,
     redirectUri: ctx.redirectUri,
-    scopes: scopeStrings,
+    scopes,
     credentialsSaved: true,
-    nextStep: `zoho-cli auth setup ${productFlag}--code "PASTE_REDIRECT_URL_OR_AUTH_CODE"`
+    nextStep: `zoho-cli auth setup ${productFlag}--code "PASTE_REDIRECT_URL_OR_AUTH_CODE"`,
+    tip: `zoho-cli auth login ${productFlag}does both steps in one command: it opens the browser and captures the redirect on ${DEFAULT_AUTH_LOGIN_REDIRECT_URI} (register that redirect URI on the client first).`
   });
 }
 
@@ -381,7 +365,7 @@ const authSetCommand: CommandModule = {
       .option('client-secret', { type: 'string', demandOption: true, describe: 'OAuth client secret' })
       .option('refresh-token', { type: 'string', demandOption: true, describe: 'OAuth refresh token' })
       .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Store for a specific product instead of shared' })
-      .option('region', { type: 'string', default: 'us', describe: 'Zoho region (us, eu, in, au, jp)' })
+      .option('region', { type: 'string', defaultDescription: 'the stored region, otherwise us', choices: ZOHO_CLI_REGION_CHOICES, describe: 'Zoho datacenter' })
       .option('org-id', { type: 'string', describe: ORG_ID_OPTION_DESCRIBE })
       .option('api-mode', { type: 'string', default: 'production', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
       .example([
@@ -401,8 +385,7 @@ const authSetCommand: CommandModule = {
 
       if (product) {
         merged = await mergeCliConfig({
-          shared: (await loadCliConfig())?.shared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-          [product]: authProductConfigUpdate({ product, credentials: creds, apiMode: argv.apiMode, orgId: argv.orgId })
+          [product]: authProductConfigUpdate({ product, credentials: creds, apiMode: argv.apiMode, orgId: argv.orgId, region: argv.region })
         });
       } else {
         merged = await mergeCliConfig({
@@ -411,13 +394,353 @@ const authSetCommand: CommandModule = {
         });
       }
 
-      outputResult({ saved: true, product: product ?? 'shared', configuredProducts: configuredProducts(merged) });
+      outputResult({ saved: true, product: product ?? 'shared', configuredProducts: await configuredProductsAfterSave(merged) });
     } catch (e) {
       outputError(e);
       process.exit(1);
     }
   }
 };
+
+// MARK: Login
+/**
+ * Default time `auth login` waits for the browser redirect before falling back to the paste prompt.
+ *
+ * Long enough to cover a first-time sign-in (account picker, MFA, consent screen), since the fallback
+ * costs the user the whole flow again.
+ */
+const DEFAULT_AUTH_LOGIN_LISTEN_FOR = '5m';
+
+const authLoginCommand: CommandModule = {
+  command: 'login',
+  describe: 'Authorize in the browser and store the refresh token (one command; captures the redirect on a local port)',
+  builder: (yargs: Argv) =>
+    yargs
+      .option('product', { type: 'string', choices: [...ZOHO_CLI_PRODUCTS] as const, describe: 'Log in a specific product (with its own OAuth client) instead of shared' })
+      .option('client-id', { type: 'string', defaultDescription: 'the stored client, otherwise prompted', describe: `OAuth client ID (from ${ZOHO_API_CONSOLE_URL})` })
+      .option('client-secret', { type: 'string', defaultDescription: 'the stored client, otherwise prompted', describe: 'OAuth client secret' })
+      .option('scopes', { type: 'string', defaultDescription: '--product when given, otherwise recruit,crm,desk', describe: 'Comma-separated products for OAuth scopes (recruit,crm,desk,sign,analytics)' })
+      .option('region', { type: 'string', defaultDescription: 'the stored region, otherwise us', choices: ZOHO_CLI_REGION_CHOICES, describe: 'Zoho datacenter to authorize against (the one Zoho redirects back with wins)' })
+      .option('redirect-uri', { type: 'string', defaultDescription: `the stored one, otherwise ${DEFAULT_AUTH_LOGIN_REDIRECT_URI}`, describe: 'Redirect URI registered on the Zoho client' })
+      .option('redirect-port', { type: 'number', describe: 'Bind the loopback listener on this port instead of the redirect URI one. The resulting redirect URI must also be registered on the client.' })
+      .option('open', { type: 'boolean', default: true, describe: 'Open the authorization URL in the default browser. Use --no-open to print it only.' })
+      .option('listen', { type: 'boolean', default: true, describe: 'Capture the browser redirect on the loopback redirect URI. Use --no-listen to always paste it back by hand.' })
+      .option('listen-for', { type: 'string', default: DEFAULT_AUTH_LOGIN_LISTEN_FOR, describe: 'How long to wait for the browser redirect before falling back to the paste prompt (e.g. 5m, 90s)' })
+      .option('code', { type: 'string', describe: 'Skip the browser and pass the redirect URL or bare code directly' })
+      .option('org-id', { type: 'string', describe: ORG_ID_OPTION_DESCRIBE })
+      .option('api-mode', { type: 'string', choices: ['production', 'sandbox'] as const, describe: 'API mode' })
+      .example([
+        ['$0 auth login', 'Log in the shared client (recruit, crm, desk) in the browser'],
+        ['$0 auth login --client-id 1000.ABC --client-secret xyz --org-id 1234567', 'First login: store the client and the Desk org id'],
+        ['$0 auth login --product sign', 'Log in the dedicated Sign client'],
+        ['$0 auth login --no-listen', 'Paste the redirect URL back by hand (e.g. over SSH)']
+      ]),
+  handler: async (argv: any) => {
+    try {
+      await handleAuthLogin(argv);
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
+/**
+ * The subset of `auth login`'s parsed argv the flow reads.
+ */
+export interface AuthLoginArgv {
+  readonly product?: ZohoCliProduct;
+  readonly clientId?: string;
+  readonly clientSecret?: string;
+  readonly scopes?: string;
+  readonly region?: string;
+  readonly redirectUri?: string;
+  readonly redirectPort?: number;
+  readonly open?: boolean;
+  readonly listen?: boolean;
+  readonly listenFor?: string;
+  readonly code?: string;
+  readonly orgId?: string;
+  readonly apiMode?: string;
+}
+
+export interface AuthLoginContext {
+  /**
+   * Product being logged in, or `undefined` for the shared client.
+   */
+  readonly product: Maybe<ZohoCliProduct>;
+  readonly clientId: Maybe<string>;
+  readonly clientSecret: Maybe<string>;
+  readonly redirectUri: string;
+  /**
+   * Datacenter the authorization request is sent to.
+   */
+  readonly region: string;
+  readonly scopes: ZohoOAuthScope[];
+  readonly apiMode: Maybe<string>;
+  readonly orgId: Maybe<string>;
+}
+
+/**
+ * Resolves the parsed `auth login` argv against the loaded config.
+ *
+ * - Client id/secret: the flags, then the logged-in block's stored client, then the shared client —
+ *   except for {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS}, which never borrow the shared client.
+ * - Redirect URI: the flag, then the one the client was last logged in with, then {@link DEFAULT_AUTH_LOGIN_REDIRECT_URI}.
+ * - Region: the flag, then the stored region, then `us`.
+ *
+ * Empty stored values (step 1 of `auth setup` stores an empty refresh token) count as absent.
+ *
+ * @param argv - Parsed options for the run.
+ * @param existingConfig - Config currently loaded, when any.
+ * @returns The resolved {@link AuthLoginContext}.
+ * @throws {Error} When none of the requested products is a known one.
+ */
+export function buildAuthLoginContext(argv: AuthLoginArgv, existingConfig: Maybe<ZohoCliConfig>): AuthLoginContext {
+  const product = argv.product;
+  const productConfig = product ? existingConfig?.[product] : undefined;
+  const sharedClientConfig = product && ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS.has(product) ? undefined : existingConfig?.shared;
+  const firstValue = (...values: Maybe<string>[]): Maybe<string> => values.find((x) => x != null && x !== '');
+
+  return {
+    product,
+    clientId: firstValue(argv.clientId, productConfig?.clientId, sharedClientConfig?.clientId),
+    clientSecret: firstValue(argv.clientSecret, productConfig?.clientSecret, sharedClientConfig?.clientSecret),
+    redirectUri: firstValue(argv.redirectUri, productConfig?.redirectUri, sharedClientConfig?.redirectUri) ?? DEFAULT_AUTH_LOGIN_REDIRECT_URI,
+    region: firstValue(argv.region, productConfig?.region, existingConfig?.shared?.region) ?? 'us',
+    scopes: zohoCliScopesForProducts(authSetupScopes(argv.scopes, product)),
+    apiMode: argv.apiMode,
+    orgId: argv.orgId
+  };
+}
+
+/**
+ * What a completed `auth login` authorization produced.
+ */
+export interface AuthLoginResult {
+  readonly clientId: string;
+  readonly clientSecret: string;
+  readonly refreshToken: string;
+  /**
+   * Datacenter that issued the grant.
+   */
+  readonly region: string;
+  /**
+   * Redirect URI the grant was authorized with.
+   */
+  readonly redirectUri: string;
+}
+
+/**
+ * Persists a completed `auth login`.
+ *
+ * A shared login writes the shared block (plus Desk's org id when one was given, desk being the only
+ * org-scoped product on the shared client). A product login writes only that product's block and
+ * leaves shared untouched.
+ *
+ * @param ctx - Resolved login context for the run.
+ * @param result - The authorized client and its new refresh token.
+ * @returns The merged config that was written.
+ */
+export function saveAuthLoginResult(ctx: AuthLoginContext, result: AuthLoginResult): Promise<ZohoCliConfig> {
+  const { clientId, clientSecret, refreshToken, region, redirectUri } = result;
+  let merged: Promise<ZohoCliConfig>;
+
+  if (ctx.product) {
+    merged = mergeCliConfig({
+      [ctx.product]: authProductConfigUpdate({ product: ctx.product, credentials: { clientId, clientSecret, refreshToken }, apiMode: ctx.apiMode, orgId: ctx.orgId, region, redirectUri })
+    });
+  } else {
+    merged = mergeCliConfig({
+      shared: { clientId, clientSecret, refreshToken, region, redirectUri, apiMode: ctx.apiMode ?? undefined },
+      desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
+    });
+  }
+
+  return merged;
+}
+
+/**
+ * Fills in a missing client id/secret by prompting for it on a terminal.
+ *
+ * @param ctx - Resolved login context for the run.
+ * @returns The context with both client values present.
+ * @throws {Error} When a value is missing and stdin is not a terminal to prompt on.
+ */
+async function promptAuthLoginClient(ctx: AuthLoginContext): Promise<AuthLoginContext & { readonly clientId: string; readonly clientSecret: string }> {
+  if (!(ctx.clientId && ctx.clientSecret) && !process.stdin.isTTY) {
+    throw new Error(`No stored OAuth client to log in with. Pass --client-id and --client-secret (create a client at ${ZOHO_API_CONSOLE_URL}).`);
+  }
+
+  let clientId = ctx.clientId;
+  let clientSecret = ctx.clientSecret;
+
+  if (!clientId) {
+    // the question goes to stderr so stdout stays the JSON result
+    process.stderr.write(`Zoho OAuth client ID (from ${ZOHO_API_CONSOLE_URL}): `);
+    clientId = (await promptLine({ question: '' })).trim();
+  }
+
+  if (!clientSecret) {
+    process.stderr.write('Zoho OAuth client secret: ');
+    clientSecret = (await promptLine({ question: '', mask: true })).trim();
+  }
+
+  if (!clientId || !clientSecret) {
+    throw new Error('A client id and client secret are both required to log in.');
+  }
+
+  return { ...ctx, clientId, clientSecret };
+}
+
+/**
+ * Waits for the authorization redirect: the loopback listener raced against a paste prompt, so the
+ * flow still finishes when the browser cannot reach this machine (SSH, a container).
+ *
+ * @param capture - The started listener, when one could be bound.
+ * @param listenForMs - How long to wait on the listener before only the prompt remains.
+ * @returns The redirect URL (or bare code) received.
+ */
+async function waitForAuthLoginRedirect(capture: Maybe<LoopbackRedirectCapture>, listenForMs: number): Promise<string> {
+  let pasted: string;
+
+  try {
+    if (capture) {
+      process.stderr.write(`Waiting for the redirect to ${capture.redirectUri} ... (or paste the redirect URL here)\n`);
+
+      const controller = new AbortController();
+      const prompt = promptLine({ question: '', signal: controller.signal });
+      const redirected = capture.waitForRedirect(listenForMs);
+
+      // whichever source loses is abandoned mid-flight; its rejection is expected, not unhandled
+      prompt.catch(noop);
+      redirected.catch(noop);
+
+      try {
+        pasted = await Promise.race([redirected, prompt]);
+      } catch (e) {
+        // only the listener's timeout reaches here — the prompt is still open, so keep waiting on it
+        process.stderr.write(`${(e as Error).message}\n`);
+        pasted = await prompt;
+      } finally {
+        // released only once a winner is settled, so an aborted prompt cannot win the race
+        controller.abort();
+      }
+    } else {
+      process.stderr.write('Paste the redirect URL (or the code) here: ');
+      pasted = await promptLine({ question: '' });
+    }
+  } finally {
+    // unconditional: a listener left bound keeps the process alive well past the command
+    await capture?.close();
+  }
+
+  return pasted;
+}
+
+/**
+ * Evicts the cached access tokens of every product that now resolves to the new grant.
+ *
+ * The token cache is keyed by product, not by grant, so without this the next call would keep using
+ * an access token minted from the replaced refresh token until it expired.
+ *
+ * @param result - The new grant.
+ * @returns Resolves once the cache entries are cleared.
+ */
+async function clearAuthLoginCachedTokens(result: AuthLoginResult): Promise<void> {
+  const config = await loadCliConfig();
+  const cacheService = fileZohoAccountsAccessTokenCacheService(getTokenCachePath(), false);
+  const products = config
+    ? ZOHO_CLI_PRODUCTS.filter((product) => {
+        const resolved = resolveProductCredentials(config, product);
+        return resolved?.clientId === result.clientId && resolved.refreshToken === result.refreshToken;
+      })
+    : [];
+
+  await Promise.all(products.map((product) => cacheService.loadZohoAccessTokenCache(product).clearCachedToken()));
+}
+
+/**
+ * Runs `auth login`: authorize in the browser, capture (or accept a pasted) redirect, exchange the
+ * code with the datacenter that issued it, and store the refresh token.
+ *
+ * @param argv - Parsed options for the run.
+ * @returns Resolves once the result is stored and reported.
+ */
+async function handleAuthLogin(argv: AuthLoginArgv): Promise<void> {
+  const ctx = await promptAuthLoginClient(buildAuthLoginContext(argv, await loadCliConfig()));
+  const listenFor = argv.listenFor ?? DEFAULT_AUTH_LOGIN_LISTEN_FOR;
+  const listenForMs = parseDurationStringToMilliseconds(listenFor);
+
+  if (!(listenForMs > 0)) {
+    throw new Error(`--listen-for: invalid duration "${listenFor}". Use formats like "5m", "90s", or mixed units like "1h30m".`);
+  }
+
+  const state = generateOAuthState();
+  const suppliedCode = argv.code;
+  const shouldListen = suppliedCode == null && argv.listen !== false;
+  const loopbackTarget = shouldListen ? parseLoopbackRedirectUri({ redirectUri: ctx.redirectUri, port: argv.redirectPort }) : undefined;
+  let capture: Maybe<LoopbackRedirectCapture>;
+
+  // the listener is started before the URL is built, since the port it binds is part of the redirect_uri
+  if (loopbackTarget) {
+    try {
+      capture = await startLoopbackRedirectCapture({ target: loopbackTarget, successMessage: 'Zoho login complete — you can close this tab and return to your terminal.' });
+    } catch (e) {
+      process.stderr.write(`${(e as Error).message} Falling back to pasting the redirect URL.\n`);
+    }
+  } else if (shouldListen) {
+    const productFlag = ctx.product ? `--product ${ctx.product} ` : '';
+    process.stderr.write(
+      `Redirect capture is unavailable: "${ctx.redirectUri}" has no loopback port to bind.\n  To capture the redirect automatically, add ${DEFAULT_AUTH_LOGIN_REDIRECT_URI} as an Authorized Redirect URI on the Zoho client, then run:\n    zoho-cli auth login ${productFlag}--redirect-uri ${DEFAULT_AUTH_LOGIN_REDIRECT_URI}\n`
+    );
+  }
+
+  // identical to the resolved redirect URI unless --redirect-port moved it; the exchange must echo it back
+  const redirectUri = capture?.redirectUri ?? ctx.redirectUri;
+  let pasted: string;
+
+  if (suppliedCode == null) {
+    const authorizationUrl = zohoAccountsAuthorizeUrlFactory({ clientId: ctx.clientId, redirectUri, scopes: ctx.scopes, accountsApiUrl: ctx.region })({ state });
+
+    // printed even when the browser opens: it is the fallback whenever the launch fails. stderr keeps stdout parseable.
+    process.stderr.write(`Authorization URL:\n  ${authorizationUrl}\n`);
+
+    if (argv.open !== false && !(await openUrlInBrowser({ url: authorizationUrl }))) {
+      process.stderr.write('Could not open a browser automatically — open the URL above by hand.\n');
+    }
+
+    pasted = await waitForAuthLoginRedirect(capture, listenForMs);
+  } else {
+    pasted = suppliedCode;
+  }
+
+  // a --code pasted from an earlier run carries no state of this run's to check against
+  const { code, region } = parseZohoAuthRedirect({ pasted, expectedState: suppliedCode == null ? state : undefined, fallbackRegion: ctx.region });
+  const tokenResponse = await exchangeZohoAuthorizationCode({ clientId: ctx.clientId, clientSecret: ctx.clientSecret, region, code, redirectUri });
+  const result: AuthLoginResult = { clientId: ctx.clientId, clientSecret: ctx.clientSecret, refreshToken: tokenResponse.refresh_token, region, redirectUri };
+  const user = await loadZohoAuthUserEmail({ clientId: ctx.clientId, clientSecret: ctx.clientSecret, region, accessToken: tokenResponse.access_token });
+
+  const merged = await saveAuthLoginResult(ctx, result);
+  await clearAuthLoginCachedTokens(result);
+
+  const block: ZohoCliCredentialBlockKey = ctx.product ?? 'shared';
+  const envVarName = zohoCliRefreshTokenEnvVarName(block);
+
+  if (process.env[envVarName]) {
+    process.stderr.write(`Note: ${envVarName} is set, but the stored login now takes precedence over it.\n`);
+  }
+
+  outputResult({
+    loggedIn: true,
+    product: block,
+    region,
+    user,
+    scopes: zohoOAuthScopesFromScopeString(tokenResponse.scope) ?? ctx.scopes,
+    refreshToken: maskSecret(result.refreshToken),
+    configuredProducts: await configuredProductsAfterSave(merged)
+  });
+}
 
 // MARK: Show
 function maskCredentials(creds: Maybe<Partial<ZohoCliCredentials>>) {
@@ -431,7 +754,7 @@ function maskCredentials(creds: Maybe<Partial<ZohoCliCredentials>>) {
 }
 
 function maskProductConfig(product: ZohoCliProduct, productConfig: Maybe<ZohoCliProductConfig>) {
-  return productConfig ? { ...maskCredentials(productConfig), apiUrl: productConfig.apiUrl, ...(ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? { orgId: productConfig.orgId } : {}) } : null;
+  return productConfig ? { ...maskCredentials(productConfig), apiUrl: productConfig.apiUrl, ...(productConfig.region ? { region: productConfig.region } : {}), ...(ZOHO_CLI_ORG_ID_PRODUCTS.has(product) ? { orgId: productConfig.orgId } : {}) } : null;
 }
 
 /**
@@ -442,10 +765,14 @@ function maskProductConfig(product: ZohoCliProduct, productConfig: Maybe<ZohoCli
  * which is exactly how a fully configured analytics install showed nothing here. `orgId` is
  * surfaced for {@link ZOHO_CLI_ORG_ID_PRODUCTS}, whose calls cannot work without it.
  *
+ * `credentialSources`, when given, reports per block whether the credentials came from the config file
+ * or env vars — a stored login wins over env, which is otherwise invisible here.
+ *
  * @param config - Loaded CLI configuration.
+ * @param credentialSources - Per-block credential sources, from `zohoCliCredentialSources`.
  * @returns Result object with every secret masked, and `null` for each product with no stored block.
  */
-export function buildAuthShowResult(config: ZohoCliConfig): Record<string, unknown> {
+export function buildAuthShowResult(config: ZohoCliConfig, credentialSources?: Maybe<Record<ZohoCliCredentialBlockKey, ZohoCliCredentialSource>>): Record<string, unknown> {
   const productResults = Object.fromEntries(ZOHO_CLI_PRODUCTS.map((product) => [product, maskProductConfig(product, config[product])]));
 
   return {
@@ -456,7 +783,8 @@ export function buildAuthShowResult(config: ZohoCliConfig): Record<string, unkno
       apiMode: config.shared?.apiMode ?? 'production'
     },
     ...productResults,
-    configuredProducts: configuredProducts(config)
+    configuredProducts: configuredProducts(config),
+    ...(credentialSources ? { credentialSources } : {})
   };
 }
 
@@ -467,7 +795,7 @@ const authShowCommand: CommandModule = {
   handler: async () => {
     try {
       const config = await loadCliConfig();
-      outputResult(config ? buildAuthShowResult(config) : { configured: false });
+      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(await loadCliConfigFile())) : { configured: false });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -488,7 +816,7 @@ const authCheckCommand: CommandModule = {
         const products = configuredProducts(config);
 
         if (products.length === 0) {
-          outputResult({ authenticated: false, error: 'No products have complete credentials. Run: zoho-cli auth setup' });
+          outputResult({ authenticated: false, error: 'No products have complete credentials. Run: zoho-cli auth login' });
         } else {
           // Try token exchange for each configured product
           const context = createCliContext(config);
@@ -518,7 +846,7 @@ const authCheckCommand: CommandModule = {
           outputResult({ products: results });
         }
       } else {
-        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth setup' });
+        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth login' });
       }
     } catch (e) {
       outputError(e);
@@ -547,6 +875,6 @@ const authClearCommand: CommandModule = {
 export const AUTH_COMMAND: CommandModule = {
   command: 'auth',
   describe: 'Manage Zoho API credentials',
-  builder: (yargs: Argv) => yargs.command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),
+  builder: (yargs: Argv) => yargs.command(authLoginCommand).command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),
   handler: noop
 };
