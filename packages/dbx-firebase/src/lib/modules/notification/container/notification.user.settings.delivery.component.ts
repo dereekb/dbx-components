@@ -30,9 +30,9 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
       <div class="dbx-pb2">
         <mat-slide-toggle [checked]="deliveryMethodSwitch.enabled" [disabled]="store.disabledSignal()" (change)="store.setMethodEnabled(deliveryMethodSwitch.method, $event.checked)">{{ deliveryMethodSwitch.label }}</mat-slide-toggle>
         @if (deliveryMethodSwitch.awaitingPhoneNumber) {
-          <div class="dbx-hint dbx-small">Save a phone number for texts to turn on text messages.</div>
+          <div class="dbx-hint dbx-small dbx-pt2">Save a phone number for texts to turn on text messages.</div>
         } @else if (!deliveryMethodSwitch.enabled) {
-          <div class="dbx-hint dbx-small">{{ deliveryMethodSwitch.offHint }}</div>
+          <div class="dbx-hint dbx-small dbx-pt2">{{ deliveryMethodSwitch.offHint }}</div>
         }
       </div>
     }

@@ -42,7 +42,7 @@ export class DbxRotatingButtonDirective<T = unknown> {
   private readonly _liveAnnouncer = inject(LiveAnnouncer);
 
   /**
-   * Whether the button has rotated yet. Only the first click skips equivalent states.
+   * Whether the button has rotated yet. Only the first click skips the state equivalent to the default state.
    */
   private _hasRotated = false;
 
@@ -97,12 +97,12 @@ export class DbxRotatingButtonDirective<T = unknown> {
   /**
    * Moves to the next state, emits its value, and announces the change.
    *
-   * The first rotation skips equivalent states when the config sets `skipEquivalentStatesOnFirstClick`.
+   * The first rotation skips the state equivalent to the default state when the config sets `skipDefaultEquivalentOnFirstClick`.
    */
   rotate(): void {
     const config = this.dbxRotatingButton();
-    const skipEquivalentStates = config?.skipEquivalentStatesOnFirstClick === true && !this._hasRotated;
-    const nextState = config ? nextDbxRotatingButtonState(config, this.dbxRotatingButtonValue(), skipEquivalentStates) : undefined;
+    const skipDefaultEquivalent = config?.skipDefaultEquivalentOnFirstClick === true && !this._hasRotated;
+    const nextState = config ? nextDbxRotatingButtonState(config, this.dbxRotatingButtonValue(), skipDefaultEquivalent) : undefined;
 
     if (config && nextState) {
       this._hasRotated = true;

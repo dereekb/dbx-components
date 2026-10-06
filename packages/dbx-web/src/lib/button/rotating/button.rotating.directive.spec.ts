@@ -81,7 +81,7 @@ describe('DbxRotatingButtonDirective', () => {
     expect(button().getAttribute('aria-label')).toBe('Text: Off');
   });
 
-  it('should skip a state equivalent to the current one on the first click only', () => {
+  it('should skip the default state from its equivalent state on the first click only', () => {
     fixture.componentInstance.config.set(dbxTristateRotatingButtonConfig({ label: 'Text', defaultValue: false }));
     fixture.componentInstance.value.set(false);
     fixture.detectChanges();
