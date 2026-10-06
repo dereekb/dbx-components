@@ -16,7 +16,7 @@ import {
   toCanonicalNotificationDeliveryMethods,
   type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams
 } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
+import { type E164PhoneNumber, type Maybe } from '@dereekb/util';
 import { compareNotificationTemplateTypeInfoGroups, type DbxFirebaseNotificationSettingsCellStates, type DbxFirebaseNotificationSettingsListItemValue, type DbxFirebaseNotificationSettingsRowCellStates } from '../component/notification.settings.list';
 
 /**
@@ -280,6 +280,34 @@ export function dbxFirebaseNotificationUserGlobalConfigUpdateParams(input: DbxFi
   }
 
   return result;
+}
+
+/**
+ * Input for {@link dbxFirebaseNotificationUserTextPhoneNumberUpdateParams}.
+ */
+export interface DbxFirebaseNotificationUserTextPhoneNumberUpdateParamsInput {
+  /**
+   * The saved global config (`gc`).
+   */
+  readonly gc?: Maybe<Partial<Pick<NotificationUserDefaultNotificationBoxRecipientConfig, 'dm'>>>;
+  /**
+   * The phone number texts are sent to.
+   */
+  readonly phoneNumber: E164PhoneNumber;
+}
+
+/**
+ * Returns the `gc` update params that save the phone number for texts and turn texts on. Saving the phone number is how the
+ * user opts into texts, so texts are removed from the disabled methods.
+ *
+ * @param input - The saved config and the phone number.
+ * @returns The update params.
+ */
+export function dbxFirebaseNotificationUserTextPhoneNumberUpdateParams(input: DbxFirebaseNotificationUserTextPhoneNumberUpdateParamsInput): UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams {
+  const { gc, phoneNumber } = input;
+  const savedDm = toCanonicalNotificationDeliveryMethods(gc?.dm);
+  const dm = savedDm.filter((x) => x !== NotificationDeliveryMethod.TEXT);
+  return { t: phoneNumber, ...(dm.length === savedDm.length ? {} : { dm: dm.length ? dm : null }) };
 }
 
 /**

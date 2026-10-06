@@ -1,11 +1,13 @@
-import { Component, computed, inject } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { DbxActionSnackbarErrorDirective, DbxButtonComponent } from '@dereekb/dbx-web';
 import { type IsModifiedFunction, type WorkUsingContext } from '@dereekb/rxjs';
-import { map, of } from 'rxjs';
+import { combineLatest, first, map, switchMap } from 'rxjs';
 import { type DbxFirebaseNotificationUserSettingsPhoneFormConfig, type DbxFirebaseNotificationUserSettingsPhoneFormValue, DbxFirebaseNotificationUserSettingsPhoneForgeFormComponent } from '../component/notification.user.settings.phone.forge.form.component';
+import { dbxFirebaseNotificationUserTextPhoneNumberUpdateParams } from '../service/notification.settings';
+import { NotificationUserDocumentStore } from '../store/notificationuser.document.store';
 import { DbxFirebaseNotificationUserSettingsStore } from '../store/notificationuser.settings.store';
 
 /**
@@ -29,21 +31,30 @@ import { DbxFirebaseNotificationUserSettingsStore } from '../store/notificationu
 })
 export class DbxFirebaseNotificationUserSettingsPhoneComponent {
   readonly store = inject(DbxFirebaseNotificationUserSettingsStore);
+  readonly notificationUserDocumentStore = inject(NotificationUserDocumentStore);
 
-  readonly formConfigSignal = computed<DbxFirebaseNotificationUserSettingsPhoneFormConfig>(() => ({
-    preferredCountries: this.store.configSignal().phoneNumberPreferredCountries,
-    placeholder: this.store.authPhoneNumberSignal()
-  }));
+  readonly formConfigSignal = toSignal(combineLatest([this.store.config$, this.store.authPhoneNumber$]).pipe(map(([config, placeholder]): DbxFirebaseNotificationUserSettingsPhoneFormConfig => ({ preferredCountries: config.phoneNumberPreferredCountries, placeholder }))));
 
   // only the saved phone number feeds the form, so saving other settings doesn't reset a number being typed
-  readonly formValue$ = toObservable(this.store.textPhoneNumberSignal).pipe(map((phoneNumber): DbxFirebaseNotificationUserSettingsPhoneFormValue => ({ phoneNumber })));
+  readonly formValue$ = this.store.textPhoneNumber$.pipe(map((phoneNumber): DbxFirebaseNotificationUserSettingsPhoneFormValue => ({ phoneNumber })));
 
   // saving the number that is already saved does nothing, so it doesn't count as a change
-  readonly isPhoneNumberModified: IsModifiedFunction<DbxFirebaseNotificationUserSettingsPhoneFormValue> = (value) => of((value.phoneNumber || undefined) !== (this.store.textPhoneNumberSignal() ?? undefined));
+  readonly isPhoneNumberModified: IsModifiedFunction<DbxFirebaseNotificationUserSettingsPhoneFormValue> = (value) =>
+    this.store.textPhoneNumber$.pipe(
+      first(),
+      map((textPhoneNumber) => (value.phoneNumber || undefined) !== (textPhoneNumber ?? undefined))
+    );
 
   readonly handleSavePhoneNumber: WorkUsingContext<DbxFirebaseNotificationUserSettingsPhoneFormValue> = (value, context) => {
-    if (value.phoneNumber) {
-      context.startWorkingWithLoadingStateObservable(this.store.saveTextPhoneNumber(value.phoneNumber));
+    const { phoneNumber } = value;
+
+    if (phoneNumber) {
+      const savePhoneNumber = this.store.savedGc$.pipe(
+        first(),
+        switchMap((gc) => this.notificationUserDocumentStore.updateNotificationUser({ gc: dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ gc, phoneNumber }) }))
+      );
+
+      context.startWorkingWithLoadingStateObservable(savePhoneNumber);
     } else {
       context.reject();
     }

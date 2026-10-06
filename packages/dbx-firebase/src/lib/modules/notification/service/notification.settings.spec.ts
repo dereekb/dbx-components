@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
-import { DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP, dbxFirebaseNotificationSettingsCellStates, dbxFirebaseNotificationSettingsListItemValues, dbxFirebaseNotificationUserGlobalConfigUpdateParams } from './notification.settings';
+import { DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP, dbxFirebaseNotificationSettingsCellStates, dbxFirebaseNotificationSettingsListItemValues, dbxFirebaseNotificationUserGlobalConfigUpdateParams, dbxFirebaseNotificationUserTextPhoneNumberUpdateParams } from './notification.settings';
 
 const { EMAIL, TEXT, NOTIFICATION_SUMMARY } = NotificationDeliveryMethod;
 const COLUMNS = [EMAIL, TEXT, NOTIFICATION_SUMMARY];
@@ -134,5 +134,23 @@ describe('dbxFirebaseNotificationUserGlobalConfigUpdateParams()', () => {
   it('should combine cell and disabled method changes', () => {
     const result = dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc: {}, edits: { E: { [EMAIL]: false } }, disabledDeliveryMethods: [TEXT] });
     expect(result).toEqual({ configs: [{ type: 'E', se: false }], dm: [TEXT] });
+  });
+});
+
+describe('dbxFirebaseNotificationUserTextPhoneNumberUpdateParams()', () => {
+  const { EMAIL, TEXT } = NotificationDeliveryMethod;
+  const phoneNumber = '+15555550100';
+
+  it('should save the phone number', () => {
+    expect(dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ phoneNumber })).toEqual({ t: phoneNumber });
+  });
+
+  it('should turn texts on', () => {
+    expect(dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ gc: { dm: [TEXT, EMAIL] }, phoneNumber })).toEqual({ t: phoneNumber, dm: [EMAIL] });
+    expect(dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ gc: { dm: [TEXT] }, phoneNumber })).toEqual({ t: phoneNumber, dm: null });
+  });
+
+  it('should leave the other disabled methods alone', () => {
+    expect(dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ gc: { dm: [EMAIL] }, phoneNumber })).toEqual({ t: phoneNumber });
   });
 });

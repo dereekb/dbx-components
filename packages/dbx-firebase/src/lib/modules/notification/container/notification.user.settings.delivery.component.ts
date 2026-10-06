@@ -1,9 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { NotificationDeliveryMethod } from '@dereekb/firebase';
+import { map } from 'rxjs';
 import { NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS } from '../service/healthcheck.presentation';
-import { DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE } from '../service/notification.settings';
 import { DbxFirebaseNotificationUserSettingsStore } from '../store/notificationuser.settings.store';
 import { DbxFirebaseNotificationUserSettingsPhoneComponent } from './notification.user.settings.phone.component';
 
@@ -28,7 +29,7 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
   template: `
     @for (deliveryMethodSwitch of switchesSignal(); track deliveryMethodSwitch.method) {
       <div class="dbx-pb2">
-        <mat-slide-toggle [checked]="deliveryMethodSwitch.enabled" [disabled]="store.disabledSignal()" (change)="store.setMethodEnabled(deliveryMethodSwitch.method, $event.checked)">{{ deliveryMethodSwitch.label }}</mat-slide-toggle>
+        <mat-slide-toggle [checked]="deliveryMethodSwitch.enabled" [disabled]="disabledSignal()" (change)="store.setMethodEnabled({ method: deliveryMethodSwitch.method, enabled: $event.checked })">{{ deliveryMethodSwitch.label }}</mat-slide-toggle>
         @if (deliveryMethodSwitch.awaitingPhoneNumber) {
           <div class="dbx-hint dbx-small dbx-pt2">Save a phone number for texts to turn on text messages.</div>
         } @else if (!deliveryMethodSwitch.enabled) {
@@ -36,7 +37,7 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
         }
       </div>
     }
-    @if (showTextSettingsSignal()) {
+    @if (textPhoneNumberFormOpenSignal()) {
       <div class="dbx-pb2">
         <dbx-firebase-notification-user-settings-phone></dbx-firebase-notification-user-settings-phone>
         <p class="dbx-hint dbx-small">{{ textMessageDisclosureSignal() }}</p>
@@ -54,32 +55,21 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
 export class DbxFirebaseNotificationUserSettingsDeliveryComponent {
   readonly store = inject(DbxFirebaseNotificationUserSettingsStore);
 
-  readonly switchesSignal = computed(() =>
-    this.store.deliveryMethodSwitchesSignal().map((x) => ({
-      ...x,
-      label: dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(x.method),
-      offHint: `${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[x.method]} notifications are turned off for every notification type.`
-    }))
+  readonly switchesSignal = toSignal(
+    this.store.deliveryMethodSwitches$.pipe(
+      map((switches) =>
+        switches.map((x) => ({
+          ...x,
+          label: dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(x.method),
+          offHint: `${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[x.method]} notifications are turned off for every notification type.`
+        }))
+      )
+    ),
+    { initialValue: [] }
   );
 
-  /**
-   * Shows the text settings, including the phone number form, once the text switch is turned on. Without a text switch they
-   * always show, since saving a phone number is the only way to turn texts on.
-   */
-  readonly showTextSettingsSignal = computed(() => {
-    const columns = this.store.columnsSignal();
-    const switchable = this.store.switchableDeliveryMethodsSignal();
-    const formOpen = this.store.textPhoneNumberFormOpenSignal();
-    return columns.includes(NotificationDeliveryMethod.TEXT) && (formOpen || !switchable.includes(NotificationDeliveryMethod.TEXT));
-  });
-  readonly textMessageDisclosureSignal = computed(() => this.store.configSignal().textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
-
-  /**
-   * When the user consented to texts, shown only while texts are on in the saved settings.
-   */
-  readonly textConsentAtSignal = computed(() => {
-    const textConsentAt = this.store.textConsentAtSignal();
-    const textsOn = this.store.canEnableTextSignal() && this.store.savedTextOptInSignal();
-    return textsOn ? textConsentAt : undefined;
-  });
+  readonly disabledSignal = toSignal(this.store.disabled$, { initialValue: true });
+  readonly textPhoneNumberFormOpenSignal = toSignal(this.store.textPhoneNumberFormOpen$, { initialValue: false });
+  readonly textMessageDisclosureSignal = toSignal(this.store.textMessageDisclosure$);
+  readonly textConsentAtSignal = toSignal(this.store.textConsentAt$);
 }

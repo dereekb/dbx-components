@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BehaviorSubject, of, Subject } from 'rxjs';
-import { AppNotificationTemplateTypeInfoRecordService, appNotificationTemplateTypeInfoRecordService, firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateTypeInfo, type NotificationUser, type UpdateNotificationUserParams } from '@dereekb/firebase';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { AppNotificationTemplateTypeInfoRecordService, appNotificationTemplateTypeInfoRecordService, firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateTypeInfo, type NotificationUser } from '@dereekb/firebase';
 import { beginLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
-import { DbxFirebaseNotificationUserSettingsStore } from './notificationuser.settings.store';
+import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig } from './notificationuser.settings.store';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 
 const { EMAIL, TEXT } = NotificationDeliveryMethod;
@@ -24,21 +24,16 @@ function makeNotificationUser(gc: TestGc): NotificationUser & { id: string; key:
 describe('DbxFirebaseNotificationUserSettingsStore', () => {
   let store: DbxFirebaseNotificationUserSettingsStore;
   let dataLoadingState$: BehaviorSubject<LoadingState<NotificationUser>>;
-  let updateResult$: Subject<LoadingState<void>>;
-  let updateNotificationUser: ReturnType<typeof vi.fn>;
   let authUser$: BehaviorSubject<{ uid: string; phoneNumber: string | null }>;
 
   function setNotificationUser(gc: TestGc) {
     const notificationUser = makeNotificationUser(gc);
     dataLoadingState$.next(successResult(notificationUser));
-    TestBed.tick();
     return notificationUser;
   }
 
   beforeEach(() => {
     dataLoadingState$ = new BehaviorSubject<LoadingState<NotificationUser>>(beginLoading());
-    updateResult$ = new Subject();
-    updateNotificationUser = vi.fn((_: Partial<UpdateNotificationUserParams>) => updateResult$);
     authUser$ = new BehaviorSubject<{ uid: string; phoneNumber: string | null }>({ uid: UID, phoneNumber: '+15555550199' });
 
     TestBed.configureTestingModule({
@@ -48,10 +43,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
           provide: NotificationUserDocumentStore,
           useValue: {
             hasRef$: of(true),
-            dataLoadingState$,
-            currentId$: of(UID),
-            updateNotificationUser,
-            createNotificationUser: vi.fn(() => of(successResult({ modelKeys: [`nu/${UID}`] })))
+            dataLoadingState$
           }
         },
         {
@@ -70,169 +62,191 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     TestBed.resetTestingModule();
   });
 
-  it('should be loading until the NotificationUser loads', () => {
-    TestBed.tick();
-    expect(store.pageStateSignal()).toBe('loading');
+  it('should be loading until the NotificationUser loads', async () => {
+    expect(await firstValueFrom(store.pageState$)).toBe('loading');
 
     setNotificationUser({});
-    expect(store.pageStateSignal()).toBe('ready');
+    expect(await firstValueFrom(store.pageState$)).toBe('ready');
   });
 
-  it('should be missing when the NotificationUser does not exist', () => {
+  it('should be missing when the NotificationUser does not exist', async () => {
     dataLoadingState$.next({ loading: false, error: { code: 'NOT_FOUND', message: 'Does not exist.' } });
-    TestBed.tick();
-
-    expect(store.pageStateSignal()).toBe('missing');
+    expect(await firstValueFrom(store.pageState$)).toBe('missing');
   });
 
-  it('should clear the edit when a cell is set back to its saved value', () => {
+  it('should merge the config set from an observable over the app config', async () => {
+    const config$ = new BehaviorSubject<DbxFirebaseNotificationUserSettingsStoreConfig>({ deliveryMethods: [EMAIL] });
+    store.setConfig(config$);
+    expect(await firstValueFrom(store.columns$)).toEqual([EMAIL]);
+
+    config$.next({ deliveryMethods: [TEXT, EMAIL] });
+    expect(await firstValueFrom(store.columns$)).toEqual([TEXT, EMAIL]);
+  });
+
+  it('should not count a cell set back to its saved value as a change', async () => {
     setNotificationUser({ c: { E: { st: true } } });
 
-    store.setCellValue('E', TEXT, false);
-    expect(store.isModifiedSignal()).toBe(true);
-    expect(store.cellStatesSignal()['E'][TEXT]?.modified).toBe(true);
+    store.setCellValue({ type: 'E', method: TEXT, value: false });
+    expect(await firstValueFrom(store.isModified$)).toBe(true);
+    expect((await firstValueFrom(store.cellStates$))['E'][TEXT]?.modified).toBe(true);
 
-    store.setCellValue('E', TEXT, true);
-    expect(store.isModifiedSignal()).toBe(false);
-    expect(store.updateParamsSignal()).toBeUndefined();
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    expect(await firstValueFrom(store.isModified$)).toBe(false);
+    expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
+    expect((await firstValueFrom(store.cellStates$))['E'][TEXT]?.modified).toBe(false);
   });
 
-  it('should save the pending changes as one gc update', () => {
+  it('should build one gc update from the pending changes', async () => {
     setNotificationUser({});
 
-    store.setCellValue('E', TEXT, true);
-    store.setMethodEnabled(EMAIL, false);
-    store.save().subscribe();
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    store.setMethodEnabled({ method: EMAIL, enabled: false });
 
-    expect(updateNotificationUser).toHaveBeenCalledTimes(1);
-    expect(updateNotificationUser).toHaveBeenCalledWith({ gc: { configs: [{ type: 'E', st: true }], dm: [EMAIL] } });
-    expect(store.savingSignal()).toBe(true);
+    expect(await firstValueFrom(store.updateParams$)).toEqual({ configs: [{ type: 'E', st: true }], dm: [EMAIL] });
   });
 
-  it('should hold the saved values until the next snapshot', () => {
+  it('should drop the pending changes once a snapshot has them', async () => {
     setNotificationUser({});
 
-    store.setCellValue('E', TEXT, true);
-    store.save().subscribe();
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    store.setMethodEnabled({ method: EMAIL, enabled: false });
 
-    updateResult$.next(successResult(undefined));
-    updateResult$.complete();
+    setNotificationUser({ c: { E: { st: true } }, dm: [EMAIL] });
+    expect(await firstValueFrom(store.isModified$)).toBe(false);
 
-    // pending edits are cleared, but the saved value still shows before the snapshot arrives
-    expect(store.isModifiedSignal()).toBe(false);
-    expect(store.savingSignal()).toBe(false);
-    expect(store.cellStatesSignal()['E'][TEXT]?.value).toBe(true);
-
-    // the next snapshot replaces the optimistic value
+    // the edits are gone, so a later snapshot shows as is
     setNotificationUser({ c: { E: { st: false } } });
-    expect(store.cellStatesSignal()['E'][TEXT]?.value).toBe(false);
+    expect((await firstValueFrom(store.cellStates$))['E'][TEXT]?.value).toBe(false);
+    expect(await firstValueFrom(store.isModified$)).toBe(false);
   });
 
-  it('should keep the pending changes when the save fails', () => {
+  it('should keep the pending changes a snapshot does not have', async () => {
     setNotificationUser({});
 
-    store.setCellValue('E', TEXT, true);
-    store.save().subscribe();
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    setNotificationUser({ c: { E: { se: false } } });
 
-    updateResult$.next({ loading: false, error: { code: 'FAILED', message: 'Failed.' } });
-    updateResult$.complete();
-
-    expect(store.isModifiedSignal()).toBe(true);
-    expect(store.savingSignal()).toBe(false);
+    expect(await firstValueFrom(store.updateParams$)).toEqual({ configs: [{ type: 'E', st: true }] });
+    expect((await firstValueFrom(store.cellStates$))['E'][TEXT]?.modified).toBe(true);
   });
 
-  it('should discard the pending changes on reset', () => {
+  it('should discard the pending changes on reset', async () => {
     setNotificationUser({ dm: [TEXT], t: '+15555550100' });
 
-    store.setCellValue('E', EMAIL, false);
-    store.setMethodEnabled(TEXT, true);
-    expect(store.disabledDeliveryMethodsSignal()).toEqual([]);
+    store.setCellValue({ type: 'E', method: EMAIL, value: false });
+    store.setMethodEnabled({ method: TEXT, enabled: true });
+    expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([]);
 
     store.reset();
-    expect(store.isModifiedSignal()).toBe(false);
-    expect(store.disabledDeliveryMethodsSignal()).toEqual([TEXT]);
+    expect(await firstValueFrom(store.isModified$)).toBe(false);
+    expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([TEXT]);
   });
 
-  it('should report when saving enables texts', () => {
+  it('should report when saving enables texts', async () => {
     setNotificationUser({ t: '+15555550100' });
-    expect(store.enablesTextSignal()).toBe(false);
+    expect(await firstValueFrom(store.enablesText$)).toBe(false);
 
-    store.setCellValue('E', TEXT, true);
-    expect(store.enablesTextSignal()).toBe(true);
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    expect(await firstValueFrom(store.enablesText$)).toBe(true);
 
-    store.setMethodEnabled(TEXT, false);
-    expect(store.enablesTextSignal()).toBe(false);
+    store.setMethodEnabled({ method: TEXT, enabled: false });
+    expect(await firstValueFrom(store.enablesText$)).toBe(false);
   });
 
-  it('should only send texts to a saved phone number and suggest the account phone number', () => {
+  it('should only send texts to a saved phone number and suggest the account phone number', async () => {
     setNotificationUser({});
-    expect(store.textPhoneNumberSignal()).toBeUndefined();
-    expect(store.canEnableTextSignal()).toBe(false);
-    expect(store.authPhoneNumberSignal()).toBe('+15555550199');
+    expect(await firstValueFrom(store.textPhoneNumber$)).toBeUndefined();
+    expect(await firstValueFrom(store.canEnableText$)).toBe(false);
+    expect(await firstValueFrom(store.authPhoneNumber$)).toBe('+15555550199');
 
     setNotificationUser({ t: '+15555550100' });
-    expect(store.textPhoneNumberSignal()).toBe('+15555550100');
-    expect(store.canEnableTextSignal()).toBe(true);
+    expect(await firstValueFrom(store.textPhoneNumber$)).toBe('+15555550100');
+    expect(await firstValueFrom(store.canEnableText$)).toBe(true);
+  });
+
+  it('should only show the text consent date while texts are on', async () => {
+    const tcat = new Date('2026-10-01T00:00:00Z');
+
+    setNotificationUser({ t: '+15555550100', tcat, c: { E: { st: true } } });
+    expect(await firstValueFrom(store.textConsentAt$)).toBe(tcat);
+
+    setNotificationUser({ t: '+15555550100', tcat, c: { E: { st: true } }, dm: [TEXT] });
+    expect(await firstValueFrom(store.textConsentAt$)).toBeUndefined();
   });
 
   describe('without a phone number for texts', () => {
-    it('should show texts as off and disable the text column', () => {
+    it('should show texts as off and disable the text column', async () => {
       setNotificationUser({});
 
-      expect(store.disabledDeliveryMethodsSignal()).toEqual([TEXT]);
-      expect(store.deliveryMethodSwitchesSignal()).toEqual([{ method: TEXT, enabled: false, modified: false, awaitingPhoneNumber: false }]);
-      expect(store.cellStatesSignal()['E'][TEXT]?.disabled).toBe(true);
-      expect(store.cellStatesSignal()['E'][EMAIL]?.disabled).toBe(false);
+      expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([TEXT]);
+      expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([{ method: TEXT, enabled: false, modified: false, awaitingPhoneNumber: false }]);
+
+      const cellStates = await firstValueFrom(store.cellStates$);
+      expect(cellStates['E'][TEXT]?.disabled).toBe(true);
+      expect(cellStates['E'][EMAIL]?.disabled).toBe(false);
     });
 
-    it('should open the phone number form instead of turning texts on', () => {
+    it('should open the phone number form instead of turning texts on', async () => {
       setNotificationUser({ dm: [TEXT] });
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(false);
 
-      store.setMethodEnabled(TEXT, true);
-      expect(store.isModifiedSignal()).toBe(false);
-      expect(store.textPhoneNumberFormOpenSignal()).toBe(true);
-      expect(store.deliveryMethodSwitchesSignal()[0]).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: true });
+      store.setMethodEnabled({ method: TEXT, enabled: true });
+      expect(await firstValueFrom(store.isModified$)).toBe(false);
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(true);
+      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0]).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: true });
 
-      store.setMethodEnabled(TEXT, false);
-      expect(store.textPhoneNumberFormOpenSignal()).toBe(false);
+      store.setMethodEnabled({ method: TEXT, enabled: false });
+      expect(await firstValueFrom(store.isModified$)).toBe(false);
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(false);
     });
 
-    it('should turn texts on when the phone number is saved', () => {
+    it('should always show the phone number form when texts have no switch', async () => {
+      store.setConfig({ switchableDeliveryMethods: [] });
+      setNotificationUser({});
+
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(true);
+    });
+
+    it('should turn texts on once the phone number is saved', async () => {
       setNotificationUser({ dm: [TEXT, EMAIL] });
-      store.setMethodEnabled(TEXT, true);
+      store.setMethodEnabled({ method: TEXT, enabled: true });
 
-      store.saveTextPhoneNumber('+15555550100').subscribe();
-      expect(updateNotificationUser).toHaveBeenCalledWith({ gc: { t: '+15555550100', dm: [EMAIL] } });
+      setNotificationUser({ t: '+15555550100', dm: [EMAIL] });
+      expect(await firstValueFrom(store.canEnableText$)).toBe(true);
+      expect(await firstValueFrom(store.isModified$)).toBe(false);
 
-      updateResult$.next(successResult(undefined));
-      updateResult$.complete();
+      const [textSwitch] = await firstValueFrom(store.deliveryMethodSwitches$);
+      expect(textSwitch).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: false });
 
-      // the saved number shows before the next snapshot arrives
-      expect(store.canEnableTextSignal()).toBe(true);
-      expect(store.deliveryMethodSwitchesSignal()[0].enabled).toBe(true);
+      // the text switch edit is dropped with the snapshot, so turning texts off elsewhere shows
+      setNotificationUser({ t: '+15555550100', dm: [TEXT, EMAIL] });
+      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0].enabled).toBe(false);
     });
 
-    it('should not save turning texts on once the phone number is gone', () => {
+    it('should keep waiting for a phone number across snapshots', async () => {
+      setNotificationUser({});
+      store.setMethodEnabled({ method: TEXT, enabled: true });
+
+      setNotificationUser({ c: { E: { se: false } } });
+      expect(await firstValueFrom(store.awaitingTextPhoneNumber$)).toBe(true);
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(true);
+    });
+
+    it('should not save turning texts on once the phone number is gone', async () => {
       setNotificationUser({ dm: [TEXT], t: '+15555550100' });
 
-      store.setMethodEnabled(TEXT, true);
-      expect(store.updateParamsSignal()).toEqual({ dm: null });
+      store.setMethodEnabled({ method: TEXT, enabled: true });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ dm: null });
 
       setNotificationUser({ dm: [TEXT] });
-      expect(store.updateParamsSignal()).toBeUndefined();
+      expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
     });
 
-    it('should still turn other methods off', () => {
+    it('should still turn other methods off', async () => {
       setNotificationUser({});
 
-      store.setMethodEnabled(EMAIL, false);
-      expect(store.updateParamsSignal()).toEqual({ dm: [EMAIL] });
+      store.setMethodEnabled({ method: EMAIL, enabled: false });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ dm: [EMAIL] });
     });
-  });
-
-  it('should create the NotificationUser for the current id', () => {
-    const documentStore = TestBed.inject(NotificationUserDocumentStore);
-    store.createNotificationUser().subscribe();
-    expect(documentStore.createNotificationUser).toHaveBeenCalledWith({ uid: UID });
   });
 });

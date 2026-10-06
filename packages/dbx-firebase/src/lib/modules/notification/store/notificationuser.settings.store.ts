@@ -1,24 +1,26 @@
-import { computed, inject, Injectable, isSignal, type Signal, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ComponentStore } from '@ngrx/component-store';
 import {
   hasNotificationDeliveryMethodOptIn,
   NotificationDeliveryMethod,
+  type NotificationDeliveryMethodMap,
   type NotificationTemplateType,
   type NotificationUser,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
-  type OnCallCreateModelResult,
   readNotificationDeliveryMethodFlag,
   toCanonicalNotificationDeliveryMethods,
   updateNotificationUserDefaultNotificationBoxRecipientConfig,
   type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams
 } from '@dereekb/firebase';
-import { filterMaybe, isLoadingStateFinishedLoading, isLoadingStateLoading, isLoadingStateWithError, type ListLoadingState, type LoadingState, successResult } from '@dereekb/rxjs';
+import { isLoadingStateLoading, type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { type E164PhoneNumber, type Maybe, mergeObjects } from '@dereekb/util';
-import { defer, finalize, first, type Observable, of, switchMap, tap } from 'rxjs';
+import { map, type Observable, shareReplay } from 'rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { type DbxFirebaseNotificationSettingsListDelegate, type DbxFirebaseNotificationSettingsListItemValue } from '../component/notification.settings.list';
+import { DbxFirebaseNotificationSettingsListDelegate, type DbxFirebaseNotificationSettingsListItemValue } from '../component/notification.settings.list';
 import {
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
   type DbxFirebaseNotificationSettingsCellEdits,
   dbxFirebaseNotificationSettingsCellStates,
   dbxFirebaseNotificationSettingsDeliveryMethods,
@@ -71,65 +73,105 @@ export interface DbxFirebaseNotificationUserSettingsDeliveryMethodSwitch {
 }
 
 /**
- * Saved global config shown until the next snapshot arrives, so the view does not flicker back to the old values after a save.
+ * Input for {@link DbxFirebaseNotificationUserSettingsStore.setCellValue}.
  */
-interface DbxFirebaseNotificationUserSettingsOptimisticGc {
+export interface DbxFirebaseNotificationUserSettingsCellValue {
   /**
-   * The snapshot the save was made against. The overlay is dropped once the NotificationUser changes from it.
+   * The template type of the cell's row.
    */
-  readonly basedOn: NotificationUser;
-  readonly gc: NotificationUserDefaultNotificationBoxRecipientConfig;
+  readonly type: NotificationTemplateType;
+  /**
+   * The delivery method of the cell's column.
+   */
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * The new value. Null clears the cell back to its default.
+   */
+  readonly value: Maybe<boolean>;
 }
 
 /**
- * Signal-based store for editing the global notification settings (`gc`) of the NotificationUser in the ancestor
+ * Input for {@link DbxFirebaseNotificationUserSettingsStore.setMethodEnabled}.
+ */
+export interface DbxFirebaseNotificationUserSettingsMethodEnabled {
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * Whether the method is on account-wide.
+   */
+  readonly enabled: boolean;
+}
+
+/**
+ * State of a {@link DbxFirebaseNotificationUserSettingsStore}.
+ */
+export interface DbxFirebaseNotificationUserSettingsStoreState {
+  /**
+   * Config merged over the app's {@link DbxFirebaseNotificationUserSettingsConfig}.
+   */
+  readonly config?: Maybe<DbxFirebaseNotificationUserSettingsStoreConfig>;
+  /**
+   * Pending cell changes. Changes the saved config already has are dropped as each snapshot arrives.
+   */
+  readonly cellEdits: DbxFirebaseNotificationSettingsCellEdits;
+  /**
+   * Pending account-wide on/off changes, keyed by delivery method. Changes the saved config already has are dropped as each
+   * snapshot arrives.
+   */
+  readonly methodEdits: NotificationDeliveryMethodMap<boolean>;
+}
+
+const INITIAL_STATE: DbxFirebaseNotificationUserSettingsStoreState = {
+  cellEdits: {},
+  methodEdits: {}
+};
+
+/**
+ * Store for editing the global notification settings (`gc`) of the NotificationUser in the ancestor
  * {@link NotificationUserDocumentStore}.
  *
- * Cell and switch changes are kept as pending edits and sent together by {@link save}. Implements the
- * {@link DbxFirebaseNotificationSettingsListDelegate}, so it can be provided to `dbx-firebase-notification-settings-list`.
+ * Cell and switch changes are kept as pending edits, and {@link updateParams$} turns them into a single `gc` update for
+ * `updateNotificationUser()`. Once a snapshot with the saved changes arrives, the edits it has are dropped, so a save needs no
+ * cleanup. Provide a {@link DbxFirebaseNotificationUserSettingsStoreListDelegate} alongside it to drive
+ * `dbx-firebase-notification-settings-list`.
  */
 @Injectable()
-export class DbxFirebaseNotificationUserSettingsStore implements DbxFirebaseNotificationSettingsListDelegate {
+export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<DbxFirebaseNotificationUserSettingsStoreState> {
   readonly notificationUserDocumentStore = inject(NotificationUserDocumentStore);
   readonly notificationTemplateService = inject(DbxFirebaseNotificationTemplateService);
 
   private readonly _authService = inject(DbxFirebaseAuthService);
   private readonly _appConfig = inject(DbxFirebaseNotificationUserSettingsConfig, { optional: true });
 
-  private readonly _inputConfig = signal<Signal<Maybe<Partial<DbxFirebaseNotificationUserSettingsStoreConfig>>>>(signal(undefined));
-  private readonly _edits = signal<DbxFirebaseNotificationSettingsCellEdits>({});
-  private readonly _pendingDisabledDeliveryMethods = signal<Maybe<NotificationDeliveryMethod[]>>(undefined);
-  private readonly _optimisticGc = signal<Maybe<DbxFirebaseNotificationUserSettingsOptimisticGc>>(undefined);
-  private readonly _textPhoneNumberFormOpen = signal(false);
-  private readonly _saving = signal(false);
-
-  private readonly _hasRefSignal = toSignal(this.notificationUserDocumentStore.hasRef$, { initialValue: false });
-  private readonly _dataLoadingStateSignal = toSignal(this.notificationUserDocumentStore.dataLoadingState$);
-  private readonly _currentAuthUserSignal = toSignal(this._authService.currentAuthUser$);
+  constructor() {
+    super(INITIAL_STATE);
+    this._dropSavedEdits(this.savedGc$);
+  }
 
   // MARK: Config
   /**
    * The app config merged with the config set by {@link setConfig}.
    */
-  readonly configSignal = computed(() => mergeObjects<DbxFirebaseNotificationUserSettingsStoreConfig>([this._appConfig, this._inputConfig()()]));
+  readonly config$: Observable<DbxFirebaseNotificationUserSettingsStoreConfig> = this.select((state) => state.config).pipe(
+    map((config) => mergeObjects<DbxFirebaseNotificationUserSettingsStoreConfig>([this._appConfig, config])),
+    shareReplay(1)
+  );
 
-  readonly columnsSignal = computed(() => dbxFirebaseNotificationSettingsDeliveryMethods(this.configSignal()));
-  readonly switchableDeliveryMethodsSignal = computed(() => this.configSignal().switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS);
+  readonly columns$ = this.select(this.config$, (config) => dbxFirebaseNotificationSettingsDeliveryMethods(config));
+  readonly switchableDeliveryMethods$ = this.select(this.config$, (config) => config.switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS);
+  readonly textMessageDisclosure$ = this.select(this.config$, (config) => config.textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
 
   // MARK: Document
   /**
    * The loaded NotificationUser.
    */
-  readonly notificationUserSignal = computed(() => this._dataLoadingStateSignal()?.value);
+  readonly notificationUser$: Observable<Maybe<NotificationUser>> = this.select(this.notificationUserDocumentStore.dataLoadingState$, (state) => state.value);
 
-  readonly pageStateSignal = computed<DbxFirebaseNotificationUserSettingsPageState>(() => {
-    const state = this._dataLoadingStateSignal();
-    const hasRef = this._hasRefSignal();
+  readonly pageState$ = this.select(this.notificationUserDocumentStore.hasRef$, this.notificationUserDocumentStore.dataLoadingState$, (hasRef, state) => {
     let pageState: DbxFirebaseNotificationUserSettingsPageState;
 
-    if (state?.value) {
+    if (state.value) {
       pageState = 'ready';
-    } else if (state == null || !hasRef || isLoadingStateLoading(state)) {
+    } else if (!hasRef || isLoadingStateLoading(state)) {
       pageState = 'loading';
     } else {
       pageState = 'missing';
@@ -139,322 +181,250 @@ export class DbxFirebaseNotificationUserSettingsStore implements DbxFirebaseNoti
   });
 
   /**
-   * The saved global config, or the optimistic result of the last save until the next snapshot arrives.
+   * The saved global config.
    */
-  readonly savedGcSignal = computed(() => {
-    const notificationUser = this.notificationUserSignal();
-    const optimistic = this._optimisticGc();
-    return optimistic != null && optimistic.basedOn === notificationUser ? optimistic.gc : notificationUser?.gc;
-  });
+  readonly savedGc$ = this.select(this.notificationUser$, (notificationUser) => notificationUser?.gc);
 
   // MARK: List
-  readonly itemsSignal = computed<DbxFirebaseNotificationSettingsListItemValue[]>(() => {
-    const { hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = this.configSignal();
+  /**
+   * The list rows. Only changes with the config, so cell changes never recreate the rows.
+   */
+  readonly items$ = this.select(this.config$, (config) => {
+    const { hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = config;
     const typeInfos = this.notificationTemplateService.appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypeInfo();
-    return dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: this.columnsSignal(), hiddenTemplateTypes, fallbackGroupBy, defaultGroup });
+    return dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: dbxFirebaseNotificationSettingsDeliveryMethods(config), hiddenTemplateTypes, fallbackGroupBy, defaultGroup });
   });
 
   /**
-   * List state for `dbx-firebase-notification-settings-list`. Only changes with the config, so cell changes never recreate the rows.
+   * List state for `dbx-firebase-notification-settings-list`.
    */
-  readonly listStateSignal = computed<ListLoadingState<DbxFirebaseNotificationSettingsListItemValue>>(() => successResult(this.itemsSignal()));
+  readonly listState$: Observable<ListLoadingState<DbxFirebaseNotificationSettingsListItemValue>> = this.select(this.items$, (items) => successResult(items));
 
+  // MARK: Texts
   /**
    * The phone number texts are sent to (`gc.t`).
    *
    * Texts are opt-in: until the user saves a phone number for texts, texts are off and the text column is disabled. The
    * account phone number is only ever suggested, never used.
    */
-  readonly textPhoneNumberSignal = computed(() => this.savedGcSignal()?.t);
+  readonly textPhoneNumber$ = this.select(this.savedGc$, (gc) => gc?.t);
 
   /**
    * Whether texts can be turned on, which needs a saved phone number for texts.
    */
-  readonly canEnableTextSignal = computed(() => this.textPhoneNumberSignal() != null);
+  readonly canEnableText$ = this.select(this.textPhoneNumber$, (textPhoneNumber) => textPhoneNumber != null);
 
   /**
-   * Whether the phone number form is open: texts are on, or the text switch was turned on and waits for a phone number.
+   * Whether the text switch was turned on without a saved phone number for texts, and waits for one to be saved.
    */
-  readonly textPhoneNumberFormOpenSignal = computed(() => {
-    const canEnableText = this.canEnableTextSignal();
-    const formOpen = this._textPhoneNumberFormOpen();
-    const disabled = this.disabledDeliveryMethodsSignal();
-    return canEnableText ? !disabled.includes(NotificationDeliveryMethod.TEXT) : formOpen;
-  });
+  readonly awaitingTextPhoneNumber$ = this.select(
+    this.canEnableText$,
+    this.select((state) => state.methodEdits),
+    (canEnableText, methodEdits) => !canEnableText && methodEdits[NotificationDeliveryMethod.TEXT] === true
+  );
 
   /**
-   * The pending account-wide disabled delivery methods to save, or undefined when unchanged. Drops turning texts on while
-   * {@link canEnableTextSignal} is false.
+   * When the user consented to receiving texts. Only set while texts are on in the saved settings.
    */
-  private readonly _effectivePendingDisabledDeliveryMethodsSignal = computed(() => {
-    const pending = this._pendingDisabledDeliveryMethods();
-    const canEnableText = this.canEnableTextSignal();
-    const savedDm = toCanonicalNotificationDeliveryMethods(this.savedGcSignal()?.dm);
-    let result = pending;
-
-    if (pending != null && !canEnableText && savedDm.includes(NotificationDeliveryMethod.TEXT) && !pending.includes(NotificationDeliveryMethod.TEXT)) {
-      const next = toCanonicalNotificationDeliveryMethods([...pending, NotificationDeliveryMethod.TEXT]);
-      result = next.join(',') === savedDm.join(',') ? undefined : next;
-    }
-
-    return result;
-  });
-
-  /**
-   * Account-wide disabled delivery methods once the pending changes are saved.
-   */
-  private readonly _nextDisabledDeliveryMethodsSignal = computed(() => {
-    const pending = this._effectivePendingDisabledDeliveryMethodsSignal();
-    const savedGc = this.savedGcSignal();
-    return pending ?? toCanonicalNotificationDeliveryMethods(savedGc?.dm);
-  });
-
-  /**
-   * Account-wide disabled delivery methods as shown, including pending changes. Texts show as off while they can't be turned on.
-   */
-  readonly disabledDeliveryMethodsSignal = computed(() => {
-    const next = this._nextDisabledDeliveryMethodsSignal();
-    const canEnableText = this.canEnableTextSignal();
-    return canEnableText ? next : toCanonicalNotificationDeliveryMethods([...next, NotificationDeliveryMethod.TEXT]);
-  });
-
-  readonly cellStatesSignal = computed(() => dbxFirebaseNotificationSettingsCellStates({ items: this.itemsSignal(), deliveryMethods: this.columnsSignal(), gc: this.savedGcSignal(), edits: this._edits(), disabledDeliveryMethods: this.disabledDeliveryMethodsSignal() }));
-
-  readonly savingSignal = this._saving.asReadonly();
-  readonly disabledSignal = computed(() => {
-    const saving = this._saving();
-    const pageState = this.pageStateSignal();
-    return saving || pageState !== 'ready';
-  });
-
-  readonly deliveryMethodSwitchesSignal = computed<DbxFirebaseNotificationUserSettingsDeliveryMethodSwitch[]>(() => {
-    const shownDisabled = new Set(this.disabledDeliveryMethodsSignal());
-    const nextDisabled = new Set(this._nextDisabledDeliveryMethodsSignal());
-    const savedDisabled = new Set(this.savedGcSignal()?.dm ?? []);
-    const canEnableText = this.canEnableTextSignal();
-    const textPhoneNumberFormOpen = this._textPhoneNumberFormOpen();
-
-    return this.switchableDeliveryMethodsSignal().map((method) => {
-      const awaitingPhoneNumber = method === NotificationDeliveryMethod.TEXT && !canEnableText && textPhoneNumberFormOpen;
-
-      return {
-        method,
-        enabled: awaitingPhoneNumber || !shownDisabled.has(method),
-        modified: nextDisabled.has(method) !== savedDisabled.has(method),
-        awaitingPhoneNumber
-      };
-    });
-  });
-
-  // MARK: Changes
-  /**
-   * The `gc` update params for the pending changes, or undefined when nothing changed.
-   */
-  readonly updateParamsSignal = computed(() => dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc: this.savedGcSignal(), edits: this._edits(), disabledDeliveryMethods: this._effectivePendingDisabledDeliveryMethodsSignal() }));
-  readonly isModifiedSignal = computed(() => this.updateParamsSignal() != null);
-
-  /**
-   * The global config after the pending changes are applied.
-   */
-  readonly nextGcSignal = computed(() => {
-    const savedGc = this.savedGcSignal();
-    const params = this.updateParamsSignal();
-    return params ? applyGcUpdateParams(savedGc, params) : savedGc;
-  });
-
-  /**
-   * Whether texts are opted into once the pending changes are saved.
-   */
-  readonly textOptInSignal = computed(() => hasNotificationDeliveryMethodOptIn(this.nextGcSignal(), NotificationDeliveryMethod.TEXT));
-
-  /**
-   * Whether texts are opted into in the saved settings.
-   */
-  readonly savedTextOptInSignal = computed(() => hasNotificationDeliveryMethodOptIn(this.savedGcSignal(), NotificationDeliveryMethod.TEXT));
-
-  /**
-   * Whether saving the pending changes opts into texts for the first time, which records the user's consent.
-   */
-  readonly enablesTextSignal = computed(() => {
-    const textOptIn = this.textOptInSignal();
-    const savedTextOptIn = this.savedTextOptInSignal();
-    return textOptIn && !savedTextOptIn;
-  });
-
-  /**
-   * When the user consented to receiving texts.
-   */
-  readonly textConsentAtSignal = computed(() => this.savedGcSignal()?.tcat);
+  readonly textConsentAt$ = this.select(this.savedGc$, (gc) => (gc?.t != null && hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) ? gc.tcat : undefined));
 
   /**
    * The account phone number to suggest for texts. Only the signed-in user's own phone number is known, so it is only set
    * when the NotificationUser is theirs, unless the config sets `authPhoneNumber`.
    */
-  readonly authPhoneNumberSignal = computed(() => {
-    const notificationUser = this.notificationUserSignal();
-    const authUser = this._currentAuthUserSignal();
-    const configAuthPhoneNumber = this.configSignal().authPhoneNumber;
-    return configAuthPhoneNumber ?? (notificationUser != null && authUser?.uid === notificationUser.id ? (authUser.phoneNumber as Maybe<E164PhoneNumber>) : undefined);
+  readonly authPhoneNumber$ = this.select(this.config$, this.notificationUser$, this._authService.currentAuthUser$, (config, notificationUser, authUser) => {
+    let authPhoneNumber = config.authPhoneNumber;
+
+    if (authPhoneNumber == null && notificationUser != null && authUser?.uid === notificationUser.uid) {
+      authPhoneNumber = authUser.phoneNumber as Maybe<E164PhoneNumber>;
+    }
+
+    return authPhoneNumber;
   });
 
-  // MARK: Methods
+  // MARK: Delivery Methods
   /**
-   * Sets the config merged over the app config. Pass a signal, such as a component input, to follow its changes.
-   *
-   * @param config - The config, or a signal of it.
+   * Account-wide disabled delivery methods in the saved settings.
    */
-  setConfig(config: Maybe<Partial<DbxFirebaseNotificationUserSettingsStoreConfig>> | Signal<Maybe<Partial<DbxFirebaseNotificationUserSettingsStoreConfig>>>): void {
-    this._inputConfig.set(isSignal(config) ? config : signal(config));
-  }
+  readonly savedDisabledDeliveryMethods$ = this.select(this.savedGc$, (gc) => toCanonicalNotificationDeliveryMethods(gc?.dm));
 
   /**
-   * Sets a cell's pending value. Setting a cell back to its saved value clears the edit.
+   * Account-wide disabled delivery methods once the pending changes are saved.
    *
-   * @param type - The template type of the cell's row.
-   * @param method - The delivery method of the cell's column.
-   * @param value - The new value. Null clears the cell back to its default.
+   * Texts are only turned on by saving a phone number for texts, so text switch changes are ignored until one is saved.
    */
-  setCellValue(type: NotificationTemplateType, method: NotificationDeliveryMethod, value: Maybe<boolean>): void {
-    const savedValue = readNotificationDeliveryMethodFlag(this.savedGcSignal()?.c?.[type], method) ?? null;
-    const nextValue = value ?? null;
+  readonly nextDisabledDeliveryMethods$ = this.select(
+    this.savedDisabledDeliveryMethods$,
+    this.select((state) => state.methodEdits),
+    this.canEnableText$,
+    (savedDisabled, methodEdits, canEnableText) => {
+      const disabled = new Set(savedDisabled);
 
-    this._edits.update((edits) => {
-      const typeEdits = { ...edits[type] };
-      const nextEdits = { ...edits };
+      (Object.entries(methodEdits) as [NotificationDeliveryMethod, boolean][]).forEach(([method, enabled]) => {
+        if (method !== NotificationDeliveryMethod.TEXT || canEnableText) {
+          if (enabled) {
+            disabled.delete(method);
+          } else {
+            disabled.add(method);
+          }
+        }
+      });
 
-      if (nextValue === savedValue) {
-        delete typeEdits[method];
-      } else {
-        typeEdits[method] = nextValue;
-      }
-
-      if (Object.keys(typeEdits).length) {
-        nextEdits[type] = typeEdits;
-      } else {
-        delete nextEdits[type];
-      }
-
-      return nextEdits;
-    });
-  }
-
-  /**
-   * Turns a delivery method on or off account-wide. Setting it back to its saved state clears the pending change.
-   *
-   * Without a saved phone number for texts, turning texts on only opens the phone number form. Texts turn on once the phone
-   * number is saved with {@link saveTextPhoneNumber}.
-   *
-   * @param method - The delivery method.
-   * @param enabled - Whether the method is on.
-   */
-  setMethodEnabled(method: NotificationDeliveryMethod, enabled: boolean): void {
-    if (method === NotificationDeliveryMethod.TEXT && !this.canEnableTextSignal()) {
-      this._textPhoneNumberFormOpen.set(enabled);
-    } else {
-      const disabled = new Set(this._nextDisabledDeliveryMethodsSignal());
-
-      if (enabled) {
-        disabled.delete(method);
-      } else {
-        disabled.add(method);
-      }
-
-      const next = toCanonicalNotificationDeliveryMethods(disabled);
-      const saved = toCanonicalNotificationDeliveryMethods(this.savedGcSignal()?.dm);
-      this._pendingDisabledDeliveryMethods.set(next.join(',') === saved.join(',') ? undefined : next);
+      return toCanonicalNotificationDeliveryMethods(disabled);
     }
-  }
+  );
+
+  /**
+   * Account-wide disabled delivery methods as shown, including pending changes. Texts show as off until a phone number for texts is saved.
+   */
+  readonly disabledDeliveryMethods$ = this.select(this.nextDisabledDeliveryMethods$, this.canEnableText$, (nextDisabled, canEnableText) => (canEnableText ? nextDisabled : toCanonicalNotificationDeliveryMethods([...nextDisabled, NotificationDeliveryMethod.TEXT])));
+
+  readonly deliveryMethodSwitches$: Observable<DbxFirebaseNotificationUserSettingsDeliveryMethodSwitch[]> = this.select(
+    this.select({ methods: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, nextDisabled: this.nextDisabledDeliveryMethods$, savedDisabled: this.savedDisabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$ }),
+    ({ methods, disabled, nextDisabled, savedDisabled, awaitingTextPhoneNumber }) =>
+      methods.map((method) => {
+        const awaitingPhoneNumber = method === NotificationDeliveryMethod.TEXT && awaitingTextPhoneNumber;
+
+        return {
+          method,
+          enabled: awaitingPhoneNumber || !disabled.includes(method),
+          modified: nextDisabled.includes(method) !== savedDisabled.includes(method),
+          awaitingPhoneNumber
+        };
+      })
+  );
+
+  /**
+   * Whether the phone number for texts shows. It shows while the text switch is on, including while it waits for a phone
+   * number, and always when texts have no switch, since saving a phone number is then the only way to turn texts on.
+   */
+  readonly textPhoneNumberFormOpen$ = this.select(this.select({ columns: this.columns$, switchable: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$ }), ({ columns, switchable, disabled, awaitingTextPhoneNumber }) => {
+    const textSwitchOn = awaitingTextPhoneNumber || !disabled.includes(NotificationDeliveryMethod.TEXT);
+    return columns.includes(NotificationDeliveryMethod.TEXT) && (!switchable.includes(NotificationDeliveryMethod.TEXT) || textSwitchOn);
+  });
+
+  // MARK: Cells
+  readonly cellStates$ = this.select(this.select({ items: this.items$, deliveryMethods: this.columns$, gc: this.savedGc$, edits: this.select((state) => state.cellEdits), disabledDeliveryMethods: this.disabledDeliveryMethods$ }), (input) => dbxFirebaseNotificationSettingsCellStates(input));
+
+  /**
+   * Whether every cell and switch is disabled, which is until the NotificationUser is loaded.
+   */
+  readonly disabled$ = this.select(this.pageState$, (pageState) => pageState !== 'ready');
+
+  // MARK: Changes
+  /**
+   * The `gc` update params for the pending changes, or undefined when nothing changed.
+   */
+  readonly updateParams$ = this.select(
+    this.savedGc$,
+    this.select((state) => state.cellEdits),
+    this.nextDisabledDeliveryMethods$,
+    (gc, edits, disabledDeliveryMethods) => dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc, edits, disabledDeliveryMethods })
+  );
+
+  readonly isModified$ = this.select(this.updateParams$, (params) => params != null);
+
+  /**
+   * Whether saving the pending changes opts into texts for the first time, which records the user's consent.
+   */
+  readonly enablesText$ = this.select(this.savedGc$, this.updateParams$, (gc, params) => !hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) && params != null && hasNotificationDeliveryMethodOptIn(applyGcUpdateParams(gc, params), NotificationDeliveryMethod.TEXT));
+
+  // MARK: State Changes
+  /**
+   * Sets the config merged over the app config. Pass an observable, such as a component input, to follow its changes.
+   */
+  readonly setConfig = this.updater((state, config: Maybe<DbxFirebaseNotificationUserSettingsStoreConfig>) => ({ ...state, config }));
+
+  /**
+   * Sets a cell's pending value. A value equal to the saved value is not a change.
+   */
+  readonly setCellValue = this.updater((state, cell: DbxFirebaseNotificationUserSettingsCellValue) => ({
+    ...state,
+    cellEdits: { ...state.cellEdits, [cell.type]: { ...state.cellEdits[cell.type], [cell.method]: cell.value ?? null } }
+  }));
+
+  /**
+   * Turns a delivery method on or off account-wide. Setting it back to its saved state is not a change.
+   *
+   * Without a saved phone number for texts, turning texts on only opens the phone number form. Texts turn on once a phone
+   * number for texts is saved, such as with `dbxFirebaseNotificationUserTextPhoneNumberUpdateParams()`.
+   */
+  readonly setMethodEnabled = this.updater((state, change: DbxFirebaseNotificationUserSettingsMethodEnabled) => ({ ...state, methodEdits: { ...state.methodEdits, [change.method]: change.enabled } }));
 
   /**
    * Discards all pending changes.
    */
-  reset(): void {
-    this._edits.set({});
-    this._pendingDisabledDeliveryMethods.set(undefined);
-    this._textPhoneNumberFormOpen.set(false);
-  }
+  readonly reset = this.updater((state) => ({ ...state, cellEdits: {}, methodEdits: {} }));
 
   /**
-   * Saves the pending changes with a single `updateNotificationUser({ gc })` call.
-   *
-   * On success the pending changes are cleared, and the saved values are shown until the next snapshot arrives.
-   *
-   * @param params - The update params to send. Defaults to {@link updateParamsSignal}.
-   * @returns The loading state of the save.
+   * Drops the pending edits the saved config already has.
    */
-  save(params?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>): Observable<LoadingState<void>> {
-    return defer(() => {
-      const gc = params ?? this.updateParamsSignal();
-      let result: Observable<LoadingState<void>>;
+  private readonly _dropSavedEdits = this.updater((state, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>) => ({
+    ...state,
+    cellEdits: unsavedCellEdits(state.cellEdits, gc),
+    methodEdits: unsavedMethodEdits(state.methodEdits, gc)
+  }));
+}
 
-      if (gc) {
-        const basedOn = this.notificationUserSignal();
-        const savedGc = this.savedGcSignal();
-        this._saving.set(true);
+/**
+ * {@link DbxFirebaseNotificationSettingsListDelegate} for `dbx-firebase-notification-settings-list` that reads from and
+ * writes to the ancestor {@link DbxFirebaseNotificationUserSettingsStore}.
+ */
+@Injectable()
+export class DbxFirebaseNotificationUserSettingsStoreListDelegate extends DbxFirebaseNotificationSettingsListDelegate {
+  readonly store = inject(DbxFirebaseNotificationUserSettingsStore);
 
-        result = this.notificationUserDocumentStore.updateNotificationUser({ gc }).pipe(
-          tap((state) => {
-            if (isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state)) {
-              if (basedOn) {
-                this._optimisticGc.set({ basedOn, gc: applyGcUpdateParams(savedGc, gc) });
-              }
+  readonly columnsSignal = toSignal(this.store.columns$, { initialValue: [] });
+  readonly cellStatesSignal = toSignal(this.store.cellStates$, { initialValue: {} });
+  readonly disabledSignal = toSignal(this.store.disabled$, { initialValue: true });
 
-              this.reset();
-            }
-          }),
-          finalize(() => this._saving.set(false))
-        );
-      } else {
-        result = of(successResult(undefined));
+  setCellValue(type: NotificationTemplateType, method: NotificationDeliveryMethod, value: Maybe<boolean>): void {
+    this.store.setCellValue({ type, method, value });
+  }
+}
+
+/**
+ * Returns the cell edits whose value differs from the saved config.
+ *
+ * @param cellEdits - The pending cell edits.
+ * @param gc - The saved global config.
+ * @returns The cell edits not yet saved.
+ */
+function unsavedCellEdits(cellEdits: DbxFirebaseNotificationSettingsCellEdits, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>): DbxFirebaseNotificationSettingsCellEdits {
+  const result: DbxFirebaseNotificationSettingsCellEdits = {};
+
+  Object.entries(cellEdits).forEach(([type, typeEdits]) => {
+    (Object.entries(typeEdits) as [NotificationDeliveryMethod, Maybe<boolean>][]).forEach(([method, value]) => {
+      if ((value ?? null) !== (readNotificationDeliveryMethodFlag(gc?.c?.[type], method) ?? null)) {
+        result[type] = { ...result[type], [method]: value };
       }
-
-      return result;
     });
-  }
+  });
 
-  /**
-   * Saves the phone number texts are sent to, and turns texts on. Saving the phone number is how the user opts into texts.
-   *
-   * Saved on its own, apart from the pending changes.
-   *
-   * @param phoneNumber - The phone number for texts.
-   * @returns The loading state of the update.
-   */
-  saveTextPhoneNumber(phoneNumber: E164PhoneNumber): Observable<LoadingState<void>> {
-    return defer(() => {
-      const basedOn = this.notificationUserSignal();
-      const savedGc = this.savedGcSignal();
-      const savedDm = toCanonicalNotificationDeliveryMethods(savedGc?.dm);
-      const dm = savedDm.filter((x) => x !== NotificationDeliveryMethod.TEXT);
-      const gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams = { t: phoneNumber, ...(dm.length === savedDm.length ? {} : { dm: dm.length ? dm : null }) };
+  return result;
+}
 
-      return this.notificationUserDocumentStore.updateNotificationUser({ gc }).pipe(
-        tap((state) => {
-          if (isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state)) {
-            // show the saved number and texts on until the next snapshot arrives
-            if (basedOn) {
-              this._optimisticGc.set({ basedOn, gc: applyGcUpdateParams(savedGc, gc) });
-            }
+/**
+ * Returns the delivery method edits whose on/off state differs from the saved config. Texts count as off in the saved config
+ * until it has a phone number for texts, so turning texts on waits for the phone number to be saved.
+ *
+ * @param methodEdits - The pending delivery method edits.
+ * @param gc - The saved global config.
+ * @returns The delivery method edits not yet saved.
+ */
+function unsavedMethodEdits(methodEdits: NotificationDeliveryMethodMap<boolean>, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>): NotificationDeliveryMethodMap<boolean> {
+  const savedDisabled = new Set(toCanonicalNotificationDeliveryMethods(gc?.dm));
+  const result: NotificationDeliveryMethodMap<boolean> = {};
 
-            this._textPhoneNumberFormOpen.set(false);
-          }
-        })
-      );
-    });
-  }
+  (Object.entries(methodEdits) as [NotificationDeliveryMethod, boolean][]).forEach(([method, enabled]) => {
+    const savedEnabled = !savedDisabled.has(method) && (method !== NotificationDeliveryMethod.TEXT || gc?.t != null);
 
-  /**
-   * Creates the NotificationUser for the store's current id, which is the user's uid.
-   *
-   * @returns The loading state of the create.
-   */
-  createNotificationUser(): Observable<LoadingState<OnCallCreateModelResult>> {
-    return this.notificationUserDocumentStore.currentId$.pipe(
-      filterMaybe(),
-      first(),
-      switchMap((uid) => this.notificationUserDocumentStore.createNotificationUser({ uid }))
-    );
-  }
+    if (enabled !== savedEnabled) {
+      result[method] = enabled;
+    }
+  });
+
+  return result;
 }
 
 function applyGcUpdateParams(gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>, params: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams): NotificationUserDefaultNotificationBoxRecipientConfig {
