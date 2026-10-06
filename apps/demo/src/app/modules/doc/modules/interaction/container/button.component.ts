@@ -12,9 +12,13 @@ import {
   DbxProgressSpinnerButtonComponent,
   DbxProgressBarButtonComponent,
   DbxContentPitDirective,
-  DbxAnchorComponent
+  DbxAnchorComponent,
+  DbxRotatingButtonDirective,
+  type DbxRotatingButtonConfig,
+  type DbxTristateValue,
+  dbxTristateRotatingButtonConfig
 } from '@dereekb/dbx-web';
-import { type Milliseconds } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatIcon } from '@angular/material/icon';
@@ -44,7 +48,8 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
     DbxProgressBarButtonComponent,
     DbxContentPitDirective,
     DbxAnchorComponent,
-    DbxButtonFloatingDirective
+    DbxButtonFloatingDirective,
+    DbxRotatingButtonDirective
   ]
 })
 export class DocInteractionButtonComponent {
@@ -292,6 +297,20 @@ export class DocInteractionButtonComponent {
   readonly floatingPositionSignal = signal<DbxButtonFloatingPosition>('bottom-right');
   readonly floatingPositionIsTopSignal = computed(() => this.floatingPositionSignal().startsWith('top-'));
   readonly showFixedFloatingButtonSignal = signal(false);
+
+  readonly tristateValueSignal = signal<DbxTristateValue>(null);
+  readonly tristateEmailValueSignal = signal<DbxTristateValue>(null);
+  readonly sortValueSignal = signal<Maybe<string>>('asc');
+  readonly tristateTextConfig = dbxTristateRotatingButtonConfig({ label: 'Text', defaultValue: false });
+  readonly tristateEmailConfig = dbxTristateRotatingButtonConfig({ label: 'Email', defaultValue: true, on: { icon: 'notifications_active', color: 'success' }, off: { icon: 'notifications_off', color: 'grey' } });
+  readonly sortRotatingConfig: DbxRotatingButtonConfig<string> = {
+    label: 'Sort',
+    style: { type: 'stroked' },
+    states: [
+      { value: 'asc', label: 'Ascending', display: { icon: 'arrow_upward', text: 'Ascending' } },
+      { value: 'desc', label: 'Descending', display: { icon: 'arrow_downward', text: 'Descending' }, style: { color: 'primary' } }
+    ]
+  };
 
   toggleFixedFloatingButton() {
     this.showFixedFloatingButtonSignal.update((x) => !x);

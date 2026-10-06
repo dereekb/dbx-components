@@ -93,13 +93,13 @@
         {
           "name": "buttonStyle",
           "type": "Maybe<DbxButtonStyle>",
-          "description": "",
+          "description": "Style of the button. Individual style inputs (e.g. {@link color}, {@link raised}) take precedence.\n\nDeclared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.",
           "required": false
         },
         {
           "name": "color",
           "type": "Maybe<ThemePalette | DbxColorInput>",
-          "description": "",
+          "description": "Color of the button. Takes precedence over the {@link buttonStyle} color.\n\nDeclared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.",
           "required": false
         },
         {
@@ -855,6 +855,36 @@
       "minimalExample": "<dbx-progress-spinner-button [config]=\"cfg\"></dbx-progress-spinner-button>"
     },
     {
+      "slug": "rotating-button",
+      "category": "button",
+      "kind": "directive",
+      "selector": "[dbxRotatingButton]",
+      "className": "DbxRotatingButtonDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Turns a `dbx-button` into a rotating / multi-state button. Each click moves to the next configured state, and the\nstate's icon, text, style and aria-label are set on the button.\n\nUse {@link dbxTristateRotatingButtonConfig} for a three-state / 3-phase (default/on/off) toggle. The directive sets the\nbutton's `icon`, `text`, `buttonStyle` and `ariaLabel`, so configure those through the config rather than on the button.\n\nThe button stops click propagation by default, so a rotating button works inside clickable list rows.",
+      "inputs": [
+        {
+          "name": "dbxRotatingButton",
+          "type": "Maybe<DbxRotatingButtonConfig<T>>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "dbxRotatingButtonValue",
+          "type": "Maybe<T>",
+          "description": "The current value. Two-way bindable with `[(dbxRotatingButtonValue)]`.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "button",
+        "icon-button"
+      ],
+      "example": "readonly tristateConfig = dbxTristateRotatingButtonConfig({ label: 'Text', defaultValue: false });",
+      "minimalExample": "<dbx-button iconOnly [dbxRotatingButton]=\"tristateConfig\" [(dbxRotatingButtonValue)]=\"emailEnabled\"></dbx-button>"
+    },
+    {
       "slug": "browser-agent-view",
       "category": "misc",
       "kind": "component",
@@ -873,6 +903,12 @@
           "name": "showOverrideButton",
           "type": "Maybe<boolean>",
           "description": "",
+          "required": false
+        },
+        {
+          "name": "overrideKey",
+          "type": "Maybe<DbxBrowserAgentViewEntryKey>",
+          "description": "Key of the manually selected entry. Can be bound two-way to persist the user's choice.",
           "required": false
         }
       ],
@@ -2121,7 +2157,20 @@
       "className": "DbxColorDirective",
       "module": "@dereekb/dbx-web",
       "description": "Provides themed color *tokens* to the host element — it never paints a background itself.\n\nAccepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'success'`) or a {@link DbxColorConfig}\nobject carrying arbitrary CSS color values (any hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.).\nThe directive sets the `--dbx-bg-color-current` / `--dbx-color-current` (and tone) custom properties and adds the\n`.dbx-color` marker class, leaving the actual painting to either the explicit `.dbx-color-bg` utility on the same\nelement or a colored-surface component's own `.dbx-color`-scoped SCSS (e.g. `<dbx-bar>`, `<dbx-button>`, `<dbx-loading>`,\n`<dbx-icon-tile>`, `<mat-card>`) that reads the inherited tokens.\n\nOptionally set {@link dbxColorTone} (0-100) to control background opacity for a tonal/muted appearance.\nWhen tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule overrides the text\ncolor to the vibrant color (via `--dbx-bg-color-current`).\n\nThe standalone `[dbxColorTone]` input wins over `config.tone` when both are set; the same precedence\napplies to tonal mode.",
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "dbxColor",
+          "type": "Maybe<DbxColorInput>",
+          "description": "The color to provide tokens for. Declared as a `model` so a colored-surface component on the same host (e.g.\n`dbx-button`) can push its resolved color into the directive, keeping it the single token provider on the element.",
+          "required": false
+        },
+        {
+          "name": "dbxColorTone",
+          "type": "Maybe<DbxColorTone>",
+          "description": "Background tone level (0-100). When set, the background becomes semi-transparent\nand text color switches to the vibrant theme color for a tonal appearance.\n\nDeclared as a `model` for the same reason as {@link dbxColor}: a colored-surface component on the same host (e.g.\n`dbx-avatar-view`) resolves its tone from its own inputs/context and pushes it here, keeping this directive the\nsingle token provider on the element.",
+          "required": false
+        }
+      ],
       "outputs": [],
       "relatedSlugs": [
         "text-color",

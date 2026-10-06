@@ -5,6 +5,7 @@ import { DbxButtonFloatingDirective } from './button.floating.directive';
 import { DbxCoreButtonModule } from '@dereekb/dbx-core';
 import { DbxIconButtonComponent } from './icon';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
+import { DbxRotatingButtonDirective } from './rotating';
 
 const importsAndExports = [
   DbxCoreButtonModule,
@@ -15,7 +16,9 @@ const importsAndExports = [
   DbxButtonFloatingDirective,
   // progress
   DbxProgressSpinnerButtonComponent,
-  DbxProgressBarButtonComponent
+  DbxProgressBarButtonComponent,
+  // rotating
+  DbxRotatingButtonDirective
 ];
 
 /**

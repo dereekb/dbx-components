@@ -262,15 +262,21 @@ function parseSignalInput(property: PropertyDeclaration): ParsedAngularInput | u
 
 type SignalInputCallKind = 'plain' | 'required';
 
+/**
+ * Signal functions that declare an input. A `model()` is a writable input (plus an implicit `<name>Change` output), so it is
+ * cataloged as an input.
+ */
+const SIGNAL_INPUT_FUNCTION_NAMES = new Set(['input', 'model']);
+
 function classifySignalInputCall(call: CallExpression): SignalInputCallKind | undefined {
   const expression = call.getExpression();
   let result: SignalInputCallKind | undefined;
-  if (Node.isIdentifier(expression) && expression.getText() === 'input') {
+  if (Node.isIdentifier(expression) && SIGNAL_INPUT_FUNCTION_NAMES.has(expression.getText())) {
     result = 'plain';
   } else if (Node.isPropertyAccessExpression(expression)) {
     const baseExpr = expression.getExpression();
     const propertyName = expression.getName();
-    if (Node.isIdentifier(baseExpr) && baseExpr.getText() === 'input' && propertyName === 'required') {
+    if (Node.isIdentifier(baseExpr) && SIGNAL_INPUT_FUNCTION_NAMES.has(baseExpr.getText()) && propertyName === 'required') {
       result = 'required';
     }
   }

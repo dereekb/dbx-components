@@ -241,6 +241,50 @@ describe('extractUiEntries — required inputs', () => {
   });
 });
 
+describe('extractUiEntries — model inputs', () => {
+  it('extracts model<T>() as an input', () => {
+    const project = projectWith({
+      '/proj/src/x.ts': `
+        import { Component, model } from '@angular/core';
+        /**
+         * X.
+         * @dbxWebComponent
+         * @dbxWebSlug x
+         * @dbxWebCategory misc
+         */
+        @Component({ selector: 'x', template: '' })
+        export class X {
+          /** A writable value. */
+          readonly value = model<string>('');
+        }
+      `
+    });
+    const result = extractUiEntries({ project });
+    expect(result.entries[0].inputs[0]).toMatchObject({ name: 'value', type: 'string', description: 'A writable value.', required: false });
+  });
+
+  it('flags model.required<T>() as required', () => {
+    const project = projectWith({
+      '/proj/src/x.ts': `
+        import { Component, model } from '@angular/core';
+        /**
+         * X.
+         * @dbxWebComponent
+         * @dbxWebSlug x
+         * @dbxWebCategory misc
+         */
+        @Component({ selector: 'x', template: '' })
+        export class X {
+          /** A required writable value. */
+          readonly value = model.required<string>();
+        }
+      `
+    });
+    const result = extractUiEntries({ project });
+    expect(result.entries[0].inputs[0]).toMatchObject({ name: 'value', required: true });
+  });
+});
+
 describe('extractUiEntries — warnings', () => {
   it('warns when slug or category is missing', () => {
     const project = projectWith({
