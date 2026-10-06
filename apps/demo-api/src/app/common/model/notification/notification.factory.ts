@@ -20,6 +20,7 @@ import {
   calendarEventItemForId,
   calendarEventItemToInviteIcsString,
   firestoreModelId,
+  firestoreModelKeyParentKey,
   NotificationMessageFlag,
   notificationMessageFunction
 } from '@dereekb/firebase';
@@ -28,19 +29,44 @@ import { type DemoFirebaseServerActionsContext } from '../../firebase/action.con
 import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
 import { DEMO_CALENDAR_ICS_DOMAIN, DEMO_CALENDAR_INVITE_ORGANIZER } from '../calendar/calendar.module';
 
+// MARK: Text
+/**
+ * Prefix for every demo notification text, so the recipient knows which app sent it.
+ */
+export const DEMO_NOTIFICATION_TEXT_PREFIX = 'dbx-components: ';
+
+/**
+ * Creates the text content for a demo notification.
+ *
+ * Texts are a single short GSM-7 line followed by a deep link, which keeps each one within a single SMS
+ * segment or two. The Twilio sender joins the title and action url with a newline.
+ *
+ * @param message - Short GSM-7 message, without the {@link DEMO_NOTIFICATION_TEXT_PREFIX}.
+ * @param actionUrl - Deep link into the demo app.
+ * @returns The text content.
+ */
+export function demoNotificationTextContent(message: string, actionUrl: string): NotificationMessageContent {
+  return {
+    title: `${DEMO_NOTIFICATION_TEXT_PREFIX}${message}`,
+    actionUrl
+  };
+}
+
 // MARK: Test
 /**
  * Creates a notification template config for test notifications with static content.
  * Used in integration tests to verify the notification pipeline.
  *
- * @param _context - Server actions context (unused but kept for factory signature consistency)
+ * @param context - Server actions context used to resolve the client URL for the text deep link.
  * @returns A notification template service config for the test notification type.
  */
-export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+export function demoNotificationTestFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
+      const textContent = demoNotificationTextContent('This is a test notification.', `${context.mailgunService.mailgunApi.clientUrl}/demo/app/notification`);
+
       return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'This is a test notification',
@@ -51,7 +77,8 @@ export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsC
         const result: NotificationMessage = {
           inputContext,
           item,
-          content
+          content,
+          textContent
         };
 
         return result;
@@ -64,15 +91,16 @@ export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsC
  * Supports optional send skipping via the notification data's skipSend flag,
  * and includes onSendAttempted/onSendSuccess lifecycle hooks.
  *
- * @param _context - Server actions context (unused but kept for factory signature consistency)
+ * @param context - Server actions context used to resolve the client URL for the text deep link.
  * @returns A notification template service config for the example notification type.
  */
-export function demoExampleNotificationFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
+export function demoExampleNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<ExampleNotificationData>) => {
       const { item } = config;
       const { d } = item;
+      const textContent = demoNotificationTextContent('This is an example notification. Open the app to view your notifications.', `${context.mailgunService.mailgunApi.clientUrl}/demo/app/notification`);
 
       return notificationMessageFunction(
         async (inputContext: NotificationMessageInputContext) => {
@@ -88,6 +116,7 @@ export function demoExampleNotificationFactory(_context: DemoFirebaseServerActio
             inputContext,
             item,
             content,
+            textContent,
             flag: d?.skipSend ? NotificationMessageFlag.DO_NOT_SEND : undefined
           };
 
@@ -108,7 +137,7 @@ export function demoExampleNotificationFactory(_context: DemoFirebaseServerActio
 
 /**
  * Creates a notification template config for guestbook entry creation events.
- * Builds a notification message linking to the newly created guestbook entry.
+ * Builds a notification message linking to the guestbook the entry was created in.
  *
  * @param context - Server actions context used to resolve the client URL for action links.
  * @returns A notification template service config for the guestbook entry created type.
@@ -118,10 +147,12 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
-      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
-        const entryId = firestoreModelId(item.m as string);
-        const actionUrl = context.mailgunService.mailgunApi.clientUrl + `/guestbook/${entryId}`;
+      // the target model is the guestbook the entry was created in
+      const guestbookId = firestoreModelId(item.m as string);
+      const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/guestbook/${guestbookId}`;
+      const textContent = demoNotificationTextContent('A new guestbook entry was created.', actionUrl);
 
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'A new guestbook entry has been created',
           action: 'View entry',
@@ -131,7 +162,8 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
         const result: NotificationMessage = {
           inputContext,
           item,
-          content
+          content,
+          textContent
         };
 
         return result;
@@ -142,7 +174,7 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
 
 /**
  * Creates a notification template config for guestbook entry like events.
- * Builds a notification message linking to the liked guestbook entry.
+ * Builds a notification message linking to the guestbook of the liked entry.
  *
  * @param context - Server actions context used to resolve the client URL for action links.
  * @returns A notification template service config for the guestbook entry liked type.
@@ -152,10 +184,12 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
     type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
-      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
-        const entryId = firestoreModelId(item.m as string);
-        const actionUrl = context.mailgunService.mailgunApi.clientUrl + `/guestbook/${entryId}`;
+      // the target model is the liked guestbook entry, whose id is its creator's uid, so link to its parent guestbook
+      const guestbookId = firestoreModelId(firestoreModelKeyParentKey(item.m as string) as string);
+      const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/guestbook/${guestbookId}`;
+      const textContent = demoNotificationTextContent('Your guestbook entry has a new like.', actionUrl);
 
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'Your guestbook entry has a new like.',
           action: 'View entry',
@@ -165,7 +199,8 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
         const result: NotificationMessage = {
           inputContext,
           item,
-          content
+          content,
+          textContent
         };
 
         return result;
@@ -202,6 +237,8 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
       const calendar = await calendarCollection.documentAccessor().loadDocumentForId(calendarId).snapshotData();
       const event = calendar && eventId ? calendarEventItemForId(calendar, eventId) : undefined;
       const method: NotificationMessageCalendarAttachmentMethod = cancel ? 'CANCEL' : 'REQUEST';
+      const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/calendar`;
+      const textContent = demoNotificationTextContent(cancel ? 'An event was removed from your calendar.' : 'You were added to a calendar event.', actionUrl);
 
       // ONE factory per notification, closing over the loaded event. The sending service calls it with the
       // address it resolved for each recipient, so the ICS is rendered only for the recipients actually
@@ -230,7 +267,7 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
           title: cancel ? `An event was removed from your calendar` : `You were added to a calendar event`,
           openingMessage: event?.n ?? '',
           action: 'View calendar',
-          actionUrl: `${context.mailgunService.mailgunApi.clientUrl}/calendar`
+          actionUrl
         };
 
         // without an event there is nothing to describe, so the message carries no calendar part -- it is
@@ -242,6 +279,7 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
           item,
           content,
           emailContent,
+          textContent,
           flag: event ? undefined : NotificationMessageFlag.NO_CONTENT
         };
 

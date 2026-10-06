@@ -105,6 +105,39 @@ export class MyTwilioHandlers {
 }
 ```
 
+### Placeholder-safe conditional wiring
+
+`TwilioModule` constructs the `twilio` SDK eagerly, and the SDK throws when the Account SID does not start with `AC`. The `placeholder` / `xxx` values in a committed `.env` are truthy, so they pass `TwilioServiceConfig.assertValidConfig()` and then crash the app on startup. When Twilio is optional for an environment (local development, CI, a deployment without Twilio secrets), do not import `TwilioModule`. Read the config without validating it and build the service only when the config is usable:
+
+```ts
+import { type FactoryProvider } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { TwilioApi, TwilioService, twilioServiceConfigFromConfigService, usableTwilioServiceConfig } from '@dereekb/nestjs/twilio';
+
+export const MY_TWILIO_SERVICE_TOKEN = 'MY_TWILIO_SERVICE';
+
+export const myTwilioServiceProvider: FactoryProvider = {
+  provide: MY_TWILIO_SERVICE_TOKEN,
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    const config = usableTwilioServiceConfig(twilioServiceConfigFromConfigService(configService));
+    return config ? new TwilioService(new TwilioApi(config)) : null;
+  }
+};
+```
+
+`usableTwilioServiceConfig()` treats `''`, `placeholder` and `xxx` as unset, and requires the `AC…` Account SID, an Auth Token or an `SK…` API key pair, and a `+…` sender number or an `MG…` Messaging Service SID. It returns a copy with placeholder values removed, so a placeholder Messaging Service SID or API key never shadows a real sender or Auth Token, and a placeholder `TWILIO_STATUS_CALLBACK_URL` is dropped. `isUsableTwilioServiceConfig()` is the boolean form.
+
+### Sending notification texts
+
+[`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/) provides `twilioNotificationTextSendService()`, a `NotificationTextSendService` for the firebase-server notification pipeline. Provide it as the `textSendService` of your `NotificationSendService`, and fall back to `ignoreSendNotificationTextSendService()` when Twilio is not configured:
+
+```ts
+const textSendService = twilioService ? twilioNotificationTextSendService({ twilioService }) : ignoreSendNotificationTextSendService();
+```
+
+By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
+
 ---
 
 ## 4. Verify the setup

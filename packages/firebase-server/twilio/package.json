@@ -4,6 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "peerDependencies": {
+    "@dereekb/analytics": "14.14.0",
     "@dereekb/date": "14.14.0",
     "@dereekb/firebase": "14.14.0",
     "@dereekb/firebase-server": "14.14.0",

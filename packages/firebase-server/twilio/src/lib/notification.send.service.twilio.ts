@@ -1,26 +1,7 @@
 import { type ArrayOrValue, type E164PhoneNumber, type Maybe, type PromiseOrValue, asArray, batch, mapObjectKeysToLowercase, multiValueMapBuilder, pushArrayItemsIntoArray, runAsyncTasksForValues } from '@dereekb/util';
 import { type NotificationMessage, type NotificationMessageContent, type NotificationSendMessageTemplateName, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
+import { type NotificationSendMessagesInstance, type NotificationTextSendService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { type TwilioMessagingServiceSid, type TwilioPhoneNumber, type TwilioSendSmsInput, type TwilioService, type TwilioStatusCallbackUrl } from '@dereekb/nestjs/twilio';
-
-/**
- * Structural mirror of `@dereekb/firebase-server/model`'s `NotificationSendMessagesInstance`.
- *
- * Declared locally so this package can be built without pulling the firebase-server/model
- * subpackage's source through path aliases (which trips the rollup-typescript plugin's
- * `rootDir` restriction). The shape matches the upstream definition exactly, so values
- * produced here are assignment-compatible with consumers that import the real type.
- */
-export type NotificationSendMessagesInstance<R> = () => Promise<R>;
-
-/**
- * Structural mirror of `@dereekb/firebase-server/model`'s `NotificationTextSendService`.
- *
- * See the note on {@link NotificationSendMessagesInstance} for why this is re-declared
- * locally instead of imported.
- */
-export interface NotificationTextSendService {
-  buildSendInstanceForTextNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
-}
 
 /**
  * Default max-batch-size used by {@link twilioNotificationTextSendService}.
@@ -110,10 +91,15 @@ export interface TwilioNotificationTextSendServiceConfig {
    */
   readonly messageBuilders?: Maybe<Record<NotificationSendMessageTemplateName, TwilioNotificationTextSendServiceTemplateBuilder>>;
   /**
-   * Optional override of the built-in default builder. If unset, a built-in implementation is
-   * used that maps `textContent.openingMessage ?? content.title` to the SMS body.
+   * Optional override of the built-in default builder. If unset,
+   * {@link defaultTwilioNotificationTextSendServiceTemplateBuilder} is used.
    */
   readonly defaultMessageBuilder?: Maybe<TwilioNotificationTextSendServiceTemplateBuilder>;
+  /**
+   * Optional provider health check exposed on the created service, so a notification delivery
+   * health check can consult it for the text/SMS channel.
+   */
+  readonly healthCheckService?: Maybe<NotificationTextSendServiceHealthCheckService>;
 }
 
 /**
@@ -123,11 +109,12 @@ export type TwilioNotificationTextSendService = NotificationTextSendService;
 
 /**
  * Default {@link TwilioNotificationTextSendServiceTemplateBuilder} that builds one SMS per
- * recipient using the message's `textContent.openingMessage` (falling back to `content.title`)
- * as the body.
+ * recipient.
  *
- * Messages without a recipient phone number are skipped here; the calling service routes them
- * to `ignored` in the final result.
+ * The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's
+ * `textContent` (or its `content` when no `textContent` is set) with newlines, truncated to
+ * {@link TWILIO_NOTIFICATION_BODY_MAX_LENGTH} characters. Messages without a recipient phone number
+ * or with an empty body are dropped.
  *
  * @param input - Builder input containing the messages and shared defaults.
  * @param input.messages - Notification messages to convert to SMS inputs.
@@ -165,7 +152,9 @@ export const defaultTwilioNotificationTextSendServiceTemplateBuilder: TwilioNoti
  * converts each batch to {@link TwilioSendSmsInput}s via the matching template builder
  * (or the built-in default), and dispatches them through {@link TwilioService.sendBulkSms}.
  *
- * Messages missing a recipient phone are routed to `ignored` in the result.
+ * Messages without a recipient phone are dropped before building, and do not appear in the result
+ * since it is keyed by phone number. Sends suppressed by Twilio sandbox mode are reported as
+ * `ignored`, and sends that error or report a `failed`/`undelivered` status are reported as `failed`.
  *
  * @param config - Service configuration including the Twilio service, template builders, and batch size.
  * @returns A {@link NotificationTextSendService} that batches and sends SMS through Twilio.
@@ -180,7 +169,7 @@ export const defaultTwilioNotificationTextSendServiceTemplateBuilder: TwilioNoti
  * ```
  */
 export function twilioNotificationTextSendService(config: TwilioNotificationTextSendServiceConfig): TwilioNotificationTextSendService {
-  const { twilioService, defaultFrom, messagingServiceSid, statusCallbackUrl, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders, defaultMessageBuilder: inputDefaultMessageBuilder } = config;
+  const { twilioService, defaultFrom, messagingServiceSid, statusCallbackUrl, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders, defaultMessageBuilder: inputDefaultMessageBuilder, healthCheckService } = config;
 
   const defaultBuilder = inputDefaultMessageBuilder ?? defaultTwilioNotificationTextSendServiceTemplateBuilder;
   const lowercaseKeysMessageBuilders = inputMessageBuilders ? mapObjectKeysToLowercase(inputMessageBuilders) : undefined;
@@ -251,7 +240,8 @@ export function twilioNotificationTextSendService(config: TwilioNotificationText
       };
 
       return sendFn;
-    }
+    },
+    healthCheckService
   };
 
   return sendService;

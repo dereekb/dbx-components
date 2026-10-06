@@ -89,3 +89,100 @@ export abstract class TwilioServiceConfig {
     }
   }
 }
+
+// MARK: Usable Config
+/**
+ * Values treated as unset by {@link usableTwilioServiceConfig}.
+ *
+ * These are the stand-in values a committed `.env` ships with, which are truthy and so pass
+ * {@link TwilioServiceConfig.assertValidConfig}, but crash the `twilio` SDK constructor.
+ */
+export const TWILIO_PLACEHOLDER_CONFIG_VALUES: readonly string[] = ['', 'placeholder', 'xxx'];
+
+/**
+ * Returns true if the input is unset or one of the {@link TWILIO_PLACEHOLDER_CONFIG_VALUES}.
+ *
+ * @param value - Configured value to check.
+ * @returns True if the value should be treated as unset.
+ */
+export function isPlaceholderTwilioConfigValue(value: Maybe<string>): boolean {
+  return value == null || TWILIO_PLACEHOLDER_CONFIG_VALUES.includes(value.trim().toLowerCase());
+}
+
+/**
+ * Returns a copy of the input config with its placeholder and malformed values removed, or
+ * undefined if what remains cannot send SMS.
+ *
+ * A usable config has:
+ * - an Account SID starting with `AC`
+ * - an Auth Token, or an API Key SID starting with `SK` together with its secret
+ * - a sender phone number starting with `+`, or a Messaging Service SID starting with `MG`
+ *
+ * Values that are unset, one of the {@link TWILIO_PLACEHOLDER_CONFIG_VALUES}, or missing their
+ * expected prefix are dropped from the returned config, so a placeholder Messaging Service SID or
+ * API key never shadows a real sender or auth token. A status callback URL that is not an
+ * `http(s)` URL is dropped as well, since it does not affect whether the config can send.
+ *
+ * Use this to conditionally wire Twilio, rather than importing `TwilioModule`, which
+ * constructs the SDK eagerly and throws on placeholder values.
+ *
+ * @param config - Config to check, typically read from the environment.
+ * @returns The usable config, or undefined if the config cannot send SMS.
+ *
+ * @example
+ * ```ts
+ * const config = usableTwilioServiceConfig(twilioServiceConfigFromConfigService(configService));
+ * const twilioService = config ? new TwilioService(new TwilioApi(config)) : undefined;
+ * ```
+ */
+export function usableTwilioServiceConfig(config: Maybe<TwilioServiceConfig>): Maybe<TwilioServiceConfig> {
+  const realValueWithPrefix = <T extends string>(value: Maybe<T>, prefix?: string): Maybe<T> => (!isPlaceholderTwilioConfigValue(value) && (prefix == null || (value as string).startsWith(prefix)) ? value : undefined);
+
+  let result: Maybe<TwilioServiceConfig>;
+
+  if (config) {
+    const { twilio, messages } = config;
+
+    const accountSid = realValueWithPrefix(twilio.accountSid, 'AC');
+    const authToken = realValueWithPrefix(twilio.authToken);
+    const apiKeySid = realValueWithPrefix(twilio.apiKeySid, 'SK');
+    const apiKeySecret = realValueWithPrefix(twilio.apiKeySecret);
+    const hasApiKey = apiKeySid != null && apiKeySecret != null;
+
+    const defaultFrom = realValueWithPrefix(messages.defaultFrom, '+');
+    const messagingServiceSid = realValueWithPrefix(messages.messagingServiceSid, 'MG');
+    const defaultStatusCallback = realValueWithPrefix(messages.defaultStatusCallback, 'http');
+
+    if (accountSid && (authToken || hasApiKey) && (defaultFrom || messagingServiceSid)) {
+      result = {
+        twilio: {
+          accountSid,
+          authToken,
+          apiKeySid: hasApiKey ? apiKeySid : undefined,
+          apiKeySecret: hasApiKey ? apiKeySecret : undefined
+        },
+        messages: {
+          defaultFrom,
+          messagingServiceSid,
+          defaultStatusCallback,
+          sandbox: messages.sandbox
+        }
+      };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Returns true if {@link usableTwilioServiceConfig} can build a usable config from the input.
+ *
+ * Note that a usable config may still carry placeholder values; pass the input through
+ * {@link usableTwilioServiceConfig} to get a copy with them removed before using it.
+ *
+ * @param config - Config to check, typically read from the environment.
+ * @returns True if the config can send SMS.
+ */
+export function isUsableTwilioServiceConfig(config: Maybe<TwilioServiceConfig>): config is TwilioServiceConfig {
+  return usableTwilioServiceConfig(config) != null;
+}

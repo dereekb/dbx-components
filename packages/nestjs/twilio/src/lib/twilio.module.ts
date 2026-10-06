@@ -6,13 +6,16 @@ import { TwilioService } from './twilio.service';
 import { type TwilioAccountSid, type TwilioApiKeySecret, type TwilioApiKeySid, type TwilioAuthToken, type TwilioMessagingServiceSid, type TwilioPhoneNumber, type TwilioStatusCallbackUrl } from './twilio.type';
 
 /**
- * Factory that creates a {@link TwilioServiceConfig} from environment variables.
+ * Reads a {@link TwilioServiceConfig} from environment variables without validating it.
+ *
+ * Pair with {@link usableTwilioServiceConfig} to conditionally wire Twilio when the environment may
+ * hold placeholder values.
  *
  * @param configService - NestJS config service for reading environment variables.
- * @returns A validated {@link TwilioServiceConfig}.
+ * @returns The unvalidated {@link TwilioServiceConfig}.
  */
-export function twilioServiceConfigFactory(configService: ConfigService): TwilioServiceConfig {
-  const config: TwilioServiceConfig = {
+export function twilioServiceConfigFromConfigService(configService: ConfigService): TwilioServiceConfig {
+  return {
     twilio: {
       accountSid: configService.get<TwilioAccountSid>(TWILIO_ACCOUNT_SID_ENV_VAR) as TwilioAccountSid,
       authToken: configService.get<TwilioAuthToken>(TWILIO_AUTH_TOKEN_ENV_VAR),
@@ -26,7 +29,16 @@ export function twilioServiceConfigFactory(configService: ConfigService): Twilio
       sandbox: configService.get<string>(TWILIO_SANDBOX_ENV_VAR) === 'true'
     }
   };
+}
 
+/**
+ * Factory that creates a {@link TwilioServiceConfig} from environment variables.
+ *
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated {@link TwilioServiceConfig}.
+ */
+export function twilioServiceConfigFactory(configService: ConfigService): TwilioServiceConfig {
+  const config = twilioServiceConfigFromConfigService(configService);
   TwilioServiceConfig.assertValidConfig(config);
   return config;
 }
