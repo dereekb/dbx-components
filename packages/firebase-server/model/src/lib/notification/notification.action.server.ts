@@ -281,44 +281,51 @@ export function notificationServerActions(context: NotificationServerActionsCont
 /**
  * Factory for the `createNotificationUser` action.
  *
- * Validates the UID exists in Firebase Auth, then creates a new {@link NotificationUser} document
- * with empty default and global configs. Throws if the UID is not found in Auth.
+ * Idempotent: when the {@link NotificationUser} already exists it is returned unchanged. Otherwise validates
+ * the UID exists in Firebase Auth, then creates a new document with empty default and global configs.
+ * Throws if the UID is not found in Auth.
  *
  * @param context - The notification server actions context with auth and collection access.
- * @returns A transform-and-validate function that creates a new notification user document.
+ * @returns A transform-and-validate function that returns the (possibly new) notification user document.
  */
 export function createNotificationUserFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
 
   return firebaseServerActionTransformFunctionFactory(createNotificationUserParamsType, async (params) => {
     const { uid } = params;
 
     return async () => {
-      // assert they exist in the auth system
-      const userContext = authService.userContext(uid);
-      const userExistsInAuth = await userContext.exists();
+      await firestoreContext.runTransaction(async (transaction) => {
+        const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+        const exists = await notificationUserDocumentInTransaction.exists();
 
-      if (!userExistsInAuth) {
-        throw notificationUserInvalidUidForCreateError(uid);
-      }
+        if (!exists) {
+          // assert they exist in the auth system
+          const userContext = authService.userContext(uid);
+          const userExistsInAuth = await userContext.exists();
 
-      const notificationUserDocument = notificationUserCollection.documentAccessor().loadDocumentForId(uid);
+          if (!userExistsInAuth) {
+            throw notificationUserInvalidUidForCreateError(uid);
+          }
 
-      const newUserTemplate: NotificationUser = {
-        uid,
-        x: [],
-        bc: [],
-        b: [],
-        dc: {
-          c: {}
-        },
-        gc: {
-          c: {}
+          const newUserTemplate: NotificationUser = {
+            uid,
+            x: [],
+            bc: [],
+            b: [],
+            dc: {
+              c: {}
+            },
+            gc: {
+              c: {}
+            }
+          };
+
+          await notificationUserDocumentInTransaction.create(newUserTemplate);
         }
-      };
+      });
 
-      await notificationUserDocument.create(newUserTemplate);
-      return notificationUserDocument;
+      return notificationUserCollection.documentAccessor().loadDocumentForId(uid);
     };
   });
 }

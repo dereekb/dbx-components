@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreInvokeFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreCreateFunction, firebaseDocumentStoreInvokeFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
 import { NotificationFirestoreCollections, NotificationFunctions, type NotificationUser, type NotificationUserDocument } from '@dereekb/firebase';
 
 /**
- * Document store for a single NotificationUser with update, resync, and health check functions.
+ * Document store for a single NotificationUser with create, update, resync, and health check functions.
  */
 @Injectable()
 export class NotificationUserDocumentStore extends AbstractDbxFirebaseDocumentStore<NotificationUser, NotificationUserDocument> {
@@ -12,6 +12,13 @@ export class NotificationUserDocumentStore extends AbstractDbxFirebaseDocumentSt
   constructor() {
     super({ firestoreCollection: inject(NotificationFirestoreCollections).notificationUserCollection });
   }
+
+  /**
+   * Creates the NotificationUser for a user, then targets this store at it.
+   *
+   * Idempotent on the server, so it is safe to call when the document may already exist.
+   */
+  readonly createNotificationUser = firebaseDocumentStoreCreateFunction(this, this.notificationFunctions.notificationUser.createNotificationUser);
 
   readonly updateNotificationUser = firebaseDocumentStoreUpdateFunction(this, this.notificationFunctions.notificationUser.updateNotificationUser.update);
   readonly resyncNotificationUser = firebaseDocumentStoreUpdateFunction(this, this.notificationFunctions.notificationUser.updateNotificationUser.resync);

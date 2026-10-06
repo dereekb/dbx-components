@@ -17,6 +17,10 @@ import {
   NotificationSendType,
   NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE,
+  FORBIDDEN_ERROR_CODE,
+  type CreateNotificationUserParams,
+  type OnCallCreateModelResult,
+  onCallCreateModelParams,
   type UpdateNotificationUserParams,
   notificationUserIdentity,
   onCallUpdateModelParams,
@@ -117,6 +121,72 @@ demoApiFunctionContextFactory((f) => {
     });
 
     describe('model', () => {
+      describe('Notification User create', () => {
+        function loadNotificationUserDocument(uid: string) {
+          return f.demoFirestoreCollections.notificationUserCollection.documentAccessor().loadDocumentForId(uid);
+        }
+
+        demoAuthorizedUserContext({ f }, (u) => {
+          function callCreate(uid: string) {
+            const params: CreateNotificationUserParams = { uid };
+            return u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(notificationUserIdentity, params));
+          }
+
+          it('should create the NotificationUser for the calling user', async () => {
+            const notificationUserDocument = loadNotificationUserDocument(u.uid);
+            expect(await notificationUserDocument.exists()).toBe(false);
+
+            const result = (await callCreate(u.uid)) as OnCallCreateModelResult;
+            expect(result.modelKeys).toEqual([notificationUserDocument.key]);
+
+            const notificationUser = await assertSnapshotData(notificationUserDocument);
+            expect(notificationUser.uid).toBe(u.uid);
+            expect(notificationUser.bc).toEqual([]);
+            expect(notificationUser.gc.c).toEqual({});
+          });
+
+          it('should return the existing NotificationUser unchanged when it already exists', async () => {
+            await callCreate(u.uid);
+
+            const notificationUserDocument = loadNotificationUserDocument(u.uid);
+            await notificationUserDocument.update({ gc: { c: { [GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]: { st: true } } } });
+
+            const result = (await callCreate(u.uid)) as OnCallCreateModelResult;
+            expect(result.modelKeys).toEqual([notificationUserDocument.key]);
+
+            const notificationUser = await assertSnapshotData(notificationUserDocument);
+            expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]?.st).toBe(true);
+          });
+
+          demoAuthorizedUserContext({ f }, (u2) => {
+            itShouldFail('with FORBIDDEN when a non-admin creates a NotificationUser for another user', async () => {
+              await expectFail(() => callCreate(u2.uid), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              expect(await loadNotificationUserDocument(u2.uid).exists()).toBe(false);
+            });
+          });
+        });
+
+        demoAuthorizedUserAdminContext({ f }, (au) => {
+          function callCreate(uid: string) {
+            const params: CreateNotificationUserParams = { uid };
+            return au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(notificationUserIdentity, params));
+          }
+
+          demoAuthorizedUserContext({ f }, (u2) => {
+            it('should allow an admin to create a NotificationUser for another user', async () => {
+              await callCreate(u2.uid);
+
+              const notificationUser = await assertSnapshotData(loadNotificationUserDocument(u2.uid));
+              expect(notificationUser.uid).toBe(u2.uid);
+            });
+          });
+
+          itShouldFail('if the uid does not exist in auth', async () => {
+            await expectFail(() => callCreate('does_not_exist'), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE));
+          });
+        });
+      });
+
       demoAuthorizedUserAdminContext({ f }, (u) => {
         // use profile as the primary notification model target
         demoProfileContext({ f, u }, (p) => {

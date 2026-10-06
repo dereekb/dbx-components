@@ -829,3 +829,16 @@ function collectDisabledMethodsForBoxRecipient(input: CollectDisabledMethodsForB
 function isProbeIssueCode(code: string): boolean {
   return PROBE_NOTIFICATION_HEALTH_CHECK_ISSUE_CODES.has(code);
 }
+
+// MARK: Internal
+/**
+ * The module's private checks, exposed only so they can be unit tested without a full {@link NotificationServerActionsContext}.
+ *
+ * Not part of the public API.
+ *
+ * @internal
+ */
+export const NOTIFICATION_HEALTH_CHECK_INTERNAL = {
+  notificationDeliveryMethodConfigIssues,
+  collectDisabledMethodsForBoxRecipient
+} as const;

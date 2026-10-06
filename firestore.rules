@@ -88,7 +88,10 @@ service cloud.firestore {
 
     match /nu/{notificationUser} {
       // users can read themselves. A NotificationUser's document id is the user's uid, not a twoWayKey.
-      allow read: if resourceIsOwnedByAuthUserId();
+      // Use the path variable, not resourceIsOwnedByAuthUserId(): that helper requires resource != null, so it
+      // would deny a user who has no NotificationUser yet with permission-denied instead of a missing document.
+      allow get: if request.auth != null && request.auth.uid == notificationUser;
+      allow list: if resourceIsOwnedByAuthUserId();
     }
 
     // MARK: UserExternalConnection

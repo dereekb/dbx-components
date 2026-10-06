@@ -10,7 +10,7 @@ import { type, type Type } from 'arktype';
 import { type TargetModelParams, type FirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { firestoreModelIdType, firestoreModelKeyType } from '../../common/model/model/model.validator';
 import { targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
@@ -641,6 +641,13 @@ export const NOTIFICATION_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMa
 
 export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationUser: {
+    /**
+     * Creates the NotificationUser for a user, so they can manage their notification settings before
+     * being added to any NotificationBox.
+     *
+     * Idempotent: returns the existing document unchanged when it already exists.
+     */
+    create: CreateNotificationUserParams;
     update: {
       _: UpdateNotificationUserParams;
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
@@ -672,7 +679,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
-  notificationUser: ['update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
+  notificationUser: ['create', 'update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
   notification: ['update:send']
@@ -686,6 +693,7 @@ export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunc
  */
 export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<NotificationFunctionTypeMap, NotificationBoxModelCrudFunctionsConfig> {
   abstract notificationUser: {
+    createNotificationUser: ModelFirebaseCreateFunction<CreateNotificationUserParams>;
     updateNotificationUser: {
       update: ModelFirebaseCrudFunction<UpdateNotificationUserParams>;
       resync: ModelFirebaseCrudFunction<ResyncNotificationUserParams, ResyncNotificationUserResult>;

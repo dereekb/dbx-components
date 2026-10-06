@@ -4,6 +4,7 @@
 
 import {
   createFormSpaceParamsType,
+  createNotificationUserParamsType,
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
@@ -391,6 +392,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'flagAllRead', typeText: 'Maybe<boolean>' },
       { name: 'setReadAtTime', typeText: 'Maybe<Date>' }
     ]
+  },
+  {
+    model: 'notificationUser',
+    verb: 'create',
+    paramsTypeName: 'CreateNotificationUserParams',
+    paramsValidator: createNotificationUserParamsType,
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: 'Creates the NotificationUser for a user, so they can manage their notification settings before\nbeing added to any NotificationBox.\n\nIdempotent: returns the existing document unchanged when it already exists.',
+    paramsTypeDescription: 'Used for creating a new NotificationUser for a user.',
+    paramsFields: [{ name: 'uid', typeText: 'FirebaseAuthUserId' }]
   },
   {
     model: 'notificationUser',
