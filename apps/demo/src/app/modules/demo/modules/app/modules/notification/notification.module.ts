@@ -5,6 +5,7 @@ import { STATES } from './notification.router';
 
 import { DemoNotificationListPageComponent } from './container/list.component';
 import { DemoNotificationListPageRightComponent } from './container/list.right.component';
+import { DemoNotificationSettingsPageComponent } from './container/settings.component';
 
 @NgModule({
   imports: [
@@ -13,7 +14,8 @@ import { DemoNotificationListPageRightComponent } from './container/list.right.c
     }),
     DemoNotificationLayoutComponent,
     DemoNotificationListPageComponent,
-    DemoNotificationListPageRightComponent
+    DemoNotificationListPageRightComponent,
+    DemoNotificationSettingsPageComponent
   ]
 })
 export class DemoNotificationModule {}

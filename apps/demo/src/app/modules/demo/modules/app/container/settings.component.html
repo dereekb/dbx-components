@@ -7,9 +7,13 @@
         <!-- Deliberately distinct from the login-provider sections above: those are how you sign in, this is what you have connected. A provider can appear in both, meaning two different things. -->
         <dbx-firebase-external-connections></dbx-firebase-external-connections>
       </dbx-section>
-      <dbx-section header="Notifications" hint="Check whether notifications can actually reach you.">
+      <dbx-section header="Notifications" hint="Choose how you are notified, and check whether notifications can actually reach you.">
         <!-- a NotificationUser's document id is the uid, so the directive's documentId takes it directly -->
-        <div dbxFirebaseNotificationUserDocument [documentId]="uidSignal()">
+        <div class="dbx-flex-bar" dbxFirebaseNotificationUserDocument [documentId]="uidSignal()">
+          <dbx-anchor [anchor]="notificationSettingsRef">
+            <dbx-button [stroked]="true" icon="tune" text="Notification Settings"></dbx-button>
+          </dbx-anchor>
+          <dbx-button-spacer></dbx-button-spacer>
           <dbx-firebase-notification-healthcheck-dialog-button></dbx-firebase-notification-healthcheck-dialog-button>
         </div>
       </dbx-section>

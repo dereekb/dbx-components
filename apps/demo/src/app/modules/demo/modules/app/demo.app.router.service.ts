@@ -16,6 +16,12 @@ export class DemoAppRouterService {
     };
   }
 
+  userNotificationSettingsRef(): SegueRef {
+    return {
+      ref: 'demo.app.notification.settings'
+    };
+  }
+
   guestbookListRef(): SegueRef {
     return {
       ref: 'demo.app.guestbook.list'

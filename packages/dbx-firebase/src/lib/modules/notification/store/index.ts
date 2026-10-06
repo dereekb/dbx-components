@@ -16,3 +16,4 @@ export * from './notificationuser.collection.store';
 export * from './notificationuser.document.store.directive';
 export * from './notificationuser.document.store';
 export * from './notificationuser.healthcheck.store';
+export * from './notificationuser.settings.store';

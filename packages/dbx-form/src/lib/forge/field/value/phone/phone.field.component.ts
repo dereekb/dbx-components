@@ -122,7 +122,8 @@ export class DbxForgePhoneFieldComponent {
   protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
   protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
   protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly requiredSignal = computed(() => this.field()().required());
+  protected readonly ariaRequiredSignal = computed(() => (this.requiredSignal() ? 'true' : null));
   protected readonly ariaDescribedBySignal = computed(() => {
     const errorId = this.errorIdSignal();
     const hintId = this.hintIdSignal();

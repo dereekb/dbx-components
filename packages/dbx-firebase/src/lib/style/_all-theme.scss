@@ -1,10 +1,12 @@
 @use '../auth/login/login';
 @use '../modules/externalconnection/externalconnection';
+@use '../modules/notification/notification';
 @use '../model/model';
 
 // Includes all theming config
 @mixin all-component-themes($theme-config) {
   @include login.theme($theme-config);
   @include externalconnection.theme($theme-config);
+  @include notification.theme($theme-config);
   @include model.all-model-theme($theme-config);
 }

@@ -283,12 +283,13 @@
 
     <doc-feature-example header="dbxRotatingButton" hint="Directive that turns a dbx-button into a rotating / multi-state button. Each click moves to the next configured state and applies its icon, text, style and aria-label to the button.">
       <h4>Tristate (Default Off)</h4>
-      <p class="dbx-hint">dbxTristateRotatingButtonConfig() builds a three-state / 3-phase toggle. The default state emits null to clear the choice.</p>
+      <p class="dbx-hint">dbxTristateRotatingButtonConfig() builds a three-state / 3-phase toggle that rotates Default, On, Off. The default state emits null to clear the choice.</p>
       <div class="dbx-flex-bar">
         <dbx-button iconOnly [dbxRotatingButton]="tristateTextConfig" [(dbxRotatingButtonValue)]="tristateValueSignal"></dbx-button>
         <span class="dbx-hint">Value: {{ tristateValueSignal() ?? 'null' }}</span>
       </div>
       <h4>Tristate (Default On, Custom Icons And Colors)</h4>
+      <p class="dbx-hint">The default resolves to on, so the first click skips On and goes straight to Off (skipEquivalentStatesOnFirstClick). Later clicks rotate through every state.</p>
       <div class="dbx-flex-bar">
         <dbx-button iconOnly [dbxRotatingButton]="tristateEmailConfig" [(dbxRotatingButtonValue)]="tristateEmailValueSignal"></dbx-button>
         <span class="dbx-hint">Value: {{ tristateEmailValueSignal() ?? 'null' }}</span>

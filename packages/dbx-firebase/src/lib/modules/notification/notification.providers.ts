@@ -4,6 +4,7 @@ import { DbxFirebaseNotificationTemplateService } from './service/notification.t
 import { DbxFirebaseNotificationItemWidgetService } from './service/notificationitem.widget.service';
 import { DbxFirebaseNotificationItemDefaultViewComponent } from './component/notificationitem.view.default.component';
 import { DbxFirebaseNotificationHealthCheckConfig, DbxFirebaseNotificationHealthCheckPresentationServiceConfig } from './service/healthcheck.presentation';
+import { DbxFirebaseNotificationUserSettingsConfig } from './service/notification.settings';
 import { type Maybe } from '@dereekb/util';
 import { type DbxWidgetEntry } from '@dereekb/dbx-web';
 
@@ -36,6 +37,11 @@ export interface ProvideDbxFirebaseNotificationsConfig {
    * constants rather than repeating the numbers.
    */
   readonly healthCheck?: Maybe<DbxFirebaseNotificationHealthCheckConfig>;
+  /**
+   * Configuration for the notification user settings UI (`dbx-firebase-notification-user-settings`), such as the delivery
+   * method columns and the text message disclosure.
+   */
+  readonly userSettings?: Maybe<DbxFirebaseNotificationUserSettingsConfig>;
 }
 
 /**
@@ -45,7 +51,7 @@ export interface ProvideDbxFirebaseNotificationsConfig {
  * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotificationsConfig): EnvironmentProviders {
-  const { appNotificationTemplateTypeInfoRecordService, healthCheckPresentation, healthCheck } = config;
+  const { appNotificationTemplateTypeInfoRecordService, healthCheckPresentation, healthCheck, userSettings } = config;
 
   const providers: (EnvironmentProviders | Provider)[] = [
     {
@@ -86,6 +92,13 @@ export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotifi
     providers.push({
       provide: DbxFirebaseNotificationHealthCheckConfig,
       useValue: healthCheck
+    });
+  }
+
+  if (userSettings) {
+    providers.push({
+      provide: DbxFirebaseNotificationUserSettingsConfig,
+      useValue: userSettings
     });
   }
 

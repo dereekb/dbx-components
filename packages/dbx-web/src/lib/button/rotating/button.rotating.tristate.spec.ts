@@ -5,7 +5,7 @@ import {
   DEFAULT_DBX_TRISTATE_ON_COLOR,
   DEFAULT_DBX_TRISTATE_ON_ICON,
   DEFAULT_DBX_TRISTATE_UNKNOWN_DEFAULT_ICON,
-  dbxTristateCycle,
+  DBX_TRISTATE_CYCLE,
   dbxTristateEffectiveValue,
   dbxTristateRotatingButtonConfig,
   dbxTristateState,
@@ -29,14 +29,9 @@ describe('dbxTristateEffectiveValue()', () => {
   });
 });
 
-describe('dbxTristateCycle()', () => {
-  it('should flip the effective value first', () => {
-    expect(dbxTristateCycle(true)).toEqual([null, false, true]);
-    expect(dbxTristateCycle(false)).toEqual([null, true, false]);
-  });
-
-  it('should go on then off when the default is unknown', () => {
-    expect(dbxTristateCycle(undefined)).toEqual([null, true, false]);
+describe('DBX_TRISTATE_CYCLE', () => {
+  it('should go default, then on, then off', () => {
+    expect(DBX_TRISTATE_CYCLE).toEqual([null, true, false]);
   });
 });
 
@@ -91,12 +86,44 @@ describe('dbxTristateRotatingButtonConfig()', () => {
 
   it('should use the configured icons and colors', () => {
     const config = dbxTristateRotatingButtonConfig({ defaultValue: true, on: { icon: 'notifications_active', color: 'success' }, off: { icon: 'notifications_off' }, default: { color: 'grey' } });
-    const [defaultState, offState, onState] = config.states;
+    const [defaultState, onState, offState] = config.states;
 
     expect(defaultState.display?.icon).toBe('notifications_active');
     expect(defaultState.style?.color).toBe('grey');
     expect(offState.display?.icon).toBe('notifications_off');
     expect(onState.style?.color).toBe('success');
+  });
+
+  describe('first click', () => {
+    const config = dbxTristateRotatingButtonConfig({ label: 'Email', defaultValue: true });
+
+    it('should make the default state equivalent to the value it resolves to', () => {
+      expect(config.states.map((x) => x.equivalentValue)).toEqual([true, true, false]);
+      expect(config.skipEquivalentStatesOnFirstClick).toBe(true);
+    });
+
+    it('should skip On from a default that resolves to on', () => {
+      expect(nextDbxRotatingButtonState(config, null, true)?.value).toBe(false);
+    });
+
+    it('should skip Default from On when the default resolves to on', () => {
+      const offDefaultConfig = dbxTristateRotatingButtonConfig({ defaultValue: false });
+      expect(nextDbxRotatingButtonState(offDefaultConfig, false, true)?.value).toBe(true);
+    });
+
+    it('should rotate through every state after the first click', () => {
+      expect(nextDbxRotatingButtonState(config, null)?.value).toBe(true);
+    });
+
+    it('should not skip when turned off', () => {
+      const noSkipConfig = dbxTristateRotatingButtonConfig({ defaultValue: true, skipEquivalentStatesOnFirstClick: false });
+      expect(noSkipConfig.skipEquivalentStatesOnFirstClick).toBe(false);
+    });
+
+    it('should skip nothing when the default is unknown', () => {
+      const unknownConfig = dbxTristateRotatingButtonConfig({});
+      expect(nextDbxRotatingButtonState(unknownConfig, null, true)?.value).toBe(true);
+    });
   });
 
   it('should use a neutral icon when the default is unknown', () => {

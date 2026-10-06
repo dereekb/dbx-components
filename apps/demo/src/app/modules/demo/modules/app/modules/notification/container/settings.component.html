@@ -1,0 +1,9 @@
+<!-- a NotificationUser's document id is the uid, so dbxRouteModelIdFromAuthUserId points the store at the signed-in user's -->
+<div dbxFirebaseNotificationUserDocument dbxRouteModelIdFromAuthUserId>
+  <dbx-section header="Notification Settings" hint="Choose which notifications you receive, and how.">
+    <dbx-firebase-notification-user-settings></dbx-firebase-notification-user-settings>
+  </dbx-section>
+  <dbx-section header="Delivery Check" hint="Check whether notifications can actually reach you.">
+    <dbx-firebase-notification-healthcheck-view></dbx-firebase-notification-healthcheck-view>
+  </dbx-section>
+</div>

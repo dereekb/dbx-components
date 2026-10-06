@@ -29,6 +29,43 @@ describe('nextDbxRotatingButtonState()', () => {
   it('should return undefined when there are no states', () => {
     expect(nextDbxRotatingButtonState({ states: [] }, 'a')).toBeUndefined();
   });
+
+  describe('skipping equivalent states', () => {
+    const equivalentConfig = {
+      states: [
+        { value: 'a', equivalentValue: 1 },
+        { value: 'b', equivalentValue: 1 },
+        { value: 'c', equivalentValue: 2 }
+      ]
+    };
+
+    it('should skip states equivalent to the current state', () => {
+      expect(nextDbxRotatingButtonState(equivalentConfig, 'a', true)?.value).toBe('c');
+    });
+
+    it('should not skip when not asked to', () => {
+      expect(nextDbxRotatingButtonState(equivalentConfig, 'a')?.value).toBe('b');
+    });
+
+    it('should compare against the state value when no equivalent value is set', () => {
+      const mixedConfig = { states: [{ value: 1 }, { value: 2, equivalentValue: 1 }, { value: 3 }] };
+      expect(nextDbxRotatingButtonState(mixedConfig, 1, true)?.value).toBe(3);
+    });
+
+    it('should return the next state when every other state is equivalent', () => {
+      const allEquivalentConfig = {
+        states: [
+          { value: 'a', equivalentValue: 1 },
+          { value: 'b', equivalentValue: 1 }
+        ]
+      };
+      expect(nextDbxRotatingButtonState(allEquivalentConfig, 'a', true)?.value).toBe('b');
+    });
+
+    it('should not skip from an unknown value', () => {
+      expect(nextDbxRotatingButtonState(equivalentConfig, 'z', true)?.value).toBe('a');
+    });
+  });
 });
 
 describe('dbxRotatingButtonAriaLabel()', () => {

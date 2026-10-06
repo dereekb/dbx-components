@@ -73,17 +73,12 @@ export function dbxTristateEffectiveValue(value: DbxTristateValue, defaultValue?
 }
 
 /**
- * Returns the rotation order for a tristate value with the input default value.
+ * Rotation order of a tristate value: default, then on, then off.
  *
- * A known default `d` gives `[null, !d, d]`, so the first click from the default state always flips the effective value.
- * An unknown default gives `[null, true, false]`.
- *
- * @param defaultValue - What the default state resolves to.
- * @returns The values to rotate through.
+ * The first click skips a state equivalent to the current one (see {@link DbxTristateRotatingButtonConfigInput.skipEquivalentStatesOnFirstClick}),
+ * so it always flips the effective value; later clicks follow this order.
  */
-export function dbxTristateCycle(defaultValue?: Maybe<boolean>): Maybe<boolean>[] {
-  return defaultValue == null ? [null, true, false] : [null, !defaultValue, defaultValue];
-}
+export const DBX_TRISTATE_CYCLE: readonly DbxTristateValue[] = [null, true, false];
 
 /**
  * Per-state display configuration for {@link dbxTristateRotatingButtonConfig}.
@@ -185,13 +180,19 @@ export interface DbxTristateRotatingButtonConfigInput {
    * Whether to announce each change through the LiveAnnouncer. True by default.
    */
   readonly announceChanges?: Maybe<boolean>;
+  /**
+   * Whether the first click skips a state equivalent to the current one, such as "On" when the default resolves to on, so
+   * the first click always flips the effective value. True by default.
+   */
+  readonly skipEquivalentStatesOnFirstClick?: Maybe<boolean>;
 }
 
 /**
  * Creates a {@link DbxRotatingButtonConfig} for a three-state / 3-phase (default/on/off) toggle.
  *
- * The states rotate in {@link dbxTristateCycle} order. Explicit choices are colored; the default state shows the resolved
- * on/off icon without a color.
+ * The states rotate in {@link DBX_TRISTATE_CYCLE} order (default, on, off). The default state is equivalent to the value it
+ * resolves to, so by default the first click skips a state that would look like no change. Explicit choices are colored;
+ * the default state shows the resolved on/off icon without a color.
  *
  * @param input - The labels, default value and per-state display.
  * @returns A rotating button configuration whose default state has the value `null`.
@@ -202,7 +203,7 @@ export interface DbxTristateRotatingButtonConfigInput {
  * ```
  */
 export function dbxTristateRotatingButtonConfig(input: DbxTristateRotatingButtonConfigInput): DbxRotatingButtonConfig<DbxTristateValue> {
-  const { label, defaultValue, on, off, style, announceChanges } = input;
+  const { label, defaultValue, on, off, style, announceChanges, skipEquivalentStatesOnFirstClick } = input;
   const onIcon = on?.icon ?? DEFAULT_DBX_TRISTATE_ON_ICON;
   const offIcon = off?.icon ?? DEFAULT_DBX_TRISTATE_OFF_ICON;
   let resolvedDefaultIcon: string;
@@ -213,7 +214,7 @@ export function dbxTristateRotatingButtonConfig(input: DbxTristateRotatingButton
     resolvedDefaultIcon = defaultValue ? onIcon : offIcon;
   }
 
-  const states: DbxRotatingButtonState<DbxTristateValue>[] = dbxTristateCycle(defaultValue).map((value) => {
+  const states: DbxRotatingButtonState<DbxTristateValue>[] = DBX_TRISTATE_CYCLE.map((value) => {
     let icon: string;
     let color: DbxButtonStyle['color'];
 
@@ -236,9 +237,11 @@ export function dbxTristateRotatingButtonConfig(input: DbxTristateRotatingButton
       value,
       label: dbxTristateStateLabel({ value, defaultValue, on, off, default: input.default }),
       display: { icon },
-      style: { color }
+      style: { color },
+      // the default state is equivalent to what it resolves to; an unknown default is equivalent to nothing else
+      equivalentValue: dbxTristateEffectiveValue(value, defaultValue)
     };
   });
 
-  return { states, label, style, announceChanges };
+  return { states, label, style, announceChanges, skipEquivalentStatesOnFirstClick: skipEquivalentStatesOnFirstClick ?? true };
 }
