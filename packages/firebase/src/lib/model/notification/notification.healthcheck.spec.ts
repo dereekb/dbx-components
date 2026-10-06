@@ -4,7 +4,6 @@ import {
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES,
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS,
   type NotificationDeliveryHealthCheckResult,
-  NotificationDeliveryMethod,
   type NotificationHealthCheck,
   type NotificationHealthCheckIssue,
   NotificationHealthCheckIssueAutofixType,
@@ -25,6 +24,7 @@ import {
   rollupNotificationHealthCheckResultStatus,
   rollupNotificationHealthCheckStatus
 } from './notification.healthcheck';
+import { NotificationDeliveryMethod } from './notification.config';
 
 describe('rollupNotificationHealthCheckStatus()', () => {
   it('should return SKIPPED for an empty set of statuses', () => {

@@ -17,46 +17,7 @@ import { filterMaybeArrayValues, type Maybe, type Minutes, type Seconds } from '
 import { addMinutes, addSeconds } from 'date-fns';
 import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreDate, optionalFirestoreEnum, optionalFirestoreField, optionalFirestoreString } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
-
-/**
- * A delivery method (channel) that notifications can be sent through.
- *
- * The values mirror the per-method flags on {@link NotificationBoxRecipientTemplateConfig}
- * (`se`/`st`/`sp`/`sn`), so a method maps directly onto the config field that gates it.
- */
-export enum NotificationDeliveryMethod {
-  /**
-   * Email delivery. Gated by `se`.
-   */
-  EMAIL = 'e',
-  /**
-   * Text/SMS delivery. Gated by `st`.
-   */
-  TEXT = 't',
-  /**
-   * Push notification delivery. Gated by `sp`.
-   */
-  PUSH = 'p',
-  /**
-   * In-app delivery to a NotificationSummary. Gated by `sn`.
-   */
-  NOTIFICATION_SUMMARY = 'n'
-}
-
-/**
- * All delivery methods, in the order a report should present them.
- */
-export const ALL_NOTIFICATION_DELIVERY_METHODS: NotificationDeliveryMethod[] = [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY];
-
-/**
- * A value held per delivery method, for the methods it is known for.
- *
- * Partial because a health check only covers the methods it was asked about, so anything derived
- * from one covers those methods only.
- *
- * @template T - The per-method value.
- */
-export type NotificationDeliveryMethodMap<T> = Partial<Record<NotificationDeliveryMethod, T>>;
+import { NotificationDeliveryMethod, type NotificationDeliveryMethodMap } from './notification.config';
 
 /**
  * The outcome of a health check, or of one individual finding within it.

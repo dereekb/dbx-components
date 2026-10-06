@@ -13,10 +13,10 @@ import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
-import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
+import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
-import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode, NotificationDeliveryMethod } from './notification.healthcheck';
+import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -28,6 +28,11 @@ export const NOTIFICATION_SUBJECT_MAX_LENGTH = 100;
 
 export const NOTIFICATION_MESSAGE_MIN_LENGTH = 2;
 export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Arktype validator for a single {@link NotificationDeliveryMethod}.
+ */
+export const notificationDeliveryMethodType = /* @__PURE__ */ type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY);
 
 /**
  * Config entries are inserted, unless marked as remove.
@@ -65,8 +70,10 @@ export const createNotificationUserParamsType = /* @__PURE__ */ type({
 
 /**
  * Used for updating the global or default config on a NotificationUser.
+ *
+ * The server-managed `tcat` (text consent) field cannot be set by the client.
  */
-export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams extends Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c'> {
+export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams extends Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c' | 'tcat'> {
   readonly i?: Maybe<IndexNumber>;
   readonly e?: Maybe<EmailAddress>;
   readonly t?: Maybe<E164PhoneNumber>;
@@ -74,6 +81,12 @@ export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigPara
   readonly lk?: Maybe<boolean>;
   readonly bk?: Maybe<boolean>;
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
+  /**
+   * Delivery methods to disable account-wide.
+   *
+   * Undefined keeps the current list, null clears it, and an array replaces it.
+   */
+  readonly dm?: Maybe<NotificationDeliveryMethod[]>;
 }
 
 export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = /* @__PURE__ */ type({
@@ -83,7 +96,8 @@ export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsTy
   'configs?': clearable(notificationBoxRecipientTemplateConfigArrayEntryParamType.array()),
   'lk?': clearable('boolean'),
   'bk?': clearable('boolean'),
-  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT))
+  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)),
+  'dm?': clearable(notificationDeliveryMethodType.array())
 }) as Type<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
 
 export interface UpdateNotificationBoxRecipientLikeParams {
@@ -221,7 +235,7 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
 }
 
 export const notificationUserHealthCheckParamsType = targetModelParamsType.merge({
-  'methods?': clearable(type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY).array()),
+  'methods?': clearable(notificationDeliveryMethodType.array()),
   'sendProbe?': clearable('boolean'),
   'verifyPendingProbesOnly?': clearable('boolean'),
   'notificationTemplateType?': clearable('string > 0'),
@@ -294,7 +308,7 @@ export interface NotificationUserHealthCheckAutofixParams extends TargetModelPar
 }
 
 export const notificationUserHealthCheckAutofixParamsType = targetModelParamsType.merge({
-  method: type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY),
+  method: notificationDeliveryMethodType,
   codes: type('string > 0').array().atLeastLength(1),
   'allowExplicitAutofix?': clearable('boolean')
 }) as Type<NotificationUserHealthCheckAutofixParams>;

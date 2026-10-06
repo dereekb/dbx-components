@@ -1,5 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, appNotificationTemplateTypeInfoRecordService } from './notification.details';
+import { type NotificationTemplateTypeInfo, type NotificationTemplateTypeInfoGroup, notificationTemplateTypeInfoRecord, appNotificationTemplateTypeInfoRecordService, notificationTemplateTypeInfoUserConfigurableDeliveryMethods, DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS } from './notification.details';
+import { NotificationDeliveryMethod } from './notification.config';
 import { firestoreModelIdentity, firestoreModelKey } from '../../common';
 
 describe('notificationTemplateTypeInfoRecord()', () => {
@@ -99,5 +100,47 @@ describe('appNotificationTemplateTypeInfoRecordService()', () => {
       const typesForTargetModel = service.getTemplateTypeInfosForTargetModelIdentity(testIdentityATarget);
       expect(typesForTargetModel).toHaveLength(4);
     });
+  });
+});
+
+describe('notificationTemplateTypeInfoUserConfigurableDeliveryMethods()', () => {
+  it('should return the default methods when none are configured', () => {
+    const result = notificationTemplateTypeInfoUserConfigurableDeliveryMethods({});
+
+    expect(result).toBe(DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS);
+    expect(result).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.NOTIFICATION_SUMMARY]);
+    expect(result).not.toContain(NotificationDeliveryMethod.PUSH);
+  });
+
+  it('should return the configured methods', () => {
+    expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL]);
+  });
+});
+
+describe('appNotificationTemplateTypeInfoRecordService() groups', () => {
+  const groupA: NotificationTemplateTypeInfoGroup = { key: 'a', name: 'Group A', sortOrder: 0 };
+
+  function makeInfo(type: string, extra?: Partial<NotificationTemplateTypeInfo>): NotificationTemplateTypeInfo {
+    return { type, name: type, description: type, notificationModelIdentity: testIdentityA, ...extra };
+  }
+
+  it('should keep the group, hidden and method metadata on the type info', () => {
+    const service = appNotificationTemplateTypeInfoRecordService(notificationTemplateTypeInfoRecord([makeInfo('x', { group: groupA, sortOrder: 1, userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }), makeInfo('y', { group: groupA, hideFromUserSettings: true })]));
+
+    const [x, y] = service.getAllKnownTemplateTypeInfo();
+
+    expect(x.group).toBe(groupA);
+    expect(x.sortOrder).toBe(1);
+    expect(x.userConfigurableDeliveryMethods).toEqual([NotificationDeliveryMethod.EMAIL]);
+    expect(y.group).toBe(groupA);
+    expect(y.hideFromUserSettings).toBe(true);
+  });
+
+  it('should allow equal group definitions that share a key', () => {
+    expect(() => appNotificationTemplateTypeInfoRecordService(notificationTemplateTypeInfoRecord([makeInfo('x', { group: groupA }), makeInfo('y', { group: { ...groupA } })]))).not.toThrow();
+  });
+
+  it('should throw if two groups that share a key have different definitions', () => {
+    expect(() => appNotificationTemplateTypeInfoRecordService(notificationTemplateTypeInfoRecord([makeInfo('x', { group: groupA }), makeInfo('y', { group: { ...groupA, name: 'Other' } })]))).toThrow();
   });
 });

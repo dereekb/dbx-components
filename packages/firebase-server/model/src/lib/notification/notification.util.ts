@@ -298,7 +298,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       const { x: exclusions, dc, gc } = notificationUser;
 
       const canSendNotification = notificationSendExclusionCanSendFunction(exclusions);
-      const effectiveConfig = mergeNotificationUserDefaultNotificationBoxRecipientConfig(dc, gc);
+      const effectiveConfig = mergeNotificationUserDefaultNotificationBoxRecipientConfig(gc, dc);
       const uid = x.document.id;
 
       notificationUserRecipientConfigs.set(uid, effectiveConfig);

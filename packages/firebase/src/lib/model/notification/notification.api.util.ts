@@ -7,10 +7,12 @@
 import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import {
   type NotificationBoxRecipientTemplateConfigRecord,
+  type NotificationDeliveryMethod,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationUserNotificationBoxRecipientConfig,
   notificationBoxRecipientTemplateConfigArrayToRecord,
   notificationBoxRecipientTemplateConfigRecordToArray,
+  toCanonicalNotificationDeliveryMethods,
   updateNotificationRecipient
 } from './notification.config';
 import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
@@ -51,6 +53,10 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
  * Applies {@link UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams} to an existing
  * {@link NotificationUserDefaultNotificationBoxRecipientConfig}, producing an updated config.
  *
+ * The config is rebuilt from its known keys:
+ * - `dm` is kept when the update leaves it undefined, cleared by null, and otherwise replaced by the canonicalized list (an empty list is stored as null).
+ * - `tcat` is server-managed, so it is always kept from the existing config, even if the update carries one.
+ *
  * @param a - Existing config.
  * @param b - Update params to apply.
  * @param limitToAllowedConfigTypes - When provided, filters config types to only allowed template types.
@@ -61,15 +67,26 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
   b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams,
   limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>
 ): NotificationUserDefaultNotificationBoxRecipientConfig {
-  const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk } = b;
+  const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk, dm: inputDm } = b;
   const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
+
+  let dm: Maybe<NotificationDeliveryMethod[]>;
+
+  if (inputDm === undefined) {
+    dm = a.dm;
+  } else {
+    const canonicalDm = toCanonicalNotificationDeliveryMethods(inputDm);
+    dm = canonicalDm.length > 0 ? canonicalDm : null;
+  }
 
   return {
     ...updateNotificationRecipient(a, b),
     c,
     f: updateMaybeValue(a.f, inputF),
     bk: updateMaybeValue(a.bk, inputBk),
-    lk: updateMaybeValue(a.lk, inputLk)
+    lk: updateMaybeValue(a.lk, inputLk),
+    dm,
+    tcat: a.tcat
   };
 }
 

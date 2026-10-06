@@ -1,4 +1,5 @@
-import { NotificationBoxRecipientFlag } from './notification.config';
+import { NotificationBoxRecipientFlag, NotificationDeliveryMethod, type NotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
+import { type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams } from './notification.api';
 import { updateNotificationUserDefaultNotificationBoxRecipientConfig, updateNotificationUserNotificationBoxRecipientConfigIfChanged } from './notification.api.util';
 
 describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => {
@@ -107,6 +108,46 @@ describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => 
     expect(result.f).toBe(NotificationBoxRecipientFlag.ENABLED);
     expect(result.c).toEqual({
       a: expectedConfig
+    });
+  });
+
+  describe('dm', () => {
+    const existing: NotificationUserDefaultNotificationBoxRecipientConfig = { c: {}, dm: [NotificationDeliveryMethod.TEXT] };
+
+    it('should keep the existing dm when the update leaves it undefined', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, {});
+      expect(result.dm).toEqual([NotificationDeliveryMethod.TEXT]);
+    });
+
+    it('should clear dm when the update passes null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: null });
+      expect(result.dm).toBeNull();
+    });
+
+    it('should store an empty dm as null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: [] });
+      expect(result.dm).toBeNull();
+    });
+
+    it('should replace dm with the canonicalized list', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY, NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.EMAIL] });
+      expect(result.dm).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.NOTIFICATION_SUMMARY]);
+    });
+  });
+
+  describe('tcat', () => {
+    const tcat = new Date('2026-01-02T03:04:05Z');
+
+    it('should keep the existing tcat', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {}, tcat }, { configs: [{ type: 'a', st: true }] });
+      expect(result.tcat).toBe(tcat);
+    });
+
+    it('should ignore a tcat passed in through a cast', () => {
+      const forged = { tcat: new Date('2020-01-01T00:00:00Z') } as UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams;
+
+      expect(updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {}, tcat }, forged).tcat).toBe(tcat);
+      expect(updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {} }, forged).tcat).toBeUndefined();
     });
   });
 });
