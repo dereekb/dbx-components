@@ -3,8 +3,8 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { DbxActionSnackbarErrorDirective, DbxButtonComponent } from '@dereekb/dbx-web';
-import { type WorkUsingContext } from '@dereekb/rxjs';
-import { map } from 'rxjs';
+import { type IsModifiedFunction, type WorkUsingContext } from '@dereekb/rxjs';
+import { map, of } from 'rxjs';
 import { type DbxFirebaseNotificationUserSettingsPhoneFormConfig, type DbxFirebaseNotificationUserSettingsPhoneFormValue, DbxFirebaseNotificationUserSettingsPhoneForgeFormComponent } from '../component/notification.user.settings.phone.forge.form.component';
 import { DbxFirebaseNotificationUserSettingsStore } from '../store/notificationuser.settings.store';
 
@@ -18,7 +18,7 @@ import { DbxFirebaseNotificationUserSettingsStore } from '../store/notificationu
   selector: 'dbx-firebase-notification-user-settings-phone',
   template: `
     <div dbxAction dbxActionEnforceModified dbxActionSnackbarError [dbxActionHandler]="handleSavePhoneNumber">
-      <dbx-firebase-notification-user-settings-phone-forge-form dbxActionForm [config]="formConfigSignal()" [dbxFormSource]="formValue$"></dbx-firebase-notification-user-settings-phone-forge-form>
+      <dbx-firebase-notification-user-settings-phone-forge-form dbxActionForm [dbxActionFormIsModified]="isPhoneNumberModified" [config]="formConfigSignal()" [dbxFormSource]="formValue$"></dbx-firebase-notification-user-settings-phone-forge-form>
       <dbx-button dbxActionButton [stroked]="true" text="Save Phone Number"></dbx-button>
     </div>
   `,
@@ -37,6 +37,9 @@ export class DbxFirebaseNotificationUserSettingsPhoneComponent {
 
   // only the saved phone number feeds the form, so saving other settings doesn't reset a number being typed
   readonly formValue$ = toObservable(this.store.textPhoneNumberSignal).pipe(map((phoneNumber): DbxFirebaseNotificationUserSettingsPhoneFormValue => ({ phoneNumber })));
+
+  // saving the number that is already saved does nothing, so it doesn't count as a change
+  readonly isPhoneNumberModified: IsModifiedFunction<DbxFirebaseNotificationUserSettingsPhoneFormValue> = (value) => of((value.phoneNumber || undefined) !== (this.store.textPhoneNumberSignal() ?? undefined));
 
   readonly handleSavePhoneNumber: WorkUsingContext<DbxFirebaseNotificationUserSettingsPhoneFormValue> = (value, context) => {
     if (value.phoneNumber) {

@@ -69,7 +69,7 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
           <dbx-firebase-notification-user-settings-delivery></dbx-firebase-notification-user-settings-delivery>
         }
         <dbx-firebase-notification-settings-list [state]="store.listStateSignal()" [dbxListTitleGroup]="groupDelegate"></dbx-firebase-notification-settings-list>
-        <p class="dbx-hint dbx-small">Click a setting to switch it between Default, On and Off. Colored icons are your own choices; grey icons follow the default for that notification.</p>
+        <p class="dbx-hint dbx-small">Click a setting to switch it between Default, On and Off. Colored icons are your own choices; uncolored icons follow the default for that notification.</p>
         <div class="dbx-flex-bar" dbxAction [dbxActionValueStream]="updateParams$" [dbxActionValueStreamIsModifiedValue]="isUpdateParamsModified" dbxActionEnforceModified dbxActionTransitionSafety="dialog" dbxActionSnackbarError [dbxActionHandler]="handleSave">
           @if (showDeliveryCheckButtonSignal()) {
             <dbx-firebase-notification-healthcheck-dialog-button></dbx-firebase-notification-healthcheck-dialog-button>

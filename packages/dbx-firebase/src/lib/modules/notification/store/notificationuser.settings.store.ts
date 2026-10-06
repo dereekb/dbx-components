@@ -426,7 +426,7 @@ export class DbxFirebaseNotificationUserSettingsStore implements DbxFirebaseNoti
       const savedGc = this.savedGcSignal();
       const savedDm = toCanonicalNotificationDeliveryMethods(savedGc?.dm);
       const dm = savedDm.filter((x) => x !== NotificationDeliveryMethod.TEXT);
-      const gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams = { t: phoneNumber, ...(dm.length !== savedDm.length ? { dm: dm.length ? dm : null } : {}) };
+      const gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams = { t: phoneNumber, ...(dm.length === savedDm.length ? {} : { dm: dm.length ? dm : null }) };
 
       return this.notificationUserDocumentStore.updateNotificationUser({ gc }).pipe(
         tap((state) => {

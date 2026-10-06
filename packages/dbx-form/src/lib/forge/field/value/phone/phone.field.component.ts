@@ -140,11 +140,11 @@ export class DbxForgePhoneFieldComponent {
   constructor() {
     setupMetaTracking(this.elementRef, this.meta, { selector: 'ngx-mat-input-tel' });
 
-    // Disabled state propagation
+    // Disabled state propagation. Does not emit, otherwise enabling the controls would write the empty number to the field and replace the loaded value.
     effect(() => {
       const disabled = this.isDisabled();
-      toggleDisableFormControl(this.phoneCtrl, disabled);
-      toggleDisableFormControl(this.extensionCtrl, disabled);
+      toggleDisableFormControl(this.phoneCtrl, disabled, { emitEvent: false });
+      toggleDisableFormControl(this.extensionCtrl, disabled, { emitEvent: false });
     });
 
     // Sync Signal Forms field -> FormControl (inbound)

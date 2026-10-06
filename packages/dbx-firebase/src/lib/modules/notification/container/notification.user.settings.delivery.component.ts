@@ -40,7 +40,7 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
       <div class="dbx-pb2">
         <dbx-firebase-notification-user-settings-phone></dbx-firebase-notification-user-settings-phone>
         <p class="dbx-hint dbx-small">{{ textMessageDisclosureSignal() }}</p>
-        @if (store.textConsentAtSignal(); as textConsentAt) {
+        @if (textConsentAtSignal(); as textConsentAt) {
           <p class="dbx-hint dbx-small no-margin">Texts enabled on {{ textConsentAt | date: 'mediumDate' }}.</p>
         }
       </div>
@@ -73,4 +73,13 @@ export class DbxFirebaseNotificationUserSettingsDeliveryComponent {
     return columns.includes(NotificationDeliveryMethod.TEXT) && (formOpen || !switchable.includes(NotificationDeliveryMethod.TEXT));
   });
   readonly textMessageDisclosureSignal = computed(() => this.store.configSignal().textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
+
+  /**
+   * When the user consented to texts, shown only while texts are on in the saved settings.
+   */
+  readonly textConsentAtSignal = computed(() => {
+    const textConsentAt = this.store.textConsentAtSignal();
+    const textsOn = this.store.canEnableTextSignal() && this.store.savedTextOptInSignal();
+    return textsOn ? textConsentAt : undefined;
+  });
 }
