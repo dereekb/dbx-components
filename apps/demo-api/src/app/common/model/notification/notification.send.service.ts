@@ -1,8 +1,8 @@
 import { type NotificationSendService, firestoreNotificationSummarySendService, ignoreSendNotificationTextSendService } from '@dereekb/firebase-server/model';
-import { twilioNotificationTextSendService } from '@dereekb/firebase-server/twilio';
 import { type TwilioService } from '@dereekb/nestjs/twilio';
 import { type Maybe } from '@dereekb/util';
 import { demoNotificationMailgunSendService } from './notification.send.mailgun.service';
+import { demoNotificationTwilioSendService } from './notification.send.twilio.service';
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID } from 'demo-firebase';
 
@@ -20,7 +20,7 @@ export function demoNotificationSendServiceFactory(demoFirebaseServerActionsCont
   const { mailgunService } = demoFirebaseServerActionsContext;
 
   const emailSendService = demoNotificationMailgunSendService(mailgunService);
-  const textSendService = twilioService ? twilioNotificationTextSendService({ twilioService }) : ignoreSendNotificationTextSendService();
+  const textSendService = twilioService ? demoNotificationTwilioSendService(twilioService) : ignoreSendNotificationTextSendService();
   const notificationSummarySendService = firestoreNotificationSummarySendService({
     context: demoFirebaseServerActionsContext
   });

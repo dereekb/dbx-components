@@ -315,6 +315,27 @@ demoApiFunctionContextFactory((f) => {
               expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE);
             });
 
+            describe('without a template type', () => {
+              it('should report that no notification type sends texts', async () => {
+                const { healthCheck } = await runHealthCheck({ notificationTemplateType: undefined });
+
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).toContain(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE);
+              });
+
+              it('should not report an opt-in problem once texts are turned on for any notification type', async () => {
+                await updateNotificationUser({ gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+
+                const { healthCheck } = await runHealthCheck({ notificationTemplateType: undefined });
+
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+              });
+            });
+
             it('should report the global config turning a method off as the decisive one', async () => {
               await updateNotificationUser({
                 gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false }] },

@@ -77,7 +77,7 @@ const HIDDEN_NOTIFICATION_DELIVERY_METHODS: ReadonlySet<NotificationDeliveryMeth
 
       @for (methodSection of methodSectionsSignal(); track methodSection.result.me) {
         <dbx-content-pit class="dbx-mb3">
-          <dbx-firebase-notification-healthcheck-method [result]="methodSection.result" [probeAction]="methodSection.probeAction" [showIssueDetails]="showIssueDetails()" [autofixActions]="methodSection.autofixActions"></dbx-firebase-notification-healthcheck-method>
+          <dbx-firebase-notification-healthcheck-method [result]="methodSection.result" [probeAction]="methodSection.probeAction" [currentTargets]="currentTargets()" [showIssueDetails]="showIssueDetails()" [autofixActions]="methodSection.autofixActions"></dbx-firebase-notification-healthcheck-method>
         </dbx-content-pit>
       }
     }
@@ -98,6 +98,14 @@ export class DbxFirebaseNotificationHealthCheckComponent {
    * Left unset the report is read-only, which is what an admin or historical view wants.
    */
   readonly probeActions = input<Maybe<DbxFirebaseNotificationHealthCheckProbeActionMap>>();
+
+  /**
+   * Where each method delivers to now, so a section can show a destination that changed since the check was run. See
+   * {@link DbxFirebaseNotificationHealthCheckMethodComponent.currentTargets}.
+   *
+   * Left unset each section shows the destination the check delivered to.
+   */
+  readonly currentTargets = input<Maybe<NotificationDeliveryMethodMap<Maybe<string>>>>();
 
   /**
    * Whether each finding renders its structured detail, for an admin reviewing someone's delivery.

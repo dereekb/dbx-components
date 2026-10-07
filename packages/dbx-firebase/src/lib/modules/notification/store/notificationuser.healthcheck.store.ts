@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import {
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS,
-  type NotificationDeliveryMethod,
+  NotificationDeliveryMethod,
   type NotificationDeliveryMethodMap,
   notificationHealthCheckPendingProbeMethods,
   notificationUserHealthCheckNextProbeAtByMethod,
@@ -16,7 +16,8 @@ import {
 import { errorResult, type LoadingState, startWithBeginLoading } from '@dereekb/rxjs';
 import { areEqualPOJOValues, filterMaybeArrayValues, type Maybe, MS_IN_SECOND, type Seconds } from '@dereekb/util';
 import { addMinutes, isAfter } from 'date-fns';
-import { catchError, distinctUntilChanged, EMPTY, exhaustMap, filter, map, type Observable, of, shareReplay, switchMap, takeWhile, tap, timer, withLatestFrom } from 'rxjs';
+import { catchError, combineLatest, distinctUntilChanged, EMPTY, exhaustMap, filter, map, type Observable, of, shareReplay, switchMap, takeWhile, tap, timer, withLatestFrom } from 'rxjs';
+import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { type DbxFirebaseDocumentStoreFunctionParamsInput } from '../../../model/modules/store';
 import { DbxFirebaseNotificationHealthCheckConfig, DEFAULT_NOTIFICATION_HEALTH_CHECK_PROBE_WATCH_MINUTES } from '../service/healthcheck.presentation';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
@@ -136,6 +137,8 @@ export interface DbxFirebaseNotificationUserHealthCheckStoreState {
 export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<DbxFirebaseNotificationUserHealthCheckStoreState> {
   readonly notificationUserDocumentStore = inject(NotificationUserDocumentStore);
 
+  private readonly _authService = inject(DbxFirebaseAuthService);
+
   /**
    * The app's health check tuning, when it configured any.
    *
@@ -194,6 +197,36 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
    * caller that dispatches and then watches it is watching its own fix.
    */
   readonly healthCheckAutofixResultState$ = this.select((state) => state.healthCheckAutofixResultState).pipe(distinctUntilChanged(), shareReplay(1));
+
+  // MARK: Destinations
+  /**
+   * Where each method delivers to now, read live from the document, so it follows a contact change made after the stored check
+   * was run. A test message is sent to this destination, since the server resolves it again on every run.
+   *
+   * Resolved like the server: the override on the global config (`gc.e` / `gc.t`), otherwise the contact on the user's auth
+   * record, which is only known here when the NotificationUser is the signed-in user's own. A method whose destination cannot
+   * be known here is absent, and a method known to have no destination is null. Only email and text are resolved, since only
+   * they deliver to a contact the user can change.
+   */
+  readonly currentDeliveryTargetByMethod$: Observable<NotificationDeliveryMethodMap<Maybe<string>>> = combineLatest([this.notificationUserDocumentStore.data$, this._authService.currentAuthUser$]).pipe(
+    map(([notificationUser, authUser]) => {
+      const { gc, uid } = notificationUser;
+      const isOwnNotificationUser = authUser != null && authUser.uid === uid;
+      const targets: NotificationDeliveryMethodMap<Maybe<string>> = {};
+
+      if (gc.e != null || isOwnNotificationUser) {
+        targets[NotificationDeliveryMethod.EMAIL] = gc.e ?? authUser?.email ?? null;
+      }
+
+      if (gc.t != null || isOwnNotificationUser) {
+        targets[NotificationDeliveryMethod.TEXT] = gc.t ?? authUser?.phoneNumber ?? null;
+      }
+
+      return targets;
+    }),
+    distinctUntilChanged(areEqualPOJOValues),
+    shareReplay(1)
+  );
 
   // MARK: Throttle
   /**

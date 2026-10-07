@@ -4,7 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type DbxActionConfirmConfig, DbxActionConfirmDirective, DbxActionErrorDirective, DbxButtonComponent, DbxChipDirective, DbxColorDirective, DbxErrorComponent, DbxIconTileComponent } from '@dereekb/dbx-web';
-import { type NotificationDeliveryHealthCheckResult, type NotificationHealthCheckIssueCode } from '@dereekb/firebase';
+import { type NotificationDeliveryHealthCheckResult, type NotificationDeliveryMethodMap, type NotificationHealthCheckIssueCode } from '@dereekb/firebase';
 import { DbxFirebaseNotificationHealthCheckPresentationService } from '../service/healthcheck.presentation.service';
 import { type DbxFirebaseNotificationHealthCheckIssueAutofixActionConfig, DbxFirebaseNotificationHealthCheckIssueComponent } from './healthcheck.issue.component';
 
@@ -68,14 +68,18 @@ export interface DbxFirebaseNotificationHealthCheckMethodProbeActionConfig {
         <dbx-icon-tile class="dbx-icon-spacer" [icon]="methodIconSignal()" [dbxColor]="statusColorSignal()" [dbxColorTone]="18"></dbx-icon-tile>
         <div class="dbx-flex-fill">
           <div class="dbx-text-title-medium">{{ methodLabelSignal() }}</div>
-          @if (resultValue.tg) {
-            <div class="dbx-text-body-small dbx-hint">{{ resultValue.tg }}</div>
+          @if (targetSignal(); as target) {
+            <div class="dbx-text-body-small dbx-hint">{{ target }}</div>
           } @else {
             <div class="dbx-text-body-small dbx-hint">No destination</div>
           }
         </div>
         <dbx-chip [small]="true" [color]="statusColorSignal()">{{ statusLabelSignal() }}</dbx-chip>
       </div>
+
+      @if (targetChangedSignal()) {
+        <div class="dbx-text-body-small dbx-hint">The results below were checked for {{ resultValue.tg ?? 'no destination' }}. Run the check again to check the current destination.</div>
+      }
 
       @for (issueSection of issueSectionsSignal(); track $index) {
         <div class="dbx-pt2">
@@ -138,6 +142,15 @@ export class DbxFirebaseNotificationHealthCheckMethodComponent {
   readonly probeAction = input<Maybe<DbxFirebaseNotificationHealthCheckMethodProbeActionConfig>>();
 
   /**
+   * Where each method delivers to now, such as after the user changed their phone number since the check was run. See
+   * {@link DbxFirebaseNotificationUserHealthCheckStore.currentDeliveryTargetByMethod$}.
+   *
+   * When this method's destination is present and differs from the one the check delivered to, the section shows the current
+   * one and notes that its findings are for the old one. A method that is absent shows the destination the check delivered to.
+   */
+  readonly currentTargets = input<Maybe<NotificationDeliveryMethodMap<Maybe<string>>>>();
+
+  /**
    * Whether each finding renders its structured detail, for an admin reviewing it.
    */
   readonly showIssueDetails = input<Maybe<boolean>>();
@@ -157,6 +170,23 @@ export class DbxFirebaseNotificationHealthCheckMethodComponent {
   readonly issueSectionsSignal = computed(() => {
     const autofixActions = this.autofixActions();
     return (this.result()?.is ?? []).map((issue) => ({ issue, autofixAction: autofixActions?.[issue.c] }));
+  });
+
+  /**
+   * Whether this method delivers somewhere other than where the check delivered to.
+   */
+  readonly targetChangedSignal = computed(() => {
+    const result = this.result();
+    const currentTargets = this.currentTargets();
+    return result != null && currentTargets != null && result.me in currentTargets && (currentTargets[result.me] ?? undefined) !== (result.tg ?? undefined);
+  });
+
+  /**
+   * Where this method delivers to: the current destination when it changed since the check, otherwise the one the check delivered to.
+   */
+  readonly targetSignal = computed(() => {
+    const result = this.result();
+    return this.targetChangedSignal() && result ? this.currentTargets()?.[result.me] : result?.tg;
   });
 
   readonly methodLabelSignal = computed(() => {

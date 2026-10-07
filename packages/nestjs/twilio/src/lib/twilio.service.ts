@@ -1,6 +1,7 @@
 import { type Maybe, performAsyncTasks } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TwilioApi } from './twilio.api';
+import { twilioErrorCode } from './twilio.diagnostic';
 import { type TwilioMessageSid, type TwilioMessageStatus, type TwilioMessagingServiceSid, type TwilioPhoneNumber, type TwilioStatusCallbackUrl } from './twilio.type';
 
 /**
@@ -64,6 +65,10 @@ export interface TwilioSendSmsResult {
    * Error message captured if the send failed.
    */
   readonly error?: Maybe<string>;
+  /**
+   * Twilio error code captured if the send failed, such as 21610 for a recipient who replied STOP. See {@link TwilioMessageErrorCode}.
+   */
+  readonly errorCode?: Maybe<number>;
 }
 
 @Injectable()
@@ -126,7 +131,8 @@ export class TwilioService {
           to: input.to,
           status: 'failed',
           sandboxed: false,
-          error: errorMessage
+          error: errorMessage,
+          errorCode: twilioErrorCode(e)
         };
       }
     }

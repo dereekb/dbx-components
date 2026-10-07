@@ -68,7 +68,7 @@ interface DbxFirebaseNotificationHealthCheckProbeNoticeInput {
   template: `
     @if (existsSignal()) {
       @if (healthCheckSignal(); as healthCheck) {
-        <dbx-firebase-notification-healthcheck [healthCheck]="healthCheck" [probeActions]="probeActionsSignal()" [showIssueDetails]="showIssueDetails()" [autofixActions]="autofixActionsSignal()"></dbx-firebase-notification-healthcheck>
+        <dbx-firebase-notification-healthcheck [healthCheck]="healthCheck" [probeActions]="probeActionsSignal()" [currentTargets]="currentDeliveryTargetByMethodSignal()" [showIssueDetails]="showIssueDetails()" [autofixActions]="autofixActionsSignal()"></dbx-firebase-notification-healthcheck>
       } @else {
         <dbx-content-pit class="dbx-mb3">
           <p class="dbx-hint no-margin">Your notification delivery has not been checked yet. Run a check to find out why you may not be receiving notifications.</p>
@@ -124,6 +124,7 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
   readonly throttleSecondsRemainingSignal = toSignal(this.healthCheckStore.throttleSecondsRemaining$, { initialValue: 0 });
   readonly isThrottledSignal = toSignal(this.healthCheckStore.isThrottled$, { initialValue: false });
   readonly probeThrottleSecondsRemainingByMethodSignal = toSignal(this.healthCheckStore.probeThrottleSecondsRemainingByMethod$, { initialValue: {} as NotificationDeliveryMethodMap<Seconds> });
+  readonly currentDeliveryTargetByMethodSignal = toSignal(this.healthCheckStore.currentDeliveryTargetByMethod$, { initialValue: {} as NotificationDeliveryMethodMap<Maybe<string>> });
 
   private readonly _lastRequestedProbeMethod = signal<Maybe<NotificationDeliveryMethod>>(undefined);
 
@@ -175,15 +176,20 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
    * Everything the user needs to read about a test message belongs in the section holding the button
    * that sent it, so the notice is composed here rather than in a footer: what was just sent, that its
    * outcome is being watched for, and when another may be sent.
+   *
+   * The confirmation names the method's current destination rather than the one the stored check delivered
+   * to, since the server sends the test message to wherever the method delivers to when it runs.
    */
   readonly probeActionsSignal = computed<DbxFirebaseNotificationHealthCheckProbeActionMap>(() => {
     const secondsRemainingByMethod = this.probeThrottleSecondsRemainingByMethodSignal();
+    const currentTargetByMethod = this.currentDeliveryTargetByMethodSignal();
     const justSentMethod = this.latestHealthCheckResultSignal()?.probesDispatched ? this.lastRequestedProbeMethodSignal() : undefined;
     const probeActions: DbxFirebaseNotificationHealthCheckProbeActionMap = {};
 
     (this.healthCheckSignal()?.m ?? [])
       .filter((methodResult) => methodResult.pb === true)
-      .forEach(({ me: method, tg: target, pr: probe }) => {
+      .forEach(({ me: method, tg: checkedTarget, pr: probe }) => {
+        const target = method in currentTargetByMethod ? currentTargetByMethod[method] : checkedTarget;
         const label = this._presentationService.testMessageLabelForDeliveryMethod(method);
         const noun = this._presentationService.testMessageNounForDeliveryMethod(method);
         const methodLabel = this._presentationService.labelForDeliveryMethod(method).toLowerCase();

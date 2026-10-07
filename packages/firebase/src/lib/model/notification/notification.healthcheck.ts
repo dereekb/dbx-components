@@ -135,6 +135,11 @@ export enum KnownNotificationHealthCheckIssueCode {
    */
   METHOD_DISABLED_FOR_TEMPLATE = 'methodDisabledForTemplate',
   /**
+   * This delivery method is on, but none of the user's notification types send it. Reported instead of
+   * {@link KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE} when the check is not scoped to a single template type.
+   */
+  METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE = 'methodNotEnabledForAnyTemplate',
+  /**
    * This delivery method is switched off for one or more of the user's individual notification boxes.
    */
   METHOD_DISABLED_FOR_BOX = 'methodDisabledForBox',

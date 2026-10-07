@@ -214,7 +214,9 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
   /**
    * The notification template type to evaluate per-template configuration against.
    *
-   * Defaults to the app's default template type.
+   * Defaults to the app's default template type. The default template type cannot be configured in the notification settings, so
+   * checking it evaluates every known template type instead, and a method's per-type configuration is only reported when no
+   * notification type would send it.
    */
   readonly notificationTemplateType?: Maybe<NotificationTemplateType>;
   /**

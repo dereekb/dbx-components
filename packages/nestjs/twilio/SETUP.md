@@ -138,6 +138,22 @@ const textSendService = twilioService ? twilioNotificationTextSendService({ twil
 
 By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
 
+### Delivery health check
+
+Pass `twilioNotificationTextSendServiceHealthCheckService()` as the send service's `healthCheckService` so the notification delivery health check can verify texts with Twilio instead of only checking the user's settings:
+
+```ts
+const textSendService = twilioNotificationTextSendService({
+  twilioService,
+  healthCheckService: twilioNotificationTextSendServiceHealthCheckService({
+    twilioService,
+    probeBuilder: ({ to }) => ({ to, body: 'Example App: this is a test text confirming we can text this number. No reply is needed.' })
+  })
+});
+```
+
+It reports an account that is not active, and classifies the most recent text to the number, read back from the Messages API: delivered, a STOP opt-out (21610), an unregistered sending number (30034), or a failure with its reason, such as a landline or a carrier spam filter. With a `probeBuilder` it can send a test text and follow its status until the carrier reports an outcome. A STOP opt-out is refused before any message is created, so the test text is how one is found for a number that has not been texted since. Set `lookupNumber: true` to also look the number up and report an invalid number or a landline; Twilio charges per lookup for the line type. The read helpers it uses (`twilioRecentMessagesForRecipient()`, `twilioMessageForSid()`, `twilioAccountState()`, `twilioLookupPhoneNumberForDiagnosis()`) are exported from this package and report an unreachable API as `unknown` rather than throwing.
+
 ---
 
 ## 4. Verify the setup

@@ -48,6 +48,7 @@ import {
   isNotificationDeliveryMethodDisabled,
   NotificationDeliveryMethodDecisionSource,
   type NotificationExplicitOptInConfig,
+  isActiveNotificationBoxRecipient,
   resolveNotificationDeliveryMethodDecisions,
   resolveNotificationUidRecipientDelivery,
   isPendingNotificationHealthCheckProbe,
@@ -167,7 +168,17 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       }
 
       const notificationTemplateType = inputNotificationTemplateType || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
-      const explicitOptIn: Maybe<NotificationExplicitOptInConfig> = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType];
+      const { appNotificationTemplateTypeInfoRecord } = appNotificationTemplateTypeInfoRecordService;
+      const explicitOptIn: Maybe<NotificationExplicitOptInConfig> = appNotificationTemplateTypeInfoRecord[notificationTemplateType];
+
+      // The default template type cannot be configured in the notification settings, so a check of it asks whether each method
+      // reaches the user for any of the app's notification types instead.
+      let anyTemplateTypes: Maybe<NotificationHealthCheckTemplateTypeOptIn[]>;
+
+      if (notificationTemplateType === DEFAULT_NOTIFICATION_TEMPLATE_TYPE) {
+        const knownTemplateTypes = appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypes();
+        anyTemplateTypes = (knownTemplateTypes.length ? knownTemplateTypes : [notificationTemplateType]).map((x) => ({ notificationTemplateType: x, explicitOptIn: appNotificationTemplateTypeInfoRecord[x] }));
+      }
       const authDetails = await authService
         .userContext(uid)
         .loadDetails()
@@ -220,7 +231,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // lose its probe explanation while still reporting the probe itself.
           const issues: NotificationHealthCheckIssue[] = verifyPendingProbesOnly
             ? (previousMethodResult?.is ?? []).filter((x) => !(willConsultProvider && isProbeIssueCode(x.c)))
-            : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType, explicitOptIn }), ...(disabledMethodsByBox.get(method) ?? [])];
+            : [...notificationDeliveryMethodConfigIssues({ methodContext, notificationUser, notificationTemplateType, explicitOptIn, anyTemplateTypes }), ...(disabledMethodsByBox.get(method) ?? [])];
 
           // keep any previously resolved probe visible unless the provider supplies a newer one
           let probe: Maybe<NotificationHealthCheckProbe> = previousProbe;
@@ -553,11 +564,22 @@ function notificationUserAccountIssues(input: NotificationUserAccountIssuesInput
 }
 
 // MARK: Configuration Checks
-interface NotificationDeliveryMethodConfigIssuesInput {
-  readonly methodContext: NotificationDeliveryMethodContext;
-  readonly notificationUser: NotificationUser;
+/**
+ * A template type and its opt-in rules.
+ */
+interface NotificationHealthCheckTemplateTypeOptIn {
   readonly notificationTemplateType: NotificationTemplateType;
   readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
+}
+
+interface NotificationDeliveryMethodConfigIssuesInput extends NotificationHealthCheckTemplateTypeOptIn {
+  readonly methodContext: NotificationDeliveryMethodContext;
+  readonly notificationUser: NotificationUser;
+  /**
+   * When set, the per-type configuration is evaluated against each of these template types instead of `notificationTemplateType`,
+   * and is only reported when none of them sends the method.
+   */
+  readonly anyTemplateTypes?: Maybe<NotificationHealthCheckTemplateTypeOptIn[]>;
 }
 
 /**
@@ -566,11 +588,14 @@ interface NotificationDeliveryMethodConfigIssuesInput {
  * Resolves the method the same way {@link expandNotificationRecipients} does for a direct send (see
  * {@link resolveNotificationUidRecipientDelivery}), so each finding corresponds to a real reason the send pipeline would drop a message.
  *
+ * With `anyTemplateTypes`, the per-type configuration is only reported when no notification type sends the method. See
+ * {@link isNotificationDeliveryMethodSentForAnyTemplateType}.
+ *
  * @param input - The delivery method context, the user, the template type being evaluated and its opt-in rules.
  * @returns The findings for the method.
  */
 function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMethodConfigIssuesInput): NotificationHealthCheckIssue[] {
-  const { methodContext, notificationUser, notificationTemplateType, explicitOptIn } = input;
+  const { methodContext, notificationUser, notificationTemplateType, explicitOptIn, anyTemplateTypes } = input;
   const { method, label, sendServiceConfigured, target } = methodContext;
   const { gc, dc } = notificationUser;
 
@@ -619,6 +644,20 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
     return issues;
   }
 
+  if (anyTemplateTypes) {
+    if (!isNotificationDeliveryMethodSentForAnyTemplateType({ method, notificationUser, templateTypes: anyTemplateTypes })) {
+      issues.push(
+        notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
+          message: `${label} is on, but none of your notifications are set to use it.`,
+          fix: `Turn ${label.toLowerCase()} on for the notifications you want to receive that way in your notification settings.`,
+          data: { method }
+        })
+      );
+    }
+
+    return issues;
+  }
+
   // the opt-out flags are reported with the account findings, so only the method's own decision is evaluated here
   const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, notificationUser: { gc, dc, x: [] } });
   const decision = decisions[method];
@@ -643,8 +682,8 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
     } else if (decision.source === NotificationDeliveryMethodDecisionSource.DEFAULT) {
       issues.push(
         notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, NotificationHealthCheckStatus.WARNING, {
-          message: `${label} is only sent to people who have turned it on, and you have not turned it on.`,
-          fix: `Turn ${label.toLowerCase()} on in your notification settings.`,
+          message: `${label} is only sent for this kind of notification to people who have turned it on for it, and you have not.`,
+          fix: `Turn ${label.toLowerCase()} on for this notification type in your notification settings.`,
           data: { method, notificationTemplateType, requiresExplicitOptIn: true }
         })
       );
@@ -652,6 +691,29 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
   }
 
   return issues;
+}
+
+interface IsNotificationDeliveryMethodSentForAnyTemplateTypeInput {
+  readonly method: NotificationDeliveryMethod;
+  readonly notificationUser: Pick<NotificationUser, 'gc' | 'dc' | 'bc'>;
+  readonly templateTypes: NotificationHealthCheckTemplateTypeOptIn[];
+}
+
+/**
+ * Returns whether any of the template types sends the delivery method to the user, either directly (`gc`, then `dc`) or through one of
+ * their active subscriptions (`gc`, then the subscription's config).
+ *
+ * The method being switched off account-wide and the user's opt-outs are not considered, since they are reported separately.
+ *
+ * @param input - The method, the user and the template types to check.
+ * @returns True if at least one template type sends the method.
+ */
+function isNotificationDeliveryMethodSentForAnyTemplateType(input: IsNotificationDeliveryMethodSentForAnyTemplateTypeInput): boolean {
+  const { method, notificationUser, templateTypes } = input;
+  const { gc, dc, bc } = notificationUser;
+  const scopeConfigs = [dc, ...bc.filter((x) => !x.rm && isActiveNotificationBoxRecipient(x))];
+
+  return templateTypes.some(({ notificationTemplateType, explicitOptIn }) => scopeConfigs.some((scopeConfig) => resolveNotificationDeliveryMethodDecisions({ configs: [gc.c?.[notificationTemplateType], scopeConfig.c?.[notificationTemplateType]], explicitOptIn })[method].send));
 }
 
 // MARK: Subscription Checks
@@ -840,5 +902,6 @@ function isProbeIssueCode(code: string): boolean {
  */
 export const NOTIFICATION_HEALTH_CHECK_INTERNAL = {
   notificationDeliveryMethodConfigIssues,
+  isNotificationDeliveryMethodSentForAnyTemplateType,
   collectDisabledMethodsForBoxRecipient
 } as const;

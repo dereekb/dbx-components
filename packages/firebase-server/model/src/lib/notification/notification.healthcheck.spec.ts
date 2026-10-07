@@ -5,7 +5,7 @@ const { notificationDeliveryMethodConfigIssues, collectDisabledMethodsForBoxReci
 
 const TEMPLATE_TYPE = 'test';
 
-function notificationUser(overrides: Partial<Pick<NotificationUser, 'gc' | 'dc'>> = {}): NotificationUser {
+function notificationUser(overrides: Partial<Pick<NotificationUser, 'gc' | 'dc' | 'bc'>> = {}): NotificationUser {
   return { uid: 'u', x: [], b: [], bc: [], gc: { c: {} }, dc: { c: {} }, ...overrides };
 }
 
@@ -119,6 +119,54 @@ describe('notificationDeliveryMethodConfigIssues()', () => {
       expect(issues).toHaveLength(1);
       expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY);
       expect(issues[0].s).toBe(NotificationHealthCheckStatus.WARNING);
+    });
+  });
+
+  describe('any template type', () => {
+    const OTHER_TEMPLATE_TYPE = 'other';
+    const anyTemplateTypes = [
+      { notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined },
+      { notificationTemplateType: OTHER_TEMPLATE_TYPE, explicitOptIn: undefined }
+    ];
+
+    function anyTemplateTypeIssues(method: NotificationDeliveryMethod, user: NotificationUser) {
+      return notificationDeliveryMethodConfigIssues({ methodContext: methodContext(method), notificationUser: user, notificationTemplateType: 'D', explicitOptIn: undefined, anyTemplateTypes });
+    }
+
+    it('should report nothing when texts are on for one of the types', () => {
+      expect(anyTemplateTypeIssues(NotificationDeliveryMethod.TEXT, notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { st: false }, [OTHER_TEMPLATE_TYPE]: { st: true } } } }))).toEqual([]);
+    });
+
+    it('should report nothing when texts are on for one of the types in a subscription', () => {
+      const user = notificationUser({ bc: [{ nb: 'box', i: 0, c: { [OTHER_TEMPLATE_TYPE]: { st: true } } }] });
+      expect(anyTemplateTypeIssues(NotificationDeliveryMethod.TEXT, user)).toEqual([]);
+    });
+
+    it('should ignore a subscription the user removed', () => {
+      const user = notificationUser({ bc: [{ nb: 'box', i: 0, rm: true, c: { [OTHER_TEMPLATE_TYPE]: { st: true } } }] });
+      const issues = anyTemplateTypeIssues(NotificationDeliveryMethod.TEXT, user);
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+    });
+
+    it('should report a warning when no type sends texts', () => {
+      const issues = anyTemplateTypeIssues(NotificationDeliveryMethod.TEXT, notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { st: false } } } }));
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+      expect(issues[0].s).toBe(NotificationHealthCheckStatus.WARNING);
+    });
+
+    it('should report nothing for email, which is on by default', () => {
+      expect(anyTemplateTypeIssues(NotificationDeliveryMethod.EMAIL, notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { se: false } } } }))).toEqual([]);
+    });
+
+    it('should still report the method switched off account-wide', () => {
+      const issues = anyTemplateTypeIssues(NotificationDeliveryMethod.TEXT, notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { st: true } }, dm: [NotificationDeliveryMethod.TEXT] } }));
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY);
     });
   });
 

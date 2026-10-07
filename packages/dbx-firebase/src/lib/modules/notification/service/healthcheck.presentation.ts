@@ -14,7 +14,16 @@
  */
 import { type ArrayOrValue, type Maybe, type Minutes, type Seconds } from '@dereekb/util';
 import { type DbxThemeColor } from '@dereekb/dbx-web';
-import { type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, type NotificationHealthCheckIssueData, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
+import {
+  type NotificationHealthCheckIssue,
+  type NotificationHealthCheckIssueCode,
+  type NotificationHealthCheckIssueData,
+  KnownNotificationHealthCheckIssueCode,
+  MailgunNotificationHealthCheckIssueCode,
+  NotificationDeliveryMethod,
+  NotificationHealthCheckStatus,
+  TwilioNotificationHealthCheckIssueCode
+} from '@dereekb/firebase';
 
 /**
  * One labelled value from a finding's structured detail, for an admin reviewing it.
@@ -378,7 +387,7 @@ export function notificationHealthCheckProbeIssueLabel(code: NotificationHealthC
 }
 
 /**
- * Presentation entries for every issue code the library and the Mailgun email check emit.
+ * Presentation entries for every issue code the library, the Mailgun email check and the Twilio text check emit.
  *
  * None of them set a colour — see {@link DbxFirebaseNotificationHealthCheckPresentationEntry.color}.
  */
@@ -391,6 +400,7 @@ export const DEFAULT_NOTIFICATION_HEALTH_CHECK_PRESENTATION_ENTRIES: DbxFirebase
   { code: KnownNotificationHealthCheckIssueCode.RECIPIENT_DISABLED, label: 'Turned Off', icon: 'notifications_off' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, label: 'Off Everywhere', icon: 'notifications_off' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, label: 'Off For This Type', icon: 'notifications_paused' },
+  { code: KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE, label: 'Off For Every Type', icon: 'notifications_paused' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX, label: 'Off For A Subscription', icon: 'notifications_paused' },
   // subscriptions
   { code: KnownNotificationHealthCheckIssueCode.NO_NOTIFICATION_BOXES, label: 'No Subscriptions', icon: 'inbox' },
@@ -464,5 +474,24 @@ export const DEFAULT_NOTIFICATION_HEALTH_CHECK_PRESENTATION_ENTRIES: DbxFirebase
   { code: MailgunNotificationHealthCheckIssueCode.DOMAIN_NOT_ACTIVE, label: 'Sending System Down', icon: 'dns' },
   { code: MailgunNotificationHealthCheckIssueCode.ADDRESS_UNDELIVERABLE, label: 'Address Undeliverable', icon: 'person_off' },
   { code: MailgunNotificationHealthCheckIssueCode.ADDRESS_DISPOSABLE, label: 'Disposable Address', icon: 'delete_forever' },
-  { code: MailgunNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED, label: 'Test Unavailable', icon: 'block' }
+  { code: MailgunNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED, label: 'Test Unavailable', icon: 'block' },
+  // twilio
+  { code: TwilioNotificationHealthCheckIssueCode.RECIPIENT_OPTED_OUT, label: 'Replied STOP', icon: 'unsubscribe' },
+  {
+    code: TwilioNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE,
+    label: 'Recent Text Failed',
+    icon: 'error',
+    details: (d) =>
+      presentNotificationHealthCheckIssueDetails([
+        { label: 'Failed', value: readNotificationHealthCheckIssueDataDate(d['at']) },
+        { label: 'Error code', value: typeof d['errorCode'] === 'number' ? String(d['errorCode']) : undefined }
+      ])
+  },
+  { code: TwilioNotificationHealthCheckIssueCode.RECENT_DELIVERY_SUCCESS, label: 'Recently Delivered', icon: 'mark_chat_read' },
+  { code: TwilioNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, label: 'No Recent Activity', icon: 'history_toggle_off' },
+  { code: TwilioNotificationHealthCheckIssueCode.ACCOUNT_NOT_ACTIVE, label: 'Sending System Down', icon: 'dns' },
+  { code: TwilioNotificationHealthCheckIssueCode.SENDER_NOT_REGISTERED, label: 'Sender Not Registered', icon: 'gpp_bad' },
+  { code: TwilioNotificationHealthCheckIssueCode.NUMBER_INVALID, label: 'Invalid Number', icon: 'phone_disabled' },
+  { code: TwilioNotificationHealthCheckIssueCode.NUMBER_LANDLINE, label: 'Landline Number', icon: 'phone_disabled' },
+  { code: TwilioNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED, label: 'Test Unavailable', icon: 'block' }
 ];
