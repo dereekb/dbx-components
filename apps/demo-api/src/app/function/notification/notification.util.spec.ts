@@ -225,6 +225,56 @@ demoApiFunctionContextFactory((f) => {
                 expect(result.texts).toHaveLength(1);
                 expect(result.texts[0].phoneNumber).toBe(overridePhone);
               });
+
+              it('should not text the auth phone number', async () => {
+                const authDetails = await f.authService.userContext(u.uid).loadDetails();
+                expect(authDetails.phoneNumber).toBeDefined();
+
+                const result = await expandListedRecipient();
+                expect(result.texts).toHaveLength(0);
+              });
+
+              describe('stopped texting number', () => {
+                beforeEach(async () => {
+                  await nu.updateNotificationUser({ gc: { t: overridePhone } });
+                  await nu.document.arrayUpdate({ union: { tso: [overridePhone] } });
+                });
+
+                it('should not text a number that replied STOP', async () => {
+                  const result = await expandListedRecipient();
+
+                  expect(result.emails).toHaveLength(1);
+                  expect(result.texts).toHaveLength(0);
+                });
+
+                it('should not text a non-uid recipient that shares the stopped number', async () => {
+                  const notification: Notification = {
+                    ...baseNotification,
+                    r: [
+                      { uid: u.uid, st: true },
+                      { t: overridePhone, st: true }
+                    ]
+                  };
+
+                  const result = await expandNotificationRecipients({
+                    notification,
+                    authService: f.authService,
+                    notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
+                  });
+
+                  expect(result.texts).toHaveLength(0);
+                });
+
+                it('should still text a different number', async () => {
+                  const otherPhone = '+12025550198';
+                  await nu.updateNotificationUser({ gc: { t: otherPhone } });
+
+                  const result = await expandListedRecipient();
+
+                  expect(result.texts).toHaveLength(1);
+                  expect(result.texts[0].phoneNumber).toBe(otherPhone);
+                });
+              });
             });
           });
 
@@ -578,8 +628,14 @@ demoApiFunctionContextFactory((f) => {
 
                                         describe('user opt in tests', () => {
                                           describe('user opts into sms', () => {
-                                            beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ st: true });
+                                            // texts only go to a saved texting number, never the auth phone number
+                                            beforeEachUpdateNotificationUserGlobalConfig({ t: '+12025550124', configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
                                             describeNotificationShouldBeSentToUser({ email: false, text: true, notificationSummary: true, checkGlobalConfig: true });
+                                          });
+
+                                          describe('user opts into sms without a texting number', () => {
+                                            beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ st: true });
+                                            describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true, skipConfigCheck: true });
                                           });
 
                                           describe('user opts into emails', () => {
@@ -641,7 +697,7 @@ demoApiFunctionContextFactory((f) => {
 
                                         describe('user opt in tests', () => {
                                           describe('user opts into sms', () => {
-                                            beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ st: true });
+                                            beforeEachUpdateNotificationUserDefaultConfig({ t: '+12025550124', configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
                                             describeNotificationShouldBeSentToUser({ email: false, text: true, notificationSummary: true, checkDefaultConfig: true });
                                           });
 
@@ -742,7 +798,7 @@ demoApiFunctionContextFactory((f) => {
                                         }
 
                                         describe('user opts into sms', () => {
-                                          beforeEachUpdateNotificationUserGlobalConfig({ configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
+                                          beforeEachUpdateNotificationUserGlobalConfig({ t: '+12025550124', configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, st: true }] });
                                           describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: true, notificationSummary: true, checkGlobalConfig: true });
                                         });
 

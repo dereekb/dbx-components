@@ -1,16 +1,23 @@
 import { KnownNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus, type NotificationUser, type NotificationUserNotificationBoxRecipientConfig } from '@dereekb/firebase';
 import { NOTIFICATION_HEALTH_CHECK_INTERNAL } from './notification.healthcheck';
 
-const { notificationDeliveryMethodConfigIssues, collectDisabledMethodsForBoxRecipient } = NOTIFICATION_HEALTH_CHECK_INTERNAL;
+const { buildNotificationDeliveryMethodContexts, notificationDeliveryMethodConfigIssues, collectDisabledMethodsForBoxRecipient } = NOTIFICATION_HEALTH_CHECK_INTERNAL;
 
 const TEMPLATE_TYPE = 'test';
 
-function notificationUser(overrides: Partial<Pick<NotificationUser, 'gc' | 'dc' | 'bc'>> = {}): NotificationUser {
+function notificationUser(overrides: Partial<Pick<NotificationUser, 'gc' | 'dc' | 'bc' | 'tso'>> = {}): NotificationUser {
   return { uid: 'u', x: [], b: [], bc: [], gc: { c: {} }, dc: { c: {} }, ...overrides };
 }
 
-function methodContext(method: NotificationDeliveryMethod, target: unknown = 'target', sendServiceConfigured = true) {
-  return { method, label: method === NotificationDeliveryMethod.TEXT ? 'Text' : 'Email', sendServiceConfigured, target };
+interface MethodContextOverrides {
+  readonly target?: unknown;
+  readonly sendServiceConfigured?: boolean;
+  readonly targetStopped?: boolean;
+}
+
+function methodContext(method: NotificationDeliveryMethod, overrides: MethodContextOverrides = {}) {
+  const { target = 'target', sendServiceConfigured = true, targetStopped = false } = overrides;
+  return { method, label: method === NotificationDeliveryMethod.TEXT ? 'Text' : 'Email', sendServiceConfigured, target, targetStopped };
 }
 
 describe('notificationDeliveryMethodConfigIssues()', () => {
@@ -96,7 +103,7 @@ describe('notificationDeliveryMethodConfigIssues()', () => {
   describe('disabled delivery methods', () => {
     it('should report the method switched off globally before the missing destination', () => {
       const issues = notificationDeliveryMethodConfigIssues({
-        methodContext: methodContext(NotificationDeliveryMethod.TEXT, null),
+        methodContext: methodContext(NotificationDeliveryMethod.TEXT, { target: null }),
         notificationUser: notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { st: true } }, dm: [NotificationDeliveryMethod.TEXT] } }),
         notificationTemplateType: TEMPLATE_TYPE,
         explicitOptIn: undefined
@@ -170,19 +177,72 @@ describe('notificationDeliveryMethodConfigIssues()', () => {
     });
   });
 
+  describe('stopped texting number', () => {
+    it('should report an error when the texting number replied STOP', () => {
+      const issues = notificationDeliveryMethodConfigIssues({
+        methodContext: methodContext(NotificationDeliveryMethod.TEXT, { target: '+15555550100', targetStopped: true }),
+        notificationUser: notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { st: true } }, t: '+15555550100' }, tso: ['+15555550100'] }),
+        notificationTemplateType: TEMPLATE_TYPE,
+        explicitOptIn: undefined
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.TEXT_PHONE_NUMBER_STOPPED);
+      expect(issues[0].s).toBe(NotificationHealthCheckStatus.ERROR);
+      expect(issues[0].af).toBeUndefined();
+    });
+
+    it('should report the stopped number before the method switched off globally', () => {
+      const issues = notificationDeliveryMethodConfigIssues({
+        methodContext: methodContext(NotificationDeliveryMethod.TEXT, { target: '+15555550100', targetStopped: true }),
+        notificationUser: notificationUser({ gc: { c: {}, t: '+15555550100', dm: [NotificationDeliveryMethod.TEXT] }, tso: ['+15555550100'] }),
+        notificationTemplateType: TEMPLATE_TYPE,
+        explicitOptIn: undefined
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.TEXT_PHONE_NUMBER_STOPPED);
+    });
+  });
+
   it('should report a missing destination', () => {
-    const issues = notificationDeliveryMethodConfigIssues({ methodContext: methodContext(NotificationDeliveryMethod.TEXT, null), notificationUser: notificationUser(), notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined });
+    const issues = notificationDeliveryMethodConfigIssues({ methodContext: methodContext(NotificationDeliveryMethod.TEXT, { target: null }), notificationUser: notificationUser(), notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined });
 
     expect(issues).toHaveLength(1);
     expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET);
   });
 
   it('should only report the send service when it is not configured', () => {
-    const issues = notificationDeliveryMethodConfigIssues({ methodContext: methodContext(NotificationDeliveryMethod.TEXT, null, false), notificationUser: notificationUser(), notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined });
+    const issues = notificationDeliveryMethodConfigIssues({ methodContext: methodContext(NotificationDeliveryMethod.TEXT, { target: null, sendServiceConfigured: false }), notificationUser: notificationUser(), notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined });
 
     expect(issues).toHaveLength(1);
     expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_NOT_CONFIGURED);
     expect(issues[0].s).toBe(NotificationHealthCheckStatus.SKIPPED);
+  });
+});
+
+describe('buildNotificationDeliveryMethodContexts()', () => {
+  const notificationSendService = { textSendService: {} } as unknown as Parameters<typeof buildNotificationDeliveryMethodContexts>[0]['notificationSendService'];
+
+  function textContext(user: NotificationUser) {
+    return buildNotificationDeliveryMethodContexts({ notificationUser: user, notificationSendService, authEmail: 'auth@example.com', uid: 'u' }).find((x) => x.method === NotificationDeliveryMethod.TEXT);
+  }
+
+  it('should not use an auth phone number as the text target', () => {
+    const context = textContext(notificationUser());
+    expect(context?.target).toBeUndefined();
+    expect(context?.targetStopped).toBe(false);
+  });
+
+  it('should flag a stopped texting number', () => {
+    const context = textContext(notificationUser({ gc: { c: {}, t: '+15555550100' }, tso: ['+15555550100'] }));
+    expect(context?.target).toBe('+15555550100');
+    expect(context?.targetStopped).toBe(true);
+  });
+
+  it('should not flag a texting number that did not reply STOP', () => {
+    const context = textContext(notificationUser({ gc: { c: {}, t: '+15555550101' }, tso: ['+15555550100'] }));
+    expect(context?.targetStopped).toBe(false);
   });
 });
 

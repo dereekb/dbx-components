@@ -51,6 +51,7 @@ import {
   firestoreObjectArray,
   firestoreString,
   firestoreUID,
+  optionalFirestoreArray,
   optionalFirestoreBoolean,
   optionalFirestoreEnum,
   snapshotConverterFunctions,
@@ -214,6 +215,17 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * @dbxModelVariable healthCheck
    */
   hc?: Maybe<NotificationHealthCheck>;
+  /**
+   * Phone numbers that replied STOP to a text. Texts to a number in this list resolve to off, at send time and in the health check.
+   *
+   * Managed by the server — set only by the text opt-out sync (`applyNotificationUserTextOptOut`), which adds the number when it replies
+   * STOP and removes it when it replies START. Clients and admins can't edit it directly; only a START from that number turns its texts back on.
+   *
+   * An opt-out belongs to the number, not the user: saving a texting number (`gc.t`) another user already stopped adds it to this list too.
+   *
+   * @dbxModelVariable textStoppedPhoneNumbers
+   */
+  tso?: Maybe<E164PhoneNumber[]>;
 }
 
 export type NotificationUserRoles = 'sync' | GrantedUpdateRole | GrantedReadRole;
@@ -238,7 +250,8 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
       objectField: firestoreNotificationUserNotificationBoxRecipientConfig
     }),
     ns: optionalFirestoreBoolean(),
-    hc: optionalFirestoreNotificationHealthCheck
+    hc: optionalFirestoreNotificationHealthCheck,
+    tso: optionalFirestoreArray<E164PhoneNumber>({ filterUnique: true, dontStoreIfEmpty: true })
   }
 });
 

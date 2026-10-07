@@ -145,6 +145,49 @@ export class MyTwilioHandlers {
 }
 ```
 
+### Syncing STOP/START replies
+
+Twilio blocks every text to a number after it replies STOP (send error 21610), until that number texts START. Sync those replies back to the app so its notification settings match what Twilio will deliver. [`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/) provides `twilioNotificationTextOptOutHandler()`, which calls the `applyNotificationUserTextOptOut` notification server action:
+
+- STOP adds the number to `tso` on every `NotificationUser` whose texting number (`gc.t`) is that number. Texts to it then resolve to off at send time and in the health check, and the settings UI locks texts with a message on how to restart them.
+- START removes the number, and re-records text consent (`gc.tcat`) for the users that still text it.
+- HELP and other texts do nothing.
+
+Setup:
+
+1. Point the Messaging Service's (or number's) **"A message comes in"** webhook at your `/webhook/twilio/incoming` route.
+2. Advanced Opt-Out is recommended. Twilio then sends the matched keyword as the `OptOutType` parameter, which wins over the body. Without it, the body is matched against Twilio's default keywords (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT, REVOKE, OPTOUT / START, YES, UNSTOP / HELP, INFO). With custom keywords, pass `optOutTypeOnly: true` so only `OptOutType` is trusted.
+3. Never reply to keyword texts. Twilio already sends the confirmation.
+4. Opt-outs are tracked per Messaging Service or sender. A number that replied STOP to one sender can still receive texts from another.
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+import { TwilioWebhookService } from '@dereekb/nestjs/twilio';
+import { NotificationServerActions } from '@dereekb/firebase-server/model';
+import { twilioNotificationTextOptOutHandler } from '@dereekb/firebase-server/twilio';
+
+@Injectable()
+export class MyTwilioHandlers {
+  constructor(@Inject(TwilioWebhookService) twilioWebhookService: TwilioWebhookService, @Inject(NotificationServerActions) notificationServerActions: NotificationServerActions) {
+    const handleTextOptOut = twilioNotificationTextOptOutHandler({ notificationServerActions });
+
+    twilioWebhookService.configure(this, (handler) => {
+      handler.handleIncomingMessage(async ({ payload }) => {
+        const { optOutType } = await handleTextOptOut(payload);
+
+        if (optOutType == null) {
+          // handle any other text here
+        }
+      });
+    });
+  }
+}
+```
+
+The module that registers the handlers must import your notification module, so `NotificationServerActions` can be injected.
+
+Known limits: only the texting number (`gc.t`) is matched on STOP, not numbers on box entries, listed recipients or `dc.t` (Twilio still blocks those, and the send pipeline skips any number a loaded user stopped). STOPs from before the sync was set up, or from missed webhooks, are not backfilled; the Twilio health check still reports them from the message history.
+
 ### Sending notification texts
 
 [`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/) provides `twilioNotificationTextSendService()`, a `NotificationTextSendService` for the firebase-server notification pipeline. Provide it as the `textSendService` of your `NotificationSendService`, and fall back to `ignoreSendNotificationTextSendService()` when Twilio is not configured:
@@ -153,7 +196,7 @@ export class MyTwilioHandlers {
 const textSendService = isUsableTwilioServiceConfig(twilioService.twilioApi.config) ? twilioNotificationTextSendService({ twilioService }) : ignoreSendNotificationTextSendService();
 ```
 
-By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
+By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Texts only go to a saved texting number (`gc.t`, or a box entry, `dc.t` or listed recipient `t`), never the Firebase Auth phone number, and never to a number that replied STOP. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
 
 ### Delivery health check
 

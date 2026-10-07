@@ -104,7 +104,12 @@ import {
   type NotificationLoggedEventDayDocument,
   notificationExplicitOptInConfigForNotification,
   hasNotificationDeliveryMethodOptIn,
-  NotificationDeliveryMethod
+  NotificationDeliveryMethod,
+  NotificationUserTextOptOutType,
+  notificationUsersWithTextPhoneNumberQuery,
+  notificationUsersWithStoppedTextPhoneNumberQuery,
+  isNotificationUserTextPhoneNumberStopped,
+  type FirebaseAuthUserId
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -211,6 +216,32 @@ export interface NotificationUserHealthCheckServerConfigRef {
 export interface NotificationServerActionsContext extends BaseNotificationServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef, NotificationUserHealthCheckServerConfigRef {}
 
 /**
+ * Input for {@link NotificationServerActions.applyNotificationUserTextOptOut}.
+ */
+export interface ApplyNotificationUserTextOptOutParams {
+  /**
+   * The phone number that replied.
+   */
+  readonly phoneNumber: E164PhoneNumber;
+  /**
+   * Whether the number replied STOP or START.
+   */
+  readonly type: NotificationUserTextOptOutType;
+}
+
+/**
+ * Result of {@link NotificationServerActions.applyNotificationUserTextOptOut}.
+ */
+export interface ApplyNotificationUserTextOptOutResult {
+  readonly phoneNumber: E164PhoneNumber;
+  readonly type: NotificationUserTextOptOutType;
+  /**
+   * The NotificationUsers the reply was applied to.
+   */
+  readonly notificationUserIds: FirebaseAuthUserId[];
+}
+
+/**
  * Abstract service class defining all server-side notification CRUD and delivery actions.
  *
  * This is the central API surface for the notification system's backend. It provides:
@@ -230,6 +261,7 @@ export abstract class NotificationServerActions {
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
   abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
   abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
+  abstract applyNotificationUserTextOptOut(params: ApplyNotificationUserTextOptOutParams): Promise<ApplyNotificationUserTextOptOutResult>;
   abstract notificationUserHealthCheck(params: NotificationUserHealthCheckParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckResult>>>;
   abstract notificationUserHealthCheckAutofix(params: NotificationUserHealthCheckAutofixParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckAutofixParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckAutofixResult>>>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
@@ -263,6 +295,7 @@ export function notificationServerActions(context: NotificationServerActionsCont
     updateNotificationUser: updateNotificationUserFactory(context),
     resyncNotificationUser: resyncNotificationUserFactory(context),
     resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
+    applyNotificationUserTextOptOut: applyNotificationUserTextOptOutFactory(context),
     notificationUserHealthCheck: notificationUserHealthCheckFactory(context),
     notificationUserHealthCheckAutofix: notificationUserHealthCheckAutofixFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
@@ -339,6 +372,9 @@ export function createNotificationUserFactory(context: NotificationServerActions
  *
  * Records SMS consent (`gc.tcat`) when the global config first opts in to text messages. See {@link hasNotificationDeliveryMethodOptIn}.
  *
+ * The stopped numbers (`tso`) are server-managed and never read from the params. An opt-out belongs to the number, so when the texting
+ * number (`gc.t`) changes to a number another NotificationUser already stopped, it is added to this user's `tso` too.
+ *
  * Box config changes are flagged for sync (`ns`) and reach their NotificationBoxes on the next resync. When `resync` is set and the update
  * leaves configs flagged, the user's resync runs right after the update (see {@link resyncNotificationUserDocumentFactory}). That sync is
  * best-effort: a failure is logged and the configs stay flagged for the next resync.
@@ -355,6 +391,10 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
     return async (notificationUserDocument: NotificationUserDocument) => {
       let needsSync = false;
+
+      // an opt-out belongs to the number, so check whether the new texting number was already stopped by another user
+      const inputTextPhoneNumber = inputGc?.t;
+      const inputTextPhoneNumberIsStopped = inputTextPhoneNumber != null && (await notificationUserCollection.queryDocument(notificationUsersWithStoppedTextPhoneNumberQuery(inputTextPhoneNumber)).getFirstDoc()) != null;
 
       await firestoreContext.runTransaction(async (transaction) => {
         const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
@@ -378,6 +418,11 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
           if (!areEqualPOJOValues(notificationUser.gc, nextGc)) {
             updateTemplate.gc = nextGc;
+
+            // inherit the stop when the texting number changes to a number another user stopped
+            if (inputTextPhoneNumberIsStopped && nextGc.t === inputTextPhoneNumber && notificationUser.gc.t !== inputTextPhoneNumber && !isNotificationUserTextPhoneNumberStopped(notificationUser, inputTextPhoneNumber)) {
+              updateTemplate.tso = [...(notificationUser.tso ?? []), inputTextPhoneNumber];
+            }
 
             // gc is applied live at send time, so only a lock change needs to be synced to the boxes
             if (Boolean(notificationUser.gc.lk) !== Boolean(nextGc.lk)) {
@@ -672,6 +717,62 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
     const result: ResyncAllNotificationUsersResult = {
       notificationUsersResynced: iterateResult.totalSnapshotsVisited,
       notificationBoxesUpdated
+    };
+
+    return result;
+  };
+}
+
+/**
+ * Factory for the `applyNotificationUserTextOptOut` action.
+ *
+ * Syncs a STOP or START reply to a text back to the {@link NotificationUser}s it came from. See `NotificationUser.tso`.
+ * - STOP: adds the number to `tso` on every NotificationUser whose texting number (`gc.t`) is that number. Idempotent.
+ * - START: removes the number from `tso` on every NotificationUser that stopped it, and re-records text consent (`gc.tcat`) for those
+ *   whose texting number is still that number.
+ *
+ * @param context - The notification server actions context with Firestore and collection access.
+ * @returns An async function that applies the reply and returns the ids of the NotificationUsers it was applied to.
+ */
+export function applyNotificationUserTextOptOutFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, notificationUserCollection } = context;
+
+  return async (params: ApplyNotificationUserTextOptOutParams): Promise<ApplyNotificationUserTextOptOutResult> => {
+    const { phoneNumber, type } = params;
+    let notificationUserIds: FirebaseAuthUserId[];
+
+    if (type === NotificationUserTextOptOutType.STOP) {
+      const notificationUserDocuments = await notificationUserCollection.queryDocument(notificationUsersWithTextPhoneNumberQuery(phoneNumber)).getDocs();
+
+      await performAsyncTasks(notificationUserDocuments, (notificationUserDocument) => notificationUserDocument.arrayUpdate({ union: { tso: [phoneNumber] } }), { maxParallelTasks: 10, throwError: true });
+      notificationUserIds = notificationUserDocuments.map((x) => x.id);
+    } else {
+      const notificationUserDocuments = await notificationUserCollection.queryDocument(notificationUsersWithStoppedTextPhoneNumberQuery(phoneNumber)).getDocs();
+
+      await performAsyncTasks(
+        notificationUserDocuments,
+        (notificationUserDocument) =>
+          firestoreContext.runTransaction(async (transaction) => {
+            const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
+            const notificationUser = await assertSnapshotData(notificationUserDocumentInTransaction);
+
+            await notificationUserDocumentInTransaction.arrayUpdate({ remove: { tso: [phoneNumber] } });
+
+            // the number opted back in, so re-record consent for the users that still text it
+            if (notificationUser.gc.t === phoneNumber) {
+              await notificationUserDocumentInTransaction.update({ gc: { ...notificationUser.gc, tcat: new Date() } });
+            }
+          }),
+        { maxParallelTasks: 10, throwError: true }
+      );
+
+      notificationUserIds = notificationUserDocuments.map((x) => x.id);
+    }
+
+    const result: ApplyNotificationUserTextOptOutResult = {
+      phoneNumber,
+      type,
+      notificationUserIds
     };
 
     return result;

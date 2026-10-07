@@ -11,7 +11,8 @@ import {
   NotificationUidRecipientSuppression,
   resolveNotificationUidRecipientDelivery,
   updateNotificationUserNotificationSendExclusions,
-  notificationSendExclusionCanSendFunction
+  notificationSendExclusionCanSendFunction,
+  isNotificationUserTextPhoneNumberStopped
 } from './notification.util';
 
 describe('updateNotificationUserNotificationSendExclusions()', () => {
@@ -226,7 +227,7 @@ describe('resolveNotificationUidRecipientDelivery()', () => {
   const notificationTemplateType = 'T';
   const notificationBoxId = 'p_1';
 
-  function notificationUser(input: Partial<Pick<NotificationUser, 'gc' | 'dc' | 'x'>>): Pick<NotificationUser, 'gc' | 'dc' | 'x'> {
+  function notificationUser(input: Partial<Pick<NotificationUser, 'gc' | 'dc' | 'x' | 'tso'>>): Pick<NotificationUser, 'gc' | 'dc' | 'x' | 'tso'> {
     return { gc: { c: {} }, dc: { c: {} }, x: [], ...input };
   }
 
@@ -401,7 +402,7 @@ describe('resolveNotificationUidRecipientDelivery()', () => {
     it('should use the default config overrides in direct scope', () => {
       const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, notificationUser: notificationUser({ dc: { c: {}, e: 'dc@example.com' } }), listedRecipient: { uid: 'u', e: 'listed@example.com' }, authDetails });
       expect(result.emailAddress).toBe('dc@example.com');
-      expect(result.phoneNumber).toBe(authDetails.phoneNumber);
+      expect(result.phoneNumber).toBeUndefined();
     });
 
     it('should use the box entry overrides in box scope', () => {
@@ -417,5 +418,51 @@ describe('resolveNotificationUidRecipientDelivery()', () => {
       expect(auth.emailAddress).toBe(authDetails.email);
       expect(auth.name).toBe(authDetails.displayName);
     });
+
+    it('should not fall back to the auth phone number', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, notificationUser: notificationUser({}), listedRecipient: { uid: 'u' }, authDetails });
+      expect(result.phoneNumber).toBeUndefined();
+    });
+  });
+
+  describe('stopped phone number', () => {
+    const stoppedPhoneNumber = '+15555550100';
+    const otherPhoneNumber = '+15555550101';
+
+    it('should turn the text off when the texting number replied STOP', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { st: true } }, t: stoppedPhoneNumber }, tso: [stoppedPhoneNumber] }), boxRecipient: boxRecipient() });
+
+      expect(result.phoneNumber).toBe(stoppedPhoneNumber);
+      expect(result.decisions[NotificationDeliveryMethod.TEXT]).toEqual({ send: false, source: NotificationDeliveryMethodDecisionSource.STOPPED_PHONE_NUMBER });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].send).toBe(true);
+    });
+
+    it('should still text a number that did not reply STOP', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { st: true } }, t: otherPhoneNumber }, tso: [stoppedPhoneNumber] }), boxRecipient: boxRecipient() });
+
+      expect(result.phoneNumber).toBe(otherPhoneNumber);
+      expect(result.decisions[NotificationDeliveryMethod.TEXT].send).toBe(true);
+    });
+
+    it('should keep the original decision when the text was already off', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { st: true } }, t: stoppedPhoneNumber, dm: [NotificationDeliveryMethod.TEXT] }, tso: [stoppedPhoneNumber] }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.TEXT]).toEqual({ send: false, source: NotificationDeliveryMethodDecisionSource.DISABLED_METHOD });
+    });
+  });
+});
+
+describe('isNotificationUserTextPhoneNumberStopped()', () => {
+  it('should return true for a stopped number', () => {
+    expect(isNotificationUserTextPhoneNumberStopped({ tso: ['+15555550100'] }, '+15555550100')).toBe(true);
+  });
+
+  it('should return false for a number that is not stopped', () => {
+    expect(isNotificationUserTextPhoneNumberStopped({ tso: ['+15555550100'] }, '+15555550101')).toBe(false);
+  });
+
+  it('should return false when no number or user is provided', () => {
+    expect(isNotificationUserTextPhoneNumberStopped({ tso: ['+15555550100'] }, undefined)).toBe(false);
+    expect(isNotificationUserTextPhoneNumberStopped(undefined, '+15555550100')).toBe(false);
+    expect(isNotificationUserTextPhoneNumberStopped({}, '+15555550100')).toBe(false);
   });
 });

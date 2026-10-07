@@ -18,6 +18,7 @@ import {
   type NotificationRecipient,
   type NotificationRecipientWithConfig,
   NotificationDeliveryMethod,
+  NotificationDeliveryMethodDecisionSource,
   resolveNotificationDeliveryMethodDecisions
 } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
@@ -25,6 +26,31 @@ import { type FirebaseAuthDetails, type FirebaseAuthUserId, type FirestoreDocume
 import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion, type NotificationTemplateType } from './notification.id';
 
 // MARK: NotificationUser
+/**
+ * A STOP or START reply to a text, synced back to the NotificationUsers whose texting number sent it. See `NotificationUser.tso`.
+ */
+export enum NotificationUserTextOptOutType {
+  /**
+   * The number replied STOP. Texts to it are off until it replies START.
+   */
+  STOP = 'stop',
+  /**
+   * The number replied START. Texts to it are back on, and its text consent is re-recorded.
+   */
+  START = 'start'
+}
+
+/**
+ * Returns true if the phone number replied STOP, so texts to it are off. See `NotificationUser.tso`.
+ *
+ * @param notificationUser - The NotificationUser whose stopped numbers to check.
+ * @param phoneNumber - The phone number to check.
+ * @returns True if the number is in the user's stopped numbers.
+ */
+export function isNotificationUserTextPhoneNumberStopped(notificationUser: Maybe<Pick<NotificationUser, 'tso'>>, phoneNumber: Maybe<E164PhoneNumber>): boolean {
+  return phoneNumber != null && (notificationUser?.tso?.includes(phoneNumber) ?? false);
+}
+
 /**
  * Input for computing the effective {@link NotificationBoxRecipient} from the recipient entry and the user's per-box config.
  */
@@ -148,7 +174,7 @@ export interface ResolveNotificationUidRecipientDeliveryInput {
   /**
    * The recipient's NotificationUser, if one exists.
    */
-  readonly notificationUser?: Maybe<Pick<NotificationUser, 'gc' | 'dc' | 'x'>>;
+  readonly notificationUser?: Maybe<Pick<NotificationUser, 'gc' | 'dc' | 'x' | 'tso'>>;
   /**
    * The notification's box, used to apply the user's box exclusions (`x`).
    */
@@ -162,7 +188,7 @@ export interface ResolveNotificationUidRecipientDeliveryInput {
    */
   readonly listedRecipient?: Maybe<NotificationRecipientWithConfig>;
   /**
-   * The recipient's auth details, used as the final contact fallback.
+   * The recipient's auth details. Its email is the final email fallback. Its phone number is never used, since texts only go to a saved texting number.
    */
   readonly authDetails?: Maybe<Pick<FirebaseAuthDetails, 'email' | 'phoneNumber' | 'displayName'>>;
 }
@@ -182,7 +208,7 @@ export interface NotificationUidRecipientDelivery {
    */
   readonly emailAddress?: Maybe<EmailAddress>;
   /**
-   * The resolved text/SMS phone number. Undefined when no override is configured and no auth details were provided.
+   * The resolved text/SMS phone number. Undefined when no config level sets one, since the auth phone number is never used.
    */
   readonly phoneNumber?: Maybe<E164PhoneNumber>;
   readonly name?: Maybe<string>;
@@ -197,8 +223,11 @@ export interface NotificationUidRecipientDelivery {
  * 2. Disabled methods — `gc.dm` (unioned with `dc.dm` in direct scope). The method is off, regardless of configs and opt-in defaults.
  * 3. Configs, highest priority first, each made effective first — box scope: `[gc.c[T], entry.c[T], listed]`. Direct scope: `[gc.c[T], dc.c[T], listed]`.
  * 4. Defaults — see {@link isNotificationDeliveryMethodEnabledByDefault}.
+ * 5. Stopped number — a text that would be sent is off ({@link NotificationDeliveryMethodDecisionSource.STOPPED_PHONE_NUMBER}) when the
+ *    resolved phone number replied STOP. See {@link isNotificationUserTextPhoneNumberStopped}.
  *
- * Contact details resolve as `gc.e ?? (entry.e | dc.e) ?? listed.e ?? auth email`, and the same for the phone number via `t`.
+ * Contact details resolve as `gc.e ?? (entry.e | dc.e) ?? listed.e ?? auth email`. The phone number resolves as `gc.t ?? (entry.t | dc.t) ?? listed.t`,
+ * and never falls back to the auth phone number.
  *
  * @param input - The recipient's NotificationUser, box entry, listed config and the notification's template type and opt-in rules.
  * @returns The scope, suppression, per-method decisions and contact details.
@@ -225,19 +254,23 @@ export function resolveNotificationUidRecipientDelivery(input: ResolveNotificati
 
   const disabledDeliveryMethods = isBoxScope ? gc?.dm : [...(gc?.dm ?? []), ...(dc?.dm ?? [])];
 
-  const decisions = resolveNotificationDeliveryMethodDecisions({
+  const resolvedDecisions = resolveNotificationDeliveryMethodDecisions({
     configs: [gc?.c?.[notificationTemplateType], scopeConfig?.c?.[notificationTemplateType], listedRecipient],
     disabledDeliveryMethods,
     explicitOptIn,
     suppressed: suppression != null
   });
 
+  const phoneNumber = gc?.t ?? scopeConfig?.t ?? listedRecipient?.t;
+  const isTextStopped = resolvedDecisions[NotificationDeliveryMethod.TEXT].send && isNotificationUserTextPhoneNumberStopped(notificationUser, phoneNumber);
+  const decisions = isTextStopped ? { ...resolvedDecisions, [NotificationDeliveryMethod.TEXT]: { send: false, source: NotificationDeliveryMethodDecisionSource.STOPPED_PHONE_NUMBER } } : resolvedDecisions;
+
   return {
     scope,
     suppression,
     decisions,
     emailAddress: gc?.e ?? scopeConfig?.e ?? listedRecipient?.e ?? (authDetails?.email as Maybe<EmailAddress>),
-    phoneNumber: gc?.t ?? scopeConfig?.t ?? listedRecipient?.t ?? (authDetails?.phoneNumber as Maybe<E164PhoneNumber>),
+    phoneNumber,
     name: authDetails?.displayName || boxRecipient?.n || listedRecipient?.n
   };
 }

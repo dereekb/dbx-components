@@ -127,6 +127,12 @@ export enum KnownNotificationHealthCheckIssueCode {
    */
   RECIPIENT_DISABLED = 'recipientDisabled',
   /**
+   * The user's texting number replied STOP, so texts to it are off until it replies START. See `NotificationUser.tso`.
+   *
+   * Distinct from {@link KnownNotificationHealthCheckIssueCode.RECIPIENT_OPTED_OUT}, which means the user opted out of every notification.
+   */
+  TEXT_PHONE_NUMBER_STOPPED = 'textPhoneNumberStopped',
+  /**
    * This delivery method is switched off by the user's global or default configuration.
    */
   METHOD_DISABLED_GLOBALLY = 'methodDisabledGlobally',

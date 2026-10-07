@@ -514,6 +514,125 @@
       "derivedFieldOverrides": []
     },
     {
+      "slug": "notification-users-with-text-phone-number-query",
+      "name": "notificationUsersWithTextPhoneNumberQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationUsersWithTextPhoneNumberQuery(phoneNumber: E164PhoneNumber): FirestoreQueryConstraint[]",
+      "description": "Query constraints for finding {@link NotificationUser} documents whose texting number (`gc.t`) is the given phone number.\n\nUsed by the text opt-out sync to find the users a STOP reply came from.",
+      "model": "NotificationUser",
+      "collection": "nu",
+      "isNested": false,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "lookup",
+      "params": [
+        {
+          "name": "phoneNumber",
+          "type": "E164PhoneNumber",
+          "description": "- The texting number to match.",
+          "optional": false
+        }
+      ],
+      "returns": "Array of Firestore query constraints filtering for users with that texting number.",
+      "tags": [
+        "lookup",
+        "notificationuser",
+        "notification",
+        "users",
+        "with",
+        "text",
+        "phone",
+        "number",
+        "query",
+        "notificationuserswithtextphonenumberquery",
+        "user",
+        "constraints",
+        "finding",
+        "link",
+        "documents",
+        "whose",
+        "texting",
+        "given",
+        "used"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "gc.t",
+              "operator": "=="
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
+      "slug": "notification-users-with-stopped-text-phone-number-query",
+      "name": "notificationUsersWithStoppedTextPhoneNumberQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationUsersWithStoppedTextPhoneNumberQuery(phoneNumber: E164PhoneNumber): FirestoreQueryConstraint[]",
+      "description": "Query constraints for finding {@link NotificationUser} documents that have the given phone number in their stopped numbers (`tso`).\n\nUsed by the text opt-out sync to find the users a START reply turns texts back on for.",
+      "model": "NotificationUser",
+      "collection": "nu",
+      "isNested": false,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "lookup",
+      "params": [
+        {
+          "name": "phoneNumber",
+          "type": "E164PhoneNumber",
+          "description": "- The stopped phone number to match.",
+          "optional": false
+        }
+      ],
+      "returns": "Array of Firestore query constraints filtering for users that stopped that number.",
+      "tags": [
+        "lookup",
+        "notificationuser",
+        "notification",
+        "users",
+        "with",
+        "stopped",
+        "text",
+        "phone",
+        "number",
+        "query",
+        "notificationuserswithstoppedtextphonenumberquery",
+        "user",
+        "constraints",
+        "finding",
+        "link",
+        "documents",
+        "have",
+        "given",
+        "their",
+        "numbers"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "tso",
+              "operator": "array-contains"
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
       "slug": "notification-summaries-flagged-for-needs-initialization-query",
       "name": "notificationSummariesFlaggedForNeedsInitializationQuery",
       "module": "@dereekb/firebase",

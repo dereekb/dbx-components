@@ -1,5 +1,6 @@
 import { type Maybe, type Handler, type HandlerBindAccessor, type HandlerMappedSetFunction, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
-import { type TwilioAccountSid, type TwilioMessageSid, type TwilioMessageStatus, type TwilioPhoneNumber } from '../twilio.type';
+import { type TwilioAccountSid, type TwilioMessageSid, type TwilioMessageStatus, type TwilioMessagingServiceSid, type TwilioPhoneNumber } from '../twilio.type';
+import { type TwilioOptOutType } from './webhook.twilio.optout';
 
 /**
  * Twilio webhook event type.
@@ -43,6 +44,15 @@ export interface TwilioIncomingMessagePayload {
   readonly FromState?: Maybe<string>;
   readonly FromZip?: Maybe<string>;
   readonly FromCountry?: Maybe<string>;
+  /**
+   * The Messaging Service the message was sent to, if it was sent to one.
+   */
+  readonly MessagingServiceSid?: Maybe<TwilioMessagingServiceSid>;
+  /**
+   * The opt-out keyword type Twilio matched the message to, if any. Only sent for messages to a Messaging Service, or to a number with
+   * Advanced Opt-Out. See {@link twilioIncomingMessageOptOutType}, which also matches the default keywords when it is absent.
+   */
+  readonly OptOutType?: Maybe<TwilioOptOutType>;
   /**
    * Resolved MediaUrl0..MediaUrlN entries, ordered by index. Empty array when no media.
    */

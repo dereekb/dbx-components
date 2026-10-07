@@ -203,8 +203,8 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
    * Where each method delivers to now, read live from the document, so it follows a contact change made after the stored check
    * was run. A test message is sent to this destination, since the server resolves it again on every run.
    *
-   * Resolved like the server: the override on the global config (`gc.e` / `gc.t`), otherwise the contact on the user's auth
-   * record, which is only known here when the NotificationUser is the signed-in user's own. A method whose destination cannot
+   * Resolved like the server: the override on the global config (`gc.e` / `gc.t`), otherwise the email on the user's auth
+   * record, which is only known here when the NotificationUser is the signed-in user's own. Texts only go to `gc.t`. A method whose destination cannot
    * be known here is absent, and a method known to have no destination is null. Only email and text are resolved, since only
    * they deliver to a contact the user can change.
    */
@@ -218,8 +218,9 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
         targets[NotificationDeliveryMethod.EMAIL] = gc.e ?? authUser?.email ?? null;
       }
 
+      // texts never fall back to the auth phone number
       if (gc.t != null || isOwnNotificationUser) {
-        targets[NotificationDeliveryMethod.TEXT] = gc.t ?? authUser?.phoneNumber ?? null;
+        targets[NotificationDeliveryMethod.TEXT] = gc.t ?? null;
       }
 
       return targets;

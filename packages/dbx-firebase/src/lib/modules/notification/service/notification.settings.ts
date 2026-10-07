@@ -37,6 +37,11 @@ import { compareNotificationTemplateTypeInfoGroups, type DbxFirebaseNotification
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE = 'Message and data rates may apply. Message frequency varies. Reply STOP to opt out, HELP for help.';
 
 /**
+ * Default message shown while texts are locked because the texting number replied STOP.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE = 'Your texting number replied STOP, so text messages are off. Reply START to any of our texts to turn them back on, or save a different number.';
+
+/**
  * Delivery methods that get an account-wide on/off switch by default.
  */
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS: NotificationDeliveryMethod[] = [NotificationDeliveryMethod.TEXT];
@@ -96,6 +101,10 @@ export abstract class DbxFirebaseNotificationUserSettingsConfig {
    * Disclosure shown beside the text message settings. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE}.
    */
   abstract readonly textMessageDisclosure?: Maybe<string>;
+  /**
+   * Message shown while texts are locked because the texting number replied STOP. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE}.
+   */
+  abstract readonly textStoppedMessage?: Maybe<string>;
   /**
    * Preferred countries for the phone number field, e.g. `['US', 'CA']`.
    */

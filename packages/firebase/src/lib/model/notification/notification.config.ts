@@ -16,13 +16,15 @@
  *    - direct recipients (listed, without an active box entry): {@link NotificationUser.gc} → {@link NotificationUser.dc} → the listed recipient
  * 4. Defaults — email, push and in-app summaries are sent unless `onlySendToExplicitlyEnabledRecipients`; texts are only sent when
  *    `onlyTextExplicitlyEnabledRecipients` is false. See {@link isNotificationDeliveryMethodEnabledByDefault}.
+ * 5. Stopped number — a text that would be sent is off when the resolved phone number replied STOP (it is in `NotificationUser.tso`).
  *
  * Note that the global config (`gc`) is an override, not a default: a method `gc` sets for a template type beats the box entry's setting for it,
  * in every box. Only a box opt-out (an inactive box entry, whose `f` is set) beats `gc.c`, since the entry is skipped entirely. Apps should keep
  * per-type settings in one place, either `gc.c` with a per-box on/off switch, or the box entries with `gc.c` left unset. See `NotificationUser.gc`.
  *
  * The global config (`gc`) is applied live at send time and is never copied into the boxes, except for its lock flag (`lk`).
- * Contact details resolve as `gc.e ?? (box entry | dc).e ?? listed.e ?? auth email`, and the same for the phone number via `t`.
+ * Contact details resolve as `gc.e ?? (box entry | dc).e ?? listed.e ?? auth email`. The phone number resolves the same way via `t`, but
+ * never falls back to the auth phone number: texts only go to a saved texting number.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
  */
 import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, type IndexNumber, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, KeyValueTypleValueFilter, mergeObjects, filterUndefinedValues, type Building } from '@dereekb/util';
@@ -279,7 +281,12 @@ export enum NotificationDeliveryMethodDecisionSource {
   /**
    * No config level set the method, so the template's opt-in default decided it.
    */
-  DEFAULT = 'default'
+  DEFAULT = 'default',
+  /**
+   * The text would be sent, but the resolved phone number replied STOP (see `NotificationUser.tso`), so texts are off. Only applies to
+   * {@link NotificationDeliveryMethod.TEXT}.
+   */
+  STOPPED_PHONE_NUMBER = 'stopped_phone_number'
 }
 
 /**

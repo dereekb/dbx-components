@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ComponentStore } from '@ngrx/component-store';
 import {
   isNotificationDeliveryMethodDisabled,
+  isNotificationUserTextPhoneNumberStopped,
   type NotificationBoxId,
   NotificationBoxRecipientFlag,
   type NotificationBoxRecipientTemplateConfigRecord,
@@ -24,6 +25,7 @@ import {
   DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE,
   type DbxFirebaseNotificationBoxSettingsMode,
   type DbxFirebaseNotificationSettingsCellEdits,
   dbxFirebaseNotificationSettingsCellStates,
@@ -90,6 +92,11 @@ export interface DbxFirebaseNotificationUserSettingsDeliveryMethodSwitch {
    * Whether the switch was turned on but waits for a phone number to be saved before the method is turned on. Only set for texts.
    */
   readonly awaitingPhoneNumber: boolean;
+  /**
+   * Whether the switch can't be changed, because the texting number replied STOP. Only a START from that number, or saving a different
+   * number, turns texts back on. Only set for texts.
+   */
+  readonly locked: boolean;
 }
 
 /**
@@ -195,7 +202,7 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
 
   constructor() {
     super(INITIAL_STATE);
-    this._dropSavedEdits(this.select({ gc: this.savedGc$, c: this.savedTemplateConfigs$ }));
+    this._dropSavedEdits(this.select({ gc: this.savedGc$, c: this.savedTemplateConfigs$, textStopped: this.textPhoneNumberStopped$ }));
     this._dropSavedBoxEnabledEdit(this.savedTargetBoxConfig$);
     this._clearCellEditsOnTargetChange(this.notificationBoxId$);
     this._clearBoxEnabledEditOnTargetChange(this.select(this.notificationBoxTarget$, (target) => target?.notificationBoxId));
@@ -217,6 +224,7 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   readonly columns$ = this.select(this.config$, (config) => dbxFirebaseNotificationSettingsDeliveryMethods(config));
   readonly switchableDeliveryMethods$ = this.select(this.config$, (config) => config.switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS);
   readonly textMessageDisclosure$ = this.select(this.config$, (config) => config.textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
+  readonly textStoppedMessage$ = this.select(this.config$, (config) => config.textStoppedMessage ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE);
 
   /**
    * Where the per-type settings live. See {@link DbxFirebaseNotificationBoxSettingsMode}.
@@ -380,6 +388,12 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   readonly canEnableText$ = this.select(this.textPhoneNumber$, (textPhoneNumber) => textPhoneNumber != null);
 
   /**
+   * Whether the phone number for texts replied STOP (it is in `tso`). Texts are then locked off: only a START from that number, or saving a
+   * different number, turns them back on.
+   */
+  readonly textPhoneNumberStopped$ = this.select(this.notificationUser$, (notificationUser) => isNotificationUserTextPhoneNumberStopped(notificationUser, notificationUser?.gc.t));
+
+  /**
    * Whether the text switch was turned on without a saved phone number for texts, and waits for one to be saved.
    */
   readonly awaitingTextPhoneNumber$ = this.select(
@@ -390,9 +404,9 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
 
   /**
    * When the user consented to receiving texts. Only set while texts are allowed account-wide in the saved settings, even if
-   * every notification type blocks texts.
+   * every notification type blocks texts, and hidden while the phone number for texts is stopped.
    */
-  readonly textConsentAt$ = this.select(this.savedGc$, (gc) => (gc?.t != null && !isNotificationDeliveryMethodDisabled(gc, NotificationDeliveryMethod.TEXT) ? gc.tcat : undefined));
+  readonly textConsentAt$ = this.select(this.savedGc$, this.textPhoneNumberStopped$, (gc, textStopped) => (gc?.t != null && !textStopped && !isNotificationDeliveryMethodDisabled(gc, NotificationDeliveryMethod.TEXT) ? gc.tcat : undefined));
 
   /**
    * The account phone number to suggest for texts. Only the signed-in user's own phone number is known, so it is only set
@@ -417,17 +431,19 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   /**
    * Account-wide disabled delivery methods once the pending changes are saved.
    *
-   * Texts are only turned on by saving a phone number for texts, so text switch changes are ignored until one is saved.
+   * Texts are only turned on by saving a phone number for texts, so text switch changes are ignored until one is saved. They are also
+   * ignored while the phone number for texts is stopped.
    */
   readonly nextDisabledDeliveryMethods$ = this.select(
     this.savedDisabledDeliveryMethods$,
     this.select((state) => state.methodEdits),
     this.canEnableText$,
-    (savedDisabled, methodEdits, canEnableText) => {
+    this.textPhoneNumberStopped$,
+    (savedDisabled, methodEdits, canEnableText, textStopped) => {
       const disabled = new Set(savedDisabled);
 
       (Object.entries(methodEdits) as [NotificationDeliveryMethod, boolean][]).forEach(([method, enabled]) => {
-        if (method !== NotificationDeliveryMethod.TEXT || canEnableText) {
+        if (method !== NotificationDeliveryMethod.TEXT || (canEnableText && !textStopped)) {
           if (enabled) {
             disabled.delete(method);
           } else {
@@ -441,33 +457,42 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   );
 
   /**
-   * Account-wide disabled delivery methods as shown, including pending changes. Texts show as off until a phone number for texts is saved.
+   * Account-wide disabled delivery methods as shown, including pending changes. Texts show as off until a phone number for texts is saved,
+   * and while it is stopped.
    */
-  readonly disabledDeliveryMethods$ = this.select(this.nextDisabledDeliveryMethods$, this.canEnableText$, (nextDisabled, canEnableText) => (canEnableText ? nextDisabled : toCanonicalNotificationDeliveryMethods([...nextDisabled, NotificationDeliveryMethod.TEXT])));
+  readonly disabledDeliveryMethods$ = this.select(this.nextDisabledDeliveryMethods$, this.canEnableText$, this.textPhoneNumberStopped$, (nextDisabled, canEnableText, textStopped) =>
+    canEnableText && !textStopped ? nextDisabled : toCanonicalNotificationDeliveryMethods([...nextDisabled, NotificationDeliveryMethod.TEXT])
+  );
 
   readonly deliveryMethodSwitches$: Observable<DbxFirebaseNotificationUserSettingsDeliveryMethodSwitch[]> = this.select(
-    this.select({ methods: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, nextDisabled: this.nextDisabledDeliveryMethods$, savedDisabled: this.savedDisabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$ }),
-    ({ methods, disabled, nextDisabled, savedDisabled, awaitingTextPhoneNumber }) =>
+    this.select({ methods: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, nextDisabled: this.nextDisabledDeliveryMethods$, savedDisabled: this.savedDisabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$, textStopped: this.textPhoneNumberStopped$ }),
+    ({ methods, disabled, nextDisabled, savedDisabled, awaitingTextPhoneNumber, textStopped }) =>
       methods.map((method) => {
-        const awaitingPhoneNumber = method === NotificationDeliveryMethod.TEXT && awaitingTextPhoneNumber;
+        const isText = method === NotificationDeliveryMethod.TEXT;
+        const awaitingPhoneNumber = isText && awaitingTextPhoneNumber;
 
         return {
           method,
           enabled: awaitingPhoneNumber || !disabled.includes(method),
           modified: nextDisabled.includes(method) !== savedDisabled.includes(method),
-          awaitingPhoneNumber
+          awaitingPhoneNumber,
+          locked: isText && textStopped
         };
       })
   );
 
   /**
    * Whether the phone number for texts shows. It shows while the text switch is on, including while it waits for a phone
-   * number, and always when texts have no switch, since saving a phone number is then the only way to turn texts on.
+   * number, and always when texts have no switch, since saving a phone number is then the only way to turn texts on. It also
+   * stays open while the phone number is stopped, so a different number can be saved.
    */
-  readonly textPhoneNumberFormOpen$ = this.select(this.select({ columns: this.columns$, switchable: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$ }), ({ columns, switchable, disabled, awaitingTextPhoneNumber }) => {
-    const textSwitchOn = awaitingTextPhoneNumber || !disabled.includes(NotificationDeliveryMethod.TEXT);
-    return columns.includes(NotificationDeliveryMethod.TEXT) && (!switchable.includes(NotificationDeliveryMethod.TEXT) || textSwitchOn);
-  });
+  readonly textPhoneNumberFormOpen$ = this.select(
+    this.select({ columns: this.columns$, switchable: this.switchableDeliveryMethods$, disabled: this.disabledDeliveryMethods$, awaitingTextPhoneNumber: this.awaitingTextPhoneNumber$, textStopped: this.textPhoneNumberStopped$ }),
+    ({ columns, switchable, disabled, awaitingTextPhoneNumber, textStopped }) => {
+      const textSwitchOn = awaitingTextPhoneNumber || textStopped || !disabled.includes(NotificationDeliveryMethod.TEXT);
+      return columns.includes(NotificationDeliveryMethod.TEXT) && (!switchable.includes(NotificationDeliveryMethod.TEXT) || textSwitchOn);
+    }
+  );
 
   // MARK: Cells
   readonly cellStates$ = this.select(
@@ -549,10 +574,10 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
    * Drops the pending edits the saved config already has. Cell edits are compared with the template configs the cells edit, and switch
    * edits with `gc`.
    */
-  private readonly _dropSavedEdits = this.updater((state, saved: { readonly gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>; readonly c: Maybe<NotificationBoxRecipientTemplateConfigRecord> }) => ({
+  private readonly _dropSavedEdits = this.updater((state, saved: { readonly gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>; readonly c: Maybe<NotificationBoxRecipientTemplateConfigRecord>; readonly textStopped: boolean }) => ({
     ...state,
     cellEdits: unsavedCellEdits(state.cellEdits, saved.c),
-    methodEdits: unsavedMethodEdits(state.methodEdits, saved.gc)
+    methodEdits: unsavedMethodEdits(state.methodEdits, saved.gc, saved.textStopped)
   }));
 
   /**
@@ -642,18 +667,20 @@ function unsavedCellEdits(cellEdits: DbxFirebaseNotificationSettingsCellEdits, c
 
 /**
  * Returns the delivery method edits whose on/off state differs from the saved config. Texts count as off in the saved config
- * until it has a phone number for texts, so turning texts on waits for the phone number to be saved.
+ * until it has a phone number for texts, so turning texts on waits for the phone number to be saved. They also count as off
+ * while the phone number for texts is stopped.
  *
  * @param methodEdits - The pending delivery method edits.
  * @param gc - The saved global config.
+ * @param textStopped - Whether the saved phone number for texts is stopped.
  * @returns The delivery method edits not yet saved.
  */
-function unsavedMethodEdits(methodEdits: NotificationDeliveryMethodMap<boolean>, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>): NotificationDeliveryMethodMap<boolean> {
+function unsavedMethodEdits(methodEdits: NotificationDeliveryMethodMap<boolean>, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>, textStopped: boolean): NotificationDeliveryMethodMap<boolean> {
   const savedDisabled = new Set(toCanonicalNotificationDeliveryMethods(gc?.dm));
   const result: NotificationDeliveryMethodMap<boolean> = {};
 
   (Object.entries(methodEdits) as [NotificationDeliveryMethod, boolean][]).forEach(([method, enabled]) => {
-    const savedEnabled = !savedDisabled.has(method) && (method !== NotificationDeliveryMethod.TEXT || gc?.t != null);
+    const savedEnabled = !savedDisabled.has(method) && (method !== NotificationDeliveryMethod.TEXT || (gc?.t != null && !textStopped));
 
     if (enabled !== savedEnabled) {
       result[method] = enabled;

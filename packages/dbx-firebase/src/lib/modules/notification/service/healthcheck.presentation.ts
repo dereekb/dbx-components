@@ -398,6 +398,7 @@ export const DEFAULT_NOTIFICATION_HEALTH_CHECK_PRESENTATION_ENTRIES: DbxFirebase
   { code: KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET, label: 'No Destination', icon: 'person_off' },
   { code: KnownNotificationHealthCheckIssueCode.RECIPIENT_OPTED_OUT, label: 'Opted Out', icon: 'unsubscribe' },
   { code: KnownNotificationHealthCheckIssueCode.RECIPIENT_DISABLED, label: 'Turned Off', icon: 'notifications_off' },
+  { code: KnownNotificationHealthCheckIssueCode.TEXT_PHONE_NUMBER_STOPPED, label: 'Replied STOP', icon: 'unsubscribe' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY, label: 'Off Everywhere', icon: 'notifications_off' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE, label: 'Off For This Type', icon: 'notifications_paused' },
   { code: KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE, label: 'Off For Every Type', icon: 'notifications_paused' },

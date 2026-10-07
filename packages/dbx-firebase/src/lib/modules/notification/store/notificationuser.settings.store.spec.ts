@@ -228,7 +228,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       setNotificationUser({});
 
       expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([TEXT]);
-      expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([{ method: TEXT, enabled: false, modified: false, awaitingPhoneNumber: false }]);
+      expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([{ method: TEXT, enabled: false, modified: false, awaitingPhoneNumber: false, locked: false }]);
 
       const cellStates = await firstValueFrom(store.cellStates$);
       expect(cellStates['E'][TEXT]?.disabled).toBe(true);
@@ -242,7 +242,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       store.setMethodEnabled({ method: TEXT, enabled: true });
       expect(await firstValueFrom(store.isModified$)).toBe(false);
       expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(true);
-      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0]).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: true });
+      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0]).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: true, locked: false });
 
       store.setMethodEnabled({ method: TEXT, enabled: false });
       expect(await firstValueFrom(store.isModified$)).toBe(false);
@@ -265,7 +265,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       expect(await firstValueFrom(store.isModified$)).toBe(false);
 
       const [textSwitch] = await firstValueFrom(store.deliveryMethodSwitches$);
-      expect(textSwitch).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: false });
+      expect(textSwitch).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: false, locked: false });
 
       // the text switch edit is dropped with the snapshot, so turning texts off elsewhere shows
       setNotificationUser({ t: '+15555550100', dm: [TEXT, EMAIL] });
@@ -296,6 +296,54 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
 
       store.setMethodEnabled({ method: EMAIL, enabled: false });
       expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+  });
+
+  describe('with a stopped phone number for texts', () => {
+    const STOPPED_PHONE = '+15555550100';
+
+    function setStoppedNotificationUser(gc: TestGc) {
+      const notificationUser = { ...makeNotificationUser({ t: STOPPED_PHONE, ...gc }), tso: [STOPPED_PHONE] };
+      dataLoadingState$.next(successResult(notificationUser));
+      return notificationUser;
+    }
+
+    it('should lock texts off', async () => {
+      setStoppedNotificationUser({ tcat: new Date() });
+
+      expect(await firstValueFrom(store.textPhoneNumberStopped$)).toBe(true);
+      expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([TEXT]);
+      expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([{ method: TEXT, enabled: false, modified: false, awaitingPhoneNumber: false, locked: true }]);
+      expect(await firstValueFrom(store.textConsentAt$)).toBeUndefined();
+    });
+
+    it('should keep the phone number form open so a different number can be saved', async () => {
+      setStoppedNotificationUser({});
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(true);
+    });
+
+    it('should ignore text switch edits', async () => {
+      setStoppedNotificationUser({ dm: [TEXT] });
+
+      store.setMethodEnabled({ method: TEXT, enabled: true });
+      expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
+      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0].enabled).toBe(false);
+    });
+
+    it('should not save texts as off', async () => {
+      setStoppedNotificationUser({});
+
+      store.setMethodEnabled({ method: EMAIL, enabled: false });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+
+    it('should unlock texts once a different number is saved', async () => {
+      setStoppedNotificationUser({});
+      expect(await firstValueFrom(store.textPhoneNumberStopped$)).toBe(true);
+
+      dataLoadingState$.next(successResult({ ...makeNotificationUser({ t: '+15555550101' }), tso: [STOPPED_PHONE] }));
+      expect(await firstValueFrom(store.textPhoneNumberStopped$)).toBe(false);
+      expect((await firstValueFrom(store.deliveryMethodSwitches$))[0]).toEqual({ method: TEXT, enabled: true, modified: false, awaitingPhoneNumber: false, locked: false });
     });
   });
   describe('with a notificationBox in global mode', () => {

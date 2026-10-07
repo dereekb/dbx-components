@@ -213,6 +213,9 @@ export interface ExpandNotificationRecipientsResult {
  * user's global config (`gc`) and box exclusions (`x`) apply without waiting for a box resync. Throws if the NotificationUsers cannot be loaded, so the send
  * is retried instead of sent without the users' settings.
  *
+ * Texts only go to a saved texting number, never the auth phone number. A number any loaded NotificationUser stopped (`tso`) gets no text, even
+ * when another recipient lists it.
+ *
  * @param input - The notification, box, auth service, and recipient configuration.
  * @returns Channel-specific recipient lists (email, text, notification summary) ready for delivery.
  */
@@ -278,6 +281,13 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       notificationUsers.set(x.document.id, x.data); // keyed by the document id, since some NotificationUsers lack a uid value
     });
   }
+
+  // numbers that replied STOP. Twilio blocks every text to them, so no recipient that shares one is texted, uid or not.
+  const stoppedTextPhoneNumbers = new Set<PhoneNumber>();
+
+  notificationUsers.forEach((x) => {
+    x.tso?.forEach((phoneNumber) => stoppedTextPhoneNumbers.add(phoneNumber));
+  });
 
   // 2. resolve each uid recipient
   const uidRecipientDeliveries = new Map<FirebaseAuthUserId, NotificationUidRecipientDelivery>();
@@ -429,7 +439,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       uid,
       delivery,
       emailAddress: delivery.emailAddress ?? (userDetails?.email as Maybe<EmailAddress>),
-      phoneNumber: delivery.phoneNumber ?? (userDetails?.phoneNumber as Maybe<E164PhoneNumber>),
+      phoneNumber: delivery.phoneNumber, // texts only go to a saved texting number, never the auth phone number
       name: userDetails?.displayName || delivery.name,
       boxRecipient: boxRecipientConfigsByUid.get(uid),
       otherRecipient: otherRecipientConfigs.get(uid)
@@ -472,7 +482,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const phoneNumbersSet = new Set<PhoneNumber>();
 
   function addText(recipient: Omit<ExpandedNotificationRecipientText, 'phoneNumber'>, phoneNumber: Maybe<PhoneNumber>) {
-    if (phoneNumber && !phoneNumbersSet.has(phoneNumber)) {
+    if (phoneNumber && !phoneNumbersSet.has(phoneNumber) && !stoppedTextPhoneNumbers.has(phoneNumber)) {
       phoneNumbersSet.add(phoneNumber);
       texts.push({ ...recipient, phoneNumber: phoneNumber as E164PhoneNumber });
     }

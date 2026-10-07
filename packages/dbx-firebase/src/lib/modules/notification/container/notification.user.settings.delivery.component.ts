@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
@@ -29,8 +29,10 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
   template: `
     @for (deliveryMethodSwitch of switchesSignal(); track deliveryMethodSwitch.method) {
       <div class="dbx-pb2">
-        <mat-slide-toggle [checked]="deliveryMethodSwitch.enabled" [disabled]="disabledSignal()" (change)="store.setMethodEnabled({ method: deliveryMethodSwitch.method, enabled: $event.checked })">{{ deliveryMethodSwitch.label }}</mat-slide-toggle>
-        @if (deliveryMethodSwitch.awaitingPhoneNumber) {
+        <mat-slide-toggle [checked]="deliveryMethodSwitch.enabled" [disabled]="disabledSignal() || deliveryMethodSwitch.locked" (change)="store.setMethodEnabled({ method: deliveryMethodSwitch.method, enabled: $event.checked })">{{ deliveryMethodSwitch.label }}</mat-slide-toggle>
+        @if (deliveryMethodSwitch.locked) {
+          <div class="dbx-hint dbx-small dbx-pt2">{{ textStoppedMessageSignal() }}</div>
+        } @else if (deliveryMethodSwitch.awaitingPhoneNumber) {
           <div class="dbx-hint dbx-small dbx-pt2">Save a phone number for texts to turn on text messages.</div>
         } @else if (!deliveryMethodSwitch.enabled) {
           <div class="dbx-hint dbx-small dbx-pt2">{{ deliveryMethodSwitch.offHint }}</div>
@@ -40,6 +42,9 @@ export function dbxFirebaseNotificationUserSettingsDeliveryMethodSwitchLabel(met
     @if (textPhoneNumberFormOpenSignal()) {
       <div class="dbx-pb2">
         <dbx-firebase-notification-user-settings-phone></dbx-firebase-notification-user-settings-phone>
+        @if (showTextStoppedMessageWithPhoneSignal()) {
+          <p class="dbx-hint dbx-small">{{ textStoppedMessageSignal() }}</p>
+        }
         <p class="dbx-hint dbx-small">{{ textMessageDisclosureSignal() }}</p>
         @if (textConsentAtSignal(); as textConsentAt) {
           <p class="dbx-hint dbx-small no-margin">Texts enabled on {{ textConsentAt | date: 'mediumDate' }}.</p>
@@ -72,4 +77,11 @@ export class DbxFirebaseNotificationUserSettingsDeliveryComponent {
   readonly textPhoneNumberFormOpenSignal = toSignal(this.store.textPhoneNumberFormOpen$, { initialValue: false });
   readonly textMessageDisclosureSignal = toSignal(this.store.textMessageDisclosure$);
   readonly textConsentAtSignal = toSignal(this.store.textConsentAt$);
+  readonly textStoppedMessageSignal = toSignal(this.store.textStoppedMessage$);
+  readonly textPhoneNumberStoppedSignal = toSignal(this.store.textPhoneNumberStopped$, { initialValue: false });
+
+  /**
+   * Whether the stopped message shows beside the phone number, which is when texts have no switch to show it beside.
+   */
+  readonly showTextStoppedMessageWithPhoneSignal = computed(() => this.textPhoneNumberStoppedSignal() && !this.switchesSignal().some((x) => x.method === NotificationDeliveryMethod.TEXT));
 }

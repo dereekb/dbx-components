@@ -46,6 +46,7 @@ import {
   KnownNotificationHealthCheckIssueCode,
   ALL_NOTIFICATION_DELIVERY_METHODS,
   isNotificationDeliveryMethodDisabled,
+  isNotificationUserTextPhoneNumberStopped,
   NotificationDeliveryMethodDecisionSource,
   type NotificationExplicitOptInConfig,
   isActiveNotificationBoxRecipient,
@@ -105,6 +106,10 @@ interface NotificationDeliveryMethodContext<T = unknown> {
    * The resolved delivery target, if one could be determined.
    */
   readonly target?: Maybe<T>;
+  /**
+   * Whether the target replied STOP (see `NotificationUser.tso`), so the method is off and the provider is not consulted. Only set for texts.
+   */
+  readonly targetStopped?: Maybe<boolean>;
 }
 
 /**
@@ -188,7 +193,6 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
         notificationUser,
         notificationSendService,
         authEmail: authDetails?.email as Maybe<EmailAddress>,
-        authPhone: authDetails?.phoneNumber as Maybe<E164PhoneNumber>,
         uid
       });
 
@@ -213,7 +217,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
 
       const methodResults: NotificationDeliveryHealthCheckResult[] = await Promise.all(
         methodContextsToCheck.map(async (methodContext) => {
-          const { method, target, label, sendServiceConfigured, healthCheckService } = methodContext;
+          const { method, target, targetStopped, label, sendServiceConfigured, healthCheckService } = methodContext;
           const previousMethodResult = previousHealthCheck?.m.find((x) => x.me === method);
           const previousProbe = previousMethodResult?.pr;
           const pendingProbe = isPendingNotificationHealthCheckProbe(previousProbe) ? previousProbe : undefined;
@@ -223,8 +227,11 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // calls at all, which is what makes it cheap enough to be polled on a short window.
           const providerHasSomethingToReport = !verifyPendingProbesOnly || pendingProbe != null;
 
+          // A stopped number is reported from the user's own records. Consulting the provider would only repeat it, and a test text to it would fail.
+          const canConsultProvider = healthCheckService != null && target != null && !targetStopped;
+
           // whether the provider will be consulted, and so whether fresh probe findings are coming
-          const willConsultProvider = healthCheckService != null && target != null && providerHasSomethingToReport;
+          const willConsultProvider = canConsultProvider && providerHasSomethingToReport;
 
           // A verify-only run carries the previous findings forward. The stale probe findings are only
           // dropped when the provider is actually going to replace them — otherwise the method would
@@ -236,7 +243,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // keep any previously resolved probe visible unless the provider supplies a newer one
           let probe: Maybe<NotificationHealthCheckProbe> = previousProbe;
 
-          if (healthCheckService && target != null && providerHasSomethingToReport) {
+          if (healthCheckService && target != null && willConsultProvider) {
             try {
               const response = await healthCheckService.runHealthCheck({
                 method,
@@ -271,7 +278,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
                 })
               );
             }
-          } else if (sendServiceConfigured && !healthCheckService && !verifyPendingProbesOnly && target != null) {
+          } else if (sendServiceConfigured && !healthCheckService && !verifyPendingProbesOnly && target != null && !targetStopped) {
             issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.SKIPPED, { message: `${label} delivery could not be verified with the provider, so only your settings were checked.`, data: { method } }));
           }
 
@@ -284,7 +291,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
             // whether probing is supported is only knowable here, so it is reported for a client that
             // offers a per-method test message action. A supporting provider with nothing to deliver to
             // still cannot be probed.
-            pb: healthCheckService?.supportsProbe === true && target != null ? true : undefined
+            pb: healthCheckService?.supportsProbe === true && canConsultProvider ? true : undefined
           };
 
           return methodResult;
@@ -318,7 +325,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       // The same predicate as the `pb` flag, so what is returned matches what the client was told it could
       // test. An empty set means nothing probe-capable was in scope, and then there is no narrower answer
       // to give than the diagnosis explaining why nothing was sent.
-      const probedMethods = new Set(sendProbe ? methodContextsToCheck.filter((x) => x.healthCheckService?.supportsProbe === true && x.target != null).map((x) => x.method) : []);
+      const probedMethods = new Set(sendProbe ? methodContextsToCheck.filter((x) => x.healthCheckService?.supportsProbe === true && x.target != null && !x.targetStopped).map((x) => x.method) : []);
       const returnFullHealthCheck = inputReturnFullHealthCheck === true || !sendProbe || probedMethods.size === 0;
       const returnedHealthCheck = returnFullHealthCheck ? healthCheck : narrowNotificationHealthCheckToMethods(healthCheck, probedMethods);
 
@@ -436,7 +443,6 @@ interface BuildNotificationDeliveryMethodContextsInput {
   readonly notificationUser: NotificationUser;
   readonly notificationSendService: NotificationServerActionsContext['notificationSendService'];
   readonly authEmail: Maybe<EmailAddress>;
-  readonly authPhone: Maybe<E164PhoneNumber>;
   readonly uid: FirebaseAuthUserId;
 }
 
@@ -444,14 +450,15 @@ interface BuildNotificationDeliveryMethodContextsInput {
  * Builds the per-method view of what is configured and where each method would deliver to.
  *
  * Target resolution mirrors the send pipeline (see {@link resolveNotificationUidRecipientDelivery}): the override on the
- * user's global config wins, otherwise the value on their Firebase Auth record is used. The default config's overrides
+ * user's global config wins, otherwise the email on their Firebase Auth record is used. Texts never fall back to the auth
+ * phone number, so the text target is only the saved texting number (`gc.t`). The default config's overrides
  * (`dc.e` / `dc.t`) are ignored, since they only apply to a few direct sends.
  *
  * @param input - The user, the configured send service, and their auth contact details.
  * @returns One context per delivery method, in report order.
  */
 function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliveryMethodContextsInput): NotificationDeliveryMethodContext[] {
-  const { notificationUser, notificationSendService, authEmail, authPhone, uid } = input;
+  const { notificationUser, notificationSendService, authEmail, uid } = input;
   const { gc } = notificationUser;
   const { emailSendService, textSendService, notificationSummarySendService, notificationSummaryIdForUidFunction } = notificationSendService;
 
@@ -468,7 +475,8 @@ function buildNotificationDeliveryMethodContexts(input: BuildNotificationDeliver
     label: 'Text message',
     sendServiceConfigured: textSendService != null,
     healthCheckService: textSendService?.healthCheckService,
-    target: (gc.t ?? authPhone) as Maybe<E164PhoneNumber>
+    target: gc.t,
+    targetStopped: isNotificationUserTextPhoneNumberStopped(notificationUser, gc.t)
   };
 
   const summaryContext: NotificationDeliveryMethodContext<string> = {
@@ -596,8 +604,8 @@ interface NotificationDeliveryMethodConfigIssuesInput extends NotificationHealth
  */
 function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMethodConfigIssuesInput): NotificationHealthCheckIssue[] {
   const { methodContext, notificationUser, notificationTemplateType, explicitOptIn, anyTemplateTypes } = input;
-  const { method, label, sendServiceConfigured, target } = methodContext;
-  const { gc, dc } = notificationUser;
+  const { method, label, sendServiceConfigured, target, targetStopped } = methodContext;
+  const { gc, dc, tso } = notificationUser;
 
   const issues: NotificationHealthCheckIssue[] = [];
 
@@ -605,6 +613,19 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
     issues.push(notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_NOT_CONFIGURED, NotificationHealthCheckStatus.SKIPPED, { message: `${label} notifications are not enabled on this system.`, data: { method } }));
 
     return issues; // nothing else about this method is meaningful
+  }
+
+  // reported before the disabled check, since only a START from the number turns texts back on, whatever the settings say
+  if (targetStopped) {
+    issues.push(
+      notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.TEXT_PHONE_NUMBER_STOPPED, NotificationHealthCheckStatus.ERROR, {
+        message: `Your texting number replied STOP, so no ${label.toLowerCase()}s are being sent to it.`,
+        fix: 'Reply START to any of our texts to turn them back on, or save a different texting number in your notification settings.',
+        data: { method }
+      })
+    );
+
+    return issues;
   }
 
   // reported before the destination check, so someone who switched the method off is not asked to add a destination for it
@@ -659,7 +680,7 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
   }
 
   // the opt-out flags are reported with the account findings, so only the method's own decision is evaluated here
-  const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, notificationUser: { gc, dc, x: [] } });
+  const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, notificationUser: { gc, dc, x: [], tso } });
   const decision = decisions[method];
 
   if (!decision.send) {
@@ -901,6 +922,7 @@ function isProbeIssueCode(code: string): boolean {
  * @internal
  */
 export const NOTIFICATION_HEALTH_CHECK_INTERNAL = {
+  buildNotificationDeliveryMethodContexts,
   notificationDeliveryMethodConfigIssues,
   isNotificationDeliveryMethodSentForAnyTemplateType,
   collectDisabledMethodsForBoxRecipient

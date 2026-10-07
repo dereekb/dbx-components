@@ -1,4 +1,5 @@
 export * from './webhook.twilio';
+export * from './webhook.twilio.optout';
 export * from './webhook.twilio.config';
 export * from './webhook.twilio.url';
 export * from './webhook.twilio.verify';

@@ -2,6 +2,7 @@ import { type Handler } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { type TwilioMessageSid, type TwilioMessageStatus, type TwilioPhoneNumber } from '../twilio.type';
+import { twilioOptOutTypeFromString } from './webhook.twilio.optout';
 import { type TwilioIncomingMessageEvent, type TwilioStatusCallbackEvent, type TwilioWebhookEvent, type TwilioWebhookEventType, twilioWebhookEventHandlerConfigurerFactory, twilioWebhookEventHandlerFactory } from './webhook.twilio';
 import { TwilioWebhookServiceConfig } from './webhook.twilio.config';
 import { twilioWebhookVerifier, type TwilioWebhookVerifier } from './webhook.twilio.verify';
@@ -82,6 +83,8 @@ export class TwilioWebhookService {
           FromState: params['FromState'],
           FromZip: params['FromZip'],
           FromCountry: params['FromCountry'],
+          MessagingServiceSid: params['MessagingServiceSid'],
+          OptOutType: twilioOptOutTypeFromString(params['OptOutType']),
           mediaUrls,
           raw: params
         }

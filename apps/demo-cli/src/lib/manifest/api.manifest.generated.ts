@@ -1478,7 +1478,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedIsArray: true
       },
       { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' },
-      { name: 'hc', longName: 'healthCheck', tsType: 'Maybe<NotificationHealthCheck>', optional: true, description: 'The result of the most recent notification delivery health check run for this user.' }
+      { name: 'hc', longName: 'healthCheck', tsType: 'Maybe<NotificationHealthCheck>', optional: true, description: 'The result of the most recent notification delivery health check run for this user.' },
+      { name: 'tso', longName: 'textStoppedPhoneNumbers', tsType: 'Maybe<E164PhoneNumber[]>', optional: true, description: 'Phone numbers that replied STOP to a text. Texts to a number in this list resolve to off, at send time and in the health check.' }
     ],
     read: 'system',
     serviceFactory: { exportName: 'notificationUserFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

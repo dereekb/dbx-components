@@ -20,7 +20,7 @@ import { demoNotificationInitServerActionsContextConfig } from './notification.i
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
 import { OPENROUTER_RUN_TASK_SERVICE_TOKEN } from '@dereekb/openrouter/firebase-server';
 import { DemoApiOpenRouterDependencyModule } from '../../../api/openrouter';
-import { DemoApiTwilioModule } from '../../../api/twilio';
+import { DemoApiTwilioModule } from '../../../api/twilio/twilio.module';
 import { TwilioService } from '@dereekb/nestjs/twilio';
 
 /**
