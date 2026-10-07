@@ -4,8 +4,9 @@
  * Utility functions for applying {@link UpdateNotificationUserParams} changes to notification config objects.
  * Used by the server action service when processing user config update requests.
  */
-import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
+import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, filterUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import {
+  type NotificationBoxRecipientTemplateConfig,
   type NotificationBoxRecipientTemplateConfigRecord,
   type NotificationDeliveryMethod,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
@@ -20,8 +21,12 @@ import { type AppNotificationTemplateTypeInfoRecordService } from './notificatio
 import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
 
 /**
- * Applies an array of config entry params to a {@link NotificationBoxRecipientTemplateConfigRecord},
- * inserting new entries, merging updates, and removing entries marked with `remove: true`.
+ * Applies an array of config entry params to a {@link NotificationBoxRecipientTemplateConfigRecord}.
+ *
+ * Only what the entries set is changed:
+ * - an entry's defined values are merged into its type's config, and its undefined values keep the existing ones
+ * - types without an entry are kept as they are
+ * - a type marked with `remove: true`, or whose entry clears its last set values, is removed
  *
  * @param a - Existing config record.
  * @param b - Array of update params to apply.
@@ -30,14 +35,20 @@ import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } fr
  */
 export function updateNotificationBoxRecipientTemplateConfigRecord(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigArrayEntryParam[], limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationBoxRecipientTemplateConfigRecord> {
   const cArray = notificationBoxRecipientTemplateConfigRecordToArray(a);
-  let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, merge: (x, y) => ({ ...x, ...y }) });
+  let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, merge: (x, y) => ({ ...x, ...filterUndefinedValues(y) }) });
 
-  // remove types marked as remove
-  updatedC = ModelRelationUtility.removeKeysFromCollection(
-    updatedC,
-    b.filter((x) => x.remove).map((x) => x.type),
-    (x) => x.type
-  );
+  const hasNoValues = (x: NotificationBoxRecipientTemplateConfig) => [x.sd, x.se, x.st, x.sp, x.sn].every((value) => value == null);
+  const setsValues = (x: NotificationBoxRecipientTemplateConfig) => [x.sd, x.se, x.st, x.sp, x.sn].some((value) => value !== undefined);
+  const typesSetByUpdate = new Set(b.filter(setsValues).map((x) => x.type));
+  const removedTypes = new Set(b.filter((x) => x.remove).map((x) => x.type));
+
+  updatedC.forEach((x) => {
+    if (typesSetByUpdate.has(x.type) && hasNoValues(x)) {
+      removedTypes.add(x.type);
+    }
+  });
+
+  updatedC = ModelRelationUtility.removeKeysFromCollection(updatedC, Array.from(removedTypes), (x) => x.type);
 
   let c = notificationBoxRecipientTemplateConfigArrayToRecord(updatedC);
 

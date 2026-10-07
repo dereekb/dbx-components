@@ -111,6 +111,35 @@ describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => 
     });
   });
 
+  describe('configs', () => {
+    const existing: NotificationUserDefaultNotificationBoxRecipientConfig = { c: { a: { se: false, sn: true }, b: { st: true } } };
+
+    it('should only change the values an entry sets', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', st: true }] });
+      expect(result.c).toEqual({ a: { se: false, sn: true, st: true }, b: { st: true } });
+    });
+
+    it('should keep the existing value when an entry leaves it undefined', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: undefined, st: true }] });
+      expect(result.c['a']).toEqual({ se: false, sn: true, st: true });
+    });
+
+    it('should clear a value set to null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: null }] });
+      expect(result.c).toEqual({ a: { se: null, sn: true }, b: { st: true } });
+    });
+
+    it('should remove a type the update leaves with no values set', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: null, sn: null }] });
+      expect(result.c).toEqual({ b: { st: true } });
+    });
+
+    it('should not add a new type with no values set', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'c', st: null }] });
+      expect(result.c).toEqual(existing.c);
+    });
+  });
+
   describe('dm', () => {
     const existing: NotificationUserDefaultNotificationBoxRecipientConfig = { c: {}, dm: [NotificationDeliveryMethod.TEXT] };
 

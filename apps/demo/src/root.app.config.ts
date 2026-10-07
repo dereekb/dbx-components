@@ -411,7 +411,8 @@ export const APP_CONFIG: ApplicationConfig = {
         },
         userSettings: {
           textMessageDisclosure: DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
-          phoneNumberPreferredCountries: ['US', 'CA']
+          phoneNumberPreferredCountries: ['US', 'CA'],
+          settingsAnchor: { ref: 'demo.app.notification.settings' }
         }
       },
       provideAnalyticsUserEventsListener: true,

@@ -190,9 +190,9 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
    * The list rows. Only changes with the config, so cell changes never recreate the rows.
    */
   readonly items$ = this.select(this.config$, (config) => {
-    const { hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = config;
+    const { groups, templateTypes, hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = config;
     const typeInfos = this.notificationTemplateService.appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypeInfo();
-    return dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: dbxFirebaseNotificationSettingsDeliveryMethods(config), hiddenTemplateTypes, fallbackGroupBy, defaultGroup });
+    return dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: dbxFirebaseNotificationSettingsDeliveryMethods(config), groups, templateTypes, hiddenTemplateTypes, fallbackGroupBy, defaultGroup });
   });
 
   /**

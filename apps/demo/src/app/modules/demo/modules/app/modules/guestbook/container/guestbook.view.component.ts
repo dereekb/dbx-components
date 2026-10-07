@@ -10,8 +10,8 @@ import { DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
 import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
-import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
-import { publishedGuestbookEntriesQuery } from 'demo-firebase';
+import { DbxFirebaseCollectionListDirective, type DbxFirebaseNotificationUserSettingsComponentConfig, DbxFirebaseNotificationUserSettingsDialogButtonComponent } from '@dereekb/dbx-firebase';
+import { DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP, publishedGuestbookEntriesQuery } from 'demo-firebase';
 
 @Component({
   selector: 'app-guestbook-view',
@@ -29,7 +29,8 @@ import { publishedGuestbookEntriesQuery } from 'demo-firebase';
     DemoGuestbookEntryCollectionStoreDirective,
     DbxFirebaseCollectionListDirective,
     MatDividerModule,
-    DemoGuestbookAlbumComponent
+    DemoGuestbookAlbumComponent,
+    DbxFirebaseNotificationUserSettingsDialogButtonComponent
   ]
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
@@ -37,6 +38,9 @@ export class DemoGuestbookViewComponent implements OnDestroy {
   readonly matDialog = inject(MatDialog);
 
   readonly entryConstraints = publishedGuestbookEntriesQuery({ published: true });
+
+  // only the guestbook notifications, without the account-wide delivery settings
+  readonly guestbookNotificationSettingsConfig: DbxFirebaseNotificationUserSettingsComponentConfig = { groups: [DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP.key], showDeliveryMethodSettings: false };
 
   readonly documentStore = viewChild.required(GuestbookEntryDocumentStore);
 

@@ -10,12 +10,14 @@ import {
   type NotificationTemplateType,
   type NotificationTemplateTypeInfo,
   type NotificationTemplateTypeInfoGroup,
+  type NotificationTemplateTypeInfoGroupKey,
   notificationTemplateTypeInfoUserConfigurableDeliveryMethods,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
   readNotificationDeliveryMethodFlag,
   toCanonicalNotificationDeliveryMethods,
   type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams
 } from '@dereekb/firebase';
+import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type E164PhoneNumber, type Maybe } from '@dereekb/util';
 import { compareNotificationTemplateTypeInfoGroups, type DbxFirebaseNotificationSettingsCellStates, type DbxFirebaseNotificationSettingsListItemValue, type DbxFirebaseNotificationSettingsRowCellStates } from '../component/notification.settings.list';
 
@@ -65,7 +67,20 @@ export abstract class DbxFirebaseNotificationUserSettingsConfig {
    */
   abstract readonly phoneNumberPreferredCountries?: Maybe<string[]>;
   /**
-   * Template types to hide from the settings, in addition to types marked `hideFromUserSettings`.
+   * Groups to show. When {@link groups} or {@link templateTypes} is set, only the template types in these groups or in
+   * {@link templateTypes} are shown.
+   *
+   * Matches the group a type is listed under, including the fallback group of a type with no group.
+   */
+  abstract readonly groups?: Maybe<NotificationTemplateTypeInfoGroupKey[]>;
+  /**
+   * Template types to show. When {@link groups} or {@link templateTypes} is set, only these template types and the types in
+   * {@link groups} are shown.
+   */
+  abstract readonly templateTypes?: Maybe<NotificationTemplateType[]>;
+  /**
+   * Template types to hide from the settings, in addition to types marked `hideFromUserSettings`. Applies after
+   * {@link groups} and {@link templateTypes}.
    */
   abstract readonly hiddenTemplateTypes?: Maybe<NotificationTemplateType[]>;
   /**
@@ -76,6 +91,11 @@ export abstract class DbxFirebaseNotificationUserSettingsConfig {
    * Group for template types that have no group. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP}.
    */
   abstract readonly defaultGroup?: Maybe<NotificationTemplateTypeInfoGroup>;
+  /**
+   * Anchor to the page with all of the user's notification settings, such as the route that shows
+   * `dbx-firebase-notification-user-settings`. When set, the notification settings dialog links to it.
+   */
+  abstract readonly settingsAnchor?: Maybe<ClickableAnchor>;
 }
 
 /**
@@ -87,7 +107,7 @@ export type DbxFirebaseNotificationSettingsCellEdits = Record<NotificationTempla
 /**
  * Input for {@link dbxFirebaseNotificationSettingsListItemValues}.
  */
-export interface DbxFirebaseNotificationSettingsListItemValuesInput extends Pick<DbxFirebaseNotificationUserSettingsConfig, 'hiddenTemplateTypes' | 'fallbackGroupBy' | 'defaultGroup'> {
+export interface DbxFirebaseNotificationSettingsListItemValuesInput extends Pick<DbxFirebaseNotificationUserSettingsConfig, 'groups' | 'templateTypes' | 'hiddenTemplateTypes' | 'fallbackGroupBy' | 'defaultGroup'> {
   /**
    * All of the app's template type infos.
    */
@@ -102,14 +122,18 @@ export interface DbxFirebaseNotificationSettingsListItemValuesInput extends Pick
  * Builds the settings list rows from the app's template type infos.
  *
  * Drops hidden types and types with no configurable column, intersects each type's configurable methods with the columns,
- * applies the group fallback, and sorts the rows by `sortOrder` then name.
+ * applies the group fallback, keeps only the selected groups and types when any are set, and sorts the rows by `sortOrder`
+ * then name.
  *
- * @param input - The template type infos, columns and grouping options.
+ * @param input - The template type infos, columns, selected groups and types, and grouping options.
  * @returns The list rows.
  */
 export function dbxFirebaseNotificationSettingsListItemValues(input: DbxFirebaseNotificationSettingsListItemValuesInput): DbxFirebaseNotificationSettingsListItemValue[] {
   const { typeInfos, deliveryMethods: columns, hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = input;
   const hidden = new Set(hiddenTemplateTypes ?? []);
+  const selectedGroups = new Set(input.groups ?? []);
+  const selectedTemplateTypes = new Set(input.templateTypes ?? []);
+  const isSelectionSet = input.groups != null || input.templateTypes != null;
 
   const values: DbxFirebaseNotificationSettingsListItemValue[] = [];
 
@@ -130,7 +154,9 @@ export function dbxFirebaseNotificationSettingsListItemValues(input: DbxFirebase
           group = defaultGroup ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP;
         }
 
-        values.push({ type: info.type, name: info.name, description: info.description, group, deliveryMethods, info });
+        if (!isSelectionSet || selectedGroups.has(group.key) || selectedTemplateTypes.has(info.type)) {
+          values.push({ type: info.type, name: info.name, description: info.description, group, deliveryMethods, info });
+        }
       }
     }
   });
@@ -230,8 +256,8 @@ export interface DbxFirebaseNotificationUserGlobalConfigUpdateParamsInput {
 /**
  * Maps pending settings edits to `gc` update params.
  *
- * - only changed cells are sent, and `null` clears a cell
- * - a type left with no set cells is sent as `{ type, remove: true }`
+ * - only changed cells are sent, and `null` clears a cell. The server only changes the cells that are sent, and drops a
+ *   type once its last cell is cleared, so types and cells that are not shown are never touched.
  * - when the disabled methods changed, the full list is sent (`null` when empty)
  *
  * @param input - The saved config and pending edits.
@@ -254,9 +280,7 @@ export function dbxFirebaseNotificationUserGlobalConfigUpdateParams(input: DbxFi
     });
 
     if (Object.keys(changes).length) {
-      const nextConfig = { ...savedConfig, ...changes };
-      const isEmpty = Object.values(nextConfig).every((x) => x == null);
-      configs.push(isEmpty ? { type, remove: true } : { type, ...changes });
+      configs.push({ type, ...changes });
     }
   });
 

@@ -229,6 +229,25 @@ demoApiFunctionContextFactory((f) => {
                     expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
                     expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(false);
                   });
+
+                  it('should only change the template config values that are passed', async () => {
+                    await nu.document.update({ gc: { c: { [GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]: { se: true }, [GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]: { sn: false } }, dm: [NotificationDeliveryMethod.EMAIL] } });
+
+                    // a settings view that only shows the created type changes one of its cells
+                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, { key: nu.documentKey, gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } } as UpdateNotificationUserParams));
+
+                    let notificationUser = await assertSnapshotData(nu.document);
+                    expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true, st: true });
+                    expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ sn: false });
+                    expect(notificationUser.gc.dm).toEqual([NotificationDeliveryMethod.EMAIL]);
+
+                    // clearing the last set value of a type removes it, and leaves the other type alone
+                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, { key: nu.documentKey, gc: { configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, sn: null }] } } as UpdateNotificationUserParams));
+
+                    notificationUser = await assertSnapshotData(nu.document);
+                    expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toBeUndefined();
+                    expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true, st: true });
+                  });
                 });
 
                 describe('default config', () => {

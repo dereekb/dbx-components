@@ -54,6 +54,37 @@ describe('dbxFirebaseNotificationSettingsListItemValues()', () => {
     const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, fallbackGroupBy: 'notificationModel' });
     expect(result.find((x) => x.type === 'X')?.group.key).toBe('guestbook');
   });
+
+  describe('selecting groups and types', () => {
+    it('should only show the selected groups', () => {
+      const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: ['guestbook'] });
+      expect(result.map((x) => x.type)).toEqual(['GBE_L', 'GBE_C']);
+    });
+
+    it('should match the fallback group of an ungrouped type', () => {
+      const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: [DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP.key] });
+      expect(result.map((x) => x.type)).toEqual(['X']);
+    });
+
+    it('should only show the selected types', () => {
+      const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, templateTypes: ['E', 'GBE_C'] });
+      expect(result.map((x) => x.type).sort()).toEqual(['E', 'GBE_C']);
+    });
+
+    it('should show the selected groups and the selected types together', () => {
+      const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: ['guestbook'], templateTypes: ['E'] });
+      expect(result.map((x) => x.type).sort()).toEqual(['E', 'GBE_C', 'GBE_L']);
+    });
+
+    it('should still drop hidden types', () => {
+      const result = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: ['profile'], hiddenTemplateTypes: ['E'] });
+      expect(result.map((x) => x.type)).toEqual(['CAL_INV']);
+    });
+
+    it('should show nothing for an empty selection', () => {
+      expect(dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: [] })).toEqual([]);
+    });
+  });
 });
 
 describe('dbxFirebaseNotificationSettingsCellStates()', () => {
@@ -116,9 +147,9 @@ describe('dbxFirebaseNotificationUserGlobalConfigUpdateParams()', () => {
     expect(result).toEqual({ configs: [{ type: 'E', st: null }] });
   });
 
-  it('should remove a type left with no set cells', () => {
+  it('should only send the cleared cell of a type left with no set cells', () => {
     const result = dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc: { c: { E: { st: true } } }, edits: { E: { [TEXT]: null } } });
-    expect(result).toEqual({ configs: [{ type: 'E', remove: true }] });
+    expect(result).toEqual({ configs: [{ type: 'E', st: null }] });
   });
 
   it('should add a new type', () => {
