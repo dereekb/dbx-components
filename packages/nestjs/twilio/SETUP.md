@@ -7,6 +7,8 @@ This package wraps the official `twilio` SDK with a NestJS module that exposes:
 - **`TwilioLookupModule`** — `TwilioLookupApi` + `TwilioLookupService` for phone-number validation and (optional) carrier info (Twilio Lookup v2).
 - **`TwilioWebhookModule`** — controller + service that receive Twilio status callbacks (`POST /webhook/twilio/status`) and incoming SMS (`POST /webhook/twilio/incoming`), with `X-Twilio-Signature` verification.
 
+Each module has an `appTwilio*ModuleMetadata()` counterpart (`appTwilioModuleMetadata()`, `appTwilioVerifyModuleMetadata()`, `appTwilioLookupModuleMetadata()`, `appTwilioWebhookModuleMetadata()`) for declaring the app's own module with a `dependencyModule` and extra `imports` / `exports` / `providers`.
+
 The bridge to firebase-server's notification pipeline lives in [`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/).
 
 ---
@@ -42,7 +44,6 @@ All configuration is read from process env vars via NestJS `ConfigService`. The 
 | `TWILIO_API_KEY_SID` | API key SID (`SK…`). When provided together with `TWILIO_API_KEY_SECRET`, the client authenticates with this pair instead of `TWILIO_AUTH_TOKEN`. |
 | `TWILIO_API_KEY_SECRET` | Secret value paired with `TWILIO_API_KEY_SID`. |
 | `TWILIO_MESSAGING_SERVICE_SID` | Messaging Service SID (`MG…`). When set, Twilio chooses the sender from the service's number pool. Takes precedence over `TWILIO_PHONE_NUMBER` for outbound. |
-| `TWILIO_STATUS_CALLBACK_URL` | Default `statusCallback` URL applied to every outbound SMS. Twilio will POST delivery-status updates here. Point it at your deployment's `https://…/webhook/twilio/status`. |
 | `TWILIO_SANDBOX` | `true` suppresses real SDK calls and returns synthetic message SIDs — useful for local development. Defaults to `false`. |
 
 ### Required for `TwilioVerifyModule` (OTP / 2FA)
@@ -55,8 +56,7 @@ All configuration is read from process env vars via NestJS `ConfigService`. The 
 
 | Variable | Description |
 | --- | --- |
-| `TWILIO_WEBHOOK_AUTH_TOKEN` | Auth token used to verify the `X-Twilio-Signature` header. When unset, falls back to `TWILIO_AUTH_TOKEN`. Set this to a separate value only if you rotate webhook tokens independently. |
-| `TWILIO_WEBHOOK_BASE_URL` | Public base URL Twilio uses to call your webhook (e.g. `https://api.example.com`). Required when the service sits behind a proxy — Twilio computes the signature over the URL it called, so the verifier needs to reconstruct that exact URL. |
+| `TWILIO_WEBHOOK_AUTH_TOKEN` | Auth token used to verify the `X-Twilio-Signature` header. When unset or a placeholder, falls back to `TWILIO_AUTH_TOKEN`. Set this to a separate value only if you rotate webhook tokens independently. |
 | `TWILIO_WEBHOOK_SKIP_VERIFY` | `true` bypasses signature verification. **Do not enable in production.** Intended for local development against Twilio test mode. Defaults to `false`. |
 
 ---
@@ -80,9 +80,49 @@ import { TwilioModule, TwilioVerifyModule, TwilioLookupModule, TwilioWebhookModu
 export class AppModule {}
 ```
 
+To declare your own modules instead, use the `appTwilio*ModuleMetadata()` functions. A `dependencyModule` that exports a `TwilioWebhookUrlsConfig` supplies the app's public webhook URLs (see [Webhook URLs](#webhook-urls)), and the Verify and Lookup modules take the app's Twilio module as their `dependencyModule` so they share its `TwilioApi`:
+
+```ts
+import { Module } from '@nestjs/common';
+import { appTwilioModuleMetadata, appTwilioVerifyModuleMetadata, appTwilioWebhookModuleMetadata, TwilioWebhookUrlsConfig } from '@dereekb/nestjs/twilio';
+import { twilioWebhookUrlsConfigProvider } from '@dereekb/firebase-server/twilio';
+
+@Module({ providers: [twilioWebhookUrlsConfigProvider()], exports: [TwilioWebhookUrlsConfig] })
+export class AppTwilioDependencyModule {}
+
+@Module(appTwilioModuleMetadata({ dependencyModule: AppTwilioDependencyModule }))
+export class AppTwilioModule {}
+
+@Module(appTwilioVerifyModuleMetadata({ dependencyModule: AppTwilioModule }))
+export class AppTwilioVerifyModule {}
+
+@Module(appTwilioWebhookModuleMetadata({ dependencyModule: AppTwilioDependencyModule, providers: [MyTwilioHandlers] }))
+export class AppTwilioWebhookModule {}
+```
+
+### Placeholder values
+
+`TwilioApi` creates the `twilio` SDK client on first use rather than when it is constructed, because the SDK throws when the Account SID does not start with `AC`. The modules therefore start with the `placeholder` / `xxx` values of a committed `.env`, and only a call that reaches the SDK fails.
+
+`twilioServiceConfigFactory()` removes placeholder values from a usable config through `usableTwilioServiceConfig()`, so a placeholder Messaging Service SID or API key never shadows a real sender or Auth Token. `usableTwilioServiceConfig()` treats `''`, `placeholder` and `xxx` as unset, and requires the `AC…` Account SID, an Auth Token or an `SK…` API key pair, and a `+…` sender number or an `MG…` Messaging Service SID. Use `isUsableTwilioServiceConfig(twilioService.twilioApi.config)` to decide whether the provided `TwilioService` can send.
+
 ### Webhook prerequisite — raw-body middleware
 
-`TwilioWebhookController` uses `@RawBody()` from `@dereekb/nestjs`. The consuming application must register the raw-body middleware for the `/webhook/twilio` path so signature verification can read the unparsed form body. Extend `AppModuleWithWebhooksEnabled` (see `packages/nestjs/src/lib/middlewares/webhook.ts`) and include `/webhook/twilio` in its consumed path list — without this, every request is rejected with HTTP 403.
+`TwilioWebhookController` uses `@RawBody()` from `@dereekb/nestjs`, so signature verification can read the unparsed form body. The raw-body middleware must cover `/webhook/twilio`. `AppModuleWithWebhooksEnabled` (see `packages/nestjs/src/lib/middlewares/webhook.ts`) applies it to every `POST /webhook/{*path}`, and a firebase-server app gets it by setting `configureWebhooks: true` in its `nestServerInstance()` config. Without it, every request is rejected with HTTP 403.
+
+The routes sit under the app's global route prefix, if any. With `globalApiRoutePrefix: '/api'` the endpoints are `https://<your-app>/api/webhook/twilio/status` and `https://<your-app>/api/webhook/twilio/incoming`.
+
+### Webhook URLs
+
+The webhook URLs are not configured through the environment. `twilioWebhookUrls(webhookUrl)` builds them from the app's public webhook URL (the URL its `/webhook` routes are served at):
+
+- **`statusCallbackUrl`** — the default `statusCallback` of every outbound SMS, so Twilio posts its delivery status to `/webhook/twilio/status`. Twilio has no account-wide default for this; it is sent with each message.
+- **`incomingMessageUrl`** — set it in the Twilio Console as "A message comes in" on your phone number (or the Messaging Service's integration settings). Nothing registers it with Twilio for you.
+- **`baseUrl`** — the public origin the webhook verifier uses. Twilio signs the URL it called, so behind a proxy the verifier needs the public origin to rebuild that URL. Without it, the URL is rebuilt from the `X-Forwarded-Proto` / `X-Forwarded-Host` / `Host` headers.
+
+Supply them by exporting a `TwilioWebhookUrlsConfig` from the `dependencyModule` of `appTwilioModuleMetadata()` (which then sets the default status callback) and `appTwilioWebhookModuleMetadata()` (which then verifies against `baseUrl`). In a firebase-server app, `twilioWebhookUrlsConfigProvider()` from [`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/) provides it from `FirebaseServerEnvService.appWebhookUrl`, as in the example above. It supplies no URLs when webhooks are disabled or the webhook URL is not reachable from the internet, such as `localhost` during local development, so no status callback is requested and the verifier falls back to the request headers.
+
+The webhook module only needs the auth token, so it does not import the Twilio module.
 
 ### Registering webhook handlers
 
@@ -93,7 +133,7 @@ import { TwilioWebhookService } from '@dereekb/nestjs/twilio';
 @Injectable()
 export class MyTwilioHandlers {
   constructor(twilioWebhookService: TwilioWebhookService) {
-    twilioWebhookService.configure((handler) => {
+    twilioWebhookService.configure(this, (handler) => {
       handler.handleStatusCallback(async ({ payload }) => {
         // payload.MessageSid, payload.MessageStatus, payload.ErrorCode, …
       });
@@ -105,35 +145,12 @@ export class MyTwilioHandlers {
 }
 ```
 
-### Placeholder-safe conditional wiring
-
-`TwilioModule` constructs the `twilio` SDK eagerly, and the SDK throws when the Account SID does not start with `AC`. The `placeholder` / `xxx` values in a committed `.env` are truthy, so they pass `TwilioServiceConfig.assertValidConfig()` and then crash the app on startup. When Twilio is optional for an environment (local development, CI, a deployment without Twilio secrets), do not import `TwilioModule`. Read the config without validating it and build the service only when the config is usable:
-
-```ts
-import { type FactoryProvider } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { TwilioApi, TwilioService, twilioServiceConfigFromConfigService, usableTwilioServiceConfig } from '@dereekb/nestjs/twilio';
-
-export const MY_TWILIO_SERVICE_TOKEN = 'MY_TWILIO_SERVICE';
-
-export const myTwilioServiceProvider: FactoryProvider = {
-  provide: MY_TWILIO_SERVICE_TOKEN,
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService) => {
-    const config = usableTwilioServiceConfig(twilioServiceConfigFromConfigService(configService));
-    return config ? new TwilioService(new TwilioApi(config)) : null;
-  }
-};
-```
-
-`usableTwilioServiceConfig()` treats `''`, `placeholder` and `xxx` as unset, and requires the `AC…` Account SID, an Auth Token or an `SK…` API key pair, and a `+…` sender number or an `MG…` Messaging Service SID. It returns a copy with placeholder values removed, so a placeholder Messaging Service SID or API key never shadows a real sender or Auth Token, and a placeholder `TWILIO_STATUS_CALLBACK_URL` is dropped. `isUsableTwilioServiceConfig()` is the boolean form.
-
 ### Sending notification texts
 
 [`@dereekb/firebase-server/twilio`](../../firebase-server/twilio/) provides `twilioNotificationTextSendService()`, a `NotificationTextSendService` for the firebase-server notification pipeline. Provide it as the `textSendService` of your `NotificationSendService`, and fall back to `ignoreSendNotificationTextSendService()` when Twilio is not configured:
 
 ```ts
-const textSendService = twilioService ? twilioNotificationTextSendService({ twilioService }) : ignoreSendNotificationTextSendService();
+const textSendService = isUsableTwilioServiceConfig(twilioService.twilioApi.config) ? twilioNotificationTextSendService({ twilioService }) : ignoreSendNotificationTextSendService();
 ```
 
 By default each message becomes one SMS. The body joins the `title`, `openingMessage`, `closingMessage` and `actionUrl` of the message's `textContent` (or its `content`) with newlines, truncated to 1600 characters, so give each notification template a short `textContent` with a deep link. Messages without a recipient phone number are dropped. Sends suppressed by `TWILIO_SANDBOX=true` are reported as ignored. Pass `messageBuilders` to build the SMS for specific send template names yourself.
@@ -186,7 +203,7 @@ TWILIO_SANDBOX=true
 
 ## 5. Common pitfalls
 
-- **Signature verification rejecting every request behind a proxy.** Set `TWILIO_WEBHOOK_BASE_URL` to the public URL Twilio dialed. The verifier rebuilds the request URL from `X-Forwarded-Proto` / `X-Forwarded-Host` when present, but an explicit base URL is more reliable.
+- **Signature verification rejecting every request behind a proxy.** Pass the public origin Twilio dialed as `TwilioWebhookConfig.baseUrl` (`appTwilioWebhookModuleMetadata()` does this for firebase-server apps). The verifier rebuilds the request URL from `X-Forwarded-Proto` / `X-Forwarded-Host` when present, but an explicit base URL is more reliable.
 - **`Authentication Error - invalid username` from the SDK.** The Account SID does not match the Auth Token (or the token has been rotated). Re-copy both from the Twilio Console.
 - **Trial-account "unverified caller" errors.** During trial, Twilio refuses outbound SMS to numbers you have not verified in the console. Verify the test recipient under Phone Numbers → Verified Caller IDs.
 - **A2P 10DLC required for US-bound traffic.** US carriers reject unregistered traffic. Register your brand and campaign via Messaging → Regulatory Compliance, then send through a `Messaging Service` whose pool includes the registered campaign.

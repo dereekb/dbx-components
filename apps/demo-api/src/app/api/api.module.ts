@@ -10,6 +10,7 @@ import { DemoApiVapiAiModule } from './vapiai';
 import { DemoApiOpenAIModule } from './openai';
 import { DemoOpenRouterModule } from './openrouter';
 import { DemoApiTypeformModule } from './typeform';
+import { DemoApiTwilioWebhookModule } from './twilio';
 import { DemoApiDiscordModule, DemoDiscordOAuthConnectionModule } from './discord';
 import { DemoApiCalcomModule } from './calcom';
 import { DemoApiZohoModule } from './zoho';
@@ -26,7 +27,7 @@ export const DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES = [CalcomUserExternalCo
   // UserExternalConnectionModule is imported for the accessor and actions the reader is built from.
   // This is also the only module that can see the registry, which is why the reader is provided here
   // rather than alongside them.
-  imports: [UserExternalConnectionModule, DemoApiStripeModule, DemoApiZoomModule, DemoApiVapiAiModule, DemoApiOpenAIModule, DemoOpenRouterModule, DemoApiTypeformModule, DemoApiDiscordModule, DemoDiscordOAuthConnectionModule, DemoApiCalcomModule, DemoApiZohoModule],
+  imports: [UserExternalConnectionModule, DemoApiStripeModule, DemoApiZoomModule, DemoApiVapiAiModule, DemoApiOpenAIModule, DemoOpenRouterModule, DemoApiTypeformModule, DemoApiTwilioWebhookModule, DemoApiDiscordModule, DemoDiscordOAuthConnectionModule, DemoApiCalcomModule, DemoApiZohoModule],
   providers: [userExternalConnectionOAuthProviderRegistryProvider(DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES), userExternalConnectionReaderProvider()],
   exports: [UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader]
 })

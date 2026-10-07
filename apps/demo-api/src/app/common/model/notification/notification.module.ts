@@ -20,7 +20,8 @@ import { demoNotificationInitServerActionsContextConfig } from './notification.i
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
 import { OPENROUTER_RUN_TASK_SERVICE_TOKEN } from '@dereekb/openrouter/firebase-server';
 import { DemoApiOpenRouterDependencyModule } from '../../../api/openrouter';
-import { DEMO_API_TWILIO_SERVICE_TOKEN, DemoApiTwilioModule } from '../../../api/twilio';
+import { DemoApiTwilioModule } from '../../../api/twilio';
+import { TwilioService } from '@dereekb/nestjs/twilio';
 
 /**
  * The demo's delivery health check windows.
@@ -51,13 +52,13 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
   // DemoApiOpenRouterDependencyModule supplies the run-task queue the `resume` storage-file purpose
   // enqueues into. Imported here rather than in the model module because the task service is what needs
   // it, and the task service is built here. DemoApiTwilioModule likewise supplies the send service's
-  // optional TwilioService.
+  // TwilioService.
   imports: [DemoApiActionModule, DemoApiOpenRouterDependencyModule, DemoApiTwilioModule],
   providers: [
     {
       provide: NotificationSendService,
       useFactory: demoNotificationSendServiceFactory,
-      inject: [DemoFirebaseServerActionsContext, DEMO_API_TWILIO_SERVICE_TOKEN]
+      inject: [DemoFirebaseServerActionsContext, TwilioService]
     },
     {
       provide: NotificationTaskService,

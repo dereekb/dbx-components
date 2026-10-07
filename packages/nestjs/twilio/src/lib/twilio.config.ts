@@ -7,7 +7,6 @@ export const TWILIO_API_KEY_SID_ENV_VAR = 'TWILIO_API_KEY_SID';
 export const TWILIO_API_KEY_SECRET_ENV_VAR = 'TWILIO_API_KEY_SECRET';
 export const TWILIO_PHONE_NUMBER_ENV_VAR = 'TWILIO_PHONE_NUMBER';
 export const TWILIO_MESSAGING_SERVICE_SID_ENV_VAR = 'TWILIO_MESSAGING_SERVICE_SID';
-export const TWILIO_STATUS_CALLBACK_URL_ENV_VAR = 'TWILIO_STATUS_CALLBACK_URL';
 export const TWILIO_SANDBOX_ENV_VAR = 'TWILIO_SANDBOX';
 
 /**
@@ -50,6 +49,9 @@ export interface TwilioMessagesConfig {
   /**
    * Default status callback URL applied to outbound messages when the caller does not
    * supply one explicitly.
+   *
+   * Not read from the environment. Build it from the app's public webhook URL with
+   * `twilioWebhookUrls()`.
    */
   readonly defaultStatusCallback?: Maybe<TwilioStatusCallbackUrl>;
   /**
@@ -123,8 +125,7 @@ export function isPlaceholderTwilioConfigValue(value: Maybe<string>): boolean {
  * API key never shadows a real sender or auth token. A status callback URL that is not an
  * `http(s)` URL is dropped as well, since it does not affect whether the config can send.
  *
- * Use this to conditionally wire Twilio, rather than importing `TwilioModule`, which
- * constructs the SDK eagerly and throws on placeholder values.
+ * `twilioServiceConfigFactory()` uses this to remove placeholder values from a usable environment config.
  *
  * @param config - Config to check, typically read from the environment.
  * @returns The usable config, or undefined if the config cannot send SMS.
@@ -132,7 +133,6 @@ export function isPlaceholderTwilioConfigValue(value: Maybe<string>): boolean {
  * @example
  * ```ts
  * const config = usableTwilioServiceConfig(twilioServiceConfigFromConfigService(configService));
- * const twilioService = config ? new TwilioService(new TwilioApi(config)) : undefined;
  * ```
  */
 export function usableTwilioServiceConfig(config: Maybe<TwilioServiceConfig>): Maybe<TwilioServiceConfig> {
@@ -176,6 +176,9 @@ export function usableTwilioServiceConfig(config: Maybe<TwilioServiceConfig>): M
 
 /**
  * Returns true if {@link usableTwilioServiceConfig} can build a usable config from the input.
+ *
+ * Use it to decide whether a provided `TwilioService` can send, e.g.
+ * `isUsableTwilioServiceConfig(twilioService.twilioApi.config)`.
  *
  * Note that a usable config may still carry placeholder values; pass the input through
  * {@link usableTwilioServiceConfig} to get a copy with them removed before using it.
