@@ -21,17 +21,15 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
 /**
  * Confirmation dialog displayed by {@link DbxActionTransitionSafetyDirective} when the user
  * attempts to navigate away with unsaved changes. Offers options to stay on the page,
- * discard changes, or save before leaving.
+ * leave without saving, or save before leaving.
  */
 @Component({
   template: `
     <dbx-dialog-content>
       <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
-        <ng-container>
-          <dbx-error dbxActionError></dbx-error>
-          <dbx-button text="Save Changes" dbxActionButton></dbx-button>
-          <dbx-button-spacer></dbx-button-spacer>
-        </ng-container>
+        <dbx-error dbxActionError></dbx-error>
+        <dbx-button buttons [raised]="true" color="primary" text="Save Changes" dbxActionButton></dbx-button>
+        <dbx-button-spacer buttons></dbx-button-spacer>
       </dbx-prompt-confirm>
     </dbx-dialog-content>
   `,
@@ -42,7 +40,7 @@ export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDi
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',
-    cancelText: 'Discard Changes'
+    cancelText: 'Leave without saving'
   };
 
   confirm(): void {

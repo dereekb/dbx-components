@@ -74,6 +74,16 @@ describe('DbxActionUIRouterTransitionSafetyDialogComponent', () => {
     expect(content?.querySelector('dbx-prompt-confirm')).toBeTruthy();
   });
 
+  it('should show Save Changes in the same row as Stay and Leave without saving', async () => {
+    openDialog();
+    await fixture.whenStable();
+
+    const row = findDialogButton('Stay')?.closest('dbx-button')?.parentElement;
+    expect(row).toBeTruthy();
+    expect(findDialogButton('Save Changes')?.closest('dbx-button')?.parentElement).toBe(row);
+    expect(findDialogButton('Leave without saving')?.closest('dbx-button')?.parentElement).toBe(row);
+  });
+
   it('should trigger the action when Save Changes is clicked', async () => {
     openDialog();
     await fixture.whenStable();
