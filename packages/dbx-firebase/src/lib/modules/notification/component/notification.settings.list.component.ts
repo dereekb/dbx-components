@@ -74,7 +74,18 @@ export interface DbxFirebaseNotificationSettingsListViewItemCell {
   readonly method: NotificationDeliveryMethod;
   readonly state: Maybe<DbxFirebaseNotificationSettingsCellState>;
   readonly rotatingConfig: Maybe<DbxRotatingButtonConfig<DbxTristateValue>>;
-  readonly disabledTooltip: Maybe<string>;
+  /**
+   * The value shown: the override's value when the cell is overridden, otherwise the cell's own value.
+   */
+  readonly value: Maybe<boolean>;
+  /**
+   * Whether a higher-priority setting decides the cell, so it cannot be changed.
+   */
+  readonly overridden: boolean;
+  /**
+   * Explains why the cell is disabled: its method is turned off account-wide, or a higher-priority setting overrides it.
+   */
+  readonly tooltip: Maybe<string>;
 }
 
 @Component({
@@ -88,10 +99,11 @@ export interface DbxFirebaseNotificationSettingsListViewItemCell {
         }
       </div>
       @for (cell of cellsSignal(); track cell.method) {
-        <div class="dbx-firebase-notification-settings-cell" [class.dbx-firebase-notification-settings-cell-modified]="cell.state?.modified">
+        <div class="dbx-firebase-notification-settings-cell" [class.dbx-firebase-notification-settings-cell-modified]="cell.state?.modified" [class.dbx-firebase-notification-settings-cell-overridden]="cell.overridden">
           @if (cell.rotatingConfig) {
-            <span class="dbx-firebase-notification-settings-cell-button" [matTooltip]="cell.disabledTooltip ?? ''" [matTooltipDisabled]="!cell.disabledTooltip">
-              <dbx-button iconOnly [disabled]="delegate.disabledSignal() || cell.state?.disabled" [dbxRotatingButton]="cell.rotatingConfig" [dbxRotatingButtonValue]="cell.state?.value" (dbxRotatingButtonValueChange)="setCellValue(cell.method, $event)"></dbx-button>
+            <!-- the tooltip is on the wrapper, since a disabled button does not receive hover events -->
+            <span class="dbx-firebase-notification-settings-cell-button" [matTooltip]="cell.tooltip ?? ''" [matTooltipDisabled]="!cell.tooltip">
+              <dbx-button iconOnly [disabled]="delegate.disabledSignal() || cell.state?.disabled || cell.overridden" [dbxRotatingButton]="cell.rotatingConfig" [dbxRotatingButtonValue]="cell.value" (dbxRotatingButtonValueChange)="setCellValue(cell.method, $event)"></dbx-button>
             </span>
           } @else {
             <span class="dbx-firebase-notification-settings-cell-unavailable dbx-hint" aria-hidden="true">—</span>
@@ -113,8 +125,11 @@ export class DbxFirebaseNotificationSettingsListViewItemComponent extends Abstra
       const state = rowStates?.[method];
       const label = `${name} ${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method]}`;
       const rotatingConfig = state?.available ? dbxTristateRotatingButtonConfig({ label, defaultValue: state.defaultValue }) : undefined;
-      const disabledTooltip = state?.disabled ? `${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method]} notifications are turned off.` : undefined;
-      return { method, state, rotatingConfig, disabledTooltip };
+      const override = state?.override;
+      const value = override ? override.value : state?.value;
+      // a method turned off account-wide is off regardless of the override
+      const tooltip = state?.disabled ? `${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method]} notifications are turned off.` : override?.description;
+      return { method, state, rotatingConfig, value, overridden: Boolean(override), tooltip };
     });
   });
 

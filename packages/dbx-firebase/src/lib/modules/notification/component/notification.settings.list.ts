@@ -66,6 +66,25 @@ export interface DbxFirebaseNotificationSettingsCellState {
    * Whether the cell has a pending edit that differs from the saved value.
    */
   readonly modified: boolean;
+  /**
+   * Set when a higher-priority setting decides the cell, such as the global setting (`gc`) for a NotificationBox's cell. The cell then shows
+   * the override's value and cannot be changed.
+   */
+  readonly override?: Maybe<DbxFirebaseNotificationSettingsCellOverride>;
+}
+
+/**
+ * A higher-priority setting that decides a cell, so the cell's own value has no effect.
+ */
+export interface DbxFirebaseNotificationSettingsCellOverride {
+  /**
+   * Whether the overriding setting sends the method.
+   */
+  readonly value: boolean;
+  /**
+   * Explains what overrides the cell, shown as its tooltip. E.g. "Your setting for all guestbooks overrides this."
+   */
+  readonly description: string;
 }
 
 /**

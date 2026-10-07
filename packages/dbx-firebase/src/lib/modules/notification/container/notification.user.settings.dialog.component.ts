@@ -6,6 +6,7 @@ import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseNotificationUserSettingsConfig } from '../service/notification.settings';
 import { NotificationUserDocumentStore } from '../store/notificationuser.document.store';
 import { DbxFirebaseNotificationUserDocumentStoreDirective } from '../store/notificationuser.document.store.directive';
+import { DbxFirebaseNotificationBoxContextToggleComponent } from './notification.box.context.toggle.component';
 import { DbxFirebaseNotificationUserSettingsComponent, type DbxFirebaseNotificationUserSettingsComponentConfig } from './notification.user.settings.component';
 
 /**
@@ -24,9 +25,15 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
   /**
    * Config for the settings, such as the `groups` or `templateTypes` to show. Saving only changes the settings that are shown.
    *
-   * Its `settingsAnchor` overrides the app's, for the link to all of the notification settings.
+   * Its `settingsAnchor` overrides the app's, for the link to all of the notification settings. With a `notificationBox`, the dialog edits the
+   * user's settings for that box.
    */
   readonly config?: Maybe<DbxFirebaseNotificationUserSettingsComponentConfig>;
+  /**
+   * Whether to wrap the settings in a `dbx-firebase-notification-box-context-toggle` when the config has a `notificationBox`, so the user can
+   * switch between the box's settings and their global settings. True by default.
+   */
+  readonly showNotificationBoxToggle?: Maybe<boolean>;
   /**
    * The injector to open the dialog with.
    *
@@ -43,13 +50,26 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
  * Use it to show a few notification settings where they are relevant, such as only the `groups` for the current page. Links to
  * the page with all of the settings when a `settingsAnchor` is configured, such as through the `userSettings` of
  * `provideDbxFirebaseNotifications()`. Opened by {@link DbxFirebaseNotificationUserSettingsDialogButtonComponent}.
+ *
+ * When the config has a `notificationBox`, the settings are wrapped in a {@link DbxFirebaseNotificationBoxContextToggleComponent} unless
+ * `showNotificationBoxToggle` is false.
  */
 @Component({
   template: `
     <dbx-dialog-content class="dbx-dialog-content-with-header">
       <h3 class="dbx-dialog-content-header">{{ header }}</h3>
       <dbx-dialog-content-close (close)="close()"></dbx-dialog-content-close>
-      @if (hasNotificationUserDocumentStore) {
+      @if (showNotificationBoxToggle) {
+        <dbx-firebase-notification-box-context-toggle [notificationBox]="config?.notificationBox">
+          @if (hasNotificationUserDocumentStore) {
+            <dbx-firebase-notification-user-settings [config]="config"></dbx-firebase-notification-user-settings>
+          } @else {
+            <div dbxFirebaseNotificationUserDocument dbxRouteModelIdFromAuthUserId>
+              <dbx-firebase-notification-user-settings [config]="config"></dbx-firebase-notification-user-settings>
+            </div>
+          }
+        </dbx-firebase-notification-box-context-toggle>
+      } @else if (hasNotificationUserDocumentStore) {
         <dbx-firebase-notification-user-settings [config]="config"></dbx-firebase-notification-user-settings>
       } @else {
         <div dbxFirebaseNotificationUserDocument dbxRouteModelIdFromAuthUserId>
@@ -63,12 +83,13 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
       }
     </dbx-dialog-content>
   `,
-  imports: [DbxDialogModule, DbxLinkComponent, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseNotificationUserDocumentStoreDirective, DbxFirebaseNotificationUserSettingsComponent]
+  imports: [DbxDialogModule, DbxLinkComponent, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseNotificationUserDocumentStoreDirective, DbxFirebaseNotificationUserSettingsComponent, DbxFirebaseNotificationBoxContextToggleComponent]
 })
 export class DbxFirebaseNotificationUserSettingsDialogComponent extends AbstractDialogDirective<unknown, Maybe<DbxFirebaseNotificationUserSettingsDialogConfig>> {
   readonly hasNotificationUserDocumentStore = inject(NotificationUserDocumentStore, { optional: true }) != null;
   readonly header = this.data?.header ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_USER_SETTINGS_DIALOG_HEADER;
   readonly config = this.data?.config;
+  readonly showNotificationBoxToggle = this.config?.notificationBox != null && this.data?.showNotificationBoxToggle !== false;
 
   /**
    * Anchor to all of the notification settings. The dialog closes once it navigates.

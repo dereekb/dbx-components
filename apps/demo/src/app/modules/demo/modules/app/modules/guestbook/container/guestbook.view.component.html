@@ -21,9 +21,11 @@
               </div>
             }
           }
-          <div class="dbx-pt3">
-            <dbx-firebase-notification-user-settings-dialog-button text="Guestbook Notifications" [config]="guestbookNotificationSettingsConfig"></dbx-firebase-notification-user-settings-dialog-button>
-          </div>
+          @if (guestbookNotificationSettingsConfigSignal(); as guestbookNotificationSettingsConfig) {
+            <div class="dbx-pt3">
+              <dbx-firebase-notification-user-settings-dialog-button text="Guestbook Notifications" [config]="guestbookNotificationSettingsConfig"></dbx-firebase-notification-user-settings-dialog-button>
+            </div>
+          }
         </div>
       </div>
       <div class="guestbook-view-content" demoGuestbookEntryCollection [constraints]="entryConstraints" dbxFirebaseCollectionChange="auto">

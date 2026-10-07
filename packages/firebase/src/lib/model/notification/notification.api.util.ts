@@ -123,6 +123,9 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
     lk: updateMaybeValue(a.lk, inputLk),
     bk: updateMaybeValue(a.bk, inputBk),
     // values remain the same
+    // the update does not change the recipient's flag or exclusion
+    f: a.f,
+    x: a.x,
     ns: a.ns,
     nb: a.nb,
     i: a.i

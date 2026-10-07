@@ -1,6 +1,7 @@
-import { Component, type OnDestroy, inject, viewChild } from '@angular/core';
+import { Component, type OnDestroy, computed, inject, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DemoGuestbookEntryCollectionStoreDirective, DemoGuestbookEntryDocumentStoreDirective, DemoGuestbookEntryListComponent, GuestbookDocumentStore, GuestbookEntryDocumentStore } from 'demo-components';
 import { DemoGuestbookAlbumComponent } from './guestbook.album.component';
@@ -11,7 +12,7 @@ import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFirebaseCollectionListDirective, type DbxFirebaseNotificationUserSettingsComponentConfig, DbxFirebaseNotificationUserSettingsDialogButtonComponent } from '@dereekb/dbx-firebase';
-import { DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP, publishedGuestbookEntriesQuery } from 'demo-firebase';
+import { publishedGuestbookEntriesQuery } from 'demo-firebase';
 
 @Component({
   selector: 'app-guestbook-view',
@@ -39,8 +40,13 @@ export class DemoGuestbookViewComponent implements OnDestroy {
 
   readonly entryConstraints = publishedGuestbookEntriesQuery({ published: true });
 
-  // only the guestbook notifications, without the account-wide delivery settings
-  readonly guestbookNotificationSettingsConfig: DbxFirebaseNotificationUserSettingsComponentConfig = { groups: [DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP.key], showDeliveryMethodSettings: false };
+  readonly guestbookKeySignal = toSignal(this.guestbookStore.key$);
+
+  // the user's settings for this guestbook's NotificationBox, without the account-wide delivery settings
+  readonly guestbookNotificationSettingsConfigSignal = computed<Maybe<DbxFirebaseNotificationUserSettingsComponentConfig>>(() => {
+    const modelKey = this.guestbookKeySignal();
+    return modelKey ? { notificationBox: { modelKey, modelName: 'guestbook' }, showDeliveryMethodSettings: false } : undefined;
+  });
 
   readonly documentStore = viewChild.required(GuestbookEntryDocumentStore);
 

@@ -204,4 +204,69 @@ describe('updateNotificationUserNotificationBoxRecipientConfigIfChanged()', () =
 
     expect(result).toBeUndefined();
   });
+
+  it('should keep the flag and exclusion of the config when updating it', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        x: true,
+        c: {}
+      },
+      {
+        nb: 'a',
+        configs: [{ type: 'a', se: true }]
+      }
+    );
+
+    expect(result).toBeDefined();
+    expect(result?.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+    expect(result?.x).toBe(true);
+  });
+
+  it('should return undefined for an empty update on a config with a flag and exclusion', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        x: true,
+        c: {}
+      },
+      {
+        nb: 'a'
+      }
+    );
+
+    expect(result).toBeUndefined();
+  });
+
+  it('should only change the template configs of an opted-out config and flag it for sync', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        c: {
+          b: { sn: false }
+        }
+      },
+      {
+        nb: 'a',
+        configs: [{ type: 'a', se: true }]
+      }
+    );
+
+    expect(result).toEqual({
+      nb: 'a',
+      i: 0,
+      f: NotificationBoxRecipientFlag.OPT_OUT,
+      ns: true,
+      c: {
+        a: { se: true },
+        b: { sn: false }
+      }
+    });
+  });
 });

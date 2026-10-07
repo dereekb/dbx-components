@@ -26,6 +26,11 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_USER_SETTINGS_DIALOG_BUTTON_ICON 
  * ```html
  * <dbx-firebase-notification-user-settings-dialog-button header="Guestbook Notifications" [config]="{ groups: ['guestbook'] }"></dbx-firebase-notification-user-settings-dialog-button>
  * ```
+ *
+ * @example
+ * ```html
+ * <dbx-firebase-notification-user-settings-dialog-button text="Guestbook Notifications" [config]="{ notificationBox: { modelKey: guestbookKey, modelName: 'guestbook' } }"></dbx-firebase-notification-user-settings-dialog-button>
+ * ```
  */
 @Component({
   selector: 'dbx-firebase-notification-user-settings-dialog-button',
@@ -50,6 +55,10 @@ export class DbxFirebaseNotificationUserSettingsDialogButtonComponent {
    * Dialog header. Defaults to the button text.
    */
   readonly header = input<Maybe<string>>();
+  /**
+   * Whether the dialog lets the user switch between a `notificationBox`'s settings and their global settings. True by default.
+   */
+  readonly showNotificationBoxToggle = input<Maybe<boolean>>();
   readonly text = input<Maybe<string>>();
   readonly icon = input<Maybe<string>>();
 
@@ -61,6 +70,7 @@ export class DbxFirebaseNotificationUserSettingsDialogButtonComponent {
     DbxFirebaseNotificationUserSettingsDialogComponent.openDialog(this._matDialog, {
       header: this.header() ?? this.textSignal(),
       config: this.config(),
+      showNotificationBoxToggle: this.showNotificationBoxToggle(),
       injector: this._injector
     });
   }

@@ -3,6 +3,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ComponentStore } from '@ngrx/component-store';
 import {
   hasNotificationDeliveryMethodOptIn,
+  type NotificationBoxId,
+  NotificationBoxRecipientFlag,
+  type NotificationBoxRecipientTemplateConfigRecord,
   NotificationDeliveryMethod,
   type NotificationDeliveryMethodMap,
   type NotificationTemplateType,
@@ -15,7 +18,7 @@ import {
 } from '@dereekb/firebase';
 import { isLoadingStateLoading, type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { type E164PhoneNumber, type Maybe, mergeObjects } from '@dereekb/util';
-import { map, type Observable, shareReplay } from 'rxjs';
+import { combineLatest, distinctUntilChanged, finalize, map, type Observable, of, shareReplay, skip, tap } from 'rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { DbxFirebaseNotificationSettingsListDelegate, type DbxFirebaseNotificationSettingsListItemValue } from '../component/notification.settings.list';
 import {
@@ -25,10 +28,15 @@ import {
   dbxFirebaseNotificationSettingsCellStates,
   dbxFirebaseNotificationSettingsDeliveryMethods,
   dbxFirebaseNotificationSettingsListItemValues,
-  dbxFirebaseNotificationUserGlobalConfigUpdateParams,
-  DbxFirebaseNotificationUserSettingsConfig
+  DbxFirebaseNotificationUserSettingsConfig,
+  type DbxFirebaseNotificationUserSettingsNotificationBoxConfig,
+  dbxFirebaseNotificationUserSettingsNotificationBoxTarget,
+  type DbxFirebaseNotificationUserSettingsNotificationBoxTarget,
+  dbxFirebaseNotificationUserSettingsTexts,
+  dbxFirebaseNotificationUserSettingsUpdateParams
 } from '../service/notification.settings';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
+import { DbxFirebaseNotificationBoxContext } from './notification.box.context';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 
 /**
@@ -42,6 +50,13 @@ export interface DbxFirebaseNotificationUserSettingsStoreConfig extends DbxFireb
    * Defaults to the signed-in user's phone number, but only when the NotificationUser being edited is theirs.
    */
   readonly authPhoneNumber?: Maybe<E164PhoneNumber>;
+  /**
+   * The NotificationBox to edit the user's settings for. When set, the cells read from and save to the user's `bc` entry for that box
+   * instead of their global settings (`gc`), only the template types of the box's model are shown, and a cell `gc` sets shows as overridden.
+   *
+   * An ancestor {@link DbxFirebaseNotificationBoxContext} takes precedence.
+   */
+  readonly notificationBox?: Maybe<DbxFirebaseNotificationUserSettingsNotificationBoxConfig>;
 }
 
 /**
@@ -49,9 +64,10 @@ export interface DbxFirebaseNotificationUserSettingsStoreConfig extends DbxFireb
  *
  * - `loading` — the NotificationUser is loading
  * - `missing` — the NotificationUser does not exist yet
+ * - `notRecipient` — the targeted NotificationBox does not send to the user: they have no `bc` entry for it, they removed themselves (`rm`), or they have no NotificationUser
  * - `ready` — the NotificationUser is loaded
  */
-export type DbxFirebaseNotificationUserSettingsPageState = 'loading' | 'missing' | 'ready';
+export type DbxFirebaseNotificationUserSettingsPageState = 'loading' | 'missing' | 'notRecipient' | 'ready';
 
 /**
  * An account-wide on/off switch for a delivery method.
@@ -126,12 +142,13 @@ const INITIAL_STATE: DbxFirebaseNotificationUserSettingsStoreState = {
 };
 
 /**
- * Store for editing the global notification settings (`gc`) of the NotificationUser in the ancestor
- * {@link NotificationUserDocumentStore}.
+ * Store for editing the notification settings of the NotificationUser in the ancestor {@link NotificationUserDocumentStore}: their global
+ * settings (`gc`), or their `bc` entry for one NotificationBox while a box is active. A box is active when the config sets `notificationBox`,
+ * or when an ancestor {@link DbxFirebaseNotificationBoxContext} is on.
  *
- * Cell and switch changes are kept as pending edits, and {@link updateParams$} turns them into a single `gc` update for
- * `updateNotificationUser()`. Once a snapshot with the saved changes arrives, the edits it has are dropped, so a save needs no
- * cleanup. Provide a {@link DbxFirebaseNotificationUserSettingsStoreListDelegate} alongside it to drive
+ * Cell and switch changes are kept as pending edits, and {@link updateParams$} turns them into a single update for
+ * `updateNotificationUser()`. The store never saves. Once a snapshot with the saved changes arrives, the edits it has are dropped, so a save
+ * needs no cleanup. Provide a {@link DbxFirebaseNotificationUserSettingsStoreListDelegate} alongside it to drive
  * `dbx-firebase-notification-settings-list`.
  */
 @Injectable()
@@ -141,10 +158,16 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
 
   private readonly _authService = inject(DbxFirebaseAuthService);
   private readonly _appConfig = inject(DbxFirebaseNotificationUserSettingsConfig, { optional: true });
+  private readonly _notificationBoxContext = inject(DbxFirebaseNotificationBoxContext, { optional: true });
 
   constructor() {
     super(INITIAL_STATE);
-    this._dropSavedEdits(this.savedGc$);
+    this._dropSavedEdits(this.select({ gc: this.savedGc$, c: this.savedTemplateConfigs$ }));
+    this._clearCellEditsOnTargetChange(this.notificationBoxId$);
+
+    if (this._notificationBoxContext) {
+      this._reportLocked(this.hasCellEdits$);
+    }
   }
 
   // MARK: Config
@@ -160,21 +183,77 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   readonly switchableDeliveryMethods$ = this.select(this.config$, (config) => config.switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS);
   readonly textMessageDisclosure$ = this.select(this.config$, (config) => config.textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
 
+  // MARK: NotificationBox
+  /**
+   * Whether an ancestor {@link DbxFirebaseNotificationBoxContext} decides the targeted box and whether it is active.
+   */
+  readonly hasNotificationBoxContext = this._notificationBoxContext != null;
+
+  /**
+   * The targeted NotificationBox's config, from the ancestor {@link DbxFirebaseNotificationBoxContext} when it sets one, otherwise from the config.
+   */
+  readonly notificationBox$: Observable<Maybe<DbxFirebaseNotificationUserSettingsNotificationBoxConfig>> = combineLatest([this.config$, this._notificationBoxContext?.notificationBox$ ?? of(undefined)]).pipe(
+    map(([config, contextNotificationBox]) => contextNotificationBox ?? config.notificationBox),
+    shareReplay(1)
+  );
+
+  /**
+   * The targeted NotificationBox. Decides the rows, and stays set while the box context is off so the rows do not change.
+   */
+  readonly notificationBoxTarget$: Observable<Maybe<DbxFirebaseNotificationUserSettingsNotificationBoxTarget>> = this.notificationBox$.pipe(
+    map((notificationBox) => dbxFirebaseNotificationUserSettingsNotificationBoxTarget(notificationBox)),
+    distinctUntilChanged((a, b) => a?.notificationBoxId === b?.notificationBoxId && a?.modelKey === b?.modelKey),
+    shareReplay(1)
+  );
+
+  /**
+   * The NotificationBox being edited: the targeted box while the box context is on, or always when there is no context. Undefined
+   * while the global settings (`gc`) are edited.
+   */
+  readonly activeNotificationBoxTarget$ = this.select(this.notificationBoxTarget$, this._notificationBoxContext?.enabled$ ?? of(true), (target, enabled) => (enabled ? target : undefined));
+
+  /**
+   * Id of the NotificationBox being edited.
+   */
+  readonly notificationBoxId$: Observable<Maybe<NotificationBoxId>> = this.select(this.activeNotificationBoxTarget$, (target) => target?.notificationBoxId);
+
+  /**
+   * The texts that describe the settings.
+   */
+  readonly texts$ = this.select(this.notificationBox$, this.notificationBoxTarget$, (notificationBox, target) => dbxFirebaseNotificationUserSettingsTexts({ notificationBox: target ? notificationBox : undefined, hasToggle: this.hasNotificationBoxContext }));
+
+  /**
+   * The hint shown above the settings. Uses the global hint while a targeted box's context is off.
+   */
+  readonly hint$ = this.select(this.texts$, this.notificationBoxTarget$, this.notificationBoxId$, (texts, target, notificationBoxId) => (target != null && notificationBoxId == null ? (texts.globalHint ?? texts.hint) : texts.hint));
+
   // MARK: Document
   /**
    * The loaded NotificationUser.
    */
   readonly notificationUser$: Observable<Maybe<NotificationUser>> = this.select(this.notificationUserDocumentStore.dataLoadingState$, (state) => state.value);
 
-  readonly pageState$ = this.select(this.notificationUserDocumentStore.hasRef$, this.notificationUserDocumentStore.dataLoadingState$, (hasRef, state) => {
+  /**
+   * The user's saved config for the NotificationBox being edited (their `bc` entry), if they have one.
+   */
+  readonly savedBoxConfig$ = this.select(this.notificationUser$, this.notificationBoxId$, (notificationUser, notificationBoxId) => (notificationBoxId == null ? undefined : notificationUser?.bc.find((x) => x.nb === notificationBoxId)));
+
+  /**
+   * Whether the NotificationBox being edited is turned off for the user (its entry is flagged or excluded), so its settings have no effect for now.
+   */
+  readonly isBoxRecipientInactive$ = this.select(this.savedBoxConfig$, (entry) => Boolean(entry?.x) || (entry?.f ?? NotificationBoxRecipientFlag.ENABLED) !== NotificationBoxRecipientFlag.ENABLED);
+
+  readonly pageState$ = this.select(this.notificationUserDocumentStore.hasRef$, this.notificationUserDocumentStore.dataLoadingState$, this.notificationBoxId$, (hasRef, state, notificationBoxId) => {
     let pageState: DbxFirebaseNotificationUserSettingsPageState;
 
     if (state.value) {
-      pageState = 'ready';
+      const entry = notificationBoxId == null ? undefined : state.value.bc.find((x) => x.nb === notificationBoxId);
+      pageState = notificationBoxId != null && (entry == null || entry.rm) ? 'notRecipient' : 'ready';
     } else if (!hasRef || isLoadingStateLoading(state)) {
       pageState = 'loading';
     } else {
-      pageState = 'missing';
+      // creating a NotificationUser would not make the user a recipient of the box
+      pageState = notificationBoxId == null ? 'missing' : 'notRecipient';
     }
 
     return pageState;
@@ -185,13 +264,21 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
    */
   readonly savedGc$ = this.select(this.notificationUser$, (notificationUser) => notificationUser?.gc);
 
+  /**
+   * The saved template configs the cells edit: the box config's while a box is being edited, otherwise `gc`'s.
+   */
+  readonly savedTemplateConfigs$: Observable<Maybe<NotificationBoxRecipientTemplateConfigRecord>> = this.select(this.savedGc$, this.savedBoxConfig$, this.notificationBoxId$, (gc, boxConfig, notificationBoxId) => (notificationBoxId == null ? gc?.c : boxConfig?.c));
+
   // MARK: List
   /**
-   * The list rows. Only changes with the config, so cell changes never recreate the rows.
+   * The list rows. Only changes with the config and the targeted box, so cell changes and switching the box context never recreate the rows.
+   *
+   * With a targeted box, only the template types of the box's model are shown.
    */
-  readonly items$ = this.select(this.config$, (config) => {
+  readonly items$ = this.select(this.config$, this.notificationBoxTarget$, (config, target) => {
     const { groups, templateTypes, hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = config;
-    const typeInfos = this.notificationTemplateService.appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypeInfo();
+    const recordService = this.notificationTemplateService.appNotificationTemplateTypeInfoRecordService;
+    const typeInfos = target ? recordService.getTemplateTypesInfoForNotificationModel(target.modelKey) : recordService.getAllKnownTemplateTypeInfo();
     return dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: dbxFirebaseNotificationSettingsDeliveryMethods(config), groups, templateTypes, hiddenTemplateTypes, fallbackGroupBy, defaultGroup });
   });
 
@@ -304,7 +391,10 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   });
 
   // MARK: Cells
-  readonly cellStates$ = this.select(this.select({ items: this.items$, deliveryMethods: this.columns$, gc: this.savedGc$, edits: this.select((state) => state.cellEdits), disabledDeliveryMethods: this.disabledDeliveryMethods$ }), (input) => dbxFirebaseNotificationSettingsCellStates(input));
+  readonly cellStates$ = this.select(
+    this.select({ items: this.items$, deliveryMethods: this.columns$, gc: this.savedGc$, edits: this.select((state) => state.cellEdits), disabledDeliveryMethods: this.disabledDeliveryMethods$, notificationBoxId: this.notificationBoxId$, savedBoxConfig: this.savedBoxConfig$, texts: this.texts$ }),
+    ({ notificationBoxId, savedBoxConfig, texts, ...input }) => dbxFirebaseNotificationSettingsCellStates({ ...input, boxConfig: notificationBoxId == null ? undefined : (savedBoxConfig ?? { c: {} }), overrideDescription: texts.overrideDescription })
+  );
 
   /**
    * Whether every cell and switch is disabled, which is until the NotificationUser is loaded.
@@ -313,21 +403,25 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
 
   // MARK: Changes
   /**
-   * The `gc` update params for the pending changes, or undefined when nothing changed.
+   * The `updateNotificationUser()` params for the pending changes, or undefined when nothing changed.
+   *
+   * Cell changes go to `gc`, or to the box's `bc` entry (with `resync`) while a box is being edited. Switch changes always go to `gc`.
    */
-  readonly updateParams$ = this.select(
-    this.savedGc$,
-    this.select((state) => state.cellEdits),
-    this.nextDisabledDeliveryMethods$,
-    (gc, edits, disabledDeliveryMethods) => dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc, edits, disabledDeliveryMethods })
+  readonly updateParams$ = this.select(this.select({ gc: this.savedGc$, notificationBoxId: this.notificationBoxId$, boxConfig: this.savedBoxConfig$, edits: this.select((state) => state.cellEdits), disabledDeliveryMethods: this.nextDisabledDeliveryMethods$ }), (input) =>
+    dbxFirebaseNotificationUserSettingsUpdateParams(input)
   );
 
   readonly isModified$ = this.select(this.updateParams$, (params) => params != null);
 
   /**
+   * Whether there are pending cell changes. The cells are keyed by type only, so they can't carry over to another box or to `gc`.
+   */
+  readonly hasCellEdits$ = this.select(this.updateParams$, this.notificationBoxId$, (params, notificationBoxId) => (notificationBoxId == null ? params?.gc?.configs != null : params?.bc != null));
+
+  /**
    * Whether saving the pending changes opts into texts for the first time, which records the user's consent.
    */
-  readonly enablesText$ = this.select(this.savedGc$, this.updateParams$, (gc, params) => !hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) && params != null && hasNotificationDeliveryMethodOptIn(applyGcUpdateParams(gc, params), NotificationDeliveryMethod.TEXT));
+  readonly enablesText$ = this.select(this.savedGc$, this.updateParams$, (gc, params) => !hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) && params?.gc != null && hasNotificationDeliveryMethodOptIn(applyGcUpdateParams(gc, params.gc), NotificationDeliveryMethod.TEXT));
 
   // MARK: State Changes
   /**
@@ -357,13 +451,39 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   readonly reset = this.updater((state) => ({ ...state, cellEdits: {}, methodEdits: {} }));
 
   /**
-   * Drops the pending edits the saved config already has.
+   * Drops the pending edits the saved config already has. Cell edits are compared with the template configs the cells edit, and switch
+   * edits with `gc`.
    */
-  private readonly _dropSavedEdits = this.updater((state, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>) => ({
+  private readonly _dropSavedEdits = this.updater((state, saved: { readonly gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>; readonly c: Maybe<NotificationBoxRecipientTemplateConfigRecord> }) => ({
     ...state,
-    cellEdits: unsavedCellEdits(state.cellEdits, gc),
-    methodEdits: unsavedMethodEdits(state.methodEdits, gc)
+    cellEdits: unsavedCellEdits(state.cellEdits, saved.c),
+    methodEdits: unsavedMethodEdits(state.methodEdits, saved.gc)
   }));
+
+  private readonly _clearCellEdits = this.updater((state) => ({ ...state, cellEdits: {} }));
+
+  /**
+   * Clears the cell edits whenever the NotificationBox being edited changes: a new config, a new context box, or the box context switching
+   * on or off. Cell edits are keyed by type only, so they can't carry over. Switch edits apply to `gc` either way and are kept.
+   */
+  private readonly _clearCellEditsOnTargetChange = this.effect((notificationBoxId$: Observable<Maybe<NotificationBoxId>>) =>
+    notificationBoxId$.pipe(
+      distinctUntilChanged(),
+      skip(1),
+      tap(() => this._clearCellEdits())
+    )
+  );
+
+  /**
+   * Reports pending cell changes to the ancestor {@link DbxFirebaseNotificationBoxContext}, so its toggle is locked while there are any.
+   */
+  private readonly _reportLocked = this.effect((locked$: Observable<boolean>) =>
+    locked$.pipe(
+      distinctUntilChanged(),
+      tap((locked) => this._notificationBoxContext?.setLocked(locked)),
+      finalize(() => this._notificationBoxContext?.setLocked(false))
+    )
+  );
 }
 
 /**
@@ -384,18 +504,18 @@ export class DbxFirebaseNotificationUserSettingsStoreListDelegate extends DbxFir
 }
 
 /**
- * Returns the cell edits whose value differs from the saved config.
+ * Returns the cell edits whose value differs from the saved template configs.
  *
  * @param cellEdits - The pending cell edits.
- * @param gc - The saved global config.
+ * @param c - The saved template configs the cells edit.
  * @returns The cell edits not yet saved.
  */
-function unsavedCellEdits(cellEdits: DbxFirebaseNotificationSettingsCellEdits, gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>): DbxFirebaseNotificationSettingsCellEdits {
+function unsavedCellEdits(cellEdits: DbxFirebaseNotificationSettingsCellEdits, c: Maybe<NotificationBoxRecipientTemplateConfigRecord>): DbxFirebaseNotificationSettingsCellEdits {
   const result: DbxFirebaseNotificationSettingsCellEdits = {};
 
   Object.entries(cellEdits).forEach(([type, typeEdits]) => {
     (Object.entries(typeEdits) as [NotificationDeliveryMethod, Maybe<boolean>][]).forEach(([method, value]) => {
-      if ((value ?? null) !== (readNotificationDeliveryMethodFlag(gc?.c?.[type], method) ?? null)) {
+      if ((value ?? null) !== (readNotificationDeliveryMethodFlag(c?.[type], method) ?? null)) {
         result[type] = { ...result[type], [method]: value };
       }
     });

@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
-import { DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP, dbxFirebaseNotificationSettingsCellStates, dbxFirebaseNotificationSettingsListItemValues, dbxFirebaseNotificationUserGlobalConfigUpdateParams, dbxFirebaseNotificationUserTextPhoneNumberUpdateParams } from './notification.settings';
+import { firestoreModelIdentity, notificationBoxIdForModel, NotificationDeliveryMethod, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
+import {
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT,
+  dbxFirebaseNotificationSettingsCellStates,
+  dbxFirebaseNotificationSettingsListItemValues,
+  dbxFirebaseNotificationUserBoxConfigUpdateParams,
+  dbxFirebaseNotificationUserGlobalConfigUpdateParams,
+  dbxFirebaseNotificationUserSettingsNotificationBoxTarget,
+  dbxFirebaseNotificationUserSettingsTexts,
+  dbxFirebaseNotificationUserSettingsUpdateParams,
+  dbxFirebaseNotificationUserTextPhoneNumberUpdateParams
+} from './notification.settings';
 
 const { EMAIL, TEXT, NOTIFICATION_SUMMARY } = NotificationDeliveryMethod;
 const COLUMNS = [EMAIL, TEXT, NOTIFICATION_SUMMARY];
@@ -183,5 +196,120 @@ describe('dbxFirebaseNotificationUserTextPhoneNumberUpdateParams()', () => {
 
   it('should leave the other disabled methods alone', () => {
     expect(dbxFirebaseNotificationUserTextPhoneNumberUpdateParams({ gc: { dm: [EMAIL] }, phoneNumber })).toEqual({ t: phoneNumber });
+  });
+});
+
+describe('dbxFirebaseNotificationUserSettingsNotificationBoxTarget()', () => {
+  const modelKey = 'gb/gb1';
+  const notificationBoxId = notificationBoxIdForModel(modelKey);
+
+  it('should resolve the box id from the model key', () => {
+    expect(dbxFirebaseNotificationUserSettingsNotificationBoxTarget({ modelKey })).toEqual({ modelKey, notificationBoxId });
+  });
+
+  it('should resolve the model key from the box id', () => {
+    expect(dbxFirebaseNotificationUserSettingsNotificationBoxTarget({ notificationBoxId })).toEqual({ modelKey, notificationBoxId });
+  });
+
+  it('should return undefined when neither is set', () => {
+    expect(dbxFirebaseNotificationUserSettingsNotificationBoxTarget({})).toBeUndefined();
+    expect(dbxFirebaseNotificationUserSettingsNotificationBoxTarget(undefined)).toBeUndefined();
+  });
+});
+
+describe('dbxFirebaseNotificationUserSettingsTexts()', () => {
+  it('should only return the hint without a box', () => {
+    expect(dbxFirebaseNotificationUserSettingsTexts({})).toEqual({ hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT });
+  });
+
+  it('should return the generic box texts when the model has no name', () => {
+    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1' } });
+    expect(texts.notRecipientMessage).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE);
+    expect(texts.overrideDescription).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION);
+    expect(texts.boxScopeLabel).toBe('Only here');
+    expect(texts.globalScopeLabel).toBe('Everywhere');
+  });
+
+  it("should name the box's model", () => {
+    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook' } });
+    expect(texts.notRecipientMessage).toBe('You do not receive notifications for this guestbook.');
+    expect(texts.overrideDescription).toBe('Your setting for all guestbooks overrides this.');
+    expect(texts.boxScopeLabel).toBe('This guestbook');
+    expect(texts.globalScopeLabel).toBe('All guestbooks');
+  });
+
+  it('should point the override description at the toggle', () => {
+    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook', modelPluralName: 'books' }, hasToggle: true });
+    expect(texts.overrideDescription).toBe('Your setting for all books overrides this. Switch to All books to change it.');
+  });
+});
+
+describe('dbxFirebaseNotificationSettingsCellStates() with a box config', () => {
+  const items = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS, groups: ['guestbook'] });
+
+  it('should read the values and default from the box config', () => {
+    const states = dbxFirebaseNotificationSettingsCellStates({ items, deliveryMethods: COLUMNS, gc: { c: { GBE_C: { st: true } } }, boxConfig: { c: { GBE_C: { se: true, sd: false } } } });
+    expect(states['GBE_C'][EMAIL]?.value).toBe(true);
+    expect(states['GBE_C'][NOTIFICATION_SUMMARY]?.value).toBeNull();
+    expect(states['GBE_C'][NOTIFICATION_SUMMARY]?.defaultValue).toBe(false);
+  });
+
+  it('should override the cells a gc cell sets', () => {
+    const states = dbxFirebaseNotificationSettingsCellStates({ items, deliveryMethods: COLUMNS, gc: { c: { GBE_C: { st: true } } }, boxConfig: { c: {} }, overrideDescription: 'Overridden.' });
+    expect(states['GBE_C'][TEXT]?.override).toEqual({ value: true, description: 'Overridden.' });
+    expect(states['GBE_C'][EMAIL]?.override).toBeUndefined();
+  });
+
+  it('should override every cell of a type whose gc sets sd', () => {
+    const states = dbxFirebaseNotificationSettingsCellStates({ items, deliveryMethods: COLUMNS, gc: { c: { GBE_C: { sd: false } } }, boxConfig: { c: {} } });
+    COLUMNS.forEach((method) => {
+      expect(states['GBE_C'][method]?.override).toEqual({ value: false, description: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION });
+    });
+  });
+
+  it('should keep a disabled method disabled and not overridden', () => {
+    const states = dbxFirebaseNotificationSettingsCellStates({ items, deliveryMethods: COLUMNS, gc: { dm: [TEXT] }, boxConfig: { c: {} } });
+    expect(states['GBE_C'][TEXT]?.disabled).toBe(true);
+    expect(states['GBE_C'][TEXT]?.override).toBeUndefined();
+  });
+
+  it('should not set override keys without a box config', () => {
+    const states = dbxFirebaseNotificationSettingsCellStates({ items, deliveryMethods: COLUMNS, gc: { c: { GBE_C: { sd: false } } } });
+    expect('override' in (states['GBE_C'][EMAIL] ?? {})).toBe(false);
+  });
+});
+
+describe('dbxFirebaseNotificationUserBoxConfigUpdateParams()', () => {
+  it('should only send the changed cells', () => {
+    const result = dbxFirebaseNotificationUserBoxConfigUpdateParams({ notificationBoxId: 'nb', boxConfig: { c: { GBE_C: { se: true } } }, edits: { GBE_C: { [EMAIL]: true, [TEXT]: false } } });
+    expect(result).toEqual({ nb: 'nb', configs: [{ type: 'GBE_C', st: false }] });
+  });
+
+  it('should send null to clear a cell', () => {
+    const result = dbxFirebaseNotificationUserBoxConfigUpdateParams({ notificationBoxId: 'nb', boxConfig: { c: { GBE_C: { se: true } } }, edits: { GBE_C: { [EMAIL]: null } } });
+    expect(result).toEqual({ nb: 'nb', configs: [{ type: 'GBE_C', se: null }] });
+  });
+
+  it('should return undefined when nothing changed', () => {
+    expect(dbxFirebaseNotificationUserBoxConfigUpdateParams({ notificationBoxId: 'nb', boxConfig: { c: { GBE_C: { se: true } } }, edits: { GBE_C: { [EMAIL]: true } } })).toBeUndefined();
+  });
+});
+
+describe('dbxFirebaseNotificationUserSettingsUpdateParams()', () => {
+  it('should send the cell changes as gc without a box', () => {
+    expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, edits: { E: { [TEXT]: true } } })).toEqual({ gc: { configs: [{ type: 'E', st: true }] } });
+  });
+
+  it('should send the cell changes as the box config with resync', () => {
+    expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxId: 'nb', boxConfig: { c: {} }, edits: { GBE_C: { [TEXT]: true } } })).toEqual({ bc: [{ nb: 'nb', configs: [{ type: 'GBE_C', st: true }] }], resync: true });
+  });
+
+  it('should send the switch changes as gc with a box', () => {
+    expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxId: 'nb', boxConfig: { c: {} }, edits: { GBE_C: { [TEXT]: true } }, disabledDeliveryMethods: [EMAIL] })).toEqual({ gc: { dm: [EMAIL] }, bc: [{ nb: 'nb', configs: [{ type: 'GBE_C', st: true }] }], resync: true });
+  });
+
+  it('should return undefined when nothing changed', () => {
+    expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxId: 'nb', boxConfig: { c: {} }, edits: {}, disabledDeliveryMethods: [] })).toBeUndefined();
+    expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, edits: {} })).toBeUndefined();
   });
 });

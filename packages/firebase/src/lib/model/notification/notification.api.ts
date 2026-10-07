@@ -144,12 +144,21 @@ export interface UpdateNotificationUserParams extends TargetModelParams {
   readonly gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
   readonly dc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
   readonly bc?: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
+  /**
+   * Whether to sync the box configs this update leaves flagged (`ns`) to their NotificationBoxes right away, instead of waiting for
+   * `resyncNotificationUser` / `resyncAllNotificationUsers`.
+   *
+   * Only the NotificationUser's own recipient entries are written. The sync is best-effort: a failed sync does not fail the update, and leaves
+   * the configs flagged for the next resync. An app can turn it off by clearing it in its update handler, e.g. `{ ...data, resync: undefined }`.
+   */
+  readonly resync?: Maybe<boolean>;
 }
 
 export const updateNotificationUserParamsType = targetModelParamsType.merge({
   'gc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
   'dc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
-  'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array())
+  'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array()),
+  'resync?': clearable('boolean')
 }) as Type<UpdateNotificationUserParams>;
 
 export type ResyncNotificationUserParams = TargetModelParams;

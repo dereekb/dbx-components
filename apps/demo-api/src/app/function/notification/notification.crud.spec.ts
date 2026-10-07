@@ -792,6 +792,129 @@ demoApiFunctionContextFactory((f) => {
 
                                 expect(relatedNotificationBoxConfig.c['UNKNOWN_TYPE']).toBeUndefined();
                               });
+
+                              describe('box-scoped settings save', () => {
+                                beforeEach(async () => {
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    gc: {
+                                      configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, se: false }]
+                                    },
+                                    bc: [
+                                      {
+                                        nb: nb_g.documentId,
+                                        configs: [
+                                          { type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, se: true },
+                                          { type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, sn: false }
+                                        ]
+                                      }
+                                    ]
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                });
+
+                                it("should only change the box's cells it sends, and leave gc and the other boxes untouched.", async () => {
+                                  const before = await assertSnapshotData(nu.document);
+                                  const beforeProfileConfig = before.bc.find((x) => x.nb === nb_p.documentId);
+
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [
+                                      {
+                                        nb: nb_g.documentId,
+                                        configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }]
+                                      }
+                                    ]
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                  let after = await assertSnapshotData(nu.document);
+                                  expect(after.gc).toEqual(before.gc);
+                                  expect(after.bc.find((x) => x.nb === nb_p.documentId)).toEqual(beforeProfileConfig);
+
+                                  let guestbookConfig = after.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true, st: true });
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ sn: false });
+                                  expect(guestbookConfig.ns).toBe(true);
+
+                                  // clearing the last value of a type removes the type
+                                  const clearParams: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [
+                                      {
+                                        nb: nb_g.documentId,
+                                        configs: [{ type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, sn: null }]
+                                      }
+                                    ]
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, clearParams));
+
+                                  after = await assertSnapshotData(nu.document);
+                                  expect(after.gc).toEqual(before.gc);
+
+                                  guestbookConfig = after.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toBeUndefined();
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true, st: true });
+                                });
+
+                                it("should keep the box config's opt-out flag.", async () => {
+                                  const before = await assertSnapshotData(nu.document);
+                                  await nu.document.update({ bc: before.bc.map((x) => (x.nb === nb_g.documentId ? { ...x, f: NotificationBoxRecipientFlag.OPT_OUT } : x)) });
+
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [
+                                      {
+                                        nb: nb_g.documentId,
+                                        configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }]
+                                      }
+                                    ]
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                  const after = await assertSnapshotData(nu.document);
+                                  const guestbookConfig = after.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+
+                                  expect(guestbookConfig.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true, st: true });
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ sn: false });
+                                });
+
+                                it('should sync the box config to its NotificationBox right away when resync is set.', async () => {
+                                  const beforeProfileBox = await assertSnapshotData(nb_p.document);
+
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [
+                                      {
+                                        nb: nb_g.documentId,
+                                        configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }]
+                                      }
+                                    ],
+                                    resync: true
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                  const notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.ns).toBeFalsy();
+
+                                  const guestbookConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                  expect(guestbookConfig.ns).toBeFalsy();
+
+                                  const guestbookBox = await assertSnapshotData(nb_g.document);
+                                  const recipient = guestbookBox.r.find((x) => x.uid === u.uid);
+                                  expect(recipient).toBeDefined();
+                                  expect(recipient?.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]?.st).toBe(true);
+
+                                  const afterProfileBox = await assertSnapshotData(nb_p.document);
+                                  expect(afterProfileBox.r).toEqual(beforeProfileBox.r);
+                                });
+                              });
                             });
 
                             describe('updating NotificationBox recipient', () => {

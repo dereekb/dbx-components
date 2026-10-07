@@ -498,7 +498,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'gc', typeText: 'Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>' },
       { name: 'dc', typeText: 'Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>' },
-      { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' }
+      { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' },
+      {
+        name: 'resync',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Whether to sync the box configs this update leaves flagged (`ns`) to their NotificationBoxes right away, instead of waiting for\n`resyncNotificationUser` / `resyncAllNotificationUsers`.\n\nOnly the NotificationUser's own recipient entries are written. The sync is best-effort: a failed sync does not fail the update, and leaves\nthe configs flagged for the next resync. An app can turn it off by clearing it in its update handler, e.g. `{ ...data, resync: undefined }`."
+      }
     ]
   },
   {

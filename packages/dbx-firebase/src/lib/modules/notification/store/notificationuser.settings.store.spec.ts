@@ -1,10 +1,23 @@
+import { type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
-import { AppNotificationTemplateTypeInfoRecordService, appNotificationTemplateTypeInfoRecordService, firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateTypeInfo, type NotificationUser } from '@dereekb/firebase';
+import {
+  AppNotificationTemplateTypeInfoRecordService,
+  appNotificationTemplateTypeInfoRecordService,
+  firestoreModelIdentity,
+  notificationBoxIdForModel,
+  NotificationBoxRecipientFlag,
+  NotificationDeliveryMethod,
+  type NotificationTemplateTypeInfo,
+  type NotificationUser,
+  type NotificationUserNotificationBoxRecipientConfig
+} from '@dereekb/firebase';
 import { beginLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
+import { type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
+import { DbxFirebaseNotificationBoxContext } from './notification.box.context';
 import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig } from './notificationuser.settings.store';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 
@@ -13,12 +26,24 @@ const UID = 'uid1';
 
 const profileIdentity = firestoreModelIdentity('profile', 'p');
 const EXAMPLE_TYPE_INFO: NotificationTemplateTypeInfo = { type: 'E', name: 'Example', description: 'Example notification.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile' } };
-const TYPE_INFO_RECORD = { E: EXAMPLE_TYPE_INFO };
+const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
+const GUESTBOOK_TYPE_INFO: NotificationTemplateTypeInfo = { type: 'GBE_C', name: 'Entry Created', description: 'A guestbook entry was created.', notificationModelIdentity: guestbookIdentity, group: { key: 'guestbook', name: 'Guestbooks' } };
+const TYPE_INFO_RECORD = { E: EXAMPLE_TYPE_INFO, GBE_C: GUESTBOOK_TYPE_INFO };
+
+const GUESTBOOK_KEY = 'gb/gb1';
+const GUESTBOOK_BOX_ID = notificationBoxIdForModel(GUESTBOOK_KEY);
+const OTHER_GUESTBOOK_KEY = 'gb/gb2';
+const OTHER_GUESTBOOK_BOX_ID = notificationBoxIdForModel(OTHER_GUESTBOOK_KEY);
 
 type TestGc = Partial<NotificationUser['gc']>;
+type TestBc = Partial<NotificationUserNotificationBoxRecipientConfig>[];
 
-function makeNotificationUser(gc: TestGc): NotificationUser & { id: string; key: string } {
-  return { id: UID, key: `nu/${UID}`, uid: UID, b: [], x: [], gc, dc: {}, bc: [] } as unknown as NotificationUser & { id: string; key: string };
+function makeNotificationUser(gc: TestGc, bc: TestBc = []): NotificationUser & { id: string; key: string } {
+  return { id: UID, key: `nu/${UID}`, uid: UID, b: [], x: [], gc, dc: {}, bc } as unknown as NotificationUser & { id: string; key: string };
+}
+
+function makeBoxConfig(nb: string, config: TestBc[number] = {}): TestBc[number] {
+  return { nb, i: 0, c: {}, ...config };
 }
 
 describe('DbxFirebaseNotificationUserSettingsStore', () => {
@@ -26,18 +51,19 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
   let dataLoadingState$: BehaviorSubject<LoadingState<NotificationUser>>;
   let authUser$: BehaviorSubject<{ uid: string; phoneNumber: string | null }>;
 
-  function setNotificationUser(gc: TestGc) {
-    const notificationUser = makeNotificationUser(gc);
+  function setNotificationUser(gc: TestGc, bc?: TestBc) {
+    const notificationUser = makeNotificationUser(gc, bc);
     dataLoadingState$.next(successResult(notificationUser));
     return notificationUser;
   }
 
-  beforeEach(() => {
+  function configureStore(extraProviders: Provider[] = []): DbxFirebaseNotificationUserSettingsStore {
     dataLoadingState$ = new BehaviorSubject<LoadingState<NotificationUser>>(beginLoading());
     authUser$ = new BehaviorSubject<{ uid: string; phoneNumber: string | null }>({ uid: UID, phoneNumber: '+15555550199' });
 
     TestBed.configureTestingModule({
       providers: [
+        ...extraProviders,
         DbxFirebaseNotificationUserSettingsStore,
         {
           provide: NotificationUserDocumentStore,
@@ -55,7 +81,11 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       ]
     });
 
-    store = TestBed.inject(DbxFirebaseNotificationUserSettingsStore);
+    return TestBed.inject(DbxFirebaseNotificationUserSettingsStore);
+  }
+
+  beforeEach(() => {
+    store = configureStore();
   });
 
   afterEach(() => {
@@ -102,7 +132,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     store.setCellValue({ type: 'E', method: TEXT, value: true });
     store.setMethodEnabled({ method: EMAIL, enabled: false });
 
-    expect(await firstValueFrom(store.updateParams$)).toEqual({ configs: [{ type: 'E', st: true }], dm: [EMAIL] });
+    expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { configs: [{ type: 'E', st: true }], dm: [EMAIL] } });
   });
 
   it('should drop the pending changes once a snapshot has them', async () => {
@@ -126,7 +156,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     store.setCellValue({ type: 'E', method: TEXT, value: true });
     setNotificationUser({ c: { E: { se: false } } });
 
-    expect(await firstValueFrom(store.updateParams$)).toEqual({ configs: [{ type: 'E', st: true }] });
+    expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { configs: [{ type: 'E', st: true }] } });
     expect((await firstValueFrom(store.cellStates$))['E'][TEXT]?.modified).toBe(true);
   });
 
@@ -236,7 +266,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       setNotificationUser({ dm: [TEXT], t: '+15555550100' });
 
       store.setMethodEnabled({ method: TEXT, enabled: true });
-      expect(await firstValueFrom(store.updateParams$)).toEqual({ dm: null });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: null } });
 
       setNotificationUser({ dm: [TEXT] });
       expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
@@ -246,7 +276,160 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       setNotificationUser({});
 
       store.setMethodEnabled({ method: EMAIL, enabled: false });
-      expect(await firstValueFrom(store.updateParams$)).toEqual({ dm: [EMAIL] });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+  });
+  describe('with a notificationBox', () => {
+    const notificationBox: DbxFirebaseNotificationUserSettingsNotificationBoxConfig = { modelKey: GUESTBOOK_KEY, modelName: 'guestbook' };
+
+    beforeEach(() => {
+      store.setConfig({ notificationBox });
+    });
+
+    it('should be notRecipient when the user has no config for the box', async () => {
+      setNotificationUser({}, [makeBoxConfig(OTHER_GUESTBOOK_BOX_ID)]);
+      expect(await firstValueFrom(store.pageState$)).toBe('notRecipient');
+    });
+
+    it('should be notRecipient when the user removed themselves from the box', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { rm: true })]);
+      expect(await firstValueFrom(store.pageState$)).toBe('notRecipient');
+    });
+
+    it('should be notRecipient when the NotificationUser does not exist', async () => {
+      dataLoadingState$.next({ loading: false, error: { code: 'NOT_FOUND', message: 'Does not exist.' } });
+      expect(await firstValueFrom(store.pageState$)).toBe('notRecipient');
+    });
+
+    it('should be ready for a recipient of the box', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+      expect(await firstValueFrom(store.pageState$)).toBe('ready');
+      expect(await firstValueFrom(store.isBoxRecipientInactive$)).toBe(false);
+    });
+
+    it('should report an opted-out box config as inactive', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { f: NotificationBoxRecipientFlag.OPT_OUT })]);
+      expect(await firstValueFrom(store.isBoxRecipientInactive$)).toBe(true);
+    });
+
+    it("should only show the box model's template types", async () => {
+      const items = await firstValueFrom(store.items$);
+      expect(items.map((x) => x.type)).toEqual(['GBE_C']);
+    });
+
+    it('should show the cells gc sets as overridden', async () => {
+      setNotificationUser({ c: { GBE_C: { se: false } } }, [makeBoxConfig(GUESTBOOK_BOX_ID, { c: { GBE_C: { st: true } } })]);
+
+      const row = (await firstValueFrom(store.cellStates$))['GBE_C'];
+      expect(row[EMAIL]?.override?.value).toBe(false);
+      expect(row[EMAIL]?.override?.description).toBe('Your setting for all guestbooks overrides this.');
+      expect(row[TEXT]?.override).toBeUndefined();
+      expect(row[TEXT]?.value).toBe(true);
+    });
+
+    it('should build a box update from the pending cell changes and send the switch changes as gc', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ bc: [{ nb: GUESTBOOK_BOX_ID, configs: [{ type: 'GBE_C', st: true }] }], resync: true });
+
+      store.setMethodEnabled({ method: EMAIL, enabled: false });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] }, bc: [{ nb: GUESTBOOK_BOX_ID, configs: [{ type: 'GBE_C', st: true }] }], resync: true });
+    });
+
+    it('should drop the pending cell changes once the box config has them', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      expect(await firstValueFrom(store.isModified$)).toBe(true);
+
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { c: { GBE_C: { st: true } } })]);
+      expect(await firstValueFrom(store.select((state) => state.cellEdits))).toEqual({});
+      expect(await firstValueFrom(store.isModified$)).toBe(false);
+    });
+
+    it('should clear the pending cell changes when the box changes', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID), makeBoxConfig(OTHER_GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      store.setMethodEnabled({ method: EMAIL, enabled: false });
+
+      store.setConfig({ notificationBox: { modelKey: OTHER_GUESTBOOK_KEY } });
+      expect(await firstValueFrom(store.select((state) => state.cellEdits))).toEqual({});
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+  });
+
+  describe('with a DbxFirebaseNotificationBoxContext', () => {
+    let notificationBox$: BehaviorSubject<DbxFirebaseNotificationUserSettingsNotificationBoxConfig>;
+    let enabled$: BehaviorSubject<boolean>;
+    let setLocked: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+
+      notificationBox$ = new BehaviorSubject<DbxFirebaseNotificationUserSettingsNotificationBoxConfig>({ modelKey: GUESTBOOK_KEY, modelName: 'guestbook' });
+      enabled$ = new BehaviorSubject<boolean>(true);
+      setLocked = vi.fn();
+
+      const context: DbxFirebaseNotificationBoxContext = { notificationBox$, enabled$, setLocked };
+      store = configureStore([{ provide: DbxFirebaseNotificationBoxContext, useValue: context }]);
+    });
+
+    it('should use the context box over the config box', async () => {
+      store.setConfig({ notificationBox: { modelKey: OTHER_GUESTBOOK_KEY } });
+      expect((await firstValueFrom(store.activeNotificationBoxTarget$))?.notificationBoxId).toBe(GUESTBOOK_BOX_ID);
+    });
+
+    it('should mention the toggle in the override description', async () => {
+      const texts = await firstValueFrom(store.texts$);
+      expect(texts.overrideDescription).toBe('Your setting for all guestbooks overrides this. Switch to All guestbooks to change it.');
+    });
+
+    it('should edit gc for the box model rows while the context is off', async () => {
+      setNotificationUser({ c: { GBE_C: { se: false } } }, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+      enabled$.next(false);
+
+      expect((await firstValueFrom(store.items$)).map((x) => x.type)).toEqual(['GBE_C']);
+
+      const row = (await firstValueFrom(store.cellStates$))['GBE_C'];
+      expect(row[EMAIL]?.override).toBeUndefined();
+      expect(row[EMAIL]?.value).toBe(false);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { configs: [{ type: 'GBE_C', st: true }] } });
+      expect(await firstValueFrom(store.hint$)).toContain('apply to all guestbooks');
+    });
+
+    it('should only be notRecipient while the context is on', async () => {
+      setNotificationUser({}, []);
+      expect(await firstValueFrom(store.pageState$)).toBe('notRecipient');
+
+      enabled$.next(false);
+      expect(await firstValueFrom(store.pageState$)).toBe('ready');
+    });
+
+    it('should clear the cell changes but keep the switch changes when the context switches', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      store.setMethodEnabled({ method: EMAIL, enabled: false });
+
+      enabled$.next(false);
+      expect(await firstValueFrom(store.select((state) => state.cellEdits))).toEqual({});
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+
+    it('should lock the context while there are pending cell changes', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      await firstValueFrom(store.updateParams$);
+      expect(setLocked).toHaveBeenLastCalledWith(true);
+
+      store.reset();
+      await firstValueFrom(store.updateParams$);
+      expect(setLocked).toHaveBeenLastCalledWith(false);
     });
   });
 });

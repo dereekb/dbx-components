@@ -2,13 +2,13 @@ import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionValueStreamDirective } from '@dereekb/dbx-core';
 import { DbxActionSnackbarErrorDirective, DbxActionTransitionSafetyDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxListTitleGroupDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
-import { type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams } from '@dereekb/firebase';
 import { filterMaybe, type IsModifiedFunction, type WorkUsingContext } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { first, of, switchMap } from 'rxjs';
 import { DbxFirebaseNotificationSettingsListDelegate, dbxFirebaseNotificationSettingsListGroupDelegate } from '../component/notification.settings.list';
 import { DbxFirebaseNotificationSettingsListComponent } from '../component/notification.settings.list.component';
 import { DbxFirebaseNotificationSettingsListGroupHeaderComponent } from '../component/notification.settings.list.group.component';
+import { type DbxFirebaseNotificationUserSettingsUpdateParams } from '../service/notification.settings';
 import { NotificationUserDocumentStore } from '../store/notificationuser.document.store';
 import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig, DbxFirebaseNotificationUserSettingsStoreListDelegate } from '../store/notificationuser.settings.store';
 import { DbxFirebaseNotificationHealthCheckDialogButtonComponent } from './healthcheck.dialog.button.component';
@@ -40,11 +40,19 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
  * settings. Changes are pending until Save, which sends them in one `updateNotificationUser()` call. Offers to set up
  * notifications when the NotificationUser does not exist yet.
  *
+ * Set `notificationBox` in the config to edit the user's settings for one NotificationBox instead of their global settings, or wrap the
+ * component in `dbx-firebase-notification-box-context-toggle` to let the user switch between the two.
+ *
  * @example
  * ```html
  * <div dbxFirebaseNotificationUserDocument dbxRouteModelIdFromAuthUserId>
  *   <dbx-firebase-notification-user-settings></dbx-firebase-notification-user-settings>
  * </div>
+ * ```
+ *
+ * @example
+ * ```html
+ * <dbx-firebase-notification-user-settings [config]="{ notificationBox: { modelKey: guestbookKey, modelName: 'guestbook' } }"></dbx-firebase-notification-user-settings>
  * ```
  */
 @Component({
@@ -64,12 +72,20 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
           }
         </dbx-content-pit>
       }
+      @case ('notRecipient') {
+        <dbx-content-pit>
+          <p class="dbx-hint">{{ textsSignal()?.notRecipientMessage }}</p>
+        </dbx-content-pit>
+      }
       @case ('ready') {
         @if (showDeliveryMethodSettingsSignal()) {
           <dbx-firebase-notification-user-settings-delivery></dbx-firebase-notification-user-settings-delivery>
         }
+        @if (boxRecipientInactiveSignal()) {
+          <p class="dbx-hint dbx-small">{{ textsSignal()?.inactiveRecipientMessage }}</p>
+        }
         <dbx-firebase-notification-settings-list [state]="store.listState$" [dbxListTitleGroup]="groupDelegate"></dbx-firebase-notification-settings-list>
-        <p class="dbx-hint dbx-small">Click a setting to switch it between Default, On and Off. Colored icons are your own choices; uncolored icons follow the default for that notification.</p>
+        <p class="dbx-hint dbx-small">{{ hintSignal() }}</p>
         <div class="dbx-flex-bar" dbxAction [dbxActionValueStream]="updateParams$" [dbxActionValueStreamIsModifiedValue]="isUpdateParamsModified" dbxActionEnforceModified dbxActionTransitionSafety="dialog" dbxActionSnackbarError [dbxActionHandler]="handleSave">
           @if (showDeliveryCheckButtonSignal()) {
             <dbx-firebase-notification-healthcheck-dialog-button></dbx-firebase-notification-healthcheck-dialog-button>
@@ -124,14 +140,17 @@ export class DbxFirebaseNotificationUserSettingsComponent {
   readonly isModifiedSignal = toSignal(this.store.isModified$, { initialValue: false });
   readonly enablesTextSignal = toSignal(this.store.enablesText$, { initialValue: false });
   readonly textMessageDisclosureSignal = toSignal(this.store.textMessageDisclosure$);
+  readonly textsSignal = toSignal(this.store.texts$);
+  readonly hintSignal = toSignal(this.store.hint$);
+  readonly boxRecipientInactiveSignal = toSignal(this.store.isBoxRecipientInactive$, { initialValue: false });
 
   readonly updateParams$ = this.store.updateParams$;
-  readonly isUpdateParamsModified: IsModifiedFunction<Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>> = (params) => of(params != null);
+  readonly isUpdateParamsModified: IsModifiedFunction<Maybe<DbxFirebaseNotificationUserSettingsUpdateParams>> = (params) => of(params != null);
 
   // the store drops the saved changes once their snapshot arrives
-  readonly handleSave: WorkUsingContext<Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>> = (gc, context) => {
-    if (gc) {
-      context.startWorkingWithLoadingStateObservable(this.notificationUserDocumentStore.updateNotificationUser({ gc }));
+  readonly handleSave: WorkUsingContext<Maybe<DbxFirebaseNotificationUserSettingsUpdateParams>> = (params, context) => {
+    if (params) {
+      context.startWorkingWithLoadingStateObservable(this.notificationUserDocumentStore.updateNotificationUser(params));
     } else {
       context.reject();
     }

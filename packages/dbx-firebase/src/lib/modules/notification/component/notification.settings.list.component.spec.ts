@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DbxListTitleGroupDirective, DbxRouterWebProviderConfig } from '@dereekb/dbx-web';
-import { firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateType, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
+import { firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateType, type NotificationTemplateTypeInfo, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig } from '@dereekb/firebase';
 import { successResult } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { type DbxFirebaseNotificationSettingsCellEdits, dbxFirebaseNotificationSettingsCellStates, dbxFirebaseNotificationSettingsListItemValues } from '../service/notification.settings';
@@ -33,10 +33,12 @@ const ITEMS = dbxFirebaseNotificationSettingsListItemValues({ typeInfos: TYPE_IN
 class TestNotificationSettingsListDelegate extends DbxFirebaseNotificationSettingsListDelegate {
   readonly edits = signal<DbxFirebaseNotificationSettingsCellEdits>({});
   readonly disabledDeliveryMethods = signal<NotificationDeliveryMethod[]>([]);
+  readonly gc = signal<Maybe<Partial<Pick<NotificationUserDefaultNotificationBoxRecipientConfig, 'c' | 'dm'>>>>(undefined);
+  readonly boxConfig = signal<Maybe<Partial<Pick<NotificationUserNotificationBoxRecipientConfig, 'c'>>>>(undefined);
 
   readonly columnsSignal = signal(COLUMNS);
   readonly disabledSignal = signal(false);
-  readonly cellStatesSignal = computed(() => dbxFirebaseNotificationSettingsCellStates({ items: ITEMS, deliveryMethods: COLUMNS, edits: this.edits(), disabledDeliveryMethods: this.disabledDeliveryMethods() }));
+  readonly cellStatesSignal = computed(() => dbxFirebaseNotificationSettingsCellStates({ items: ITEMS, deliveryMethods: COLUMNS, gc: this.gc(), boxConfig: this.boxConfig(), edits: this.edits(), disabledDeliveryMethods: this.disabledDeliveryMethods() }));
 
   setCellValue(type: NotificationTemplateType, method: NotificationDeliveryMethod, value: Maybe<boolean>): void {
     const edits = this.edits();
@@ -166,5 +168,21 @@ describe('DbxFirebaseNotificationSettingsListComponent', () => {
     await detectChanges();
 
     expect(cellButtons('Example').every((x) => x.disabled)).toBe(true);
+  });
+
+  it('should show an overridden cell as disabled with the override value, and ignore clicks', async () => {
+    delegate.gc.set({ c: { E: { st: true } } });
+    delegate.boxConfig.set({ c: { E: { st: false } } });
+    await detectChanges();
+
+    const [email, text] = cellButtons('Example');
+    expect(text.disabled).toBe(true);
+    expect(text.getAttribute('aria-label')).toBe('Example Text: On');
+    expect(email.disabled).toBe(false);
+    expect(rowFor('Example')?.queryAll(By.css('.dbx-firebase-notification-settings-cell-overridden')).length).toBe(1);
+
+    text.click();
+    await detectChanges();
+    expect(delegate.edits()['E']?.[TEXT]).toBeUndefined();
   });
 });
