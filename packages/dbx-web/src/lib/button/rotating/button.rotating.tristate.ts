@@ -76,8 +76,8 @@ export function dbxTristateEffectiveValue(value: DbxTristateValue, defaultValue?
  * Rotation order of a tristate value: default, then on, then off.
  *
  * The first click skips moving between the default state and the state it resolves to (see
- * {@link DbxTristateRotatingButtonConfigInput.skipDefaultEquivalentOnFirstClick}), so it always flips the effective value;
- * later clicks follow this order.
+ * {@link DbxTristateRotatingButtonConfigInput.skipDefaultEquivalentOnFirstClick}), so it always flips the effective value,
+ * and the skipped state is visited last instead. For example, a default that resolves to on rotates Default -> Off -> On -> Default.
  */
 export const DBX_TRISTATE_CYCLE: readonly DbxTristateValue[] = [null, true, false];
 
@@ -183,7 +183,8 @@ export interface DbxTristateRotatingButtonConfigInput {
   readonly announceChanges?: Maybe<boolean>;
   /**
    * Whether the first click skips moving between the default state and the state it resolves to, such as from "Default (On)"
-   * to "On", so the first click always flips the effective value. Has no effect when the default value is unknown. True by default.
+   * to "On", so the first click always flips the effective value. The skipped state is visited last instead, such as
+   * "Default (On)" -> "Off" -> "On" -> "Default (On)". Has no effect when the default value is unknown. True by default.
    */
   readonly skipDefaultEquivalentOnFirstClick?: Maybe<boolean>;
 }
@@ -192,7 +193,7 @@ export interface DbxTristateRotatingButtonConfigInput {
  * Creates a {@link DbxRotatingButtonConfig} for a three-state / 3-phase (default/on/off) toggle.
  *
  * The states rotate in {@link DBX_TRISTATE_CYCLE} order (default, on, off). A known default value sets the config's
- * `defaultState`, so by default the first click skips the state that would look like no change. Explicit choices are
+ * `defaultState`, so by default the first click skips the state that would look like no change and visits it last. Explicit choices are
  * colored; the default state shows the resolved on/off icon without a color.
  *
  * @param input - The labels, default value and per-state display.

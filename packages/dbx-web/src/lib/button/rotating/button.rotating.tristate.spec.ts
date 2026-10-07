@@ -11,7 +11,7 @@ import {
   dbxTristateState,
   dbxTristateStateLabel
 } from './button.rotating.tristate';
-import { nextDbxRotatingButtonState } from './button.rotating';
+import { dbxRotatingButtonRotationOrder, nextDbxRotatingButtonState } from './button.rotating';
 
 describe('dbxTristateState()', () => {
   it('should map true to on, false to off, and null/undefined to default', () => {
@@ -102,21 +102,23 @@ describe('dbxTristateRotatingButtonConfig()', () => {
       expect(config.skipDefaultEquivalentOnFirstClick).toBe(true);
     });
 
-    it('should skip On from a default that resolves to on', () => {
-      expect(nextDbxRotatingButtonState(config, null, true)?.value).toBe(false);
+    it('should skip On from a default that resolves to on and visit it last', () => {
+      const rotationOrder = dbxRotatingButtonRotationOrder(config, null, true);
+      expect(nextDbxRotatingButtonState(config, null, rotationOrder)?.value).toBe(false);
+      expect(nextDbxRotatingButtonState(config, false, rotationOrder)?.value).toBe(true);
+      expect(nextDbxRotatingButtonState(config, true, rotationOrder)?.value).toBeNull();
     });
 
-    it('should skip Default from Off when the default resolves to off', () => {
+    it('should skip Default from Off when the default resolves to off and visit it last', () => {
       const offDefaultConfig = dbxTristateRotatingButtonConfig({ defaultValue: false });
-      expect(nextDbxRotatingButtonState(offDefaultConfig, false, true)?.value).toBe(true);
+      const rotationOrder = dbxRotatingButtonRotationOrder(offDefaultConfig, false, true);
+      expect(nextDbxRotatingButtonState(offDefaultConfig, false, rotationOrder)?.value).toBe(true);
+      expect(nextDbxRotatingButtonState(offDefaultConfig, true, rotationOrder)?.value).toBeNull();
+      expect(nextDbxRotatingButtonState(offDefaultConfig, null, rotationOrder)?.value).toBe(false);
     });
 
     it('should not skip Default from Off when the default resolves to on', () => {
-      expect(nextDbxRotatingButtonState(config, false, true)?.value).toBeNull();
-    });
-
-    it('should rotate through every state after the first click', () => {
-      expect(nextDbxRotatingButtonState(config, null)?.value).toBe(true);
+      expect(dbxRotatingButtonRotationOrder(config, false, true)).toEqual([0, 1, 2]);
     });
 
     it('should not skip when turned off', () => {
@@ -127,7 +129,7 @@ describe('dbxTristateRotatingButtonConfig()', () => {
     it('should have no default state when the default is unknown', () => {
       const unknownConfig = dbxTristateRotatingButtonConfig({});
       expect(unknownConfig.defaultState).toBeUndefined();
-      expect(nextDbxRotatingButtonState(unknownConfig, null, true)?.value).toBe(true);
+      expect(dbxRotatingButtonRotationOrder(unknownConfig, null, true)).toEqual([0, 1, 2]);
     });
   });
 

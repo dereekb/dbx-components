@@ -289,7 +289,7 @@
         <span class="dbx-hint">Value: {{ tristateValueSignal() ?? 'null' }}</span>
       </div>
       <h4>Tristate (Default On, Custom Icons And Colors)</h4>
-      <p class="dbx-hint">The default resolves to on, so the first click skips On and goes straight to Off (skipDefaultEquivalentOnFirstClick). Later clicks rotate through every state.</p>
+      <p class="dbx-hint">The default resolves to on, so the first click skips On and goes straight to Off (skipDefaultEquivalentOnFirstClick). On is visited last instead, so it rotates Default, Off, On.</p>
       <div class="dbx-flex-bar">
         <dbx-button iconOnly [dbxRotatingButton]="tristateEmailConfig" [(dbxRotatingButtonValue)]="tristateEmailValueSignal"></dbx-button>
         <span class="dbx-hint">Value: {{ tristateEmailValueSignal() ?? 'null' }}</span>

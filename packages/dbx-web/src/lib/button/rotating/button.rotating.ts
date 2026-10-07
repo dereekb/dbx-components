@@ -69,7 +69,8 @@ export interface DbxRotatingButtonConfig<T> {
   readonly defaultState?: Maybe<DbxRotatingButtonDefaultState<T>>;
   /**
    * Whether the first click skips moving between the {@link DbxRotatingButtonConfig.defaultState} and the state it resolves
-   * to, so the first click always changes the resolved value. Later clicks rotate through every state. False by default.
+   * to, so the first click always changes the resolved value. The skipped state is visited last instead, so the button still
+   * rotates through every state before returning to where it started. See {@link dbxRotatingButtonRotationOrder}. False by default.
    */
   readonly skipDefaultEquivalentOnFirstClick?: Maybe<boolean>;
 }
@@ -98,33 +99,61 @@ export function dbxRotatingButtonStateIndex<T>(config: Pick<DbxRotatingButtonCon
 }
 
 /**
- * Returns the state after the state matching the value, wrapping back to the first state. A value that matches no state
- * starts at the first state.
+ * Returns the order the states rotate in, as indexes of the config's states.
  *
- * When `skipDefaultEquivalent` is true and the config has a `defaultState`, moving from the default state to the state it
- * resolves to (or from that state to the default state) skips ahead one more state, since that move would not change the
- * resolved value. With only two states, the next state is returned.
+ * This is the configured order, unless `skipDefaultEquivalent` is true, the config has a `defaultState`, and the move from the
+ * state matching the value is between the default state and the state it resolves to, which would not change the resolved value.
+ * That move is then skipped, and the skipped state is visited last instead, just before returning to the state matching the value.
+ * For example, a tristate whose default resolves to On rotates Default -> Off -> On -> Default. With only two states, or a value
+ * that matches no state, the configured order is returned.
  *
  * @param config - The rotating button configuration.
- * @param value - The current value.
- * @param skipDefaultEquivalent - Whether to skip the state equivalent to the default state.
- * @returns The next state, or undefined if there are no states.
+ * @param value - The current value, where the rotation starts.
+ * @param skipDefaultEquivalent - Whether to skip the move between the default state and its equivalent state.
+ * @returns The state indexes in rotation order.
  */
-export function nextDbxRotatingButtonState<T>(config: Pick<DbxRotatingButtonConfig<T>, 'states' | 'isEqual' | 'defaultState'>, value: Maybe<T>, skipDefaultEquivalent?: Maybe<boolean>): Maybe<DbxRotatingButtonState<T>> {
+export function dbxRotatingButtonRotationOrder<T>(config: Pick<DbxRotatingButtonConfig<T>, 'states' | 'isEqual' | 'defaultState'>, value: Maybe<T>, skipDefaultEquivalent?: Maybe<boolean>): number[] {
   const { states, defaultState } = config;
   const isEqual = config.isEqual ?? isEqualDbxRotatingButtonValue;
+  const count = states.length;
   const index = dbxRotatingButtonStateIndex(config, value);
-  let nextState: Maybe<DbxRotatingButtonState<T>> = states.length ? states[(index + 1) % states.length] : undefined;
+  let rotationOrder = states.map((_, i) => i);
 
-  if (skipDefaultEquivalent && defaultState && nextState && index !== -1 && states.length > 2) {
+  if (skipDefaultEquivalent && defaultState && index !== -1 && count > 2) {
+    const skippedIndex = (index + 1) % count;
     const currentValue = states[index].value;
-    const nextValue = nextState.value;
+    const nextValue = states[skippedIndex].value;
     const isDefaultToEquivalent = isEqual(currentValue, defaultState.value) && isEqual(nextValue, defaultState.equivalentValue);
     const isEquivalentToDefault = isEqual(currentValue, defaultState.equivalentValue) && isEqual(nextValue, defaultState.value);
 
     if (isDefaultToEquivalent || isEquivalentToDefault) {
-      nextState = states[(index + 2) % states.length];
+      // start at the current state, visit the states after the skipped state, then the skipped state
+      rotationOrder = [index, ...Array.from({ length: count - 2 }, (_, i) => (index + 2 + i) % count), skippedIndex];
     }
+  }
+
+  return rotationOrder;
+}
+
+/**
+ * Returns the state after the state matching the value in the rotation order, wrapping back to the start. A value that matches
+ * no state starts at the first state.
+ *
+ * @param config - The rotating button configuration.
+ * @param value - The current value.
+ * @param rotationOrder - The state indexes in rotation order, from {@link dbxRotatingButtonRotationOrder}. Defaults to the configured order.
+ * @returns The next state, or undefined if there are no states.
+ */
+export function nextDbxRotatingButtonState<T>(config: Pick<DbxRotatingButtonConfig<T>, 'states' | 'isEqual'>, value: Maybe<T>, rotationOrder?: Maybe<readonly number[]>): Maybe<DbxRotatingButtonState<T>> {
+  const { states } = config;
+  const index = dbxRotatingButtonStateIndex(config, value);
+  let nextState: Maybe<DbxRotatingButtonState<T>>;
+
+  if (index === -1 || !rotationOrder?.length) {
+    nextState = states.length ? states[(index + 1) % states.length] : undefined;
+  } else {
+    const position = rotationOrder.indexOf(index);
+    nextState = states[rotationOrder[(position + 1) % rotationOrder.length]];
   }
 
   return nextState;

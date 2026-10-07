@@ -81,7 +81,7 @@ describe('DbxRotatingButtonDirective', () => {
     expect(button().getAttribute('aria-label')).toBe('Text: Off');
   });
 
-  it('should skip the default state from its equivalent state on the first click only', () => {
+  it('should skip the default state from its equivalent state on the first click and visit it last', () => {
     fixture.componentInstance.config.set(dbxTristateRotatingButtonConfig({ label: 'Text', defaultValue: false }));
     fixture.componentInstance.value.set(false);
     fixture.detectChanges();
@@ -91,20 +91,42 @@ describe('DbxRotatingButtonDirective', () => {
     expect(fixture.componentInstance.value()).toBe(true);
 
     clickButton();
-    expect(fixture.componentInstance.value()).toBe(false);
-
-    // later clicks rotate through every state
-    clickButton();
     expect(fixture.componentInstance.value()).toBeNull();
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBe(false);
   });
 
-  it('should go from a default that resolves to on to Off on the first click', () => {
+  it('should rotate a default that resolves to on Default -> Off -> On -> Default', () => {
     fixture.componentInstance.config.set(dbxTristateRotatingButtonConfig({ label: 'Email', defaultValue: true }));
     fixture.detectChanges();
 
     clickButton();
     expect(fixture.componentInstance.value()).toBe(false);
     expect(button().getAttribute('aria-label')).toBe('Email: Off');
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBe(true);
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBeNull();
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBe(false);
+  });
+
+  it('should keep the rotation order when the config is rebuilt', () => {
+    fixture.componentInstance.config.set(dbxTristateRotatingButtonConfig({ label: 'Email', defaultValue: true }));
+    fixture.detectChanges();
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBe(false);
+
+    fixture.componentInstance.config.set(dbxTristateRotatingButtonConfig({ label: 'Email', defaultValue: true }));
+    fixture.detectChanges();
+
+    clickButton();
+    expect(fixture.componentInstance.value()).toBe(true);
   });
 
   it('should keep the same button element and focus across clicks', () => {

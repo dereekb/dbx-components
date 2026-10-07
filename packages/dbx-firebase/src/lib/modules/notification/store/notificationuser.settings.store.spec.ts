@@ -172,14 +172,29 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     expect(await firstValueFrom(store.disabledDeliveryMethods$)).toEqual([TEXT]);
   });
 
-  it('should report when saving enables texts', async () => {
-    setNotificationUser({ t: '+15555550100' });
+  it('should report when saving turns texts on', async () => {
+    setNotificationUser({ t: '+15555550100', dm: [TEXT] });
     expect(await firstValueFrom(store.enablesText$)).toBe(false);
 
-    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    store.setMethodEnabled({ method: TEXT, enabled: true });
     expect(await firstValueFrom(store.enablesText$)).toBe(true);
 
     store.setMethodEnabled({ method: TEXT, enabled: false });
+    expect(await firstValueFrom(store.enablesText$)).toBe(false);
+  });
+
+  it('should not report turning texts on when texts are already on', async () => {
+    setNotificationUser({ t: '+15555550100', c: { E: { st: false } } });
+
+    store.setCellValue({ type: 'E', method: TEXT, value: true });
+    expect(await firstValueFrom(store.isModified$)).toBe(true);
+    expect(await firstValueFrom(store.enablesText$)).toBe(false);
+  });
+
+  it('should not report turning texts on without a phone number for texts', async () => {
+    setNotificationUser({ dm: [TEXT] });
+
+    store.setMethodEnabled({ method: TEXT, enabled: true });
     expect(await firstValueFrom(store.enablesText$)).toBe(false);
   });
 
@@ -198,6 +213,10 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     const tcat = new Date('2026-10-01T00:00:00Z');
 
     setNotificationUser({ t: '+15555550100', tcat, c: { E: { st: true } } });
+    expect(await firstValueFrom(store.textConsentAt$)).toBe(tcat);
+
+    // blocking every text keeps texts on account-wide
+    setNotificationUser({ t: '+15555550100', tcat, c: { E: { st: false } } });
     expect(await firstValueFrom(store.textConsentAt$)).toBe(tcat);
 
     setNotificationUser({ t: '+15555550100', tcat, c: { E: { st: true } }, dm: [TEXT] });

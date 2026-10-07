@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dbxRotatingButtonAriaLabel, dbxRotatingButtonStateIndex, isEqualDbxRotatingButtonValue, nextDbxRotatingButtonState } from './button.rotating';
+import { dbxRotatingButtonAriaLabel, dbxRotatingButtonRotationOrder, dbxRotatingButtonStateIndex, isEqualDbxRotatingButtonValue, nextDbxRotatingButtonState } from './button.rotating';
 
 describe('isEqualDbxRotatingButtonValue()', () => {
   it('should treat null and undefined as equal', () => {
@@ -30,42 +30,67 @@ describe('nextDbxRotatingButtonState()', () => {
     expect(nextDbxRotatingButtonState({ states: [] }, 'a')).toBeUndefined();
   });
 
-  describe('skipping the default equivalent state', () => {
-    const defaultConfig = {
-      states: [{ value: 'default' }, { value: 'a' }, { value: 'b' }, { value: 'c' }],
-      defaultState: { value: 'default', equivalentValue: 'a' }
-    };
+  it('should follow the rotation order', () => {
+    expect(nextDbxRotatingButtonState(config, 'a', [0, 2, 1])?.value).toBe('c');
+    expect(nextDbxRotatingButtonState(config, 'c', [0, 2, 1])?.value).toBe('b');
+    expect(nextDbxRotatingButtonState(config, 'b', [0, 2, 1])?.value).toBe('a');
+  });
 
-    it('should skip the equivalent state from the default state', () => {
-      expect(nextDbxRotatingButtonState(defaultConfig, 'default', true)?.value).toBe('b');
-    });
+  it('should start at the first state for an unknown value with a rotation order', () => {
+    expect(nextDbxRotatingButtonState(config, 'z', [1, 0, 2])?.value).toBe('a');
+  });
+});
 
-    it('should skip the default state from the equivalent state', () => {
-      const equivalentLastConfig = { ...defaultConfig, defaultState: { value: 'default', equivalentValue: 'c' } };
-      expect(nextDbxRotatingButtonState(equivalentLastConfig, 'c', true)?.value).toBe('a');
-    });
+describe('dbxRotatingButtonRotationOrder()', () => {
+  const defaultConfig = {
+    states: [{ value: 'default' }, { value: 'a' }, { value: 'b' }, { value: 'c' }],
+    defaultState: { value: 'default', equivalentValue: 'a' }
+  };
 
-    it('should not skip between states that are not the default or its equivalent', () => {
-      expect(nextDbxRotatingButtonState(defaultConfig, 'a', true)?.value).toBe('b');
-      expect(nextDbxRotatingButtonState(defaultConfig, 'c', true)?.value).toBe('default');
-    });
+  function rotate(rotationConfig: typeof defaultConfig, start: string, clicks: number): string[] {
+    const rotationOrder = dbxRotatingButtonRotationOrder(rotationConfig, start, true);
+    const values: string[] = [];
+    let value = start;
 
-    it('should not skip when not asked to', () => {
-      expect(nextDbxRotatingButtonState(defaultConfig, 'default')?.value).toBe('a');
-    });
+    for (let i = 0; i < clicks; i += 1) {
+      value = nextDbxRotatingButtonState(rotationConfig, value, rotationOrder)?.value as string;
+      values.push(value);
+    }
 
-    it('should not skip without a default state', () => {
-      expect(nextDbxRotatingButtonState({ states: defaultConfig.states }, 'default', true)?.value).toBe('a');
-    });
+    return values;
+  }
 
-    it('should return the next state when there are only two states', () => {
-      const twoStateConfig = { states: [{ value: 'default' }, { value: 'a' }], defaultState: { value: 'default', equivalentValue: 'a' } };
-      expect(nextDbxRotatingButtonState(twoStateConfig, 'default', true)?.value).toBe('a');
-    });
+  it('should skip the equivalent state from the default state and visit it last', () => {
+    expect(dbxRotatingButtonRotationOrder(defaultConfig, 'default', true)).toEqual([0, 2, 3, 1]);
+    expect(rotate(defaultConfig, 'default', 5)).toEqual(['b', 'c', 'a', 'default', 'b']);
+  });
 
-    it('should not skip from an unknown value', () => {
-      expect(nextDbxRotatingButtonState(defaultConfig, 'z', true)?.value).toBe('default');
-    });
+  it('should skip the default state from the equivalent state and visit it last', () => {
+    const equivalentLastConfig = { ...defaultConfig, defaultState: { value: 'default', equivalentValue: 'c' } };
+    expect(dbxRotatingButtonRotationOrder(equivalentLastConfig, 'c', true)).toEqual([3, 1, 2, 0]);
+    expect(rotate(equivalentLastConfig, 'c', 5)).toEqual(['a', 'b', 'default', 'c', 'a']);
+  });
+
+  it('should not skip between states that are not the default or its equivalent', () => {
+    expect(dbxRotatingButtonRotationOrder(defaultConfig, 'a', true)).toEqual([0, 1, 2, 3]);
+    expect(dbxRotatingButtonRotationOrder(defaultConfig, 'c', true)).toEqual([0, 1, 2, 3]);
+  });
+
+  it('should not skip when not asked to', () => {
+    expect(dbxRotatingButtonRotationOrder(defaultConfig, 'default')).toEqual([0, 1, 2, 3]);
+  });
+
+  it('should not skip without a default state', () => {
+    expect(dbxRotatingButtonRotationOrder({ states: defaultConfig.states }, 'default', true)).toEqual([0, 1, 2, 3]);
+  });
+
+  it('should not skip when there are only two states', () => {
+    const twoStateConfig = { states: [{ value: 'default' }, { value: 'a' }], defaultState: { value: 'default', equivalentValue: 'a' } };
+    expect(dbxRotatingButtonRotationOrder(twoStateConfig, 'default', true)).toEqual([0, 1]);
+  });
+
+  it('should not skip from an unknown value', () => {
+    expect(dbxRotatingButtonRotationOrder(defaultConfig, 'z', true)).toEqual([0, 1, 2, 3]);
   });
 });
 

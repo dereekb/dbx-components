@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ComponentStore } from '@ngrx/component-store';
 import {
-  hasNotificationDeliveryMethodOptIn,
+  isNotificationDeliveryMethodDisabled,
   type NotificationBoxId,
   NotificationBoxRecipientFlag,
   type NotificationBoxRecipientTemplateConfigRecord,
@@ -13,9 +13,7 @@ import {
   type NotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationUserNotificationBoxRecipientConfig,
   readNotificationDeliveryMethodFlag,
-  toCanonicalNotificationDeliveryMethods,
-  updateNotificationUserDefaultNotificationBoxRecipientConfig,
-  type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams
+  toCanonicalNotificationDeliveryMethods
 } from '@dereekb/firebase';
 import { isLoadingStateLoading, type ListLoadingState, successResult } from '@dereekb/rxjs';
 import { type E164PhoneNumber, type Maybe, mergeObjects } from '@dereekb/util';
@@ -391,9 +389,10 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   );
 
   /**
-   * When the user consented to receiving texts. Only set while texts are on in the saved settings.
+   * When the user consented to receiving texts. Only set while texts are allowed account-wide in the saved settings, even if
+   * every notification type blocks texts.
    */
-  readonly textConsentAt$ = this.select(this.savedGc$, (gc) => (gc?.t != null && hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) ? gc.tcat : undefined));
+  readonly textConsentAt$ = this.select(this.savedGc$, (gc) => (gc?.t != null && !isNotificationDeliveryMethodDisabled(gc, NotificationDeliveryMethod.TEXT) ? gc.tcat : undefined));
 
   /**
    * The account phone number to suggest for texts. Only the signed-in user's own phone number is known, so it is only set
@@ -508,9 +507,10 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   readonly hasCellEdits$ = this.select(this.updateParams$, this.notificationBoxId$, (params, notificationBoxId) => (notificationBoxId == null ? params?.gc?.configs != null : params?.bc != null));
 
   /**
-   * Whether saving the pending changes opts into texts for the first time, which records the user's consent.
+   * Whether saving the pending changes turns texts on account-wide, which the user consents to by saving. Changing which notification
+   * types send texts while texts are already on does not turn texts on.
    */
-  readonly enablesText$ = this.select(this.savedGc$, this.updateParams$, (gc, params) => !hasNotificationDeliveryMethodOptIn(gc, NotificationDeliveryMethod.TEXT) && params?.gc != null && hasNotificationDeliveryMethodOptIn(applyGcUpdateParams(gc, params.gc), NotificationDeliveryMethod.TEXT));
+  readonly enablesText$ = this.select(this.savedDisabledDeliveryMethods$, this.disabledDeliveryMethods$, (savedDisabled, disabled) => savedDisabled.includes(NotificationDeliveryMethod.TEXT) && !disabled.includes(NotificationDeliveryMethod.TEXT));
 
   // MARK: State Changes
   /**
@@ -672,8 +672,4 @@ function unsavedMethodEdits(methodEdits: NotificationDeliveryMethodMap<boolean>,
  */
 function isNotificationBoxEnabledInConfig(entry: Pick<NotificationUserNotificationBoxRecipientConfig, 'f'>): boolean {
   return entry.f !== NotificationBoxRecipientFlag.OPT_OUT;
-}
-
-function applyGcUpdateParams(gc: Maybe<NotificationUserDefaultNotificationBoxRecipientConfig>, params: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams): NotificationUserDefaultNotificationBoxRecipientConfig {
-  return updateNotificationUserDefaultNotificationBoxRecipientConfig({ ...gc, c: gc?.c ?? {} }, params);
 }

@@ -3,7 +3,7 @@ import { computed, Directive, effect, inject, input, model, untracked } from '@a
 import { cleanSubscription } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent } from '../button.component';
-import { type DbxRotatingButtonConfig, dbxRotatingButtonAriaLabel, dbxRotatingButtonStateIndex, nextDbxRotatingButtonState } from './button.rotating';
+import { type DbxRotatingButtonConfig, dbxRotatingButtonAriaLabel, dbxRotatingButtonRotationOrder, dbxRotatingButtonStateIndex, nextDbxRotatingButtonState } from './button.rotating';
 
 /**
  * Turns a `dbx-button` into a rotating / multi-state button. Each click moves to the next configured state, and the
@@ -42,9 +42,11 @@ export class DbxRotatingButtonDirective<T = unknown> {
   private readonly _liveAnnouncer = inject(LiveAnnouncer);
 
   /**
-   * Whether the button has rotated yet. Only the first click skips the state equivalent to the default state.
+   * Order the states rotate in, set by the first click. See {@link dbxRotatingButtonRotationOrder}.
+   *
+   * Kept while the config has the same number of states, since a host may rebuild the config on every change.
    */
-  private _hasRotated = false;
+  private _rotationOrder: Maybe<number[]>;
 
   readonly dbxRotatingButton = input<Maybe<DbxRotatingButtonConfig<T>>>();
 
@@ -97,21 +99,31 @@ export class DbxRotatingButtonDirective<T = unknown> {
   /**
    * Moves to the next state, emits its value, and announces the change.
    *
-   * The first rotation skips the state equivalent to the default state when the config sets `skipDefaultEquivalentOnFirstClick`.
+   * When the config sets `skipDefaultEquivalentOnFirstClick`, the first rotation skips the state equivalent to the default state
+   * and visits it last instead.
    */
   rotate(): void {
     const config = this.dbxRotatingButton();
-    const skipDefaultEquivalent = config?.skipDefaultEquivalentOnFirstClick === true && !this._hasRotated;
-    const nextState = config ? nextDbxRotatingButtonState(config, this.dbxRotatingButtonValue(), skipDefaultEquivalent) : undefined;
 
-    if (config && nextState) {
-      this._hasRotated = true;
-      this.dbxRotatingButtonValue.set(nextState.value);
+    if (config) {
+      const value = this.dbxRotatingButtonValue();
+      let rotationOrder = this._rotationOrder;
 
-      const announcement = dbxRotatingButtonAriaLabel(config.label, nextState);
+      if (rotationOrder?.length !== config.states.length) {
+        rotationOrder = dbxRotatingButtonRotationOrder(config, value, config.skipDefaultEquivalentOnFirstClick);
+        this._rotationOrder = rotationOrder;
+      }
 
-      if (config.announceChanges !== false && announcement) {
-        void this._liveAnnouncer.announce(announcement);
+      const nextState = nextDbxRotatingButtonState(config, value, rotationOrder);
+
+      if (nextState) {
+        this.dbxRotatingButtonValue.set(nextState.value);
+
+        const announcement = dbxRotatingButtonAriaLabel(config.label, nextState);
+
+        if (config.announceChanges !== false && announcement) {
+          void this._liveAnnouncer.announce(announcement);
+        }
       }
     }
   }
