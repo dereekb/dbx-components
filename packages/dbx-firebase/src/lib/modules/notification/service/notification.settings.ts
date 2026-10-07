@@ -6,6 +6,7 @@ import {
   isNotificationDeliveryMethodEnabledByDefault,
   type NotificationBoxId,
   notificationBoxIdForModel,
+  NotificationBoxRecipientFlag,
   type NotificationBoxRecipientTemplateConfigRecord,
   NotificationDeliveryMethod,
   type NotificationBoxRecipientTemplateConfig,
@@ -52,6 +53,30 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP: NotificationTempl
  * - `notificationModel` — group by the model the notification is attached to
  */
 export type DbxFirebaseNotificationSettingsFallbackGroupBy = 'none' | 'notificationModel';
+
+/**
+ * Where a user's per-template-type notification settings live, which decides how the settings for one NotificationBox work.
+ *
+ * The user's global settings (`gc`) are an override, not a default: wherever they set a delivery method for a template type, that value is
+ * used in every box, and the box's own setting for that method is ignored. Per-type settings made in both places rarely do what the user
+ * expects, so an app picks one place for them:
+ *
+ * - `global` — the per-type settings are the global settings. The settings for a box show an on/off switch for the whole box, followed by the
+ *   global settings for the box's template types, which apply to every box of that kind. Turning a box off stops all of its notifications,
+ *   whatever the global settings say. This is the default, and suits most apps.
+ * - `perBox` — the per-type settings live on each box (the user's `bc` entry for it). The settings for a box show the on/off switch and the
+ *   box's own settings. A global setting for the same template type still overrides them, and those cells show as overridden, so keep the
+ *   per-box template types off the global settings page with `groups`, `templateTypes` or `hiddenTemplateTypes`.
+ *
+ * In `global` mode the per-type settings on a box entry are not shown, but they still decide whatever the global settings leave unset. An app in
+ * `global` mode should not set template configs on its box recipients.
+ */
+export type DbxFirebaseNotificationBoxSettingsMode = 'global' | 'perBox';
+
+/**
+ * The default {@link DbxFirebaseNotificationBoxSettingsMode}.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE: DbxFirebaseNotificationBoxSettingsMode = 'global';
 
 /**
  * App-level configuration for the notification user settings UI.
@@ -105,6 +130,13 @@ export abstract class DbxFirebaseNotificationUserSettingsConfig {
    * `dbx-firebase-notification-user-settings`. When set, the notification settings dialog links to it.
    */
   abstract readonly settingsAnchor?: Maybe<ClickableAnchor>;
+  /**
+   * Where the user's per-template-type settings live, which decides how the settings for a NotificationBox work. Defaults to
+   * {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE} (`global`).
+   *
+   * The global settings override the per-box settings, so an app should pick one place for them. See {@link DbxFirebaseNotificationBoxSettingsMode}.
+   */
+  abstract readonly notificationBoxSettingsMode?: Maybe<DbxFirebaseNotificationBoxSettingsMode>;
 }
 
 // MARK: NotificationBox
@@ -165,9 +197,19 @@ export function dbxFirebaseNotificationUserSettingsNotificationBoxTarget(config:
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT = 'Click a setting to switch it between Default, On and Off. Colored icons are your own choices; uncolored icons follow the default for that notification.';
 
 /**
- * Default hint shown above a NotificationBox's settings when the box's model has no name.
+ * Default hint shown above the global settings (`gc`) in `perBox` mode, where they override the settings made for each NotificationBox.
  */
-export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT = 'Click a setting to switch it between Default, On and Off. These settings only apply here; grayed-out settings follow your general settings.';
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_PER_BOX_MODE_HINT = `${DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT} These settings apply everywhere and take priority over the settings you make in one specific place.`;
+
+/**
+ * Default hint shown above a NotificationBox's settings in `perBox` mode, when the box's model has no name.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT = 'Click a setting to switch it between Default, On and Off. These settings only apply here. Grayed-out settings are set by your general settings, which take priority.';
+
+/**
+ * Default hint shown above the global settings for a NotificationBox's template types in `global` mode, when the box's model has no name.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SETTINGS_HINT = 'Click a setting to switch it between Default, On and Off. These settings apply everywhere, not only here.';
 
 /**
  * Default hint shown above the global settings while a NotificationBox context is switched off, when the box's model has no name.
@@ -177,7 +219,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_GLOBAL_HINT = 'Click
 /**
  * Default tooltip of a NotificationBox cell that the global settings override, when the box's model has no name.
  */
-export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION = 'Your general setting for this notification overrides this.';
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION = 'Your general setting for this notification takes priority over this.';
 
 /**
  * Default message shown when the user does not receive a NotificationBox's notifications, when the box's model has no name.
@@ -185,9 +227,24 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE = 'You do not receive these notifications.';
 
 /**
- * Default notice shown when a NotificationBox's notifications are turned off for the user, when the box's model has no name.
+ * Default notice shown when a NotificationBox turned off its notifications for the user, so they can't turn them back on, when the box's model has no name.
  */
-export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_INACTIVE_RECIPIENT_MESSAGE = 'These notifications are turned off for you, so these settings have no effect for now.';
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_INACTIVE_RECIPIENT_MESSAGE = 'These notifications are turned off for you here.';
+
+/**
+ * Default label of the switch that turns a NotificationBox's notifications on or off, when the box's model has no name.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_LABEL = 'Get notifications from here';
+
+/**
+ * Default hint shown while a NotificationBox's switch is off in `global` mode, when the box's model has no name.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SWITCH_OFF_HINT = "You won't get any of these notifications from here. The settings below still apply everywhere else.";
+
+/**
+ * Default hint shown while a NotificationBox's switch is off in `perBox` mode, when the box's model has no name.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_OFF_HINT = "You won't get any of these notifications from here, so the settings below have no effect for now.";
 
 /**
  * Default label of the NotificationBox context toggle's option that edits the box's settings, when the box's model has no name.
@@ -208,11 +265,11 @@ export interface DbxFirebaseNotificationUserSettingsTexts {
    */
   readonly hint: string;
   /**
-   * Hint shown instead of {@link hint} while a NotificationBox context is switched off. Only set when a box is targeted.
+   * Hint shown instead of {@link hint} while a NotificationBox context is switched off. Only set for a targeted box in `perBox` mode.
    */
   readonly globalHint?: Maybe<string>;
   /**
-   * Tooltip of a box cell that the global settings override. Only set when a box is targeted.
+   * Tooltip of a box cell that the global settings override. Only set for a targeted box in `perBox` mode.
    */
   readonly overrideDescription?: Maybe<string>;
   /**
@@ -220,9 +277,17 @@ export interface DbxFirebaseNotificationUserSettingsTexts {
    */
   readonly notRecipientMessage?: Maybe<string>;
   /**
-   * Notice shown when the box's notifications are turned off for the user. Only set when a box is targeted.
+   * Notice shown when the box turned its notifications off for the user, so the box switch can't turn them back on. Only set when a box is targeted.
    */
   readonly inactiveRecipientMessage?: Maybe<string>;
+  /**
+   * Label of the switch that turns all of the box's notifications on or off. Only set when a box is targeted.
+   */
+  readonly boxSwitchLabel?: Maybe<string>;
+  /**
+   * Hint shown while the box switch is off. Only set when a box is targeted.
+   */
+  readonly boxSwitchOffHint?: Maybe<string>;
   /**
    * Label of the NotificationBox context toggle's option that edits the box's settings. Only set when a box is targeted.
    */
@@ -242,6 +307,10 @@ export interface DbxFirebaseNotificationUserSettingsTextsInput {
    */
   readonly notificationBox?: Maybe<DbxFirebaseNotificationUserSettingsNotificationBoxConfig>;
   /**
+   * Where the per-type settings live. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE}.
+   */
+  readonly mode?: Maybe<DbxFirebaseNotificationBoxSettingsMode>;
+  /**
    * Whether the settings are inside a NotificationBox context toggle, so the override tooltip can point at it.
    */
   readonly hasToggle?: Maybe<boolean>;
@@ -250,11 +319,17 @@ export interface DbxFirebaseNotificationUserSettingsTextsInput {
 /**
  * Returns the texts that describe the notification settings. The box texts name the box's model when {@link DbxFirebaseNotificationUserSettingsNotificationBoxConfig.modelName} is set.
  *
- * @param input - The targeted NotificationBox and whether a toggle is present.
+ * The texts follow the {@link DbxFirebaseNotificationBoxSettingsMode}, and say where the global settings take priority:
+ * - `global` — the settings shown for a box are the global settings, so its hint says they apply to every box of its kind.
+ * - `perBox` — the box's settings are overridden by the global settings, so its hint and override tooltip say the global settings take priority,
+ *   as does the hint of the global settings page.
+ *
+ * @param input - The targeted NotificationBox, the mode, and whether a toggle is present.
  * @returns The texts.
  */
 export function dbxFirebaseNotificationUserSettingsTexts(input: DbxFirebaseNotificationUserSettingsTextsInput): DbxFirebaseNotificationUserSettingsTexts {
   const { notificationBox, hasToggle } = input;
+  const isPerBoxMode = (input.mode ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE) === 'perBox';
   let result: DbxFirebaseNotificationUserSettingsTexts;
 
   if (notificationBox) {
@@ -263,31 +338,54 @@ export function dbxFirebaseNotificationUserSettingsTexts(input: DbxFirebaseNotif
 
     if (modelName) {
       const plural = notificationBox.modelPluralName ?? `${modelName}s`;
-
-      texts = {
-        hint: `Click a setting to switch it between Default, On and Off. These settings only apply to this ${modelName}; grayed-out settings follow your setting for all ${plural}.`,
-        globalHint: `Click a setting to switch it between Default, On and Off. These settings apply to all ${plural} and take priority over the settings for a single ${modelName}.`,
-        overrideDescription: `Your setting for all ${plural} overrides this.`,
+      const sharedTexts = {
         notRecipientMessage: `You do not receive notifications for this ${modelName}.`,
-        inactiveRecipientMessage: `Notifications for this ${modelName} are turned off for you, so these settings have no effect for now.`,
+        inactiveRecipientMessage: `Notifications for this ${modelName} are turned off for you.`,
+        boxSwitchLabel: `Get notifications for this ${modelName}`,
         boxScopeLabel: `This ${modelName}`,
         globalScopeLabel: `All ${plural}`
       };
+
+      texts = isPerBoxMode
+        ? {
+            ...sharedTexts,
+            hint: `Click a setting to switch it between Default, On and Off. These settings only apply to this ${modelName}. Grayed-out settings are set by your settings for all ${plural}, which take priority.`,
+            globalHint: `Click a setting to switch it between Default, On and Off. These settings apply to all ${plural} and take priority over the settings for a single ${modelName}.`,
+            overrideDescription: `Your setting for all ${plural} takes priority over this.`,
+            boxSwitchOffHint: `You won't get any notifications for this ${modelName}, so the settings below have no effect for now.`
+          }
+        : {
+            ...sharedTexts,
+            hint: `Click a setting to switch it between Default, On and Off. These settings apply to all ${plural}.`,
+            boxSwitchOffHint: `You won't get any notifications for this ${modelName}. The settings below still apply to your other ${plural}.`
+          };
     } else {
-      texts = {
-        hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT,
-        globalHint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_GLOBAL_HINT,
-        overrideDescription: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION,
+      const sharedTexts = {
         notRecipientMessage: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE,
         inactiveRecipientMessage: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_INACTIVE_RECIPIENT_MESSAGE,
+        boxSwitchLabel: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_LABEL,
         boxScopeLabel: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SCOPE_LABEL,
         globalScopeLabel: DEFAULT_DBX_FIREBASE_NOTIFICATION_GLOBAL_SCOPE_LABEL
       };
+
+      texts = isPerBoxMode
+        ? {
+            ...sharedTexts,
+            hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT,
+            globalHint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_GLOBAL_HINT,
+            overrideDescription: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION,
+            boxSwitchOffHint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_OFF_HINT
+          }
+        : {
+            ...sharedTexts,
+            hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SETTINGS_HINT,
+            boxSwitchOffHint: DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SWITCH_OFF_HINT
+          };
     }
 
-    result = hasToggle ? { ...texts, overrideDescription: `${texts.overrideDescription} Switch to ${texts.globalScopeLabel} to change it.` } : texts;
+    result = hasToggle && texts.overrideDescription ? { ...texts, overrideDescription: `${texts.overrideDescription} Switch to ${texts.globalScopeLabel} to change it.` } : texts;
   } else {
-    result = { hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT };
+    result = { hint: isPerBoxMode ? DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_PER_BOX_MODE_HINT : DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT };
   }
 
   return result;
@@ -583,46 +681,75 @@ export function dbxFirebaseNotificationUserBoxConfigUpdateParams(input: DbxFireb
 export type DbxFirebaseNotificationUserSettingsUpdateParams = Pick<UpdateNotificationUserParams, 'gc' | 'bc' | 'resync'>;
 
 /**
+ * A pending change to whether the user gets a NotificationBox's notifications.
+ */
+export interface DbxFirebaseNotificationUserSettingsNotificationBoxEnabledChange {
+  /**
+   * Id of the NotificationBox.
+   */
+  readonly notificationBoxId: NotificationBoxId;
+  /**
+   * Whether the user gets the box's notifications.
+   */
+  readonly enabled: boolean;
+}
+
+/**
  * Input for {@link dbxFirebaseNotificationUserSettingsUpdateParams}.
  */
 export interface DbxFirebaseNotificationUserSettingsUpdateParamsInput extends DbxFirebaseNotificationUserGlobalConfigUpdateParamsInput {
   /**
-   * Id of the targeted NotificationBox. When set, the cell edits apply to the box's config instead of `gc`.
+   * Id of the NotificationBox whose settings the cells edit. When set, the cell edits apply to the box's config instead of `gc`.
    */
   readonly notificationBoxId?: Maybe<NotificationBoxId>;
   /**
-   * The saved config of the targeted NotificationBox (the user's `bc` entry).
+   * The saved config of the NotificationBox the cells edit (the user's `bc` entry).
    */
   readonly boxConfig?: Maybe<Partial<Pick<NotificationUserNotificationBoxRecipientConfig, 'c'>>>;
+  /**
+   * Pending change to whether the user gets a NotificationBox's notifications. Only pass a change that differs from the saved config.
+   */
+  readonly notificationBoxEnabledChange?: Maybe<DbxFirebaseNotificationUserSettingsNotificationBoxEnabledChange>;
 }
 
 /**
  * Maps pending settings edits to `updateNotificationUser()` params.
  *
  * - without a box, the cell edits and disabled methods are sent as `gc` (see {@link dbxFirebaseNotificationUserGlobalConfigUpdateParams})
- * - with a box, the cell edits are sent as the box's `bc` entry with `resync: true`, so they reach the NotificationBox right away, and the
- *   disabled methods are still sent as `gc`
+ * - with a box, the cell edits are sent as the box's `bc` entry, and the disabled methods are still sent as `gc`
+ * - a box on/off change is sent as the box's `bc` entry `f`: {@link NotificationBoxRecipientFlag.OPT_OUT} to turn it off, or
+ *   {@link NotificationBoxRecipientFlag.ENABLED} to turn it back on
+ *
+ * Any `bc` change is sent with `resync: true`, so it reaches the NotificationBox right away.
  *
  * @param input - The saved configs, the targeted box and the pending edits.
  * @returns The update params, or undefined when nothing changed.
  */
 export function dbxFirebaseNotificationUserSettingsUpdateParams(input: DbxFirebaseNotificationUserSettingsUpdateParamsInput): Maybe<DbxFirebaseNotificationUserSettingsUpdateParams> {
-  const { gc, notificationBoxId, boxConfig, edits, disabledDeliveryMethods } = input;
+  const { gc, notificationBoxId, boxConfig, edits, disabledDeliveryMethods, notificationBoxEnabledChange } = input;
+  const gcParams = dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc, edits: notificationBoxId ? undefined : edits, disabledDeliveryMethods });
+  const boxCellParams = notificationBoxId ? dbxFirebaseNotificationUserBoxConfigUpdateParams({ notificationBoxId, boxConfig, edits }) : undefined;
+  const bc: UpdateNotificationUserNotificationBoxRecipientParams[] = boxCellParams ? [boxCellParams] : [];
+
+  if (notificationBoxEnabledChange) {
+    const { notificationBoxId: nb, enabled } = notificationBoxEnabledChange;
+    const f = enabled ? NotificationBoxRecipientFlag.ENABLED : NotificationBoxRecipientFlag.OPT_OUT;
+    const index = bc.findIndex((x) => x.nb === nb);
+
+    if (index === -1) {
+      bc.push({ nb, f });
+    } else {
+      bc[index] = { ...bc[index], f };
+    }
+  }
+
   let result: Maybe<DbxFirebaseNotificationUserSettingsUpdateParams>;
 
-  if (notificationBoxId) {
-    const gcParams = dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc, disabledDeliveryMethods });
-    const boxParams = dbxFirebaseNotificationUserBoxConfigUpdateParams({ notificationBoxId, boxConfig, edits });
-
-    if (gcParams || boxParams) {
-      result = {
-        ...(gcParams ? { gc: gcParams } : {}),
-        ...(boxParams ? { bc: [boxParams], resync: true } : {})
-      };
-    }
-  } else {
-    const gcParams = dbxFirebaseNotificationUserGlobalConfigUpdateParams({ gc, edits, disabledDeliveryMethods });
-    result = gcParams ? { gc: gcParams } : undefined;
+  if (gcParams || bc.length) {
+    result = {
+      ...(gcParams ? { gc: gcParams } : {}),
+      ...(bc.length ? { bc, resync: true } : {})
+    };
   }
 
   return result;

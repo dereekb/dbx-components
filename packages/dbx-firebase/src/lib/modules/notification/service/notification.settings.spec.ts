@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { firestoreModelIdentity, notificationBoxIdForModel, NotificationDeliveryMethod, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
+import { firestoreModelIdentity, notificationBoxIdForModel, NotificationBoxRecipientFlag, NotificationDeliveryMethod, type NotificationTemplateTypeInfo } from '@dereekb/firebase';
 import {
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SETTINGS_HINT,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SWITCH_OFF_HINT,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_LABEL,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_OFF_HINT,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_PER_BOX_MODE_HINT,
   dbxFirebaseNotificationSettingsCellStates,
   dbxFirebaseNotificationSettingsListItemValues,
   dbxFirebaseNotificationUserBoxConfigUpdateParams,
@@ -222,25 +229,62 @@ describe('dbxFirebaseNotificationUserSettingsTexts()', () => {
     expect(dbxFirebaseNotificationUserSettingsTexts({})).toEqual({ hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT });
   });
 
-  it('should return the generic box texts when the model has no name', () => {
-    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1' } });
-    expect(texts.notRecipientMessage).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE);
-    expect(texts.overrideDescription).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION);
-    expect(texts.boxScopeLabel).toBe('Only here');
-    expect(texts.globalScopeLabel).toBe('Everywhere');
+  it('should say the global settings take priority on the global settings page in perBox mode', () => {
+    expect(dbxFirebaseNotificationUserSettingsTexts({ mode: 'perBox' })).toEqual({ hint: DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_PER_BOX_MODE_HINT });
   });
 
-  it("should name the box's model", () => {
-    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook' } });
-    expect(texts.notRecipientMessage).toBe('You do not receive notifications for this guestbook.');
-    expect(texts.overrideDescription).toBe('Your setting for all guestbooks overrides this.');
-    expect(texts.boxScopeLabel).toBe('This guestbook');
-    expect(texts.globalScopeLabel).toBe('All guestbooks');
+  describe('global mode', () => {
+    it('should be the default mode', () => {
+      expect(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE).toBe('global');
+    });
+
+    it('should return the generic box texts when the model has no name', () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1' } });
+      expect(texts.hint).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SETTINGS_HINT);
+      expect(texts.notRecipientMessage).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE);
+      expect(texts.boxSwitchLabel).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_LABEL);
+      expect(texts.boxSwitchOffHint).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SWITCH_OFF_HINT);
+    });
+
+    it("should name the box's model and say the settings apply to all of its kind", () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook' } });
+      expect(texts.hint).toContain('These settings apply to all guestbooks.');
+      expect(texts.boxSwitchLabel).toBe('Get notifications for this guestbook');
+      expect(texts.boxSwitchOffHint).toBe("You won't get any notifications for this guestbook. The settings below still apply to your other guestbooks.");
+      expect(texts.notRecipientMessage).toBe('You do not receive notifications for this guestbook.');
+      expect(texts.inactiveRecipientMessage).toBe('Notifications for this guestbook are turned off for you.');
+    });
+
+    it('should not have override texts, since the cells are the global settings', () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook' }, hasToggle: true });
+      expect(texts.overrideDescription).toBeUndefined();
+      expect(texts.globalHint).toBeUndefined();
+    });
   });
 
-  it('should point the override description at the toggle', () => {
-    const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook', modelPluralName: 'books' }, hasToggle: true });
-    expect(texts.overrideDescription).toBe('Your setting for all books overrides this. Switch to All books to change it.');
+  describe('perBox mode', () => {
+    it('should return the generic box texts when the model has no name', () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1' }, mode: 'perBox' });
+      expect(texts.hint).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_HINT);
+      expect(texts.notRecipientMessage).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_NOT_RECIPIENT_MESSAGE);
+      expect(texts.overrideDescription).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION);
+      expect(texts.boxSwitchOffHint).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SWITCH_OFF_HINT);
+      expect(texts.boxScopeLabel).toBe('Only here');
+      expect(texts.globalScopeLabel).toBe('Everywhere');
+    });
+
+    it("should name the box's model and say the global settings take priority", () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook' }, mode: 'perBox' });
+      expect(texts.hint).toContain('Grayed-out settings are set by your settings for all guestbooks, which take priority.');
+      expect(texts.overrideDescription).toBe('Your setting for all guestbooks takes priority over this.');
+      expect(texts.boxScopeLabel).toBe('This guestbook');
+      expect(texts.globalScopeLabel).toBe('All guestbooks');
+    });
+
+    it('should point the override description at the toggle', () => {
+      const texts = dbxFirebaseNotificationUserSettingsTexts({ notificationBox: { modelKey: 'gb/gb1', modelName: 'guestbook', modelPluralName: 'books' }, mode: 'perBox', hasToggle: true });
+      expect(texts.overrideDescription).toBe('Your setting for all books takes priority over this. Switch to All books to change it.');
+    });
   });
 });
 
@@ -311,5 +355,30 @@ describe('dbxFirebaseNotificationUserSettingsUpdateParams()', () => {
   it('should return undefined when nothing changed', () => {
     expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxId: 'nb', boxConfig: { c: {} }, edits: {}, disabledDeliveryMethods: [] })).toBeUndefined();
     expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, edits: {} })).toBeUndefined();
+  });
+
+  describe('box switch', () => {
+    it('should opt out of the box with resync', () => {
+      expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxEnabledChange: { notificationBoxId: 'nb', enabled: false } })).toEqual({ bc: [{ nb: 'nb', f: NotificationBoxRecipientFlag.OPT_OUT }], resync: true });
+    });
+
+    it('should opt back in to the box with ENABLED', () => {
+      expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxEnabledChange: { notificationBoxId: 'nb', enabled: true } })).toEqual({ bc: [{ nb: 'nb', f: NotificationBoxRecipientFlag.ENABLED }], resync: true });
+    });
+
+    it('should send the box switch alongside cell changes to gc', () => {
+      expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, edits: { GBE_C: { [TEXT]: true } }, notificationBoxEnabledChange: { notificationBoxId: 'nb', enabled: false } })).toEqual({
+        gc: { configs: [{ type: 'GBE_C', st: true }] },
+        bc: [{ nb: 'nb', f: NotificationBoxRecipientFlag.OPT_OUT }],
+        resync: true
+      });
+    });
+
+    it('should merge the box switch into the cell changes of the same box', () => {
+      expect(dbxFirebaseNotificationUserSettingsUpdateParams({ gc: {}, notificationBoxId: 'nb', boxConfig: { c: {} }, edits: { GBE_C: { [TEXT]: true } }, notificationBoxEnabledChange: { notificationBoxId: 'nb', enabled: false } })).toEqual({
+        bc: [{ nb: 'nb', configs: [{ type: 'GBE_C', st: true }], f: NotificationBoxRecipientFlag.OPT_OUT }],
+        resync: true
+      });
+    });
   });
 });

@@ -412,7 +412,9 @@ export const APP_CONFIG: ApplicationConfig = {
         userSettings: {
           textMessageDisclosure: DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
           phoneNumberPreferredCountries: ['US', 'CA'],
-          settingsAnchor: { ref: 'demo.app.notification.settings' }
+          settingsAnchor: { ref: 'demo.app.notification.settings' },
+          // the default: per-type settings are global, and each guestbook only gets an on/off switch
+          notificationBoxSettingsMode: 'global'
         }
       },
       provideAnalyticsUserEventsListener: true,

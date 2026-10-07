@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { type DbxFirebaseNotificationUserSettingsComponentConfig } from './notification.user.settings.component';
-import { DbxFirebaseNotificationUserSettingsDialogComponent } from './notification.user.settings.dialog.component';
+import { DbxFirebaseNotificationUserSettingsDialogComponent, type DbxFirebaseNotificationUserSettingsDialogConfig } from './notification.user.settings.dialog.component';
 
 /**
  * Default text of a {@link DbxFirebaseNotificationUserSettingsDialogButtonComponent}.
@@ -56,7 +56,8 @@ export class DbxFirebaseNotificationUserSettingsDialogButtonComponent {
    */
   readonly header = input<Maybe<string>>();
   /**
-   * Whether the dialog lets the user switch between a `notificationBox`'s settings and their global settings. True by default.
+   * Whether the dialog lets the user switch between a `notificationBox`'s settings and their global settings. False by default, and only
+   * applies in `perBox` mode. See {@link DbxFirebaseNotificationUserSettingsDialogConfig.showNotificationBoxToggle}.
    */
   readonly showNotificationBoxToggle = input<Maybe<boolean>>();
   readonly text = input<Maybe<string>>();

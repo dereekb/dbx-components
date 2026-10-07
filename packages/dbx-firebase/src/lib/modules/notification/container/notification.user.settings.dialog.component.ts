@@ -3,7 +3,7 @@ import { type MatDialog, type MatDialogRef } from '@angular/material/dialog';
 import { DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
 import { AbstractDialogDirective, DbxDialogModule, DbxLinkComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
-import { DbxFirebaseNotificationUserSettingsConfig } from '../service/notification.settings';
+import { DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE, type DbxFirebaseNotificationBoxSettingsMode, DbxFirebaseNotificationUserSettingsConfig } from '../service/notification.settings';
 import { NotificationUserDocumentStore } from '../store/notificationuser.document.store';
 import { DbxFirebaseNotificationUserDocumentStoreDirective } from '../store/notificationuser.document.store.directive';
 import { DbxFirebaseNotificationBoxContextToggleComponent } from './notification.box.context.toggle.component';
@@ -31,7 +31,10 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
   readonly config?: Maybe<DbxFirebaseNotificationUserSettingsComponentConfig>;
   /**
    * Whether to wrap the settings in a `dbx-firebase-notification-box-context-toggle` when the config has a `notificationBox`, so the user can
-   * switch between the box's settings and their global settings. True by default.
+   * switch between the box's settings and their global settings. False by default.
+   *
+   * Only applies in `perBox` mode (see {@link DbxFirebaseNotificationBoxSettingsMode}). In the default `global` mode, the settings shown for a
+   * box already are the global settings, so there is nothing to switch to.
    */
   readonly showNotificationBoxToggle?: Maybe<boolean>;
   /**
@@ -51,8 +54,8 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
  * the page with all of the settings when a `settingsAnchor` is configured, such as through the `userSettings` of
  * `provideDbxFirebaseNotifications()`. Opened by {@link DbxFirebaseNotificationUserSettingsDialogButtonComponent}.
  *
- * When the config has a `notificationBox`, the settings are wrapped in a {@link DbxFirebaseNotificationBoxContextToggleComponent} unless
- * `showNotificationBoxToggle` is false.
+ * When the config has a `notificationBox`, the dialog shows the settings for that box (see {@link DbxFirebaseNotificationUserSettingsComponent}).
+ * In `perBox` mode, `showNotificationBoxToggle` wraps them in a {@link DbxFirebaseNotificationBoxContextToggleComponent}.
  */
 @Component({
   template: `
@@ -86,15 +89,18 @@ export interface DbxFirebaseNotificationUserSettingsDialogConfig {
   imports: [DbxDialogModule, DbxLinkComponent, DbxRouteModelIdFromAuthUserIdDirective, DbxFirebaseNotificationUserDocumentStoreDirective, DbxFirebaseNotificationUserSettingsComponent, DbxFirebaseNotificationBoxContextToggleComponent]
 })
 export class DbxFirebaseNotificationUserSettingsDialogComponent extends AbstractDialogDirective<unknown, Maybe<DbxFirebaseNotificationUserSettingsDialogConfig>> {
+  private readonly _appConfig = inject(DbxFirebaseNotificationUserSettingsConfig, { optional: true });
+
   readonly hasNotificationUserDocumentStore = inject(NotificationUserDocumentStore, { optional: true }) != null;
   readonly header = this.data?.header ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_USER_SETTINGS_DIALOG_HEADER;
   readonly config = this.data?.config;
-  readonly showNotificationBoxToggle = this.config?.notificationBox != null && this.data?.showNotificationBoxToggle !== false;
+  readonly notificationBoxSettingsMode = this.config?.notificationBoxSettingsMode ?? this._appConfig?.notificationBoxSettingsMode ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE;
+  readonly showNotificationBoxToggle = this.config?.notificationBox != null && this.notificationBoxSettingsMode === 'perBox' && this.data?.showNotificationBoxToggle === true;
 
   /**
    * Anchor to all of the notification settings. The dialog closes once it navigates.
    */
-  readonly settingsAnchor = this.config?.settingsAnchor ?? inject(DbxFirebaseNotificationUserSettingsConfig, { optional: true })?.settingsAnchor;
+  readonly settingsAnchor = this.config?.settingsAnchor ?? this._appConfig?.settingsAnchor;
 
   /**
    * Opens the notification settings in a dialog.

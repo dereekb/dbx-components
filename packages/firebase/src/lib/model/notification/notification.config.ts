@@ -17,6 +17,10 @@
  * 4. Defaults — email, push and in-app summaries are sent unless `onlySendToExplicitlyEnabledRecipients`; texts are only sent when
  *    `onlyTextExplicitlyEnabledRecipients` is false. See {@link isNotificationDeliveryMethodEnabledByDefault}.
  *
+ * Note that the global config (`gc`) is an override, not a default: a method `gc` sets for a template type beats the box entry's setting for it,
+ * in every box. Only a box opt-out (an inactive box entry, whose `f` is set) beats `gc.c`, since the entry is skipped entirely. Apps should keep
+ * per-type settings in one place, either `gc.c` with a per-box on/off switch, or the box entries with `gc.c` left unset. See `NotificationUser.gc`.
+ *
  * The global config (`gc`) is applied live at send time and is never copied into the boxes, except for its lock flag (`lk`).
  * Contact details resolve as `gc.e ?? (box entry | dc).e ?? listed.e ?? auth email`, and the same for the phone number via `t`.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
@@ -615,6 +619,10 @@ export function hasNotificationDeliveryMethodOptIn(config: Maybe<Pick<Notificati
  *
  * The `i` field tracks the user's index in the box's recipient array. Changes here are synced
  * bidirectionally with the corresponding {@link NotificationBox} during server-side sync.
+ *
+ * The user can opt out of the box with `f` ({@link NotificationBoxRecipientFlag.OPT_OUT}), which stops every notification from it. The user owns
+ * that opt-out: the box cannot override it, and clearing it on the user's side clears it on the box at the next sync. The per-type settings (`c`)
+ * only decide what the user's global config (`gc.c`) leaves unset.
  *
  * Field abbreviations:
  * - `nb` — NotificationBox ID this config mirrors

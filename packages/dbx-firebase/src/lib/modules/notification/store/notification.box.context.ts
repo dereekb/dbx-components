@@ -1,10 +1,13 @@
 import { type Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
-import { type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
+import { type DbxFirebaseNotificationBoxSettingsMode, type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
 
 /**
  * A NotificationBox context provided to the views inside it, such as by `dbx-firebase-notification-box-context-toggle`. While the context
  * is on, those views target the box; while it is off, they target the user's global settings for the same template types.
+ *
+ * Whether the context is on only matters in `perBox` mode (see {@link DbxFirebaseNotificationBoxSettingsMode}). In `global` mode, the views
+ * always edit the global settings for the box's template types.
  */
 export abstract class DbxFirebaseNotificationBoxContext {
   /**

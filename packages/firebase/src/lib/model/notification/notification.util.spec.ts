@@ -1,3 +1,4 @@
+import { type Maybe } from '@dereekb/util';
 import { type NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationDeliveryMethod, NotificationDeliveryMethodDecisionSource, type NotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { type NotificationBoxId, type NotificationBoxSendExclusionList } from './notification.id';
@@ -179,6 +180,31 @@ describe('effectiveNotificationBoxRecipientConfig()', () => {
     expect(result.t).toBeUndefined();
     expect(result.f).toBeUndefined();
     expect(result.lk).toBe(true);
+  });
+
+  describe('flag', () => {
+    function resultFlag(boxConfigFlag: Maybe<NotificationBoxRecipientFlag>, recipientFlag: Maybe<NotificationBoxRecipientFlag>) {
+      return effectiveNotificationBoxRecipientConfig({
+        uid: 'u',
+        m: 'p/1',
+        appNotificationTemplateTypeInfoRecordService,
+        gc: { c: {} },
+        boxConfig: { nb: 'p_1', i: 0, c: {}, f: boxConfigFlag },
+        recipient: { uid: 'u', i: 0, c: {}, f: recipientFlag }
+      }).f;
+    }
+
+    it("should copy the box config's opt-out to the box recipient", () => {
+      expect(resultFlag(NotificationBoxRecipientFlag.OPT_OUT, undefined)).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+    });
+
+    it('should clear the box recipient opt-out once the box config no longer has it', () => {
+      expect(resultFlag(undefined, NotificationBoxRecipientFlag.OPT_OUT)).toBeUndefined();
+    });
+
+    it('should keep the box recipient disabled flag when the box config has no flag', () => {
+      expect(resultFlag(undefined, NotificationBoxRecipientFlag.DISABLED)).toBe(NotificationBoxRecipientFlag.DISABLED);
+    });
   });
 });
 

@@ -15,7 +15,7 @@ import {
 } from '@dereekb/firebase';
 import { beginLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
+import { DbxFirebaseNotificationUserSettingsConfig, type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
 import { DbxFirebaseNotificationBoxContext } from './notification.box.context';
 import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig } from './notificationuser.settings.store';
@@ -279,11 +279,136 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
     });
   });
-  describe('with a notificationBox', () => {
+  describe('with a notificationBox in global mode', () => {
     const notificationBox: DbxFirebaseNotificationUserSettingsNotificationBoxConfig = { modelKey: GUESTBOOK_KEY, modelName: 'guestbook' };
 
     beforeEach(() => {
       store.setConfig({ notificationBox });
+    });
+
+    it('should default to global mode', async () => {
+      expect(await firstValueFrom(store.notificationBoxSettingsMode$)).toBe('global');
+    });
+
+    it('should be ready but not show the box switch when the user has no config for the box', async () => {
+      setNotificationUser({}, [makeBoxConfig(OTHER_GUESTBOOK_BOX_ID)]);
+      expect(await firstValueFrom(store.pageState$)).toBe('ready');
+      expect(await firstValueFrom(store.isNotBoxRecipient$)).toBe(true);
+      expect(await firstValueFrom(store.boxSwitch$)).toBeUndefined();
+    });
+
+    it('should not show the box switch when the user removed themselves from the box', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { rm: true })]);
+      expect(await firstValueFrom(store.isNotBoxRecipient$)).toBe(true);
+      expect(await firstValueFrom(store.boxSwitch$)).toBeUndefined();
+    });
+
+    it('should be missing when the NotificationUser does not exist', async () => {
+      dataLoadingState$.next({ loading: false, error: { code: 'NOT_FOUND', message: 'Does not exist.' } });
+      expect(await firstValueFrom(store.pageState$)).toBe('missing');
+    });
+
+    it("should only show the box model's template types", async () => {
+      const items = await firstValueFrom(store.items$);
+      expect(items.map((x) => x.type)).toEqual(['GBE_C']);
+    });
+
+    it("should edit gc for the box model's rows, without overrides", async () => {
+      setNotificationUser({ c: { GBE_C: { se: false } } }, [makeBoxConfig(GUESTBOOK_BOX_ID, { c: { GBE_C: { st: true } } })]);
+
+      expect(await firstValueFrom(store.activeNotificationBoxTarget$)).toBeUndefined();
+
+      const row = (await firstValueFrom(store.cellStates$))['GBE_C'];
+      expect(row[EMAIL]?.value).toBe(false);
+      expect(row[EMAIL]?.override).toBeUndefined();
+      expect(row[TEXT]?.value).toBeNull();
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { configs: [{ type: 'GBE_C', st: true }] } });
+      expect(await firstValueFrom(store.hint$)).toContain('These settings apply to all guestbooks.');
+    });
+
+    describe('box switch', () => {
+      it('should be on for a recipient of the box', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+        expect(await firstValueFrom(store.isNotBoxRecipient$)).toBe(false);
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: true, modified: false, locked: false });
+      });
+
+      it('should opt out of the box, then drop the change once it is saved', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+        store.setNotificationBoxEnabled(false);
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: false, modified: true, locked: false });
+        expect(await firstValueFrom(store.updateParams$)).toEqual({ bc: [{ nb: GUESTBOOK_BOX_ID, f: NotificationBoxRecipientFlag.OPT_OUT }], resync: true });
+
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { f: NotificationBoxRecipientFlag.OPT_OUT })]);
+        expect(await firstValueFrom(store.select((state) => state.boxEnabledEdit))).toBeUndefined();
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: false, modified: false, locked: false });
+        expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
+      });
+
+      it('should opt back in to an opted-out box', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { f: NotificationBoxRecipientFlag.OPT_OUT })]);
+
+        store.setNotificationBoxEnabled(true);
+        expect(await firstValueFrom(store.updateParams$)).toEqual({ bc: [{ nb: GUESTBOOK_BOX_ID, f: NotificationBoxRecipientFlag.ENABLED }], resync: true });
+      });
+
+      it('should not be a change when switched back to its saved state', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+        store.setNotificationBoxEnabled(false);
+        store.setNotificationBoxEnabled(true);
+        expect(await firstValueFrom(store.isModified$)).toBe(false);
+      });
+
+      it('should be locked and off when the user is excluded from the box', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { x: true })]);
+
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: false, modified: false, locked: true });
+
+        store.setNotificationBoxEnabled(true);
+        expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
+      });
+
+      it('should be locked and off when the box disabled the user', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { f: NotificationBoxRecipientFlag.DISABLED })]);
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: false, modified: false, locked: true });
+      });
+
+      it('should send the box switch with the gc cell changes', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+        store.setNotificationBoxEnabled(false);
+        store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+        expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { configs: [{ type: 'GBE_C', st: true }] }, bc: [{ nb: GUESTBOOK_BOX_ID, f: NotificationBoxRecipientFlag.OPT_OUT }], resync: true });
+      });
+
+      it('should discard the box switch change on reset', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+        store.setNotificationBoxEnabled(false);
+        store.reset();
+        expect(await firstValueFrom(store.isModified$)).toBe(false);
+      });
+
+      it('should clear the box switch change when the box changes', async () => {
+        setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID), makeBoxConfig(OTHER_GUESTBOOK_BOX_ID)]);
+
+        store.setNotificationBoxEnabled(false);
+        store.setConfig({ notificationBox: { modelKey: OTHER_GUESTBOOK_KEY } });
+        expect(await firstValueFrom(store.select((state) => state.boxEnabledEdit))).toBeUndefined();
+        expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: true, modified: false, locked: false });
+      });
+    });
+  });
+
+  describe('with a notificationBox in perBox mode', () => {
+    const notificationBox: DbxFirebaseNotificationUserSettingsNotificationBoxConfig = { modelKey: GUESTBOOK_KEY, modelName: 'guestbook' };
+
+    beforeEach(() => {
+      store.setConfig({ notificationBox, notificationBoxSettingsMode: 'perBox' });
     });
 
     it('should be notRecipient when the user has no config for the box', async () => {
@@ -301,15 +426,15 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       expect(await firstValueFrom(store.pageState$)).toBe('notRecipient');
     });
 
-    it('should be ready for a recipient of the box', async () => {
+    it('should be ready for a recipient of the box, with the box switch on', async () => {
       setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
       expect(await firstValueFrom(store.pageState$)).toBe('ready');
-      expect(await firstValueFrom(store.isBoxRecipientInactive$)).toBe(false);
+      expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: true, modified: false, locked: false });
     });
 
-    it('should report an opted-out box config as inactive', async () => {
+    it('should show an opted-out box config with the box switch off', async () => {
       setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID, { f: NotificationBoxRecipientFlag.OPT_OUT })]);
-      expect(await firstValueFrom(store.isBoxRecipientInactive$)).toBe(true);
+      expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: false, modified: false, locked: false });
     });
 
     it("should only show the box model's template types", async () => {
@@ -322,7 +447,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
 
       const row = (await firstValueFrom(store.cellStates$))['GBE_C'];
       expect(row[EMAIL]?.override?.value).toBe(false);
-      expect(row[EMAIL]?.override?.description).toBe('Your setting for all guestbooks overrides this.');
+      expect(row[EMAIL]?.override?.description).toBe('Your setting for all guestbooks takes priority over this.');
       expect(row[TEXT]?.override).toBeUndefined();
       expect(row[TEXT]?.value).toBe(true);
     });
@@ -335,6 +460,14 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
 
       store.setMethodEnabled({ method: EMAIL, enabled: false });
       expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] }, bc: [{ nb: GUESTBOOK_BOX_ID, configs: [{ type: 'GBE_C', st: true }] }], resync: true });
+    });
+
+    it('should send the box switch in the same box update as the cell changes', async () => {
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
+      store.setNotificationBoxEnabled(false);
+      expect(await firstValueFrom(store.updateParams$)).toEqual({ bc: [{ nb: GUESTBOOK_BOX_ID, configs: [{ type: 'GBE_C', st: true }], f: NotificationBoxRecipientFlag.OPT_OUT }], resync: true });
     });
 
     it('should drop the pending cell changes once the box config has them', async () => {
@@ -354,7 +487,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       store.setCellValue({ type: 'GBE_C', method: TEXT, value: true });
       store.setMethodEnabled({ method: EMAIL, enabled: false });
 
-      store.setConfig({ notificationBox: { modelKey: OTHER_GUESTBOOK_KEY } });
+      store.setConfig({ notificationBox: { modelKey: OTHER_GUESTBOOK_KEY }, notificationBoxSettingsMode: 'perBox' });
       expect(await firstValueFrom(store.select((state) => state.cellEdits))).toEqual({});
       expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
     });
@@ -373,7 +506,11 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       setLocked = vi.fn();
 
       const context: DbxFirebaseNotificationBoxContext = { notificationBox$, enabled$, setLocked };
-      store = configureStore([{ provide: DbxFirebaseNotificationBoxContext, useValue: context }]);
+      const appConfig: Partial<DbxFirebaseNotificationUserSettingsConfig> = { notificationBoxSettingsMode: 'perBox' };
+      store = configureStore([
+        { provide: DbxFirebaseNotificationBoxContext, useValue: context },
+        { provide: DbxFirebaseNotificationUserSettingsConfig, useValue: appConfig }
+      ]);
     });
 
     it('should use the context box over the config box', async () => {
@@ -383,7 +520,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
 
     it('should mention the toggle in the override description', async () => {
       const texts = await firstValueFrom(store.texts$);
-      expect(texts.overrideDescription).toBe('Your setting for all guestbooks overrides this. Switch to All guestbooks to change it.');
+      expect(texts.overrideDescription).toBe('Your setting for all guestbooks takes priority over this. Switch to All guestbooks to change it.');
     });
 
     it('should edit gc for the box model rows while the context is off', async () => {
@@ -418,6 +555,14 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
       enabled$.next(false);
       expect(await firstValueFrom(store.select((state) => state.cellEdits))).toEqual({});
       expect(await firstValueFrom(store.updateParams$)).toEqual({ gc: { dm: [EMAIL] } });
+    });
+
+    it('should ignore the context in global mode', async () => {
+      store.setConfig({ notificationBoxSettingsMode: 'global' });
+      setNotificationUser({}, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      expect(await firstValueFrom(store.activeNotificationBoxTarget$)).toBeUndefined();
+      expect((await firstValueFrom(store.notificationBoxTarget$))?.notificationBoxId).toBe(GUESTBOOK_BOX_ID);
     });
 
     it('should lock the context while there are pending cell changes', async () => {

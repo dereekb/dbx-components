@@ -67,8 +67,9 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
     c,
     uid, // index and uid are retained
     i: recipient?.i ?? notificationUserNotificationBoxConfig.i,
-    // copy from NotificationUser
-    f: notificationUserNotificationBoxConfig.f ?? recipient?.f,
+    // copy from NotificationUser. The user owns OPT_OUT, so a box OPT_OUT their config no longer has is cleared. ENABLED is never stored, so
+    // an unset flag on the config is how an opt-out is cleared. Other flags, such as DISABLED, belong to the box and are kept.
+    f: notificationUserNotificationBoxConfig.f ?? (recipient?.f === NotificationBoxRecipientFlag.OPT_OUT ? undefined : recipient?.f),
     lk: gc.lk ?? notificationUserNotificationBoxConfig.lk, // lock state only comes from NotificationUser
     // email and text overrides come from the NotificationBox specific config. The global overrides are applied at send time.
     e: notificationUserNotificationBoxConfig.e,

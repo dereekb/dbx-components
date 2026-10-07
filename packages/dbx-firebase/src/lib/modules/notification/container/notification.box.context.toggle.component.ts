@@ -3,7 +3,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonToggle, type MatButtonToggleChange, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatTooltip } from '@angular/material/tooltip';
 import { type Maybe } from '@dereekb/util';
-import { type DbxFirebaseNotificationUserSettingsNotificationBoxConfig, dbxFirebaseNotificationUserSettingsTexts } from '../service/notification.settings';
+import { type DbxFirebaseNotificationBoxSettingsMode, type DbxFirebaseNotificationUserSettingsNotificationBoxConfig, dbxFirebaseNotificationUserSettingsTexts } from '../service/notification.settings';
 import { DbxFirebaseNotificationBoxContext } from '../store/notification.box.context';
 
 /**
@@ -40,6 +40,9 @@ type DbxFirebaseNotificationBoxContextToggleValue = 'box' | 'global';
  * toggle switches the view between the NotificationBox's settings and the user's global settings for the same template types.
  *
  * The toggle is locked while a view inside reports pending changes through {@link DbxFirebaseNotificationBoxContext.setLocked}.
+ *
+ * Only useful in `perBox` mode (see {@link DbxFirebaseNotificationBoxSettingsMode}), where it lets the user reach the global settings that
+ * override the box's settings. In the default `global` mode, the settings for a box already edit the global settings, so the toggle has no effect.
  *
  * @example
  * ```html

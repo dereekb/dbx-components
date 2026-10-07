@@ -122,6 +122,15 @@ export interface UpdateNotificationUserNotificationBoxRecipientParams extends Up
   readonly rm?: Maybe<boolean>;
   readonly lk?: Maybe<boolean>;
   readonly bk?: Maybe<boolean>;
+  /**
+   * Opts the user out of the box, or back in.
+   *
+   * {@link NotificationBoxRecipientFlag.OPT_OUT} stops every notification from the box, whatever the user's global config (`gc`) sets per
+   * template type. `null` or {@link NotificationBoxRecipientFlag.ENABLED} opts back in. {@link NotificationBoxRecipientFlag.DISABLED} belongs
+   * to the box and is ignored, and a config the box has DISABLED is not changed. Undefined keeps the current flag.
+   *
+   * Like the other box config changes, it reaches the NotificationBox on the next resync, or right away with `resync`.
+   */
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
   readonly deleteRemovedConfig?: Maybe<boolean>;
 }

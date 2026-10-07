@@ -163,6 +163,15 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.
    *
+   * It is an override, not a default: wherever `gc.c` sets a delivery method for a template type (directly or through the type's `sd`), that
+   * value is used for every box, and the box's own `bc` setting for that method is ignored. A method `gc.c` leaves unset falls through to the
+   * box's setting. So configuring the same template type in both `gc.c` and `bc[].c` rarely does what a user expects, and an app should pick one
+   * place for per-type settings:
+   * - global: per-type settings live in `gc.c`, and each box only has an on/off switch (`bc[].f`). This is the usual setup.
+   * - per box: per-type settings live in `bc[].c`, and `gc.c` leaves those template types unset.
+   *
+   * Opting out of a box (`bc[].f`) is not overridden by `gc.c`: the box's entry is skipped entirely. `gc.f` turns off every notification.
+   *
    * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply live as a final override during notification delivery.
    * Only its lock flag (`lk`) is synced to the boxes. Its `dm` disables delivery methods account-wide, and its `e`/`t` override the user's
    * auth email and phone number for every notification.
@@ -182,6 +191,9 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * Per-box recipient configurations. Each entry corresponds to one of the user's subscribed notification boxes.
    *
    * These configs are synced bidirectionally with the {@link NotificationBoxRecipient} entries on the corresponding {@link NotificationBox}.
+   *
+   * An entry's `f` opts the user out of that box entirely. An entry's per-type settings (`c`) only decide the delivery methods the global
+   * config (`gc.c`) leaves unset, since `gc` overrides them. See {@link NotificationUser.gc}.
    *
    * @dbxModelVariable boxConfigs
    */

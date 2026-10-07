@@ -1,3 +1,4 @@
+import { type Maybe } from '@dereekb/util';
 import { NotificationBoxRecipientFlag, NotificationDeliveryMethod, type NotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams } from './notification.api';
 import { updateNotificationUserDefaultNotificationBoxRecipientConfig, updateNotificationUserNotificationBoxRecipientConfigIfChanged } from './notification.api.util';
@@ -267,6 +268,45 @@ describe('updateNotificationUserNotificationBoxRecipientConfigIfChanged()', () =
         a: { se: true },
         b: { sn: false }
       }
+    });
+  });
+
+  describe('f', () => {
+    function updateFlag(currentFlag: Maybe<NotificationBoxRecipientFlag>, inputFlag: Maybe<NotificationBoxRecipientFlag>) {
+      return updateNotificationUserNotificationBoxRecipientConfigIfChanged({ nb: 'a', i: 0, f: currentFlag, c: {} }, { nb: 'a', f: inputFlag });
+    }
+
+    it('should opt out of the box and flag the config for sync', () => {
+      const result = updateFlag(undefined, NotificationBoxRecipientFlag.OPT_OUT);
+      expect(result?.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+      expect(result?.ns).toBe(true);
+    });
+
+    it('should unset the flag when opting back in with ENABLED', () => {
+      const result = updateFlag(NotificationBoxRecipientFlag.OPT_OUT, NotificationBoxRecipientFlag.ENABLED);
+      expect(result).toBeDefined();
+      expect(result?.f).toBeUndefined();
+      expect(result?.ns).toBe(true);
+    });
+
+    it('should unset the flag when opting back in with null', () => {
+      const result = updateFlag(NotificationBoxRecipientFlag.OPT_OUT, null);
+      expect(result).toBeDefined();
+      expect(result?.f).toBeUndefined();
+    });
+
+    it('should return undefined when opting in to a box that is not opted out', () => {
+      expect(updateFlag(undefined, NotificationBoxRecipientFlag.ENABLED)).toBeUndefined();
+    });
+
+    it('should not change a config the box disabled', () => {
+      expect(updateFlag(NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.ENABLED)).toBeUndefined();
+      expect(updateFlag(NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)).toBeUndefined();
+    });
+
+    it('should ignore an input of DISABLED', () => {
+      expect(updateFlag(undefined, NotificationBoxRecipientFlag.DISABLED)).toBeUndefined();
+      expect(updateFlag(NotificationBoxRecipientFlag.OPT_OUT, NotificationBoxRecipientFlag.DISABLED)).toBeUndefined();
     });
   });
 });

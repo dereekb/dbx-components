@@ -914,6 +914,38 @@ demoApiFunctionContextFactory((f) => {
                                   const afterProfileBox = await assertSnapshotData(nb_p.document);
                                   expect(afterProfileBox.r).toEqual(beforeProfileBox.r);
                                 });
+
+                                it('should opt out of the box and back in, and sync each change to the NotificationBox.', async () => {
+                                  const optOutParams: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [{ nb: nb_g.documentId, f: NotificationBoxRecipientFlag.OPT_OUT }],
+                                    resync: true
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, optOutParams));
+
+                                  let guestbookConfig = (await assertSnapshotData(nu.document)).bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                  expect(guestbookConfig.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+                                  expect(guestbookConfig.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toEqual({ se: true });
+
+                                  let recipient = (await assertSnapshotData(nb_g.document)).r.find((x) => x.uid === u.uid);
+                                  expect(recipient?.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+
+                                  const optInParams: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [{ nb: nb_g.documentId, f: NotificationBoxRecipientFlag.ENABLED }],
+                                    resync: true
+                                  };
+
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, optInParams));
+
+                                  guestbookConfig = (await assertSnapshotData(nu.document)).bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                  expect(guestbookConfig.f).toBeFalsy();
+
+                                  recipient = (await assertSnapshotData(nb_g.document)).r.find((x) => x.uid === u.uid);
+                                  expect(recipient).toBeDefined();
+                                  expect(recipient?.f).toBeFalsy();
+                                });
                               });
                             });
 

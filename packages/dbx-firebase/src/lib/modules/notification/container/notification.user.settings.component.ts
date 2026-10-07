@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionValueDirective, DbxActionValueStreamDirective } from '@dereekb/dbx-core';
 import { DbxActionSnackbarErrorDirective, DbxActionTransitionSafetyDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, DbxListTitleGroupDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
 import { filterMaybe, type IsModifiedFunction, type WorkUsingContext } from '@dereekb/rxjs';
@@ -8,7 +9,7 @@ import { first, of, switchMap } from 'rxjs';
 import { DbxFirebaseNotificationSettingsListDelegate, dbxFirebaseNotificationSettingsListGroupDelegate } from '../component/notification.settings.list';
 import { DbxFirebaseNotificationSettingsListComponent } from '../component/notification.settings.list.component';
 import { DbxFirebaseNotificationSettingsListGroupHeaderComponent } from '../component/notification.settings.list.group.component';
-import { type DbxFirebaseNotificationUserSettingsUpdateParams } from '../service/notification.settings';
+import { type DbxFirebaseNotificationBoxSettingsMode, type DbxFirebaseNotificationUserSettingsUpdateParams } from '../service/notification.settings';
 import { NotificationUserDocumentStore } from '../store/notificationuser.document.store';
 import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig, DbxFirebaseNotificationUserSettingsStoreListDelegate } from '../store/notificationuser.settings.store';
 import { DbxFirebaseNotificationHealthCheckDialogButtonComponent } from './healthcheck.dialog.button.component';
@@ -40,8 +41,10 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
  * settings. Changes are pending until Save, which sends them in one `updateNotificationUser()` call. Offers to set up
  * notifications when the NotificationUser does not exist yet.
  *
- * Set `notificationBox` in the config to edit the user's settings for one NotificationBox instead of their global settings, or wrap the
- * component in `dbx-firebase-notification-box-context-toggle` to let the user switch between the two.
+ * Set `notificationBox` in the config to show the settings for one NotificationBox: a switch that turns all of the box's notifications on or
+ * off, and the settings for the box's template types. With the default `global` {@link DbxFirebaseNotificationBoxSettingsMode}, those are the
+ * user's global settings, which apply to every box of that kind. In `perBox` mode they are the box's own settings, and the component can be
+ * wrapped in `dbx-firebase-notification-box-context-toggle` to let the user switch between the box's settings and their global settings.
  *
  * @example
  * ```html
@@ -78,11 +81,22 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
         </dbx-content-pit>
       }
       @case ('ready') {
+        @if (hasNotificationBoxTargetSignal()) {
+          <div class="dbx-pt2 dbx-pb2 dbx-firebase-notification-user-settings-box-switch">
+            @if (boxSwitchSignal(); as boxSwitch) {
+              <mat-slide-toggle [checked]="boxSwitch.enabled" [disabled]="disabledSignal() || boxSwitch.locked" (change)="store.setNotificationBoxEnabled($event.checked)">{{ textsSignal()?.boxSwitchLabel }}</mat-slide-toggle>
+              @if (boxSwitch.locked) {
+                <div class="dbx-hint dbx-small dbx-pt2">{{ textsSignal()?.inactiveRecipientMessage }}</div>
+              } @else if (!boxSwitch.enabled) {
+                <div class="dbx-hint dbx-small dbx-pt2">{{ textsSignal()?.boxSwitchOffHint }}</div>
+              }
+            } @else {
+              <p class="dbx-hint no-margin">{{ textsSignal()?.notRecipientMessage }}</p>
+            }
+          </div>
+        }
         @if (showDeliveryMethodSettingsSignal()) {
           <dbx-firebase-notification-user-settings-delivery></dbx-firebase-notification-user-settings-delivery>
-        }
-        @if (boxRecipientInactiveSignal()) {
-          <p class="dbx-hint dbx-small">{{ textsSignal()?.inactiveRecipientMessage }}</p>
         }
         <dbx-firebase-notification-settings-list [state]="store.listState$" [dbxListTitleGroup]="groupDelegate"></dbx-firebase-notification-settings-list>
         <p class="dbx-hint dbx-small">{{ hintSignal() }}</p>
@@ -105,6 +119,7 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
     class: 'd-block dbx-firebase-notification-user-settings'
   },
   imports: [
+    MatSlideToggle,
     DbxActionDirective,
     DbxActionValueDirective,
     DbxActionValueStreamDirective,
@@ -142,7 +157,9 @@ export class DbxFirebaseNotificationUserSettingsComponent {
   readonly textMessageDisclosureSignal = toSignal(this.store.textMessageDisclosure$);
   readonly textsSignal = toSignal(this.store.texts$);
   readonly hintSignal = toSignal(this.store.hint$);
-  readonly boxRecipientInactiveSignal = toSignal(this.store.isBoxRecipientInactive$, { initialValue: false });
+  readonly hasNotificationBoxTargetSignal = toSignal(this.store.hasNotificationBoxTarget$, { initialValue: false });
+  readonly boxSwitchSignal = toSignal(this.store.boxSwitch$);
+  readonly disabledSignal = toSignal(this.store.disabled$, { initialValue: true });
 
   readonly updateParams$ = this.store.updateParams$;
   readonly isUpdateParamsModified: IsModifiedFunction<Maybe<DbxFirebaseNotificationUserSettingsUpdateParams>> = (params) => of(params != null);

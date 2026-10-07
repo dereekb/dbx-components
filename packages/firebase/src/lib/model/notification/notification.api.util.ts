@@ -6,6 +6,7 @@
  */
 import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, filterUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import {
+  NotificationBoxRecipientFlag,
   type NotificationBoxRecipientTemplateConfig,
   type NotificationBoxRecipientTemplateConfigRecord,
   type NotificationDeliveryMethod,
@@ -102,10 +103,34 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
 }
 
 /**
+ * Applies a user's opt-out change to the flag of one of their box configs.
+ *
+ * The user owns {@link NotificationBoxRecipientFlag.OPT_OUT}: they can set it, or clear it with `null` or {@link NotificationBoxRecipientFlag.ENABLED}.
+ * A cleared flag is unset rather than ENABLED, since ENABLED is never stored. {@link NotificationBoxRecipientFlag.DISABLED} belongs to the box, so
+ * a DISABLED config is never changed, and an input of DISABLED is ignored.
+ *
+ * @param current - The config's current flag.
+ * @param input - The flag from the update params. Undefined keeps the current flag.
+ * @returns The next flag.
+ */
+export function updateNotificationUserNotificationBoxRecipientFlag(current: Maybe<NotificationBoxRecipientFlag>, input: Maybe<NotificationBoxRecipientFlag>): Maybe<NotificationBoxRecipientFlag> {
+  let result = current;
+
+  if (input !== undefined && current !== NotificationBoxRecipientFlag.DISABLED && input !== NotificationBoxRecipientFlag.DISABLED) {
+    result = input === NotificationBoxRecipientFlag.OPT_OUT ? NotificationBoxRecipientFlag.OPT_OUT : undefined;
+  }
+
+  return result;
+}
+
+/**
  * Applies update params to a {@link NotificationUserNotificationBoxRecipientConfig} and returns the updated config
  * only if it actually changed. Returns `undefined` if no changes were detected.
  *
  * Automatically sets `ns = true` (needs sync) when changes are detected and the recipient has been indexed.
+ *
+ * The params' `f` opts the user out of (or back in to) the box. See {@link updateNotificationUserNotificationBoxRecipientFlag}. The exclusion
+ * flag (`x`) is server-managed and never changed.
  *
  * @param a - Existing per-box recipient config.
  * @param b - Update params to apply.
@@ -113,7 +138,7 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
  * @returns The updated config if changes were detected, or undefined if no changes occurred.
  */
 export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationUserNotificationBoxRecipientConfig> {
-  const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
+  const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk, f: inputF } = b;
   const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
 
   const nextConfig: Building<NotificationUserNotificationBoxRecipientConfig> = {
@@ -122,9 +147,9 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
     rm: updateMaybeValue(a.rm, inputRm),
     lk: updateMaybeValue(a.lk, inputLk),
     bk: updateMaybeValue(a.bk, inputBk),
+    f: updateNotificationUserNotificationBoxRecipientFlag(a.f, inputF),
     // values remain the same
-    // the update does not change the recipient's flag or exclusion
-    f: a.f,
+    // the update does not change the recipient's exclusion
     x: a.x,
     ns: a.ns,
     nb: a.nb,
