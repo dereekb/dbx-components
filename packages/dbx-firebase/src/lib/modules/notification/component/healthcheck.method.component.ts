@@ -185,8 +185,9 @@ export class DbxFirebaseNotificationHealthCheckMethodComponent {
    * Where this method delivers to: the current destination when it changed since the check, otherwise the one the check delivered to.
    */
   readonly targetSignal = computed(() => {
+    const currentTargets = this.currentTargets();
     const result = this.result();
-    return this.targetChangedSignal() && result ? this.currentTargets()?.[result.me] : result?.tg;
+    return this.targetChangedSignal() && result ? currentTargets?.[result.me] : result?.tg;
   });
 
   readonly methodLabelSignal = computed(() => {

@@ -1069,7 +1069,7 @@
       "selector": "dbx-prompt-confirm",
       "className": "DbxPromptConfirmComponent",
       "module": "@dereekb/dbx-web",
-      "description": "Renders a confirmation prompt with customizable title, message, confirm, and cancel buttons.",
+      "description": "Renders a confirmation prompt with customizable title, message, confirm, and cancel buttons.\n\nProjected content shows above the buttons. Content marked with the `buttons` attribute shows in the same row, before the\nconfirm button.",
       "inputs": [
         {
           "name": "config",
@@ -1091,7 +1091,7 @@
           "description": ""
         }
       ],
-      "contentProjection": "<ng-content></ng-content>",
+      "contentProjection": "<ng-content></ng-content>; <ng-content select=\"[buttons]\"></ng-content>",
       "relatedSlugs": [
         "prompt",
         "action-confirm"

@@ -361,21 +361,21 @@ function recentMessageActivityIssues(recentMessages: TwilioRecentMessagesForReci
 
   if (unknown) {
     issues = [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.SEND_SERVICE_HEALTH_CHECK_UNAVAILABLE, NotificationHealthCheckStatus.UNKNOWN, { message: 'Our text provider could not be reached to read the recent texts to this number.', data: twilioDiagnosticErrorData(recentMessages.error) })];
-  } else if (!messages.length) {
+  } else if (messages.length) {
+    const conclusiveMessage = messages.find((x) => DELIVERED_TWILIO_MESSAGE_STATUSES.has(x.status) || FAILED_TWILIO_MESSAGE_STATUSES.has(x.status) || x.status === SENT_TWILIO_MESSAGE_STATUS);
+
+    if (conclusiveMessage) {
+      issues = [conclusiveMessageIssue(conclusiveMessage)];
+    } else {
+      issues = [notificationHealthCheckIssue(TwilioNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, NotificationHealthCheckStatus.UNKNOWN, { message: 'Recent texts to this number were accepted for delivery, but no delivery outcome has been recorded yet.', data: { messageCount: messages.length } })];
+    }
+  } else {
     issues = [
       notificationHealthCheckIssue(TwilioNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, NotificationHealthCheckStatus.WARNING, {
         message: 'No text has been sent to this number recently, so the problem is more likely to be in what triggers the notifications than in the texts themselves.',
         fix: 'Check the settings above, and contact support if you expected to receive something.'
       })
     ];
-  } else {
-    const conclusiveMessage = messages.find((x) => DELIVERED_TWILIO_MESSAGE_STATUSES.has(x.status) || FAILED_TWILIO_MESSAGE_STATUSES.has(x.status) || x.status === SENT_TWILIO_MESSAGE_STATUS);
-
-    if (!conclusiveMessage) {
-      issues = [notificationHealthCheckIssue(TwilioNotificationHealthCheckIssueCode.NO_RECENT_ACTIVITY, NotificationHealthCheckStatus.UNKNOWN, { message: 'Recent texts to this number were accepted for delivery, but no delivery outcome has been recorded yet.', data: { messageCount: messages.length } })];
-    } else {
-      issues = [conclusiveMessageIssue(conclusiveMessage)];
-    }
   }
 
   return issues;
@@ -557,9 +557,7 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
   const { twilioService, probeBuilder, target, uid, now } = input;
   let result: ResolveProbeResult;
 
-  if (!probeBuilder) {
-    result = { issues: [notificationHealthCheckIssue(TwilioNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED, NotificationHealthCheckStatus.SKIPPED, { message: 'Sending a test text is not available on this system.', data: { target } })] };
-  } else {
+  if (probeBuilder) {
     try {
       const request = await probeBuilder({ twilioService, to: target, uid });
       const sendResult = await twilioService.sendSms({ ...request, to: target });
@@ -619,6 +617,8 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
         probe: untrackableNotificationHealthCheckProbe({ at: now, s: NotificationHealthCheckStatus.ERROR, tg: target, d: 'Could not be sent' })
       };
     }
+  } else {
+    result = { issues: [notificationHealthCheckIssue(TwilioNotificationHealthCheckIssueCode.PROBE_NOT_CONFIGURED, NotificationHealthCheckStatus.SKIPPED, { message: 'Sending a test text is not available on this system.', data: { target } })] };
   }
 
   return result;

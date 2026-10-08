@@ -279,9 +279,9 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  * Builds internal indexes for fast lookup by notification model identity and target model identity.
  * Handles alternative model identities defined in {@link NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair}.
  *
- * @throws {Error} When two template types reference different {@link NotificationTemplateTypeInfoGroup} definitions that share a key.
  * @param appNotificationTemplateTypeInfoRecord - The complete template type registry for the application.
  * @returns A fully initialized service with indexed lookups for fast template type discovery.
+ * @throws {Error} When two template types reference different {@link NotificationTemplateTypeInfoGroup} definitions that share a key.
  *
  * @example
  * ```ts

@@ -83,5 +83,8 @@ export class DbxFirebaseNotificationUserSettingsDeliveryComponent {
   /**
    * Whether the stopped message shows beside the phone number, which is when texts have no switch to show it beside.
    */
-  readonly showTextStoppedMessageWithPhoneSignal = computed(() => this.textPhoneNumberStoppedSignal() && !this.switchesSignal().some((x) => x.method === NotificationDeliveryMethod.TEXT));
+  readonly showTextStoppedMessageWithPhoneSignal = computed(() => {
+    const switches = this.switchesSignal();
+    return this.textPhoneNumberStoppedSignal() && !switches.some((x) => x.method === NotificationDeliveryMethod.TEXT);
+  });
 }
