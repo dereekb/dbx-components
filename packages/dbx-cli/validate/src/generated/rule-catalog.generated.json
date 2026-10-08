@@ -2128,11 +2128,43 @@
     "code": "NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD",
     "source": "dbx_notification_m_validate_app",
     "severity": "warning",
-    "title": "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods`",
-    "whatItFlags": "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods`.",
-    "whenItApplies": "Template types whose info declares an explicit `userConfigurableDeliveryMethods` array and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method the array leaves out.",
-    "whenItDoesNotApply": "Infos without `userConfigurableDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically, and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.",
-    "canonicalFix": "Stop returning the unlisted content from the factory, or add the delivery method to the info's `userConfigurableDeliveryMethods`.",
+    "title": "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods` or `forcedDeliveryMethods`",
+    "whatItFlags": "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods` or `forcedDeliveryMethods`.",
+    "whenItApplies": "Template types whose info declares an explicit `userConfigurableDeliveryMethods` array, or only a `forcedDeliveryMethods` array (forcing a method changes the `userConfigurableDeliveryMethods` default to none), and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method neither array lists.",
+    "whenItDoesNotApply": "Infos with neither `userConfigurableDeliveryMethods` nor `forcedDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically (including a `forcedDeliveryMethods` it cannot read), and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.",
+    "canonicalFix": "Stop returning the unlisted content from the factory, or add the delivery method to the info's `userConfigurableDeliveryMethods` (or `forcedDeliveryMethods`).",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTemplateTypeInfo` forces a delivery method while `onlySendToExplicitlyEnabledRecipients` is `true`. A forced method is on by default, which an opt-in only type cannot be, and the app throws at startup when the info record is built",
+    "whatItFlags": "A `NotificationTemplateTypeInfo` forces a delivery method while `onlySendToExplicitlyEnabledRecipients` is `true`. A forced method is on by default, which an opt-in only type cannot be, and the app throws at startup when the info record is built.",
+    "whenItApplies": "Infos with a non-empty statically read `forcedDeliveryMethods` array and `onlySendToExplicitlyEnabledRecipients: true`.",
+    "whenItDoesNotApply": "Infos without `forcedDeliveryMethods`, lists the scanner cannot read statically, and `onlySendToExplicitlyEnabledRecipients` values other than a `true` literal.",
+    "canonicalFix": "Remove `forcedDeliveryMethods`, or remove `onlySendToExplicitlyEnabledRecipients` from the info.",
+    "seeAlso": [
+      {
+        "kind": "artifact",
+        "target": "notification-template"
+      }
+    ]
+  },
+  {
+    "code": "NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD",
+    "source": "dbx_notification_m_validate_app",
+    "severity": "error",
+    "title": "A `NotificationTemplateTypeInfo` lists the text delivery method in `forcedDeliveryMethods`. Texts cannot be forced, and the app throws at startup when the info record is built",
+    "whatItFlags": "A `NotificationTemplateTypeInfo` lists the text delivery method in `forcedDeliveryMethods`. Texts cannot be forced, and the app throws at startup when the info record is built.",
+    "whenItApplies": "Infos whose statically read `forcedDeliveryMethods` array contains `NotificationDeliveryMethod.TEXT`.",
+    "whenItDoesNotApply": "Infos without `forcedDeliveryMethods`, and lists the scanner cannot read statically.",
+    "canonicalFix": "Remove `NotificationDeliveryMethod.TEXT` from `forcedDeliveryMethods`. Texts stay opt-in for the recipient.",
     "seeAlso": [
       {
         "kind": "artifact",

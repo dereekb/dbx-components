@@ -111,6 +111,11 @@ export interface ExpandNotificationRecipientsInput {
    * Defaults to true.
    */
   readonly onlyTextExplicitlyEnabledRecipients?: Maybe<boolean>;
+  /**
+   * The template type's forced delivery methods (`NotificationTemplateTypeInfo.forcedDeliveryMethods`). The uid recipients' own per-type
+   * settings are skipped for these methods. See {@link resolveNotificationUidRecipientDelivery}.
+   */
+  readonly forcedDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
 }
 
 /**
@@ -224,7 +229,7 @@ export interface ExpandNotificationRecipientsResult {
  * @returns Channel-specific recipient lists (email, text, notification summary) ready for delivery.
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
-  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = input;
+  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients, forcedDeliveryMethods } = input;
 
   const notificationBoxId = notificationBox?.id;
   const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);
@@ -310,6 +315,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const delivery = resolveNotificationUidRecipientDelivery({
       notificationTemplateType,
       explicitOptIn,
+      forcedDeliveryMethods,
       notificationUser,
       notificationBoxId,
       boxRecipient: activeBoxRecipientsByUid.get(uid),
@@ -729,7 +735,7 @@ export interface NotificationMessageFunctionWithUnlistedDeliveryMethodsWarningIn
   /**
    * The info of the notification's template type. Without it there is nothing to compare the messages against, so they are not checked.
    */
-  readonly templateTypeInfo?: Maybe<Pick<NotificationTemplateTypeInfo, 'type' | 'userConfigurableDeliveryMethods'>>;
+  readonly templateTypeInfo?: Maybe<Pick<NotificationTemplateTypeInfo, 'type' | 'userConfigurableDeliveryMethods' | 'forcedDeliveryMethods'>>;
   /**
    * Id of the notification the messages are for, named in the warning.
    */
@@ -738,7 +744,7 @@ export interface NotificationMessageFunctionWithUnlistedDeliveryMethodsWarningIn
 
 /**
  * Wraps a message function so it warns, once, when a message it returns has content for a delivery method that the template type does not
- * list in `userConfigurableDeliveryMethods`. See {@link notificationMessageUnlistedDeliveryMethods}.
+ * list in `userConfigurableDeliveryMethods` or `forcedDeliveryMethods`. See {@link notificationMessageUnlistedDeliveryMethods}.
  *
  * The warning points at a message factory that disagrees with its template type's info, such as one that returns `textContent` for a type
  * the users can't configure texts for. The messages are returned unchanged.
@@ -762,7 +768,7 @@ export function notificationMessageFunctionWithUnlistedDeliveryMethodsWarning(in
         if (unlistedDeliveryMethods.length) {
           warned = true;
           console.warn(
-            `Notification "${notificationId}" with type "${templateTypeInfo.type}" has message content for delivery methods its NotificationTemplateTypeInfo does not list in userConfigurableDeliveryMethods: ${unlistedDeliveryMethods.join(', ')}. Users can't configure these delivery methods for the type, so its message factory likely should not return content for them.`
+            `Notification "${notificationId}" with type "${templateTypeInfo.type}" has message content for delivery methods its NotificationTemplateTypeInfo does not list in userConfigurableDeliveryMethods or forcedDeliveryMethods: ${unlistedDeliveryMethods.join(', ')}. The type is not sent by these delivery methods, so its message factory likely should not return content for them.`
           );
         }
       }

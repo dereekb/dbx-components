@@ -56,6 +56,8 @@ function formatTemplateBlock(t: TemplateSummary): string {
   if (t.targetModelIdentity) parts.push(`- Target model: \`${t.targetModelIdentity}\``);
   const deliveryMethodsText = formatUserConfigurableDeliveryMethods(t);
   if (deliveryMethodsText) parts.push(`- User-configurable delivery methods: ${deliveryMethodsText}`);
+  const forcedDeliveryMethodsText = formatForcedDeliveryMethods(t);
+  if (forcedDeliveryMethodsText) parts.push(`- Forced (always on) delivery methods: ${forcedDeliveryMethodsText}`);
   if (t.factoryContentDeliveryMethods.length > 0) parts.push(`- Factory returns content for: ${t.factoryContentDeliveryMethods.join(', ')}`);
   const infoText = t.infoSymbolName ? code(t.infoSymbolName) : '_Missing._';
   const factorySuffix = t.factoryFunctionName ? ` (${code(t.factoryFunctionName)})` : '';
@@ -70,7 +72,7 @@ function formatUserConfigurableDeliveryMethods(t: TemplateSummary): string | und
       result = t.userConfigurableDeliveryMethods && t.userConfigurableDeliveryMethods.length > 0 ? t.userConfigurableDeliveryMethods.join(', ') : '_none_';
       break;
     case 'default':
-      result = 'default';
+      result = t.forcedDeliveryMethodsSource === 'declared' && (t.forcedDeliveryMethods ?? []).some((method) => method !== 'TEXT') ? '_none_ (the default when the info forces a method)' : 'default';
       break;
     case 'unresolved':
       result = '_unresolved_';
@@ -78,6 +80,16 @@ function formatUserConfigurableDeliveryMethods(t: TemplateSummary): string | und
     case undefined:
       result = undefined;
       break;
+  }
+  return result;
+}
+
+function formatForcedDeliveryMethods(t: TemplateSummary): string | undefined {
+  let result: string | undefined;
+  if (t.forcedDeliveryMethodsSource === 'declared' && t.forcedDeliveryMethods && t.forcedDeliveryMethods.length > 0) {
+    result = t.forcedDeliveryMethods.join(', ');
+  } else if (t.forcedDeliveryMethodsSource === 'unresolved') {
+    result = '_unresolved_';
   }
   return result;
 }

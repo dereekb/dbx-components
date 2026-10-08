@@ -1807,9 +1807,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return messages.filter((x) => !x.flag);
               }
 
+              const templateTypeInfo = notificationTemplateType ? appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType] : undefined;
               const buildMessage = notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({
                 messageFunction,
-                templateTypeInfo: notificationTemplateType ? appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType] : undefined,
+                templateTypeInfo,
                 notificationId: notification.id
               });
 
@@ -1826,6 +1827,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 globalRecipients: messageFunction.globalRecipients,
                 onlySendToExplicitlyEnabledRecipients,
                 onlyTextExplicitlyEnabledRecipients,
+                forcedDeliveryMethods: templateTypeInfo?.forcedDeliveryMethods,
                 notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
               });
 

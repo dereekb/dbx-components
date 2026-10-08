@@ -24,7 +24,8 @@
   }
 
   // Wraps the cell's icon button and shrinks to it.
-  .dbx-firebase-notification-settings-cell-button {
+  .dbx-firebase-notification-settings-cell-button,
+  .dbx-firebase-notification-settings-cell-forced {
     display: inline-flex;
   }
 

@@ -218,6 +218,26 @@ export function readStringProperty(obj: ObjectLiteralExpression, name: string): 
 }
 
 /**
+ * Reads the boolean-literal value of a property on an object literal,
+ * tolerating an `as` cast around the literal.
+ *
+ * @param obj - The object literal to inspect.
+ * @param name - The property name to look up.
+ * @returns The boolean value, or `undefined` when the property is missing
+ *   or is not a `true` / `false` literal.
+ */
+export function readBooleanProperty(obj: ObjectLiteralExpression, name: string): boolean | undefined {
+  const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
+  let result: boolean | undefined;
+  if (init?.getKind() === SyntaxKind.TrueKeyword) {
+    result = true;
+  } else if (init?.getKind() === SyntaxKind.FalseKeyword) {
+    result = false;
+  }
+  return result;
+}
+
+/**
  * Reads the identifier-name value of a property on an object literal,
  * tolerating an `as` cast around the identifier.
  *

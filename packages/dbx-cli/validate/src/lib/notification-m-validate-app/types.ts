@@ -66,11 +66,18 @@ export type NotificationDeliveryMethodName = 'EMAIL' | 'TEXT' | 'PUSH' | 'NOTIFI
 /**
  * Where a template info's `userConfigurableDeliveryMethods` came from.
  *
- * - `default` — the property is absent (or `undefined` / `null`), so the runtime defaults apply.
+ * - `default` — the property is absent (or `undefined` / `null`), so the runtime default applies: the default methods, or none when the
+ *   info forces a method.
  * - `declared` — an array the extractor read statically.
  * - `unresolved` — present, but not statically readable (an import, a call, an unknown element, ...).
  */
 export type UserConfigurableDeliveryMethodsSource = 'default' | 'declared' | 'unresolved';
+
+/**
+ * Where a template info's `forcedDeliveryMethods` came from. Same values as {@link UserConfigurableDeliveryMethodsSource}; `default`
+ * means no method is forced.
+ */
+export type ForcedDeliveryMethodsSource = UserConfigurableDeliveryMethodsSource;
 
 // MARK: Extracted structures
 /**
@@ -98,6 +105,15 @@ export interface ExtractedTemplateTypeInfo {
    */
   readonly userConfigurableDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
   readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource;
+  /**
+   * The statically read `forcedDeliveryMethods`. Only set when {@link forcedDeliveryMethodsSource} is `declared`.
+   */
+  readonly forcedDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
+  readonly forcedDeliveryMethodsSource: ForcedDeliveryMethodsSource;
+  /**
+   * The `onlySendToExplicitlyEnabledRecipients` boolean literal, when set to one.
+   */
+  readonly onlySendToExplicitlyEnabledRecipients: boolean | undefined;
   readonly sourceFile: string;
   readonly line: number;
 }

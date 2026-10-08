@@ -660,6 +660,10 @@ interface DeliveryMethodsFixtureOptions {
    */
   readonly deliveryMethods?: string;
   /**
+   * Extra source for the TEST info's properties (e.g. `forcedDeliveryMethods: [...]`), added after the other properties.
+   */
+  readonly extraInfoProperties?: string;
+  /**
    * Replacement for the TEST factory's `return` statement.
    */
   readonly factoryReturn?: string;
@@ -673,8 +677,9 @@ function deliveryMethodsInspection(options: DeliveryMethodsFixtureOptions): AppN
   const inspection = happyInspection();
   const component = [...inspection.component.files];
   const api = [...inspection.api.files];
-  if (options.deliveryMethods !== undefined) {
-    replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'notificationModelIdentity: testIdentity\n', to: `notificationModelIdentity: testIdentity,\n  userConfigurableDeliveryMethods: ${options.deliveryMethods}\n` });
+  if (options.deliveryMethods !== undefined || options.extraInfoProperties !== undefined) {
+    const properties = [...(options.deliveryMethods === undefined ? [] : [`userConfigurableDeliveryMethods: ${options.deliveryMethods}`]), ...(options.extraInfoProperties === undefined ? [] : [options.extraInfoProperties])];
+    replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'notificationModelIdentity: testIdentity\n', to: `notificationModelIdentity: testIdentity,\n  ${properties.join(',\n  ')}\n` });
   }
   if (options.factoryReturn !== undefined) {
     replaceInFile({ files: api, relPath: API_FACTORY_PATH, from: TEST_FACTORY_RETURN, to: options.factoryReturn });
@@ -766,6 +771,70 @@ describe('validateAppNotifications — delivery methods', () => {
   it('keeps the canonical EMAIL, TEXT, NOTIFICATION_SUMMARY order', () => {
     const factoryReturn = 'return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => async () => ({ notificationSummaryContent: {}, textContent: {}, emailContent: {} }) };';
     expect(testHandler({ factoryReturn })?.contentDeliveryMethods).toEqual(['EMAIL', 'TEXT', 'NOTIFICATION_SUMMARY']);
+  });
+});
+
+function forcedDeliveryMethodViolations(options: DeliveryMethodsFixtureOptions) {
+  const result = validateAppNotifications(deliveryMethodsInspection(options), { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+  return result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD' || v.code === 'NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN');
+}
+
+describe('validateAppNotifications — forced delivery methods', () => {
+  it('reads forcedDeliveryMethods and onlySendToExplicitlyEnabledRecipients', () => {
+    const info = testInfo({ extraInfoProperties: 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL],\n  onlySendToExplicitlyEnabledRecipients: false' });
+    expect(info?.forcedDeliveryMethodsSource).toBe('declared');
+    expect(info?.forcedDeliveryMethods).toEqual(['EMAIL']);
+    expect(info?.onlySendToExplicitlyEnabledRecipients).toBe(false);
+  });
+
+  it('reports a missing forcedDeliveryMethods as default', () => {
+    const info = testInfo({});
+    expect(info?.forcedDeliveryMethodsSource).toBe('default');
+    expect(info?.forcedDeliveryMethods).toBeUndefined();
+    expect(info?.onlySendToExplicitlyEnabledRecipients).toBeUndefined();
+  });
+
+  it('flags NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD when texts are forced', () => {
+    const violations = forcedDeliveryMethodViolations({ extraInfoProperties: 'forcedDeliveryMethods: [NotificationDeliveryMethod.TEXT]' });
+    expect(violations.map((v) => v.code)).toEqual(['NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD']);
+    expect(violations[0].severity).toBe('error');
+    expect(violations[0].side).toBe('component');
+    expect(violations[0].file).toBe(COMPONENT_MAIN_PATH);
+  });
+
+  it('flags NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN when a method is forced on an opt-in only type', () => {
+    const violations = forcedDeliveryMethodViolations({ extraInfoProperties: 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL],\n  onlySendToExplicitlyEnabledRecipients: true' });
+    expect(violations.map((v) => v.code)).toEqual(['NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN']);
+    expect(violations[0].severity).toBe('error');
+  });
+
+  it('does not flag a forced email without opt-in', () => {
+    expect(forcedDeliveryMethodViolations({ extraInfoProperties: 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]' })).toHaveLength(0);
+  });
+
+  it('does not flag an unresolved forcedDeliveryMethods list', () => {
+    const options: DeliveryMethodsFixtureOptions = { extraInfoProperties: 'forcedDeliveryMethods: FORCED_METHODS,\n  onlySendToExplicitlyEnabledRecipients: true' };
+    expect(testInfo(options)?.forcedDeliveryMethodsSource).toBe('unresolved');
+    expect(forcedDeliveryMethodViolations(options)).toHaveLength(0);
+  });
+
+  it('counts forced methods as listed for NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD', () => {
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]', extraInfoProperties: 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]', factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]', factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(1);
+  });
+
+  it('skips NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD when forcedDeliveryMethods is unresolved', () => {
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]', extraInfoProperties: 'forcedDeliveryMethods: FORCED_METHODS', factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
+    expect(unlistedDeliveryMethodViolations({ extraInfoProperties: 'forcedDeliveryMethods: FORCED_METHODS', factoryReturn: TEXT_CONTENT_RETURN })).toHaveLength(0);
+  });
+
+  it('only lists the forced methods for NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD when the info leaves userConfigurableDeliveryMethods out', () => {
+    const extraInfoProperties = 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]';
+    const violations = unlistedDeliveryMethodViolations({ extraInfoProperties, factoryReturn: TEXT_CONTENT_RETURN });
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0].message).toContain('only lists EMAIL in `forcedDeliveryMethods`');
+    expect(unlistedDeliveryMethodViolations({ extraInfoProperties, factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
   });
 });
 

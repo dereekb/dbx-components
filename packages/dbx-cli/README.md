@@ -455,7 +455,8 @@ demo-cli model notification task nb/pr_<uid>/nbn/<id> --expanded
 
 `model notificationUser settings` defaults to the logged-in user, read from the OIDC userinfo `sub`. Each
 cell shows whether the type is on for that method, and why: an explicit `gc` value, the type's `sd`
-(all methods) value, the type's default, or a method turned off account-wide in `gc.dm`. `--expanded`
+(all methods) value, the type's default, a method turned off account-wide in `gc.dm`, or a method the
+type forces on (`forcedDeliveryMethods`, shown as `always`, which the user's cells cannot change). `--expanded`
 adds the direct (`dc`) and NotificationBox (`bc`) configs, excluded boxes (`x`), box memberships (`b`),
 the sync flag (`ns`), the last health check (`hc`), and ready-to-run `model notificationUser update`
 payloads for changing a setting.
@@ -622,7 +623,8 @@ It runs the same rules as the `dbx_notification_m_validate_app` MCP tool, over t
 | A template type has a message factory but no info (or the info isn't in the info record) | `NOTIF_TEMPLATE_FACTORY_ORPHAN`, `NOTIF_TEMPLATE_INFO_MISSING`, `NOTIF_TEMPLATE_INFO_NOT_IN_RECORD`, `NOTIF_TEMPLATE_RECORD_MISSING` / `_NOT_WIRED` | error |
 | A template type has an info but no message factory | `NOTIF_TEMPLATE_FACTORY_MISSING`, `NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING`, `NOTIF_TEMPLATE_FACTORY_NOT_WIRED` | error |
 | A task type in `validate` has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
-| A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` leaves out | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
+| A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` and `forcedDeliveryMethods` leave out (an info that only forces methods is only sent by them) | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
+| An info forces texts, or forces a method while `onlySendToExplicitlyEnabledRecipients` is `true` | `NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD`, `NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN` | error |
 
 …plus the rest of the `dbx_notification_m_validate_app` rule set (`dbx_explain_rule <CODE>` describes any
 code). The delivery-method check is a heuristic: it scans the factory's own source plus the function
@@ -669,7 +671,8 @@ factory wiring flags, `taskServiceCallCount`, and one entry per template and tas
 registration state), then `errorCount`, `warningCount` and `findings`
 (`{ code, severity, message, side, file }`). Template entries include
 `notificationModelIdentity`, `targetModelIdentity`, `userConfigurableDeliveryMethods` (with a
-`default` / `declared` / `unresolved` source) and `factoryContentDeliveryMethods`. Type it with
+`default` / `declared` / `unresolved` source), `forcedDeliveryMethods` (with the same kind of source) and
+`factoryContentDeliveryMethods`. Type it with
 `notificationManifest.NotificationManifest` from `@dereekb/dbx-cli/validate`. Nothing reads it at
 runtime.
 

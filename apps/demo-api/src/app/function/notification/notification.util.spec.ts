@@ -17,7 +17,7 @@ import {
   firestoreModelKey,
   twoWayFlatFirestoreModelKey
 } from '@dereekb/firebase';
-import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from 'demo-firebase';
+import { CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO, DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from 'demo-firebase';
 import { expandNotificationRecipients } from '@dereekb/firebase-server/model';
 import { assertSnapshotData, assertSnapshotDataWithKey } from '@dereekb/firebase-server';
 
@@ -182,6 +182,59 @@ demoApiFunctionContextFactory((f) => {
                 expect(result.emails).toHaveLength(1);
                 expect(result.texts).toHaveLength(0);
                 expect(result.notificationSummaries).toHaveLength(1);
+              });
+            });
+          });
+
+          describe('forced delivery methods', () => {
+            demoNotificationUserContext({ f, u, init: true }, (nu) => {
+              async function expandCalendarInviteForBoxRecipient(boxRecipient: Omit<NotificationBoxRecipient, 'uid' | 'i'> = {}) {
+                const notification: Notification = {
+                  ...baseNotification,
+                  n: { ...baseNotification.n, t: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE }
+                };
+
+                const notificationBox: DocumentDataWithIdAndKey<NotificationBox> = {
+                  cat: new Date(),
+                  m: firestoreDummyKey(),
+                  o: firestoreDummyKey(),
+                  r: [{ ...boxRecipient, uid: u.uid, i: 0 }],
+                  w: 0,
+                  id: firestoreDummyKey(),
+                  key: firestoreDummyKey()
+                };
+
+                return expandNotificationRecipients({
+                  notification,
+                  notificationBox,
+                  authService: f.authService,
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor(),
+                  forcedDeliveryMethods: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO.forcedDeliveryMethods
+                });
+              }
+
+              it('should still email when the user turned the type off in gc', async () => {
+                await nu.updateNotificationUser({ gc: { configs: [{ type: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, se: false }] } });
+
+                const result = await expandCalendarInviteForBoxRecipient();
+                expect(result.emails).toHaveLength(1);
+              });
+
+              it('should still email when the box entry turned the type off', async () => {
+                const result = await expandCalendarInviteForBoxRecipient({ c: { [CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE]: { se: false } } });
+                expect(result.emails).toHaveLength(1);
+              });
+
+              it('should not email when email is turned off account-wide (gc.dm)', async () => {
+                await nu.updateNotificationUser({ gc: { dm: [NotificationDeliveryMethod.EMAIL] } });
+
+                const result = await expandCalendarInviteForBoxRecipient();
+                expect(result.emails).toHaveLength(0);
+              });
+
+              it('should not email when the user opted out of the profile box', async () => {
+                const result = await expandCalendarInviteForBoxRecipient({ f: NotificationBoxRecipientFlag.OPT_OUT });
+                expect(result.emails).toHaveLength(0);
               });
             });
           });

@@ -116,6 +116,8 @@ describe('renderNotificationManifest', () => {
           targetModelIdentity: undefined,
           userConfigurableDeliveryMethods: undefined,
           userConfigurableDeliveryMethodsSource: 'default',
+          forcedDeliveryMethods: undefined,
+          forcedDeliveryMethodsSource: 'default',
           factoryContentDeliveryMethods: ['TEXT'],
           inInfoRecord: true,
           hasFactory: true,
@@ -158,6 +160,13 @@ describe('cliNotificationManifestFromManifest', () => {
 
     expect(cliManifest.tasks).toEqual([expect.objectContaining({ type: 'E', symbolName: 'EXAMPLE_NOTIFICATION_TASK_TYPE', dataInterfaceName: 'ExampleNotificationTaskData', checkpoints: ['part_a'], hasHandler: true })]);
     expect(cliManifest.templates).toEqual([expect.objectContaining({ type: 'TEST', symbolName: 'TEST_NOTIFICATION_TEMPLATE_TYPE', factoryFunctionName: 'demoTestNotificationFactory', factoryContentDeliveryMethods: ['t'] })]);
+    expect(cliManifest.templates[0].forcedDeliveryMethods).toBeUndefined();
+  });
+
+  it('copies the forced delivery method codes', () => {
+    const { manifest } = render();
+    const cliManifest = cliNotificationManifestFromManifest({ ...manifest, templates: manifest.templates.map((x) => ({ ...x, forcedDeliveryMethods: ['EMAIL'], forcedDeliveryMethodsSource: 'declared' })) });
+    expect(cliManifest.templates[0].forcedDeliveryMethods).toEqual(['e']);
   });
 
   it('skips entries without a type code', () => {

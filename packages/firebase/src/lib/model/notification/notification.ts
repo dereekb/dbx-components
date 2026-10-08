@@ -177,6 +177,9 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * Only its lock flag (`lk`) is synced to the boxes. Its `dm` disables delivery methods account-wide, and its `e`/`t` override the user's
    * auth email and phone number for every notification.
    *
+   * A template type's forced delivery methods (`NotificationTemplateTypeInfo.forcedDeliveryMethods`) skip `gc.c` for that type, along with
+   * the `bc`/`dc` setting for it. Only `gc.f`, `gc.dm` and a box opt-out still turn a forced method off.
+   *
    * @dbxModelVariable globalConfig
    */
   gc: NotificationUserDefaultNotificationBoxRecipientConfig;
@@ -807,13 +810,17 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    * For example, setting `st: true` opts a user into text/SMS for this notification's template type,
    * unless overridden by the user's own {@link NotificationUser} config or their box recipient entry.
    *
+   * These values still apply to the template type's forced delivery methods (`NotificationTemplateTypeInfo.forcedDeliveryMethods`), since
+   * only the user's own settings are skipped for those.
+   *
    * @dbxModelVariable recipients
    */
   r: NotificationRecipientWithConfig[];
   /**
    * Explicit opt-in send only. When true, only sends to users who have explicitly opted in for each channel.
    *
-   * Overrides the system-level default for this notification's template type.
+   * Overrides the system-level default for this notification's template type. Also applies to the template type's forced delivery methods,
+   * so a forced method is only sent to recipients that explicitly enable it on the notification.
    *
    * @dbxModelVariable optInSendOnly
    */

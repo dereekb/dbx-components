@@ -21,6 +21,11 @@ const typeInfos: NotificationTemplateTypeInfo[] = [
   { type: 'X', name: 'Ungrouped', description: 'Ungrouped.', notificationModelIdentity: guestbookIdentity }
 ];
 
+const forcedTypeInfos: NotificationTemplateTypeInfo[] = [
+  { type: 'F', name: 'Forced', description: 'Forced.', notificationModelIdentity: profileIdentity, group: profileGroup, userConfigurableDeliveryMethods: COLUMNS, forcedDeliveryMethods: [EMAIL] },
+  { type: 'F_ONLY', name: 'Forced Only', description: 'Forced only.', notificationModelIdentity: profileIdentity, group: profileGroup, forcedDeliveryMethods: [EMAIL] }
+];
+
 describe('notificationSettingsListItemValues()', () => {
   const items = notificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS });
 
@@ -89,6 +94,27 @@ describe('notificationSettingsListItemValues()', () => {
   });
 });
 
+describe('notificationSettingsListItemValues() forced delivery methods', () => {
+  const items = notificationSettingsListItemValues({ typeInfos: forcedTypeInfos, deliveryMethods: COLUMNS });
+
+  it('should leave forced methods out of the configurable delivery methods', () => {
+    const item = items.find((x) => x.type === 'F');
+    expect(item?.deliveryMethods).toEqual([TEXT, NOTIFICATION_SUMMARY]);
+    expect(item?.forcedDeliveryMethods).toEqual([EMAIL]);
+  });
+
+  it('should keep a row for a type that only forces methods, with no configurable methods', () => {
+    const item = items.find((x) => x.type === 'F_ONLY');
+    expect(item?.deliveryMethods).toEqual([]);
+    expect(item?.forcedDeliveryMethods).toEqual([EMAIL]);
+  });
+
+  it('should set an empty forced list for types without forced methods', () => {
+    const [item] = notificationSettingsListItemValues({ typeInfos: [typeInfos[0]], deliveryMethods: COLUMNS });
+    expect(item.forcedDeliveryMethods).toEqual([]);
+  });
+});
+
 describe('notificationSettingsCellStates()', () => {
   const items = notificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS });
 
@@ -137,6 +163,29 @@ describe('notificationSettingsCellStates()', () => {
     expect(states['E'][TEXT]?.override).toBeUndefined();
     expect(states['E'][EMAIL]?.value).toBeNull();
     expect(states['E'][EMAIL]?.override).toEqual({ value: false, description: DEFAULT_NOTIFICATION_SETTINGS_BOX_OVERRIDE_DESCRIPTION });
+  });
+  describe('forced delivery methods', () => {
+    const forcedItems = notificationSettingsListItemValues({ typeInfos: forcedTypeInfos, deliveryMethods: COLUMNS });
+
+    it('should show a forced cell that is always on and cannot be configured', () => {
+      const states = notificationSettingsCellStates({ items: forcedItems, deliveryMethods: COLUMNS, gc: { c: { F: { sd: false, se: false } } }, edits: { F: { [EMAIL]: false } } });
+      expect(states['F'][EMAIL]).toEqual({ method: EMAIL, available: false, forced: true, value: null, defaultValue: true, disabled: false, modified: false });
+      expect(states['F'][NOTIFICATION_SUMMARY]?.forced).toBeUndefined();
+      expect(states['F'][NOTIFICATION_SUMMARY]?.defaultValue).toBe(false);
+    });
+
+    it('should disable a forced cell when its method is turned off account-wide', () => {
+      const states = notificationSettingsCellStates({ items: forcedItems, deliveryMethods: COLUMNS, gc: { dm: [EMAIL] } });
+      expect(states['F'][EMAIL]?.forced).toBe(true);
+      expect(states['F'][EMAIL]?.disabled).toBe(true);
+    });
+
+    it('should not override a forced cell in the box view', () => {
+      const states = notificationSettingsCellStates({ items: forcedItems, deliveryMethods: COLUMNS, gc: { c: { F: { se: false } } }, boxConfig: { c: { F: { se: false } } } });
+      expect(states['F'][EMAIL]?.override).toBeUndefined();
+      expect(states['F'][EMAIL]?.value).toBeNull();
+      expect(states['F'][EMAIL]?.defaultValue).toBe(true);
+    });
   });
 });
 

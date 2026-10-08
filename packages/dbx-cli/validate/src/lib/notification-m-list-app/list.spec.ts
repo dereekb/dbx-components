@@ -99,6 +99,8 @@ describe('listAppNotifications', () => {
     expect(template.notificationModelIdentity).toBe('testIdentity');
     expect(template.userConfigurableDeliveryMethodsSource).toBe('default');
     expect(template.userConfigurableDeliveryMethods).toBeUndefined();
+    expect(template.forcedDeliveryMethodsSource).toBe('default');
+    expect(template.forcedDeliveryMethods).toBeUndefined();
     expect(template.factoryContentDeliveryMethods).toEqual([]);
     expect(template.inInfoRecord).toBe(true);
     expect(template.hasFactory).toBe(true);
@@ -178,6 +180,20 @@ describe('listAppNotifications', () => {
     const md = formatReportAsMarkdown(listAppNotifications(happyInspection(), { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' }));
     expect(md).toContain('- User-configurable delivery methods: default');
     expect(md).not.toContain('- Factory returns content for:');
+    expect(md).not.toContain('- Forced (always on) delivery methods:');
+  });
+
+  it('lists forced delivery methods', () => {
+    const inspection = happyInspection();
+    const componentFiles = inspection.component.files.map((f) => (f.relPath.endsWith('notification.ts') ? { ...f, text: COMPONENT_MAIN.replace('notificationModelIdentity: testIdentity\n', 'notificationModelIdentity: testIdentity,\n  forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]\n') } : f));
+    const patched: AppNotificationsInspection = { ...inspection, component: { ...inspection.component, files: componentFiles } };
+    const report = listAppNotifications(patched, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+    const template = report.templates[0];
+    expect(template.forcedDeliveryMethodsSource).toBe('declared');
+    expect(template.forcedDeliveryMethods).toEqual(['EMAIL']);
+    const md = formatReportAsMarkdown(report);
+    expect(md).toContain('- Forced (always on) delivery methods: EMAIL');
+    expect(md).toContain('- User-configurable delivery methods: _none_ (the default when the info forces a method)');
   });
 
   it('formats the report as JSON', () => {

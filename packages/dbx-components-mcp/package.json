@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components-mcp",
-  "version": "14.15.0",
+  "version": "14.16.0",
   "sideEffects": false,
   "type": "module",
   "bin": {
@@ -12,7 +12,7 @@
     "ts-morph": "^21.0.0"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "14.15.0",
-    "@dereekb/util": "14.15.0"
+    "@dereekb/dbx-cli": "14.16.0",
+    "@dereekb/util": "14.16.0"
   }
 }

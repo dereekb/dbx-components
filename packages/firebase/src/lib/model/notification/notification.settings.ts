@@ -15,7 +15,7 @@ import {
   type NotificationUserNotificationBoxRecipientConfig,
   readNotificationDeliveryMethodFlag
 } from './notification.config';
-import { notificationTemplateTypeInfoUserConfigurableDeliveryMethods, type NotificationTemplateTypeInfo, type NotificationTemplateTypeInfoGroup, type NotificationTemplateTypeInfoGroupKey } from './notification.details';
+import { notificationTemplateTypeInfoForcedDeliveryMethods, notificationTemplateTypeInfoUserConfigurableDeliveryMethods, type NotificationTemplateTypeInfo, type NotificationTemplateTypeInfoGroup, type NotificationTemplateTypeInfoGroupKey } from './notification.details';
 import { type NotificationTemplateType } from './notification.id';
 
 /**
@@ -57,9 +57,19 @@ export interface NotificationSettingsListItemValue {
    */
   readonly group: NotificationTemplateTypeInfoGroup;
   /**
-   * Delivery methods the user can configure for the type, in column order. Columns not in this list show as unavailable.
+   * Delivery methods the user can configure for the type, in column order. Columns not in this list or in {@link forcedDeliveryMethods}
+   * show as unavailable.
+   *
+   * Forced delivery methods are left out, since they cannot be configured.
    */
   readonly deliveryMethods: NotificationDeliveryMethod[];
+  /**
+   * Delivery methods that are always on for the type (`NotificationTemplateTypeInfo.forcedDeliveryMethods`), in column order. Shown as
+   * always-on cells that cannot be changed.
+   *
+   * Always set by {@link notificationSettingsListItemValues}. Optional so custom list builders still compile.
+   */
+  readonly forcedDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
   /**
    * Template type info the row was built from.
    */
@@ -75,9 +85,14 @@ export interface NotificationSettingsCellState {
    */
   readonly method: NotificationDeliveryMethod;
   /**
-   * Whether the user can configure the method for the template type.
+   * Whether the user can configure the method for the template type. False for a forced cell.
    */
   readonly available: boolean;
+  /**
+   * Set when the method is always on for the template type (`NotificationTemplateTypeInfo.forcedDeliveryMethods`). A forced cell has no value,
+   * defaults to on, ignores pending edits and is never overridden. It is only off when the method is turned off account-wide (`disabled`).
+   */
+  readonly forced?: Maybe<boolean>;
   /**
    * Explicit value of the cell, including pending edits. Null/undefined means the cell uses its default.
    */
@@ -206,7 +221,8 @@ export function notificationSettingsGroupForTemplateTypeInfo(info: Pick<Notifica
 /**
  * Builds the settings list rows from the app's template type infos.
  *
- * Drops hidden types and types with no configurable column, intersects each type's configurable methods with the columns,
+ * Drops hidden types and types with no configurable or forced column, intersects each type's configurable and forced methods with the columns
+ * (a forced method is never configurable),
  * applies the group fallback, keeps only the selected groups and types when any are set, and sorts the rows by `sortOrder`
  * then name.
  *
@@ -224,14 +240,16 @@ export function notificationSettingsListItemValues(input: NotificationSettingsLi
 
   typeInfos.forEach((info) => {
     if (!info.hideFromUserSettings && !hidden.has(info.type)) {
+      const forced = new Set(notificationTemplateTypeInfoForcedDeliveryMethods(info));
       const configurable = new Set(notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info));
-      const deliveryMethods = columns.filter((method) => configurable.has(method));
+      const deliveryMethods = columns.filter((method) => configurable.has(method) && !forced.has(method));
+      const forcedDeliveryMethods = columns.filter((method) => forced.has(method));
 
-      if (deliveryMethods.length) {
+      if (deliveryMethods.length || forcedDeliveryMethods.length) {
         const group = notificationSettingsGroupForTemplateTypeInfo(info, input);
 
         if (!isSelectionSet || selectedGroups.has(group.key) || selectedTemplateTypes.has(info.type)) {
-          values.push({ type: info.type, name: info.name, description: info.description, group, deliveryMethods, info });
+          values.push({ type: info.type, name: info.name, description: info.description, group, deliveryMethods, forcedDeliveryMethods, info });
         }
       }
     }
@@ -282,6 +300,9 @@ export interface NotificationSettingsCellStatesInput {
  * A cell's default is the row's `sd` when set, otherwise {@link isNotificationDeliveryMethodEnabledByDefault} for the type.
  * A cell is disabled when its method is in the pending disabled methods.
  *
+ * A forced cell (see {@link NotificationSettingsCellState.forced}) is unavailable, has no value, defaults to on and ignores pending edits. It is
+ * never overridden, since the user's own settings for the type are skipped for a forced method at send time.
+ *
  * With a `boxConfig`, the cells read from the box's config instead of `gc`, so "Default" falls through to the global setting or the type's
  * default. A box cell is overridden wherever `gc` sets the method for the type, directly or through the type's `sd`, because `gc` takes
  * precedence at send time.
@@ -301,26 +322,33 @@ export function notificationSettingsCellStates(input: NotificationSettingsCellSt
     const overridingConfig = boxConfig ? effectiveNotificationBoxRecipientTemplateConfig(gc?.c?.[type] ?? {}) : undefined;
     const typeEdits = edits?.[type];
     const available = new Set(item.deliveryMethods);
+    const forced = new Set(item.forcedDeliveryMethods ?? []);
     const row: NotificationSettingsRowCellStates = {};
 
     deliveryMethods.forEach((method) => {
-      const savedValue = readNotificationDeliveryMethodFlag(savedConfig, method) ?? null;
-      const editValue = typeEdits?.[method];
-      const hasEdit = editValue !== undefined;
-      const value = hasEdit ? editValue : savedValue;
+      const disabled = disabledMethods.has(method);
 
-      const overrideValue = readNotificationDeliveryMethodFlag(overridingConfig, method);
-      const override: Maybe<NotificationSettingsCellOverride> = overrideValue == null ? undefined : { value: overrideValue, description: overrideDescription };
+      if (forced.has(method)) {
+        row[method] = { method, available: false, forced: true, value: null, defaultValue: true, disabled, modified: false };
+      } else {
+        const savedValue = readNotificationDeliveryMethodFlag(savedConfig, method) ?? null;
+        const editValue = typeEdits?.[method];
+        const hasEdit = editValue !== undefined;
+        const value = hasEdit ? editValue : savedValue;
 
-      row[method] = {
-        method,
-        available: available.has(method),
-        value,
-        defaultValue: savedConfig?.sd ?? isNotificationDeliveryMethodEnabledByDefault(method, info),
-        disabled: disabledMethods.has(method),
-        modified: hasEdit && editValue !== savedValue,
-        ...(override ? { override } : {})
-      };
+        const overrideValue = readNotificationDeliveryMethodFlag(overridingConfig, method);
+        const override: Maybe<NotificationSettingsCellOverride> = overrideValue == null ? undefined : { value: overrideValue, description: overrideDescription };
+
+        row[method] = {
+          method,
+          available: available.has(method),
+          value,
+          defaultValue: savedConfig?.sd ?? isNotificationDeliveryMethodEnabledByDefault(method, info),
+          disabled,
+          modified: hasEdit && editValue !== savedValue,
+          ...(override ? { override } : {})
+        };
+      }
     });
 
     result[type] = row;

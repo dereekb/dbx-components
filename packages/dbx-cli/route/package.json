@@ -1,15 +1,15 @@
 {
   "name": "@dereekb/dbx-cli/route",
-  "version": "14.15.0",
+  "version": "14.16.0",
   "type": "module",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/date": "14.15.0",
-    "@dereekb/dbx-cli": "14.15.0",
-    "@dereekb/firebase": "14.15.0",
-    "@dereekb/model": "14.15.0",
-    "@dereekb/nestjs": "14.15.0",
-    "@dereekb/oauth-resource": "14.15.0",
-    "@dereekb/util": "14.15.0"
+    "@dereekb/date": "14.16.0",
+    "@dereekb/dbx-cli": "14.16.0",
+    "@dereekb/firebase": "14.16.0",
+    "@dereekb/model": "14.16.0",
+    "@dereekb/nestjs": "14.16.0",
+    "@dereekb/oauth-resource": "14.16.0",
+    "@dereekb/util": "14.16.0"
   }
 }

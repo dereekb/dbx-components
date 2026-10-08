@@ -21,6 +21,16 @@ describe('notificationMessageUnlistedDeliveryMethods()', () => {
     expect(result).toEqual([]);
   });
 
+  it('should compare against only the forced delivery methods when the template type forces methods and lists none', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT, textContent: CONTENT, notificationSummaryContent: {} }, { forcedDeliveryMethods: [EMAIL] });
+    expect(result).toEqual([TEXT, NOTIFICATION_SUMMARY]);
+  });
+
+  it('should count forced delivery methods as listed', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT, notificationSummaryContent: {} }, { userConfigurableDeliveryMethods: [NOTIFICATION_SUMMARY], forcedDeliveryMethods: [EMAIL] });
+    expect(result).toEqual([]);
+  });
+
   it('should ignore delivery methods the message has no content for', () => {
     const result = notificationMessageUnlistedDeliveryMethods({}, { userConfigurableDeliveryMethods: [] });
     expect(result).toEqual([]);

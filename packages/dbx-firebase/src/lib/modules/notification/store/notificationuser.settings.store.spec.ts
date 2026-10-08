@@ -15,7 +15,7 @@ import {
 } from '@dereekb/firebase';
 import { beginLoading, type LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
-import { DbxFirebaseNotificationUserSettingsConfig, type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
+import { DbxFirebaseNotificationUserSettingsConfig, DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_HINT, type DbxFirebaseNotificationUserSettingsNotificationBoxConfig } from '../service/notification.settings';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
 import { DbxFirebaseNotificationBoxContext } from './notification.box.context';
 import { DbxFirebaseNotificationUserSettingsStore, type DbxFirebaseNotificationUserSettingsStoreConfig } from './notificationuser.settings.store';
@@ -57,7 +57,7 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     return notificationUser;
   }
 
-  function configureStore(extraProviders: Provider[] = []): DbxFirebaseNotificationUserSettingsStore {
+  function configureStore(extraProviders: Provider[] = [], typeInfoRecord: Record<string, NotificationTemplateTypeInfo> = TYPE_INFO_RECORD): DbxFirebaseNotificationUserSettingsStore {
     dataLoadingState$ = new BehaviorSubject<LoadingState<NotificationUser>>(beginLoading());
     authUser$ = new BehaviorSubject<{ uid: string; phoneNumber: string | null }>({ uid: UID, phoneNumber: '+15555550199' });
 
@@ -74,9 +74,9 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
         },
         {
           provide: DbxFirebaseNotificationTemplateService,
-          useValue: { appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(TYPE_INFO_RECORD) }
+          useValue: { appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(typeInfoRecord) }
         },
-        { provide: AppNotificationTemplateTypeInfoRecordService, useValue: appNotificationTemplateTypeInfoRecordService(TYPE_INFO_RECORD) },
+        { provide: AppNotificationTemplateTypeInfoRecordService, useValue: appNotificationTemplateTypeInfoRecordService(typeInfoRecord) },
         { provide: DbxFirebaseAuthService, useValue: { currentAuthUser$: authUser$ } }
       ]
     });
@@ -505,6 +505,46 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
         expect(await firstValueFrom(store.select((state) => state.boxEnabledEdit))).toBeUndefined();
         expect(await firstValueFrom(store.boxSwitch$)).toEqual({ enabled: true, modified: false, locked: false });
       });
+    });
+  });
+
+  it('should not show the forced hint when no type has a forced delivery method', async () => {
+    expect(await firstValueFrom(store.forcedHint$)).toBeUndefined();
+  });
+
+  describe('with a forced delivery method', () => {
+    const forcedTypeInfoRecord = { E: EXAMPLE_TYPE_INFO, GBE_C: { ...GUESTBOOK_TYPE_INFO, forcedDeliveryMethods: [EMAIL] } };
+
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      store = configureStore([], forcedTypeInfoRecord);
+    });
+
+    it('should show the forced hint', async () => {
+      expect(await firstValueFrom(store.forcedHint$)).toBe(DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_HINT);
+    });
+
+    it('should show the forced cell as always on', async () => {
+      setNotificationUser({ c: { GBE_C: { se: false, sd: false } } });
+      const cellStates = await firstValueFrom(store.cellStates$);
+      expect(cellStates['GBE_C'][EMAIL]).toMatchObject({ forced: true, available: false, value: null, defaultValue: true });
+    });
+
+    it('should drop an edit to a forced cell from the update params', async () => {
+      setNotificationUser({});
+
+      store.setCellValue({ type: 'GBE_C', method: EMAIL, value: false });
+      expect(await firstValueFrom(store.updateParams$)).toBeUndefined();
+      expect(await firstValueFrom(store.isModified$)).toBe(false);
+    });
+
+    it('should not override a forced cell in perBox mode', async () => {
+      store.setConfig({ notificationBox: { modelKey: GUESTBOOK_KEY, modelName: 'guestbook' }, notificationBoxSettingsMode: 'perBox' });
+      setNotificationUser({ c: { GBE_C: { se: false } } }, [makeBoxConfig(GUESTBOOK_BOX_ID)]);
+
+      const cellStates = await firstValueFrom(store.cellStates$);
+      expect(cellStates['GBE_C'][EMAIL]?.forced).toBe(true);
+      expect(cellStates['GBE_C'][EMAIL]?.override).toBeUndefined();
     });
   });
 

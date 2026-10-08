@@ -79,6 +79,8 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
       targetModelIdentity: info?.targetModelIdentity,
       userConfigurableDeliveryMethods: info?.userConfigurableDeliveryMethods,
       userConfigurableDeliveryMethodsSource: info?.userConfigurableDeliveryMethodsSource,
+      forcedDeliveryMethods: info?.forcedDeliveryMethods,
+      forcedDeliveryMethodsSource: info?.forcedDeliveryMethodsSource,
       factoryContentDeliveryMethods: unionContentDeliveryMethods(handlerEntriesByType.get(constant.symbolName) ?? []),
       inInfoRecord: info ? resolved.has(info.symbolName) : false,
       hasFactory: handler !== undefined,

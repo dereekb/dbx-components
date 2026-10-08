@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import yargs from 'yargs';
-import { firestoreModelIdentity, notificationTemplateTypeInfoRecord } from '@dereekb/firebase';
+import { NotificationDeliveryMethod, firestoreModelIdentity, notificationTemplateTypeInfoRecord } from '@dereekb/firebase';
 import { type CliNotificationManifest } from '../manifest/types';
 import { createNotificationCommand } from './notification.command.factory';
 import { type CliNotificationConfig } from './notification.config';
@@ -69,6 +69,22 @@ describe('createNotificationCommand()', () => {
       expect(text).toMatch(/TYPE\s+NAME\s+GROUP\s+EMAIL\s+TEXT\s+SUMMARY/);
       expect(text).toMatch(/A\s+Alpha\s+Notifications\s+on\s+off\s+on/);
       expect(text).not.toContain('Hidden');
+      expect(text).not.toContain('always');
+    });
+
+    it('prints always for a forced delivery method', async () => {
+      const config: CliNotificationConfig = { ...CONFIG, templateTypeInfoRecord: notificationTemplateTypeInfoRecord([{ type: 'F', name: 'Forced', description: 'Forced notification.', notificationModelIdentity: profileIdentity, forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }]) };
+      await run(config, ['notification', 'types']);
+      const text = stdout.join('');
+
+      expect(text).toContain('always means the method is always on and cannot be changed');
+      expect(text).toMatch(/F\s+Forced\s+Notifications\s+always\s+-\s+-/);
+    });
+
+    it('prints the always on line with --expanded', async () => {
+      const config: CliNotificationConfig = { ...CONFIG, templateTypeInfoRecord: notificationTemplateTypeInfoRecord([{ type: 'F', name: 'Forced', description: 'Forced notification.', notificationModelIdentity: profileIdentity, forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }]) };
+      await run(config, ['notification', 'types', '--expanded']);
+      expect(stdout.join('')).toContain('always on: email');
     });
 
     it('prints the full detail with --expanded', async () => {

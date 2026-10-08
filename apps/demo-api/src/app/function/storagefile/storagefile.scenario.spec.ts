@@ -444,6 +444,53 @@ demoApiFunctionContextFactory((f) => {
                         });
                       });
 
+                      describe('storage files have display names with slashes', () => {
+                        const testFile1DisplayName: StorageFileDisplayName = 'CPR / First Aid';
+                        const testFile2DisplayName: StorageFileDisplayName = String.raw`Infant\Toddler`;
+
+                        beforeEach(async () => {
+                          await sf1.document.update({ n: testFile1DisplayName });
+                          await sf2.document.update({ n: testFile2DisplayName });
+                        });
+
+                        it('should replace the slashes with dashes so each file is at the root of the zip', async () => {
+                          await sf1.syncAllFlaggedStorageFilesWithGroups();
+
+                          // initialize the storage file group and regenerate the zip file
+                          await sfg.initializeStorageFileGroup();
+                          await sfg.regenerateStorageFileGroupContent();
+
+                          const storageFileGroup = await assertSnapshotData(sfg.document);
+                          const zsf = storageFileGroup.zsf as string;
+                          expect(zsf).toBeDefined();
+
+                          // process the zip storage file and run its notification task
+                          const processAllStorageFilesInstance = await f.storageFileServerActions.processAllQueuedStorageFiles({});
+                          await processAllStorageFilesInstance();
+
+                          const sendQueuedNotificationsInstance = await f.notificationServerActions.sendQueuedNotifications({});
+                          await sendQueuedNotificationsInstance();
+
+                          const zipStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId(zsf);
+                          const zipStorageFile = await assertSnapshotData(zipStorageFileDocument);
+                          expect(zipStorageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+
+                          // check the zip file contents
+                          const fileBytes = await f.storageContext.file(zipStorageFile).getBytes();
+                          const zip = new AdmZip(Buffer.from(fileBytes));
+
+                          const zipEntries = zip.getEntries();
+                          expect(zipEntries.length).toBe(4); // info.json and the test files
+
+                          // entryName is the full path within the zip, so no entry should be nested in a folder
+                          const entryNames = zipEntries.map((x) => x.entryName);
+                          expect(entryNames).toContain('info.json');
+                          expect(entryNames).toContain('CPR - First Aid.any');
+                          expect(entryNames).toContain('Infant-Toddler.any');
+                          expect(entryNames).toContain('test3.any');
+                        });
+                      });
+
                       describe('zip file generated', () => {
                         demoStorageFileGroupContext(
                           {

@@ -237,7 +237,7 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
       const calendar = await calendarCollection.documentAccessor().loadDocumentForId(calendarId).snapshotData();
       const event = calendar && eventId ? calendarEventItemForId(calendar, eventId) : undefined;
       const method: NotificationMessageCalendarAttachmentMethod = cancel ? 'CANCEL' : 'REQUEST';
-      // no textContent: the type only lists email in its userConfigurableDeliveryMethods, since the invite is the email's calendar part
+      // no textContent: the type only sends email (its forcedDeliveryMethods), since the invite is the email's calendar part
       const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/calendar`;
 
       // ONE factory per notification, closing over the loaded event. The sending service calls it with the

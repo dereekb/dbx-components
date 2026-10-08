@@ -140,6 +140,7 @@ export function cliNotificationManifestFromManifest(manifest: Pick<notificationM
         symbolName: template.symbolName,
         ...(template.factoryFunctionName ? { factoryFunctionName: template.factoryFunctionName } : {}),
         factoryContentDeliveryMethods: template.factoryContentDeliveryMethods.map((name) => NOTIFICATION_DELIVERY_METHOD_CODES[name]),
+        ...(template.forcedDeliveryMethods?.length ? { forcedDeliveryMethods: template.forcedDeliveryMethods.map((name) => NOTIFICATION_DELIVERY_METHOD_CODES[name]) } : {}),
         sourceFile: template.sourceFile
       });
     }
