@@ -46,6 +46,7 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
   checkTemplateInfoPairing(extracted, violations);
   checkTemplateInfoRecord(extracted, violations);
   checkTemplateHandlerFactory(extracted, violations);
+  checkTemplateDeliveryMethods(extracted, violations);
   checkTasks(extracted, violations);
   checkDuplicates(extracted, violations);
 
@@ -228,6 +229,40 @@ function checkTemplateHandlerFactory(extracted: ExtractedAppNotifications, viola
       message: `NestJS provider for \`NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN\` uses \`useFactory: ${wiring.useFactoryIdentifier}\`, but the configs-array factory is \`${factory.symbolName}\`. Bind them together.`,
       side: 'api',
       file: wiring.sourceFile
+    });
+  }
+}
+
+// MARK: Template delivery methods
+/**
+ * Build-time counterpart of the send pipeline's unlisted-delivery-method
+ * warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`):
+ * flags a handler factory that builds channel content for a delivery method
+ * its info's explicit `userConfigurableDeliveryMethods` leaves out. Infos
+ * without a statically read list are skipped (the defaults cover every
+ * content channel).
+ *
+ * @param extracted - The extraction to inspect.
+ * @param violations - Mutable buffer that receives the warnings.
+ */
+function checkTemplateDeliveryMethods(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  const infoByTypeConstant = new Map<string, ExtractedTemplateTypeInfo>();
+  for (const info of extracted.templateTypeInfos) {
+    if (info.typeConstantName) infoByTypeConstant.set(info.typeConstantName, info);
+  }
+  for (const entry of extracted.templateHandlerEntries) {
+    const info = infoByTypeConstant.get(entry.typeIdentifier);
+    const listed = info?.userConfigurableDeliveryMethodsSource === 'declared' ? info.userConfigurableDeliveryMethods : undefined;
+    if (!listed) continue;
+    const unlisted = entry.contentDeliveryMethods.filter((method) => !listed.includes(method));
+    if (unlisted.length === 0) continue;
+    const listedText = listed.length > 0 ? listed.join(', ') : 'none';
+    pushViolation(violations, {
+      code: 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD',
+      severity: 'warning',
+      message: `Template handler factory \`${entry.factoryFunctionName ?? '<anonymous>'}\` for \`${entry.typeIdentifier}\` builds content for ${unlisted.join(', ')}, but \`${info?.symbolName}\` only lists ${listedText} in \`userConfigurableDeliveryMethods\`. This is the build-time counterpart of the send pipeline's runtime unlisted-delivery-method warning.`,
+      side: 'api',
+      file: entry.sourceFile
     });
   }
 }
@@ -432,8 +467,9 @@ interface FlagValidateWithoutHandlerOptions {
 }
 
 /**
- * Emits the validate-vs-handlers parity warning for the first
- * `notificationTaskService` call. Uses the lenient handler-type set so a
+ * Emits the validate-vs-handlers parity error for the first
+ * `notificationTaskService` call. `notificationTaskService()` throws at
+ * startup when a `validate` type has no handler, so this is an error. Uses the lenient handler-type set so a
  * declared-but-unreachable handler still counts as "exists" here; strict
  * reachability is covered separately.
  *
@@ -454,8 +490,7 @@ function flagValidateWithoutHandler(options: FlagValidateWithoutHandlerOptions):
     if (!lenientHandlerTypeIdentifiers.has(name) && !extracted.trustedExternalIdentifiers.has(name)) {
       pushViolation(violations, {
         code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
-        severity: 'warning',
-        message: `Task type \`${name}\` appears in \`notificationTaskService({ validate })\` but has no matching handler in the \`handlers\` array.`,
+        message: `Task type \`${name}\` appears in \`notificationTaskService({ validate })\` but has no matching handler in the \`handlers\` array. \`notificationTaskService()\` throws at startup for this.`,
         side: 'api',
         file: call.sourceFile
       });

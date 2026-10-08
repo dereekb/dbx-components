@@ -289,7 +289,7 @@ export const <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplate
   type: <<SCREAMING>>_NOTIFICATION_TEMPLATE_TYPE,
   name: '<<Pascal>>',
   description: 'TODO: describe the <<Pascal>> notification.',
-  notificationMIdentity: profileIdentity // TODO: replace with the model identity this notification targets
+  notificationModelIdentity: profileIdentity // TODO: replace with the model identity this notification targets
 };
 
 export interface <<Pascal>>NotificationData {

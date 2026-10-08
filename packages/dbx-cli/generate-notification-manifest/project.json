@@ -1,0 +1,55 @@
+{
+  "name": "dbx-cli-generate-notification-manifest",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/generate-notification-manifest/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": [],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-notification-manifest"],
+      "defaultConfiguration": "production",
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build-base"
+        },
+        {
+          "projects": ["dbx-cli-validate"],
+          "target": "build-base"
+        }
+      ],
+      "metadata": {
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. That XOR is the whole design constraint -- either the children get `^build` or the parent aggregates them, never both. Aggregating is the side that keeps one writer per dist directory.  It also imports the SIBLING entry point @dereekb/dbx-cli/validate (the notification extractor, rules and manifest builder), so it carries a sibling edge to dbx-cli-validate:build-base, which in turn orders that sibling's generate-rule-catalog (the bundled rule catalog) and its manifest-extract / model-test / util:build edges ahead of this bundle. A sibling edge is spelled as `build-base` (not `build`): siblings compile into this same dist directory and have no `build` of their own.  `skipTypeCheck` is true, the same choice as dbx-cli-validate and dbx-components-mcp: the @dereekb/dbx-cli/validate barrel this bundle imports carries existing type errors in unrelated clusters (ui-smell-check, storagefile-m-*, notification-m-validate-folder), so a type-checked bundle of it fails. The notification sources this generator uses are type-checked by hand with `tsc -p packages/dbx-cli/generate-notification-manifest/tsconfig.tool.json --noEmit` until those are fixed."
+      },
+      "options": {
+        "outputPath": "dist/packages/dbx-cli/generate-notification-manifest",
+        "main": "packages/dbx-cli/generate-notification-manifest/src/generate-notification-manifest/main.ts",
+        "tsConfig": "packages/dbx-cli/generate-notification-manifest/tsconfig.tool.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        }
+      },
+      "configurations": {
+        "production": {
+          "minify": false,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

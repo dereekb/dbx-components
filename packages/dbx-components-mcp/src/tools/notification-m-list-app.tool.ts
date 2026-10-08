@@ -25,7 +25,9 @@ const { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } = not
 const DBX_NOTIFICATION_M_LIST_APP_TOOL: Tool = {
   name: 'dbx_notification_m_list_app',
   description: [
-    'List every notification template + notification task configured in a downstream `-firebase` component + API app pair. Each entry reports its type code, metadata (human name, description, notification/target model identity), and registration flags — `inInfoRecord` + `hasFactory` for templates, `inAllArray` + `inValidateList` + `hasHandler` for tasks.',
+    'List every notification template + notification task configured in a downstream `-firebase` component + API app pair. Each entry reports its type code, metadata (human name, description, notification/target model identity), and registration flags — `inInfoRecord` + `hasFactory` for templates, `inAllArray` + `inValidateList` + `hasHandler` for tasks. Templates also report `userConfigurableDeliveryMethods` (with a `default` / `declared` / `unresolved` source) and `factoryContentDeliveryMethods`, the channels their factory builds content for.',
+    '',
+    'Its JSON is the report part of the `notification.manifest.json` that `dbx-cli-generate-notification-manifest` writes at build time; this tool always scans the current source.',
     '',
     'Cross-file resolution mirrors `dbx_notification_m_validate_app` — spreads and factory composition are traced through every `.ts` file under `src/lib/model/notification/` on the component side and `src/app/common/model/notification/` + `src/app/common/firebase/` on the API side.',
     '',

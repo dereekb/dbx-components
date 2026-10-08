@@ -4,14 +4,28 @@
  * reshapes the cross-file extraction into a human-friendly summary.
  */
 
+import type { NotificationDeliveryMethodName, UserConfigurableDeliveryMethodsSource } from '../notification-m-validate-app/index.js';
+
 export interface TemplateSummary {
   readonly typeCode: string | undefined;
   readonly symbolName: string;
   readonly infoSymbolName: string | undefined;
   readonly humanName: string | undefined;
   readonly description: string | undefined;
-  readonly notificationMIdentity: string | undefined;
+  readonly notificationModelIdentity: string | undefined;
   readonly targetModelIdentity: string | undefined;
+  /**
+   * The info's statically read `userConfigurableDeliveryMethods`, as `NotificationDeliveryMethod` member names. Only set when {@link userConfigurableDeliveryMethodsSource} is `declared`.
+   */
+  readonly userConfigurableDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
+  /**
+   * `default` (property absent, runtime defaults apply), `declared`, or `unresolved` (not statically readable). `undefined` when the template has no info.
+   */
+  readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource | undefined;
+  /**
+   * Delivery methods the template's handler factories build channel content for. Empty when there is no factory.
+   */
+  readonly factoryContentDeliveryMethods: readonly NotificationDeliveryMethodName[];
   /**
    * Reachable from the `<APP>_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD` aggregator.
    */

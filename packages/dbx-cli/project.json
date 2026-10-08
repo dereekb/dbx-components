@@ -26,6 +26,8 @@
         "!{workspaceRoot}/packages/dbx-cli/generate-firestore-indexes/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/dbx-cli/generate-mcp-manifest/**/*",
         "!{workspaceRoot}/packages/dbx-cli/generate-mcp-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+        "{workspaceRoot}/packages/dbx-cli/generate-notification-manifest/**/*",
+        "!{workspaceRoot}/packages/dbx-cli/generate-notification-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/dbx-cli/generate-route-manifest/**/*",
         "!{workspaceRoot}/packages/dbx-cli/generate-route-manifest/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
         "{workspaceRoot}/packages/dbx-cli/lint-cache/**/*",
@@ -56,6 +58,7 @@
             "dbx-cli-generate-firestore-indexes",
             "dbx-cli-firestore-query-manifest",
             "dbx-cli-generate-mcp-manifest",
+            "dbx-cli-generate-notification-manifest",
             "dbx-cli-generate-route-manifest",
             "dbx-cli-eslint",
             "dbx-cli-validate",
@@ -66,7 +69,7 @@
         }
       ],
       "metadata": {
-        "description": "The nested case, and the widest one in the workspace. dist/packages/dbx-cli is ONE npm package with 12 entry points, not 12 packages: five rollup subpaths (dbx-cli-manifest-extract, -route, -eslint, -model-test, -test) and seven esbuild CLI bundles (-firebase-api-manifest, -lint-cache, -generate-firestore-indexes, -firestore-query-manifest, -generate-mcp-manifest, -generate-route-manifest, -validate) all compile INTO this directory and are named by this package's own dist `exports` and `bin`. So this target is the sole deliverable and the sole owner of the directory.  What changed: the thirteen sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules the children by their real layering (3 waves: dbx-cli:build-base; the ten children that need only it; then -firebase-api-manifest and -validate, which also need the -manifest-extract / -model-test siblings) instead of 13 sequential steps. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item, and why every child carries its own explicit edge to `dbx-cli:build-base` rather than relying on this list's order.  The seven esbuild children also LOST the `build` targets they used to carry: each shelled out to its own `build-base`, which this target's command list already ran, so those subprojects were built twice into the same directory on every `nx build dbx-cli`.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back. `inputs` has to name the nested project directories explicitly -- `production` resolves `{projectRoot}/**/*` against this project's OWN file list, which Nx assigns nested projects' files away from, so without these globs a child's source change would not invalidate the cached copy of the directory that child writes into."
+        "description": "The nested case, and the widest one in the workspace. dist/packages/dbx-cli is ONE npm package with 13 entry points, not 13 packages: five rollup subpaths (dbx-cli-manifest-extract, -route, -eslint, -model-test, -test) and eight esbuild CLI bundles (-firebase-api-manifest, -lint-cache, -generate-firestore-indexes, -firestore-query-manifest, -generate-mcp-manifest, -generate-notification-manifest, -generate-route-manifest, -validate) all compile INTO this directory and are named by this package's own dist `exports` and `bin`. So this target is the sole deliverable and the sole owner of the directory.  What changed: the thirteen sequential `npx nx run <child>:build-base` shell-outs became dependsOn EDGES. Each of those was a separate Nx process with its own task graph, so nothing deduped and `parallel: false` was the only ordering; now it is one process, one graph, and Nx schedules the children by their real layering (4 waves: dbx-cli:build-base; the ten children that need only it; then -firebase-api-manifest and -validate, which also need the -manifest-extract / -model-test siblings; then -generate-notification-manifest, which also needs -validate) instead of 13 sequential steps. The finalize stays this target's own command, so it runs after every entry point is built -- dependsOn does not order its own entries, which is exactly why the post-step must not be a sibling list item, and why every child carries its own explicit edge to `dbx-cli:build-base` rather than relying on this list's order.  The seven esbuild children also LOST the `build` targets they used to carry: each shelled out to its own `build-base`, which this target's command list already ran, so those subprojects were built twice into the same directory on every `nx build dbx-cli`.  Outputs stay the whole directory, which is correct HERE precisely because this task is its only writer: the cache payload is always complete, so the restore that remove()s the directory always puts all of it back. `inputs` has to name the nested project directories explicitly -- `production` resolves `{projectRoot}/**/*` against this project's OWN file list, which Nx assigns nested projects' files away from, so without these globs a child's source change would not invalidate the cached copy of the directory that child writes into."
       }
     },
     "build-base": {
@@ -137,6 +140,14 @@
           {
             "description": "run dbx-cli-test tests",
             "command": "npx nx run-tests dbx-cli-test"
+          },
+          {
+            "description": "run dbx-cli-validate tests",
+            "command": "npx nx test dbx-cli-validate"
+          },
+          {
+            "description": "run dbx-cli-generate-notification-manifest tests",
+            "command": "npx nx test dbx-cli-generate-notification-manifest"
           }
         ],
         "color": true,

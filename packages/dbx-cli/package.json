@@ -8,6 +8,7 @@
     "dbx-cli-generate-firestore-indexes": "generate-firestore-indexes/main.js",
     "dbx-cli-generate-firestore-query-manifest": "firestore-query-manifest/main.js",
     "dbx-cli-generate-mcp-manifest": "generate-mcp-manifest/main.js",
+    "dbx-cli-generate-notification-manifest": "generate-notification-manifest/main.js",
     "dbx-cli-generate-route-manifest": "generate-route-manifest/main.js",
     "dbx-cli-lint-cache": "lint-cache/main.js"
   },
@@ -28,6 +29,9 @@
     },
     "./generate-mcp-manifest": {
       "default": "./generate-mcp-manifest/main.js"
+    },
+    "./generate-notification-manifest": {
+      "default": "./generate-notification-manifest/main.js"
     },
     "./generate-route-manifest": {
       "default": "./generate-route-manifest/main.js"

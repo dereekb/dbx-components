@@ -2031,9 +2031,9 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
   {
     code: 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER',
     source: 'dbx_notification_m_validate_app',
-    severity: 'warning',
+    severity: 'error',
     title: 'A task type appears in `validate:` but has no matching `handlers:` registration',
-    whatItFlags: 'A task type appears in `validate:` but has no matching `handlers:` registration.',
+    whatItFlags: 'A task type appears in `validate:` but has no matching `handlers:` registration.\n`notificationTaskService()` throws at startup for this.',
     whenItApplies: "When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.",
     whenItDoesNotApply: 'Tasks whose handler is provided by an upstream module (covered by the trust list).',
     canonicalFix: 'Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`.'
@@ -2153,6 +2153,23 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whenItApplies: "When `<app>NotificationTemplateServiceConfigsArrayFactory` spreads (`...fooNotifications(context)`) a function that isn't declared locally or imported.",
     whenItDoesNotApply: 'Spreads from trust-listed `@dereekb/*` modules.',
     canonicalFix: 'Declare the missing function or import it from a trusted module.'
+  },
+  {
+    code: 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD',
+    source: 'dbx_notification_m_validate_app',
+    severity: 'warning',
+    title: "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods`",
+    whatItFlags: "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods`.",
+    whenItApplies: 'Template types whose info declares an explicit `userConfigurableDeliveryMethods` array and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method the array leaves out.',
+    whenItDoesNotApply:
+      "Infos without `userConfigurableDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically, and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.",
+    canonicalFix: "Stop returning the unlisted content from the factory, or add the delivery method to the info's `userConfigurableDeliveryMethods`.",
+    seeAlso: [
+      {
+        kind: 'artifact',
+        target: 'notification-template'
+      }
+    ]
   },
   {
     code: 'NOTIF_TEMPLATE_INFO_MISSING',

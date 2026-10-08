@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateAppNotifications } from './index.js';
+import { extractAppNotifications, validateAppNotifications } from './index.js';
 import type { AppNotificationsInspection, InspectedFile, ViolationCode } from './types.js';
 
 // MARK: Fixture — mimics the demo-firebase + demo-api shape with a two-file component
@@ -14,7 +14,7 @@ export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo
   type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
   name: 'Test',
   description: 'A test notification.',
-  notificationMIdentity: testIdentity
+  notificationModelIdentity: testIdentity
 };
 
 // MARK: All Notifications
@@ -30,7 +30,7 @@ export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO: Notificati
   type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Created',
   description: 'A new guestbook entry was created.',
-  notificationMIdentity: guestbookIdentity
+  notificationModelIdentity: guestbookIdentity
 };
 
 // MARK: All Guestbook
@@ -346,6 +346,18 @@ export function demoExampleHandledNotificationTaskHandler(context) {
       ['NOTIF_TASK_SERVICE_FACTORY_MISSING']
     );
   });
+
+  it('flags NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER as an error when a validate type has no handler', () => {
+    const servicePath = 'src/app/common/model/notification/notification.task.service.ts';
+    const result = runWith(({ api }) => {
+      replaceInFile({ files: api, relPath: servicePath, from: 'export function demoNotificationTaskServiceFactory', to: "const OTHER_NOTIFICATION_TASK_TYPE = 'O';\n\nexport function demoNotificationTaskServiceFactory" });
+      replaceInFile({ files: api, relPath: servicePath, from: 'validate: [...ALL_NOTIFICATION_TASK_TYPES]', to: 'validate: [...ALL_NOTIFICATION_TASK_TYPES, OTHER_NOTIFICATION_TASK_TYPE]' });
+    });
+    const violation = result.violations.find((v) => v.code === 'NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER');
+    expect(violation?.severity).toBe('error');
+    expect(violation?.message).toContain('OTHER_NOTIFICATION_TASK_TYPE');
+    expect(result.errorCount).toBeGreaterThanOrEqual(1);
+  });
 });
 
 // MARK: factory-of-array tracer regression suite — exercises the
@@ -634,6 +646,126 @@ describe('validateAppNotifications — warnings', () => {
     });
     const warnings = result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_FACTORY_SPREAD_UNRESOLVED');
     expect(warnings.length).toBeGreaterThan(0);
+  });
+});
+
+// MARK: delivery methods — static counterpart of the send pipeline's unlisted-delivery-method warning
+const COMPONENT_MAIN_PATH = 'src/lib/model/notification/notification.ts';
+const API_FACTORY_PATH = 'src/app/common/model/notification/notification.factory.ts';
+const TEST_FACTORY_RETURN = 'return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => null };';
+
+interface DeliveryMethodsFixtureOptions {
+  /**
+   * Source text for the TEST info's `userConfigurableDeliveryMethods` property, or `undefined` to leave it out.
+   */
+  readonly deliveryMethods?: string;
+  /**
+   * Replacement for the TEST factory's `return` statement.
+   */
+  readonly factoryReturn?: string;
+  /**
+   * Extra source prepended to the API factory file.
+   */
+  readonly factoryPrelude?: string;
+}
+
+function deliveryMethodsInspection(options: DeliveryMethodsFixtureOptions): AppNotificationsInspection {
+  const inspection = happyInspection();
+  const component = [...inspection.component.files];
+  const api = [...inspection.api.files];
+  if (options.deliveryMethods !== undefined) {
+    replaceInFile({ files: component, relPath: COMPONENT_MAIN_PATH, from: 'notificationModelIdentity: testIdentity\n', to: `notificationModelIdentity: testIdentity,\n  userConfigurableDeliveryMethods: ${options.deliveryMethods}\n` });
+  }
+  if (options.factoryReturn !== undefined) {
+    replaceInFile({ files: api, relPath: API_FACTORY_PATH, from: TEST_FACTORY_RETURN, to: options.factoryReturn });
+  }
+  if (options.factoryPrelude !== undefined) {
+    replaceInFile({ files: api, relPath: API_FACTORY_PATH, from: 'export function demoTestNotificationFactory', to: `${options.factoryPrelude}\nexport function demoTestNotificationFactory` });
+  }
+  const result: AppNotificationsInspection = { component: { ...inspection.component, files: component }, api: { ...inspection.api, files: api } };
+  return result;
+}
+
+function unlistedDeliveryMethodViolations(options: DeliveryMethodsFixtureOptions) {
+  const result = validateAppNotifications(deliveryMethodsInspection(options), { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+  return result.violations.filter((v) => v.code === 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD');
+}
+
+function testInfo(options: DeliveryMethodsFixtureOptions) {
+  return extractAppNotifications(deliveryMethodsInspection(options)).templateTypeInfos.find((i) => i.symbolName === 'TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO');
+}
+
+function testHandler(options: DeliveryMethodsFixtureOptions) {
+  return extractAppNotifications(deliveryMethodsInspection(options)).templateHandlerEntries.find((e) => e.typeIdentifier === 'TEST_NOTIFICATIONS_TEMPLATE_TYPE');
+}
+
+const TEXT_CONTENT_RETURN = "return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => async () => ({ inputContext: {}, flatContent: {}, textContent: { subject: 'Hi' } }) };";
+const EMAIL_CONTENT_RETURN = "return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => async () => ({ inputContext: {}, flatContent: {}, emailContent: { subject: 'Hi' } }) };";
+
+describe('validateAppNotifications — delivery methods', () => {
+  it('warns NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD when the factory returns text content for an email-only template', () => {
+    const violations = unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.EMAIL]', factoryReturn: TEXT_CONTENT_RETURN });
+    expect(violations).toHaveLength(1);
+    expect(violations[0].severity).toBe('warning');
+    expect(violations[0].side).toBe('api');
+    expect(violations[0].file).toBe(API_FACTORY_PATH);
+    expect(violations[0].message).toContain('TEXT');
+    expect(violations[0].message).toContain('demoTestNotificationFactory');
+  });
+
+  it('does not warn when the factory only returns content for a listed method', () => {
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.EMAIL]', factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
+    expect(testHandler({ factoryReturn: EMAIL_CONTENT_RETURN })?.contentDeliveryMethods).toEqual(['EMAIL']);
+  });
+
+  it('does not warn when the info leaves userConfigurableDeliveryMethods out (runtime defaults apply)', () => {
+    expect(unlistedDeliveryMethodViolations({ factoryReturn: TEXT_CONTENT_RETURN })).toHaveLength(0);
+    const info = testInfo({});
+    expect(info?.userConfigurableDeliveryMethodsSource).toBe('default');
+    expect(info?.userConfigurableDeliveryMethods).toBeUndefined();
+  });
+
+  it("reads the runtime-code string form (['e']) as a declared list", () => {
+    const info = testInfo({ deliveryMethods: "['e']" });
+    expect(info?.userConfigurableDeliveryMethodsSource).toBe('declared');
+    expect(info?.userConfigurableDeliveryMethods).toEqual(['EMAIL']);
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: "['e']", factoryReturn: TEXT_CONTENT_RETURN })).toHaveLength(1);
+  });
+
+  it('reads a list behind a local identifier as declared', () => {
+    const inspection = deliveryMethodsInspection({ deliveryMethods: 'LOCAL_EMAIL_ONLY' });
+    const component = inspection.component.files.map((f) => (f.relPath === COMPONENT_MAIN_PATH ? { ...f, text: `const LOCAL_EMAIL_ONLY = [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.PUSH];\n${f.text}` } : f));
+    const info = extractAppNotifications({ ...inspection, component: { ...inspection.component, files: component } }).templateTypeInfos.find((i) => i.symbolName === 'TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO');
+    expect(info?.userConfigurableDeliveryMethodsSource).toBe('declared');
+    expect(info?.userConfigurableDeliveryMethods).toEqual(['EMAIL', 'PUSH']);
+  });
+
+  it('reports an imported identifier as unresolved and does not warn', () => {
+    const info = testInfo({ deliveryMethods: 'EMAIL_ONLY' });
+    expect(info?.userConfigurableDeliveryMethodsSource).toBe('unresolved');
+    expect(info?.userConfigurableDeliveryMethods).toBeUndefined();
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: 'EMAIL_ONLY', factoryReturn: TEXT_CONTENT_RETURN })).toHaveLength(0);
+  });
+
+  it('does not count content explicitly set to undefined', () => {
+    const factoryReturn = 'return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => async () => ({ inputContext: {}, flatContent: {}, textContent: undefined }) };';
+    expect(testHandler({ factoryReturn })?.contentDeliveryMethods).toEqual([]);
+    expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.EMAIL]', factoryReturn })).toHaveLength(0);
+  });
+
+  it('follows factory: <topLevelFn> one hop', () => {
+    const options: DeliveryMethodsFixtureOptions = {
+      deliveryMethods: '[NotificationDeliveryMethod.EMAIL]',
+      factoryReturn: 'return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: demoTestMessageFactory };',
+      factoryPrelude: "export async function demoTestMessageFactory() {\n  const textContent = { subject: 'Hi' };\n  return async () => ({ inputContext: {}, flatContent: {}, textContent });\n}\n"
+    };
+    expect(testHandler(options)?.contentDeliveryMethods).toEqual(['TEXT']);
+    expect(unlistedDeliveryMethodViolations(options)).toHaveLength(1);
+  });
+
+  it('keeps the canonical EMAIL, TEXT, NOTIFICATION_SUMMARY order', () => {
+    const factoryReturn = 'return { type: TEST_NOTIFICATIONS_TEMPLATE_TYPE, factory: async () => async () => ({ notificationSummaryContent: {}, textContent: {}, emailContent: {} }) };';
+    expect(testHandler({ factoryReturn })?.contentDeliveryMethods).toEqual(['EMAIL', 'TEXT', 'NOTIFICATION_SUMMARY']);
   });
 });
 

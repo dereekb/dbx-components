@@ -29,6 +29,8 @@ const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {
     '',
     'External identifiers imported from `@dereekb/*` are trusted — spreads and handler `type:` references that resolve into upstream packages do not produce orphan/unresolved errors.',
     '',
+    'The same checks run at build time through `dbx-cli-generate-notification-manifest` (see the `@dereekb/dbx-cli` README); this tool always scans the current source.',
+    '',
     'Provide both:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/demo-firebase`).',
     '- `apiDir`: relative path to the API app (e.g. `apps/demo-api`).',

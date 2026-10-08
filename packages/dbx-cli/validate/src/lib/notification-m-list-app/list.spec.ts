@@ -9,7 +9,7 @@ export const TEST_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo 
   type: TEST_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Test',
   description: 'A test notification.',
-  notificationMIdentity: testIdentity
+  notificationModelIdentity: testIdentity
 };
 
 export const DEMO_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATION_TEMPLATE_TYPE_INFO]);
@@ -96,6 +96,10 @@ describe('listAppNotifications', () => {
     expect(template.typeCode).toBe('TEST');
     expect(template.symbolName).toBe('TEST_NOTIFICATION_TEMPLATE_TYPE');
     expect(template.humanName).toBe('Test');
+    expect(template.notificationModelIdentity).toBe('testIdentity');
+    expect(template.userConfigurableDeliveryMethodsSource).toBe('default');
+    expect(template.userConfigurableDeliveryMethods).toBeUndefined();
+    expect(template.factoryContentDeliveryMethods).toEqual([]);
     expect(template.inInfoRecord).toBe(true);
     expect(template.hasFactory).toBe(true);
     expect(template.factoryFunctionName).toBe('demoTestNotificationFactory');
@@ -150,6 +154,30 @@ describe('listAppNotifications', () => {
     expect(md).toContain('### E — `EXAMPLE_NOTIFICATION_TASK_TYPE`');
     expect(md).toContain('Has factory: yes (`demoTestNotificationFactory`)');
     expect(md).toContain('Handler: yes (2 flow steps)');
+  });
+
+  it('lists declared delivery methods and the content the factory returns', () => {
+    const inspection = happyInspection();
+    const componentFiles = inspection.component.files.map((f) =>
+      f.relPath.endsWith('notification.ts') ? { ...f, text: COMPONENT_MAIN.replace('notificationModelIdentity: testIdentity\n', 'notificationModelIdentity: testIdentity,\n  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT]\n') } : f
+    );
+    const apiFiles = inspection.api.files.map((f) => (f.relPath.endsWith('notification.factory.ts') ? { ...f, text: API_FACTORY.replace('factory: async () => null', 'factory: async () => async () => ({ emailContent: {}, textContent: {} })') } : f));
+    const patched: AppNotificationsInspection = { component: { ...inspection.component, files: componentFiles }, api: { ...inspection.api, files: apiFiles } };
+    const report = listAppNotifications(patched, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' });
+    const template = report.templates[0];
+    expect(template.userConfigurableDeliveryMethodsSource).toBe('declared');
+    expect(template.userConfigurableDeliveryMethods).toEqual(['EMAIL', 'TEXT']);
+    expect(template.factoryContentDeliveryMethods).toEqual(['EMAIL', 'TEXT']);
+    const md = formatReportAsMarkdown(report);
+    expect(md).toContain('- Notification model: `testIdentity`');
+    expect(md).toContain('- User-configurable delivery methods: EMAIL, TEXT');
+    expect(md).toContain('- Factory returns content for: EMAIL, TEXT');
+  });
+
+  it('marks default delivery methods in the markdown', () => {
+    const md = formatReportAsMarkdown(listAppNotifications(happyInspection(), { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api' }));
+    expect(md).toContain('- User-configurable delivery methods: default');
+    expect(md).not.toContain('- Factory returns content for:');
   });
 
   it('formats the report as JSON', () => {

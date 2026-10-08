@@ -64,6 +64,26 @@ describe('formatSpec — placeholder substitution', () => {
     expect(md).toContain('worker-paid');
   });
 
+  it('adds the build-time notification check step to both notification specs', () => {
+    for (const artifact of ['notification-template', 'notification-task'] as const) {
+      const spec = getFileConventionSpec(artifact);
+      if (!spec) throw new Error('expected spec');
+      const md = formatSpec(spec, { componentDir: 'components/demo-firebase', apiDir: 'apps/demo-api', name: 'worker-paid' });
+      expect(md).toContain('Build-time check');
+      expect(md).toContain('apps/demo-api/project.json');
+      expect(md).toContain('npx dbx-cli-generate-notification-manifest --component-dir=components/demo-firebase --api-dir=apps/demo-api --output=dist/apps/demo-api/notification.manifest.json');
+      expect(md).toContain('generate-notification-manifest` runs the same checks the build does');
+    }
+  });
+
+  it('names notificationModelIdentity (the NotificationTemplateTypeInfo field) in the notification-template spec', () => {
+    const spec = getFileConventionSpec('notification-template');
+    if (!spec) throw new Error('expected spec');
+    const md = formatSpec(spec, { componentDir: undefined, apiDir: undefined, name: undefined });
+    expect(md).toContain('notificationModelIdentity');
+    expect(md).not.toContain('notificationMIdentity');
+  });
+
   it('renders header lines, numbered step headings, and a See also block', () => {
     const spec = getFileConventionSpec('firestore-model');
     if (!spec) throw new Error('expected spec');

@@ -366,3 +366,104 @@ The two read paths authorize independently, and this is by design:
 
 So `--via api` and `--via firestore` can legitimately disagree about a specific document while
 agreeing about every model.
+
+## Build-time notification wiring check
+
+`dbx-cli-generate-notification-manifest` checks an app's notification wiring during the build and
+writes `notification.manifest.json`. A notification template or task type has to be registered in
+two places that must agree: the `-firebase` component (type constants, `NotificationTemplateTypeInfo`
+objects, the info record, `ALL_*_NOTIFICATION_TASK_TYPES`) and the API (the template configs-array
+factory, `notificationTaskService({ validate, handlers })`). The server checks this at startup; this
+generator catches the same problems before deploy.
+
+It runs the same rules as the `dbx_notification_m_validate_app` MCP tool, over the same extraction as
+`dbx_notification_m_list_app`, so the manifest and both tools always agree.
+
+### What it checks
+
+| Problem | Rule code(s) | Severity |
+|---|---|---|
+| A template type has a message factory but no info (or the info isn't in the info record) | `NOTIF_TEMPLATE_FACTORY_ORPHAN`, `NOTIF_TEMPLATE_INFO_MISSING`, `NOTIF_TEMPLATE_INFO_NOT_IN_RECORD`, `NOTIF_TEMPLATE_RECORD_MISSING` / `_NOT_WIRED` | error |
+| A template type has an info but no message factory | `NOTIF_TEMPLATE_FACTORY_MISSING`, `NOTIF_TEMPLATE_FACTORY_ARRAY_MISSING`, `NOTIF_TEMPLATE_FACTORY_NOT_WIRED` | error |
+| A task type in `validate` has no handler | `NOTIF_TASK_IN_VALIDATE_WITHOUT_HANDLER`, `NOTIF_TASK_NOT_REGISTERED_IN_SERVICE`, `NOTIF_TASK_HANDLER_NAME_MISMATCH` | error |
+| A factory returns `emailContent` / `textContent` / `notificationSummaryContent` for a delivery method the info's explicit `userConfigurableDeliveryMethods` leaves out | `NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD` | warning |
+
+…plus the rest of the `dbx_notification_m_validate_app` rule set (`dbx_explain_rule <CODE>` describes any
+code). The delivery-method check is a heuristic: it scans the factory's own source plus the function
+its `factory:` names, so content built in a shared helper is missed.
+
+The runtime startup checks in `@dereekb/firebase-server/model` stay in place as the backstop. They
+also cover what a static scan can't see: types from upstream `@dereekb/*` packages, factories
+registered through `NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN`, and wiring built through
+indirection the tracer can't follow.
+
+### What it scans
+
+- component: `<component-dir>/src/lib/model/notification/**`
+- API: `<api-dir>/src/app/common/model/notification/**` and `<api-dir>/src/app/common/firebase/**`
+
+Only non-spec `.ts` files are read.
+
+### Flags and exit codes
+
+| Flag | |
+|---|---|
+| `--component-dir=<path>` | required; the app's `-firebase` component root (workspace-relative or absolute) |
+| `--api-dir=<path>` | required; the API app root |
+| `--output=<path>` | required; manifest JSON path |
+| `--app=<name>` | optional; stamped as `app.name`, defaults to the basename of `--api-dir` |
+| `--strict` | treat every warning as blocking |
+| `--allow-warning=<CODE>` | repeatable; never block on that warning code (error codes can't be allowed) |
+| `--max-warnings=<N>` | block when the non-allowed warnings exceed N |
+
+- **Exit 0**: no blocking findings. The manifest is written (atomically, via `<output>.tmp`), with
+  any warnings in its `findings`.
+- **Exit 1**: a validator error (or a blocking warning under `--strict` / `--max-warnings`), a wrong
+  `--component-dir` / `--api-dir`, or a missing flag. Each finding is printed to stderr, errors with
+  a `fix:` line. The manifest is **not** written, and any manifest an earlier, passing run left at
+  `--output` is deleted.
+
+### The manifest
+
+`notification.manifest.json` holds `version`, `generatedAt`, `app`, then the
+`dbx_notification_m_list_app` report (`componentDir`, `apiDir`, the info-record / configs-array
+factory wiring flags, `taskServiceCallCount`, and one entry per template and task with its
+registration state), then `errorCount`, `warningCount` and `findings`
+(`{ code, severity, message, side, file }`). Template entries include
+`notificationModelIdentity`, `targetModelIdentity`, `userConfigurableDeliveryMethods` (with a
+`default` / `declared` / `unresolved` source) and `factoryContentDeliveryMethods`. Type it with
+`notificationManifest.NotificationManifest` from `@dereekb/dbx-cli/validate`. Nothing reads it at
+runtime.
+
+### Adopting it in an app
+
+Add an nx target to the API project and list it in `build.dependsOn`:
+
+```json
+"generate-notification-manifest": {
+  "executor": "nx:run-commands",
+  "outputs": ["{workspaceRoot}/dist/apps/<app>-api/notification.manifest.json"],
+  "inputs": [
+    "{workspaceRoot}/components/<app>-firebase/src/lib/model/notification/**/*.ts",
+    "{workspaceRoot}/apps/<app>-api/src/app/common/model/notification/**/*.ts",
+    "{workspaceRoot}/apps/<app>-api/src/app/common/firebase/**/*.ts"
+  ],
+  "options": {
+    "command": "npx dbx-cli-generate-notification-manifest --component-dir=components/<app>-firebase --api-dir=apps/<app>-api --output=dist/apps/<app>-api/notification.manifest.json",
+    "cwd": "{workspaceRoot}"
+  }
+}
+```
+
+```json
+"build": {
+  "dependsOn": ["build-base", "generate-notification-manifest"]
+}
+```
+
+A failing check then fails `build`, and with it anything that depends on `build` (CI, deploy). Don't
+add it to `serve`: nothing reads the manifest at runtime, and the server's startup checks already
+cover `serve`. The dbx-components workspace itself runs the locally built bundle
+(`node dist/packages/dbx-cli/generate-notification-manifest/main.js`) with a `dependsOn` on
+`dbx-cli:build`; see `apps/demo-api/project.json`. `dbx_artifact_file_convention` for
+`notification-template` / `notification-task` shows the same target with your directories filled in.

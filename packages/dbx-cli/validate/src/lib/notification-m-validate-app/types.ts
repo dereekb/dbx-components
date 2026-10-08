@@ -57,6 +57,21 @@ import type { TwoSideInspectionInput } from '../_core/_validate/inspection.types
 
 export type AppNotificationsInspection = TwoSideInspectionInput;
 
+// MARK: Delivery methods
+/**
+ * Member names of `NotificationDeliveryMethod` (`@dereekb/firebase`): EMAIL='e', TEXT='t', PUSH='p', NOTIFICATION_SUMMARY='n'. Mirrored, not imported, to keep the validator dependency-light.
+ */
+export type NotificationDeliveryMethodName = 'EMAIL' | 'TEXT' | 'PUSH' | 'NOTIFICATION_SUMMARY';
+
+/**
+ * Where a template info's `userConfigurableDeliveryMethods` came from.
+ *
+ * - `default` — the property is absent (or `undefined` / `null`), so the runtime defaults apply.
+ * - `declared` — an array the extractor read statically.
+ * - `unresolved` — present, but not statically readable (an import, a call, an unknown element, ...).
+ */
+export type UserConfigurableDeliveryMethodsSource = 'default' | 'declared' | 'unresolved';
+
 // MARK: Extracted structures
 /**
  * An exported `*_NOTIFICATION_TEMPLATE_TYPE` constant.
@@ -76,8 +91,13 @@ export interface ExtractedTemplateTypeInfo {
   readonly typeConstantName: string | undefined;
   readonly humanName: string | undefined;
   readonly description: string | undefined;
-  readonly notificationMIdentity: string | undefined;
+  readonly notificationModelIdentity: string | undefined;
   readonly targetModelIdentity: string | undefined;
+  /**
+   * The statically read `userConfigurableDeliveryMethods`. Only set when {@link userConfigurableDeliveryMethodsSource} is `declared`.
+   */
+  readonly userConfigurableDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
+  readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource;
   readonly sourceFile: string;
   readonly line: number;
 }
@@ -166,6 +186,10 @@ export interface ExtractedTemplateHandlerEntry {
    * The factory-function name that produced this handler config (e.g. `demoNotificationTestFactory`, or a nested sub-factory like `hellosubsNotificationWorkerPaidFactory`).
    */
   readonly factoryFunctionName: string | undefined;
+  /**
+   * Delivery methods the handler's factory builds channel content for (`emailContent` → EMAIL, `textContent` → TEXT, `notificationSummaryContent` → NOTIFICATION_SUMMARY), in that order. Heuristic: scans the factory's own source plus one `factory:` hop.
+   */
+  readonly contentDeliveryMethods: readonly NotificationDeliveryMethodName[];
   readonly sourceFile: string;
   readonly line: number;
 }
