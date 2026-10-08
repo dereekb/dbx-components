@@ -47,6 +47,7 @@ export function runRules(inspection: AppNotificationsInspection, extracted: Extr
   checkTemplateInfoRecord(extracted, violations);
   checkTemplateHandlerFactory(extracted, violations);
   checkTemplateDeliveryMethods(extracted, violations);
+  checkTemplateForcedDeliveryMethods(extracted, violations);
   checkTasks(extracted, violations);
   checkDuplicates(extracted, violations);
 
@@ -238,9 +239,10 @@ function checkTemplateHandlerFactory(extracted: ExtractedAppNotifications, viola
  * Build-time counterpart of the send pipeline's unlisted-delivery-method
  * warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`):
  * flags a handler factory that builds channel content for a delivery method
- * its info's explicit `userConfigurableDeliveryMethods` leaves out. Infos
- * without a statically read list are skipped (the defaults cover every
- * content channel).
+ * its info's explicit `userConfigurableDeliveryMethods` and
+ * `forcedDeliveryMethods` leave out. Infos without a statically read list are
+ * skipped (the defaults cover every content channel), as are infos whose
+ * `forcedDeliveryMethods` cannot be read.
  *
  * @param extracted - The extraction to inspect.
  * @param violations - Mutable buffer that receives the warnings.
@@ -252,18 +254,51 @@ function checkTemplateDeliveryMethods(extracted: ExtractedAppNotifications, viol
   }
   for (const entry of extracted.templateHandlerEntries) {
     const info = infoByTypeConstant.get(entry.typeIdentifier);
-    const listed = info?.userConfigurableDeliveryMethodsSource === 'declared' ? info.userConfigurableDeliveryMethods : undefined;
-    if (!listed) continue;
+    const userConfigurable = info?.userConfigurableDeliveryMethodsSource === 'declared' ? info.userConfigurableDeliveryMethods : undefined;
+    if (!info || !userConfigurable || info.forcedDeliveryMethodsSource === 'unresolved') continue;
+    const forced = info.forcedDeliveryMethods ?? [];
+    const listed = [...userConfigurable, ...forced.filter((method) => !userConfigurable.includes(method))];
     const unlisted = entry.contentDeliveryMethods.filter((method) => !listed.includes(method));
     if (unlisted.length === 0) continue;
     const listedText = listed.length > 0 ? listed.join(', ') : 'none';
     pushViolation(violations, {
       code: 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD',
       severity: 'warning',
-      message: `Template handler factory \`${entry.factoryFunctionName ?? '<anonymous>'}\` for \`${entry.typeIdentifier}\` builds content for ${unlisted.join(', ')}, but \`${info?.symbolName}\` only lists ${listedText} in \`userConfigurableDeliveryMethods\`. This is the build-time counterpart of the send pipeline's runtime unlisted-delivery-method warning.`,
+      message: `Template handler factory \`${entry.factoryFunctionName ?? '<anonymous>'}\` for \`${entry.typeIdentifier}\` builds content for ${unlisted.join(', ')}, but \`${info.symbolName}\` only lists ${listedText} in \`userConfigurableDeliveryMethods\`${forced.length > 0 ? ' and `forcedDeliveryMethods`' : ''}. This is the build-time counterpart of the send pipeline's runtime unlisted-delivery-method warning.`,
       side: 'api',
       file: entry.sourceFile
     });
+  }
+}
+
+/**
+ * Build-time counterpart of `assertNotificationTemplateTypeInfo()`: flags an
+ * info that forces texts, or forces a method while
+ * `onlySendToExplicitlyEnabledRecipients` is `true`. Only a statically read
+ * `forcedDeliveryMethods` list and a `true` literal are checked.
+ *
+ * @param extracted - The extraction to inspect.
+ * @param violations - Mutable buffer that receives the errors.
+ */
+function checkTemplateForcedDeliveryMethods(extracted: ExtractedAppNotifications, violations: Violation[]): void {
+  for (const info of extracted.templateTypeInfos) {
+    const forced = info.forcedDeliveryMethodsSource === 'declared' ? (info.forcedDeliveryMethods ?? []) : [];
+    if (forced.includes('TEXT')) {
+      pushViolation(violations, {
+        code: 'NOTIF_TEMPLATE_FORCED_TEXT_DELIVERY_METHOD',
+        message: `Info \`${info.symbolName}\` lists TEXT in \`forcedDeliveryMethods\`. Texts cannot be forced; the info record throws at startup.`,
+        side: 'component',
+        file: info.sourceFile
+      });
+    }
+    if (forced.length > 0 && info.onlySendToExplicitlyEnabledRecipients === true) {
+      pushViolation(violations, {
+        code: 'NOTIF_TEMPLATE_FORCED_DELIVERY_METHOD_EXPLICIT_OPT_IN',
+        message: `Info \`${info.symbolName}\` forces ${forced.join(', ')} while \`onlySendToExplicitlyEnabledRecipients\` is true. A forced method is on by default, so the info record throws at startup.`,
+        side: 'component',
+        file: info.sourceFile
+      });
+    }
   }
 }
 

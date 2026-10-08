@@ -21,6 +21,7 @@ import {
   findLocalVariable,
   findReturnExpression,
   getPropertyInitializer,
+  readBooleanProperty,
   readIdentifierProperty,
   readStringLiteralInitializer,
   readStringProperty,
@@ -65,6 +66,8 @@ const TEMPLATE_CONFIGS_ARRAY_TOKEN = 'NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRA
 const CHECKPOINT_ALIAS_SUFFIX = 'NotificationTaskCheckpoint';
 const TASK_DATA_INTERFACE_SUFFIX = 'NotificationTaskData';
 const USER_CONFIGURABLE_DELIVERY_METHODS_PROPERTY = 'userConfigurableDeliveryMethods';
+const FORCED_DELIVERY_METHODS_PROPERTY = 'forcedDeliveryMethods';
+const ONLY_SEND_TO_EXPLICITLY_ENABLED_RECIPIENTS_PROPERTY = 'onlySendToExplicitlyEnabledRecipients';
 const DELIVERY_METHOD_ENUM = 'NotificationDeliveryMethod';
 
 /**
@@ -206,7 +209,8 @@ function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly Extr
         if (!nameMatches && !typeMatches) continue;
         const obj = asObjectLiteral(decl.getInitializer());
         if (!obj) continue;
-        const deliveryMethods = readUserConfigurableDeliveryMethods(obj, sf);
+        const deliveryMethods = readDeliveryMethodsProperty(obj, sf, USER_CONFIGURABLE_DELIVERY_METHODS_PROPERTY);
+        const forcedDeliveryMethods = readDeliveryMethodsProperty(obj, sf, FORCED_DELIVERY_METHODS_PROPERTY);
         const entry: ExtractedTemplateTypeInfo = {
           symbolName: name,
           typeConstantName: readIdentifierProperty(obj, 'type'),
@@ -216,6 +220,9 @@ function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly Extr
           targetModelIdentity: readIdentifierProperty(obj, 'targetModelIdentity'),
           userConfigurableDeliveryMethods: deliveryMethods.methods,
           userConfigurableDeliveryMethodsSource: deliveryMethods.source,
+          forcedDeliveryMethods: forcedDeliveryMethods.methods,
+          forcedDeliveryMethodsSource: forcedDeliveryMethods.source,
+          onlySendToExplicitlyEnabledRecipients: readBooleanProperty(obj, ONLY_SEND_TO_EXPLICITLY_ENABLED_RECIPIENTS_PROPERTY),
           sourceFile: rel,
           line: decl.getStartLineNumber()
         };
@@ -232,17 +239,19 @@ interface ReadDeliveryMethodsResult {
 }
 
 /**
- * Reads an info's `userConfigurableDeliveryMethods` statically. An absent (or
- * `undefined` / `null`) property means the runtime defaults apply; an array
- * literal — inline, or behind one local identifier — is read element by
- * element; anything else is reported as `unresolved`.
+ * Reads an info's delivery methods list property (`userConfigurableDeliveryMethods`
+ * or `forcedDeliveryMethods`) statically. An absent (or `undefined` / `null`)
+ * property means the runtime defaults apply; an array literal — inline, or
+ * behind one local identifier — is read element by element; anything else is
+ * reported as `unresolved`.
  *
  * @param obj - The `NotificationTemplateTypeInfo` object literal.
  * @param sf - The source file declaring the info, used to resolve a local identifier.
+ * @param propertyName - The delivery methods list property to read.
  * @returns The read methods and where they came from.
  */
-function readUserConfigurableDeliveryMethods(obj: ObjectLiteralExpression, sf: SourceFile): ReadDeliveryMethodsResult {
-  const value = unwrapAsExpressions(getPropertyInitializer(obj, USER_CONFIGURABLE_DELIVERY_METHODS_PROPERTY));
+function readDeliveryMethodsProperty(obj: ObjectLiteralExpression, sf: SourceFile, propertyName: string): ReadDeliveryMethodsResult {
+  const value = unwrapAsExpressions(getPropertyInitializer(obj, propertyName));
   let result: ReadDeliveryMethodsResult;
   if (!value || isNullishLiteral(value)) {
     result = { methods: undefined, source: 'default' };

@@ -84,6 +84,7 @@ export type {
   ExtractedTemplateInfoRecordWiring,
   ExtractedTemplateTypeConstant,
   ExtractedTemplateTypeInfo,
+  ForcedDeliveryMethodsSource,
   InspectedFile,
   NotificationDeliveryMethodName,
   SideInspection,

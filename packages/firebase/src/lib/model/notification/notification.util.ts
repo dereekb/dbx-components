@@ -19,9 +19,10 @@ import {
   type NotificationRecipientWithConfig,
   NotificationDeliveryMethod,
   NotificationDeliveryMethodDecisionSource,
-  resolveNotificationDeliveryMethodDecisions
+  resolveNotificationDeliveryMethodDecisions,
+  effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods
 } from './notification.config';
-import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
+import { type AppNotificationTemplateTypeInfoRecordService, notificationTemplateTypeInfoForcedDeliveryMethods } from './notification.details';
 import { type FirebaseAuthDetails, type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
 import { type NotificationBoxId, notificationBoxIdForModel, type NotificationId, type NotificationBoxSendExclusionList, type NotificationBoxSendExclusion, type NotificationTemplateType } from './notification.id';
 
@@ -172,6 +173,11 @@ export interface ResolveNotificationUidRecipientDeliveryInput {
    */
   readonly explicitOptIn?: Maybe<NotificationExplicitOptInConfig>;
   /**
+   * The template type's forced delivery methods (`NotificationTemplateTypeInfo.forcedDeliveryMethods`). The recipient's own per-type settings
+   * (`gc.c[T]` and the box entry's or `dc`'s `c[T]`) are skipped for these methods. Texts are ignored, since they cannot be forced.
+   */
+  readonly forcedDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
    * The recipient's NotificationUser, if one exists.
    */
   readonly notificationUser?: Maybe<Pick<NotificationUser, 'gc' | 'dc' | 'x' | 'tso'>>;
@@ -222,6 +228,8 @@ export interface NotificationUidRecipientDelivery {
  * 1. Suppression — box scope: `gc.f`, or `x` excludes the box. Direct scope: `gc.f ?? dc.f`, or `x` excludes the box. Every method is off.
  * 2. Disabled methods — `gc.dm` (unioned with `dc.dm` in direct scope). The method is off, regardless of configs and opt-in defaults.
  * 3. Configs, highest priority first, each made effective first — box scope: `[gc.c[T], entry.c[T], listed]`. Direct scope: `[gc.c[T], dc.c[T], listed]`.
+ *    For a forced delivery method (see `forcedDeliveryMethods`), `gc.c[T]` and the scope level are skipped: neither the method's flag nor the
+ *    level's `sd` applies to it, so only the listed recipient or the default decides it.
  * 4. Defaults — see {@link isNotificationDeliveryMethodEnabledByDefault}.
  * 5. Stopped number — a text that would be sent is off ({@link NotificationDeliveryMethodDecisionSource.STOPPED_PHONE_NUMBER}) when the
  *    resolved phone number replied STOP. See {@link isNotificationUserTextPhoneNumberStopped}.
@@ -234,6 +242,7 @@ export interface NotificationUidRecipientDelivery {
  */
 export function resolveNotificationUidRecipientDelivery(input: ResolveNotificationUidRecipientDeliveryInput): NotificationUidRecipientDelivery {
   const { notificationTemplateType, explicitOptIn, notificationUser, notificationBoxId, boxRecipient, listedRecipient, authDetails } = input;
+  const forcedDeliveryMethods = notificationTemplateTypeInfoForcedDeliveryMethods(input);
   const gc = notificationUser?.gc;
   const dc = notificationUser?.dc;
 
@@ -255,7 +264,7 @@ export function resolveNotificationUidRecipientDelivery(input: ResolveNotificati
   const disabledDeliveryMethods = isBoxScope ? gc?.dm : [...(gc?.dm ?? []), ...(dc?.dm ?? [])];
 
   const resolvedDecisions = resolveNotificationDeliveryMethodDecisions({
-    configs: [gc?.c?.[notificationTemplateType], scopeConfig?.c?.[notificationTemplateType], listedRecipient],
+    configs: [effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(gc?.c?.[notificationTemplateType], forcedDeliveryMethods), effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(scopeConfig?.c?.[notificationTemplateType], forcedDeliveryMethods), listedRecipient],
     disabledDeliveryMethods,
     explicitOptIn,
     suppressed: suppression != null

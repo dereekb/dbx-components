@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { of } from 'rxjs';
 import {
@@ -8,7 +9,9 @@ import {
   DbxButtonComponent,
   DbxListWrapperComponentImportsModule,
   DbxRotatingButtonDirective,
+  DbxTextColorDirective,
   DbxValueListViewComponentImportsModule,
+  DEFAULT_DBX_TRISTATE_ON_ICON,
   DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   type DbxRotatingButtonConfig,
@@ -83,10 +86,24 @@ export interface DbxFirebaseNotificationSettingsListViewItemCell {
    */
   readonly overridden: boolean;
   /**
-   * Explains why the cell is disabled: its method is turned off account-wide, or a higher-priority setting overrides it.
+   * Whether the method is always on for the template type. A forced cell is shown as an always-on icon that cannot be selected.
+   */
+  readonly forced: boolean;
+  /**
+   * Explains why the cell is disabled or always on: its method is turned off account-wide, a higher-priority setting overrides it, or the
+   * method is forced on for the type.
    */
   readonly tooltip: Maybe<string>;
+  /**
+   * Accessible label of a forced cell's icon.
+   */
+  readonly ariaLabel: string;
 }
+
+/**
+ * The icon shown in a forced (always-on) notification settings cell.
+ */
+export const DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_CELL_ICON = DEFAULT_DBX_TRISTATE_ON_ICON;
 
 @Component({
   selector: 'dbx-firebase-notification-settings-list-view-item',
@@ -100,7 +117,12 @@ export interface DbxFirebaseNotificationSettingsListViewItemCell {
       </div>
       @for (cell of cellsSignal(); track cell.method) {
         <div class="dbx-firebase-notification-settings-cell" [class.dbx-firebase-notification-settings-cell-modified]="cell.state?.modified" [class.dbx-firebase-notification-settings-cell-overridden]="cell.overridden">
-          @if (cell.rotatingConfig) {
+          @if (cell.forced) {
+            <!-- a forced cell is a plain icon rather than a disabled button, since a disabled icon button is greyed out -->
+            <span class="dbx-firebase-notification-settings-cell-forced" [matTooltip]="cell.tooltip ?? ''" [matTooltipDisabled]="!cell.tooltip">
+              <mat-icon role="img" [attr.aria-label]="cell.ariaLabel" [dbxTextColor]="cell.state?.disabled ? 'disabled' : 'success'">{{ forcedCellIcon }}</mat-icon>
+            </span>
+          } @else if (cell.rotatingConfig) {
             <!-- the tooltip is on the wrapper, since a disabled button does not receive hover events -->
             <span class="dbx-firebase-notification-settings-cell-button" [matTooltip]="cell.tooltip ?? ''" [matTooltipDisabled]="!cell.tooltip">
               <dbx-button iconOnly [disabled]="delegate.disabledSignal() || cell.state?.disabled || cell.overridden" [dbxRotatingButton]="cell.rotatingConfig" [dbxRotatingButtonValue]="cell.value" (dbxRotatingButtonValueChange)="setCellValue(cell.method, $event)"></dbx-button>
@@ -112,10 +134,11 @@ export interface DbxFirebaseNotificationSettingsListViewItemCell {
       }
     </div>
   `,
-  imports: [DbxButtonComponent, DbxRotatingButtonDirective, MatTooltip]
+  imports: [DbxButtonComponent, DbxRotatingButtonDirective, DbxTextColorDirective, MatIcon, MatTooltip]
 })
 export class DbxFirebaseNotificationSettingsListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseNotificationSettingsListItemValue> {
   readonly delegate = inject(DbxFirebaseNotificationSettingsListDelegate);
+  readonly forcedCellIcon = DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_CELL_ICON;
 
   readonly cellsSignal = computed<DbxFirebaseNotificationSettingsListViewItemCell[]>(() => {
     const { type, name } = this.itemValue;
@@ -123,13 +146,24 @@ export class DbxFirebaseNotificationSettingsListViewItemComponent extends Abstra
 
     return this.delegate.columnsSignal().map((method) => {
       const state = rowStates?.[method];
-      const label = `${name} ${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method]}`;
-      const rotatingConfig = state?.available ? dbxTristateRotatingButtonConfig({ label, defaultValue: state.defaultValue }) : undefined;
-      const override = state?.override;
+      const methodLabel = NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method];
+      const label = `${name} ${methodLabel}`;
+      const forced = Boolean(state?.forced);
+      const rotatingConfig = state?.available && !forced ? dbxTristateRotatingButtonConfig({ label, defaultValue: state.defaultValue }) : undefined;
+      const override = forced ? undefined : state?.override;
       const value = override ? override.value : state?.value;
-      // a method turned off account-wide is off regardless of the override
-      const tooltip = state?.disabled ? `${NOTIFICATION_DELIVERY_METHOD_SHORT_LABELS[method]} notifications are turned off.` : override?.description;
-      return { method, state, rotatingConfig, value, overridden: Boolean(override), tooltip };
+      let tooltip: Maybe<string>;
+
+      // a method turned off account-wide is off regardless of the override or forced setting
+      if (state?.disabled) {
+        tooltip = `${methodLabel} notifications are turned off.`;
+      } else if (forced) {
+        tooltip = `${methodLabel} is always on for this notification.`;
+      } else {
+        tooltip = override?.description;
+      }
+
+      return { method, state, rotatingConfig, value, overridden: Boolean(override), forced, ariaLabel: `${label}: Always on`, tooltip };
     });
   });
 

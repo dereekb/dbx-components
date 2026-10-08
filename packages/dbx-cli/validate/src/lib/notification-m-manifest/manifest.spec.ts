@@ -23,7 +23,8 @@ export const INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInf
   description: 'An invite notification.',
   notificationModelIdentity: testIdentity,
   targetModelIdentity: calendarIdentity,
-  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL]
+  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL],
+  forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]
 };
 
 export const DEMO_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATION_TEMPLATE_TYPE_INFO, INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO]);
@@ -151,6 +152,10 @@ describe('buildNotificationManifest', () => {
     expect(invite.userConfigurableDeliveryMethodsSource).toBe('declared');
     expect(invite.userConfigurableDeliveryMethods).toEqual(['EMAIL']);
     expect(invite.factoryContentDeliveryMethods).toEqual(['EMAIL']);
+    expect(test.forcedDeliveryMethodsSource).toBe('default');
+    expect(test.forcedDeliveryMethods).toBeUndefined();
+    expect(invite.forcedDeliveryMethodsSource).toBe('declared');
+    expect(invite.forcedDeliveryMethods).toEqual(['EMAIL']);
   });
 
   it('agrees with the list and validate entry points', () => {

@@ -73,6 +73,57 @@ describe('notificationTypesView()', () => {
   });
 });
 
+const FORCED_CONFIG: CliNotificationConfig = {
+  templateTypeInfoRecord: notificationTemplateTypeInfoRecord([
+    { type: 'A', name: 'Alpha', description: 'Alpha notification.', notificationModelIdentity: profileIdentity },
+    { type: 'F', name: 'Always Email', description: 'Forced notification.', notificationModelIdentity: profileIdentity, forcedDeliveryMethods: [EMAIL] },
+    { type: 'O', name: 'Aa Only Forced', description: 'Only forced notification.', notificationModelIdentity: profileIdentity, userConfigurableDeliveryMethods: [EMAIL], forcedDeliveryMethods: [EMAIL] }
+  ])
+};
+
+describe('notificationTypesView() with forced delivery methods', () => {
+  it('lists the forced methods apart from the configurable methods', () => {
+    const view = notificationTypesView({ config: FORCED_CONFIG });
+    const forced = view.types.find((x) => x.type === 'F');
+
+    expect(forced?.forcedDeliveryMethods).toEqual([EMAIL]);
+    expect(forced?.deliveryMethods).toEqual([TEXT, NOTIFICATION_SUMMARY]);
+    expect(forced?.defaults[EMAIL]).toBeUndefined();
+    expect(view.types.find((x) => x.type === 'O')?.deliveryMethods).toEqual([]);
+    expect(view.types.find((x) => x.type === 'A')?.forcedDeliveryMethods).toBeUndefined();
+  });
+});
+
+describe('notificationUserSettingsView() with forced delivery methods', () => {
+  it('resolves a forced cell to always on, ignoring the user cells for the type', () => {
+    const view = notificationUserSettingsView({ config: FORCED_CONFIG, key: 'nu/u1', notificationUser: { uid: 'u1', gc: { c: { F: { se: false, sd: false } } } }, cliName: 'demo-cli' });
+    const forced = view.types.find((x) => x.type === 'F');
+
+    expect(forced?.cells[EMAIL]).toMatchObject({ available: false, value: null, effective: true, source: 'forced' });
+    expect(forced?.cells[NOTIFICATION_SUMMARY]).toMatchObject({ effective: false, source: 'master' });
+  });
+
+  it('resolves a forced cell to off when the method is turned off account-wide', () => {
+    const view = notificationUserSettingsView({ config: FORCED_CONFIG, key: 'nu/u1', notificationUser: { uid: 'u1', gc: { c: {}, dm: [EMAIL] } }, cliName: 'demo-cli' });
+    expect(view.types.find((x) => x.type === 'F')?.cells[EMAIL]).toMatchObject({ effective: false, source: 'disabled' });
+  });
+
+  it('builds the how-to-change examples from a configurable cell and notes the forced cells', () => {
+    const view = notificationUserSettingsView({ config: FORCED_CONFIG, key: 'nu/u1', notificationUser: { uid: 'u1', gc: { c: {} } }, cliName: 'demo-cli', expanded: true });
+    const examples = view.howToChange?.examples ?? [];
+
+    expect(view.types[0]?.type).toBe('O');
+    expect(examples[0]?.data).toEqual({ key: 'nu/u1', gc: { configs: [{ type: 'A', se: false }] } });
+    expect(examples[2]?.data).toEqual({ key: 'nu/u1', gc: { dm: [EMAIL] } });
+    expect(view.howToChange?.notes.some((x) => x.includes('forced'))).toBe(true);
+  });
+
+  it('does not add the forced note without forced types', () => {
+    const view = notificationUserSettingsView({ config: CONFIG, key: 'nu/u1', notificationUser: { uid: 'u1', gc: { c: {} } }, cliName: 'demo-cli', expanded: true });
+    expect(view.howToChange?.notes.some((x) => x.includes('forced'))).toBe(false);
+  });
+});
+
 describe('notificationTaskTypesView()', () => {
   it('lists the manifest tasks sorted by type', () => {
     const view = notificationTaskTypesView({ manifest: MANIFEST });

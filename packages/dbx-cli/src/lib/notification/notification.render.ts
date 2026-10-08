@@ -2,7 +2,7 @@ import { type NotificationDeliveryMethod } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { indentLines, renderTable, truncate } from '../util/table';
 import { cliNotificationDeliveryMethodLabel } from './notification.config';
-import { type CliNotificationSettingsCellView, type CliNotificationTaskTypeView, type CliNotificationTaskTypesView, type CliNotificationTaskView, type CliNotificationTasksView, type CliNotificationTypesView, type CliNotificationUserSettingsView } from './notification.view';
+import { type CliNotificationSettingsCellView, type CliNotificationTaskTypeView, type CliNotificationTaskTypesView, type CliNotificationTaskView, type CliNotificationTasksView, type CliNotificationTypeView, type CliNotificationTypesView, type CliNotificationUserSettingsView } from './notification.view';
 
 const DESCRIPTION_MAX_LENGTH = 60;
 
@@ -33,6 +33,19 @@ function joinBlocks(blocks: readonly string[]): string {
 }
 
 // MARK: Types
+function typeDefaultCellText(type: Pick<CliNotificationTypeView, 'defaults'>, method: NotificationDeliveryMethod, forced: ReadonlySet<NotificationDeliveryMethod>): string {
+  let result: string;
+
+  if (forced.has(method)) {
+    result = 'always';
+  } else {
+    const defaultValue = type.defaults[method];
+    result = defaultValue == null ? '-' : onOff(defaultValue);
+  }
+
+  return result;
+}
+
 /**
  * Renders the `notification types` view: a table by default, one block per type when expanded.
  *
@@ -45,7 +58,8 @@ function joinBlocks(blocks: readonly string[]): string {
 export function renderCliNotificationTypesView(view: CliNotificationTypesView, expanded: boolean): string {
   const { deliveryMethods, types, hiddenCount } = view;
   const hiddenNote = hiddenCount > 0 ? ` (${hiddenCount} hidden, pass --all to include them)` : '';
-  const header = `${types.length} notification type${types.length === 1 ? '' : 's'}${hiddenNote}. Cells show each method's default; - means the user cannot configure it.`;
+  const forcedNote = types.some((x) => x.forcedDeliveryMethods?.length) ? '; always means the method is always on and cannot be changed' : '';
+  const header = `${types.length} notification type${types.length === 1 ? '' : 's'}${hiddenNote}. Cells show each method's default; - means the user cannot configure it${forcedNote}.`;
   let result: string;
 
   if (expanded) {
@@ -56,6 +70,7 @@ export function renderCliNotificationTypesView(view: CliNotificationTypesView, e
         ...(type.description ? [indentLines(type.description, 2)] : []),
         `  notification model: ${type.notificationModel}${type.targetModel ? `   target model: ${type.targetModel}` : ''}`,
         `  methods: ${methods || 'none'}`,
+        ...(type.forcedDeliveryMethods?.length ? [`  always on: ${formatMethods(type.forcedDeliveryMethods)}`] : []),
         ...(type.userConfigurableDeliveryMethods ? [`  declared configurable: ${formatMethods(type.userConfigurableDeliveryMethods)}`] : []),
         ...(type.onlySendToExplicitlyEnabledRecipients ? ['  opt-in: only sent to recipients that enabled it'] : []),
         ...(type.onlyTextExplicitlyEnabledRecipients === false ? ['  texts: sent unless the recipient turned them off'] : []),
@@ -72,7 +87,8 @@ export function renderCliNotificationTypesView(view: CliNotificationTypesView, e
       ['TYPE', 'NAME', 'GROUP', ...deliveryMethods.map((x) => cliNotificationDeliveryMethodLabel(x).toUpperCase()), 'FLAGS'],
       ...types.map((type) => {
         const flags = [type.hidden ? 'hidden' : undefined, type.onlySendToExplicitlyEnabledRecipients ? 'opt-in' : undefined].filter((x) => x != null).join(',');
-        return [type.type, truncate(type.name, DESCRIPTION_MAX_LENGTH), type.group, ...deliveryMethods.map((method) => (type.defaults[method] == null ? '-' : onOff(type.defaults[method]))), flags];
+        const forced = new Set(type.forcedDeliveryMethods ?? []);
+        return [type.type, truncate(type.name, DESCRIPTION_MAX_LENGTH), type.group, ...deliveryMethods.map((method) => typeDefaultCellText(type, method, forced)), flags];
       })
     ];
 
@@ -125,6 +141,8 @@ function settingsCellText(cell: Maybe<CliNotificationSettingsCellView>, expanded
     result = '-';
   } else if (cell.source === 'disabled') {
     result = 'off (dm)';
+  } else if (cell.source === 'forced') {
+    result = 'always';
   } else if (cell.source === 'explicit') {
     result = onOff(cell.effective);
   } else {
@@ -156,7 +174,8 @@ export function renderCliNotificationUserSettingsView(view: CliNotificationUserS
     `  off account-wide (gc.dm): ${account.disabledDeliveryMethods.length ? formatMethods(account.disabledDeliveryMethods) : 'none'}   stopped numbers (tso): ${account.textStoppedNumbers.join(', ') || 'none'}`
   ].join('\n');
   const rows = [['TYPE', 'NAME', ...deliveryMethods.map((x) => cliNotificationDeliveryMethodLabel(x).toUpperCase())], ...types.map((row) => [row.type, truncate(row.name, DESCRIPTION_MAX_LENGTH), ...deliveryMethods.map((method) => settingsCellText(row.cells[method], expanded))])];
-  const legend = `on/off: set by the user. default (x): not set, resolves to x. ${expanded ? 'all (x): set by the type-wide toggle (sd). ' : ''}off (dm): turned off account-wide. -: not configurable.`;
+  const hasForced = types.some((row) => Object.values(row.cells).some((cell) => cell?.source === 'forced'));
+  const legend = `on/off: set by the user. default (x): not set, resolves to x. ${expanded ? 'all (x): set by the type-wide toggle (sd). ' : ''}off (dm): turned off account-wide. ${hasForced ? 'always: always on, cannot be changed. ' : ''}-: not configurable.`;
   const blocks = [header, `${renderTable(rows)}\n${legend}`];
 
   if (expanded) {

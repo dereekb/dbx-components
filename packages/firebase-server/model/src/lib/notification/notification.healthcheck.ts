@@ -48,7 +48,9 @@ import {
   isNotificationDeliveryMethodDisabled,
   isNotificationUserTextPhoneNumberStopped,
   NotificationDeliveryMethodDecisionSource,
-  type NotificationExplicitOptInConfig,
+  type NotificationTemplateTypeInfo,
+  notificationTemplateTypeInfoForcedDeliveryMethods,
+  effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods,
   isActiveNotificationBoxRecipient,
   resolveNotificationDeliveryMethodDecisions,
   resolveNotificationUidRecipientDelivery,
@@ -174,7 +176,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
 
       const notificationTemplateType = inputNotificationTemplateType || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
       const { appNotificationTemplateTypeInfoRecord } = appNotificationTemplateTypeInfoRecordService;
-      const explicitOptIn: Maybe<NotificationExplicitOptInConfig> = appNotificationTemplateTypeInfoRecord[notificationTemplateType];
+      const explicitOptIn: Maybe<NotificationHealthCheckExplicitOptIn> = appNotificationTemplateTypeInfoRecord[notificationTemplateType];
 
       // The default template type cannot be configured in the notification settings, so a check of it asks whether each method
       // reaches the user for any of the app's notification types instead.
@@ -573,11 +575,26 @@ function notificationUserAccountIssues(input: NotificationUserAccountIssuesInput
 
 // MARK: Configuration Checks
 /**
+ * A template type's opt-in rules and forced delivery methods.
+ */
+type NotificationHealthCheckExplicitOptIn = Pick<NotificationTemplateTypeInfo, 'onlySendToExplicitlyEnabledRecipients' | 'onlyTextExplicitlyEnabledRecipients' | 'forcedDeliveryMethods'>;
+
+/**
  * A template type and its opt-in rules.
  */
 interface NotificationHealthCheckTemplateTypeOptIn {
   readonly notificationTemplateType: NotificationTemplateType;
-  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
+  readonly explicitOptIn: Maybe<NotificationHealthCheckExplicitOptIn>;
+}
+
+/**
+ * Returns the template type's forced delivery methods, whose per-type user settings the send pipeline skips.
+ *
+ * @param explicitOptIn - The template type's opt-in rules and forced delivery methods.
+ * @returns The forced delivery methods. Empty when there are none.
+ */
+function notificationHealthCheckForcedDeliveryMethods(explicitOptIn: Maybe<NotificationHealthCheckExplicitOptIn>): NotificationDeliveryMethod[] {
+  return explicitOptIn ? notificationTemplateTypeInfoForcedDeliveryMethods(explicitOptIn) : [];
 }
 
 interface NotificationDeliveryMethodConfigIssuesInput extends NotificationHealthCheckTemplateTypeOptIn {
@@ -680,7 +697,7 @@ function notificationDeliveryMethodConfigIssues(input: NotificationDeliveryMetho
   }
 
   // the opt-out flags are reported with the account findings, so only the method's own decision is evaluated here
-  const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, notificationUser: { gc, dc, x: [], tso } });
+  const { decisions } = resolveNotificationUidRecipientDelivery({ notificationTemplateType, explicitOptIn, forcedDeliveryMethods: explicitOptIn?.forcedDeliveryMethods, notificationUser: { gc, dc, x: [], tso } });
   const decision = decisions[method];
 
   if (!decision.send) {
@@ -734,7 +751,11 @@ function isNotificationDeliveryMethodSentForAnyTemplateType(input: IsNotificatio
   const { gc, dc, bc } = notificationUser;
   const scopeConfigs = [dc, ...bc.filter((x) => !x.rm && isActiveNotificationBoxRecipient(x))];
 
-  return templateTypes.some(({ notificationTemplateType, explicitOptIn }) => scopeConfigs.some((scopeConfig) => resolveNotificationDeliveryMethodDecisions({ configs: [gc.c?.[notificationTemplateType], scopeConfig.c?.[notificationTemplateType]], explicitOptIn })[method].send));
+  return templateTypes.some(({ notificationTemplateType, explicitOptIn }) => {
+    const forcedDeliveryMethods = notificationHealthCheckForcedDeliveryMethods(explicitOptIn);
+    const gcConfig = effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(gc.c?.[notificationTemplateType], forcedDeliveryMethods);
+    return scopeConfigs.some((scopeConfig) => resolveNotificationDeliveryMethodDecisions({ configs: [gcConfig, effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(scopeConfig.c?.[notificationTemplateType], forcedDeliveryMethods)], explicitOptIn })[method].send);
+  });
 }
 
 // MARK: Subscription Checks
@@ -742,7 +763,7 @@ interface InspectNotificationUserSubscriptionsInput {
   readonly notificationUser: NotificationUser;
   readonly notificationBoxCollection: NotificationServerActionsContext['notificationBoxCollection'];
   readonly notificationTemplateType: NotificationTemplateType;
-  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
+  readonly explicitOptIn: Maybe<NotificationHealthCheckExplicitOptIn>;
 }
 
 interface InspectNotificationUserSubscriptionsResult {
@@ -872,7 +893,7 @@ interface CollectDisabledMethodsForBoxRecipientInput {
   readonly config: NotificationUserNotificationBoxRecipientConfig;
   readonly gc: NotificationUser['gc'];
   readonly notificationTemplateType: NotificationTemplateType;
-  readonly explicitOptIn: Maybe<NotificationExplicitOptInConfig>;
+  readonly explicitOptIn: Maybe<NotificationHealthCheckExplicitOptIn>;
 }
 
 /**
@@ -895,7 +916,11 @@ function collectDisabledMethodsForBoxRecipient(input: CollectDisabledMethodsForB
     return [];
   }
 
-  const decisions = resolveNotificationDeliveryMethodDecisions({ configs: [gc.c?.[notificationTemplateType], effectiveRecipient.c?.[notificationTemplateType]], explicitOptIn });
+  const forcedDeliveryMethods = notificationHealthCheckForcedDeliveryMethods(explicitOptIn);
+  const decisions = resolveNotificationDeliveryMethodDecisions({
+    configs: [effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(gc.c?.[notificationTemplateType], forcedDeliveryMethods), effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(effectiveRecipient.c?.[notificationTemplateType], forcedDeliveryMethods)],
+    explicitOptIn
+  });
 
   return ALL_NOTIFICATION_DELIVERY_METHODS.filter((method) => {
     const decision = decisions[method];

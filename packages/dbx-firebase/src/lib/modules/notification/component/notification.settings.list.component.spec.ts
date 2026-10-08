@@ -2,6 +2,7 @@ import { Component, computed, Injectable, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { MatTooltip } from '@angular/material/tooltip';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DbxListTitleGroupDirective, DbxRouterWebProviderConfig } from '@dereekb/dbx-web';
 import { firestoreModelIdentity, NotificationDeliveryMethod, type NotificationTemplateType, type NotificationTemplateTypeInfo, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig } from '@dereekb/firebase';
@@ -21,6 +22,7 @@ const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
 const TYPE_INFOS: NotificationTemplateTypeInfo[] = [
   { type: 'E', name: 'Example', description: 'Example notification.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 } },
   { type: 'CAL_INV', name: 'Calendar Invite', description: 'Calendar invite.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 }, userConfigurableDeliveryMethods: [EMAIL] },
+  { type: 'FRC', name: 'Forced Notice', description: 'Always emailed.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 }, forcedDeliveryMethods: [EMAIL] },
   { type: 'GBE_C', name: 'Guestbook Entry Created', description: 'Created.', notificationModelIdentity: guestbookIdentity, group: { key: 'guestbook', name: 'Guestbooks', sortOrder: 1 } }
 ];
 
@@ -184,5 +186,45 @@ describe('DbxFirebaseNotificationSettingsListComponent', () => {
     text.click();
     await detectChanges();
     expect(delegate.edits()['E']?.[TEXT]).toBeUndefined();
+  });
+
+  describe('forced cell', () => {
+    function forcedCell(): HTMLElement | undefined {
+      return rowFor('Forced Notice')?.query(By.css('.dbx-firebase-notification-settings-cell-forced'))?.nativeElement as HTMLElement | undefined;
+    }
+
+    it('should render a forced cell as a success-colored icon with no button', () => {
+      const cell = forcedCell();
+      const icon = cell?.querySelector('mat-icon');
+
+      expect(cell).toBeDefined();
+      expect(cell?.querySelector('button')).toBeNull();
+      expect(icon?.classList.contains('dbx-success')).toBe(true);
+      expect(icon?.getAttribute('role')).toBe('img');
+      expect(icon?.getAttribute('aria-label')).toBe('Forced Notice Email: Always on');
+      expect(cellButtons('Forced Notice').length).toBe(2);
+    });
+
+    it('should explain the forced cell in its tooltip', () => {
+      const tooltip = rowFor('Forced Notice')?.query(By.css('.dbx-firebase-notification-settings-cell-forced'))?.injector.get(MatTooltip);
+      expect(tooltip?.message).toBe('Email is always on for this notification.');
+    });
+
+    it('should use the disabled color when the method is turned off account-wide', async () => {
+      delegate.disabledDeliveryMethods.set([EMAIL]);
+      await detectChanges();
+
+      const icon = forcedCell()?.querySelector('mat-icon');
+      expect(icon?.classList.contains('dbx-disabled')).toBe(true);
+      expect(icon?.classList.contains('dbx-success')).toBe(false);
+    });
+
+    it('should not make an edit when the forced cell is clicked', async () => {
+      forcedCell()?.click();
+      forcedCell()?.querySelector('mat-icon')?.dispatchEvent(new MouseEvent('click'));
+      await detectChanges();
+
+      expect(delegate.edits()['FRC']).toBeUndefined();
+    });
   });
 });

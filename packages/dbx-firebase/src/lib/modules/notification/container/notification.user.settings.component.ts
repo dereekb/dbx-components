@@ -102,6 +102,9 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
         }
         <dbx-firebase-notification-settings-list [state]="store.listState$" [dbxListTitleGroup]="groupDelegate"></dbx-firebase-notification-settings-list>
         <p class="dbx-hint dbx-small">{{ hintSignal() }}</p>
+        @if (forcedHintSignal()) {
+          <p class="dbx-hint dbx-small">{{ forcedHintSignal() }}</p>
+        }
         <div class="dbx-flex-bar" dbxAction [dbxActionValueStream]="updateParams$" [dbxActionValueStreamIsModifiedValue]="isUpdateParamsModified" dbxActionEnforceModified dbxActionTransitionSafety="dialog" dbxActionSnackbarError [dbxActionHandler]="handleSave">
           @if (showDeliveryCheckButtonSignal()) {
             <dbx-firebase-notification-healthcheck-dialog-button></dbx-firebase-notification-healthcheck-dialog-button>
@@ -159,6 +162,7 @@ export class DbxFirebaseNotificationUserSettingsComponent {
   readonly textMessageDisclosureSignal = toSignal(this.store.textMessageDisclosure$);
   readonly textsSignal = toSignal(this.store.texts$);
   readonly hintSignal = toSignal(this.store.hint$);
+  readonly forcedHintSignal = toSignal(this.store.forcedHint$);
   readonly hasNotificationBoxTargetSignal = toSignal(this.store.hasNotificationBoxTarget$, { initialValue: false });
   readonly boxSwitchSignal = toSignal(this.store.boxSwitch$);
   readonly disabledSignal = toSignal(this.store.disabled$, { initialValue: true });

@@ -1,5 +1,14 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type NotificationTemplateTypeInfo, type NotificationTemplateTypeInfoGroup, notificationTemplateTypeInfoRecord, appNotificationTemplateTypeInfoRecordService, notificationTemplateTypeInfoUserConfigurableDeliveryMethods, DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS } from './notification.details';
+import {
+  type NotificationTemplateTypeInfo,
+  type NotificationTemplateTypeInfoGroup,
+  notificationTemplateTypeInfoRecord,
+  appNotificationTemplateTypeInfoRecordService,
+  notificationTemplateTypeInfoUserConfigurableDeliveryMethods,
+  notificationTemplateTypeInfoForcedDeliveryMethods,
+  notificationTemplateTypeInfoDeliveryMethods,
+  DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS
+} from './notification.details';
 import { NotificationDeliveryMethod } from './notification.config';
 import { firestoreModelIdentity, firestoreModelKey } from '../../common';
 
@@ -13,6 +22,36 @@ describe('notificationTemplateTypeInfoRecord()', () => {
     };
 
     void expectFail(() => notificationTemplateTypeInfoRecord([detail, detail]));
+  });
+
+  describe('forcedDeliveryMethods', () => {
+    const baseDetail: NotificationTemplateTypeInfo = {
+      type: 'forced',
+      name: 'forced',
+      description: 'forced',
+      notificationModelIdentity: firestoreModelIdentity('test')
+    };
+
+    it('should allow forcing email', () => {
+      const record = notificationTemplateTypeInfoRecord([{ ...baseDetail, forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }]);
+      expect(record['forced'].forcedDeliveryMethods).toEqual([NotificationDeliveryMethod.EMAIL]);
+    });
+
+    itShouldFail('should throw an error if texts are forced', () => {
+      void expectFail(() => notificationTemplateTypeInfoRecord([{ ...baseDetail, forcedDeliveryMethods: [NotificationDeliveryMethod.TEXT] }]));
+    });
+
+    itShouldFail('should throw an error if a method is forced on a type with onlySendToExplicitlyEnabledRecipients', () => {
+      void expectFail(() => notificationTemplateTypeInfoRecord([{ ...baseDetail, onlySendToExplicitlyEnabledRecipients: true, forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }]));
+    });
+
+    itShouldFail('should throw an error from the record service if texts are forced', () => {
+      void expectFail(() => appNotificationTemplateTypeInfoRecordService({ forced: { ...baseDetail, forcedDeliveryMethods: [NotificationDeliveryMethod.TEXT] } }));
+    });
+
+    itShouldFail('should throw an error from the record service if a method is forced on a type with onlySendToExplicitlyEnabledRecipients', () => {
+      void expectFail(() => appNotificationTemplateTypeInfoRecordService({ forced: { ...baseDetail, onlySendToExplicitlyEnabledRecipients: true, forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] } }));
+    });
   });
 });
 
@@ -114,6 +153,30 @@ describe('notificationTemplateTypeInfoUserConfigurableDeliveryMethods()', () => 
 
   it('should return the configured methods', () => {
     expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL]);
+  });
+});
+
+describe('notificationTemplateTypeInfoForcedDeliveryMethods()', () => {
+  it('should return an empty array when none are forced', () => {
+    expect(notificationTemplateTypeInfoForcedDeliveryMethods({})).toEqual([]);
+  });
+
+  it('should return the forced methods in canonical order without duplicates', () => {
+    expect(notificationTemplateTypeInfoForcedDeliveryMethods({ forcedDeliveryMethods: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY, NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.NOTIFICATION_SUMMARY]);
+  });
+
+  it('should drop texts', () => {
+    expect(notificationTemplateTypeInfoForcedDeliveryMethods({ forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT] })).toEqual([NotificationDeliveryMethod.EMAIL]);
+  });
+});
+
+describe('notificationTemplateTypeInfoDeliveryMethods()', () => {
+  it('should return the union of the user-configurable and forced methods', () => {
+    expect(notificationTemplateTypeInfoDeliveryMethods({ userConfigurableDeliveryMethods: [NotificationDeliveryMethod.TEXT], forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT]);
+  });
+
+  it('should return the default methods when none are configured or forced', () => {
+    expect(notificationTemplateTypeInfoDeliveryMethods({})).toEqual(DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS);
   });
 });
 

@@ -3,7 +3,7 @@
 
 import { type CliGeneratedManifestStamp, type CliNotificationManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.14.0' };
+export const DEMO_CLI_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.15.0' };
 
 export const DEMO_CLI_NOTIFICATION_MANIFEST: CliNotificationManifest = {
   tasks: [
@@ -41,6 +41,7 @@ export const DEMO_CLI_NOTIFICATION_MANIFEST: CliNotificationManifest = {
       symbolName: 'CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE',
       factoryFunctionName: 'demoCalendarEventInviteNotificationFactory',
       factoryContentDeliveryMethods: ['e'],
+      forcedDeliveryMethods: ['e'],
       sourceFile: 'src/lib/model/notification/notification.ts'
     },
     {

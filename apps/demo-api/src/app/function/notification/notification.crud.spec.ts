@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoCalendarContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
@@ -46,6 +46,8 @@ import {
   GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
   TEST_NOTIFICATIONS_TEMPLATE_TYPE,
+  CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE,
+  calendarEventInviteNotificationTemplate,
   exampleNotificationTemplate,
   profileIdentity
 } from 'demo-firebase';
@@ -2347,6 +2349,41 @@ demoApiFunctionContextFactory((f) => {
 
             describe('notification box does not exist', () => {
               describeNotificationCreateAndSendTestsWithNotificationBox(false, false);
+            });
+          });
+
+          describe('forced delivery methods', () => {
+            demoAuthorizedUserContext({ f, addContactInfo: true }, (u3) => {
+              demoProfileContext({ f, u: u3 }, (p3) => {
+                demoNotificationUserContext({ f, u: u3, init: true }, (nu3) => {
+                  demoCalendarContext({ f, profile: p3, createTestCalendarEvent: true }, (cal) => {
+                    demoNotificationBoxContext({ f, for: p3, createIfNeeded: true, initIfNeeded: true }, (nb3) => {
+                      let notificationDocument: NotificationDocument;
+
+                      beforeEach(async () => {
+                        await nu3.updateNotificationUser({ gc: { configs: [{ type: CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, se: false }] } });
+
+                        const calendar = await assertSnapshotData(cal.document);
+                        const eventId = calendar.e?.[0]?.id as string;
+                        expect(eventId).toBeDefined();
+
+                        const template: CreateNotificationTemplate = { ...calendarEventInviteNotificationTemplate({ profileDocument: p3.document, eventId }), st: NotificationSendType.SEND_IF_BOX_EXISTS };
+                        const result = await createNotificationDocument({ template, accessor: f.demoFirestoreCollections.notificationCollectionFactory(nb3.document).documentAccessor() });
+                        notificationDocument = result.notificationDocument;
+                      });
+
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
+                        it('should email the calendar invite even though the user turned the type off', async () => {
+                          const result = await nbn.sendNotification();
+
+                          expect(result.success).toBe(true);
+                          expect(result.sendEmailsResult?.success.length).toBe(1);
+                        });
+                      });
+                    });
+                  });
+                });
+              });
             });
           });
 

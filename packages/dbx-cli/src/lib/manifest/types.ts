@@ -976,6 +976,11 @@ export interface CliNotificationManifestTemplate {
    */
   readonly factoryContentDeliveryMethods: readonly string[];
   /**
+   * Delivery method codes (e.g. `e`) the template type info forces on (`forcedDeliveryMethods`). Only set when the info forces a method.
+   * Informational; the runtime template type info stays the source of truth.
+   */
+  readonly forcedDeliveryMethods?: readonly string[];
+  /**
    * Workspace-relative source file of the template type.
    */
   readonly sourceFile: string;

@@ -2,7 +2,7 @@ import { deleteApp, getApps } from 'firebase/app';
 import { FIRESTORE_SESSION_OIDC_SCOPE, NotificationDeliveryMethod, type NotificationDocument, createNotificationDocument, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- firebase-server/test ships test-only fixtures; same pattern as `withDemoTestCli`.
 import { oAuthAuthorizedSuperTestContextFactory } from '@dereekb/firebase-server/test';
-import { EXAMPLE_NOTIFICATION_TASK_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTaskTemplate } from 'demo-firebase';
+import { CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE, EXAMPLE_NOTIFICATION_TASK_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTaskTemplate } from 'demo-firebase';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- demo-api fixture is intentionally shared with demo-cli specs (see apps/demo-cli/src/test/fixture.ts for the established pattern).
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from 'demo-api/test';
 import { withDemoTestCli } from '../fixture';
@@ -72,6 +72,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const types = envelope.data.types.map((x: { readonly type: string }) => x.type);
 
             expect(types).toContain(TEST_NOTIFICATIONS_TEMPLATE_TYPE);
+          });
+
+          it('lists the forced delivery methods of a type', async () => {
+            const envelope = parseEnvelope((await runCli(['notification', 'types', '--json'])).stdoutText);
+            const calendarInvite = envelope.data.types.find((x: { readonly type: string }) => x.type === CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE);
+
+            expect(calendarInvite.forcedDeliveryMethods).toEqual([NotificationDeliveryMethod.EMAIL]);
           });
         });
 

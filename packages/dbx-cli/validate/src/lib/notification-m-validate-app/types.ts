@@ -72,6 +72,12 @@ export type NotificationDeliveryMethodName = 'EMAIL' | 'TEXT' | 'PUSH' | 'NOTIFI
  */
 export type UserConfigurableDeliveryMethodsSource = 'default' | 'declared' | 'unresolved';
 
+/**
+ * Where a template info's `forcedDeliveryMethods` came from. Same values as {@link UserConfigurableDeliveryMethodsSource}; `default`
+ * means no method is forced.
+ */
+export type ForcedDeliveryMethodsSource = UserConfigurableDeliveryMethodsSource;
+
 // MARK: Extracted structures
 /**
  * An exported `*_NOTIFICATION_TEMPLATE_TYPE` constant.
@@ -98,6 +104,15 @@ export interface ExtractedTemplateTypeInfo {
    */
   readonly userConfigurableDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
   readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource;
+  /**
+   * The statically read `forcedDeliveryMethods`. Only set when {@link forcedDeliveryMethodsSource} is `declared`.
+   */
+  readonly forcedDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
+  readonly forcedDeliveryMethodsSource: ForcedDeliveryMethodsSource;
+  /**
+   * The `onlySendToExplicitlyEnabledRecipients` boolean literal, when set to one.
+   */
+  readonly onlySendToExplicitlyEnabledRecipients: boolean | undefined;
   readonly sourceFile: string;
   readonly line: number;
 }

@@ -14,6 +14,9 @@
  *    - box recipients: {@link NotificationUser.gc} → the box's {@link NotificationBoxRecipient} entry (synced from the user's
  *      {@link NotificationUserNotificationBoxRecipientConfig}) → the recipient as listed on the notification (`Notification.r`)
  *    - direct recipients (listed, without an active box entry): {@link NotificationUser.gc} → {@link NotificationUser.dc} → the listed recipient
+ *
+ *    For a template type's forced delivery methods (`NotificationTemplateTypeInfo.forcedDeliveryMethods`), the user's own levels (`gc` and the
+ *    box entry or `dc`) are skipped: they neither set the forced method nor apply their `sd` to it. Only the listed recipient can still decide it.
  * 4. Defaults — email, push and in-app summaries are sent unless `onlySendToExplicitlyEnabledRecipients`; texts are only sent when
  *    `onlyTextExplicitlyEnabledRecipients` is false. See {@link isNotificationDeliveryMethodEnabledByDefault}.
  * 5. Stopped number — a text that would be sent is off when the resolved phone number replied STOP (it is in `NotificationUser.tso`).
@@ -204,6 +207,39 @@ export function readNotificationDeliveryMethodFlag(config: Maybe<NotificationBox
 export function toCanonicalNotificationDeliveryMethods(methods: Maybe<Iterable<NotificationDeliveryMethod>>): NotificationDeliveryMethod[] {
   const methodsSet = new Set(methods ?? []);
   return ALL_NOTIFICATION_DELIVERY_METHODS.filter((x) => methodsSet.has(x));
+}
+
+/**
+ * Makes the config level effective (see {@link effectiveNotificationBoxRecipientTemplateConfig}), then unsets its `sd` and the flags of the given
+ * delivery methods, so the level no longer decides those methods.
+ *
+ * The level's `sd` still decides the other methods. Used to skip a recipient's own settings for a template type's forced delivery methods.
+ *
+ * @param config - The template config level.
+ * @param methods - The delivery methods to unset.
+ * @returns The effective config without the given methods' flags. The input config is returned as-is when there are no methods.
+ *
+ * @example
+ * ```ts
+ * effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods({ sd: false }, [NotificationDeliveryMethod.EMAIL]);
+ * // { st: false, sp: false, sn: false }
+ * ```
+ */
+export function effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(config: Maybe<NotificationBoxRecipientTemplateConfig>, methods: Maybe<NotificationDeliveryMethod[]>): Maybe<NotificationBoxRecipientTemplateConfig> {
+  let result = config;
+
+  if (config != null && methods?.length) {
+    const effective: Building<NotificationBoxRecipientTemplateConfig> = { ...effectiveNotificationBoxRecipientTemplateConfig(config) };
+    delete effective.sd;
+
+    methods.forEach((method) => {
+      delete effective[NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY[method]];
+    });
+
+    result = effective;
+  }
+
+  return result;
 }
 
 /**

@@ -23,6 +23,7 @@ import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.serv
 import { DbxFirebaseNotificationSettingsListDelegate, type DbxFirebaseNotificationSettingsListItemValue } from '../component/notification.settings.list';
 import {
   DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_MODE,
+  DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_HINT,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE,
@@ -377,6 +378,36 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
    */
   readonly listState$: Observable<ListLoadingState<DbxFirebaseNotificationSettingsListItemValue>> = this.select(this.items$, (items) => successResult(items));
 
+  /**
+   * The hint shown when any row has a delivery method that is always on, which the user cannot change.
+   */
+  readonly forcedHint$: Observable<Maybe<string>> = this.select(this.items$, (items) => (items.some((x) => x.forcedDeliveryMethods?.length) ? DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_HINT : undefined));
+
+  /**
+   * The pending cell edits, without edits to forced cells, which can't be changed.
+   */
+  readonly configurableCellEdits$: Observable<DbxFirebaseNotificationSettingsCellEdits> = this.select(
+    this.items$,
+    this.select((state) => state.cellEdits),
+    (items, cellEdits) => {
+      let result = cellEdits;
+      const forcedItems = items.filter((x) => x.forcedDeliveryMethods?.length && cellEdits[x.type] != null);
+
+      if (forcedItems.length) {
+        const edits = { ...cellEdits };
+
+        forcedItems.forEach(({ type, forcedDeliveryMethods }) => {
+          const forced = new Set(forcedDeliveryMethods);
+          edits[type] = Object.fromEntries(Object.entries(edits[type]).filter(([method]) => !forced.has(method as NotificationDeliveryMethod)));
+        });
+
+        result = edits;
+      }
+
+      return result;
+    }
+  );
+
   // MARK: Texts
   /**
    * The phone number texts are sent to (`gc.t`).
@@ -518,7 +549,7 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   /**
    * The `updateNotificationUser()` params for the pending changes, or undefined when nothing changed.
    *
-   * Cell changes go to `gc`, or to the box's `bc` entry while the cells edit a box. Delivery method switch changes always go to `gc`. A box
+   * Cell changes go to `gc`, or to the box's `bc` entry while the cells edit a box. Edits to forced cells are dropped. Delivery method switch changes always go to `gc`. A box
    * switch change goes to the box's `bc` entry `f`. Any `bc` change is sent with `resync`.
    */
   readonly updateParams$ = this.select(
@@ -526,7 +557,7 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
       gc: this.savedGc$,
       notificationBoxId: this.notificationBoxId$,
       boxConfig: this.savedBoxConfig$,
-      edits: this.select((state) => state.cellEdits),
+      edits: this.configurableCellEdits$,
       disabledDeliveryMethods: this.nextDisabledDeliveryMethods$,
       notificationBoxEnabledChange: this.notificationBoxEnabledChange$
     }),

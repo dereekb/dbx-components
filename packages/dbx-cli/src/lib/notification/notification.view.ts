@@ -117,6 +117,10 @@ export interface CliNotificationTypeView {
    */
   readonly onlyTextExplicitlyEnabledRecipients?: Maybe<boolean>;
   /**
+   * Delivery methods that are always on for the type, among the shown columns. Set only when the type forces a method.
+   */
+  readonly forcedDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
    * Set when the type is hidden from the user settings. Only listed with `--all` or an explicit type lookup.
    */
   readonly hidden?: Maybe<CliNotificationTypeHiddenReason>;
@@ -203,6 +207,7 @@ export function notificationTypesView(input: NotificationTypesViewInput): CliNot
       defaults,
       ...(info.onlySendToExplicitlyEnabledRecipients == null ? {} : { onlySendToExplicitlyEnabledRecipients: info.onlySendToExplicitlyEnabledRecipients }),
       ...(info.onlyTextExplicitlyEnabledRecipients == null ? {} : { onlyTextExplicitlyEnabledRecipients: info.onlyTextExplicitlyEnabledRecipients }),
+      ...(item.forcedDeliveryMethods?.length ? { forcedDeliveryMethods: item.forcedDeliveryMethods } : {}),
       ...(isHidden ? { hidden: info.hideFromUserSettings ? 'hideFromUserSettings' : 'hiddenTemplateTypes' } : {}),
       ...(expanded ? { groupKey: item.group.key, userConfigurableDeliveryMethods: notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info), template: templates.get(item.type) } : {})
     };
@@ -296,9 +301,10 @@ export function notificationTaskTypesView(input: NotificationTaskTypesViewInput)
  * - `master`: the user set the type's master toggle (`sd`).
  * - `default`: the type's default.
  * - `disabled`: the method is turned off account-wide (`gc.dm`).
+ * - `forced`: the method is always on for the type (`forcedDeliveryMethods`), so the user's cells for the type are skipped.
  * - `unavailable`: the user cannot configure the method for the type, so the type's default applies.
  */
-export type CliNotificationSettingsCellSource = 'explicit' | 'master' | 'default' | 'disabled' | 'unavailable';
+export type CliNotificationSettingsCellSource = 'explicit' | 'master' | 'default' | 'disabled' | 'forced' | 'unavailable';
 
 /**
  * One template type × delivery method cell of the account-level (`gc`) settings.
@@ -506,6 +512,9 @@ export function notificationUserSettingsView(input: NotificationUserSettingsView
         if (state.disabled) {
           source = 'disabled';
           effective = false;
+        } else if (state.forced) {
+          source = 'forced';
+          effective = true;
         } else if (!state.available) {
           source = 'unavailable';
           effective = state.defaultValue;
@@ -582,11 +591,12 @@ function notificationSettingsHowToChange(input: {
 }): CliNotificationSettingsHowToChange {
   const { config, key, cliName, items, gc, bc } = input;
   const command = `${cliName} ${config.modelCommandName ?? DEFAULT_CLI_NOTIFICATION_MODEL_COMMAND_NAME} ${notificationUserIdentity.modelType} update`;
-  const exampleItem = items[0];
+  const exampleItem = items.find((x) => x.deliveryMethods.length > 0);
   const exampleType = exampleItem?.type ?? '<type>';
   const exampleMethod = exampleItem?.deliveryMethods[0];
   const exampleConfigKey = exampleMethod ? NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY[exampleMethod] : 'se';
-  const disableMethod = items.flatMap((x) => x.deliveryMethods).find((x) => !(gc?.dm ?? []).includes(x));
+  const disableMethod = items.flatMap((x) => [...x.deliveryMethods, ...(x.forcedDeliveryMethods ?? [])]).find((x) => !(gc?.dm ?? []).includes(x));
+  const hasForced = items.some((x) => x.forcedDeliveryMethods?.length);
   const exampleBox = bc?.[0]?.nb ?? '<notificationBoxId>';
 
   const example = (description: string, data: Record<string, unknown>): CliNotificationSettingsChangeExample => ({ description, data, command: `${command} --data '${JSON.stringify(data)}'` });
@@ -601,6 +611,7 @@ function notificationSettingsHowToChange(input: {
   const notes = [
     'Account-level settings (gc) take priority over NotificationBox (bc) and notification-level config. A Default (null) cell lets the box and notification-level config apply.',
     'A method in gc.dm is off for every type, whatever the cell says.',
+    ...(hasForced ? ['A forced (always on) cell cannot be changed: the type ignores its gc, bc and dc cells for that method. Only gc.dm, opting out, or opting out of the box turns it off.'] : []),
     `Per-method config keys: ${Object.entries(NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY)
       .map(([method, configKey]) => `${configKey} (${method})`)
       .join(', ')}; sd sets every method of a type at once.`,

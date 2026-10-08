@@ -3,6 +3,7 @@ import {
   NotificationDeliveryMethod,
   NotificationDeliveryMethodDecisionSource,
   firestoreNotificationUserDefaultNotificationBoxRecipientConfig,
+  effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods,
   hasNotificationDeliveryMethodOptIn,
   isNotificationDeliveryMethodDisabled,
   isNotificationDeliveryMethodEnabledByDefault,
@@ -112,6 +113,38 @@ describe('mergeEffectiveNotificationBoxRecipientTemplateConfigs()', () => {
   it('should return an empty config for no levels', () => {
     const result = mergeEffectiveNotificationBoxRecipientTemplateConfigs([]);
     expect(result).toEqual({});
+  });
+});
+
+describe('effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods()', () => {
+  it('should return the config as-is when there are no methods', () => {
+    const config = { sd: false };
+    expect(effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(config, [])).toBe(config);
+    expect(effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(config, undefined)).toBe(config);
+  });
+
+  it('should return null/undefined for a null/undefined config', () => {
+    expect(effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods(undefined, [NotificationDeliveryMethod.EMAIL])).toBeUndefined();
+  });
+
+  it('should unset sd and the given methods while sd still decides the other methods', () => {
+    const result = effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods({ sd: false }, [NotificationDeliveryMethod.EMAIL]);
+    expect(result).toEqual({ st: false, sp: false, sn: false });
+  });
+
+  it('should unset the given methods even when set explicitly', () => {
+    const result = effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods({ se: false, st: true }, [NotificationDeliveryMethod.EMAIL]);
+    expect(result?.se).toBeUndefined();
+    expect(result?.st).toBe(true);
+    expect(result?.sd).toBeUndefined();
+  });
+
+  it('should leave the given method to the lower levels when resolved', () => {
+    const config = effectiveNotificationBoxRecipientTemplateConfigWithoutDeliveryMethods({ sd: false, se: false }, [NotificationDeliveryMethod.EMAIL]);
+    const decisions = resolveNotificationDeliveryMethodDecisions({ configs: [config] });
+
+    expect(decisions[NotificationDeliveryMethod.EMAIL]).toEqual({ send: true, source: NotificationDeliveryMethodDecisionSource.DEFAULT });
+    expect(decisions[NotificationDeliveryMethod.NOTIFICATION_SUMMARY].send).toBe(false);
   });
 });
 

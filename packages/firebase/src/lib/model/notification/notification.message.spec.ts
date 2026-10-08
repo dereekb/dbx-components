@@ -21,6 +21,11 @@ describe('notificationMessageUnlistedDeliveryMethods()', () => {
     expect(result).toEqual([]);
   });
 
+  it('should count forced delivery methods as listed', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT, notificationSummaryContent: {} }, { userConfigurableDeliveryMethods: [NOTIFICATION_SUMMARY], forcedDeliveryMethods: [EMAIL] });
+    expect(result).toEqual([]);
+  });
+
   it('should ignore delivery methods the message has no content for', () => {
     const result = notificationMessageUnlistedDeliveryMethods({}, { userConfigurableDeliveryMethods: [] });
     expect(result).toEqual([]);

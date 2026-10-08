@@ -4,7 +4,7 @@
  * reshapes the cross-file extraction into a human-friendly summary.
  */
 
-import type { NotificationDeliveryMethodName, UserConfigurableDeliveryMethodsSource } from '../notification-m-validate-app/index.js';
+import type { ForcedDeliveryMethodsSource, NotificationDeliveryMethodName, UserConfigurableDeliveryMethodsSource } from '../notification-m-validate-app/index.js';
 
 export interface TemplateSummary {
   readonly typeCode: string | undefined;
@@ -22,6 +22,14 @@ export interface TemplateSummary {
    * `default` (property absent, runtime defaults apply), `declared`, or `unresolved` (not statically readable). `undefined` when the template has no info.
    */
   readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource | undefined;
+  /**
+   * The info's statically read `forcedDeliveryMethods` (always on for every user), as `NotificationDeliveryMethod` member names. Only set when {@link forcedDeliveryMethodsSource} is `declared`.
+   */
+  readonly forcedDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
+  /**
+   * `default` (property absent, no method is forced), `declared`, or `unresolved` (not statically readable). `undefined` when the template has no info.
+   */
+  readonly forcedDeliveryMethodsSource: ForcedDeliveryMethodsSource | undefined;
   /**
    * Delivery methods the template's handler factories build channel content for. Empty when there is no factory.
    */

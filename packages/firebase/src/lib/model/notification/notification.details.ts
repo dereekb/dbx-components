@@ -10,7 +10,7 @@
 import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
-import { NotificationDeliveryMethod, type NotificationExplicitOptInConfig } from './notification.config';
+import { NotificationDeliveryMethod, type NotificationExplicitOptInConfig, toCanonicalNotificationDeliveryMethods } from './notification.config';
 
 /**
  * Alternative model identity pair for cases where notifications are attached to a different model
@@ -145,16 +145,82 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
    * Defaults to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
    */
   readonly userConfigurableDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
+   * Delivery methods that are always on for this template type, for every user.
+   *
+   * A forced method is locked at Default, and that Default is On. A forced method is never user-configurable, even when it is listed in
+   * `userConfigurableDeliveryMethods`, and is shown as an always-on cell in the user's notification settings.
+   *
+   * The send pipeline skips the recipient's own per-type settings for a forced method:
+   * - their global config for the type (`NotificationUser.gc.c[type]`), including the type's master toggle (`sd`)
+   * - their box entry for the type (`NotificationBoxRecipient.c[type]`, which mirrors `NotificationUser.bc`)
+   * - their direct config for the type (`NotificationUser.dc.c[type]`)
+   *
+   * The method is still turned off by:
+   * - opting out (`gc.f`, or `dc.f` for direct sends)
+   * - a box that is switched off or excluded (an inactive box entry, or `NotificationUser.x`)
+   * - the account-wide method switch (`gc.dm`, plus `dc.dm` for direct sends). The switch wins.
+   *
+   * The notification's own levers still apply: the recipients listed on the notification with inline flags (`Notification.r`, or
+   * message-function global recipients), and the per-notification `Notification.ois`.
+   *
+   * Note that a uid recipient's box entry for the type is skipped even when the box owner set it (`updateNotificationBoxRecipient`).
+   * Recipients without a uid keep their box entry's settings.
+   *
+   * Texts cannot be forced, and a method cannot be forced on a type with `onlySendToExplicitlyEnabledRecipients`, since the forced default
+   * must be On. Both throw when the record is built. See {@link assertNotificationTemplateTypeInfo}.
+   */
+  readonly forcedDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
 }
 
 /**
  * Returns the delivery methods a user can configure for the template type.
+ *
+ * Forced methods are not removed here. See {@link notificationTemplateTypeInfoForcedDeliveryMethods}.
  *
  * @param info - The template type info.
  * @returns The configured `userConfigurableDeliveryMethods`, or {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
  */
 export function notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods'>): NotificationDeliveryMethod[] {
   return info.userConfigurableDeliveryMethods ?? DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS;
+}
+
+/**
+ * Returns the delivery methods that are always on for the template type.
+ *
+ * Texts are dropped, since they cannot be forced.
+ *
+ * @param info - The template type info.
+ * @returns The canonical forced delivery methods. Empty when none are forced.
+ */
+export function notificationTemplateTypeInfoForcedDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'forcedDeliveryMethods'>): NotificationDeliveryMethod[] {
+  return toCanonicalNotificationDeliveryMethods(info.forcedDeliveryMethods).filter((x) => x !== NotificationDeliveryMethod.TEXT);
+}
+
+/**
+ * Returns the delivery methods the template type is sent by: the user-configurable methods and the forced methods.
+ *
+ * @param info - The template type info.
+ * @returns The canonical union of the user-configurable and forced delivery methods.
+ */
+export function notificationTemplateTypeInfoDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods' | 'forcedDeliveryMethods'>): NotificationDeliveryMethod[] {
+  return toCanonicalNotificationDeliveryMethods([...notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info), ...notificationTemplateTypeInfoForcedDeliveryMethods(info)]);
+}
+
+/**
+ * Asserts that the template type info is valid.
+ *
+ * @param info - The template type info to check.
+ * @throws {Error} When the info forces texts, or forces a method on a type with `onlySendToExplicitlyEnabledRecipients`.
+ */
+export function assertNotificationTemplateTypeInfo(info: Pick<NotificationTemplateTypeInfo, 'type' | 'forcedDeliveryMethods' | 'onlySendToExplicitlyEnabledRecipients'>): void {
+  const forcedDeliveryMethods = info.forcedDeliveryMethods ?? [];
+
+  if (forcedDeliveryMethods.includes(NotificationDeliveryMethod.TEXT)) {
+    throw new Error(`assertNotificationTemplateTypeInfo(): NotificationTemplateType "${info.type}" cannot force the text delivery method.`);
+  } else if (forcedDeliveryMethods.length > 0 && info.onlySendToExplicitlyEnabledRecipients === true) {
+    throw new Error(`assertNotificationTemplateTypeInfo(): NotificationTemplateType "${info.type}" cannot force delivery methods while onlySendToExplicitlyEnabledRecipients is true.`);
+  }
 }
 
 /**
@@ -167,7 +233,7 @@ export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType
  *
  * @param infoArray - Array of template type info entries to index.
  * @returns A record keyed by template type.
- * @throws {Error} When duplicate template types are found in the input array.
+ * @throws {Error} When duplicate template types are found in the input array, or an entry fails {@link assertNotificationTemplateTypeInfo}.
  *
  * @example
  * ```ts
@@ -187,6 +253,7 @@ export function notificationTemplateTypeInfoRecord(infoArray: NotificationTempla
       throw new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`);
     }
 
+    assertNotificationTemplateTypeInfo(x);
     record[type] = x;
   });
 
@@ -281,7 +348,7 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  *
  * @param appNotificationTemplateTypeInfoRecord - The complete template type registry for the application.
  * @returns A fully initialized service with indexed lookups for fast template type discovery.
- * @throws {Error} When two template types reference different {@link NotificationTemplateTypeInfoGroup} definitions that share a key.
+ * @throws {Error} When two template types reference different {@link NotificationTemplateTypeInfoGroup} definitions that share a key, or an entry fails {@link assertNotificationTemplateTypeInfo}.
  *
  * @example
  * ```ts
@@ -305,6 +372,7 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
 
   Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, info]) => {
     const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities, group } = info;
+    assertNotificationTemplateTypeInfo(info);
 
     if (group != null) {
       const existingGroup = groupsByKey.get(group.key);

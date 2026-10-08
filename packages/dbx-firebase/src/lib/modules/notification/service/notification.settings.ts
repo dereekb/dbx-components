@@ -237,6 +237,11 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_GLOBAL_MODE_SETTINGS_HINT = '
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_GLOBAL_HINT = 'Click a setting to switch it between Default, On and Off. These settings apply everywhere and take priority over the settings made only here.';
 
 /**
+ * Default hint shown below the settings when a notification type has a delivery method that is always on.
+ */
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_FORCED_HINT = "Some settings are always on and can't be changed.";
+
+/**
  * Default tooltip of a NotificationBox cell that the global settings override, when the box's model has no name.
  */
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION = DEFAULT_NOTIFICATION_SETTINGS_BOX_OVERRIDE_DESCRIPTION;
@@ -425,8 +430,8 @@ export type DbxFirebaseNotificationSettingsListItemValuesInput = NotificationSet
 /**
  * Builds the settings list rows from the app's template type infos. See {@link notificationSettingsListItemValues}.
  *
- * Drops hidden types and types with no configurable column, intersects each type's configurable methods with the columns,
- * applies the group fallback, keeps only the selected groups and types when any are set, and sorts the rows by `sortOrder`
+ * Drops hidden types and types with no configurable or forced column, intersects each type's configurable and forced methods with the
+ * columns, applies the group fallback, keeps only the selected groups and types when any are set, and sorts the rows by `sortOrder`
  * then name.
  *
  * @param input - The template type infos, columns, selected groups and types, and grouping options.

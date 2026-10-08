@@ -449,6 +449,68 @@ describe('resolveNotificationUidRecipientDelivery()', () => {
       expect(result.decisions[NotificationDeliveryMethod.TEXT]).toEqual({ send: false, source: NotificationDeliveryMethodDecisionSource.DISABLED_METHOD });
     });
   });
+
+  describe('forced delivery methods', () => {
+    const forcedDeliveryMethods = [NotificationDeliveryMethod.EMAIL];
+
+    it('should send a forced email despite the global config se:false', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { se: false } } } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL]).toEqual({ send: true, source: NotificationDeliveryMethodDecisionSource.DEFAULT });
+    });
+
+    it('should send a forced email despite the global config sd:false, while sd still decides the other methods', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { sd: false } } } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].send).toBe(true);
+      expect(result.decisions[NotificationDeliveryMethod.NOTIFICATION_SUMMARY].send).toBe(false);
+    });
+
+    it('should send a forced email despite the box entry se:false', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({}), boxRecipient: boxRecipient({ c: { [notificationTemplateType]: { se: false } } }) });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].send).toBe(true);
+    });
+
+    it('should send a forced email despite the direct config se:false', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ dc: { c: { [notificationTemplateType]: { se: false } } } }), listedRecipient: { uid: 'u' } });
+      expect(result.scope).toBe(NotificationUidRecipientDeliveryScope.DIRECT);
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].send).toBe(true);
+    });
+
+    it('should not send a forced email when the user opted out', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ gc: { c: {}, f: true } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].source).toBe(NotificationDeliveryMethodDecisionSource.SUPPRESSED);
+    });
+
+    it('should not send a forced email when the box is excluded', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationBoxId, notificationUser: notificationUser({ x: [notificationBoxId] }), listedRecipient: { uid: 'u' } });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].source).toBe(NotificationDeliveryMethodDecisionSource.SUPPRESSED);
+    });
+
+    it('should not send a forced email when email is disabled in the global config', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ gc: { c: {}, dm: [NotificationDeliveryMethod.EMAIL] } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].source).toBe(NotificationDeliveryMethodDecisionSource.DISABLED_METHOD);
+    });
+
+    it('should not send a forced email when email is disabled in the direct config in direct scope', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ dc: { c: {}, dm: [NotificationDeliveryMethod.EMAIL] } }), listedRecipient: { uid: 'u' } });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].source).toBe(NotificationDeliveryMethodDecisionSource.DISABLED_METHOD);
+    });
+
+    it('should not send a forced email when the listed recipient has se:false', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { se: true } } } }), listedRecipient: { uid: 'u', se: false } });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].send).toBe(false);
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL].configIndex).toBe(2);
+    });
+
+    it('should not send a forced email to a recipient that did not opt in when the notification is opt-in only (ois)', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods, explicitOptIn: { onlySendToExplicitlyEnabledRecipients: true }, notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { se: true } } } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.EMAIL]).toEqual({ send: false, source: NotificationDeliveryMethodDecisionSource.DEFAULT });
+    });
+
+    it('should ignore a forced text', () => {
+      const result = resolveNotificationUidRecipientDelivery({ notificationTemplateType, forcedDeliveryMethods: [NotificationDeliveryMethod.TEXT], notificationUser: notificationUser({ gc: { c: { [notificationTemplateType]: { st: true } }, t: '+12345678901' } }), boxRecipient: boxRecipient() });
+      expect(result.decisions[NotificationDeliveryMethod.TEXT].source).toBe(NotificationDeliveryMethodDecisionSource.CONFIG);
+    });
+  });
 });
 
 describe('isNotificationUserTextPhoneNumberStopped()', () => {

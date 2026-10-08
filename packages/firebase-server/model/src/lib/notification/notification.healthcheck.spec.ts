@@ -177,6 +177,55 @@ describe('notificationDeliveryMethodConfigIssues()', () => {
     });
   });
 
+  describe('forced delivery methods', () => {
+    const forcedEmail = { forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] };
+
+    it('should report nothing when the global config turns a forced method off', () => {
+      const issues = notificationDeliveryMethodConfigIssues({
+        methodContext: methodContext(NotificationDeliveryMethod.EMAIL),
+        notificationUser: notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { se: false, sd: false } } } }),
+        notificationTemplateType: TEMPLATE_TYPE,
+        explicitOptIn: forcedEmail
+      });
+
+      expect(issues).toEqual([]);
+    });
+
+    it('should report nothing when the default config turns a forced method off', () => {
+      const issues = notificationDeliveryMethodConfigIssues({
+        methodContext: methodContext(NotificationDeliveryMethod.EMAIL),
+        notificationUser: notificationUser({ dc: { c: { [TEMPLATE_TYPE]: { se: false } } } }),
+        notificationTemplateType: TEMPLATE_TYPE,
+        explicitOptIn: forcedEmail
+      });
+
+      expect(issues).toEqual([]);
+    });
+
+    it('should still report a forced method switched off account-wide', () => {
+      const issues = notificationDeliveryMethodConfigIssues({
+        methodContext: methodContext(NotificationDeliveryMethod.EMAIL),
+        notificationUser: notificationUser({ gc: { c: {}, dm: [NotificationDeliveryMethod.EMAIL] } }),
+        notificationTemplateType: TEMPLATE_TYPE,
+        explicitOptIn: forcedEmail
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].c).toBe(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY);
+    });
+
+    it('should report nothing for any template type when a forced type sends the method', () => {
+      const user = notificationUser({ gc: { c: { [TEMPLATE_TYPE]: { se: false }, other: { se: false } } } });
+      const anyTemplateTypes = [
+        { notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: forcedEmail },
+        { notificationTemplateType: 'other', explicitOptIn: undefined }
+      ];
+
+      const issues = notificationDeliveryMethodConfigIssues({ methodContext: methodContext(NotificationDeliveryMethod.EMAIL), notificationUser: user, notificationTemplateType: 'D', explicitOptIn: undefined, anyTemplateTypes });
+      expect(issues).toEqual([]);
+    });
+  });
+
   describe('stopped texting number', () => {
     it('should report an error when the texting number replied STOP', () => {
       const issues = notificationDeliveryMethodConfigIssues({
@@ -264,6 +313,11 @@ describe('collectDisabledMethodsForBoxRecipient()', () => {
   it('should not report a method that is only off by default', () => {
     const methods = collectDisabledMethodsForBoxRecipient({ boxRecipient: undefined, config: boxConfig({}), gc: { c: {} }, notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: undefined });
     expect(methods).toEqual([]);
+  });
+
+  it('should not report a forced method the box entry turns off', () => {
+    const methods = collectDisabledMethodsForBoxRecipient({ boxRecipient: undefined, config: boxConfig({ [TEMPLATE_TYPE]: { se: false, sd: false } }), gc: { c: {} }, notificationTemplateType: TEMPLATE_TYPE, explicitOptIn: { forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] } });
+    expect(methods).not.toContain(NotificationDeliveryMethod.EMAIL);
   });
 
   it('should report nothing for a flagged recipient', () => {
