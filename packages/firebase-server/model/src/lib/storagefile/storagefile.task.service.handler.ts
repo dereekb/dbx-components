@@ -341,6 +341,31 @@ export interface StorageFileGroupStorageFileZipFileDisplayNameFunctionFactoryInp
 
 export type StorageFileGroupStorageFileZipFileDisplayNameFunctionFactory = (input: StorageFileGroupStorageFileZipFileDisplayNameFunctionFactoryInput) => PromiseOrValue<StorageFileGroupStorageFileZipFileDisplayNameFunction>;
 
+export interface StorageFileGroupStorageFileZipFileNameNormalizeFunctionInput extends StorageFileGroupStorageFileZipFileDisplayNameFunctionInput {
+  /**
+   * The resolved name of the file in the zip, without the file extension.
+   */
+  readonly name: StorageFileDisplayName;
+}
+
+/**
+ * Normalizes the resolved name of a file before it is added to the zip.
+ *
+ * The returned name is used as the zip entry's path, so any slash it contains is treated as a folder separator by archive tools.
+ */
+export type StorageFileGroupStorageFileZipFileNameNormalizeFunction = (input: StorageFileGroupStorageFileZipFileNameNormalizeFunctionInput) => StorageFileDisplayName;
+
+/**
+ * The default {@link StorageFileGroupStorageFileZipFileNameNormalizeFunction}.
+ *
+ * Replaces every forward slash and backslash with a dash so each file is placed at the root of the zip. Without this, a display name like
+ * "CPR / First Aid" would be extracted as a "CPR " folder containing a " First Aid" file, which some platforms (e.g. Windows) cannot extract at all.
+ *
+ * @param input - The normalize input containing the resolved name.
+ * @returns The name with all slashes replaced by dashes.
+ */
+export const storageFileGroupZipFileNameDefaultNormalize: StorageFileGroupStorageFileZipFileNameNormalizeFunction = (input) => input.name.replaceAll(/[/\\]/g, '-');
+
 export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfigZipConfiguration extends Pick<StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask>, 'cleanup'> {
   /**
    * Configures the maximum number of files to zip in parallel. Streaming more files in parallel concurrently requires more memory.
@@ -352,6 +377,12 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
    * Optional factory for generating the display name of each file in the zip.
    */
   readonly zipFileDisplayNameFunctionFactory?: Maybe<StorageFileGroupStorageFileZipFileDisplayNameFunctionFactory>;
+  /**
+   * Normalizes the resolved name of each file in the zip, regardless of whether it came from zipFileDisplayNameFunctionFactory, the StorageFile's display name, the embedded file's name, or the stored file's name.
+   *
+   * Defaults to {@link storageFileGroupZipFileNameDefaultNormalize}, which replaces slashes with dashes. Provide a function that returns the name unchanged to keep slashes as folders in the zip.
+   */
+  readonly normalizeZipFileName?: Maybe<StorageFileGroupStorageFileZipFileNameNormalizeFunction>;
   /**
    * Configures the options for the zip archiver.
    *
@@ -386,13 +417,21 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
 ): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
   const { storageFileFirestoreCollections, storageAccessor, zip } = config;
   const { storageFileCollection, storageFileGroupCollection } = storageFileFirestoreCollections;
-  const { maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel, zipFileDisplayNameFunctionFactory: inputZipFileDisplayNameFunctionFactory, configureZipInfoJson: inputConfigureZipInfoJson, configureZipArchiverOptions: inputConfigureZipArchiverOptions, finalizeZipArchive } = zip ?? {};
+  const {
+    maxNumberOfFilesToZipInParallel: inputMaxNumberOfFilesToZipInParallel,
+    zipFileDisplayNameFunctionFactory: inputZipFileDisplayNameFunctionFactory,
+    normalizeZipFileName: inputNormalizeZipFileName,
+    configureZipInfoJson: inputConfigureZipInfoJson,
+    configureZipArchiverOptions: inputConfigureZipArchiverOptions,
+    finalizeZipArchive
+  } = zip ?? {};
 
   const maxNumberOfFilesToZipInParallel = inputMaxNumberOfFilesToZipInParallel ?? 3;
   const appendZipInfoJson = inputConfigureZipInfoJson !== false;
   const configureZipArchiverOptions = inputConfigureZipArchiverOptions ?? (() => ({ zlib: { level: 9 } }));
   const configureZipInfoJson = (appendZipInfoJson ? inputConfigureZipInfoJson : undefined) ?? MAP_IDENTITY;
   const zipFileDisplayNameFunctionFactory = inputZipFileDisplayNameFunctionFactory ?? (() => () => null);
+  const normalizeZipFileName = inputNormalizeZipFileName ?? storageFileGroupZipFileNameDefaultNormalize;
 
   const storageFileGroupZipProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> = {
     target: STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE,
@@ -465,9 +504,9 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                           const storageFileGroupEmbeddedFile = embeddedFilesMap.get(storageFile.id) as StorageFileGroupEmbeddedFile;
                           const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile;
 
-                          const nameFromFactory = await zipFileDisplayNameFunction({ metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile });
+                          const displayNameFunctionInput: StorageFileGroupStorageFileZipFileDisplayNameFunctionInput = { metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile };
+                          const nameFromFactory = await zipFileDisplayNameFunction(displayNameFunctionInput);
 
-                          let untypedName: Maybe<string> = nameFromFactory ?? storageFileDisplayName ?? embeddedFileNameOverride ?? fileSlashPathDetails.fileName;
                           let extension: Maybe<string>;
 
                           if (fileSlashPathDetails.typedFileExtension) {
@@ -476,8 +515,9 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                             extension = documentFileExtensionForMimeType(metadata.contentType);
                           }
 
-                          // set the default name if still unset
-                          untypedName = untypedName ?? `sf_${storageFile.id}`;
+                          // set the default name if still unset, then normalize it so it is safe to use as a zip entry path
+                          const resolvedName = nameFromFactory ?? storageFileDisplayName ?? embeddedFileNameOverride ?? fileSlashPathDetails.fileName ?? `sf_${storageFile.id}`;
+                          const untypedName = normalizeZipFileName({ ...displayNameFunctionInput, name: resolvedName });
 
                           const name = extension ? `${untypedName}.${extension}` : untypedName;
 
