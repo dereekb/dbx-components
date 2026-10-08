@@ -1,5 +1,5 @@
 import { ZOHO_OAUTH_SCOPE_DELIMITER, type ZohoAccessToken, type ZohoAccessTokenCache } from '@dereekb/zoho';
-import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type FirebaseAuthUserId } from '@dereekb/firebase';
+import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type FirebaseAuthUserId, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type UserExternalConnectionAccessor, type UserExternalConnectionCredentials, type UserExternalConnectionCredentialsWriter, mergeRefreshedUserExternalConnectionCredentials } from '@dereekb/firebase-server/model';
 import { MS_IN_SECOND, type Maybe, type Seconds } from '@dereekb/util';
 import { safeToJsDate } from '@dereekb/date';
@@ -8,7 +8,7 @@ import { ZOHO_EXTRA_API_DOMAIN_KEY } from './zoho.oauth.connection.service';
 /**
  * Maps stored connection credentials to a {@link ZohoAccessToken}.
  *
- * @param credentials - The credentials stored for the `zoho` provider.
+ * @param credentials - The credentials stored for a Zoho connection.
  * @returns The equivalent Zoho access token, or null when the credentials cannot form one.
  */
 export function zohoAccessTokenFromUserExternalConnectionCredentials(credentials: Maybe<UserExternalConnectionCredentials>): Maybe<ZohoAccessToken> {
@@ -52,6 +52,12 @@ export interface UserExternalConnectionZohoAccessTokenCacheConfig {
    */
   readonly actions: UserExternalConnectionCredentialsWriter;
   readonly uid: FirebaseAuthUserId;
+  /**
+   * The provider type of the Zoho connection to read and write. Defaults to
+   * {@link ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE}; set it for an app that registers more than one
+   * Zoho connection.
+   */
+  readonly providerType?: Maybe<UserExternalConnectionProviderType>;
 }
 
 /**
@@ -71,7 +77,7 @@ export interface UserExternalConnectionZohoAccessTokenCacheConfig {
  */
 export function userExternalConnectionZohoAccessTokenCache(config: UserExternalConnectionZohoAccessTokenCacheConfig): ZohoAccessTokenCache {
   const { accessor, actions, uid } = config;
-  const providerType = ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
+  const providerType = config.providerType ?? ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE;
   const connection = accessor.accessorForUser({ uid })(providerType);
 
   async function loadCachedToken(): Promise<Maybe<ZohoAccessToken>> {

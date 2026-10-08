@@ -1,5 +1,6 @@
-import { Controller, Inject } from '@nestjs/common';
-import { AbstractUserExternalConnectionOAuthController } from '@dereekb/firebase-server/model';
+import { Controller, Inject, type Type } from '@nestjs/common';
+import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { AbstractUserExternalConnectionOAuthController, userExternalConnectionOAuthControllerPath } from '@dereekb/firebase-server/model';
 import { ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_CONTROLLER_PATH } from './zoho.oauth.connection.config';
 import { ZohoUserExternalConnectionOAuthService } from './zoho.oauth.connection.service';
 
@@ -20,4 +21,35 @@ export class ZohoUserExternalConnectionOAuthController extends AbstractUserExter
   constructor(@Inject(ZohoUserExternalConnectionOAuthService) readonly oauthService: ZohoUserExternalConnectionOAuthService) {
     super();
   }
+}
+
+/**
+ * Returns the controller class serving the Zoho handoff for a provider type.
+ *
+ * The default provider type returns {@link ZohoUserExternalConnectionOAuthController}. Any other gets
+ * its own class mounted at `/oauth/<providerType>`: the mount point is fixed when the class is
+ * decorated, so a second Zoho connection cannot reuse the static class without both landing on
+ * `/oauth/zoho`. Each class injects the service from its OWN module, which is how two Zoho connections
+ * in one app each reach their own config.
+ *
+ * @param providerType - The provider type the controller serves.
+ * @returns The controller class to register on that connection's module.
+ */
+export function zohoUserExternalConnectionOAuthControllerForProviderType(providerType: UserExternalConnectionProviderType): Type<AbstractUserExternalConnectionOAuthController> {
+  let result: Type<AbstractUserExternalConnectionOAuthController>;
+
+  if (providerType === ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE) {
+    result = ZohoUserExternalConnectionOAuthController;
+  } else {
+    @Controller(userExternalConnectionOAuthControllerPath(providerType))
+    class ZohoUserExternalConnectionOAuthProviderTypeController extends AbstractUserExternalConnectionOAuthController {
+      constructor(@Inject(ZohoUserExternalConnectionOAuthService) readonly oauthService: ZohoUserExternalConnectionOAuthService) {
+        super();
+      }
+    }
+
+    result = ZohoUserExternalConnectionOAuthProviderTypeController;
+  }
+
+  return result;
 }

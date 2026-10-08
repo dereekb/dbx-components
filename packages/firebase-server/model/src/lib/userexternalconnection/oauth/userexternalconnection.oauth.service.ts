@@ -368,6 +368,15 @@ export abstract class AbstractUserExternalConnectionOAuthService {
    * per-process limiter is a weaker guarantee than a shared one.
    */
   readonly userExternalConnectionSignInThrottle?: Maybe<UserExternalConnectionSignInThrottle>;
+  /**
+   * The keys of the stored credentials' `extra` map a client needs alongside the access token to use
+   * it — e.g. the api domain a Zoho token is only valid against.
+   *
+   * Read when an access token is minted out to a client (`UserExternalConnectionTokenApiService`).
+   * Every other `extra` value stays on the server: an allowlist, because a provider may keep values
+   * there that only make sense to the server, such as the host its refresh is sent to.
+   */
+  readonly exportedCredentialExtraKeys?: Maybe<readonly string[]>;
 
   // lazy, because `providerType` reads a subclass constructor property that is not assigned yet
   // while this class's own fields initialize

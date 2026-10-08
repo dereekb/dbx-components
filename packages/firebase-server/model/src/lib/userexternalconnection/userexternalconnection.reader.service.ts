@@ -100,6 +100,22 @@ export interface UserExternalConnectionReportFailureParams extends UserExternalC
 export interface UserExternalConnectionReaderUserInput extends FirebaseAuthUserIdRef {}
 
 /**
+ * Input for {@link UserExternalConnectionReaderProviderInstance.readUsableUserExternalConnectionCredentials}.
+ */
+export interface UserExternalConnectionReadUsableCredentialsInput {
+  /**
+   * How long the returned credentials must still be valid for. Credentials expiring sooner are renewed
+   * first, as if they had already expired.
+   *
+   * Only ever WIDENS the reader's configured expiration buffer. Meant for a caller handing the access
+   * token to something that keeps it — a CLI it is minted out to — rather than spending it on one call,
+   * so that what it hands over is not seconds from expiring. Best-effort: it forces at most one renewal,
+   * and a provider whose tokens live shorter than this returns a fresh token that still falls short.
+   */
+  readonly minimumRemaining?: Maybe<Milliseconds>;
+}
+
+/**
  * A {@link UserExternalConnectionReader} narrowed to ONE user and ONE provider.
  *
  * The reader's entire read surface, with `{ uid, providerType }` already applied — so a consumer acting
@@ -121,10 +137,11 @@ export interface UserExternalConnectionReaderProviderInstance {
   /**
    * Returns credentials that are safe to attempt a provider call with, renewing them first if needed.
    *
+   * @param input - Optional. How long the credentials must remain valid for.
    * @throws When the user is not connected to the provider, or the credentials have expired and could
    *   not be renewed.
    */
-  readUsableUserExternalConnectionCredentials(): Promise<UserExternalConnectionCredentials>;
+  readUsableUserExternalConnectionCredentials(input?: Maybe<UserExternalConnectionReadUsableCredentialsInput>): Promise<UserExternalConnectionCredentials>;
   /**
    * Records that the provider rejected these credentials, moving the entry to the `error` status.
    *
@@ -217,15 +234,14 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
    * left at its default, a missing expiration would resolve to `now - buffer` and read as expired.
    *
    * @param credentials - The credentials to check.
-   * @param now - The instant to compare against. Defaults to the current time.
+   * @param buffer - The leeway window. Defaults to the configured expiration buffer.
    * @returns True when the credentials are expired or expire inside the leeway window.
    */
-  function credentialsAreExpired(credentials: UserExternalConnectionCredentials, now?: Maybe<Date>): boolean {
+  function credentialsAreExpired(credentials: UserExternalConnectionCredentials, buffer: Milliseconds = expirationBuffer): boolean {
     return expirationDetails({
       expiresFromDate: safeToJsDate(credentials.expiresAt),
-      expiresIn: -expirationBuffer,
-      defaultExpiresFromDateToNow: false,
-      now
+      expiresIn: -buffer,
+      defaultExpiresFromDateToNow: false
     }).hasExpired();
   }
 
@@ -283,8 +299,9 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
     return result;
   }
 
-  async function readUsableUserExternalConnectionCredentials(params: UserExternalConnectionReadParams): Promise<UserExternalConnectionCredentials> {
+  async function readUsableUserExternalConnectionCredentials(params: UserExternalConnectionReadParams, input?: Maybe<UserExternalConnectionReadUsableCredentialsInput>): Promise<UserExternalConnectionCredentials> {
     const { uid, providerType } = params;
+    const buffer = Math.max(expirationBuffer, input?.minimumRemaining ?? 0);
     const { entry, credentials } = await accessor.accessorForUser({ uid })(providerType).readUserExternalConnectionForProvider();
 
     // an absent entry, an absent set of credentials, or an explicit disconnect all mean the same thing
@@ -297,7 +314,7 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
     // there is something to try with. When there is not, the stored credentials are still handed over
     // if they have not expired: the recorded error may have been a scope refusal that leaves them
     // usable for other calls, and refusing to try would be less useful than letting the caller find out
-    const expired = credentialsAreExpired(credentials);
+    const expired = credentialsAreExpired(credentials, buffer);
     const shouldRefresh = expired || (entry.st === 'error' && refresher != null);
 
     return shouldRefresh ? refreshCredentialsOnce({ ...params, previous: credentials, entry }) : credentials;
@@ -326,7 +343,7 @@ export function userExternalConnectionReader(config: UserExternalConnectionReade
         providerType,
         readUserExternalConnectionForProvider: () => accessorForProvider.readUserExternalConnectionForProvider(),
         readUserExternalConnectionCredentials: () => accessorForProvider.readUserExternalConnectionCredentials(),
-        readUsableUserExternalConnectionCredentials: () => readUsableUserExternalConnectionCredentials(params),
+        readUsableUserExternalConnectionCredentials: (usableInput) => readUsableUserExternalConnectionCredentials(params, usableInput),
         reportUserExternalConnectionFailure: (failureInput) => reportUserExternalConnectionFailure({ ...params, error: failureInput?.error })
       };
     };

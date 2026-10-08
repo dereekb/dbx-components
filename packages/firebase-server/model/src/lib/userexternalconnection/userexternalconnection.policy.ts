@@ -1,5 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type UserExternalConnectionProviderType } from '@dereekb/firebase';
+import { userExternalConnectionProviderNotAllowedError } from './userexternalconnection.error';
+import { type UserExternalConnectionOAuthProviderRegistry } from './oauth/userexternalconnection.oauth.registry';
 
 /**
  * What happens when the external account being connected is already held by a different user.
@@ -57,6 +59,29 @@ export interface UserExternalConnectionProviderPolicy {
    * What to do when `unique` is set and another user already holds the account. Defaults to `block`.
    */
   readonly onCollision?: Maybe<UserExternalConnectionCollisionPolicy>;
+  /**
+   * Only an admin may connect this provider. Defaults to FALSE.
+   *
+   * Enforced where the connect/link state is minted (see `assertUserExternalConnectionProviderConnectable()`):
+   * a non-admin is refused exactly as if the provider were not mounted, so the endpoint does not reveal
+   * that admin-only providers exist. Disconnecting and unlinking stay open, so a demoted admin can still
+   * clean up.
+   *
+   * Incompatible with {@link signIn}: a sign-in is unauthenticated, so whether the caller is an admin is
+   * unknowable until a user may already have been created. The registry refuses the combination.
+   */
+  readonly adminOnly?: Maybe<boolean>;
+  /**
+   * The connection's ACCESS token may be minted out to the user it belongs to through the external
+   * connection token API (`UserExternalConnectionTokenApiService`). Defaults to FALSE.
+   *
+   * Opt-in, per provider, because a minted token leaves the server and can be used off-platform with
+   * every scope the connection was granted. Only the access token and its metadata leave: never the
+   * refresh token or the OAuth client secret. The token API applies its own gates too (an app predicate,
+   * an OIDC scope and client allowlist); this flag is the app's declaration that the provider may be
+   * exported at all.
+   */
+  readonly tokenExport?: Maybe<boolean>;
 }
 
 /**
@@ -70,7 +95,9 @@ export const DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY: Omit<Required<Use
   unique: false,
   signIn: false,
   signInConnects: false,
-  onCollision: 'block'
+  onCollision: 'block',
+  adminOnly: false,
+  tokenExport: false
 };
 
 /**
@@ -92,6 +119,8 @@ export interface UserExternalConnectionResolvedProviderPolicy {
   readonly signIn: boolean;
   readonly signInConnects: boolean;
   readonly onCollision: UserExternalConnectionCollisionPolicy;
+  readonly adminOnly: boolean;
+  readonly tokenExport: boolean;
 }
 
 /**
@@ -110,7 +139,9 @@ export function resolveUserExternalConnectionProviderPolicy(providerType: UserEx
     unique: policy?.unique ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.unique ?? false,
     signIn: policy?.signIn ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signIn ?? false,
     signInConnects: policy?.signInConnects ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.signInConnects ?? false,
-    onCollision: policy?.onCollision ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onCollision ?? 'block'
+    onCollision: policy?.onCollision ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.onCollision ?? 'block',
+    adminOnly: policy?.adminOnly ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.adminOnly ?? false,
+    tokenExport: policy?.tokenExport ?? DEFAULT_USER_EXTERNAL_CONNECTION_PROVIDER_POLICY.tokenExport ?? false
   };
 }
 
@@ -120,11 +151,19 @@ export function resolveUserExternalConnectionProviderPolicy(providerType: UserEx
  * @param policies - The per-provider policies the app declares. Providers absent from the list take
  *   the default policy.
  * @returns The registry.
+ * @throws {Error} When a policy is both `adminOnly` and `signIn`.
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function userExternalConnectionProviderPolicyRegistry(policies?: Maybe<readonly UserExternalConnectionProviderPolicy[]>): UserExternalConnectionProviderPolicyRegistry {
-  const map = new Map<UserExternalConnectionProviderType, UserExternalConnectionProviderPolicy>((policies ?? []).map((x) => [x.providerType, x]));
+  const declared = policies ?? [];
+  const adminOnlySignIn = declared.find((x) => x.adminOnly && x.signIn);
+
+  if (adminOnlySignIn) {
+    throw new Error(`UserExternalConnectionProviderPolicy for "${adminOnlySignIn.providerType}" is both adminOnly and signIn. A sign-in is unauthenticated, so an admin-only provider cannot be used to sign in.`);
+  }
+
+  const map = new Map<UserExternalConnectionProviderType, UserExternalConnectionProviderPolicy>(declared.map((x) => [x.providerType, x]));
   return { policyForProviderType: (providerType) => resolveUserExternalConnectionProviderPolicy(providerType, map.get(providerType)) };
 }
 
@@ -141,4 +180,51 @@ export function userExternalConnectionProviderPolicyRegistry(policies?: Maybe<re
  */
 export function userExternalConnectionPolicyForProviderType(registry: Maybe<UserExternalConnectionProviderPolicyRegistry>, providerType: UserExternalConnectionProviderType): UserExternalConnectionResolvedProviderPolicy {
   return registry ? registry.policyForProviderType(providerType) : resolveUserExternalConnectionProviderPolicy(providerType);
+}
+
+// MARK: Connectable
+/**
+ * Input for {@link assertUserExternalConnectionProviderConnectable}.
+ */
+export interface AssertUserExternalConnectionProviderConnectableInput {
+  /**
+   * The app's mounted OAuth flows.
+   */
+  readonly oauthRegistry: UserExternalConnectionOAuthProviderRegistry;
+  /**
+   * The app's provider policies, when it declared any.
+   */
+  readonly policyRegistry?: Maybe<UserExternalConnectionProviderPolicyRegistry>;
+  readonly providerType: UserExternalConnectionProviderType;
+  /**
+   * Whether the caller is an admin, by the app's own definition (typically `isAdminInRequest(request)`).
+   */
+  readonly isAdmin: boolean;
+}
+
+/**
+ * Asserts the caller may begin connecting (or linking) a provider: the app has an OAuth flow mounted
+ * for it, and the provider is not `adminOnly` unless the caller is an admin.
+ *
+ * Meant for the place the connect/link state is minted — every later step of the handoff is bound to
+ * that state, so this one check covers the whole flow.
+ *
+ * A non-admin asking for an admin-only provider gets the SAME error as a provider that is not mounted,
+ * so the endpoint does not reveal which admin-only providers exist.
+ *
+ * @param input - The registries, provider and caller's admin status.
+ * @returns The provider's resolved policy.
+ * @throws A precondition-conflict HttpsError when the provider is not mounted or is admin-only and the caller is not an admin.
+ */
+export function assertUserExternalConnectionProviderConnectable(input: AssertUserExternalConnectionProviderConnectableInput): UserExternalConnectionResolvedProviderPolicy {
+  const { oauthRegistry, policyRegistry, providerType, isAdmin } = input;
+  oauthRegistry.assertHasAuthorizeFlowForProviderType(providerType);
+
+  const policy = userExternalConnectionPolicyForProviderType(policyRegistry, providerType);
+
+  if (policy.adminOnly && !isAdmin) {
+    throw userExternalConnectionProviderNotAllowedError(providerType);
+  }
+
+  return policy;
 }

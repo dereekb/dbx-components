@@ -5,11 +5,19 @@ import { ZOHO_ACCOUNTS_EU_API_URL, ZOHO_ACCOUNTS_US_API_URL, type ZohoAccountsAc
 import { ZohoAccountsOAuthApi, type ZohoAccountsOAuthServiceConfig, appZohoAccountsOAuthModuleMetadata } from '@dereekb/zoho/nestjs';
 import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionErrorCode } from '@dereekb/firebase';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { UserExternalConnectionAccessor, UserExternalConnectionServerActions, UserExternalConnectionStateCoder, type UserExternalConnectionCredentials, userExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import {
+  UserExternalConnectionAccessor,
+  UserExternalConnectionOAuthProviderRegistry,
+  userExternalConnectionOAuthProviderRegistryProvider,
+  UserExternalConnectionServerActions,
+  UserExternalConnectionStateCoder,
+  type UserExternalConnectionCredentials,
+  userExternalConnectionStateCoder
+} from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
 import { DEFAULT_ZOHO_OAUTH_SCOPES, ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from './zoho.oauth.connection.config';
-import { ZohoUserExternalConnectionOAuthController } from './zoho.oauth.connection.controller';
-import { appZohoUserExternalConnectionOAuthModuleMetadata } from './zoho.oauth.connection.module';
+import { ZohoUserExternalConnectionOAuthController, zohoUserExternalConnectionOAuthControllerForProviderType } from './zoho.oauth.connection.controller';
+import { appZohoUserExternalConnectionOAuthModuleMetadata, zohoUserExternalConnectionOAuthServiceToken } from './zoho.oauth.connection.module';
 import { ZohoUserExternalConnectionOAuthService, zohoUserExternalConnectionCredentials } from './zoho.oauth.connection.service';
 
 const TEST_CLIENT_ID = 'test-client-id';
@@ -149,6 +157,83 @@ class TestZohoAccountsOAuthModule {}
   })
 )
 class TestZohoUserExternalConnectionOAuthModule {}
+
+const TEST_ADMIN_PROVIDER_TYPE = 'zoho_admin';
+
+@Module(
+  appZohoUserExternalConnectionOAuthModuleMetadata({
+    providerType: TEST_ADMIN_PROVIDER_TYPE,
+    dependencyModule: TestZohoAccountsOAuthModule,
+    successPath: TEST_SUCCESS_PATH,
+    failurePath: TEST_FAILURE_PATH
+  })
+)
+class TestZohoAdminUserExternalConnectionOAuthModule {}
+
+@Module({})
+class TestZohoGlobalProvidersModule {}
+
+/**
+ * Declares the OAuth provider registry the way an app does: one module importing every connection
+ * module and listing each service token.
+ */
+@Module({
+  imports: [TestZohoUserExternalConnectionOAuthModule, TestZohoAdminUserExternalConnectionOAuthModule],
+  providers: [userExternalConnectionOAuthProviderRegistryProvider([zohoUserExternalConnectionOAuthServiceToken(), zohoUserExternalConnectionOAuthServiceToken(TEST_ADMIN_PROVIDER_TYPE)])],
+  exports: [UserExternalConnectionOAuthProviderRegistry]
+})
+class TestZohoOAuthProviderRegistryModule {}
+
+describe('appZohoUserExternalConnectionOAuthModuleMetadata() with several Zoho connections', () => {
+  let nest: TestingModule;
+
+  beforeEach(async () => {
+    const stateCoder = userExternalConnectionStateCoder({ secret: TEST_STATE_SECRET });
+    const captured = capturingServerActions();
+
+    const providers: Provider[] = [
+      { provide: FirebaseServerEnvService, useValue: makeEnvService() },
+      { provide: UserExternalConnectionStateCoder, useValue: stateCoder },
+      { provide: UserExternalConnectionServerActions, useValue: captured.actions },
+      { provide: UserExternalConnectionAccessor, useValue: captured.accessor }
+    ];
+
+    const globalModule: DynamicModule = { module: TestZohoGlobalProvidersModule, providers, exports: providers, global: true };
+    nest = await Test.createTestingModule({ imports: [globalModule, TestZohoOAuthProviderRegistryModule] }).compile();
+  });
+
+  function serviceForProviderType(providerType: string): ZohoUserExternalConnectionOAuthService {
+    return nest.get(UserExternalConnectionOAuthProviderRegistry, { strict: false }).serviceForProviderType(providerType) as ZohoUserExternalConnectionOAuthService;
+  }
+
+  it('should keep the class token for the default connection', () => {
+    expect(zohoUserExternalConnectionOAuthServiceToken()).toBe(ZohoUserExternalConnectionOAuthService);
+    expect(zohoUserExternalConnectionOAuthServiceToken(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(ZohoUserExternalConnectionOAuthService);
+  });
+
+  it('should resolve two distinct services, each carrying its own provider type', () => {
+    const defaultService = serviceForProviderType(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+    const adminService = serviceForProviderType(TEST_ADMIN_PROVIDER_TYPE);
+
+    expect(defaultService.providerType).toBe(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
+    expect(adminService).not.toBe(defaultService);
+    expect(adminService.providerType).toBe(TEST_ADMIN_PROVIDER_TYPE);
+    expect(new URL(adminService.redirectUri).pathname).toBe(`/oauth/${TEST_ADMIN_PROVIDER_TYPE}/callback`);
+  });
+
+  it('should mount the extra connection at its own path', () => {
+    const controller = zohoUserExternalConnectionOAuthControllerForProviderType(TEST_ADMIN_PROVIDER_TYPE);
+
+    expect(controller).not.toBe(ZohoUserExternalConnectionOAuthController);
+    expect(Reflect.getMetadata('path', controller)).toBe(`oauth/${TEST_ADMIN_PROVIDER_TYPE}`);
+    expect(zohoUserExternalConnectionOAuthControllerForProviderType(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE)).toBe(ZohoUserExternalConnectionOAuthController);
+  });
+
+  it('should export only the api domain and location with a minted token', () => {
+    const adminService = serviceForProviderType(TEST_ADMIN_PROVIDER_TYPE);
+    expect([...(adminService.exportedCredentialExtraKeys ?? [])].sort()).toEqual(['apiDomain', 'location']);
+  });
+});
 
 describe('ZohoUserExternalConnectionOAuthService', () => {
   const stateCoder = userExternalConnectionStateCoder({ secret: TEST_STATE_SECRET });

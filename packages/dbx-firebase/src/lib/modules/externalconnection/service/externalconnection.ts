@@ -160,6 +160,15 @@ export interface DbxFirebaseExternalConnectionProvider {
    * gets a redirect straight back to the failure url.
    */
   readonly signIn?: Maybe<DbxFirebaseExternalConnectionSignInConfig>;
+  /**
+   * Only admins may connect this provider. Defaults to false.
+   *
+   * Non-admins never see its row — not even when they hold an entry for it — and admins see it with an
+   * "Admin Only" marker. Display only: the server must independently declare the provider `adminOnly`
+   * in its provider policy, which is what actually refuses a non-admin. An admin-only provider must not
+   * declare {@link signIn}.
+   */
+  readonly adminOnly?: Maybe<boolean>;
 }
 
 /**
@@ -354,6 +363,10 @@ export interface DbxFirebaseExternalConnectionRow {
    * is retained as a row so it can be disconnected.
    */
   readonly enabled: boolean;
+  /**
+   * Whether only admins may connect this provider.
+   */
+  readonly adminOnly: boolean;
 }
 
 /**
@@ -419,23 +432,28 @@ export interface DbxFirebaseExternalConnectionRowsInput {
    * Whether the connection document is still loading.
    */
   readonly loading?: Maybe<boolean>;
+  /**
+   * Whether the current user is an admin. Admin-only providers are dropped unless true.
+   */
+  readonly isAdmin?: Maybe<boolean>;
 }
 
 /**
  * Builds the rows to render.
  *
  * The row set is the union of the enabled providers and any registered provider the user still has
- * an entry for, so a provider that has since been disabled can still be disconnected.
+ * an entry for, so a provider that has since been disabled can still be disconnected. Admin-only
+ * providers are dropped for a non-admin, even one holding an entry for them.
  *
  * @param input - The registry state plus the user's entries.
  * @returns The rows, in registration order.
  */
 export function dbxFirebaseExternalConnectionRows(input: DbxFirebaseExternalConnectionRowsInput): DbxFirebaseExternalConnectionRow[] {
-  const { providers, enabledProviderTypes, entries, loading } = input;
+  const { providers, enabledProviderTypes, entries, loading, isAdmin } = input;
   const enabled = new Set(enabledProviderTypes);
 
   return providers
-    .filter((x) => enabled.has(x.providerType) || entries?.[x.providerType] != null)
+    .filter((x) => (isAdmin || !x.adminOnly) && (enabled.has(x.providerType) || entries?.[x.providerType] != null))
     .map((provider) => {
       const entry = entries?.[provider.providerType];
 
@@ -444,7 +462,8 @@ export function dbxFirebaseExternalConnectionRows(input: DbxFirebaseExternalConn
         assets: provider.assets,
         entry,
         status: loading ? ('loading' as const) : dbxFirebaseExternalConnectionRowStatusForEntry(entry),
-        enabled: enabled.has(provider.providerType)
+        enabled: enabled.has(provider.providerType),
+        adminOnly: provider.adminOnly === true
       };
     });
 }
