@@ -1,12 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
-import { type Maybe, type Seconds } from '@dereekb/util';
-import { ALL_NOTIFICATION_DELIVERY_METHODS, type NotificationDeliveryMethod, type NotificationDeliveryMethodMap, NotificationHealthCheckStatus } from '@dereekb/firebase';
+import { filterMaybeArrayValues, type Maybe, type Seconds } from '@dereekb/util';
+import { ALL_NOTIFICATION_DELIVERY_METHODS, type NotificationDeliveryMethod, type NotificationDeliveryMethodMap, type NotificationHealthCheckIssueCode, NotificationHealthCheckIssueAutofixType, NotificationHealthCheckStatus } from '@dereekb/firebase';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { DbxActionErrorDirective, DbxButtonComponent, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseNotificationUserHealthCheckStore, type DbxFirebaseNotificationUserHealthCheckRunParams } from '../store/notificationuser.healthcheck.store';
-import { type DbxFirebaseNotificationHealthCheckProbeActionMap, DbxFirebaseNotificationHealthCheckComponent } from '../component/healthcheck.component';
+import { type DbxFirebaseNotificationHealthCheckAutofixActionMap, type DbxFirebaseNotificationHealthCheckProbeActionMap, DbxFirebaseNotificationHealthCheckComponent } from '../component/healthcheck.component';
+import { type DbxFirebaseNotificationHealthCheckIssueAutofixActionConfig } from '../component/healthcheck.issue.component';
 import { DbxFirebaseNotificationHealthCheckPresentationService } from '../service/healthcheck.presentation.service';
 
 /**
@@ -57,13 +58,17 @@ interface DbxFirebaseNotificationHealthCheckProbeNoticeInput {
  * that outcome itself rather than telling the user to come back and re-run the check: the store polls a
  * cheap server-side verification while anything is in flight, and the report — read live from the
  * document — updates the moment the result lands.
+ *
+ * An admin view sets `showIssueDetails` to see the detail behind each finding, and `allowAutofix` to offer
+ * a fix for each finding its provider marked as fixable. Both default to off, since the fix endpoint is
+ * admin-only and the detail is diagnostic.
  */
 @Component({
   selector: 'dbx-firebase-notification-healthcheck-view',
   template: `
     @if (existsSignal()) {
       @if (healthCheckSignal(); as healthCheck) {
-        <dbx-firebase-notification-healthcheck [healthCheck]="healthCheck" [probeActions]="probeActionsSignal()"></dbx-firebase-notification-healthcheck>
+        <dbx-firebase-notification-healthcheck [healthCheck]="healthCheck" [probeActions]="probeActionsSignal()" [currentTargets]="currentDeliveryTargetByMethodSignal()" [showIssueDetails]="showIssueDetails()" [autofixActions]="autofixActionsSignal()"></dbx-firebase-notification-healthcheck>
       } @else {
         <dbx-content-pit class="dbx-mb3">
           <p class="dbx-hint no-margin">Your notification delivery has not been checked yet. Run a check to find out why you may not be receiving notifications.</p>
@@ -100,12 +105,26 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
 
   readonly healthCheckStore = inject(DbxFirebaseNotificationUserHealthCheckStore);
 
+  /**
+   * Whether each finding renders its structured detail, such as when and from which email an address
+   * unsubscribed. For an admin reviewing someone else's delivery.
+   */
+  readonly showIssueDetails = input<Maybe<boolean>>();
+
+  /**
+   * Whether to offer a fix for each finding its provider marked as fixable.
+   *
+   * Only enable this where the viewer is an admin: the server refuses the fix for anyone else.
+   */
+  readonly allowAutofix = input<Maybe<boolean>>();
+
   readonly existsSignal = toSignal(this.healthCheckStore.exists$, { initialValue: false });
   readonly healthCheckSignal = toSignal(this.healthCheckStore.healthCheck$);
   readonly latestHealthCheckResultSignal = toSignal(this.healthCheckStore.latestHealthCheckResult$);
   readonly throttleSecondsRemainingSignal = toSignal(this.healthCheckStore.throttleSecondsRemaining$, { initialValue: 0 });
   readonly isThrottledSignal = toSignal(this.healthCheckStore.isThrottled$, { initialValue: false });
   readonly probeThrottleSecondsRemainingByMethodSignal = toSignal(this.healthCheckStore.probeThrottleSecondsRemainingByMethod$, { initialValue: {} as NotificationDeliveryMethodMap<Seconds> });
+  readonly currentDeliveryTargetByMethodSignal = toSignal(this.healthCheckStore.currentDeliveryTargetByMethod$, { initialValue: {} as NotificationDeliveryMethodMap<Maybe<string>> });
 
   private readonly _lastRequestedProbeMethod = signal<Maybe<NotificationDeliveryMethod>>(undefined);
 
@@ -157,15 +176,20 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
    * Everything the user needs to read about a test message belongs in the section holding the button
    * that sent it, so the notice is composed here rather than in a footer: what was just sent, that its
    * outcome is being watched for, and when another may be sent.
+   *
+   * The confirmation names the method's current destination rather than the one the stored check delivered
+   * to, since the server sends the test message to wherever the method delivers to when it runs.
    */
   readonly probeActionsSignal = computed<DbxFirebaseNotificationHealthCheckProbeActionMap>(() => {
     const secondsRemainingByMethod = this.probeThrottleSecondsRemainingByMethodSignal();
+    const currentTargetByMethod = this.currentDeliveryTargetByMethodSignal();
     const justSentMethod = this.latestHealthCheckResultSignal()?.probesDispatched ? this.lastRequestedProbeMethodSignal() : undefined;
     const probeActions: DbxFirebaseNotificationHealthCheckProbeActionMap = {};
 
     (this.healthCheckSignal()?.m ?? [])
       .filter((methodResult) => methodResult.pb === true)
-      .forEach(({ me: method, tg: target, pr: probe }) => {
+      .forEach(({ me: method, tg: checkedTarget, pr: probe }) => {
+        const target = method in currentTargetByMethod ? currentTargetByMethod[method] : checkedTarget;
         const label = this._presentationService.testMessageLabelForDeliveryMethod(method);
         const noun = this._presentationService.testMessageNounForDeliveryMethod(method);
         const methodLabel = this._presentationService.labelForDeliveryMethod(method).toLowerCase();
@@ -211,6 +235,82 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
     const nextAllowed = secondsRemaining > 0 ? ` Another can be sent in ${formatSecondsRemaining(secondsRemaining)}.` : '';
 
     return sent == null ? undefined : `${sent}${waiting}${nextAllowed}`;
+  }
+
+  /**
+   * The fix handler for each delivery method and issue code, created on first use and then reused.
+   *
+   * Kept stable for the same reason as the test message handlers: `dbxActionHandler` installs its handler
+   * in an effect, so a fresh closure on every recompute would re-install it for no reason.
+   */
+  private readonly _autofixHandlers = new Map<string, WorkUsingContext>();
+
+  /**
+   * The fix to offer for each finding the provider marked as fixable, when this view allows fixes.
+   *
+   * The confirmation says what the fix changes and for which address. An explicit-only fix, such as lifting
+   * a spam complaint, leads with what the recipient chose and when overriding it is acceptable, and is the
+   * only kind of fix sent with `allowExplicitAutofix`.
+   */
+  readonly autofixActionsSignal = computed<Maybe<DbxFirebaseNotificationHealthCheckAutofixActionMap>>(() => {
+    const healthCheck = this.healthCheckSignal();
+    const allowAutofix = this.allowAutofix() === true;
+    const autofixActions: DbxFirebaseNotificationHealthCheckAutofixActionMap = {};
+
+    (allowAutofix ? (healthCheck?.m ?? []) : []).forEach(({ me: method, tg: target, is: issues }) => {
+      const methodAutofixActions: Record<NotificationHealthCheckIssueCode, DbxFirebaseNotificationHealthCheckIssueAutofixActionConfig> = {};
+
+      issues.forEach((issue) => {
+        const autofix = this._presentationService.autofixPresentationForIssue(issue);
+
+        if (autofix != null) {
+          const explicit = issue.af === NotificationHealthCheckIssueAutofixType.EXPLICIT;
+          const destination = target ? `This applies to ${target}.` : undefined;
+          const prompt = filterMaybeArrayValues([autofix.warning, autofix.description, destination, 'Continue?']).join(' ');
+
+          methodAutofixActions[issue.c] = {
+            label: autofix.label,
+            icon: 'build',
+            confirm: {
+              title: autofix.label,
+              prompt,
+              confirmText: autofix.label
+            },
+            handler: this.autofixHandlerFor(method, issue.c, explicit)
+          };
+        }
+      });
+
+      if (Object.keys(methodAutofixActions).length > 0) {
+        autofixActions[method] = methodAutofixActions;
+      }
+    });
+
+    return allowAutofix ? autofixActions : undefined;
+  });
+
+  /**
+   * The fix handler for one finding, reused across recomputes.
+   *
+   * @param method - The delivery method the finding belongs to.
+   * @param code - The finding's issue code.
+   * @param explicit - Whether the fix is explicit-only, and so must be sent with `allowExplicitAutofix`.
+   * @returns The handler that runs the fix as the action's work.
+   */
+  private autofixHandlerFor(method: NotificationDeliveryMethod, code: NotificationHealthCheckIssueCode, explicit: boolean): WorkUsingContext {
+    const handlerKey = `${method}:${code}:${explicit}`;
+    let handler = this._autofixHandlers.get(handlerKey);
+
+    if (handler == null) {
+      handler = (_, context) => {
+        this.healthCheckStore.runHealthCheckAutofix({ method, codes: [code], allowExplicitAutofix: explicit || undefined });
+        context.startWorkingWithLoadingStateObservable(this.healthCheckStore.healthCheckAutofixResultState$);
+      };
+
+      this._autofixHandlers.set(handlerKey, handler);
+    }
+
+    return handler;
   }
 
   readonly handleRunHealthCheck: WorkUsingContext = (_, context) => {

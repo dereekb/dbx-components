@@ -36,6 +36,7 @@ import {
   StorageFileServerActions,
   UserExternalConnectionAccessor,
   UserExternalConnectionOAuthProviderRegistry,
+  UserExternalConnectionProviderPolicyRegistry,
   UserExternalConnectionReader,
   UserExternalConnectionServerActions,
   UserExternalConnectionStateCoder
@@ -105,6 +106,16 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get userExternalConnectionOAuthRegistry(): UserExternalConnectionOAuthProviderRegistry {
     return this.nestApplication.get(UserExternalConnectionOAuthProviderRegistry);
+  }
+
+  /**
+   * The app's per-provider connection policies (`adminOnly`, `tokenExport`, sign-in, uniqueness), as
+   * declared in `UserExternalConnectionModule`.
+   *
+   * @returns The provider policy registry.
+   */
+  get userExternalConnectionProviderPolicyRegistry(): UserExternalConnectionProviderPolicyRegistry {
+    return this.nestApplication.get(UserExternalConnectionProviderPolicyRegistry);
   }
 
   get userExternalConnectionActions(): UserExternalConnectionServerActions {

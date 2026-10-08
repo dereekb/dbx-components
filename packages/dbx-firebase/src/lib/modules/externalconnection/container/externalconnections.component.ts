@@ -72,18 +72,27 @@ export class DbxFirebaseExternalConnectionsComponent {
    */
   private readonly _entriesStateSignal = toSignal(this.dbxFirebaseUserExternalConnectionsStore.entriesLoadingState$, { initialValue: beginLoading() });
 
+  /**
+   * The user's auth roles, or undefined until they resolve. Admin-only rows stay hidden until then, so
+   * they never flash in front of a non-admin.
+   */
+  private readonly _authRolesSignal = toSignal(this.dbxFirebaseAuthService.authRoles$, { initialValue: undefined });
+
   readonly signedInSignal = computed(() => this._currentUidSignal() != null);
 
   readonly errorSignal = computed(() => this._entriesStateSignal().error);
 
   readonly rowsSignal = computed<DbxFirebaseExternalConnectionRow[]>(() => {
     const state = this._entriesStateSignal();
+    const authRoles = this._authRolesSignal();
+    const isAdmin = authRoles != null && this.dbxFirebaseAuthService.isAdminInAuthRoleSet(authRoles);
 
     return dbxFirebaseExternalConnectionRows({
       providers: this.dbxFirebaseExternalConnectionService.getProviders(),
       enabledProviderTypes: this.dbxFirebaseExternalConnectionService.getEnabledTypes(),
       entries: state.value,
-      loading: isLoadingStateLoading(state)
+      loading: isLoadingStateLoading(state),
+      isAdmin
     });
   });
 

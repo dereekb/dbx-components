@@ -1,6 +1,18 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { type FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, type NotificationBoxRecipient, type NotificationUser, type NotificationUserNotificationBoxRecipientConfig, firestoreDummyKey } from '@dereekb/firebase';
-import { updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { afterEach, beforeEach, vi } from 'vitest';
+import {
+  type FirebaseAuthUserId,
+  NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
+  NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
+  type NotificationBoxRecipient,
+  NotificationDeliveryMethod,
+  type NotificationMessage,
+  type NotificationMessageInputContext,
+  type NotificationUser,
+  type NotificationUserNotificationBoxRecipientConfig,
+  firestoreDummyKey
+} from '@dereekb/firebase';
+import { notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 
 // more utils are tested in demo-api/.../notification.util.spec.ts so that it has access to authService and other configured services.
@@ -354,5 +366,41 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         });
       });
     });
+  });
+});
+
+describe('notificationMessageFunctionWithUnlistedDeliveryMethodsWarning()', () => {
+  const inputContext: NotificationMessageInputContext = { recipient: { n: 'Recipient' } };
+  const messageFunction = async (x: NotificationMessageInputContext): Promise<NotificationMessage> => ({ inputContext: x, content: { title: 'Title' }, emailContent: { title: 'Title' }, textContent: { title: 'Title' } });
+
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  it('should warn once when a message has content for a delivery method the template type does not list', async () => {
+    const buildMessage = notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({ messageFunction, templateTypeInfo: { type: 'CAL_INV', userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] }, notificationId: 'n1' });
+
+    const message = await buildMessage(inputContext);
+    await buildMessage(inputContext);
+
+    expect(message.textContent).toEqual({ title: 'Title' });
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain(NotificationDeliveryMethod.TEXT);
+  });
+
+  it('should not warn when the template type lists every delivery method the messages have content for', async () => {
+    const buildMessage = notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({ messageFunction, templateTypeInfo: { type: 'E', userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT] } });
+    await buildMessage(inputContext);
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('should return the message function itself without template type info', () => {
+    expect(notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({ messageFunction, templateTypeInfo: undefined })).toBe(messageFunction);
   });
 });

@@ -4,6 +4,8 @@ import {
   type CallModelOidcScope,
   CLI_TOKEN_OIDC_SCOPE,
   type CliTokenOidcScope,
+  EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE,
+  type ExternalConnectionTokenOidcScope,
   FIRESTORE_SESSION_OIDC_SCOPE_DETAILS,
   type FirestoreSessionOidcScope,
   type OidcProviderProfile,
@@ -16,6 +18,7 @@ import {
   STANDARD_OIDC_SCOPE_DETAILS,
   type StandardOidcScope
 } from '@dereekb/firebase';
+import { type Seconds, SECONDS_IN_HOUR } from '@dereekb/util';
 
 // MARK: Scopes
 /**
@@ -41,6 +44,11 @@ import {
  *   CLI login credential for itself. Unlocked only by the {@link CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY}
  *   provider profile, so it is part of {@link DemoOidcProviderProfileScope} rather than of the general
  *   picker — see {@link DEMO_OIDC_PROVIDER_PROFILES}.
+ * - {@link ExternalConnectionTokenOidcScope} (`token.external`): admin-only scope that lets a session
+ *   mint a short-lived access token for one of the caller's own exportable external connections
+ *   (`GET /api/session/external/:providerType`, e.g. the `zoho_admin` token `zoho-cli` runs on).
+ *   Unlocked only by the {@link EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY} provider profile, so it too is
+ *   part of {@link DemoOidcProviderProfileScope} rather than of the general picker.
  */
 export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope | FirestoreSessionOidcScope | DemoOidcProviderProfileScope;
 
@@ -70,6 +78,26 @@ export const REPORTS_OIDC_SCOPE = 'reports' as const;
  */
 export const CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY = 'cli-handoff';
 
+/**
+ * Key of the admin-only provider profile that unlocks {@link EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}.
+ *
+ * A PROFILE for the same reason as {@link CLI_HANDOFF_OIDC_PROVIDER_PROFILE_KEY}: only a client an admin
+ * explicitly assigned it to can obtain `token.external`. Unlike `cli-handoff` it is NEVER a default
+ * profile, not even outside production — the scope reaches a third-party account off-platform, so the
+ * per-client assignment is part of the gate. demo-cli's dedicated `external-token` env requests the
+ * scope on its own, so an everyday login never carries it.
+ */
+export const EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY = 'external-token';
+
+/**
+ * Longest a grant carrying `token.external` may live: {@link OidcProviderProfile.maxSessionTtl} of the
+ * {@link EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY} profile.
+ *
+ * A grant that can mint third-party tokens is re-consented at least once a working day, so a leaked
+ * refresh token for it stops minting within hours rather than lasting as long as an ordinary login.
+ */
+export const DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL: Seconds = 8 * SECONDS_IN_HOUR;
+
 export type LmsOidcScope = typeof LMS_OIDC_SCOPE;
 export type ReportsOidcScope = typeof REPORTS_OIDC_SCOPE;
 
@@ -82,8 +110,10 @@ export type ReportsOidcScope = typeof REPORTS_OIDC_SCOPE;
  * - {@link LMS_OIDC_SCOPE} (`lms`): unlocked (and force-required) by the `lms` profile.
  * - {@link REPORTS_OIDC_SCOPE} (`reports`): unlocked (optional) by the `reports` profile.
  * - {@link CliTokenOidcScope} (`token.cli`): unlocked (optional) by the admin-only `cli-handoff` profile.
+ * - {@link ExternalConnectionTokenOidcScope} (`token.external`): unlocked (optional) by the admin-only
+ *   `external-token` profile.
  */
-export type DemoOidcProviderProfileScope = LmsOidcScope | ReportsOidcScope | CliTokenOidcScope;
+export type DemoOidcProviderProfileScope = LmsOidcScope | ReportsOidcScope | CliTokenOidcScope | ExternalConnectionTokenOidcScope;
 
 /**
  * Frontend base path for the demo app's OAuth interaction pages.
@@ -98,7 +128,7 @@ export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
 /**
  * All available OIDC scopes for the demo app, suitable for use in scope picker fields.
  *
- * NOTE: {@link DemoOidcProviderProfileScope} scopes (`lms`, `reports`, `token.cli`) are intentionally excluded — they
+ * NOTE: {@link DemoOidcProviderProfileScope} scopes (`lms`, `reports`, `token.cli`, `token.external`) are intentionally excluded — they
  * are restricted and unlocked only via an {@link OidcProviderProfile} (see {@link DEMO_OIDC_PROVIDER_PROFILES}).
  * This is the `assignmentOnlyScopesForOidcProviderProfiles` set: no demo profile is marked `isDefault`,
  * so every gated scope requires an explicit assignment. Were a default profile added, its scopes would
@@ -113,6 +143,8 @@ export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [..
  * - `lms`: unlocks and force-requires the `lms` scope. Every LMS client's token carries `lms`.
  * - `reports`: unlocks the `reports` scope as optional (the client may request it, but it is not forced).
  * - `cli-handoff`: unlocks the admin-only `token.cli` scope as optional.
+ * - `external-token`: unlocks the admin-only `token.external` scope as optional, capping the grant at
+ *   {@link DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL}.
  */
 export const DEMO_OIDC_PROVIDER_PROFILES: OidcProviderProfile<DemoOidcScope>[] = demoOidcProviderProfiles({ unlockCliHandoffByDefault: false });
 
@@ -160,6 +192,17 @@ export function demoOidcProviderProfiles(config: DemoOidcProviderProfilesConfig 
       adminOnly: true,
       ...(unlockCliHandoffByDefault ? { isDefault: true } : undefined),
       scopes: [{ scope: CLI_TOKEN_OIDC_SCOPE, require: 'none' }]
+    },
+    {
+      key: EXTERNAL_TOKEN_OIDC_PROVIDER_PROFILE_KEY,
+      label: 'External connection tokens (admin)',
+      description: 'Admin-only: mint short-lived access tokens for your own connected third-party accounts (e.g. for zoho-cli)',
+      // admin-only through the profile, NOT `adminOnlyScopes`, for the same reason as `cli-handoff`: that
+      // array selects the 365-day service-token TTL tier. Never `isDefault` in any environment — the
+      // per-client assignment is part of the gate.
+      adminOnly: true,
+      maxSessionTtl: DEMO_EXTERNAL_TOKEN_OIDC_MAX_SESSION_TTL,
+      scopes: [{ scope: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, require: 'none' }]
     }
   ];
 }

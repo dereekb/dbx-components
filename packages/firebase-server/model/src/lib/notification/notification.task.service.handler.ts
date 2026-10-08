@@ -37,6 +37,8 @@ export interface NotificationTaskServiceTaskHandlerConfig<D extends Notification
 export interface NotificationTaskServiceConfig {
   /**
    * List of expected {@link NotificationTaskType} values, used to verify all types have registered handlers.
+   *
+   * {@link notificationTaskService} throws when one of them has no handler in {@link handlers}.
    */
   readonly validate?: NotificationTaskType[];
   /**
@@ -54,6 +56,7 @@ export interface NotificationTaskServiceConfig {
  *
  * @param config - Handler configurations and optional validation list.
  * @returns A {@link NotificationTaskService} that dispatches tasks to the registered handlers.
+ * @throws {Error} When a task type in `validate` has no handler.
  *
  * @example
  * ```ts
@@ -79,6 +82,12 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
     const { type } = handlerConfig;
     handlers[type] = handlerForConfig(handlerConfig);
   });
+
+  const missingHandlerTypes = (config.validate ?? []).filter((type) => handlers[type] == null);
+
+  if (missingHandlerTypes.length) {
+    throw new Error(`notificationTaskService(): no handler is configured for these task types listed in validate: ${missingHandlerTypes.join(', ')}.`);
+  }
 
   function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig<any, any>): NotificationTaskServiceTaskHandler {
     const { flow: inputFlows, allowRunMultipleParts } = handlerConfig;

@@ -6,6 +6,8 @@ import { FIREBASE_SERVER_MCP_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/fi
 import { CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/calcom';
 import { DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/discord';
 import { ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE } from '@dereekb/firebase-server/zoho';
+import { userExternalConnectionOAuthRoutesForGlobalRouteExclude } from '@dereekb/firebase-server/model';
+import { DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 import { DemoApiAppModule } from './app.module';
 import { initUserOnCreate } from './function';
 import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
@@ -21,7 +23,9 @@ export const DEMO_API_NEST_SERVER_CONFIG: NestServerInstanceConfig<DemoApiAppMod
       ...FIREBASE_SERVER_MCP_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE,
       ...CALCOM_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE,
       ...DISCORD_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE,
-      ...ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE
+      ...ZOHO_USER_EXTERNAL_CONNECTION_OAUTH_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE,
+      // the second Zoho connection (DemoZohoAdminOAuthCallbackModule) mounts at /oauth/zoho_admin
+      ...userExternalConnectionOAuthRoutesForGlobalRouteExclude(DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE)
     ]
   },
   configureNestServerInstance: (nestApp: INestApplication) => {

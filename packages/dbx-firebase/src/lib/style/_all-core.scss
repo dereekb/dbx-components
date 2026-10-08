@@ -1,10 +1,12 @@
 @use '../auth/login/login';
 @use '../modules/externalconnection/externalconnection';
+@use '../modules/notification/notification';
 @use '../model/model';
 
 // Includes all theming config
 @mixin all-component-core($theme-config) {
   @include login.core();
   @include externalconnection.core();
+  @include notification.core();
   @include model.all-model-core($theme-config);
 }

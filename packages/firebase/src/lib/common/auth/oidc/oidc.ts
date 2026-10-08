@@ -257,6 +257,34 @@ export const CLI_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<CliTokenO
   description: 'Admin-only: mint a short-lived CLI login credential from this session'
 };
 
+// MARK: External Connection Token Scope
+/**
+ * Custom OIDC scope that lets a session read a short-lived ACCESS token for one of the caller's own
+ * third-party connections (a `UserExternalConnection` provider) — e.g. a Zoho token handed to a
+ * provider CLI so it can call Zoho without its own login.
+ *
+ * Only the provider's access token ever leaves the server: the refresh token and the OAuth client
+ * secret stay on it, and the server keeps the stored token renewed. Which connections may be read this
+ * way is the app's choice — the endpoint refuses any provider type the app did not mark exportable.
+ *
+ * Scope-gating alone is NOT a sufficient gate: `oidcScopesFromScopeClaim` returns `undefined` for a
+ * non-OIDC caller (a plain Firebase ID token) and every enforcement site treats `undefined` as
+ * "skip". The endpoint's app-supplied predicate is the load-bearing check; this scope is defence in
+ * depth.
+ */
+export const EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE = 'token.external' as const;
+
+export type ExternalConnectionTokenOidcScope = typeof EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE;
+
+/**
+ * Pre-built scope picker entry for {@link EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}.
+ */
+export const EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<ExternalConnectionTokenOidcScope> = {
+  label: 'Connected app tokens',
+  value: EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE,
+  description: 'Read short-lived access tokens for your connected third-party apps'
+};
+
 // MARK: Scope Terms (callModel AND-of-ORs enforcement)
 /**
  * A single requirement TERM in the callModel OIDC scope model.

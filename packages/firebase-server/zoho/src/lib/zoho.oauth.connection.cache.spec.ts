@@ -28,7 +28,7 @@ function makeStoredCredentials(overrides?: Partial<UserExternalConnectionCredent
   };
 }
 
-function makeCache(stored: Maybe<UserExternalConnectionCredentials>) {
+function makeCache(stored: Maybe<UserExternalConnectionCredentials>, providerType?: Maybe<string>) {
   const writes: CapturedWrite[] = [];
 
   const accessor: UserExternalConnectionAccessor = {
@@ -48,7 +48,7 @@ function makeCache(stored: Maybe<UserExternalConnectionCredentials>) {
     }
   };
 
-  return { cache: userExternalConnectionZohoAccessTokenCache({ accessor, actions, uid: TEST_UID }), writes };
+  return { cache: userExternalConnectionZohoAccessTokenCache({ accessor, actions, uid: TEST_UID, providerType }), writes };
 }
 
 describe('zohoAccessTokenFromUserExternalConnectionCredentials()', () => {
@@ -117,6 +117,15 @@ describe('userExternalConnectionZohoAccessTokenCache()', () => {
       expect(writes[0].providerType).toBe(ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE);
       expect(writes[0].credentials.accessToken).toBe('renewed-access-token');
       expect(writes[0].credentials.extra?.['apiDomain']).toBe('https://www.zohoapis.eu');
+    });
+
+    it('should write to the configured provider type', async () => {
+      // an app registering a second Zoho connection reads and writes it under its own provider type
+      const { cache, writes } = makeCache(makeStoredCredentials(), 'zoho_admin');
+
+      await cache.updateCachedToken(renewed);
+
+      expect(writes[0].providerType).toBe('zoho_admin');
     });
 
     it('should retain the refresh token and the accounts server', async () => {

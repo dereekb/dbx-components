@@ -10,7 +10,8 @@
  */
 import { type PromiseOrValue, type Building, type Maybe, type WebsiteUrl, type NameEmailPair, type ArrayOrValue } from '@dereekb/util';
 import { type ICalendarIcsString, type ICalendarMethod } from '@dereekb/date';
-import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
+import { NotificationDeliveryMethod, type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
+import { type NotificationTemplateTypeInfo, notificationTemplateTypeInfoUserConfigurableDeliveryMethods } from './notification.details';
 import { type NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type DocumentDataWithIdAndKey } from '../../common';
@@ -432,4 +433,25 @@ export function noContentNotificationMessageFunctionFactory<D extends Notificati
       return result;
     };
   };
+}
+
+/**
+ * Returns the delivery methods that a message has channel-specific content for, but that its template type does not list in
+ * `userConfigurableDeliveryMethods`. For example, `textContent` returned for a template type that is only sent by email.
+ *
+ * The shared `content` is used by every delivery method, so only `emailContent`, `textContent` and `notificationSummaryContent` are checked.
+ *
+ * @param message - The message returned by a {@link NotificationMessageFunction}.
+ * @param templateTypeInfo - The info of the message's template type.
+ * @returns The delivery methods the message has content for that the template type does not list, in canonical order.
+ */
+export function notificationMessageUnlistedDeliveryMethods(message: Pick<NotificationMessage, 'emailContent' | 'textContent' | 'notificationSummaryContent'>, templateTypeInfo: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods'>): NotificationDeliveryMethod[] {
+  const listed = new Set(notificationTemplateTypeInfoUserConfigurableDeliveryMethods(templateTypeInfo));
+  const contentDeliveryMethods: [unknown, NotificationDeliveryMethod][] = [
+    [message.emailContent, NotificationDeliveryMethod.EMAIL],
+    [message.textContent, NotificationDeliveryMethod.TEXT],
+    [message.notificationSummaryContent, NotificationDeliveryMethod.NOTIFICATION_SUMMARY]
+  ];
+
+  return contentDeliveryMethods.filter(([content, method]) => content != null && !listed.has(method)).map(([, method]) => method);
 }

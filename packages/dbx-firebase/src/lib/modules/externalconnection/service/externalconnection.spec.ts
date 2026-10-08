@@ -75,4 +75,27 @@ describe('dbxFirebaseExternalConnectionRows()', () => {
     expect(result[0].entry).toBe(entry);
     expect(result[0].status).toBe('error');
   });
+
+  describe('admin-only providers', () => {
+    const adminProvider: DbxFirebaseExternalConnectionProvider = { providerType: 'zoho_admin', assets: { providerName: 'Zoho (Admin)' }, adminOnly: true };
+    const adminProviders = [calcomProvider, adminProvider];
+
+    it('should hide an admin-only provider from a non-admin', () => {
+      const result = dbxFirebaseExternalConnectionRows({ providers: adminProviders, enabledProviderTypes: ['calcom', 'zoho_admin'], entries: {} });
+      expect(result.map((x) => x.providerType)).toEqual(['calcom']);
+    });
+
+    it('should hide an admin-only provider from a non-admin even when they hold an entry for it', () => {
+      const result = dbxFirebaseExternalConnectionRows({ providers: adminProviders, enabledProviderTypes: ['calcom', 'zoho_admin'], entries: { zoho_admin: { st: 'connected', uat: now } }, isAdmin: false });
+      expect(result.map((x) => x.providerType)).toEqual(['calcom']);
+    });
+
+    it('should show an admin-only provider to an admin, marked admin-only', () => {
+      const result = dbxFirebaseExternalConnectionRows({ providers: adminProviders, enabledProviderTypes: ['calcom', 'zoho_admin'], entries: {}, isAdmin: true });
+
+      expect(result.map((x) => x.providerType)).toEqual(['calcom', 'zoho_admin']);
+      expect(result[0].adminOnly).toBe(false);
+      expect(result[1].adminOnly).toBe(true);
+    });
+  });
 });

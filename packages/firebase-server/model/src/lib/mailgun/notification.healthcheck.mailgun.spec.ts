@@ -8,6 +8,7 @@ import {
   KnownNotificationHealthCheckIssueCode,
   MailgunNotificationHealthCheckIssueCode,
   NotificationDeliveryMethod,
+  NotificationHealthCheckIssueAutofixType,
   NotificationHealthCheckStatus
 } from '@dereekb/firebase';
 import { type MailgunBounceSuppression, type MailgunComplaintSuppression, type MailgunDomainEvent, type MailgunEmailValidationResult, type MailgunService, type MailgunTemplateEmailRequest, type MailgunUnsubscribeSuppression, MailgunEventName, MailgunEventSeverity } from '@dereekb/nestjs/mailgun';
@@ -51,6 +52,14 @@ interface MockMailgunServiceConfig {
    * Events returned for a `message-id` query — the probe correlation lookup.
    */
   readonly probeEvents?: MailgunDomainEvent[];
+  /**
+   * Events returned for an `event`-filtered query — the lookup of what triggered a suppression.
+   */
+  readonly suppressionEvents?: MailgunDomainEvent[];
+  /**
+   * The rejection suppressions.destroy() gives for a list, keyed by list name. Lists not present succeed.
+   */
+  readonly destroyErrors?: Record<string, { readonly status: number; readonly message: string }>;
   readonly validation?: Maybe<Partial<MailgunEmailValidationResult>>;
   readonly sendResult?: Maybe<{ id?: string; status?: number; message?: string }>;
   readonly sendError?: boolean;
@@ -58,6 +67,10 @@ interface MockMailgunServiceConfig {
 
 interface MockMailgunServiceCaptures {
   readonly eventQueries: Record<string, any>[];
+  /**
+   * Each suppression removal, as `[list, address]`.
+   */
+  readonly destroyedSuppressions: string[][];
   readonly validatedAddresses: string[];
   readonly sentRequests: MailgunTemplateEmailRequest[];
 }
@@ -68,9 +81,9 @@ interface MockMailgunService {
 }
 
 function createMockMailgunService(config: MockMailgunServiceConfig = {}): MockMailgunService {
-  const { domainResult, domainError, bounce, complaint, unsubscribe, suppressionsError, recentEvents, probeEvents, validation, sendResult, sendError } = config;
+  const { domainResult, domainError, bounce, complaint, unsubscribe, suppressionsError, recentEvents, probeEvents, suppressionEvents, destroyErrors, validation, sendResult, sendError } = config;
 
-  const captures: MockMailgunServiceCaptures = { eventQueries: [], validatedAddresses: [], sentRequests: [] };
+  const captures: MockMailgunServiceCaptures = { eventQueries: [], destroyedSuppressions: [], validatedAddresses: [], sentRequests: [] };
   const suppressionRecords: Record<string, unknown> = { bounces: bounce, complaints: complaint, unsubscribes: unsubscribe };
 
   const mailgunService = {
@@ -85,12 +98,26 @@ function createMockMailgunService(config: MockMailgunServiceConfig = {}): MockMa
         get: (_domain: string, list: string) => {
           const record = suppressionsError ? undefined : suppressionRecords[list];
           return record ? Promise.resolve(record) : Promise.reject(new Error('not found'));
+        },
+        destroy: (_domain: string, list: string, address: string) => {
+          captures.destroyedSuppressions.push([list, address]);
+          const error = destroyErrors?.[list];
+          return error ? Promise.reject(Object.assign(new Error(error.message), { status: error.status })) : Promise.resolve({ message: 'removed', value: '', address });
         }
       },
       events: {
         get: (_domain: string, query: Record<string, any>) => {
           captures.eventQueries.push(query);
-          const items = query['message-id'] == null ? recentEvents : probeEvents;
+          let items: Maybe<MailgunDomainEvent[]>;
+
+          if (query['message-id'] != null) {
+            items = probeEvents;
+          } else if (query['event'] == null) {
+            items = recentEvents;
+          } else {
+            items = suppressionEvents?.filter((x) => x.event === query['event']);
+          }
+
           return Promise.resolve({ items: items ?? [] });
         }
       },
@@ -244,6 +271,63 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       const { response } = await runHealthCheck({ mock: { bounce, complaint, unsubscribe } });
 
       expect(issueCodes(response)).toEqual(expect.arrayContaining([MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE]));
+    });
+
+    it('should mark a bounce and an unsubscribe as fixable, and a spam complaint as fixable only when explicitly allowed', async () => {
+      const { response } = await runHealthCheck({ mock: { bounce, complaint, unsubscribe } });
+
+      expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE)?.af).toBe(NotificationHealthCheckIssueAutofixType.STANDARD);
+      expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE)?.af).toBe(NotificationHealthCheckIssueAutofixType.STANDARD);
+      expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT)?.af).toBe(NotificationHealthCheckIssueAutofixType.EXPLICIT);
+    });
+
+    it('should not mark findings other than suppressions as fixable', async () => {
+      const { response } = await runHealthCheck({ mock: { domainResult: { state: 'unverified' }, recentEvents: [] } });
+      expect(response.issues.every((x) => x.af == null)).toBe(true);
+    });
+
+    describe('triggering email lookup', () => {
+      const unsubscribedEvent = makeTestEvent({ event: MailgunEventName.UNSUBSCRIBED, message: { headers: { subject: 'Your weekly schedule' } } as MailgunDomainEvent['message'] });
+      const complainedEvent = makeTestEvent({ event: MailgunEventName.COMPLAINED, message: { headers: { subject: 'A new job is available' } } as MailgunDomainEvent['message'] });
+
+      it('should record the subject of the email an address unsubscribed from', async () => {
+        const { response } = await runHealthCheck({ mock: { unsubscribe, suppressionEvents: [unsubscribedEvent] } });
+        expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE)?.d?.['subject']).toBe('Your weekly schedule');
+      });
+
+      it('should record the subject of the email that was reported as spam', async () => {
+        const { response } = await runHealthCheck({ mock: { complaint, suppressionEvents: [complainedEvent] } });
+        expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT)?.d?.['subject']).toBe('A new job is available');
+      });
+
+      it('should search around the time the suppression was created', async () => {
+        const { captures } = await runHealthCheck({ mock: { unsubscribe } });
+        const lookup = captures.eventQueries.find((x) => x['event'] === MailgunEventName.UNSUBSCRIBED);
+
+        expect(lookup?.['recipient']).toBe(TEST_TARGET);
+        expect(new Date(lookup?.['begin']).getTime()).toBeLessThan(TEST_NOW.getTime());
+        expect(new Date(lookup?.['end']).getTime()).toBeGreaterThan(TEST_NOW.getTime());
+      });
+
+      it('should leave the subject out when the event is no longer available', async () => {
+        const { response } = await runHealthCheck({ mock: { unsubscribe, suppressionEvents: [] } });
+        const issue = issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE);
+
+        expect(issue?.d).toBeDefined();
+        expect(issue?.d && 'subject' in issue.d).toBe(false);
+      });
+
+      it('should not look anything up when the address is not suppressed', async () => {
+        const { captures } = await runHealthCheck();
+        expect(captures.eventQueries.some((x) => x['event'] != null)).toBe(false);
+      });
+
+      it('should not look anything up when the lookup is turned off', async () => {
+        const { response, captures } = await runHealthCheck({ mock: { unsubscribe, suppressionEvents: [unsubscribedEvent] }, service: { lookupSuppressionEvents: false } });
+
+        expect(captures.eventQueries.some((x) => x['event'] != null)).toBe(false);
+        expect(issueForCode(response, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE)?.d?.['subject']).toBeUndefined();
+      });
     });
 
     it('should treat a failed suppression lookup as the address not being listed', async () => {
@@ -510,5 +594,53 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       expect(captures.sentRequests).toHaveLength(0);
       expect(issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_DELIVERED)).toBeDefined();
     });
+  });
+});
+
+describe('mailgunNotificationEmailSendServiceHealthCheckService().runAutofix()', () => {
+  async function runAutofix(codes: NotificationHealthCheckIssueCode[], mock?: MockMailgunServiceConfig) {
+    const { mailgunService, captures } = createMockMailgunService(mock);
+    const healthCheckService = mailgunNotificationEmailSendServiceHealthCheckService({ mailgunService });
+    const response = await healthCheckService.runAutofix!({ method: NotificationDeliveryMethod.EMAIL, target: TEST_TARGET, uid: TEST_UID, codes, now: TEST_NOW });
+    return { response, captures };
+  }
+
+  it('should remove the address from the list matching each suppression', async () => {
+    const { response, captures } = await runAutofix([MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT]);
+
+    expect(captures.destroyedSuppressions).toEqual(
+      expect.arrayContaining([
+        ['unsubscribes', TEST_TARGET],
+        ['bounces', TEST_TARGET],
+        ['complaints', TEST_TARGET]
+      ])
+    );
+    expect(captures.destroyedSuppressions).toHaveLength(3);
+    expect(response.results.map((x) => x.code)).toEqual([MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_COMPLAINT]);
+    expect(response.results.every((x) => x.fixed)).toBe(true);
+  });
+
+  it('should report an address that was already off the list as fixed', async () => {
+    const { response } = await runAutofix([MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE], { destroyErrors: { unsubscribes: { status: 404, message: 'Address not found' } } });
+
+    expect(response.results[0].fixed).toBe(true);
+    expect(response.results[0].message).toContain('no longer');
+  });
+
+  it('should report a removal the provider refused as not fixed, with the reason', async () => {
+    const { response } = await runAutofix([MailgunNotificationHealthCheckIssueCode.SUPPRESSED_BOUNCE, MailgunNotificationHealthCheckIssueCode.SUPPRESSED_UNSUBSCRIBE], { destroyErrors: { bounces: { status: 500, message: 'Internal error' } } });
+    const [bounceResult, unsubscribeResult] = response.results;
+
+    expect(bounceResult.fixed).toBe(false);
+    expect(bounceResult.message).toContain('Internal error');
+    // one failure does not stop the other fixes
+    expect(unsubscribeResult.fixed).toBe(true);
+  });
+
+  it('should not fix a code that is not a suppression', async () => {
+    const { response, captures } = await runAutofix([MailgunNotificationHealthCheckIssueCode.RECENT_DELIVERY_FAILURE]);
+
+    expect(response.results[0].fixed).toBe(false);
+    expect(captures.destroyedSuppressions).toHaveLength(0);
   });
 });

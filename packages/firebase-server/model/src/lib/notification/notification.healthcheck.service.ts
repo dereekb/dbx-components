@@ -11,7 +11,7 @@
  * {@link NotificationSendServiceHealthCheckService}.
  */
 import { type EmailAddress, type E164PhoneNumber, type Maybe } from '@dereekb/util';
-import { type FirebaseAuthUserId, type NotificationDeliveryMethod, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, type NotificationSummaryId, type NotificationTemplateType } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type NotificationDeliveryMethod, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode, type NotificationHealthCheckProbe, type NotificationSummaryId, type NotificationTemplateType } from '@dereekb/firebase';
 
 /**
  * Input to a {@link NotificationSendServiceHealthCheckService}.
@@ -71,11 +71,56 @@ export interface NotificationSendServiceHealthCheckResponse {
 }
 
 /**
+ * Input to {@link NotificationSendServiceHealthCheckService.runAutofix}.
+ *
+ * @template T - The delivery target type for the method (email address, phone number, summary id).
+ */
+export interface NotificationSendServiceHealthCheckAutofixRequest<T = unknown> {
+  /**
+   * The delivery method being fixed.
+   */
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * The delivery target to fix, as recorded by the health check that reported the issues.
+   */
+  readonly target: T;
+  /**
+   * The user the fix is being applied for.
+   */
+  readonly uid: FirebaseAuthUserId;
+  /**
+   * The codes of the issues to fix.
+   *
+   * Every code was reported by this service on the stored health check and marked fixable, and any
+   * {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} fix among them has been explicitly allowed.
+   * The service only has to apply them.
+   */
+  readonly codes: NotificationHealthCheckIssueCode[];
+  /**
+   * The time the fix started.
+   */
+  readonly now: Date;
+}
+
+/**
+ * Output of {@link NotificationSendServiceHealthCheckService.runAutofix}.
+ */
+export interface NotificationSendServiceHealthCheckAutofixResponse {
+  /**
+   * The outcome of each requested fix, one per requested code.
+   */
+  readonly results: NotificationHealthCheckIssueAutofixResult[];
+}
+
+/**
  * Contributes provider-specific diagnostics for one delivery method.
  *
  * Implementations should be failure-tolerant: if a provider API is unreachable, report that as an
  * {@link NotificationHealthCheckStatus.UNKNOWN} issue rather than throwing, so the rest of the health
  * check still reaches the user.
+ *
+ * A service that can repair some of what it reports also implements {@link runAutofix}, and marks each
+ * issue it can repair with an `autofix` type so a caller knows what it may ask to have fixed.
  *
  * @template T - The delivery target type for the method.
  *
@@ -106,6 +151,16 @@ export interface NotificationSendServiceHealthCheckService<T = unknown> {
    * @returns The provider's findings and probe state.
    */
   runHealthCheck(request: NotificationSendServiceHealthCheckRequest<T>): Promise<NotificationSendServiceHealthCheckResponse>;
+  /**
+   * Optional. Fixes issues this service reported as fixable.
+   *
+   * Like {@link runHealthCheck}, it should be failure-tolerant: a fix that could not be applied is
+   * reported as an unfixed result rather than thrown, so the other fixes in the request still go through.
+   *
+   * @param request - The target and the issue codes to fix.
+   * @returns The outcome of each fix.
+   */
+  runAutofix?(request: NotificationSendServiceHealthCheckAutofixRequest<T>): Promise<NotificationSendServiceHealthCheckAutofixResponse>;
 }
 
 /**

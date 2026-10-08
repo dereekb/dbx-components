@@ -9,7 +9,7 @@ import { type NotificationSummary, type Notification, type NotificationBox, type
 import { toISODateString, toISO8601DayStringForUTC } from '@dereekb/date';
 import { type NotificationBoxSendExclusion } from './notification.id';
 import { addDays } from 'date-fns';
-import { type ArrayOrValue } from '@dereekb/util';
+import { type ArrayOrValue, type E164PhoneNumber } from '@dereekb/util';
 
 // MARK: NotificationUser
 /**
@@ -42,6 +42,41 @@ export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConst
  */
 export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<NotificationBoxSendExclusion>): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('x', 'array-contains-any', exclusionId)];
+}
+
+/**
+ * Query constraints for finding {@link NotificationUser} documents whose texting number (`gc.t`) is the given phone number.
+ *
+ * Used by the text opt-out sync to find the users a STOP reply came from.
+ *
+ * @param phoneNumber - The texting number to match.
+ * @returns Array of Firestore query constraints filtering for users with that texting number.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationUser
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ */
+export function notificationUsersWithTextPhoneNumberQuery(phoneNumber: E164PhoneNumber): FirestoreQueryConstraint[] {
+  // the typed where only allows top-level keys, so the nested gc.t path uses the untyped where
+  return [where('gc.t', '==', phoneNumber)];
+}
+
+/**
+ * Query constraints for finding {@link NotificationUser} documents that have the given phone number in their stopped numbers (`tso`).
+ *
+ * Used by the text opt-out sync to find the users a START reply turns texts back on for.
+ *
+ * @param phoneNumber - The stopped phone number to match.
+ * @returns Array of Firestore query constraints filtering for users that stopped that number.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel NotificationUser
+ * @dbxModelFirebaseIndexScope COLLECTION
+ * @dbxModelFirebaseIndexCategory lookup
+ */
+export function notificationUsersWithStoppedTextPhoneNumberQuery(phoneNumber: E164PhoneNumber): FirestoreQueryConstraint[] {
+  return [where<NotificationUser>('tso', 'array-contains', phoneNumber)];
 }
 
 // MARK: NotificationSummary

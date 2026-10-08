@@ -1,7 +1,7 @@
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type ZohoApiUrl, type ZohoApiUrlKey, type ZohoConfig, type ZohoApiServiceName } from '../zoho.config';
-import { type ZohoAccessTokenStringFactory, type ZohoServiceAccessTokenKey } from '../accounts';
+import { type ZohoAccessTokenStringFactory, type ZohoDatacenterApiUrlInput, type ZohoServiceAccessTokenKey, zohoDatacenterApiDomain, zohoDatacenterDomain } from '../accounts';
 import { type ZohoRateLimiterRef } from '../zoho.limit';
 
 /**
@@ -44,6 +44,26 @@ export function zohoCrmConfigApiUrl(input: ZohoCrmConfigApiUrlInput): ZohoApiUrl
       break;
   }
   return result;
+}
+
+/**
+ * Resolves the Zoho CRM API URL of a datacenter. Production CRM is served from the datacenter's api
+ * domain (e.g. `https://www.zohoapis.eu/crm`), and the sandbox from its `crmsandbox` host.
+ *
+ * {@link zohoCrmConfigApiUrl}'s keys always target the `us` datacenter; use this for an account
+ * that lives in another one (e.g. one whose access token reports `location: 'eu'`).
+ *
+ * @param input - The datacenter (default `us`) and mode (default `production`).
+ * @returns The full Zoho CRM API base URL for that datacenter.
+ *
+ * @example
+ * ```typescript
+ * zohoCrmConfigApiUrlForDatacenter({ datacenter: 'eu' }); // 'https://www.zohoapis.eu/crm'
+ * zohoCrmConfigApiUrlForDatacenter({ datacenter: 'eu', mode: 'sandbox' }); // 'https://crmsandbox.zoho.eu/crm'
+ * ```
+ */
+export function zohoCrmConfigApiUrlForDatacenter(input?: Maybe<ZohoDatacenterApiUrlInput>): ZohoCrmApiUrl {
+  return input?.mode === 'sandbox' ? `https://crmsandbox.${zohoDatacenterDomain(input)}/crm` : `${zohoDatacenterApiDomain(input)}/crm`;
 }
 
 /**

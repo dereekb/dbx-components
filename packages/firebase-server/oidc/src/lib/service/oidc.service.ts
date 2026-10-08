@@ -6,6 +6,7 @@ import {
   DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA,
   DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM,
   DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM,
+  capLoginDurationSeconds,
   parseRequestedSessionTtlSeconds,
   readRemainingGrantSeconds,
   readRequestedSessionTtlSeconds,
@@ -44,6 +45,13 @@ export interface ResolveLoginDurationTier {
    * Whether the grant being created carries an admin-only service-token scope.
    */
   readonly hasServiceScope: boolean;
+  /**
+   * Cap (seconds) from the provider profiles unlocking a scope the grant carries
+   * (`OidcProviderProfile.maxSessionTtl`). Applied last, so it wins over the server minimum and every tier.
+   *
+   * @see maxSessionTtlForOidcProviderProfileScopes
+   */
+  readonly maxSessionTtl?: Maybe<number>;
 }
 
 // MARK: JWT Access Tokens
@@ -101,6 +109,9 @@ export class OidcService {
    * {@link OidcModuleConfig.maxRequestedLoginDuration} ceiling so a service token can intentionally
    * exceed it.
    *
+   * A `tier.maxSessionTtl` cap (from the provider profiles unlocking a scope the grant carries) is
+   * applied last, after the server minimum, so it always wins.
+   *
    * @param requestedRawTtl - The raw `dbx_session_ttl` value from `interaction.params`, if any.
    * @param clientPayload - The persisted client metadata, used to read the per-client `dbx_max_session_ttl` cap.
    * @param tier - Whether the resolving user is an admin and whether the grant carries a service-token scope.
@@ -118,13 +129,15 @@ export class OidcService {
     const serverMinSeconds = config.minRequestedLoginDuration ?? DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS;
     const defaultSeconds = config.defaultRequestedLoginDuration ?? config.tokenLifetimes.grant;
 
-    return resolveLoginDurationSeconds({
+    const seconds = resolveLoginDurationSeconds({
       requestedSeconds: parseRequestedSessionTtlSeconds(requestedRawTtl),
       clientMaxSeconds: clientPayload?.dbx_max_session_ttl,
       serverMaxSeconds,
       serverMinSeconds,
       defaultSeconds
     });
+
+    return capLoginDurationSeconds(seconds, tier.maxSessionTtl);
   }
 
   // MARK: Token Verification

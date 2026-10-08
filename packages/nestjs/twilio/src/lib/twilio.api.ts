@@ -4,20 +4,26 @@ import { TwilioServiceConfig } from './twilio.config';
 
 @Injectable()
 export class TwilioApi {
-  readonly client: Twilio;
+  private _client?: Twilio;
 
-  constructor(@Inject(TwilioServiceConfig) readonly config: TwilioServiceConfig) {
-    const { accountSid, authToken, apiKeySid, apiKeySecret } = config.twilio;
+  constructor(@Inject(TwilioServiceConfig) readonly config: TwilioServiceConfig) {}
 
-    let client: Twilio;
-
-    if (apiKeySid && apiKeySecret) {
-      client = new Twilio(apiKeySid, apiKeySecret, { accountSid });
-    } else {
-      client = new Twilio(accountSid, authToken as string);
+  /**
+   * The Twilio SDK client, created on first access.
+   *
+   * Created lazily because the SDK constructor throws when the Account SID does not start with `AC`, so a
+   * config holding the placeholder values of a committed `.env` can still be provided. Accessing the client
+   * with such a config throws.
+   *
+   * @returns The Twilio SDK client.
+   */
+  get client(): Twilio {
+    if (!this._client) {
+      const { accountSid, authToken, apiKeySid, apiKeySecret } = this.config.twilio;
+      this._client = apiKeySid && apiKeySecret ? new Twilio(apiKeySid, apiKeySecret, { accountSid }) : new Twilio(accountSid, authToken as string);
     }
 
-    this.client = client;
+    return this._client;
   }
 }
 

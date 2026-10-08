@@ -1,7 +1,7 @@
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type ZohoApiUrl, type ZohoApiUrlKey, type ZohoConfig, type ZohoApiServiceName } from '../zoho.config';
-import { type ZohoAccessTokenStringFactory, type ZohoServiceAccessTokenKey } from '../accounts';
+import { type ZohoAccessTokenStringFactory, type ZohoDatacenterApiUrlInput, type ZohoServiceAccessTokenKey, zohoDatacenterDomain } from '../accounts';
 import { type ZohoRateLimiterRef } from '../zoho.limit';
 
 /**
@@ -44,6 +44,26 @@ export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): Zo
       break;
   }
   return result;
+}
+
+/**
+ * Resolves the Zoho Recruit API URL of a datacenter (e.g. `https://recruit.zoho.eu/recruit`, or the
+ * `recruitsandbox` host in sandbox mode).
+ *
+ * {@link zohoRecruitConfigApiUrl}'s keys always target the `us` datacenter; use this for an account
+ * that lives in another one.
+ *
+ * @param input - The datacenter (default `us`) and mode (default `production`).
+ * @returns The full Zoho Recruit API base URL for that datacenter.
+ *
+ * @example
+ * ```typescript
+ * zohoRecruitConfigApiUrlForDatacenter({ datacenter: 'in' }); // 'https://recruit.zoho.in/recruit'
+ * ```
+ */
+export function zohoRecruitConfigApiUrlForDatacenter(input?: Maybe<ZohoDatacenterApiUrlInput>): ZohoRecruitApiUrl {
+  const host = input?.mode === 'sandbox' ? 'recruitsandbox' : 'recruit';
+  return `https://${host}.${zohoDatacenterDomain(input)}/recruit`;
 }
 
 /**

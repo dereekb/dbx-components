@@ -24,7 +24,9 @@ export function maskEnv(env: CliEnvConfig): Record<string, unknown> {
     scopes: env.scopes,
     // The Firebase web config is public by design (it ships in the browser bundle), so it is shown
     // unmasked — hiding it would only make a misconfigured direct-Firestore session harder to debug.
-    firebase: env.firebase
+    firebase: env.firebase,
+    // Hints are non-secret by contract (an app ships them in its `defaultEnvs`), so they are shown as-is.
+    externalConnectionHints: env.externalConnectionHints
   };
 }
 

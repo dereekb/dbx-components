@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { buildManifestCommands, type CliEnvConfig, type CliFirebaseConfig, type CreateCliInput } from '@dereekb/dbx-cli';
+import { buildManifestCommands, buildNotificationModelCommands, type CliEnvConfig, type CliFirebaseConfig, type CreateCliInput } from '@dereekb/dbx-cli';
 import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- @dereekb/dbx-cli/test is a test-only sibling sub-project; demo-cli specs are the intended consumer.
@@ -14,6 +14,7 @@ import { DEFAULT_DEMO_CLI_ENVS } from '../lib/env.defaults';
 import { demoCliFirestore } from '../lib/firestore';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from '../lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from '../lib/manifest/query.manifest.generated';
+import { DEMO_CLI_NOTIFICATION_CONFIG } from '../lib/notification';
 
 export const DEMO_TEST_CLI_NAME = 'demo-cli';
 export const DEMO_TEST_CLI_ENV_NAME = 'test';
@@ -168,7 +169,8 @@ export function withDemoTestCli(params: WithDemoTestCliParams, buildTests: (ctx:
         modelManifest: DEMO_CLI_MODEL_MANIFEST,
         firestore: demoCliFirestore.binding,
         firestoreQueryManifest: DEMO_CLI_FIRESTORE_QUERY_MANIFEST,
-        apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
+        notification: DEMO_CLI_NOTIFICATION_CONFIG,
+        apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST, modelCommands: buildNotificationModelCommands(DEMO_CLI_NOTIFICATION_CONFIG) }),
         actionCommands: DEMO_CLI_ACTION_COMMANDS,
         // the same list `src/index.ts` hands `runCli`. Without it the in-process CLI runs only the
         // dbx-cli built-in checks, so `doctor` silently omits `firestore-session` -- and a spec

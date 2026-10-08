@@ -10,6 +10,7 @@
 import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
+import { NotificationDeliveryMethod, type NotificationExplicitOptInConfig } from './notification.config';
 
 /**
  * Alternative model identity pair for cases where notifications are attached to a different model
@@ -61,13 +62,57 @@ export interface NotificationTemplateTypeInfoIdentityInfo {
 }
 
 /**
+ * Key of a {@link NotificationTemplateTypeInfoGroup}. Template types whose groups share a key are shown together.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
+ */
+export type NotificationTemplateTypeInfoGroupKey = string;
+
+/**
+ * A named group of notification template types, used to organize the template types in a user's notification settings.
+ *
+ * Every {@link NotificationTemplateTypeInfo} that references a group with the same key must reference an identical definition.
+ * Define each group once as a constant and reuse it.
+ */
+export interface NotificationTemplateTypeInfoGroup {
+  /**
+   * Unique key of the group.
+   */
+  readonly key: NotificationTemplateTypeInfoGroupKey;
+  /**
+   * Human-readable group name shown as the group header.
+   */
+  readonly name: string;
+  /**
+   * Optional description shown with the group header.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * Sort order of the group relative to the other groups. Lower values are shown first.
+   */
+  readonly sortOrder?: Maybe<number>;
+}
+
+/**
+ * The delivery methods a user can configure per template type by default.
+ *
+ * Push is left out because push notifications are not delivered yet.
+ */
+export const DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS: NotificationDeliveryMethod[] = [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.NOTIFICATION_SUMMARY];
+
+/**
  * Complete metadata for a notification template type. Defines display info, model associations,
  * and delivery rules for a specific {@link NotificationTemplateType}.
  *
  * Registered in the application's {@link NotificationTemplateTypeInfoRecord} and accessed at runtime
  * via the {@link AppNotificationTemplateTypeInfoRecordService}.
+ *
+ * The {@link NotificationExplicitOptInConfig} fields decide what each delivery method does for a recipient whose config leaves it unset.
  */
-export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeInfoIdentityInfo {
+export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeInfoIdentityInfo, NotificationExplicitOptInConfig {
   /**
    * Template type identifier (e.g., `'comment'`, `'invite'`). Should be short to minimize Firestore storage.
    */
@@ -81,19 +126,35 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
    */
   readonly description: string;
   /**
-   * When true, only sends to recipients who have explicitly enabled this template type in their
-   * {@link NotificationBoxRecipientTemplateConfig}. Recipients without an explicit opt-in are skipped.
-   *
-   * Overridable per-notification via {@link Notification.ois}.
+   * Group this template type is shown under in a user's notification settings.
    */
-  readonly onlySendToExplicitlyEnabledRecipients?: boolean;
+  readonly group?: Maybe<NotificationTemplateTypeInfoGroup>;
   /**
-   * When false, sends text/SMS to all recipients regardless of explicit opt-in status
-   * (still respects explicit opt-outs).
-   *
-   * Overridable per-notification via {@link Notification.ots}.
+   * Sort order of this template type within its group. Lower values are shown first.
    */
-  readonly onlyTextExplicitlyEnabledRecipients?: boolean;
+  readonly sortOrder?: Maybe<number>;
+  /**
+   * Whether to hide this template type from a user's notification settings, such as for internal or test notifications.
+   *
+   * Defaults to false.
+   */
+  readonly hideFromUserSettings?: Maybe<boolean>;
+  /**
+   * The delivery methods a user can configure for this template type.
+   *
+   * Defaults to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
+   */
+  readonly userConfigurableDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
+}
+
+/**
+ * Returns the delivery methods a user can configure for the template type.
+ *
+ * @param info - The template type info.
+ * @returns The configured `userConfigurableDeliveryMethods`, or {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
+ */
+export function notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods'>): NotificationDeliveryMethod[] {
+  return info.userConfigurableDeliveryMethods ?? DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS;
 }
 
 /**
@@ -220,6 +281,7 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  *
  * @param appNotificationTemplateTypeInfoRecord - The complete template type registry for the application.
  * @returns A fully initialized service with indexed lookups for fast template type discovery.
+ * @throws {Error} When two template types reference different {@link NotificationTemplateTypeInfoGroup} definitions that share a key.
  *
  * @example
  * ```ts
@@ -239,9 +301,20 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
 
   const allKnownTemplateTypes: NotificationTemplateType[] = [];
   const allKnownTemplateTypeInfo: NotificationTemplateTypeInfo[] = [];
+  const groupsByKey = new Map<NotificationTemplateTypeInfoGroupKey, NotificationTemplateTypeInfoGroup>();
 
   Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, info]) => {
-    const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities } = info;
+    const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities, group } = info;
+
+    if (group != null) {
+      const existingGroup = groupsByKey.get(group.key);
+
+      if (existingGroup == null) {
+        groupsByKey.set(group.key, group);
+      } else if (existingGroup !== group && (existingGroup.name !== group.name || existingGroup.description !== group.description || existingGroup.sortOrder !== group.sortOrder)) {
+        throw new Error(`appNotificationTemplateTypeInfoRecordService(): conflicting NotificationTemplateTypeInfoGroup definitions for group key "${group.key}" on NotificationTemplateType "${info.type}".`);
+      }
+    }
 
     function addInfoForIdentity(modelIdentity: FirestoreModelIdentity, targetIdentity?: Maybe<FirestoreModelIdentity>) {
       const { collectionType } = modelIdentity;

@@ -281,6 +281,29 @@
       </div>
     </doc-feature-example>
 
+    <doc-feature-example header="dbxRotatingButton" hint="Directive that turns a dbx-button into a rotating / multi-state button. Each click moves to the next configured state and applies its icon, text, style and aria-label to the button.">
+      <h4>Tristate (Default Off)</h4>
+      <p class="dbx-hint">dbxTristateRotatingButtonConfig() builds a three-state / 3-phase toggle that rotates Default, On, Off. The default state emits null to clear the choice.</p>
+      <div class="dbx-flex-bar">
+        <dbx-button iconOnly [dbxRotatingButton]="tristateTextConfig" [(dbxRotatingButtonValue)]="tristateValueSignal"></dbx-button>
+        <span class="dbx-hint">Value: {{ tristateValueSignal() ?? 'null' }}</span>
+      </div>
+      <h4>Tristate (Default On, Custom Icons And Colors)</h4>
+      <p class="dbx-hint">The default resolves to on, so the first click skips On and goes straight to Off (skipDefaultEquivalentOnFirstClick). On is visited last instead, so it rotates Default, Off, On.</p>
+      <div class="dbx-flex-bar">
+        <dbx-button iconOnly [dbxRotatingButton]="tristateEmailConfig" [(dbxRotatingButtonValue)]="tristateEmailValueSignal"></dbx-button>
+        <span class="dbx-hint">Value: {{ tristateEmailValueSignal() ?? 'null' }}</span>
+      </div>
+      <h4>Custom States With Text</h4>
+      <div class="dbx-flex-bar">
+        <dbx-button [dbxRotatingButton]="sortRotatingConfig" [(dbxRotatingButtonValue)]="sortValueSignal"></dbx-button>
+      </div>
+      <h4>Disabled</h4>
+      <div class="dbx-flex-bar">
+        <dbx-button iconOnly [disabled]="true" [dbxRotatingButton]="tristateTextConfig" [dbxRotatingButtonValue]="true"></dbx-button>
+      </div>
+    </doc-feature-example>
+
     <h3>Progress Buttons</h3>
     <doc-feature-derived from="mat-progress-buttons" url="https://github.com/michaeldoye/mat-progress-buttons"></doc-feature-derived>
     <doc-feature-example header="dbx-progress-spinner-button" hint="Component that displays a button and implements the DbxButton directive directly and wraps a dbx-progress-spinner-button.">

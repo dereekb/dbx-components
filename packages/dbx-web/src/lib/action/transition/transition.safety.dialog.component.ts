@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
+import { DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
+import { DbxDialogContentDirective } from '../../interaction/dialog/dialog.content.directive';
 import { type DbxPromptConfirmConfig, DbxPromptConfirmComponent } from '../../interaction/prompt/prompt.confirm.component';
 import { DbxErrorComponent } from '../../error/error.component';
 import { DbxActionErrorDirective } from '../../error/error.action.directive';
@@ -19,26 +21,26 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
 /**
  * Confirmation dialog displayed by {@link DbxActionTransitionSafetyDirective} when the user
  * attempts to navigate away with unsaved changes. Offers options to stay on the page,
- * discard changes, or save before leaving.
+ * leave without saving, or save before leaving.
  */
 @Component({
   template: `
-    <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
-      <ng-container>
+    <dbx-dialog-content>
+      <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
         <dbx-error dbxActionError></dbx-error>
-        <dbx-button text="Save Changes" dbxActionButton></dbx-button>
-        <dbx-button-spacer></dbx-button-spacer>
-      </ng-container>
-    </dbx-prompt-confirm>
+        <dbx-button buttons [raised]="true" color="primary" text="Save Changes" dbxActionButton></dbx-button>
+        <dbx-button-spacer buttons></dbx-button-spacer>
+      </dbx-prompt-confirm>
+    </dbx-dialog-content>
   `,
-  imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective]
+  imports: [DbxDialogContentDirective, DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxActionButtonDirective, DbxButtonSpacerDirective]
 })
 export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective {
   readonly config: DbxPromptConfirmConfig = {
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',
-    cancelText: 'Discard Changes'
+    cancelText: 'Leave without saving'
   };
 
   confirm(): void {

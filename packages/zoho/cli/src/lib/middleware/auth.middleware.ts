@@ -1,6 +1,7 @@
 import { createContextSlot } from '@dereekb/dbx-cli';
 import type { MiddlewareFunction } from 'yargs';
 import { loadCliConfig, configuredProducts } from '../config/cli.config';
+import { loadZohoCliResolvedTokenSource } from '../config/token.source';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
 import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi, ZohoAnalyticsApi } from '@dereekb/zoho/nestjs';
@@ -16,7 +17,14 @@ const _cliContextSlot = createContextSlot<ZohoCliContext>({
 });
 
 /**
+ * How to set up a token source instead of credentials, appended to the "not configured" errors.
+ */
+const TOKEN_SOURCE_SETUP_HINT = 'or use a token source: zoho-cli auth token-source set "<command>"';
+
+/**
  * Builds a yargs middleware that loads the CLI config, ensures at least one Zoho product has resolvable credentials, and stores the constructed {@link ZohoCliContext} in a module-level slot for command handlers to consume via {@link getCliContext}.
+ *
+ * When a token source is active (`ZOHO_CLI_TOKEN_COMMAND`, else the saved `tokenSource` block), its token is loaded first — running its command unless a cached token is still valid — and the products its scopes cover authenticate through it. A failing token source fails the command with the source's own error.
  *
  * Commands listed in `skipCommands` (typically `auth` subcommands like `setup`/`clear`) bypass the check so users can configure credentials before they exist. On any failure the middleware writes a structured error envelope to stdout via {@link outputError} and exits the process with status `4`.
  *
@@ -35,18 +43,20 @@ export function createAuthMiddleware(skipCommands: ReadonlySet<string>): Middlew
       const config = await loadCliConfig();
 
       if (!config) {
-        outputError(new Error('Not authenticated. Run: zoho-cli auth setup --client-id X --client-secret Y --token Z'));
+        outputError(new Error(`Not authenticated. Run: zoho-cli auth login (or zoho-cli auth setup --client-id X --client-secret Y --token Z), ${TOKEN_SOURCE_SETUP_HINT}`));
         process.exit(4);
       }
 
-      const products = configuredProducts(config);
+      const tokenSource = await loadZohoCliResolvedTokenSource(config);
+      const products = configuredProducts(config, tokenSource);
 
       if (products.length === 0) {
-        outputError(new Error('No products configured with complete credentials. Run: zoho-cli auth setup'));
+        const message = tokenSource ? `No products configured: the token source "${tokenSource.source.command}" grants no Zoho product scopes the CLI supports, and no product has complete credentials.` : `No products configured with complete credentials. Run: zoho-cli auth setup, ${TOKEN_SOURCE_SETUP_HINT}`;
+        outputError(new Error(message));
         process.exit(4);
       }
 
-      _cliContextSlot.set(createCliContext(config));
+      _cliContextSlot.set(createCliContext(config, tokenSource));
     } catch (e) {
       outputError(e);
       process.exit(4);
@@ -76,7 +86,7 @@ export function getRecruitApi(argv: any): ZohoRecruitApi {
   const { recruitApi } = getCliContext(argv);
 
   if (!recruitApi) {
-    throw new Error('Recruit not configured. Run: zoho-cli auth setup --client-id X --client-secret Y --token Z');
+    throw new Error(`Recruit not configured. Run: zoho-cli auth setup --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
   }
 
   return recruitApi;
@@ -93,7 +103,7 @@ export function getCrmApi(argv: any): ZohoCrmApi {
   const { crmApi } = getCliContext(argv);
 
   if (!crmApi) {
-    throw new Error('CRM not configured. Run: zoho-cli auth setup --product crm --client-id X --client-secret Y --token Z');
+    throw new Error(`CRM not configured. Run: zoho-cli auth setup --product crm --client-id X --client-secret Y --token Z, ${TOKEN_SOURCE_SETUP_HINT}`);
   }
 
   return crmApi;
@@ -110,7 +120,7 @@ export function getDeskApi(argv: any): ZohoDeskApi {
   const { deskApi } = getCliContext(argv);
 
   if (!deskApi) {
-    throw new Error('Desk not configured. Run: zoho-cli auth setup --product desk --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID');
+    throw new Error('Desk not configured. Run: zoho-cli auth setup --product desk --client-id X --client-secret Y --token Z --org-id YOUR_ORG_ID (a token source covering Desk also needs an org id: ZOHO_DESK_ORG_ID, auth set --product desk --org-id, or its zohoDeskOrgId hint)');
   }
 
   return deskApi;

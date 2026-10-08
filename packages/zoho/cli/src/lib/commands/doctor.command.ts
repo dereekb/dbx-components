@@ -1,6 +1,23 @@
 import type { CommandModule, Argv } from 'yargs';
 import type { Maybe } from '@dereekb/util';
-import { loadCliConfig, getConfigFilePath, getTokenCachePath, configuredProducts, ZOHO_CLI_ORG_ID_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct } from '../config/cli.config';
+import {
+  loadCliConfig,
+  loadCliConfigFile,
+  getConfigFilePath,
+  getTokenCachePath,
+  configuredProducts,
+  zohoCliCredentialSources,
+  zohoCliProductOrgId,
+  zohoCliRefreshTokenEnvVarName,
+  zohoCliShadowedEnvCredentialBlocks,
+  ZOHO_CLI_ORG_ID_PRODUCTS,
+  ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS,
+  type ZohoCliConfig,
+  type ZohoCliProduct,
+  type ZohoCliCredentialSource,
+  type ZohoCliTokenSourceCoverage
+} from '../config/cli.config';
+import { loadZohoCliTokenSourceStatus, type ZohoCliResolvedTokenSource, type ZohoCliTokenSourceStatus } from '../config/token.source';
 import { createCliContext, toZohoCliProductApis, type ZohoCliProductApi, type ZohoCliProductApis } from '../context/cli.context';
 import { outputResult } from '../util/output';
 import { access, constants } from 'node:fs';
@@ -28,16 +45,24 @@ export const DOCTOR_COMMAND: CommandModule = {
   builder: (yargs: Argv) => yargs,
   handler: async () => {
     const config = await loadCliConfig();
+    const fileConfig = await loadCliConfigFile();
     const checks: DoctorCheck[] = [];
 
     checks.push(checkConfigLoaded(config));
-    const sharedCheck = checkSharedCredentials(config);
+    const sharedCheck = checkSharedCredentials(config, zohoCliCredentialSources(fileConfig).shared);
     if (sharedCheck) checks.push(sharedCheck);
+    const shadowCheck = checkShadowedEnvCredentials(fileConfig);
+    if (shadowCheck) checks.push(shadowCheck);
     checks.push(await checkTokenCacheDir());
 
     if (config) {
-      const products = configuredProducts(config);
-      checks.push(checkConfiguredProducts(products), ...(await checkTokenExchanges(config, products)), ...checkOrgIdProducts(config, products));
+      const tokenSourceStatus = await loadZohoCliTokenSourceStatus(fileConfig);
+      const tokenSource = tokenSourceStatus?.resolved;
+      const tokenSourceCheck = tokenSourceStatus ? checkTokenSource(tokenSourceStatus) : undefined;
+      if (tokenSourceCheck) checks.push(tokenSourceCheck);
+
+      const products = configuredProducts(config, tokenSource);
+      checks.push(checkConfiguredProducts(products), ...(await checkTokenExchanges(config, products, tokenSource)), ...checkOrgIdProducts(config, products, tokenSource));
     }
 
     const allPassed = doctorChecksHealthy(checks);
@@ -53,17 +78,63 @@ function checkConfigLoaded(config: Awaited<ReturnType<typeof loadCliConfig>>): D
   if (config) {
     return { name: 'config', status: 'pass', message: `Config loaded from ${getConfigFilePath()}` };
   }
-  return { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth setup' };
+  return { name: 'config', status: 'fail', message: 'No config found. Run: zoho-cli auth login' };
 }
 
-function checkSharedCredentials(config: Awaited<ReturnType<typeof loadCliConfig>>): DoctorCheck | undefined {
+function checkSharedCredentials(config: Awaited<ReturnType<typeof loadCliConfig>>, source: ZohoCliCredentialSource): DoctorCheck | undefined {
   if (config?.shared?.clientId && config?.shared?.clientSecret && config?.shared?.refreshToken) {
-    return { name: 'shared-credentials', status: 'pass', message: 'Shared credentials present' };
+    const from = source === 'env' ? 'environment variables' : 'config file';
+    return { name: 'shared-credentials', status: 'pass', message: `Shared credentials present (from ${from})` };
   }
   if (config) {
-    return { name: 'shared-credentials', status: 'warn', message: 'Missing shared credentials. Per-product credentials may still work.' };
+    return { name: 'shared-credentials', status: 'warn', message: 'Missing shared credentials. Per-product credentials or a token source may still work.' };
   }
   return undefined;
+}
+
+/**
+ * Warns when a stored login is shadowing a DIFFERENT refresh token exported in the environment.
+ *
+ * Stored credentials win over env vars, so the exported value is silently ignored — not a failure,
+ * but worth surfacing so a stale export is not mistaken for the credential in use.
+ *
+ * @param fileConfig - The raw config file.
+ * @returns The warning, or `undefined` when nothing is shadowed.
+ */
+export function checkShadowedEnvCredentials(fileConfig: Maybe<ZohoCliConfig>): DoctorCheck | undefined {
+  const shadowed = zohoCliShadowedEnvCredentialBlocks(fileConfig);
+  let result: DoctorCheck | undefined;
+
+  if (shadowed.length > 0) {
+    const envVarNames = shadowed.map((block) => zohoCliRefreshTokenEnvVarName(block)).join(', ');
+    result = { name: 'credential-precedence', status: 'warn', message: `The stored login for ${shadowed.join(', ')} takes precedence over a different refresh token set in ${envVarNames}; the env value is ignored.` };
+  }
+
+  return result;
+}
+
+/**
+ * Reports the active token source: where it came from, what its token covers, the datacenter, expiry
+ * and scopes — never the token. Fails when the source could not produce a token, and warns when its
+ * token covers none of the CLI's products.
+ *
+ * @param status - The active token source's status.
+ * @returns The check.
+ */
+export function checkTokenSource(status: ZohoCliTokenSourceStatus): DoctorCheck {
+  const { active, resolved, error } = status;
+  const source = `Token source "${active.command}" (from ${active.origin === 'env' ? 'ZOHO_CLI_TOKEN_COMMAND' : 'config file'})`;
+  let result: DoctorCheck;
+
+  if (resolved == null) {
+    result = { name: 'token-source', status: 'fail', message: `${source} failed: ${error ?? 'no token'}` };
+  } else if (resolved.products.length === 0) {
+    result = { name: 'token-source', status: 'warn', message: `${source} grants no Zoho product scopes the CLI supports. Scopes: ${resolved.token.scopes.join(', ') || '(none)'}` };
+  } else {
+    result = { name: 'token-source', status: 'pass', message: `${source} covers ${resolved.products.join(', ')} (datacenter: ${resolved.datacenter}, expires: ${resolved.token.expiresAt}). Scopes: ${resolved.token.scopes.join(', ')}` };
+  }
+
+  return result;
 }
 
 async function checkTokenCacheDir(): Promise<DoctorCheck> {
@@ -82,24 +153,30 @@ function checkConfiguredProducts(products: readonly ZohoCliProduct[]): DoctorChe
   return { name: 'products', status: 'fail', message: 'No products have complete credentials' };
 }
 
-async function checkTokenExchanges(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[]): Promise<DoctorCheck[]> {
-  const productApis: ZohoCliProductApis = toZohoCliProductApis(createCliContext(config));
+async function checkTokenExchanges(config: NonNullable<Awaited<ReturnType<typeof loadCliConfig>>>, products: readonly ZohoCliProduct[], tokenSource: Maybe<ZohoCliResolvedTokenSource>): Promise<DoctorCheck[]> {
+  const productApis: ZohoCliProductApis = toZohoCliProductApis(createCliContext(config, tokenSource));
   const results: DoctorCheck[] = [];
   for (const product of products) {
-    results.push(await checkTokenExchange(productApis[product], product));
+    results.push(await checkTokenExchange(productApis[product], product, tokenSource?.products.includes(product) ?? false));
   }
   return results;
 }
 
-async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCliProduct): Promise<DoctorCheck> {
+async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCliProduct, usesTokenSource: boolean): Promise<DoctorCheck> {
   if (!api) {
     return { name: `${product}-token`, status: 'warn', message: `${product}: API not configured` };
   }
   let result: DoctorCheck;
   try {
-    // the product's own accounts API, so the reported scope is the grant it authenticates with
-    const tokenResponse = await api.zohoAccountsApi.accessToken();
-    result = { name: `${product}-token`, status: 'pass', message: `${product}: Token exchange successful. Scope: ${tokenResponse.scope}` };
+    if (usesTokenSource) {
+      // no refresh token to exchange: load the token the way every command does, through the token source
+      const token = await api.zohoAccountsApi.accountsContext.loadAccessToken();
+      result = { name: `${product}-token`, status: 'pass', message: `${product}: Token loaded from the token source. Scope: ${token.scope}` };
+    } else {
+      // the product's own accounts API, so the reported scope is the grant it authenticates with
+      const tokenResponse = await api.zohoAccountsApi.accessToken();
+      result = { name: `${product}-token`, status: 'pass', message: `${product}: Token exchange successful. Scope: ${tokenResponse.scope}` };
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     result = { name: `${product}-token`, status: 'fail', message: `${product}: Token exchange failed: ${message}` };
@@ -119,20 +196,26 @@ async function checkTokenExchange(api: Maybe<ZohoCliProductApi>, product: ZohoCl
  * only warns: desk is dropped from {@link configuredProducts} without one, so this is the "desk is
  * simply not set up" case rather than a broken install.
  *
+ * The org id is resolved the way the context resolves it ({@link zohoCliProductOrgId}): the config/env
+ * value, else — for a product the token source covers — the token source's hint.
+ *
  * @param config - Loaded CLI configuration.
  * @param products - Products {@link configuredProducts} reports as usable.
+ * @param tokenSource - The active token source's coverage, when one is active.
  * @returns One check per org-scoped product.
  */
-export function checkOrgIdProducts(config: ZohoCliConfig, products: readonly ZohoCliProduct[]): DoctorCheck[] {
+export function checkOrgIdProducts(config: ZohoCliConfig, products: readonly ZohoCliProduct[], tokenSource?: Maybe<ZohoCliTokenSourceCoverage>): DoctorCheck[] {
   return Array.from(ZOHO_CLI_ORG_ID_PRODUCTS).map((product) => {
-    const orgId = config[product]?.orgId;
+    const orgId = zohoCliProductOrgId({ config, product, tokenSource });
     const name = `${product}-org-id`;
+    const hintKey = ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS[product];
+    const hintAlternative = hintKey && tokenSource?.products.includes(product) ? ` (or set ZOHO_${product.toUpperCase()}_ORG_ID, or have the token source provide its ${hintKey} hint)` : '';
     let result: DoctorCheck;
 
     if (orgId) {
       result = { name, status: 'pass', message: `${product}: Org ID configured: ${orgId}` };
     } else if (products.includes(product)) {
-      result = { name, status: 'fail', message: `${product}: No org ID configured, but ${product} is reported as configured — every org-scoped ${product} command will fail. Run: zoho-cli auth set --product ${product} --org-id <ORG_ID>` };
+      result = { name, status: 'fail', message: `${product}: No org ID configured, but ${product} is reported as configured — every org-scoped ${product} command will fail. Run: zoho-cli auth set --product ${product} --org-id <ORG_ID>${hintAlternative}` };
     } else {
       result = { name, status: 'warn', message: `${product}: No org ID. ${product} commands unavailable.` };
     }

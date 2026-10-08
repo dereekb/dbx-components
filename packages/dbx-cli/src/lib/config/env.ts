@@ -149,7 +149,8 @@ export function mergeCliEnvWithDefault(input: MergeCliEnvWithDefaultInput): Mayb
       tokenEndpointAuthMethod: (nonEmpty(e?.tokenEndpointAuthMethod) ?? nonEmpty(d?.tokenEndpointAuthMethod)) as OidcCliTokenEndpointAuthMethod | undefined,
       redirectUri: nonEmpty(e?.redirectUri) ?? nonEmpty(d?.redirectUri),
       scopes: nonEmpty(e?.scopes) ?? nonEmpty(d?.scopes),
-      firebase: mergeCliFirebaseConfig(e?.firebase, d?.firebase)
+      firebase: mergeCliFirebaseConfig(e?.firebase, d?.firebase),
+      externalConnectionHints: mergeCliExternalConnectionHints(e?.externalConnectionHints, d?.externalConnectionHints)
     };
   }
 
@@ -325,6 +326,53 @@ export interface CliEnvConfig {
    * never needs it, and requiring it would break every existing consumer.
    */
   readonly firebase?: CliFirebaseConfig;
+  /**
+   * Static, non-secret values a consuming CLI needs alongside an external connection's access token,
+   * keyed by provider type (e.g. `{ zoho_admin: { recruitOrgId: '...' } }`).
+   *
+   * A downstream app ships these per env through its `defaultEnvs`; the `external-token` command
+   * emits the active env's entry for the requested provider as the bundle's `hints`, and `env show`
+   * displays them. Never put a secret here — the values are printed unmasked.
+   */
+  readonly externalConnectionHints?: Maybe<CliExternalConnectionHints>;
+}
+
+/**
+ * Non-secret per-provider values carried by {@link CliEnvConfig.externalConnectionHints}, keyed by
+ * provider type, then by hint name.
+ */
+export type CliExternalConnectionHints = Record<string, Record<string, string>>;
+
+/**
+ * Merges stored external connection hints on top of a default env's hints, provider by provider, so a
+ * stored env can override a single hint of a registered default without restating the rest.
+ *
+ * @param env - The user's persisted hints, if any.
+ * @param defaultEnv - The registered default's hints, if any.
+ * @returns The merged hints, or `undefined` when neither side supplies any.
+ *
+ * @example
+ * ```typescript
+ * mergeCliExternalConnectionHints({ zoho_admin: { orgId: '2' } }, { zoho_admin: { orgId: '1', region: 'us' } });
+ * // { zoho_admin: { orgId: '2', region: 'us' } }
+ * ```
+ */
+export function mergeCliExternalConnectionHints(env: Maybe<CliExternalConnectionHints>, defaultEnv: Maybe<CliExternalConnectionHints>): Maybe<CliExternalConnectionHints> {
+  let result: Maybe<CliExternalConnectionHints>;
+
+  if (env && defaultEnv) {
+    const merged: Record<string, Record<string, string>> = {};
+
+    for (const providerType of new Set([...Object.keys(defaultEnv), ...Object.keys(env)])) {
+      merged[providerType] = { ...defaultEnv[providerType], ...env[providerType] };
+    }
+
+    result = merged;
+  } else {
+    result = env ?? defaultEnv ?? undefined;
+  }
+
+  return result;
 }
 
 /**
@@ -440,7 +488,8 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
       clientSecret: clientSecret ?? input.env?.clientSecret,
       redirectUri: redirectUri ?? input.env?.redirectUri,
       scopes: scopes ?? input.env?.scopes,
-      ...(input.env?.firebase || hasFirebaseOverrides ? { firebase } : undefined)
+      ...(input.env?.firebase || hasFirebaseOverrides ? { firebase } : undefined),
+      ...(input.env?.externalConnectionHints ? { externalConnectionHints: input.env.externalConnectionHints } : undefined)
     };
   }
 

@@ -1,7 +1,7 @@
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type ZohoApiUrl, type ZohoApiUrlKey, type ZohoConfig, type ZohoApiServiceName } from '../zoho.config';
-import { type ZohoAccessTokenStringFactory, type ZohoServiceAccessTokenKey } from '../accounts';
+import { type ZohoAccessTokenStringFactory, type ZohoDatacenterApiUrlInput, type ZohoServiceAccessTokenKey, zohoDatacenterDomain } from '../accounts';
 import { type ZohoRateLimiterRef } from '../zoho.limit';
 import { type ZohoDeskOrgId } from './desk';
 
@@ -50,6 +50,23 @@ export function zohoDeskConfigApiUrl(input: ZohoDeskConfigApiUrlInput): ZohoApiU
   }
 
   return result;
+}
+
+/**
+ * Resolves the Zoho Desk API URL of a datacenter (e.g. `https://desk.zoho.eu/api/v1`).
+ *
+ * Desk has no sandbox, so both modes resolve to the production host, matching {@link zohoDeskConfigApiUrl}.
+ *
+ * @param input - The datacenter (default `us`); the mode is ignored.
+ * @returns The full Zoho Desk API base URL for that datacenter.
+ *
+ * @example
+ * ```typescript
+ * zohoDeskConfigApiUrlForDatacenter({ datacenter: 'ca' }); // 'https://desk.zohocloud.ca/api/v1'
+ * ```
+ */
+export function zohoDeskConfigApiUrlForDatacenter(input?: Maybe<ZohoDatacenterApiUrlInput>): ZohoDeskApiUrl {
+  return `https://desk.${zohoDatacenterDomain(input)}/api/v1`;
 }
 
 /**

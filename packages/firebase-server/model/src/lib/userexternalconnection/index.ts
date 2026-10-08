@@ -1,4 +1,5 @@
 export * from './oauth';
+export * from './token';
 export * from './userexternalconnection.private';
 export * from './userexternalconnection.accessor.service';
 export * from './userexternalconnection.action.server';

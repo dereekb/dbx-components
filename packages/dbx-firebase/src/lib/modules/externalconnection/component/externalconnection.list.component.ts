@@ -136,7 +136,12 @@ export class DbxFirebaseExternalConnectionListViewComponent extends AbstractDbxL
           [avatarColor]="statusColor"
           [avatarColorTone]="18"></dbx-avatar>
         <div class="dbx-flex-fill">
-          <div class="dbx-text-title-medium">{{ assets.providerName }}</div>
+          <div class="dbx-flex-bar">
+            <div class="dbx-text-title-medium">{{ assets.providerName }}</div>
+            @if (row.adminOnly) {
+              <dbx-chip class="dbx-pl2" [small]="true">Admin Only</dbx-chip>
+            }
+          </div>
           @if (detail; as detailValue) {
             <div class="dbx-text-body-small dbx-hint">{{ detailValue }}</div>
           }

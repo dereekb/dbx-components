@@ -3,6 +3,32 @@ These are the instructions for Recruit, but generally apply to Zoho products:
 
 https://www.zoho.com/recruit/developer-guide/apiv2/oauth-overview.html
 
+## CLI login (`zoho-cli auth login`)
+The quickest way to get a refresh token for the CLI. It does the whole authorization-code flow in one command: it opens the consent screen in your browser, captures the redirect on a local port, exchanges the code with the datacenter Zoho redirected back from, and stores the result in `~/.zoho-cli/config.json` (written with `0600` permissions).
+
+1. On your client in https://api-console.zoho.com/, add `http://localhost:8976/callback` as an **Authorized Redirect URI**. To use a different URI, pass it with `--redirect-uri`. The URI used is remembered for that client's next login.
+2. Log in the shared client (Recruit, CRM and Desk):
+
+   ```sh
+   zoho-cli auth login --client-id 1000.ABCDE --client-secret xyz --org-id 1234567
+   ```
+
+   Later logins reuse the stored client, so a plain `zoho-cli auth login` is enough. When no client is stored and none is passed, the CLI prompts for it on a terminal. `--org-id` stores the Desk organization id.
+3. Sign and Analytics use their own OAuth clients. Log each one in separately. This writes only that product's block and leaves the shared client alone:
+
+   ```sh
+   zoho-cli auth login --product sign --client-id 1000.SIGN --client-secret xyz
+   zoho-cli auth login --product analytics --client-id 1000.ANALYTICS --client-secret xyz --org-id 1234567
+   ```
+
+Useful flags:
+- `--no-open`: print the authorization URL without opening a browser.
+- `--no-listen`: always paste the redirect URL back by hand. The CLI accepts a pasted URL while it listens anyway, so a login over SSH still works.
+- `--listen-for 90s`: how long to wait for the redirect before falling back to the paste prompt (default `5m`).
+- `--region eu`: the datacenter to start the authorization in. The datacenter Zoho redirects back with always wins.
+
+**Stored credentials win over env vars.** Once a block (shared, or a product) has a stored refresh token, `zoho-cli` uses it even when `ZOHO_ACCOUNTS_REFRESH_TOKEN` (or `ZOHO_{PRODUCT}_ACCOUNTS_REFRESH_TOKEN`) is exported. The env vars are only the fallback for a block with no stored login. Credentials resolve as a unit per block, so a stored client id is never paired with an env refresh token. `zoho-cli auth show` reports where each block's credentials came from (`credentialSources`). `zoho-cli doctor` warns when a stored login is shadowing a different exported refresh token.
+
 ## For generating an oauth key, do the following steps:
 
 ### 1. Register the Client

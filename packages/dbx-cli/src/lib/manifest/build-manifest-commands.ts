@@ -117,7 +117,20 @@ export interface BuildManifestCommandsOptions {
    * emitted with their original short keys.
    */
   readonly modelManifest?: CliModelManifest;
+  /**
+   * Extra leaf commands to register under `<cli> model <model>`, keyed by model type, next to the generated API calls and the
+   * per-model `get`. The hook for app-specific per-model commands, such as `model notificationUser settings` from
+   * `buildNotificationModelCommands()`.
+   *
+   * A model with extension commands but no API entries still gets its `model <model>` group.
+   */
+  readonly modelCommands?: CliModelCommands;
 }
+
+/**
+ * Extra leaf commands for `<cli> model <model>`, keyed by model type. See {@link BuildManifestCommandsOptions.modelCommands}.
+ */
+export type CliModelCommands = { readonly [modelType: string]: readonly CommandModule[] };
 
 /**
  * Default name of the parent command that groups all per-model manifest commands.
@@ -159,6 +172,14 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
     }
   }
 
+  const modelCommands = options?.modelCommands ?? {};
+
+  for (const [model, commands] of Object.entries(modelCommands)) {
+    if (commands.length > 0 && !byModel.has(model)) {
+      byModel.set(model, []);
+    }
+  }
+
   let result: CommandModule[];
 
   if (byModel.size === 0) {
@@ -171,7 +192,7 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
     const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
     const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
     const sortedModels = Array.from(byModel.entries()).sort(([a], [b]) => a.localeCompare(b));
-    const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest };
+    const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest, modelCommands };
 
     result = [
       {
@@ -199,6 +220,7 @@ interface BuilderContext {
   readonly helpMode: ManifestHelpMode;
   readonly hideOnFocus: readonly string[];
   readonly modelManifest?: CliModelManifest;
+  readonly modelCommands: CliModelCommands;
 }
 
 /**
@@ -296,15 +318,22 @@ function parseHelpMode(value: string): ManifestHelpMode | undefined {
 }
 
 function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[], context: BuilderContext): CommandModule {
+  const extraCommands = context.modelCommands[model] ?? [];
+  const actionCount = entries.length + extraCommands.length;
+
   return {
     command: `${model} <action>`,
-    describe: `Calls for model '${model}' (${entries.length} action${entries.length === 1 ? '' : 's'})`,
+    describe: `Calls for model '${model}' (${actionCount} action${actionCount === 1 ? '' : 's'})`,
     builder: (yargs: Argv) => {
       for (const entry of entries) {
         yargs.command(buildEntryCommand(entry, context));
       }
 
       yargs.command(buildPerModelGetCommand(model, context.modelManifest));
+
+      for (const command of extraCommands) {
+        yargs.command(command);
+      }
 
       hideGlobalOptions(yargs, context.hideOnFocus);
 

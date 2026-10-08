@@ -7,6 +7,7 @@ import {
   type OnCallCreateModelResult,
   type ReadUserExternalConnectionAuthorizeStateParams,
   type UserExternalConnectionAuthorizeStateResult,
+  USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE,
   ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO,
   ZOOM_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOOM,
   onCallCreateModelParams,
@@ -14,9 +15,40 @@ import {
   onCallUpdateModelParams,
   userExternalConnectionIdentity
 } from '@dereekb/firebase';
-import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder } from '@dereekb/firebase-server/model';
+import { type Maybe } from '@dereekb/util';
+import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionStateCoder, type UserExternalConnectionStateActor } from '@dereekb/firebase-server/model';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoUserExternalConnectionContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
+import { DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE as ZOHO_ADMIN } from 'demo-firebase';
+import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoUserExternalConnectionContext, demoUserExternalConnectionTestCredentials } from '../../../test/fixture';
+
+/**
+ * Reads the server error code off a rejected HttpsError.
+ *
+ * @param fn - The call expected to reject.
+ * @returns The error's code, or undefined when it carried none.
+ */
+async function errorCodeFor(fn: () => Promise<unknown>): Promise<Maybe<string>> {
+  let code: Maybe<string>;
+
+  try {
+    await fn();
+    throw new Error('expected the call to reject, but it resolved');
+  } catch (e) {
+    code = (e as { details?: { code?: string } }).details?.code;
+  }
+
+  return code;
+}
+
+/**
+ * Reads the uid a verified state was minted for. A `signin` state carries none.
+ *
+ * @param actor - The verified state actor, if the state verified at all.
+ * @returns The uid, or undefined for a state that did not verify or names no user.
+ */
+function stateActorUid(actor: Maybe<UserExternalConnectionStateActor>): Maybe<string> {
+  return actor != null && actor.mode !== 'signin' ? actor.uid : undefined;
+}
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('userExternalConnection', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -274,14 +306,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
               expect(result.state).toBeDefined();
               // only the server can open it, so verify through the coder rather than by inspection
-              expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })?.uid).toBe(u.uid);
+              expect(stateActorUid(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM }))).toBe(u.uid);
             });
 
             it('should mint a state for every registered provider, not just the first', async () => {
               const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: DISCORD };
               const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))) as UserExternalConnectionAuthorizeStateResult;
 
-              expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: DISCORD })?.uid).toBe(u.uid);
+              expect(stateActorUid(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: DISCORD }))).toBe(u.uid);
               // the secret is shared, so a discord state must not open as a calcom one
               expect(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: CALCOM })).toBeUndefined();
             });
@@ -305,6 +337,33 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               const params: ReadUserExternalConnectionAuthorizeStateParams = { providerType: ZOOM };
               await expect(u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState'))).rejects.toThrow();
             });
+
+            describe('admin-only provider', () => {
+              function callAuthorizeState(params: ReadUserExternalConnectionAuthorizeStateParams) {
+                return u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState')) as Promise<UserExternalConnectionAuthorizeStateResult>;
+              }
+
+              it('should refuse a non-admin a connect state for zoho_admin exactly as if it were not mounted', async () => {
+                const adminOnlyCode = await errorCodeFor(() => callAuthorizeState({ providerType: ZOHO_ADMIN }));
+                const unmountedCode = await errorCodeFor(() => callAuthorizeState({ providerType: ZOOM }));
+
+                expect(adminOnlyCode).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE);
+                // the same answer as an unmounted provider, so the call does not reveal that zoho_admin exists
+                expect(adminOnlyCode).toBe(unmountedCode);
+              });
+
+              it('should refuse a non-admin a link state for zoho_admin', async () => {
+                // one handler serves both modes, so the admin rule cannot be skipped by asking for a link
+                expect(await errorCodeFor(() => callAuthorizeState({ providerType: ZOHO_ADMIN, mode: 'link' }))).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE);
+              });
+
+              it('should still mint a non-admin a state for the open zoho connection', async () => {
+                const result = await callAuthorizeState({ providerType: ZOHO });
+
+                // zoho declares no policy, so the admin-only zoho_admin connection beside it leaves it open
+                expect(stateActorUid(f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOHO }))).toBe(u.uid);
+              });
+            });
           });
 
           it('should offer exactly the providers whose oauth modules are mounted', () => {
@@ -315,7 +374,42 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(registry.hasAuthorizeFlowForProviderType(CALCOM)).toBe(true);
             expect(registry.hasAuthorizeFlowForProviderType(DISCORD)).toBe(true);
             expect(registry.hasAuthorizeFlowForProviderType(ZOHO)).toBe(true);
+            // the second Zoho connection, registered under its own service token
+            expect(registry.hasAuthorizeFlowForProviderType(ZOHO_ADMIN)).toBe(true);
             expect(registry.hasAuthorizeFlowForProviderType(ZOOM)).toBe(false);
+          });
+        });
+      });
+    });
+
+    demoAuthorizedUserAdminContext({ f }, (au) => {
+      demoUserExternalConnectionContext({ f, u: au, createIfNeeded: true }, () => {
+        describe('read:authorizeState callable (admin)', () => {
+          function callAuthorizeState(params: ReadUserExternalConnectionAuthorizeStateParams) {
+            return au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(userExternalConnectionIdentity, params, 'authorizeState')) as Promise<UserExternalConnectionAuthorizeStateResult>;
+          }
+
+          it('should mint an admin a connect state for zoho_admin, bound to that provider', async () => {
+            const result = await callAuthorizeState({ providerType: ZOHO_ADMIN });
+            const stateCoder = f.nest.get(UserExternalConnectionStateCoder);
+            const actor = stateCoder.verifyState({ state: result.state, providerType: ZOHO_ADMIN });
+
+            expect(stateActorUid(actor)).toBe(au.uid);
+            expect(actor?.mode).toBe('connect');
+            // a zoho_admin state cannot be redeemed at the plain zoho callback, nor the other way around
+            expect(stateCoder.verifyState({ state: result.state, providerType: ZOHO })).toBeUndefined();
+          });
+
+          it('should mint an admin a link state for zoho_admin', async () => {
+            const result = await callAuthorizeState({ providerType: ZOHO_ADMIN, mode: 'link' });
+            const actor = f.nest.get(UserExternalConnectionStateCoder).verifyState({ state: result.state, providerType: ZOHO_ADMIN });
+
+            expect(stateActorUid(actor)).toBe(au.uid);
+            expect(actor?.mode).toBe('link');
+          });
+
+          it('should still refuse an admin a provider that is not mounted', async () => {
+            expect(await errorCodeFor(() => callAuthorizeState({ providerType: ZOOM }))).toBe(USER_EXTERNAL_CONNECTION_PROVIDER_NOT_ALLOWED_ERROR_CODE);
           });
         });
       });

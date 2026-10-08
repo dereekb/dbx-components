@@ -52,12 +52,34 @@ function formatTemplateBlock(t: TemplateSummary): string {
   parts.push(heading);
   if (t.humanName) parts.push(`- Human name: ${t.humanName}`);
   if (t.description) parts.push(`- Description: ${t.description}`);
-  if (t.notificationMIdentity) parts.push(`- Notification model: \`${t.notificationMIdentity}\``);
+  if (t.notificationModelIdentity) parts.push(`- Notification model: \`${t.notificationModelIdentity}\``);
   if (t.targetModelIdentity) parts.push(`- Target model: \`${t.targetModelIdentity}\``);
+  const deliveryMethodsText = formatUserConfigurableDeliveryMethods(t);
+  if (deliveryMethodsText) parts.push(`- User-configurable delivery methods: ${deliveryMethodsText}`);
+  if (t.factoryContentDeliveryMethods.length > 0) parts.push(`- Factory returns content for: ${t.factoryContentDeliveryMethods.join(', ')}`);
   const infoText = t.infoSymbolName ? code(t.infoSymbolName) : '_Missing._';
   const factorySuffix = t.factoryFunctionName ? ` (${code(t.factoryFunctionName)})` : '';
   parts.push(`- Info object: ${infoText}`, `- In info record: ${formatBool(t.inInfoRecord)}`, `- Has factory: ${formatBool(t.hasFactory)}${factorySuffix}`, `- Source: \`${t.sourceFile}\``);
   return parts.join('\n');
+}
+
+function formatUserConfigurableDeliveryMethods(t: TemplateSummary): string | undefined {
+  let result: string | undefined;
+  switch (t.userConfigurableDeliveryMethodsSource) {
+    case 'declared':
+      result = t.userConfigurableDeliveryMethods && t.userConfigurableDeliveryMethods.length > 0 ? t.userConfigurableDeliveryMethods.join(', ') : '_none_';
+      break;
+    case 'default':
+      result = 'default';
+      break;
+    case 'unresolved':
+      result = '_unresolved_';
+      break;
+    case undefined:
+      result = undefined;
+      break;
+  }
+  return result;
 }
 
 function formatTaskBlock(t: TaskSummary): string {

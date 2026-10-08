@@ -7,6 +7,7 @@ import { type CreateCacheCommandInput, createCacheCommand } from '../cache/cache
 import { type CliDataCache, createCliDataCache } from '../cache/data-cache';
 import { CLI_DATA_CACHE_GLOBAL_OPTION_NAMES, DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS, checkCliDataCacheArgv } from '../cache/data-cache.options';
 import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
+import { buildExternalTokenCommand } from '../api/external-token.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type Maybe } from '@dereekb/util';
@@ -28,6 +29,8 @@ import { closeAllCliFirebaseApps } from '../firestore/firestore.session';
 import { cliBuildDriftDescription, inspectCliBuildDrift } from './build-stamp';
 import { type CliLifecycleHooks, type CliLifecycleRunner, cliLifecycleRunner } from './lifecycle';
 import { createOutputMiddleware } from '../middleware/output.middleware';
+import { createNotificationCommand } from '../notification/notification.command.factory';
+import { type CliNotificationConfig } from '../notification/notification.config';
 import { createOutputCommand } from '../output/output.command.factory';
 import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
 import { setCliRawArgv } from '../util/stdin';
@@ -155,6 +158,17 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly disableFirestoreGet?: boolean;
   /**
+   * The app's notification wiring. Enables the auth-free `notification` catalog group (`notification types`, `notification task-types`).
+   *
+   * The model-tree leaves (`model notificationUser settings`, `model notification tasks` / `task`) are wired by the app itself, through
+   * `buildManifestCommands(manifest, { modelCommands: buildNotificationModelCommands(config) })`, because the app builds the `model` tree.
+   */
+  readonly notification?: CliNotificationConfig;
+  /**
+   * Disable the built-in `notification` catalog group even when {@link notification} is provided.
+   */
+  readonly disableNotificationCommands?: boolean;
+  /**
    * Enables the recorded query/export dataset cache: the auth-free `cache` command group, and the
    * `--cache` / `--refresh` global flags that `firestore-query` and app actions honour.
    *
@@ -163,6 +177,17 @@ export interface CreateCliInput extends CliLifecycleHooks {
    * stamp, or the command name.
    */
   readonly dataCache?: boolean | Omit<CreateCacheCommandInput, 'cliName'>;
+  /**
+   * Enables the built-in `external-token <providerType>` command, which mints a short-lived access
+   * token for one of the signed-in user's external connections (e.g. `zoho_admin`) from the API's
+   * `/session/external/<providerType>` endpoint.
+   *
+   * Run directly it prints a redacted token; the raw token is written only for a credential process
+   * (`DBX_CLI_CREDENTIAL_PROCESS=1`), so another CLI can use it via e.g.
+   * `zoho-cli auth token-source set "<cli> external-token zoho_admin"`. The server must mount the token
+   * API and opt the provider in.
+   */
+  readonly externalConnectionToken?: boolean;
   /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
@@ -237,6 +262,7 @@ export interface CreateCliInput extends CliLifecycleHooks {
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
+ * @param input.externalConnectionToken - Enables the `external-token <providerType>` command.
  * @param input.manifestGeneratorVersion - The `@dereekb/dbx-cli` version that emitted the app's generated
  *   manifests, for the built-in `cli-build-not-stale` doctor check.
  * @param input.setup - App hook run once before the command's handler; a throw aborts the command.
@@ -265,6 +291,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.firestoreQueryManifest) {
     builtInConfigCommands.push(buildFirestoreQueriesCommand(input.firestoreQueryManifest));
+  }
+
+  if (input.notification && input.disableNotificationCommands !== true) {
+    builtInConfigCommands.push(createNotificationCommand(input.notification));
   }
 
   // ONE cache instance for the whole invocation, shared by the `cache` group and every command that
@@ -297,6 +327,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.firestore && input.disableFirestoreGet !== true) {
     builtInApiCommands.push(buildFirestoreGetCommand());
+  }
+
+  if (input.externalConnectionToken) {
+    builtInApiCommands.push(buildExternalTokenCommand({ cliName }));
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);

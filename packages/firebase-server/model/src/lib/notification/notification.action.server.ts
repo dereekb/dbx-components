@@ -30,6 +30,8 @@ import {
   updateNotificationBoxRecipientParamsType,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type UpdateNotificationUserParams,
   updateNotificationUserParamsType,
   firestoreDummyKey,
@@ -99,7 +101,16 @@ import {
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
   applyExclusionsToNotificationUserNotificationBoxRecipientConfigs,
-  type NotificationLoggedEventDayDocument
+  type NotificationLoggedEventDayDocument,
+  notificationExplicitOptInConfigForNotification,
+  hasNotificationDeliveryMethodOptIn,
+  NotificationDeliveryMethod,
+  NotificationUserTextOptOutType,
+  notificationUsersWithTextPhoneNumberQuery,
+  notificationUsersWithStoppedTextPhoneNumberQuery,
+  isNotificationUserTextPhoneNumberStopped,
+  type FirebaseAuthUserId,
+  NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -134,8 +145,8 @@ import { type NotificationTemplateServiceInstance, type NotificationTemplateServ
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
-import { notificationUserHealthCheckFactory } from './notification.healthcheck';
-import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { notificationUserHealthCheckAutofixFactory, notificationUserHealthCheckFactory } from './notification.healthcheck';
+import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
@@ -206,6 +217,32 @@ export interface NotificationUserHealthCheckServerConfigRef {
 export interface NotificationServerActionsContext extends BaseNotificationServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef, NotificationUserHealthCheckServerConfigRef {}
 
 /**
+ * Input for {@link NotificationServerActions.applyNotificationUserTextOptOut}.
+ */
+export interface ApplyNotificationUserTextOptOutParams {
+  /**
+   * The phone number that replied.
+   */
+  readonly phoneNumber: E164PhoneNumber;
+  /**
+   * Whether the number replied STOP or START.
+   */
+  readonly type: NotificationUserTextOptOutType;
+}
+
+/**
+ * Result of {@link NotificationServerActions.applyNotificationUserTextOptOut}.
+ */
+export interface ApplyNotificationUserTextOptOutResult {
+  readonly phoneNumber: E164PhoneNumber;
+  readonly type: NotificationUserTextOptOutType;
+  /**
+   * The NotificationUsers the reply was applied to.
+   */
+  readonly notificationUserIds: FirebaseAuthUserId[];
+}
+
+/**
  * Abstract service class defining all server-side notification CRUD and delivery actions.
  *
  * This is the central API surface for the notification system's backend. It provides:
@@ -225,7 +262,9 @@ export abstract class NotificationServerActions {
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
   abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
   abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
+  abstract applyNotificationUserTextOptOut(params: ApplyNotificationUserTextOptOutParams): Promise<ApplyNotificationUserTextOptOutResult>;
   abstract notificationUserHealthCheck(params: NotificationUserHealthCheckParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckResult>>>;
+  abstract notificationUserHealthCheckAutofix(params: NotificationUserHealthCheckAutofixParams): Promise<TransformAndValidateFunctionResult<NotificationUserHealthCheckAutofixParams, (notificationUserDocument: NotificationUserDocument) => Promise<NotificationUserHealthCheckAutofixResult>>>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract updateNotificationSummary(params: UpdateNotificationSummaryParams): AsyncNotificationSummaryUpdateAction<UpdateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
@@ -257,7 +296,9 @@ export function notificationServerActions(context: NotificationServerActionsCont
     updateNotificationUser: updateNotificationUserFactory(context),
     resyncNotificationUser: resyncNotificationUserFactory(context),
     resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
+    applyNotificationUserTextOptOut: applyNotificationUserTextOptOutFactory(context),
     notificationUserHealthCheck: notificationUserHealthCheckFactory(context),
+    notificationUserHealthCheckAutofix: notificationUserHealthCheckAutofixFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
     updateNotificationSummary: updateNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),
@@ -274,44 +315,51 @@ export function notificationServerActions(context: NotificationServerActionsCont
 /**
  * Factory for the `createNotificationUser` action.
  *
- * Validates the UID exists in Firebase Auth, then creates a new {@link NotificationUser} document
- * with empty default and global configs. Throws if the UID is not found in Auth.
+ * Idempotent: when the {@link NotificationUser} already exists it is returned unchanged. Otherwise validates
+ * the UID exists in Firebase Auth, then creates a new document with empty default and global configs.
+ * Throws if the UID is not found in Auth.
  *
  * @param context - The notification server actions context with auth and collection access.
- * @returns A transform-and-validate function that creates a new notification user document.
+ * @returns A transform-and-validate function that returns the (possibly new) notification user document.
  */
 export function createNotificationUserFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
 
   return firebaseServerActionTransformFunctionFactory(createNotificationUserParamsType, async (params) => {
     const { uid } = params;
 
     return async () => {
-      // assert they exist in the auth system
-      const userContext = authService.userContext(uid);
-      const userExistsInAuth = await userContext.exists();
+      await firestoreContext.runTransaction(async (transaction) => {
+        const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(uid);
+        const exists = await notificationUserDocumentInTransaction.exists();
 
-      if (!userExistsInAuth) {
-        throw notificationUserInvalidUidForCreateError(uid);
-      }
+        if (!exists) {
+          // assert they exist in the auth system
+          const userContext = authService.userContext(uid);
+          const userExistsInAuth = await userContext.exists();
 
-      const notificationUserDocument = notificationUserCollection.documentAccessor().loadDocumentForId(uid);
+          if (!userExistsInAuth) {
+            throw notificationUserInvalidUidForCreateError(uid);
+          }
 
-      const newUserTemplate: NotificationUser = {
-        uid,
-        x: [],
-        bc: [],
-        b: [],
-        dc: {
-          c: {}
-        },
-        gc: {
-          c: {}
+          const newUserTemplate: NotificationUser = {
+            uid,
+            x: [],
+            bc: [],
+            b: [],
+            dc: {
+              c: {}
+            },
+            gc: {
+              c: {}
+            }
+          };
+
+          await notificationUserDocumentInTransaction.create(newUserTemplate);
         }
-      };
+      });
 
-      await notificationUserDocument.create(newUserTemplate);
-      return notificationUserDocument;
+      return notificationUserCollection.documentAccessor().loadDocumentForId(uid);
     };
   });
 }
@@ -320,19 +368,35 @@ export function createNotificationUserFactory(context: NotificationServerActions
  * Factory for the `updateNotificationUser` action.
  *
  * Updates a {@link NotificationUser}'s default config (`dc`), global config (`gc`), and/or
- * box configs (`bc`). When the global config changes, iterates all box configs to propagate
- * effective recipient changes and marks affected entries for sync.
+ * box configs (`bc`). The global config is applied live at send time, so only a change to its lock
+ * flag (`lk`) marks the box configs for sync.
+ *
+ * Records SMS consent (`gc.tcat`) when the global config first opts in to text messages. See {@link hasNotificationDeliveryMethodOptIn}.
+ *
+ * The stopped numbers (`tso`) are server-managed and never read from the params. An opt-out belongs to the number, so when the texting
+ * number (`gc.t`) changes to a number another NotificationUser already stopped, it is added to this user's `tso` too.
+ *
+ * Box config changes are flagged for sync (`ns`) and reach their NotificationBoxes on the next resync. When `resync` is set and the update
+ * leaves configs flagged, the user's resync runs right after the update (see {@link resyncNotificationUserDocumentFactory}). That sync is
+ * best-effort: a failure is logged and the configs stay flagged for the next resync.
  *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that updates an existing notification user document.
  */
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
+  const resyncNotificationUserDocument = resyncNotificationUserDocumentFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(updateNotificationUserParamsType, async (params) => {
-    const { gc: inputGc, dc: inputDc, bc: inputBc } = params;
+    const { gc: inputGc, dc: inputDc, bc: inputBc, resync } = params;
 
     return async (notificationUserDocument: NotificationUserDocument) => {
+      let needsSync = false;
+
+      // an opt-out belongs to the number, so check whether the new texting number was already stopped by another user
+      const inputTextPhoneNumber = inputGc?.t;
+      const inputTextPhoneNumberIsStopped = inputTextPhoneNumber != null && (await notificationUserCollection.queryDocument(notificationUsersWithStoppedTextPhoneNumberQuery(inputTextPhoneNumber)).getFirstDoc()) != null;
+
       await firestoreContext.runTransaction(async (transaction) => {
         const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
         const notificationUser = await assertSnapshotData(notificationUserDocumentInTransaction);
@@ -346,40 +410,34 @@ export function updateNotificationUserFactory(context: NotificationServerActions
         }
 
         if (inputGc != null) {
-          const nextGc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
+          let nextGc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
+
+          // record SMS consent when the user opts in to text messages
+          if (!hasNotificationDeliveryMethodOptIn(notificationUser.gc, NotificationDeliveryMethod.TEXT) && hasNotificationDeliveryMethodOptIn(nextGc, NotificationDeliveryMethod.TEXT)) {
+            nextGc = { ...nextGc, tcat: new Date() };
+          }
 
           if (!areEqualPOJOValues(notificationUser.gc, nextGc)) {
             updateTemplate.gc = nextGc;
 
-            // iterate and update any box config that has the effective recipient change
-            updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
-              let updatedConfig = currentConfig;
+            // inherit the stop when the texting number changes to a number another user stopped
+            if (inputTextPhoneNumberIsStopped && nextGc.t === inputTextPhoneNumber && notificationUser.gc.t !== inputTextPhoneNumber && !isNotificationUserTextPhoneNumberStopped(notificationUser, inputTextPhoneNumber)) {
+              updateTemplate.tso = [...(notificationUser.tso ?? []), inputTextPhoneNumber];
+            }
 
-              // check item isn't already marked for sync or marked as removed
-              if (currentConfig.ns !== true && currentConfig.rm !== true) {
-                const currentEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                  uid: notificationUser.uid,
-                  appNotificationTemplateTypeInfoRecordService,
-                  gc: notificationUser.gc,
-                  boxConfig: currentConfig
-                });
+            // gc is applied live at send time, so only a lock change needs to be synced to the boxes
+            if (Boolean(notificationUser.gc.lk) !== Boolean(nextGc.lk)) {
+              updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
+                let updatedConfig = currentConfig;
 
-                const nextEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                  uid: notificationUser.uid,
-                  appNotificationTemplateTypeInfoRecordService,
-                  gc: nextGc,
-                  boxConfig: currentConfig
-                });
-
-                const effectiveConfigChanged = !areEqualPOJOValues(currentEffectiveRecipient, nextEffectiveRecipient);
-
-                if (effectiveConfigChanged) {
+                // check item isn't already marked for sync or marked as removed
+                if (currentConfig.ns !== true && currentConfig.rm !== true) {
                   updatedConfig = { ...currentConfig, ns: true };
                 }
-              }
 
-              return updatedConfig;
-            });
+                return updatedConfig;
+              });
+            }
           }
         }
 
@@ -404,8 +462,20 @@ export function updateNotificationUserFactory(context: NotificationServerActions
           updateTemplate.ns = calculateNsForNotificationUserNotificationBoxRecipientConfigs(updateTemplate.bc);
         }
 
+        // assigned on every attempt, since the transaction may retry
+        needsSync = (updateTemplate.ns ?? notificationUser.ns) === true;
+
         await notificationUserDocumentInTransaction.update(updateTemplate);
       });
+
+      if (resync && needsSync) {
+        try {
+          await resyncNotificationUserDocument(notificationUserDocument);
+        } catch (e) {
+          // the update is already committed; the configs stay flagged for the next resync
+          console.error('updateNotificationUser(): failed to resync the notification user after the update.', e);
+        }
+      }
 
       return notificationUserDocument;
     };
@@ -415,178 +485,191 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
 
 /**
- * Factory for the `resyncNotificationUser` action.
- *
- * Re-synchronizes a single {@link NotificationUser}'s box configs by iterating through
+ * Creates a function that re-synchronizes a single {@link NotificationUser}'s box configs by iterating through
  * entries flagged with `ns=true` (needs-sync), loading the corresponding {@link NotificationBox},
  * and merging the user's preferences back into the box's recipient list. Handles removed entries
  * and cleans up stale box references.
+ *
+ * Used by {@link resyncNotificationUserFactory}, {@link resyncAllNotificationUsersFactory}, and by {@link updateNotificationUserFactory} when the update asks to resync.
+ *
+ * @param context - Provides Firestore and collection access for the resync.
+ * @returns A function that resyncs the given notification user document's box configurations.
+ */
+export function resyncNotificationUserDocumentFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
+
+  return async (notificationUserDocument: NotificationUserDocument): Promise<ResyncNotificationUserResult> => {
+    // run updates in batches
+
+    interface ResyncNotificationUserBatchResult {
+      readonly notificationBoxesUpdatedInBatch: number;
+      readonly hasMoreNotificationBoxesToSync: boolean;
+    }
+
+    let notificationBoxesUpdated = 0;
+    let hasMoreNotificationBoxesToSync = true;
+
+    while (hasMoreNotificationBoxesToSync) {
+      const batchResult = await firestoreContext.runTransaction(async (transaction) => {
+        const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
+        const notificationUser = await assertSnapshotData(notificationUserDocumentInTransaction);
+        const { gc } = notificationUser;
+
+        const notificationBoxConfigsToSync = notificationUser.bc.filter((x) => x.ns);
+        const notificationBoxConfigsToSyncInThisBatch = takeFront(notificationBoxConfigsToSync, MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH);
+
+        /**
+         * These are the actual number of NotificationBox values that had recipients updated.
+         */
+        let notificationBoxesUpdatedInBatch = 0;
+        let hasUnsyncedNotificationBoxConfigs = false;
+
+        if (notificationBoxConfigsToSyncInThisBatch.length > 0) {
+          const notificationBoxConfigsToSyncInThisBatchMap = makeModelMap(notificationBoxConfigsToSyncInThisBatch, (x) => x.nb);
+
+          const notificationBoxIdsToSyncInThisBatch = Array.from(notificationBoxConfigsToSyncInThisBatchMap.keys()) as string[];
+
+          const notificationBoxDocuments = loadDocumentsForIds(notificationBoxCollection.documentAccessorForTransaction(transaction), notificationBoxIdsToSyncInThisBatch);
+          const notificationBoxDocumentSnapshotDataPairs = await getDocumentSnapshotDataPairs(notificationBoxDocuments);
+
+          const notificationBoxConfigsToRemoveFromNotificationUser = new Set<NotificationBoxId>();
+          const notificationUserNotificationBoxConfigsToMarkAsRemoved = new Set<NotificationBoxId>();
+          const nextRecipientsMap = new Map<NotificationBoxId, Maybe<NotificationBoxRecipient>>();
+
+          // update each NotificationBoxDocument
+          await performAsyncTasks(notificationBoxDocumentSnapshotDataPairs, async (notificationBoxDocumentSnapshotDataPair) => {
+            const { data: notificationBox, document } = notificationBoxDocumentSnapshotDataPair;
+            const nb: NotificationBoxId = document.id;
+
+            const notificationUserNotificationBoxConfig = notificationBoxConfigsToSyncInThisBatchMap.get(nb) as NotificationUserNotificationBoxRecipientConfig; // always exists
+
+            if (notificationBox) {
+              // update in the NotificationBox
+              const recipientIndex = notificationBox.r.findIndex((x) => x.uid === notificationUser.uid);
+
+              let r: NotificationBoxRecipient[] | undefined;
+
+              if (recipientIndex === -1) {
+                // if they are not in the NotificationBox, then mark them as removed on the user
+                notificationUserNotificationBoxConfigsToMarkAsRemoved.add(nb);
+              } else if (notificationUserNotificationBoxConfig.rm) {
+                // remove from the notification box if it is flagged
+                r = removeValuesAtIndexesFromArrayCopy(notificationBox.r, recipientIndex);
+              } else {
+                const { m } = notificationBox;
+                const recipient = notificationBox.r[recipientIndex];
+
+                const nextRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                  uid: notificationUser.uid,
+                  m,
+                  appNotificationTemplateTypeInfoRecordService,
+                  gc,
+                  boxConfig: notificationUserNotificationBoxConfig,
+                  recipient
+                });
+
+                const recipientHasChange = !areEqualPOJOValues(nextRecipient, recipient);
+
+                // only update recipients if the next/new recipient is not equal to the existing one
+                if (recipientHasChange) {
+                  r = [...notificationBox.r];
+                  r[recipientIndex] = nextRecipient;
+                  nextRecipientsMap.set(nb, nextRecipient);
+                } else {
+                  nextRecipientsMap.set(nb, recipient);
+                }
+              }
+
+              // update recipients if needed
+              if (r != null) {
+                await document.update({ r });
+                notificationBoxesUpdatedInBatch += 1;
+              }
+            } else {
+              // if the entire NotificationBox no longer exists, flag to remove it from the user as a cleanup measure
+              notificationBoxConfigsToRemoveFromNotificationUser.add(nb);
+            }
+          });
+
+          // Update the NotificationUser
+          const notificationBoxIdsSynced = new Set(notificationBoxIdsToSyncInThisBatch);
+
+          // start nextConfigs off as a new array with none of the sync'd ids
+          const nextConfigs = notificationBoxConfigsToSyncInThisBatch.filter((x) => !notificationBoxIdsSynced.has(x.nb));
+
+          notificationBoxIdsToSyncInThisBatch.forEach((nb) => {
+            let nextConfig: Maybe<Building<NotificationUserNotificationBoxRecipientConfig>>;
+
+            if (notificationBoxConfigsToRemoveFromNotificationUser.has(nb)) {
+              // do nothing, as it should be removed
+            } else {
+              const existingConfig = notificationBoxConfigsToSyncInThisBatchMap.get(nb) as NotificationUserNotificationBoxRecipientConfig;
+
+              if (notificationUserNotificationBoxConfigsToMarkAsRemoved.has(nb) || existingConfig.rm) {
+                // if the recipient was being removed or is marked as removed, then update the config to confirm removal
+                nextConfig = {
+                  ...existingConfig,
+                  nb,
+                  rm: true,
+                  i: UNSET_INDEX_NUMBER
+                };
+              } else {
+                // else, use the updated recipient and keep/copy the
+                const updatedRecipient = nextRecipientsMap.get(nb) as NotificationBoxRecipient;
+
+                nextConfig = {
+                  ...existingConfig,
+                  nb,
+                  rm: false, // mark as not removed
+                  i: updatedRecipient.i
+                };
+              }
+            }
+
+            if (nextConfig != null) {
+              nextConfig.ns = false; // mark as synced
+              nextConfigs.push(nextConfig as NotificationUserNotificationBoxRecipientConfig);
+            }
+          });
+
+          const ns = nextConfigs.some((x) => x.ns);
+          await notificationUserDocumentInTransaction.update({ bc: nextConfigs, ns });
+          hasUnsyncedNotificationBoxConfigs = ns;
+        }
+
+        const batchResult: ResyncNotificationUserBatchResult = {
+          hasMoreNotificationBoxesToSync: hasUnsyncedNotificationBoxConfigs,
+          notificationBoxesUpdatedInBatch
+        };
+
+        return batchResult;
+      });
+
+      hasMoreNotificationBoxesToSync = batchResult.hasMoreNotificationBoxesToSync;
+      notificationBoxesUpdated += batchResult.notificationBoxesUpdatedInBatch;
+    }
+
+    const result: ResyncNotificationUserResult = {
+      notificationBoxesUpdated
+    };
+
+    return result;
+  };
+}
+
+/**
+ * Factory for the `resyncNotificationUser` action.
+ *
+ * Re-synchronizes a single {@link NotificationUser}'s box configs. See {@link resyncNotificationUserDocumentFactory}.
  *
  * @param context - The notification server actions context with Firestore and collection access.
  * @returns A transform-and-validate function that resyncs a notification user's box configurations.
  */
 export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const resyncNotificationUserDocument = resyncNotificationUserDocumentFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(resyncNotificationUserParamsType, async () => {
-    return async (notificationUserDocument: NotificationUserDocument) => {
-      // run updates in batches
-
-      interface ResyncNotificationUserBatchResult {
-        readonly notificationBoxesUpdatedInBatch: number;
-        readonly hasMoreNotificationBoxesToSync: boolean;
-      }
-
-      let notificationBoxesUpdated = 0;
-      let hasMoreNotificationBoxesToSync = true;
-
-      while (hasMoreNotificationBoxesToSync) {
-        const batchResult = await firestoreContext.runTransaction(async (transaction) => {
-          const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
-          const notificationUser = await assertSnapshotData(notificationUserDocumentInTransaction);
-          const { gc } = notificationUser;
-
-          const notificationBoxConfigsToSync = notificationUser.bc.filter((x) => x.ns);
-          const notificationBoxConfigsToSyncInThisBatch = takeFront(notificationBoxConfigsToSync, MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH);
-
-          /**
-           * These are the actual number of NotificationBox values that had recipients updated.
-           */
-          let notificationBoxesUpdatedInBatch = 0;
-          let hasUnsyncedNotificationBoxConfigs = false;
-
-          if (notificationBoxConfigsToSyncInThisBatch.length > 0) {
-            const notificationBoxConfigsToSyncInThisBatchMap = makeModelMap(notificationBoxConfigsToSyncInThisBatch, (x) => x.nb);
-
-            const notificationBoxIdsToSyncInThisBatch = Array.from(notificationBoxConfigsToSyncInThisBatchMap.keys()) as string[];
-
-            const notificationBoxDocuments = loadDocumentsForIds(notificationBoxCollection.documentAccessorForTransaction(transaction), notificationBoxIdsToSyncInThisBatch);
-            const notificationBoxDocumentSnapshotDataPairs = await getDocumentSnapshotDataPairs(notificationBoxDocuments);
-
-            const notificationBoxConfigsToRemoveFromNotificationUser = new Set<NotificationBoxId>();
-            const notificationUserNotificationBoxConfigsToMarkAsRemoved = new Set<NotificationBoxId>();
-            const nextRecipientsMap = new Map<NotificationBoxId, Maybe<NotificationBoxRecipient>>();
-
-            // update each NotificationBoxDocument
-            await performAsyncTasks(notificationBoxDocumentSnapshotDataPairs, async (notificationBoxDocumentSnapshotDataPair) => {
-              const { data: notificationBox, document } = notificationBoxDocumentSnapshotDataPair;
-              const nb: NotificationBoxId = document.id;
-
-              const notificationUserNotificationBoxConfig = notificationBoxConfigsToSyncInThisBatchMap.get(nb) as NotificationUserNotificationBoxRecipientConfig; // always exists
-
-              if (notificationBox) {
-                // update in the NotificationBox
-                const recipientIndex = notificationBox.r.findIndex((x) => x.uid === notificationUser.uid);
-
-                let r: NotificationBoxRecipient[] | undefined;
-
-                if (recipientIndex === -1) {
-                  // if they are not in the NotificationBox, then mark them as removed on the user
-                  notificationUserNotificationBoxConfigsToMarkAsRemoved.add(nb);
-                } else if (notificationUserNotificationBoxConfig.rm) {
-                  // remove from the notification box if it is flagged
-                  r = removeValuesAtIndexesFromArrayCopy(notificationBox.r, recipientIndex);
-                } else {
-                  const { m } = notificationBox;
-                  const recipient = notificationBox.r[recipientIndex];
-
-                  const nextRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                    uid: notificationUser.uid,
-                    m,
-                    appNotificationTemplateTypeInfoRecordService,
-                    gc,
-                    boxConfig: notificationUserNotificationBoxConfig,
-                    recipient
-                  });
-
-                  const recipientHasChange = !areEqualPOJOValues(nextRecipient, recipient);
-
-                  // only update recipients if the next/new recipient is not equal to the existing one
-                  if (recipientHasChange) {
-                    r = [...notificationBox.r];
-                    r[recipientIndex] = nextRecipient;
-                    nextRecipientsMap.set(nb, nextRecipient);
-                  } else {
-                    nextRecipientsMap.set(nb, recipient);
-                  }
-                }
-
-                // update recipients if needed
-                if (r != null) {
-                  await document.update({ r });
-                  notificationBoxesUpdatedInBatch += 1;
-                }
-              } else {
-                // if the entire NotificationBox no longer exists, flag to remove it from the user as a cleanup measure
-                notificationBoxConfigsToRemoveFromNotificationUser.add(nb);
-              }
-            });
-
-            // Update the NotificationUser
-            const notificationBoxIdsSynced = new Set(notificationBoxIdsToSyncInThisBatch);
-
-            // start nextConfigs off as a new array with none of the sync'd ids
-            const nextConfigs = notificationBoxConfigsToSyncInThisBatch.filter((x) => !notificationBoxIdsSynced.has(x.nb));
-
-            notificationBoxIdsToSyncInThisBatch.forEach((nb) => {
-              let nextConfig: Maybe<Building<NotificationUserNotificationBoxRecipientConfig>>;
-
-              if (notificationBoxConfigsToRemoveFromNotificationUser.has(nb)) {
-                // do nothing, as it should be removed
-              } else {
-                const existingConfig = notificationBoxConfigsToSyncInThisBatchMap.get(nb) as NotificationUserNotificationBoxRecipientConfig;
-
-                if (notificationUserNotificationBoxConfigsToMarkAsRemoved.has(nb) || existingConfig.rm) {
-                  // if the recipient was being removed or is marked as removed, then update the config to confirm removal
-                  nextConfig = {
-                    ...existingConfig,
-                    nb,
-                    rm: true,
-                    i: UNSET_INDEX_NUMBER
-                  };
-                } else {
-                  // else, use the updated recipient and keep/copy the
-                  const updatedRecipient = nextRecipientsMap.get(nb) as NotificationBoxRecipient;
-
-                  nextConfig = {
-                    ...existingConfig,
-                    nb,
-                    rm: false, // mark as not removed
-                    i: updatedRecipient.i
-                  };
-                }
-              }
-
-              if (nextConfig != null) {
-                nextConfig.ns = false; // mark as synced
-                nextConfigs.push(nextConfig as NotificationUserNotificationBoxRecipientConfig);
-              }
-            });
-
-            const ns = nextConfigs.some((x) => x.ns);
-            await notificationUserDocumentInTransaction.update({ bc: nextConfigs, ns });
-            hasUnsyncedNotificationBoxConfigs = ns;
-          }
-
-          const batchResult: ResyncNotificationUserBatchResult = {
-            hasMoreNotificationBoxesToSync: hasUnsyncedNotificationBoxConfigs,
-            notificationBoxesUpdatedInBatch
-          };
-
-          return batchResult;
-        });
-
-        hasMoreNotificationBoxesToSync = batchResult.hasMoreNotificationBoxesToSync;
-        notificationBoxesUpdated += batchResult.notificationBoxesUpdatedInBatch;
-      }
-
-      const result: ResyncNotificationUserResult = {
-        notificationBoxesUpdated
-      };
-
-      return result;
-    };
-  });
+  return firebaseServerActionTransformFunctionFactory(resyncNotificationUserParamsType, async () => resyncNotificationUserDocument);
 }
 
 /**
@@ -601,20 +684,17 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
  */
 export function resyncAllNotificationUsersFactory(context: NotificationServerActionsContext) {
   const { notificationUserCollection } = context;
-  const resyncNotificationUser = resyncNotificationUserFactory(context);
+  const resyncNotificationUserDocument = resyncNotificationUserDocumentFactory(context);
 
   return async () => {
     let notificationBoxesUpdated = 0;
-
-    const resyncNotificationUserParams: ResyncNotificationUserParams = { key: firestoreDummyKey() };
-    const resyncNotificationUserInstance = await resyncNotificationUser(resyncNotificationUserParams);
 
     const iterateResult = await iterateFirestoreDocumentSnapshotPairs({
       documentAccessor: notificationUserCollection.documentAccessor(),
       iterateSnapshotPair: async (snapshotPair) => {
         const { document: notificationUserDocument } = snapshotPair;
 
-        const result = await resyncNotificationUserInstance(notificationUserDocument);
+        const result = await resyncNotificationUserDocument(notificationUserDocument);
         notificationBoxesUpdated += result.notificationBoxesUpdated;
       },
       constraintsFactory: () => notificationUsersFlaggedForNeedsSyncQuery(),
@@ -638,6 +718,62 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
     const result: ResyncAllNotificationUsersResult = {
       notificationUsersResynced: iterateResult.totalSnapshotsVisited,
       notificationBoxesUpdated
+    };
+
+    return result;
+  };
+}
+
+/**
+ * Factory for the `applyNotificationUserTextOptOut` action.
+ *
+ * Syncs a STOP or START reply to a text back to the {@link NotificationUser}s it came from. See `NotificationUser.tso`.
+ * - STOP: adds the number to `tso` on every NotificationUser whose texting number (`gc.t`) is that number. Idempotent.
+ * - START: removes the number from `tso` on every NotificationUser that stopped it, and re-records text consent (`gc.tcat`) for those
+ *   whose texting number is still that number.
+ *
+ * @param context - The notification server actions context with Firestore and collection access.
+ * @returns An async function that applies the reply and returns the ids of the NotificationUsers it was applied to.
+ */
+export function applyNotificationUserTextOptOutFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, notificationUserCollection } = context;
+
+  return async (params: ApplyNotificationUserTextOptOutParams): Promise<ApplyNotificationUserTextOptOutResult> => {
+    const { phoneNumber, type } = params;
+    let notificationUserIds: FirebaseAuthUserId[];
+
+    if (type === NotificationUserTextOptOutType.STOP) {
+      const notificationUserDocuments = await notificationUserCollection.queryDocument(notificationUsersWithTextPhoneNumberQuery(phoneNumber)).getDocs();
+
+      await performAsyncTasks(notificationUserDocuments, (notificationUserDocument) => notificationUserDocument.arrayUpdate({ union: { tso: [phoneNumber] } }), { maxParallelTasks: 10, throwError: true });
+      notificationUserIds = notificationUserDocuments.map((x) => x.id);
+    } else {
+      const notificationUserDocuments = await notificationUserCollection.queryDocument(notificationUsersWithStoppedTextPhoneNumberQuery(phoneNumber)).getDocs();
+
+      await performAsyncTasks(
+        notificationUserDocuments,
+        (notificationUserDocument) =>
+          firestoreContext.runTransaction(async (transaction) => {
+            const notificationUserDocumentInTransaction = notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationUserDocument);
+            const notificationUser = await assertSnapshotData(notificationUserDocumentInTransaction);
+
+            await notificationUserDocumentInTransaction.arrayUpdate({ remove: { tso: [phoneNumber] } });
+
+            // the number opted back in, so re-record consent for the users that still text it
+            if (notificationUser.gc.t === phoneNumber) {
+              await notificationUserDocumentInTransaction.update({ gc: { ...notificationUser.gc, tcat: new Date() } });
+            }
+          }),
+        { maxParallelTasks: 10, throwError: true }
+      );
+
+      notificationUserIds = notificationUserDocuments.map((x) => x.id);
+    }
+
+    const result: ApplyNotificationUserTextOptOutResult = {
+      phoneNumber,
+      type,
+      notificationUserIds
     };
 
     return result;
@@ -1148,7 +1284,8 @@ export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
  */
 export const NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES = 1;
 
-export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
+// Defined in @dereekb/firebase so the CLI can read it. Re-exported here for existing imports.
+export { NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS };
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
 
@@ -1294,8 +1431,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t] as NotificationTemplateTypeInfo | undefined;
 
             isKnownTemplateType = templateTypeInfo != null;
-            onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
-            onlyTextExplicitlyEnabledRecipients = notification.ots ?? templateTypeInfo?.onlyTextExplicitlyEnabledRecipients;
+            ({ onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = notificationExplicitOptInConfigForNotification(notification, templateTypeInfo));
 
             if (!isConfiguredTemplateType) {
               // log the issue that an notification with an unconfigured type was queued
@@ -1671,6 +1807,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return messages.filter((x) => !x.flag);
               }
 
+              const buildMessage = notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({
+                messageFunction,
+                templateTypeInfo: notificationTemplateType ? appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType] : undefined,
+                notificationId: notification.id
+              });
+
               // expand recipients
               const {
                 emails: emailRecipients,
@@ -1710,7 +1852,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                     return context;
                   });
 
-                const emailMessages = await Promise.all(emailInputContexts.map(messageFunction))
+                const emailMessages = await Promise.all(emailInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
@@ -1776,7 +1918,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                     return context;
                   });
 
-                const textMessages = await Promise.all(textInputContexts.map(messageFunction))
+                const textMessages = await Promise.all(textInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
@@ -1839,7 +1981,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   return context;
                 });
 
-                const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction))
+                const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);

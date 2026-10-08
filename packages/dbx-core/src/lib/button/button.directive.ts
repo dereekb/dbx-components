@@ -1,4 +1,4 @@
-import { Directive, type Signal, computed, input, output, signal } from '@angular/core';
+import { Directive, type Signal, computed, input, model, output, signal } from '@angular/core';
 import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { emitDelayObs } from '@dereekb/rxjs';
@@ -38,7 +38,12 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
 
   readonly buttonClick = output();
 
-  readonly ariaLabel = input<Maybe<string>>(undefined);
+  /**
+   * Accessible label for the button.
+   *
+   * Declared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.
+   */
+  readonly ariaLabel = model<Maybe<string>>(undefined);
 
   readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: Boolean });
   readonly working = input<DbxButtonWorking, Maybe<DbxButtonWorking>>(false, { transform: (x) => x ?? false });
@@ -62,8 +67,18 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
     return isDefinedAndNotFalse(working);
   });
 
-  readonly icon = input<Maybe<string>>();
-  readonly text = input<Maybe<string>>();
+  /**
+   * Icon to display. Takes precedence over the {@link buttonDisplay} icon.
+   *
+   * Declared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.
+   */
+  readonly icon = model<Maybe<string>>();
+  /**
+   * Text to display. Takes precedence over the {@link buttonDisplay} text.
+   *
+   * Declared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.
+   */
+  readonly text = model<Maybe<string>>();
 
   readonly buttonDisplayContentSignal: Signal<DbxButtonDisplay> = computed(() => {
     const icon = this.icon();

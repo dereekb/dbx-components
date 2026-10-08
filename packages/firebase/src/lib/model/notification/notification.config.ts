@@ -3,17 +3,33 @@
  *
  * Notification recipient configuration types and the bitwise encoding system for per-template channel preferences.
  *
- * Configuration follows a 3-level hierarchy (highest priority first):
- * 1. {@link NotificationUser.gc} — Global config override (applies at send time, not synced to boxes)
- * 2. {@link NotificationUserNotificationBoxRecipientConfig} — Per-box config on the user (synced to boxes)
- * 3. {@link NotificationBoxRecipientTemplateConfig} — Template defaults from the system configuration
+ * Each config level can enable/disable delivery per channel (email, text, push, summary) per template type. For a uid recipient,
+ * the send pipeline resolves each delivery method in this order (see `resolveNotificationUidRecipientDelivery()`):
  *
- * Each level can enable/disable delivery per channel (email, text, push, summary) per template type.
+ * 1. Suppression — the user opted out (`gc.f`, or `gc.f ?? dc.f` for direct sends), or their box exclusions (`NotificationUser.x`)
+ *    exclude the notification's box. Every method is off.
+ * 2. Disabled methods — the method is in `gc.dm` (unioned with `dc.dm` for direct sends). The method is off.
+ * 3. Configs, highest priority first, each level made effective first (its own `sd` fills its unset channels). The first level that sets
+ *    the method decides it:
+ *    - box recipients: {@link NotificationUser.gc} → the box's {@link NotificationBoxRecipient} entry (synced from the user's
+ *      {@link NotificationUserNotificationBoxRecipientConfig}) → the recipient as listed on the notification (`Notification.r`)
+ *    - direct recipients (listed, without an active box entry): {@link NotificationUser.gc} → {@link NotificationUser.dc} → the listed recipient
+ * 4. Defaults — email, push and in-app summaries are sent unless `onlySendToExplicitlyEnabledRecipients`; texts are only sent when
+ *    `onlyTextExplicitlyEnabledRecipients` is false. See {@link isNotificationDeliveryMethodEnabledByDefault}.
+ * 5. Stopped number — a text that would be sent is off when the resolved phone number replied STOP (it is in `NotificationUser.tso`).
+ *
+ * Note that the global config (`gc`) is an override, not a default: a method `gc` sets for a template type beats the box entry's setting for it,
+ * in every box. Only a box opt-out (an inactive box entry, whose `f` is set) beats `gc.c`, since the entry is skipped entirely. Apps should keep
+ * per-type settings in one place, either `gc.c` with a per-box on/off switch, or the box entries with `gc.c` left unset. See `NotificationUser.gc`.
+ *
+ * The global config (`gc`) is applied live at send time and is never copied into the boxes, except for its lock flag (`lk`).
+ * Contact details resolve as `gc.e ?? (box entry | dc).e ?? listed.e ?? auth email`. The phone number resolves the same way via `t`, but
+ * never falls back to the auth phone number: texts only go to a saved texting number.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
  */
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects, type Building } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, type IndexNumber, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, KeyValueTypleValueFilter, mergeObjects, filterUndefinedValues, type Building } from '@dereekb/util';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, type SavedToFirestoreIfTrue, firestoreModelIdString } from '../../common';
+import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreArray, optionalFirestoreBoolean, optionalFirestoreDate, optionalFirestoreEnum, optionalFirestoreString, type SavedToFirestoreIfTrue, firestoreModelIdString } from '../../common';
 
 /**
  * Per-template notification channel preferences for a recipient.
@@ -52,7 +68,10 @@ export interface NotificationBoxRecipientTemplateConfig {
 }
 
 /**
- * Merges two {@link NotificationBoxRecipientTemplateConfig} objects, preferring values from `a` over `b`.
+ * Merges two {@link NotificationBoxRecipientTemplateConfig} objects per channel, preferring values from `a` over `b`.
+ *
+ * A null/undefined channel on `a` is filled from `b`. Neither config is made effective first; to apply each level's `sd` before merging,
+ * use {@link mergeEffectiveNotificationBoxRecipientTemplateConfigs}.
  *
  * @param a - Primary config whose defined values take precedence.
  * @param b - Fallback config supplying values when `a` fields are undefined.
@@ -104,6 +123,255 @@ export function effectiveNotificationBoxRecipientTemplateConfig(a: NotificationB
     sp: sp ?? sd,
     sn: sn ?? sd
   };
+}
+
+// MARK: Delivery Method
+/**
+ * A delivery method (channel) that notifications can be sent through.
+ *
+ * The values mirror the per-method flags on {@link NotificationBoxRecipientTemplateConfig}
+ * (`se`/`st`/`sp`/`sn`), so a method maps directly onto the config field that gates it. See {@link NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY}.
+ */
+export enum NotificationDeliveryMethod {
+  /**
+   * Email delivery. Gated by `se`.
+   */
+  EMAIL = 'e',
+  /**
+   * Text/SMS delivery. Gated by `st`.
+   */
+  TEXT = 't',
+  /**
+   * Push notification delivery. Gated by `sp`.
+   */
+  PUSH = 'p',
+  /**
+   * In-app delivery to a NotificationSummary. Gated by `sn`.
+   */
+  NOTIFICATION_SUMMARY = 'n'
+}
+
+/**
+ * All delivery methods, in the order a report should present them.
+ */
+export const ALL_NOTIFICATION_DELIVERY_METHODS: NotificationDeliveryMethod[] = [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY];
+
+/**
+ * A value held per delivery method, for the methods it is known for.
+ *
+ * Partial because a health check only covers the methods it was asked about, so anything derived
+ * from one covers those methods only.
+ *
+ * @template T - The per-method value.
+ */
+export type NotificationDeliveryMethodMap<T> = Partial<Record<NotificationDeliveryMethod, T>>;
+
+/**
+ * A {@link NotificationBoxRecipientTemplateConfig} key that gates a single {@link NotificationDeliveryMethod}.
+ */
+export type NotificationBoxRecipientTemplateConfigDeliveryMethodKey = 'se' | 'st' | 'sp' | 'sn';
+
+/**
+ * The {@link NotificationBoxRecipientTemplateConfig} key that gates each {@link NotificationDeliveryMethod}.
+ */
+export const NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY: Readonly<Record<NotificationDeliveryMethod, NotificationBoxRecipientTemplateConfigDeliveryMethodKey>> = {
+  [NotificationDeliveryMethod.EMAIL]: 'se',
+  [NotificationDeliveryMethod.TEXT]: 'st',
+  [NotificationDeliveryMethod.PUSH]: 'sp',
+  [NotificationDeliveryMethod.NOTIFICATION_SUMMARY]: 'sn'
+};
+
+/**
+ * Reads the flag a {@link NotificationBoxRecipientTemplateConfig} has set for the given delivery method.
+ *
+ * This is the raw channel value: `sd` is not applied. Pass the config through {@link effectiveNotificationBoxRecipientTemplateConfig}
+ * first to read the effective value.
+ *
+ * @param config - The template config to read from.
+ * @param method - The delivery method whose flag to read.
+ * @returns The configured flag, or null/undefined when the config leaves the method unset.
+ */
+export function readNotificationDeliveryMethodFlag(config: Maybe<NotificationBoxRecipientTemplateConfig>, method: NotificationDeliveryMethod): Maybe<boolean> {
+  return config?.[NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY[method]];
+}
+
+/**
+ * Returns the known delivery methods from the input, without duplicates and in the canonical {@link ALL_NOTIFICATION_DELIVERY_METHODS} order.
+ *
+ * @param methods - The delivery methods to canonicalize.
+ * @returns The canonical delivery method list. Empty when the input is null/undefined or holds no known methods.
+ */
+export function toCanonicalNotificationDeliveryMethods(methods: Maybe<Iterable<NotificationDeliveryMethod>>): NotificationDeliveryMethod[] {
+  const methodsSet = new Set(methods ?? []);
+  return ALL_NOTIFICATION_DELIVERY_METHODS.filter((x) => methodsSet.has(x));
+}
+
+/**
+ * Template-level opt-in rules that decide what a delivery method does for a recipient whose config leaves it unset.
+ *
+ * Defined on a {@link NotificationTemplateTypeInfo}, and overridable per-notification via `Notification.ois` / `Notification.ots`.
+ */
+export interface NotificationExplicitOptInConfig {
+  /**
+   * When true, only sends email, push and in-app notifications to recipients who have explicitly enabled this template type in their
+   * {@link NotificationBoxRecipientTemplateConfig}. Recipients without an explicit opt-in are skipped.
+   *
+   * Defaults to false. Overridable per-notification via `Notification.ois`.
+   */
+  readonly onlySendToExplicitlyEnabledRecipients?: Maybe<boolean>;
+  /**
+   * When false, sends text/SMS to all recipients regardless of explicit opt-in status (still respects explicit opt-outs).
+   *
+   * Defaults to true, so texts are opt-in. Overridable per-notification via `Notification.ots`.
+   */
+  readonly onlyTextExplicitlyEnabledRecipients?: Maybe<boolean>;
+}
+
+/**
+ * Returns whether the delivery method is sent to a recipient whose config leaves it unset.
+ *
+ * This is what a "Default" choice resolves to:
+ * - Text is off unless `onlyTextExplicitlyEnabledRecipients` is explicitly false.
+ * - Every other method is on unless `onlySendToExplicitlyEnabledRecipients` is true.
+ *
+ * @param method - The delivery method to check.
+ * @param explicitOptIn - The template/notification opt-in rules.
+ * @returns True if the method is sent by default.
+ */
+export function isNotificationDeliveryMethodEnabledByDefault(method: NotificationDeliveryMethod, explicitOptIn?: Maybe<NotificationExplicitOptInConfig>): boolean {
+  return method === NotificationDeliveryMethod.TEXT ? explicitOptIn?.onlyTextExplicitlyEnabledRecipients === false : explicitOptIn?.onlySendToExplicitlyEnabledRecipients !== true;
+}
+
+/**
+ * Merges template configs from multiple config levels into one effective config.
+ *
+ * The configs are ordered highest priority first. Each level is made effective FIRST (its own `sd` fills its unset channels, see
+ * {@link effectiveNotificationBoxRecipientTemplateConfig}), then the first level that sets a channel decides it. A level's `sd` therefore
+ * beats any channel set on a lower level.
+ *
+ * @param configs - The template configs, highest priority first. Null/undefined levels are skipped.
+ * @returns The merged effective template config.
+ *
+ * @example
+ * ```ts
+ * mergeEffectiveNotificationBoxRecipientTemplateConfigs([{ sd: false }, { se: true }]);
+ * // { sd: false, se: false, st: false, sp: false, sn: false }
+ * ```
+ */
+export function mergeEffectiveNotificationBoxRecipientTemplateConfigs(configs: Maybe<NotificationBoxRecipientTemplateConfig>[]): NotificationBoxRecipientTemplateConfig {
+  return configs.reduceRight<NotificationBoxRecipientTemplateConfig>((acc, x) => (x == null ? acc : mergeNotificationBoxRecipientTemplateConfigs(effectiveNotificationBoxRecipientTemplateConfig(x), acc)), {});
+}
+
+/**
+ * What decided whether a delivery method is sent to a recipient. See {@link resolveNotificationDeliveryMethodDecisions}.
+ */
+export enum NotificationDeliveryMethodDecisionSource {
+  /**
+   * The recipient is suppressed entirely (opted out or excluded), so every method is off.
+   */
+  SUPPRESSED = 'suppressed',
+  /**
+   * The recipient disabled the delivery method account-wide.
+   */
+  DISABLED_METHOD = 'disabled_method',
+  /**
+   * A config level set the method. `configIndex` is the index of the level that decided it.
+   */
+  CONFIG = 'config',
+  /**
+   * No config level set the method, so the template's opt-in default decided it.
+   */
+  DEFAULT = 'default',
+  /**
+   * The text would be sent, but the resolved phone number replied STOP (see `NotificationUser.tso`), so texts are off. Only applies to
+   * {@link NotificationDeliveryMethod.TEXT}.
+   */
+  STOPPED_PHONE_NUMBER = 'stopped_phone_number'
+}
+
+/**
+ * Whether a delivery method is sent to a recipient, and what decided it.
+ */
+export interface NotificationDeliveryMethodDecision {
+  /**
+   * Whether the method is sent.
+   */
+  readonly send: boolean;
+  /**
+   * What decided `send`.
+   */
+  readonly source: NotificationDeliveryMethodDecisionSource;
+  /**
+   * The index of the config level that decided the method. Only set when `source` is {@link NotificationDeliveryMethodDecisionSource.CONFIG}.
+   */
+  readonly configIndex?: Maybe<IndexNumber>;
+}
+
+/**
+ * A {@link NotificationDeliveryMethodDecision} for every delivery method.
+ */
+export type NotificationDeliveryMethodDecisions = Record<NotificationDeliveryMethod, NotificationDeliveryMethodDecision>;
+
+/**
+ * Input for {@link resolveNotificationDeliveryMethodDecisions}.
+ */
+export interface ResolveNotificationDeliveryMethodDecisionsInput {
+  /**
+   * The template config of each config level, highest priority first. Null/undefined levels are skipped.
+   */
+  readonly configs: Maybe<NotificationBoxRecipientTemplateConfig>[];
+  /**
+   * Delivery methods the recipient disabled. A disabled method is off regardless of the configs and the opt-in defaults.
+   */
+  readonly disabledDeliveryMethods?: Maybe<Iterable<NotificationDeliveryMethod>>;
+  /**
+   * The opt-in rules that decide a method no config level sets.
+   */
+  readonly explicitOptIn?: Maybe<NotificationExplicitOptInConfig>;
+  /**
+   * Whether the recipient is suppressed entirely (opted out or excluded). Turns every method off.
+   */
+  readonly suppressed?: Maybe<boolean>;
+}
+
+/**
+ * Decides, per delivery method, whether a notification is sent to a recipient.
+ *
+ * Checked in order, the first match deciding:
+ * 1. SUPPRESSED — the recipient is suppressed, so the method is off.
+ * 2. DISABLED_METHOD — the method is in `disabledDeliveryMethods`, so it is off.
+ * 3. CONFIG — the first config level (each made effective first, see {@link mergeEffectiveNotificationBoxRecipientTemplateConfigs}) that sets the method.
+ * 4. DEFAULT — {@link isNotificationDeliveryMethodEnabledByDefault}.
+ *
+ * @param input - The config levels, disabled methods and opt-in rules to resolve against.
+ * @returns A decision for every delivery method.
+ */
+export function resolveNotificationDeliveryMethodDecisions(input: ResolveNotificationDeliveryMethodDecisionsInput): NotificationDeliveryMethodDecisions {
+  const { configs, explicitOptIn, suppressed } = input;
+  const disabledDeliveryMethods = new Set(input.disabledDeliveryMethods ?? []);
+  const effectiveConfigs = configs.map((x) => (x == null ? undefined : effectiveNotificationBoxRecipientTemplateConfig(x)));
+  const decisions: Building<NotificationDeliveryMethodDecisions> = {};
+
+  ALL_NOTIFICATION_DELIVERY_METHODS.forEach((method) => {
+    let decision: NotificationDeliveryMethodDecision;
+
+    if (suppressed) {
+      decision = { send: false, source: NotificationDeliveryMethodDecisionSource.SUPPRESSED };
+    } else if (disabledDeliveryMethods.has(method)) {
+      decision = { send: false, source: NotificationDeliveryMethodDecisionSource.DISABLED_METHOD };
+    } else {
+      const configIndex = effectiveConfigs.findIndex((x) => readNotificationDeliveryMethodFlag(x, method) != null);
+
+      decision =
+        configIndex === -1
+          ? { send: isNotificationDeliveryMethodEnabledByDefault(method, explicitOptIn), source: NotificationDeliveryMethodDecisionSource.DEFAULT }
+          : { send: readNotificationDeliveryMethodFlag(effectiveConfigs[configIndex], method) === true, source: NotificationDeliveryMethodDecisionSource.CONFIG, configIndex };
+    }
+
+    decisions[method] = decision;
+  });
+
+  return decisions as NotificationDeliveryMethodDecisions;
 }
 
 // MARK: Recipient
@@ -282,10 +550,33 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
    * Blocked flag. Prevents the NotificationBox from re-adding this user as a recipient.
    */
   readonly bk?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Delivery methods the user turned off account-wide, such as an SMS kill switch.
+   *
+   * A disabled method is never sent, regardless of the per-template configs and the template opt-in defaults.
+   *
+   * @dbxModelVariable disabledDeliveryMethods
+   */
+  readonly dm?: Maybe<NotificationDeliveryMethod[]>;
+  /**
+   * When the user last opted in to text messages, having not been opted in before. Evidence of SMS consent only; it never gates sending.
+   *
+   * See {@link hasNotificationDeliveryMethodOptIn}.
+   *
+   * Server-managed and only set on the global config (`gc`). Clients cannot set it.
+   *
+   * @dbxModelVariable textConsentAt
+   */
+  readonly tcat?: Maybe<Date>;
 }
 
 /**
  * Merges two {@link NotificationUserDefaultNotificationBoxRecipientConfig} objects, preferring defined values from `a` over `b`.
+ *
+ * - Top-level fields: `a` wins when its value is not null/undefined.
+ * - `c`: merged per template type and per channel, `a` winning. See {@link mergeNotificationBoxRecipientTemplateConfigRecords}.
+ * - `dm`: the union of both lists.
+ * - `tcat`: `a`'s value, falling back to `b`'s.
  *
  * @param a - Primary config whose defined values take precedence.
  * @param b - Fallback config supplying values when `a` fields are undefined.
@@ -293,13 +584,41 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
  */
 export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: NotificationUserDefaultNotificationBoxRecipientConfig): NotificationUserDefaultNotificationBoxRecipientConfig {
   const c = mergeNotificationBoxRecipientTemplateConfigRecords(a.c, b.c);
+  const dm = a.dm == null && b.dm == null ? undefined : toCanonicalNotificationDeliveryMethods([...(a.dm ?? []), ...(b.dm ?? [])]);
 
   const result: NotificationUserDefaultNotificationBoxRecipientConfig = {
-    ...mergeObjects<NotificationUserDefaultNotificationBoxRecipientConfig>([a, b], KeyValueTypleValueFilter.UNDEFINED),
-    c
+    ...mergeObjects<NotificationUserDefaultNotificationBoxRecipientConfig>([b, a], KeyValueTypleValueFilter.NULL),
+    c,
+    dm,
+    tcat: a.tcat ?? b.tcat
   };
 
   return result;
+}
+
+/**
+ * Returns whether the config disables the delivery method account-wide via its `dm` list.
+ *
+ * @param config - The NotificationUser global/default config.
+ * @param method - The delivery method to check.
+ * @returns True if the method is disabled.
+ */
+export function isNotificationDeliveryMethodDisabled(config: Maybe<Pick<NotificationUserDefaultNotificationBoxRecipientConfig, 'dm'>>, method: NotificationDeliveryMethod): boolean {
+  return config?.dm?.includes(method) ?? false;
+}
+
+/**
+ * Returns whether the config opts in to the delivery method: the method is not disabled, and at least one template type's
+ * effective config (see {@link effectiveNotificationBoxRecipientTemplateConfig}) explicitly enables it.
+ *
+ * Used to detect when a user first opts in to text messages, to record SMS consent.
+ *
+ * @param config - The NotificationUser global/default config.
+ * @param method - The delivery method to check.
+ * @returns True if the config opts in to the method.
+ */
+export function hasNotificationDeliveryMethodOptIn(config: Maybe<Pick<NotificationUserDefaultNotificationBoxRecipientConfig, 'c' | 'dm'>>, method: NotificationDeliveryMethod): boolean {
+  return config != null && !isNotificationDeliveryMethodDisabled(config, method) && Object.values(config.c ?? {}).some((x) => readNotificationDeliveryMethodFlag(effectiveNotificationBoxRecipientTemplateConfig(x), method) === true);
 }
 
 /**
@@ -307,6 +626,10 @@ export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: No
  *
  * The `i` field tracks the user's index in the box's recipient array. Changes here are synced
  * bidirectionally with the corresponding {@link NotificationBox} during server-side sync.
+ *
+ * The user can opt out of the box with `f` ({@link NotificationBoxRecipientFlag.OPT_OUT}), which stops every notification from it. The user owns
+ * that opt-out: the box cannot override it, and clearing it on the user's side clears it on the box at the next sync. The per-type settings (`c`)
+ * only decide what the user's global config (`gc.c`) leaves unset.
  *
  * Field abbreviations:
  * - `nb` — NotificationBox ID this config mirrors
@@ -375,15 +698,30 @@ export type EncodedNotificationBoxRecipientTemplateConfig = BitwiseEncodedSet;
 export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTemplateType, NotificationBoxRecipientTemplateConfig>;
 
 /**
- * Merges two {@link NotificationBoxRecipientTemplateConfigRecord} objects, preferring defined values from `a`.
+ * Merges two {@link NotificationBoxRecipientTemplateConfigRecord} objects per template type and per channel, preferring defined values from `a`.
+ *
+ * Each template type present in either record is merged with {@link mergeNotificationBoxRecipientTemplateConfigs}, so a channel `a` leaves unset
+ * is filled from `b`.
  *
  * @param a - Primary record whose defined values take precedence.
  * @param b - Fallback record supplying values when `a` entries are undefined.
  * @returns The merged template config record.
+ *
+ * @example
+ * ```ts
+ * mergeNotificationBoxRecipientTemplateConfigRecords({ x: { se: true } }, { x: { se: false, st: true }, y: { sn: false } });
+ * // { x: { se: true, st: true }, y: { sn: false } }
+ * ```
  */
-export function mergeNotificationBoxRecipientTemplateConfigRecords(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigRecord): NotificationBoxRecipientTemplateConfigRecord {
-  const mergeConfigs = mergeObjectsFunction<NotificationBoxRecipientTemplateConfigRecord>(KeyValueTypleValueFilter.UNDEFINED);
-  return mergeConfigs([a, b]) as NotificationBoxRecipientTemplateConfigRecord;
+export function mergeNotificationBoxRecipientTemplateConfigRecords(a: Maybe<NotificationBoxRecipientTemplateConfigRecord>, b: Maybe<NotificationBoxRecipientTemplateConfigRecord>): NotificationBoxRecipientTemplateConfigRecord {
+  const result: NotificationBoxRecipientTemplateConfigRecord = {};
+  const types = new Set<NotificationTemplateType>([...Object.keys(a ?? {}), ...Object.keys(b ?? {})]);
+
+  types.forEach((type) => {
+    result[type] = filterUndefinedValues(mergeNotificationBoxRecipientTemplateConfigs(a?.[type], b?.[type]));
+  });
+
+  return result;
 }
 
 /**
@@ -501,7 +839,9 @@ export const firestoreNotificationUserDefaultNotificationBoxRecipientConfig = fi
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
       f: optionalFirestoreEnum<NotificationBoxRecipientFlag>({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
-      c: firestoreNotificationBoxRecipientTemplateConfigRecord()
+      c: firestoreNotificationBoxRecipientTemplateConfigRecord(),
+      dm: optionalFirestoreArray<NotificationDeliveryMethod>({ filterUnique: true, dontStoreIfEmpty: true }),
+      tcat: optionalFirestoreDate()
     }
   }
 });

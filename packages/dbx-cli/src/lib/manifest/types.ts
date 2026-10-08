@@ -914,3 +914,79 @@ export interface CliGeneratedManifestStamp {
    */
   readonly generatorVersion: string;
 }
+
+// MARK: Notification Manifest
+/**
+ * One notification task type in a {@link CliNotificationManifest}.
+ *
+ * Structural copy of the `TaskSummary` the `@dereekb/dbx-cli/validate` extractor reports, emitted by
+ * `generate-notification-manifest --cli-output`. Checkpoints only exist as TypeScript union types, so this is the only way the CLI can
+ * know them.
+ */
+export interface CliNotificationManifestTask {
+  /**
+   * The task type code, e.g. `E`.
+   */
+  readonly type: string;
+  /**
+   * The exported constant the type code is declared with, e.g. `EXAMPLE_NOTIFICATION_TASK_TYPE`.
+   */
+  readonly symbolName: string;
+  /**
+   * The task's data interface, when the extractor found one.
+   */
+  readonly dataInterfaceName?: string;
+  /**
+   * The task's checkpoints, in declaration order.
+   */
+  readonly checkpoints: readonly string[];
+  /**
+   * Whether the API registers a handler for the task type.
+   */
+  readonly hasHandler: boolean;
+  /**
+   * Number of steps in the handler's flow, when known.
+   */
+  readonly handlerFlowStepCount?: number;
+  /**
+   * Workspace-relative source file of the task type.
+   */
+  readonly sourceFile: string;
+}
+
+/**
+ * One notification template type in a {@link CliNotificationManifest}. Only enriches the runtime template type info, which stays the
+ * source of truth for names and delivery methods.
+ */
+export interface CliNotificationManifestTemplate {
+  /**
+   * The template type code, e.g. `E`.
+   */
+  readonly type: string;
+  /**
+   * The exported constant the type code is declared with.
+   */
+  readonly symbolName: string;
+  /**
+   * The API's message factory function for the type, when found.
+   */
+  readonly factoryFunctionName?: string;
+  /**
+   * Delivery method codes (e.g. `e`, `t`) the factory produces content for.
+   */
+  readonly factoryContentDeliveryMethods: readonly string[];
+  /**
+   * Workspace-relative source file of the template type.
+   */
+  readonly sourceFile: string;
+}
+
+/**
+ * Build-time notification facts for an app CLI, emitted by `generate-notification-manifest --cli-output`.
+ *
+ * Structural on purpose: the runtime cannot import `@dereekb/dbx-cli/validate`, which depends on it.
+ */
+export interface CliNotificationManifest {
+  readonly tasks: readonly CliNotificationManifestTask[];
+  readonly templates: readonly CliNotificationManifestTemplate[];
+}

@@ -1,7 +1,8 @@
 import { Global, Inject, Module, type ModuleMetadata } from '@nestjs/common';
 import { NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, notificationInitServerActions, NotificationInitServerActions, type NotificationInitServerActionsContextConfig } from './notification.action.server.init';
 import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, type BaseNotificationServerActionsContext, NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, notificationServerActions, NotificationServerActions, type NotificationServerActionsContext } from './notification.action.server';
-import { NotificationTemplateService } from './notification.config.service';
+import { assertNotificationTemplateServiceTemplateTypes, NotificationTemplateService } from './notification.config.service';
+import { type AppNotificationTemplateTypeInfoRecordServiceRef } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationSendService } from './notification.send.service';
@@ -13,12 +14,16 @@ import { exportMutableNotificationExpediteService, MutableNotificationExpediteSe
  * Factory that assembles the full {@link NotificationServerActionsContext} by combining
  * the base context with the template, send, task, and expedite services.
  *
+ * When the context carries an `appNotificationTemplateTypeInfoRecordService`, checks that the template service has a message factory for
+ * exactly the template types that have info. See {@link assertNotificationTemplateServiceTemplateTypes}.
+ *
  * @param context - The base server actions context.
  * @param notificationTemplateService - Resolves message factories for notification template types.
  * @param notificationSendService - Handles sending notification messages.
  * @param notificationTaskService - Handles notification task dispatch.
  * @param notificationsExpediteService - Expedites immediate notification delivery.
  * @returns The assembled {@link NotificationServerActionsContext}
+ * @throws {Error} When a template type has a message factory but no info, or info but no message factory.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function notificationServerActionsContextFactory(
@@ -28,6 +33,13 @@ export function notificationServerActionsContextFactory(
   notificationTaskService: NotificationTaskService,
   notificationsExpediteService: NotificationExpediteService
 ) {
+  // the app's base context usually carries the template type info, but the base context type does not require it
+  const { appNotificationTemplateTypeInfoRecordService } = context as Partial<AppNotificationTemplateTypeInfoRecordServiceRef>;
+
+  if (appNotificationTemplateTypeInfoRecordService) {
+    assertNotificationTemplateServiceTemplateTypes({ notificationTemplateService, appNotificationTemplateTypeInfoRecordService });
+  }
+
   return { ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
 }
 

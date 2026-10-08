@@ -129,6 +129,12 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
    */
   readonly accountsApiUrl: ZohoAccountsApiUrl;
 
+  /**
+   * A minted Zoho token is only usable against the api domain it was issued for; the location code names
+   * that datacenter for a client configuring itself. The accounts server stays: only a refresh uses it.
+   */
+  override readonly exportedCredentialExtraKeys: readonly string[] = [ZOHO_EXTRA_API_DOMAIN_KEY, ZOHO_EXTRA_LOCATION_KEY];
+
   constructor(
     @Inject(ZohoUserExternalConnectionOAuthServiceConfig) readonly config: ZohoUserExternalConnectionOAuthServiceConfig,
     @Inject(UserExternalConnectionStateCoder) readonly stateCoder: UserExternalConnectionStateCoder,

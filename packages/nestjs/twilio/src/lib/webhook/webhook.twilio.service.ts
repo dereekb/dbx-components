@@ -1,8 +1,8 @@
 import { type Handler } from '@dereekb/util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type Request } from 'express';
-import { TwilioApi } from '../twilio.api';
 import { type TwilioMessageSid, type TwilioMessageStatus, type TwilioPhoneNumber } from '../twilio.type';
+import { twilioOptOutTypeFromString } from './webhook.twilio.optout';
 import { type TwilioIncomingMessageEvent, type TwilioStatusCallbackEvent, type TwilioWebhookEvent, type TwilioWebhookEventType, twilioWebhookEventHandlerConfigurerFactory, twilioWebhookEventHandlerFactory } from './webhook.twilio';
 import { TwilioWebhookServiceConfig } from './webhook.twilio.config';
 import { twilioWebhookVerifier, type TwilioWebhookVerifier } from './webhook.twilio.verify';
@@ -15,8 +15,8 @@ export class TwilioWebhookService {
   readonly handler: Handler<TwilioWebhookEvent, TwilioWebhookEventType> = twilioWebhookEventHandlerFactory();
   readonly configure = twilioWebhookEventHandlerConfigurerFactory(this.handler);
 
-  constructor(@Inject(TwilioApi) twilioApi: TwilioApi, @Inject(TwilioWebhookServiceConfig) webhookConfig: TwilioWebhookServiceConfig) {
-    const authToken = webhookConfig.twilioWebhook.authToken ?? twilioApi.config.twilio.authToken;
+  constructor(@Inject(TwilioWebhookServiceConfig) webhookConfig: TwilioWebhookServiceConfig) {
+    const { authToken, baseUrl, skipVerify } = webhookConfig.twilioWebhook;
 
     if (!authToken) {
       throw new Error('TwilioWebhookService: authToken is required (set TWILIO_AUTH_TOKEN or TWILIO_WEBHOOK_AUTH_TOKEN).');
@@ -24,8 +24,8 @@ export class TwilioWebhookService {
 
     this._verifier = twilioWebhookVerifier({
       authToken,
-      baseUrl: webhookConfig.twilioWebhook.baseUrl,
-      skip: webhookConfig.twilioWebhook.skipVerify
+      baseUrl,
+      skip: skipVerify
     });
   }
 
@@ -83,6 +83,8 @@ export class TwilioWebhookService {
           FromState: params['FromState'],
           FromZip: params['FromZip'],
           FromCountry: params['FromCountry'],
+          MessagingServiceSid: params['MessagingServiceSid'],
+          OptOutType: twilioOptOutTypeFromString(params['OptOutType']),
           mediaUrls,
           raw: params
         }

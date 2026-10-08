@@ -271,8 +271,9 @@ export enum NotificationMValidateAppCode {
 
   /**
    * A task type appears in `validate:` but has no matching `handlers:` registration.
+   * `notificationTaskService()` throws at startup for this.
    *
-   * @dbxRuleSeverity warning
+   * @dbxRuleSeverity error
    * @dbxRuleApplies When `notificationTaskService({ validate, handlers })` lists a task type in `validate:` that the `handlers:` traversal doesn't reach.
    * @dbxRuleNotApplies Tasks whose handler is provided by an upstream module (covered by the trust list).
    * @dbxRuleFix Add the matching `NotificationTaskServiceTaskHandlerConfig` for the task and include it in `handlers:`.
@@ -297,7 +298,18 @@ export enum NotificationMValidateAppCode {
    * @dbxRuleNotApplies Apps that intentionally compose multiple task services (rare — only the first call's config takes effect at runtime).
    * @dbxRuleFix Consolidate the calls into one — the second call's handlers are unused at runtime.
    */
-  NOTIF_TASK_MULTIPLE_SERVICES = 'NOTIF_TASK_MULTIPLE_SERVICES'
+  NOTIF_TASK_MULTIPLE_SERVICES = 'NOTIF_TASK_MULTIPLE_SERVICES',
+
+  /**
+   * A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods`.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Template types whose info declares an explicit `userConfigurableDeliveryMethods` array and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method the array leaves out.
+   * @dbxRuleNotApplies Infos without `userConfigurableDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically, and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.
+   * @dbxRuleFix Stop returning the unlisted content from the factory, or add the delivery method to the info's `userConfigurableDeliveryMethods`.
+   * @dbxRuleSeeAlso artifact:notification-template
+   */
+  NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD = 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD'
 }
 
 /**

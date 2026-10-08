@@ -2,6 +2,8 @@ export * from './call-model.client';
 export * from './call-model.command.factory';
 export * from './call.passthrough.command';
 export * from './expand-keys';
+export * from './external-token';
+export * from './external-token.command';
 export * from './firestore-session.client';
 export * from './get-args.helper';
 export * from './get.command';

@@ -67,3 +67,15 @@ export const NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE = 'NOTIFI
  * cheap and meant to be polled, so it neither answers to nor consumes the user's run allowance.
  */
 export const NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED';
+
+/**
+ * Thrown when a NotificationUser health check autofix asks for an issue that cannot be fixed: it is not on
+ * the stored health check, it is not marked fixable, or the delivery method's provider has no autofix.
+ */
+export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE';
+
+/**
+ * Thrown when a NotificationUser health check autofix asks for an issue whose autofix is
+ * {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} without setting `allowExplicitAutofix`.
+ */
+export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED';

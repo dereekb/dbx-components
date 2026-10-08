@@ -13,7 +13,9 @@ import {
   readFirestoreModelKey,
   type ReadFirestoreModelKeyInput,
   type CalendarEventId,
-  calendarIdentity
+  calendarIdentity,
+  type NotificationTemplateTypeInfoGroup,
+  NotificationDeliveryMethod
 } from '@dereekb/firebase';
 import { type ProfileDocument, profileIdentity } from '../profile';
 import { demoProfileCalendarId } from '../calendar';
@@ -50,6 +52,30 @@ export const DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES: Minutes = 2;
  */
 export const DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS: Seconds = 15;
 
+// MARK: User Settings
+/**
+ * Settings group for the notifications about the user's own profile.
+ */
+export const DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP: NotificationTemplateTypeInfoGroup = {
+  key: 'profile',
+  name: 'Your Profile',
+  sortOrder: 0
+};
+
+/**
+ * Settings group for the notifications about the guestbooks a user takes part in.
+ */
+export const DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP: NotificationTemplateTypeInfoGroup = {
+  key: 'guestbook',
+  name: 'Guestbooks',
+  sortOrder: 1
+};
+
+/**
+ * Disclosure shown to a demo user where they turn on text message notifications.
+ */
+export const DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE = 'By turning on text messages you agree to receive notification texts from the dbx-components demo. Message and data rates may apply. Message frequency varies. Reply STOP to opt out, HELP for help.';
+
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
 
@@ -57,7 +83,9 @@ export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo
   type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
   name: 'Test Type',
   description: 'A test notification for profiles.',
-  notificationModelIdentity: profileIdentity
+  notificationModelIdentity: profileIdentity,
+  group: DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP,
+  hideFromUserSettings: true // internal test notifications are not user-configurable
 };
 
 // MARK: Example Notification
@@ -70,7 +98,8 @@ export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeIn
   type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Example Notification',
   description: 'An example notification.',
-  notificationModelIdentity: profileIdentity
+  notificationModelIdentity: profileIdentity,
+  group: DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP
 };
 
 export interface ExampleNotificationData {
@@ -119,7 +148,8 @@ export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO: Notificati
   type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Created',
   description: 'A new guestbook entry has been created.',
-  notificationModelIdentity: guestbookIdentity
+  notificationModelIdentity: guestbookIdentity,
+  group: DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP
 };
 
 export interface GuestbookEntryCreatedNotificationData {}
@@ -155,7 +185,8 @@ export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO: Notification
   name: 'Guestbook Entry Liked',
   description: 'A guestbook entry has been liked.',
   notificationModelIdentity: guestbookIdentity, // occurs in guestbooks
-  targetModelIdentity: guestbookEntryIdentity // targets guestbook entries
+  targetModelIdentity: guestbookEntryIdentity, // targets guestbook entries
+  group: DEMO_NOTIFICATION_GUESTBOOK_SETTINGS_GROUP
 };
 
 export interface GuestbookEntryLikedNotificationData {}
@@ -212,7 +243,9 @@ export const CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO: Notification
   name: 'Calendar Event Invite',
   description: 'An invitation to an event on a profile calendar, delivered as an iTIP calendar attachment.',
   notificationModelIdentity: profileIdentity, // delivered to the profile's notification box
-  targetModelIdentity: calendarIdentity // targets the profile's calendar
+  targetModelIdentity: calendarIdentity, // targets the profile's calendar
+  group: DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP,
+  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] // the iTIP calendar attachment only works by email
 };
 
 /**

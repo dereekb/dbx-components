@@ -26,6 +26,7 @@ import {
   type DbxFirebaseModelTypesServiceConfig,
   type DbxFirebaseModelTypesServiceEntry,
   type DbxFirebaseExternalConnectionProviderEntry,
+  DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
   dbxFirebaseKnownExternalConnectionProvider,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   provideDbxFirebase,
@@ -49,6 +50,7 @@ import {
   DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES,
   DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES,
   DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS,
+  DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
   DEMO_OIDC_AVAILABLE_SCOPES,
   DEMO_OIDC_PROVIDER_PROFILE_DETAILS,
   DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
@@ -56,6 +58,7 @@ import {
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
   DEMO_FORM_SPACE_TYPE_CONFIG_SERVICE,
   ProfileFunctions
 } from 'demo-firebase';
@@ -95,6 +98,11 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * is no second place naming Discord. Demo-api has to enable sign-in for it independently; without
  * that the button redirects straight back to the login page. No brand mark: the known provider's
  * `forum` material icon is reused, since the repo carries no Discord asset.
+ *
+ * `zoho_admin` is a second Zoho connection that exists only to be minted out to `zoho-cli`. It is
+ * `adminOnly`: hidden from non-admins entirely and marked "Admin Only" for admins. Display only —
+ * demo-api's provider policy is what refuses a non-admin. No `signIn`: an admin-only provider can never
+ * be a login method.
  */
 export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionProviderEntry[] = [
   DEMO_CALCOM_EXTERNAL_CONNECTION_PROVIDER_TYPE,
@@ -104,7 +112,17 @@ export const DEMO_EXTERNAL_CONNECTION_PROVIDERS: DbxFirebaseExternalConnectionPr
     // button on the login page reads. Only the brand colors are Discord's own
     signIn: { backgroundColor: '#5865F2', textColor: '#FFFFFF' }
   }),
-  DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE
+  DEMO_ZOHO_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+  {
+    ...DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER,
+    providerType: DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    adminOnly: true,
+    assets: {
+      ...DBX_FIREBASE_EXTERNAL_CONNECTION_ZOHO_PROVIDER.assets,
+      providerName: 'Zoho (Admin, CLI)',
+      description: 'Connect the Zoho account zoho-cli runs as. Its access token can be minted out to demo-cli.'
+    }
+  }
 ];
 
 // MARK: DbxAnalytics
@@ -407,6 +425,16 @@ export const APP_CONFIG: ApplicationConfig = {
           probeThrottleMinutes: DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES,
           runThrottleMinutes: DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES,
           verifyThrottleSeconds: DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS
+        },
+        userSettings: {
+          // demo-api sends texts through Twilio, so every delivery method shows. An app that doesn't send texts passes
+          // [NotificationDeliveryMethod.TEXT], which also drops the text message switch and the phone number for texts
+          hiddenDeliveryMethods: [],
+          textMessageDisclosure: DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
+          phoneNumberPreferredCountries: ['US', 'CA'],
+          settingsAnchor: { ref: 'demo.app.notification.settings' },
+          // the default: per-type settings are global, and each guestbook only gets an on/off switch
+          notificationBoxSettingsMode: 'global'
         }
       },
       provideAnalyticsUserEventsListener: true,

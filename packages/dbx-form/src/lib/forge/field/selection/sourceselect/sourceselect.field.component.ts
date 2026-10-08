@@ -20,7 +20,8 @@ import {
   type SourceSelectOpenSourceResult,
   type SourceSelectOptions,
   type SourceSelectValue,
-  type SourceSelectValueGroup
+  type SourceSelectValueGroup,
+  sourceSelectDisplayValueMatchesFilterText
 } from '../../../../field/selection/sourceselect/sourceselect';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import type { DbxForgeSourceSelectFieldProps } from './sourceselect.field';
@@ -271,7 +272,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
 
       const lowerFilter = filterText.toLowerCase();
       const selectedSet = new Set(currentValues);
-      const matches = (dv: SourceSelectDisplayValue<T, M>) => selectedSet.has(dv.value) || dv.label.toLowerCase().includes(lowerFilter);
+      const matches = (dv: SourceSelectDisplayValue<T, M>) => selectedSet.has(dv.value) || sourceSelectDisplayValueMatchesFilterText(dv, lowerFilter);
       const filterGroups = this.filterableGroupsSignal();
 
       return {

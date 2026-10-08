@@ -41,6 +41,9 @@ export const DEFAULT_PROMPT_CANCEL_BUTTON_STYLE: DbxButtonStyle = { type: 'strok
 /**
  * Renders a confirmation prompt with customizable title, message, confirm, and cancel buttons.
  *
+ * Projected content shows above the buttons. Content marked with the `buttons` attribute shows in the same row, before the
+ * confirm button.
+ *
  * @dbxWebComponent
  * @dbxWebSlug prompt-confirm
  * @dbxWebCategory overlay
@@ -61,6 +64,7 @@ export const DEFAULT_PROMPT_CANCEL_BUTTON_STYLE: DbxButtonStyle = { type: 'strok
     <dbx-prompt [header]="config()?.title" [prompt]="config()?.prompt">
       <ng-content></ng-content>
       <div class="dbx-pt3">
+        <ng-content select="[buttons]"></ng-content>
         <dbx-button [buttonStyle]="confirmButtonStyleSignal()" [text]="confirmTextSignal()" (buttonClick)="onConfirm()"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button [buttonStyle]="cancelButtonStyleSignal()" [text]="cancelTextSignal()" (buttonClick)="onCancel()"></dbx-button>

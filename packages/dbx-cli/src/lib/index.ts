@@ -10,6 +10,7 @@ export * from './firestore';
 export * from './manifest';
 export * from './mcp-scan';
 export * from './middleware';
+export * from './notification';
 export * from './scan-helpers/emit-generated-ts.js';
 export * from './scan-helpers/exported-from-package.js';
 export * from './scan-helpers/scan-io.js';

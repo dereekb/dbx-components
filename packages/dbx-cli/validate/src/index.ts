@@ -1,8 +1,8 @@
 /**
  * Public surface of `@dereekb/dbx-cli/validate`.
  *
- * Pure, dependency-light validators, app-introspection extractors, and
- * smell-checks for a dbx-components workspace. None of this logic touches the
+ * Pure, dependency-light validators, app-introspection extractors, build-time
+ * manifest builders, and smell-checks for a dbx-components workspace. None of this logic touches the
  * MCP SDK or yargs — it is callable three ways over one implementation:
  *
  * - `import` (dbx-claude scripts and other library consumers),
@@ -21,7 +21,7 @@
  * …), the violation formatters (`formatStatusLabel`, `groupViolations`, …), and
  * the two-side folder validator engine (`createTwoSideFolderValidator`).
  *
- * Each **per-domain validator / extractor / smell-check** is exported as a
+ * Each **per-domain validator / extractor / manifest builder / smell-check** is exported as a
  * namespace, because they share generic member names (`validate*`,
  * `formatResult`, `inspectFolder`, `ValidationResult`, `Violation`, …) that
  * would collide in a flat barrel. Import the namespace and reach through it:
@@ -70,6 +70,9 @@ export * as notificationListApp from './lib/notification-m-list-app/index.js';
 export * as storagefileListApp from './lib/storagefile-m-list-app/index.js';
 export * as systemListApp from './lib/system-m-list-app/index.js';
 export * as colorTemplateListApp from './lib/dbx-color-template-list-app/index.js';
+
+// per-domain build-time manifests
+export * as notificationManifest from './lib/notification-m-manifest/index.js';
 
 // smell-checks
 export * as colorSmellCheck from './lib/dbx-color-smell-check/index.js';

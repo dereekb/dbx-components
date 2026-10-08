@@ -10,9 +10,9 @@
     "build": {
       "executor": "nx:noop",
       "outputs": [],
-      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest"],
+      "dependsOn": ["build-base", "copy-cli-artifact", "generate-mcp-manifest", "generate-route-manifest", "generate-notification-manifest"],
       "metadata": {
-        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the two manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the four dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
+        "description": "The app is assembled entirely by its dependsOn entries, so `build` itself has nothing left to run: it is a pure aggregation node (`nx:noop` -- a bare dependsOn with no executor is invalid, createTask throws). It used to shell out to `npx nx run demo-api:build-base` and then `npx nx run demo-api:copy-cli-artifact` under parallel:false; each of those was a separate Nx process with its own task graph, so nothing deduped the ~80-task ^build chain they share. As edges they resolve in ONE graph.  Ordering is NOT this list -- dependsOn does not order its own entries. build-base -> copy-cli-artifact is enforced by copy-cli-artifact's own dependsOn (build-base's asset copy would otherwise clobber assets/secure); the three manifests write dist/apps/demo-api/*.manifest.json, which no other task in this target touches, so they are genuinely order-free.  `outputs` is empty on purpose: every file under dist/apps/demo-api is written -- and cached, and restored -- by one of the five dependencies. Declaring them here would make a second task own the same paths, which is exactly the one-writer-per-output-directory invariant this whole conversion exists to preserve.  There is no `production` configuration any more: it only existed to swap in `build-base:production`, nothing ever invoked `demo-api:build:production`, and TargetDependencyConfig has no `configuration` field. The production path is `ci-deploy`, which calls `demo-api:build-base:production` directly."
       }
     },
     "copy-cli-artifact": {
@@ -70,6 +70,24 @@
       "options": {
         "command": "node dist/packages/dbx-cli/generate-route-manifest/main.js --src='apps/demo/src/**/*.ts' --app=demo --output=dist/apps/demo-api/route.manifest.json --models-input=dist/apps/demo-api/mcp.manifest.json",
         "cwd": "{workspaceRoot}"
+      }
+    },
+    "generate-notification-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/notification.manifest.json"],
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build"
+        }
+      ],
+      "inputs": ["{workspaceRoot}/components/demo-firebase/src/lib/model/notification/**/*.ts", "{workspaceRoot}/apps/demo-api/src/app/common/model/notification/**/*.ts", "{workspaceRoot}/apps/demo-api/src/app/common/firebase/**/*.ts", "{workspaceRoot}/dist/packages/dbx-cli/generate-notification-manifest/main.js"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-notification-manifest/main.js --component-dir=components/demo-firebase --api-dir=apps/demo-api --app=demo-api --output=dist/apps/demo-api/notification.manifest.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Build-time notification wiring check. Runs the dbx_notification_m_validate_app rules over the same extraction as dbx_notification_m_list_app, writes notification.manifest.json and exits non-zero on a validator error, so `build` (and ci-deploy, which depends on build through nx.json targetDefaults) fails before deploy. The runtime startup checks in @dereekb/firebase-server/model stay as the backstop. Not read at runtime, so `serve` does not depend on it. Not cached, like the sibling generate-* targets."
       }
     },
     "build-base": {

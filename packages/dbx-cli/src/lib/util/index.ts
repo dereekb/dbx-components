@@ -1,6 +1,7 @@
 export * from './args';
 export * from './browser';
 export * from './context.slot';
+export * from './credential-process';
 export * from './handler';
 export * from './interactive';
 export * from './output';

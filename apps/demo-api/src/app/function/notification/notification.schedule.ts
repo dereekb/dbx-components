@@ -14,6 +14,11 @@ export const notificationHourlyUpdateSchedule: DemoScheduleFunction = async (req
       const initializeNotificationSummariesResult = await initializeAllApplicableNotificationSummaries();
       return { initializeNotificationSummariesResult };
     },
+    // sync the NotificationUser box configs that are still flagged before sending, so sends read synced boxes
+    resyncAllNotificationUsers: async () => {
+      const resyncAllNotificationUsersResult = await request.nest.notificationActions.resyncAllNotificationUsers();
+      return { resyncAllNotificationUsersResult };
+    },
     sendQueuedNotifications: async () => {
       const sendQueuedNotifications = await request.nest.notificationActions.sendQueuedNotifications({});
       const sendQueuedNotificationsResult = await sendQueuedNotifications();

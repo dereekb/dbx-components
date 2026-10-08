@@ -47,6 +47,39 @@ describe('firestore.rules', () => {
       });
     });
 
+    describe('nu (NotificationUser)', () => {
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'nu', OWNER_UID), { uid: OWNER_UID, x: [], b: [], bc: [], dc: { c: {} }, gc: { c: {} } });
+        });
+      });
+
+      it('should allow the owner to read their own document', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(OWNER_UID), 'nu', OWNER_UID)));
+      });
+
+      it('should allow the owner to read when they have no document yet', async () => {
+        // the settings page reads the NotificationUser before it is created, so a missing document must read as missing, not permission-denied
+        await assertSucceeds(getDoc(doc(f.firestoreForUser('rulestestnonotificationuser'), 'nu', 'rulestestnonotificationuser')));
+      });
+
+      it("should deny reading another user's document", async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OTHER_UID), 'nu', OWNER_UID)));
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'nu', OWNER_UID)));
+      });
+
+      it('should deny the owner writing their own document', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser(OWNER_UID), 'nu', OWNER_UID), { gc: { c: {} } }));
+      });
+
+      it('should deny the owner creating their own document', async () => {
+        await assertFails(setDoc(doc(f.firestoreForUser('rulestestnonotificationuser'), 'nu', 'rulestestnonotificationuser'), { uid: 'rulestestnonotificationuser' }));
+      });
+    });
+
     describe('uecp (UserExternalConnectionPrivate)', () => {
       beforeEach(async () => {
         await f.withSecurityRulesDisabled(async (firestore) => {

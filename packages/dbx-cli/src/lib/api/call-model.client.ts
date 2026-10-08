@@ -258,7 +258,23 @@ function extractMessage(body: unknown, fallback: string, res: Response): string 
   return messageString ?? (fallback || `${res.status} ${res.statusText}`);
 }
 
-function codeForStatus(status: number): string {
+/**
+ * Maps an HTTP status to the stable {@link CliError} code the CLI reports for it.
+ *
+ * Shared by every HTTP client in the CLI so the same failure carries the same code (and the error
+ * envelope downstream emits the same suggestion) regardless of the endpoint.
+ *
+ * @param status - The HTTP status of a non-2xx response.
+ * @returns The CLI error code, e.g. `AUTH_FORBIDDEN` for 403 or `API_ERROR` for an unmapped 4xx.
+ *
+ * @example
+ * ```typescript
+ * codeForStatus(403); // 'AUTH_FORBIDDEN'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function codeForStatus(status: number): string {
   let result: string;
   if (status === 401) {
     result = 'AUTH_UNAUTHORIZED';

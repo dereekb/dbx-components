@@ -43,7 +43,9 @@ import type {
   ExtractedTemplateInfoRecord,
   ExtractedTemplateInfoRecordWiring,
   ExtractedTemplateTypeConstant,
-  ExtractedTemplateTypeInfo
+  ExtractedTemplateTypeInfo,
+  NotificationDeliveryMethodName,
+  UserConfigurableDeliveryMethodsSource
 } from './types.js';
 
 const NOTIF_TEMPLATE_TYPE = 'NotificationTemplateType';
@@ -62,6 +64,38 @@ const TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX = 'NotificationTemplateServiceConfig
 const TEMPLATE_CONFIGS_ARRAY_TOKEN = 'NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN';
 const CHECKPOINT_ALIAS_SUFFIX = 'NotificationTaskCheckpoint';
 const TASK_DATA_INTERFACE_SUFFIX = 'NotificationTaskData';
+const USER_CONFIGURABLE_DELIVERY_METHODS_PROPERTY = 'userConfigurableDeliveryMethods';
+const DELIVERY_METHOD_ENUM = 'NotificationDeliveryMethod';
+
+/**
+ * `NotificationDeliveryMethod.<MEMBER>` → member name.
+ */
+const DELIVERY_METHOD_BY_MEMBER: ReadonlyMap<string, NotificationDeliveryMethodName> = new Map([
+  ['EMAIL', 'EMAIL'],
+  ['TEXT', 'TEXT'],
+  ['PUSH', 'PUSH'],
+  ['NOTIFICATION_SUMMARY', 'NOTIFICATION_SUMMARY']
+]);
+
+/**
+ * `NotificationDeliveryMethod` runtime code (`'e'` etc.) → member name.
+ */
+const DELIVERY_METHOD_BY_CODE: ReadonlyMap<string, NotificationDeliveryMethodName> = new Map([
+  ['e', 'EMAIL'],
+  ['t', 'TEXT'],
+  ['p', 'PUSH'],
+  ['n', 'NOTIFICATION_SUMMARY']
+]);
+
+/**
+ * `NotificationMessage` channel-content property → delivery method, in the order
+ * `notificationMessageUnlistedDeliveryMethods` (`@dereekb/firebase`) checks them.
+ */
+const CONTENT_PROPERTY_DELIVERY_METHODS: ReadonlyMap<string, NotificationDeliveryMethodName> = new Map([
+  ['emailContent', 'EMAIL'],
+  ['textContent', 'TEXT'],
+  ['notificationSummaryContent', 'NOTIFICATION_SUMMARY']
+]);
 
 interface ComponentAggregateIndex {
   readonly templateInfos: ReadonlyMap<string, ExtractedTemplateTypeInfo>;
@@ -172,13 +206,16 @@ function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly Extr
         if (!nameMatches && !typeMatches) continue;
         const obj = asObjectLiteral(decl.getInitializer());
         if (!obj) continue;
+        const deliveryMethods = readUserConfigurableDeliveryMethods(obj, sf);
         const entry: ExtractedTemplateTypeInfo = {
           symbolName: name,
           typeConstantName: readIdentifierProperty(obj, 'type'),
           humanName: readStringProperty(obj, 'name'),
           description: readStringProperty(obj, 'description'),
-          notificationMIdentity: readIdentifierProperty(obj, 'notificationMIdentity'),
+          notificationModelIdentity: readIdentifierProperty(obj, 'notificationModelIdentity'),
           targetModelIdentity: readIdentifierProperty(obj, 'targetModelIdentity'),
+          userConfigurableDeliveryMethods: deliveryMethods.methods,
+          userConfigurableDeliveryMethodsSource: deliveryMethods.source,
           sourceFile: rel,
           line: decl.getStartLineNumber()
         };
@@ -187,6 +224,63 @@ function extractTemplateTypeInfos(sources: readonly SourceFile[]): readonly Extr
     }
   }
   return out;
+}
+
+interface ReadDeliveryMethodsResult {
+  readonly methods: readonly NotificationDeliveryMethodName[] | undefined;
+  readonly source: UserConfigurableDeliveryMethodsSource;
+}
+
+/**
+ * Reads an info's `userConfigurableDeliveryMethods` statically. An absent (or
+ * `undefined` / `null`) property means the runtime defaults apply; an array
+ * literal — inline, or behind one local identifier — is read element by
+ * element; anything else is reported as `unresolved`.
+ *
+ * @param obj - The `NotificationTemplateTypeInfo` object literal.
+ * @param sf - The source file declaring the info, used to resolve a local identifier.
+ * @returns The read methods and where they came from.
+ */
+function readUserConfigurableDeliveryMethods(obj: ObjectLiteralExpression, sf: SourceFile): ReadDeliveryMethodsResult {
+  const value = unwrapAsExpressions(getPropertyInitializer(obj, USER_CONFIGURABLE_DELIVERY_METHODS_PROPERTY));
+  let result: ReadDeliveryMethodsResult;
+  if (!value || isNullishLiteral(value)) {
+    result = { methods: undefined, source: 'default' };
+  } else if (Node.isIdentifier(value)) {
+    result = readDeliveryMethodsArray(asArrayLiteral(findLocalVariable(sf, value.getText())?.getInitializer()));
+  } else {
+    result = readDeliveryMethodsArray(asArrayLiteral(value));
+  }
+  return result;
+}
+
+function readDeliveryMethodsArray(arr: ArrayLiteralExpression | undefined): ReadDeliveryMethodsResult {
+  const methods: NotificationDeliveryMethodName[] = [];
+  let readable = arr !== undefined;
+  for (const el of arr?.getElements() ?? []) {
+    const method = readDeliveryMethodElement(unwrapAsExpressions(el));
+    if (!method) {
+      readable = false;
+    } else if (!methods.includes(method)) {
+      methods.push(method);
+    }
+  }
+  const result: ReadDeliveryMethodsResult = readable ? { methods, source: 'declared' } : { methods: undefined, source: 'unresolved' };
+  return result;
+}
+
+function readDeliveryMethodElement(el: Node | undefined): NotificationDeliveryMethodName | undefined {
+  let result: NotificationDeliveryMethodName | undefined;
+  if (el && Node.isPropertyAccessExpression(el) && el.getExpression().getText() === DELIVERY_METHOD_ENUM) {
+    result = DELIVERY_METHOD_BY_MEMBER.get(el.getName());
+  } else if (el && Node.isStringLiteral(el)) {
+    result = DELIVERY_METHOD_BY_CODE.get(el.getLiteralText());
+  }
+  return result;
+}
+
+function isNullishLiteral(node: Node | undefined): boolean {
+  return node !== undefined && ((Node.isIdentifier(node) && node.getText() === 'undefined') || node.getKind() === SyntaxKind.NullKeyword);
 }
 
 // MARK: Template info aggregates
@@ -629,6 +723,7 @@ function collectFromSingleEntryFactory(name: string, out: ExtractedTemplateHandl
   out.push({
     typeIdentifier: typeIdent,
     factoryFunctionName: name,
+    contentDeliveryMethods: collectContentDeliveryMethods([fn.node, factoryPropertyFunctionNode(obj, index)]),
     sourceFile: fn.relPath,
     line: obj.getStartLineNumber()
   });
@@ -665,7 +760,7 @@ function consumeArrayEntryFactoryElement(options: ConsumeArrayEntryFactoryElemen
     chaseDirectSingleEntryFactoryCall(inner, out, index);
     return;
   }
-  recordInlineEntryFactoryObject({ inner, factoryName, relPath, out });
+  recordInlineEntryFactoryObject({ inner, factoryName, relPath, out, index });
 }
 
 function chaseSpreadEntryFactoryCall(inner: Node, out: ExtractedTemplateHandlerEntry[], index: ApiFunctionIndex): void {
@@ -689,15 +784,68 @@ interface RecordInlineEntryFactoryObjectOptions {
   readonly factoryName: string;
   readonly relPath: string;
   readonly out: ExtractedTemplateHandlerEntry[];
+  readonly index: ApiFunctionIndex;
 }
 
 function recordInlineEntryFactoryObject(options: RecordInlineEntryFactoryObjectOptions): void {
-  const { inner, factoryName, relPath, out } = options;
+  const { inner, factoryName, relPath, out, index } = options;
   const obj = asObjectLiteral(inner);
   if (!obj) return;
   const typeIdent = readIdentifierProperty(obj, 'type');
   if (!typeIdent) return;
-  out.push({ typeIdentifier: typeIdent, factoryFunctionName: factoryName, sourceFile: relPath, line: obj.getStartLineNumber() });
+  // only the inline config is scanned: the enclosing function returns several configs
+  const contentDeliveryMethods = collectContentDeliveryMethods([obj, factoryPropertyFunctionNode(obj, index)]);
+  out.push({ typeIdentifier: typeIdent, factoryFunctionName: factoryName, contentDeliveryMethods, sourceFile: relPath, line: obj.getStartLineNumber() });
+}
+
+// MARK: Template handler content
+/**
+ * Resolves a handler config's `factory:` identifier (or shorthand) to a
+ * function declared in the API, so its body can be scanned for channel
+ * content. One hop only.
+ *
+ * @param obj - The `NotificationTemplateServiceTypeConfig` object literal.
+ * @param index - The API function index.
+ * @returns The named function node, or `undefined` when `factory:` is not an identifier naming an API function.
+ */
+function factoryPropertyFunctionNode(obj: ObjectLiteralExpression, index: ApiFunctionIndex): Node | undefined {
+  const name = readIdentifierProperty(obj, 'factory');
+  return name ? index.functionsByName.get(name)?.node : undefined;
+}
+
+/**
+ * Heuristic scan for the channel content a template factory builds: every
+ * `emailContent` / `textContent` / `notificationSummaryContent` property
+ * assignment (or shorthand) under the given nodes, skipping ones explicitly
+ * set to `undefined` / `null`. Content built in a helper outside these nodes
+ * is missed; the send pipeline's runtime warning still covers it.
+ *
+ * @param nodes - The subtrees to scan; `undefined` entries are skipped.
+ * @returns The delivery methods found, in canonical order (EMAIL, TEXT, NOTIFICATION_SUMMARY).
+ */
+function collectContentDeliveryMethods(nodes: readonly (Node | undefined)[]): NotificationDeliveryMethodName[] {
+  const found = new Set<NotificationDeliveryMethodName>();
+  for (const node of nodes) {
+    if (node) {
+      scanContentDeliveryMethods(node, found);
+    }
+  }
+  return Array.from(CONTENT_PROPERTY_DELIVERY_METHODS.values()).filter((method) => found.has(method));
+}
+
+function scanContentDeliveryMethods(node: Node, found: Set<NotificationDeliveryMethodName>): void {
+  for (const prop of node.getDescendantsOfKind(SyntaxKind.PropertyAssignment)) {
+    const method = CONTENT_PROPERTY_DELIVERY_METHODS.get(prop.getName());
+    if (method && !isNullishLiteral(unwrapAsExpressions(prop.getInitializer()))) {
+      found.add(method);
+    }
+  }
+  for (const prop of node.getDescendantsOfKind(SyntaxKind.ShorthandPropertyAssignment)) {
+    const method = CONTENT_PROPERTY_DELIVERY_METHODS.get(prop.getName());
+    if (method) {
+      found.add(method);
+    }
+  }
 }
 
 // MARK: Task service calls

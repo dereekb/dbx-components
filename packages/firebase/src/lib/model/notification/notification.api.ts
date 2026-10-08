@@ -10,13 +10,13 @@ import { type, type Type } from 'arktype';
 import { type TargetModelParams, type FirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { firestoreModelIdType, firestoreModelKeyType } from '../../common/model/model/model.validator';
 import { targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
-import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
+import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
-import { type NotificationHealthCheck, NotificationDeliveryMethod } from './notification.healthcheck';
+import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
@@ -28,6 +28,11 @@ export const NOTIFICATION_SUBJECT_MAX_LENGTH = 100;
 
 export const NOTIFICATION_MESSAGE_MIN_LENGTH = 2;
 export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Arktype validator for a single {@link NotificationDeliveryMethod}.
+ */
+export const notificationDeliveryMethodType = /* @__PURE__ */ type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY);
 
 /**
  * Config entries are inserted, unless marked as remove.
@@ -65,8 +70,10 @@ export const createNotificationUserParamsType = /* @__PURE__ */ type({
 
 /**
  * Used for updating the global or default config on a NotificationUser.
+ *
+ * The server-managed `tcat` (text consent) field cannot be set by the client.
  */
-export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams extends Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c'> {
+export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams extends Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c' | 'tcat'> {
   readonly i?: Maybe<IndexNumber>;
   readonly e?: Maybe<EmailAddress>;
   readonly t?: Maybe<E164PhoneNumber>;
@@ -74,6 +81,12 @@ export interface UpdateNotificationUserDefaultNotificationBoxRecipientConfigPara
   readonly lk?: Maybe<boolean>;
   readonly bk?: Maybe<boolean>;
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
+  /**
+   * Delivery methods to disable account-wide.
+   *
+   * Undefined keeps the current list, null clears it, and an array replaces it.
+   */
+  readonly dm?: Maybe<NotificationDeliveryMethod[]>;
 }
 
 export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType = /* @__PURE__ */ type({
@@ -83,7 +96,8 @@ export const updateNotificationUserDefaultNotificationBoxRecipientConfigParamsTy
   'configs?': clearable(notificationBoxRecipientTemplateConfigArrayEntryParamType.array()),
   'lk?': clearable('boolean'),
   'bk?': clearable('boolean'),
-  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT))
+  'f?': clearable(type.enumerated(NotificationBoxRecipientFlag.ENABLED, NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)),
+  'dm?': clearable(notificationDeliveryMethodType.array())
 }) as Type<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
 
 export interface UpdateNotificationBoxRecipientLikeParams {
@@ -108,6 +122,15 @@ export interface UpdateNotificationUserNotificationBoxRecipientParams extends Up
   readonly rm?: Maybe<boolean>;
   readonly lk?: Maybe<boolean>;
   readonly bk?: Maybe<boolean>;
+  /**
+   * Opts the user out of the box, or back in.
+   *
+   * {@link NotificationBoxRecipientFlag.OPT_OUT} stops every notification from the box, whatever the user's global config (`gc`) sets per
+   * template type. `null` or {@link NotificationBoxRecipientFlag.ENABLED} opts back in. {@link NotificationBoxRecipientFlag.DISABLED} belongs
+   * to the box and is ignored, and a config the box has DISABLED is not changed. Undefined keeps the current flag.
+   *
+   * Like the other box config changes, it reaches the NotificationBox on the next resync, or right away with `resync`.
+   */
   readonly f?: Maybe<NotificationBoxRecipientFlag>;
   readonly deleteRemovedConfig?: Maybe<boolean>;
 }
@@ -130,12 +153,21 @@ export interface UpdateNotificationUserParams extends TargetModelParams {
   readonly gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
   readonly dc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
   readonly bc?: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
+  /**
+   * Whether to sync the box configs this update leaves flagged (`ns`) to their NotificationBoxes right away, instead of waiting for
+   * `resyncNotificationUser` / `resyncAllNotificationUsers`.
+   *
+   * Only the NotificationUser's own recipient entries are written. The sync is best-effort: a failed sync does not fail the update, and leaves
+   * the configs flagged for the next resync. An app can turn it off by clearing it in its update handler, e.g. `{ ...data, resync: undefined }`.
+   */
+  readonly resync?: Maybe<boolean>;
 }
 
 export const updateNotificationUserParamsType = targetModelParamsType.merge({
   'gc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
   'dc?': clearable(updateNotificationUserDefaultNotificationBoxRecipientConfigParamsType),
-  'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array())
+  'bc?': clearable(updateNotificationUserNotificationBoxRecipientParamsType.array()),
+  'resync?': clearable('boolean')
 }) as Type<UpdateNotificationUserParams>;
 
 export type ResyncNotificationUserParams = TargetModelParams;
@@ -182,7 +214,9 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
   /**
    * The notification template type to evaluate per-template configuration against.
    *
-   * Defaults to the app's default template type.
+   * Defaults to the app's default template type. The default template type cannot be configured in the notification settings, so
+   * checking it evaluates every known template type instead, and a method's per-type configuration is only reported when no
+   * notification type would send it.
    */
   readonly notificationTemplateType?: Maybe<NotificationTemplateType>;
   /**
@@ -221,7 +255,7 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
 }
 
 export const notificationUserHealthCheckParamsType = targetModelParamsType.merge({
-  'methods?': clearable(type.enumerated(NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY).array()),
+  'methods?': clearable(notificationDeliveryMethodType.array()),
   'sendProbe?': clearable('boolean'),
   'verifyPendingProbesOnly?': clearable('boolean'),
   'notificationTemplateType?': clearable('string > 0'),
@@ -252,6 +286,67 @@ export interface NotificationUserHealthCheckResult {
    * The number of previously-pending probes this run resolved to a final status.
    */
   readonly probesResolved: number;
+}
+
+/**
+ * Used for automatically fixing issues a notification delivery health check found for a user, such as
+ * removing their address from a delivery provider's suppression list.
+ *
+ * PRIVILEGED — admin only. A fix changes state at the delivery provider, and can undo a choice the
+ * recipient made, so the API layer must restrict who can call it:
+ *
+ * ```ts
+ * assertIsAdminInRequest(request);
+ * ```
+ *
+ * Only issues on the user's STORED health check can be fixed, and only those the reporting provider marked
+ * as fixable (`af`). The fix is applied to the delivery target that check recorded, which is the one an
+ * admin reviewing the check sees. The delivery method is checked again afterwards, so the result and the
+ * stored check both show whether the fix worked.
+ *
+ * @dbxModelApiParams
+ */
+export interface NotificationUserHealthCheckAutofixParams extends TargetModelParams {
+  /**
+   * The delivery method whose issues to fix.
+   */
+  readonly method: NotificationDeliveryMethod;
+  /**
+   * The codes of the issues to fix. Each must be on the stored health check for this method and be marked
+   * fixable, or the whole call is refused.
+   */
+  readonly codes: NotificationHealthCheckIssueCode[];
+  /**
+   * Allow fixing issues whose autofix is {@link NotificationHealthCheckIssueAutofixType.EXPLICIT}.
+   *
+   * Those fixes override a choice the recipient made, such as reporting a message as spam, so they are
+   * refused unless this is set. Only set it when the recipient has explicitly asked for the fix.
+   *
+   * Defaults to false.
+   */
+  readonly allowExplicitAutofix?: Maybe<boolean>;
+}
+
+export const notificationUserHealthCheckAutofixParamsType = targetModelParamsType.merge({
+  method: notificationDeliveryMethodType,
+  codes: type('string > 0').array().atLeastLength(1),
+  'allowExplicitAutofix?': clearable('boolean')
+}) as Type<NotificationUserHealthCheckAutofixParams>;
+
+/**
+ * The result of a `healthCheckAutofix` invocation.
+ */
+export interface NotificationUserHealthCheckAutofixResult {
+  /**
+   * The outcome of each requested fix, in the order the codes were requested.
+   */
+  readonly results: NotificationHealthCheckIssueAutofixResult[];
+  /**
+   * The health check after the fixes were applied, with the fixed delivery method checked again.
+   *
+   * Also persisted to the {@link NotificationUser}'s `hc` field.
+   */
+  readonly healthCheck: NotificationHealthCheck;
 }
 
 export interface ResyncAllNotificationUserParams {}
@@ -566,12 +661,20 @@ export const NOTIFICATION_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMa
 
 export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationUser: {
+    /**
+     * Creates the NotificationUser for a user, so they can manage their notification settings before
+     * being added to any NotificationBox.
+     *
+     * Idempotent: returns the existing document unchanged when it already exists.
+     */
+    create: CreateNotificationUserParams;
     update: {
       _: UpdateNotificationUserParams;
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
     };
     invoke: {
       healthCheck: [NotificationUserHealthCheckParams, NotificationUserHealthCheckResult];
+      healthCheckAutofix: [NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult];
     };
   };
   readonly notificationSummary: {
@@ -596,7 +699,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
-  notificationUser: ['update:_,resync', 'invoke:healthCheck'],
+  notificationUser: ['create', 'update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
   notification: ['update:send']
@@ -610,12 +713,14 @@ export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunc
  */
 export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<NotificationFunctionTypeMap, NotificationBoxModelCrudFunctionsConfig> {
   abstract notificationUser: {
+    createNotificationUser: ModelFirebaseCreateFunction<CreateNotificationUserParams>;
     updateNotificationUser: {
       update: ModelFirebaseCrudFunction<UpdateNotificationUserParams>;
       resync: ModelFirebaseCrudFunction<ResyncNotificationUserParams, ResyncNotificationUserResult>;
     };
     invokeNotificationUser: {
       healthCheck: ModelFirebaseCrudFunction<NotificationUserHealthCheckParams, NotificationUserHealthCheckResult>;
+      healthCheckAutofix: ModelFirebaseCrudFunction<NotificationUserHealthCheckAutofixParams, NotificationUserHealthCheckAutofixResult>;
     };
   };
   abstract notificationSummary: {

@@ -1,5 +1,6 @@
 import { type ReadUserExternalConnectionAuthorizeStateParams, type UserExternalConnectionAuthorizeStateResult, firestoreModelKey, readUserExternalConnectionAuthorizeStateParamsType, userExternalConnectionIdentity } from '@dereekb/firebase';
-import { withApiDetails } from '@dereekb/firebase-server';
+import { isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
+import { assertUserExternalConnectionProviderConnectable } from '@dereekb/firebase-server/model';
 import { type DemoReadModelFunction } from '../function.context';
 
 /**
@@ -11,6 +12,10 @@ import { type DemoReadModelFunction } from '../function.context';
  *
  * Which providers are offered comes from the registry of mounted OAuth services rather than a list
  * maintained here, so a provider absent from the app's modules cannot be handed an unusable state.
+ * A provider whose policy is `adminOnly` (`zoho_admin`) is offered to admins only: a non-admin is
+ * refused with the same error as an unmounted provider, so the call does not reveal it exists. This is
+ * the one place the check is needed — every later step of the handoff is bound to the state minted
+ * here — and it covers both modes.
  *
  * The state is always minted for the caller's own document: it is keyed by uid, so the key is built
  * here rather than taken from `key` (which the client's document store injects, but which cannot name
@@ -28,7 +33,12 @@ export const userExternalConnectionReadAuthorizeState: DemoReadModelFunction<Rea
     const { nest, data, auth } = request;
     const { providerType, mode } = data;
 
-    nest.userExternalConnectionOAuthRegistry.assertHasAuthorizeFlowForProviderType(providerType);
+    assertUserExternalConnectionProviderConnectable({
+      oauthRegistry: nest.userExternalConnectionOAuthRegistry,
+      policyRegistry: nest.userExternalConnectionProviderPolicyRegistry,
+      providerType,
+      isAdmin: isAdminInRequest(request)
+    });
 
     const uid = auth.uid;
 

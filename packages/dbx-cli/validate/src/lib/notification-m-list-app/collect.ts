@@ -4,7 +4,7 @@
  * {@link AppNotificationsReport} — no AST walk happens here.
  */
 
-import type { ExtractedAppNotifications, ExtractedTemplateTypeInfo } from '../notification-m-validate-app/index.js';
+import type { ExtractedAppNotifications, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName } from '../notification-m-validate-app/index.js';
 import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './types.js';
 
 export interface CollectOptions {
@@ -57,8 +57,12 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
   const resolved = new Set(record ? record.resolvedInfoIdentifiers : []);
 
   const handlerByType = new Map<string, { readonly factoryFunctionName: string | undefined }>();
+  const handlerEntriesByType = new Map<string, ExtractedTemplateHandlerEntry[]>();
   for (const entry of extracted.templateHandlerEntries) {
     handlerByType.set(entry.typeIdentifier, { factoryFunctionName: entry.factoryFunctionName });
+    const entries = handlerEntriesByType.get(entry.typeIdentifier) ?? [];
+    entries.push(entry);
+    handlerEntriesByType.set(entry.typeIdentifier, entries);
   }
 
   const templates: TemplateSummary[] = [];
@@ -71,8 +75,11 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
       infoSymbolName: info?.symbolName,
       humanName: info?.humanName,
       description: info?.description,
-      notificationMIdentity: info?.notificationMIdentity,
+      notificationModelIdentity: info?.notificationModelIdentity,
       targetModelIdentity: info?.targetModelIdentity,
+      userConfigurableDeliveryMethods: info?.userConfigurableDeliveryMethods,
+      userConfigurableDeliveryMethodsSource: info?.userConfigurableDeliveryMethodsSource,
+      factoryContentDeliveryMethods: unionContentDeliveryMethods(handlerEntriesByType.get(constant.symbolName) ?? []),
       inInfoRecord: info ? resolved.has(info.symbolName) : false,
       hasFactory: handler !== undefined,
       factoryFunctionName: handler?.factoryFunctionName,
@@ -80,6 +87,23 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
     });
   }
   return templates;
+}
+
+/**
+ * Unions the content delivery methods of every handler entry for one template
+ * type, keeping the extractor's canonical order.
+ *
+ * @param entries - The handler entries registered for the type.
+ * @returns The delivery methods any of the entries build content for.
+ */
+function unionContentDeliveryMethods(entries: readonly ExtractedTemplateHandlerEntry[]): NotificationDeliveryMethodName[] {
+  const result: NotificationDeliveryMethodName[] = [];
+  for (const entry of entries) {
+    for (const method of entry.contentDeliveryMethods) {
+      if (!result.includes(method)) result.push(method);
+    }
+  }
+  return result;
 }
 
 /**

@@ -7,7 +7,7 @@
  * — placeholder substitution happens at render time.
  */
 
-import type { FileConventionSpec } from './types.js';
+import type { FileConventionSpec, FileConventionStep } from './types.js';
 
 const FIRESTORE_MODEL: FileConventionSpec = {
   artifact: 'firestore-model',
@@ -197,6 +197,36 @@ const STORAGEFILE_PROCESSOR_SUBTASK: FileConventionSpec = {
   verify: 'Run `dbx_validate_app_storagefiles` — `STORAGEFILE_PROCESSING_SUBTASK_NOT_HANDLED` should clear once the flow entry is added.'
 };
 
+/**
+ * Shared by the notification-template and notification-task specs: the nx
+ * target that runs the notification validator at build time.
+ */
+const NOTIFICATION_BUILD_TIME_CHECK_STEP: FileConventionStep = {
+  heading: 'Build-time check',
+  path: '<apiDir>/project.json',
+  body: [
+    'Wire `dbx-cli-generate-notification-manifest` (from `@dereekb/dbx-cli`) as an nx target so broken notification wiring fails the build before deploy. It runs the same rules as `dbx_notification_m_validate_app`, writes `notification.manifest.json`, and exits non-zero on a validator error (warnings are written into the manifest). One target covers every template and task type; add it once per app.',
+    '',
+    '```json',
+    '"generate-notification-manifest": {',
+    '  "executor": "nx:run-commands",',
+    '  "outputs": ["{workspaceRoot}/dist/<apiDir>/notification.manifest.json"],',
+    '  "inputs": [',
+    '    "{workspaceRoot}/<componentDir>/src/lib/model/notification/**/*.ts",',
+    '    "{workspaceRoot}/<apiDir>/src/app/common/model/notification/**/*.ts",',
+    '    "{workspaceRoot}/<apiDir>/src/app/common/firebase/**/*.ts"',
+    '  ],',
+    '  "options": {',
+    '    "command": "npx dbx-cli-generate-notification-manifest --component-dir=<componentDir> --api-dir=<apiDir> --output=dist/<apiDir>/notification.manifest.json",',
+    '    "cwd": "{workspaceRoot}"',
+    '  }',
+    '}',
+    '```',
+    '',
+    "**Wire into:** the API project's `build.dependsOn` (not `serve`: nothing reads the manifest at runtime, and the server's startup checks already cover `serve`)."
+  ].join('\n')
+};
+
 const NOTIFICATION_TEMPLATE: FileConventionSpec = {
   artifact: 'notification-template',
   title: 'Notification template',
@@ -209,7 +239,7 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
       body: [
         '**Required exports:**',
         "- `<NAME>_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = '<short_code>'`.",
-        '- `<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo` with `{ type, name, description, notificationMIdentity, targetModelIdentity? }`.',
+        '- `<NAME>_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo` with `{ type, name, description, notificationModelIdentity, targetModelIdentity? }`.',
         '- For multi-file workspaces, also declare `ALL_<MODULE>_NOTIFICATION_TEMPLATE_TYPE_INFOS: NotificationTemplateTypeInfo[]` and re-export the per-file infos.',
         '',
         '**Barrel:** Re-export from `<componentDir>/src/lib/model/notification/index.ts`.'
@@ -231,10 +261,12 @@ const NOTIFICATION_TEMPLATE: FileConventionSpec = {
         '',
         '**Wire into:** the top-level `<app>NotificationTemplateServiceConfigsArrayFactory(context)` — call the new factory inside its returned array. The configs-array factory is itself bound via `NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN` in the notification module.'
       ].join('\n')
-    }
+    },
+    NOTIFICATION_BUILD_TIME_CHECK_STEP
   ],
   seeAlso: ['notification-task'],
-  verify: 'Run `dbx_notification_m_validate_app` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_notification_m_list_app` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`.'
+  verify:
+    'Run `dbx_notification_m_validate_app` to confirm both registration paths (info-record + handler factory) are wired, then `dbx_notification_m_list_app` to confirm the new template appears with `inInfoRecord: true` and `hasFactory: true`, then `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
 };
 
 const NOTIFICATION_TASK: FileConventionSpec = {
@@ -275,10 +307,11 @@ const NOTIFICATION_TASK: FileConventionSpec = {
     {
       heading: 'Wire into task service',
       body: ['Push the new handler config into the `handlers: [...]` array passed to `notificationTaskService({ validate, handlers })`. The `validate:` spread should already cover it via `ALL_NOTIFICATION_TASK_TYPES`.'].join('\n')
-    }
+    },
+    NOTIFICATION_BUILD_TIME_CHECK_STEP
   ],
   seeAlso: ['notification-template'],
-  verify: 'Run `dbx_notification_m_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type.'
+  verify: 'Run `dbx_notification_m_validate_app` to confirm `inAllArray: true` + `hasHandler: true` for the new task type, then `npx nx run <api-project>:generate-notification-manifest` runs the same checks the build does.'
 };
 
 const NESTJS_MODEL_MODULE: FileConventionSpec = {

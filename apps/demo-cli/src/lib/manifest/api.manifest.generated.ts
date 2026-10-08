@@ -4,6 +4,7 @@
 
 import {
   createFormSpaceParamsType,
+  createNotificationUserParamsType,
   createOidcClientParamsType,
   createStorageFileParamsType,
   createStorageFileSignedUploadUrlParamsType,
@@ -18,6 +19,7 @@ import {
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
   lockFormSpaceParamsType,
+  notificationUserHealthCheckAutofixParamsType,
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
@@ -63,7 +65,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.9.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.14.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -393,6 +395,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   },
   {
     model: 'notificationUser',
+    verb: 'create',
+    paramsTypeName: 'CreateNotificationUserParams',
+    paramsValidator: createNotificationUserParamsType,
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: 'Creates the NotificationUser for a user, so they can manage their notification settings before\nbeing added to any NotificationBox.\n\nIdempotent: returns the existing document unchanged when it already exists.',
+    paramsTypeDescription: 'Used for creating a new NotificationUser for a user.',
+    paramsFields: [{ name: 'uid', typeText: 'FirebaseAuthUserId' }]
+  },
+  {
+    model: 'notificationUser',
     verb: 'invoke',
     specifier: 'healthCheck',
     paramsTypeName: 'NotificationUserHealthCheckParams',
@@ -415,7 +428,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         description:
           "Only resolve probes left pending by the previous check, skipping the configuration, history, and\nprovider diagnostics.\n\nDefaults to false. This is the POLL that settles an in-flight test message, and it is deliberately\ncheap enough to be called repeatedly: it consults a provider only for a method that actually has a\nprobe in flight, and touches nothing else. It answers to its own short window rather than the run\nwindow, and advances the stored check's `vat` rather than its `at`, so polling a test message never\nconsumes the user's allowance for running the check itself."
       },
-      { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>', description: "The notification template type to evaluate per-template configuration against.\n\nDefaults to the app's default template type." },
+      {
+        name: 'notificationTemplateType',
+        typeText: 'Maybe<NotificationTemplateType>',
+        description:
+          "The notification template type to evaluate per-template configuration against.\n\nDefaults to the app's default template type. The default template type cannot be configured in the notification settings, so\nchecking it evaluates every known template type instead, and a method's per-type configuration is only reported when no\nnotification type would send it."
+      },
       {
         name: 'skipSubscriptionChecks',
         typeText: 'Maybe<boolean>',
@@ -448,6 +466,33 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   },
   {
     model: 'notificationUser',
+    verb: 'invoke',
+    specifier: 'healthCheckAutofix',
+    paramsTypeName: 'NotificationUserHealthCheckAutofixParams',
+    paramsValidator: notificationUserHealthCheckAutofixParamsType,
+    resultTypeName: 'NotificationUserHealthCheckAutofixResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription:
+      "Used for automatically fixing issues a notification delivery health check found for a user, such as\nremoving their address from a delivery provider's suppression list.\n\nPRIVILEGED — admin only. A fix changes state at the delivery provider, and can undo a choice the\nrecipient made, so the API layer must restrict who can call it:\n\n```ts\nassertIsAdminInRequest(request);\n```\n\nOnly issues on the user's STORED health check can be fixed, and only those the reporting provider marked\nas fixable (`af`). The fix is applied to the delivery target that check recorded, which is the one an\nadmin reviewing the check sees. The delivery method is checked again afterwards, so the result and the\nstored check both show whether the fix worked.",
+    paramsFields: [
+      { name: 'method', typeText: 'NotificationDeliveryMethod', description: 'The delivery method whose issues to fix.' },
+      { name: 'codes', typeText: 'NotificationHealthCheckIssueCode[]', description: 'The codes of the issues to fix. Each must be on the stored health check for this method and be marked\nfixable, or the whole call is refused.' },
+      {
+        name: 'allowExplicitAutofix',
+        typeText: 'Maybe<boolean>',
+        description:
+          'Allow fixing issues whose autofix is {@link NotificationHealthCheckIssueAutofixType.EXPLICIT}.\n\nThose fixes override a choice the recipient made, such as reporting a message as spam, so they are\nrefused unless this is set. Only set it when the recipient has explicitly asked for the fix.\n\nDefaults to false.'
+      }
+    ],
+    resultTypeDescription: 'The result of a `healthCheckAutofix` invocation.',
+    resultFields: [
+      { name: 'results', typeText: 'NotificationHealthCheckIssueAutofixResult[]', description: 'The outcome of each requested fix, in the order the codes were requested.' },
+      { name: 'healthCheck', typeText: 'NotificationHealthCheck', description: "The health check after the fixes were applied, with the fixed delivery method checked again.\n\nAlso persisted to the {@link NotificationUser}'s `hc` field." }
+    ]
+  },
+  {
+    model: 'notificationUser',
     verb: 'update',
     specifier: '_',
     paramsTypeName: 'UpdateNotificationUserParams',
@@ -458,7 +503,13 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'gc', typeText: 'Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>' },
       { name: 'dc', typeText: 'Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>' },
-      { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' }
+      { name: 'bc', typeText: 'Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>' },
+      {
+        name: 'resync',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Whether to sync the box configs this update leaves flagged (`ns`) to their NotificationBoxes right away, instead of waiting for\n`resyncNotificationUser` / `resyncAllNotificationUsers`.\n\nOnly the NotificationUser's own recipient entries are written. The sync is best-effort: a failed sync does not fail the update, and leaves\nthe configs flagged for the next resync. An app can turn it off by clearing it in its update handler, e.g. `{ ...data, resync: undefined }`."
+      }
     ]
   },
   {
@@ -1427,7 +1478,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedIsArray: true
       },
       { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' },
-      { name: 'hc', longName: 'healthCheck', tsType: 'Maybe<NotificationHealthCheck>', optional: true, description: 'The result of the most recent notification delivery health check run for this user.' }
+      { name: 'hc', longName: 'healthCheck', tsType: 'Maybe<NotificationHealthCheck>', optional: true, description: 'The result of the most recent notification delivery health check run for this user.' },
+      { name: 'tso', longName: 'textStoppedPhoneNumbers', tsType: 'Maybe<E164PhoneNumber[]>', optional: true, description: 'Phone numbers that replied STOP to a text. Texts to a number in this list resolve to off, at send time and in the health check.' }
     ],
     read: 'system',
     serviceFactory: { exportName: 'notificationUserFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }

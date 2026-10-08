@@ -1,5 +1,5 @@
 import { ZOHO_ACCOUNTS_PROFILE_READ_SCOPE, type ZohoAccountsConfigApiUrlInput, type ZohoOAuthScope } from '@dereekb/zoho';
-import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE } from '@dereekb/firebase';
+import { ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE, type UserExternalConnectionProviderType } from '@dereekb/firebase';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { UserExternalConnectionOAuthServiceConfig, userExternalConnectionOAuthControllerPath, userExternalConnectionOAuthRoutesForGlobalRouteExclude, userExternalConnectionOAuthServiceConfigFactory } from '@dereekb/firebase-server/model';
 import { type Maybe } from '@dereekb/util';
@@ -56,6 +56,14 @@ export abstract class ZohoUserExternalConnectionOAuthServiceConfig extends UserE
 export interface ZohoUserExternalConnectionOAuthServiceConfigFactoryConfig {
   readonly envService: FirebaseServerEnvService;
   /**
+   * The provider type this Zoho connection is stored and routed under. Defaults to
+   * {@link ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE}.
+   *
+   * Set when an app registers more than one Zoho connection, e.g. a minimal-scope `zoho` connection the
+   * server uses and a separately consented full-scope one minted out to a CLI.
+   */
+  readonly providerType?: Maybe<UserExternalConnectionProviderType>;
+  /**
    * Path on the app URL the user is returned to after connecting, e.g. `/app/settings`.
    */
   readonly successPath: string;
@@ -85,11 +93,11 @@ export interface ZohoUserExternalConnectionOAuthServiceConfigFactoryConfig {
  * @returns The validated service configuration.
  */
 export function zohoUserExternalConnectionOAuthServiceConfigFactory(config: ZohoUserExternalConnectionOAuthServiceConfigFactoryConfig): ZohoUserExternalConnectionOAuthServiceConfig {
-  const { envService, successPath, failurePath, scopes, accountsApiUrl } = config;
+  const { envService, providerType, successPath, failurePath, scopes, accountsApiUrl } = config;
 
   const baseConfig = userExternalConnectionOAuthServiceConfigFactory({
     envService,
-    providerType: ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+    providerType: providerType ?? ZOHO_USER_EXTERNAL_CONNECTION_PROVIDER_TYPE,
     successPath,
     failurePath
   });

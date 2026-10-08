@@ -13,6 +13,7 @@
       [onlyCountries]="onlyCountriesSignal()"
       [enablePlaceholder]="false"
       [placeholder]="(placeholder() | dynamicText | async) ?? ''"
+      [required]="requiredSignal()"
       [attr.aria-invalid]="ariaInvalidSignal()"
       [attr.aria-required]="ariaRequiredSignal()"
       [attr.aria-describedby]="ariaDescribedBySignal()"></ngx-mat-input-tel>

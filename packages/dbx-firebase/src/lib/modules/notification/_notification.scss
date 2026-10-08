@@ -1,0 +1,46 @@
+// MARK: Mixin
+@mixin core() {
+  // Notification settings list rows and group headers share one layout so the column headers line up with the cells.
+  .dbx-firebase-notification-settings-row {
+    display: flex;
+    align-items: center;
+    gap: var(--dbx-padding-2);
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+  }
+
+  .dbx-firebase-notification-settings-row-label {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dbx-firebase-notification-settings-cell {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: var(--dbx-firebase-notification-settings-cell-width, 56px);
+  }
+
+  // Wraps the cell's icon button and shrinks to it.
+  .dbx-firebase-notification-settings-cell-button {
+    display: inline-flex;
+  }
+
+  // Marks a cell with an unsaved change with a tint of the button's own icon color, in the same circle as its hover state layer.
+  // The extra classes outrank dbx-button's `background: none` reset on colored icon buttons.
+  .dbx-firebase-notification-settings-cell.dbx-firebase-notification-settings-cell-modified .dbx-firebase-notification-settings-cell-button .mdc-button.dbx-base-button.mat-mdc-icon-button {
+    // currentColor is the icon color in every state, including the uncolored default state
+    background-color: color-mix(in srgb, currentColor var(--dbx-firebase-notification-settings-cell-modified-tone, 16%), transparent);
+  }
+
+  .dbx-firebase-notification-settings-column-header {
+    flex-direction: column;
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-small);
+  }
+}
+
+@mixin theme($theme-config) {
+}

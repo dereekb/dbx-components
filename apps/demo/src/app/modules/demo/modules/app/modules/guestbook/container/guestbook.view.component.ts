@@ -1,6 +1,7 @@
-import { Component, type OnDestroy, inject, viewChild } from '@angular/core';
+import { Component, type OnDestroy, computed, inject, viewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DemoGuestbookEntryCollectionStoreDirective, DemoGuestbookEntryDocumentStoreDirective, DemoGuestbookEntryListComponent, GuestbookDocumentStore, GuestbookEntryDocumentStore } from 'demo-components';
 import { DemoGuestbookAlbumComponent } from './guestbook.album.component';
@@ -10,7 +11,7 @@ import { DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
 import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
-import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
+import { DbxFirebaseCollectionListDirective, type DbxFirebaseNotificationUserSettingsComponentConfig, DbxFirebaseNotificationUserSettingsDialogButtonComponent } from '@dereekb/dbx-firebase';
 import { publishedGuestbookEntriesQuery } from 'demo-firebase';
 
 @Component({
@@ -29,7 +30,8 @@ import { publishedGuestbookEntriesQuery } from 'demo-firebase';
     DemoGuestbookEntryCollectionStoreDirective,
     DbxFirebaseCollectionListDirective,
     MatDividerModule,
-    DemoGuestbookAlbumComponent
+    DemoGuestbookAlbumComponent,
+    DbxFirebaseNotificationUserSettingsDialogButtonComponent
   ]
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
@@ -37,6 +39,14 @@ export class DemoGuestbookViewComponent implements OnDestroy {
   readonly matDialog = inject(MatDialog);
 
   readonly entryConstraints = publishedGuestbookEntriesQuery({ published: true });
+
+  readonly guestbookKeySignal = toSignal(this.guestbookStore.key$);
+
+  // the user's settings for this guestbook's NotificationBox, without the account-wide delivery settings
+  readonly guestbookNotificationSettingsConfigSignal = computed<Maybe<DbxFirebaseNotificationUserSettingsComponentConfig>>(() => {
+    const modelKey = this.guestbookKeySignal();
+    return modelKey ? { notificationBox: { modelKey, modelName: 'guestbook' }, showDeliveryMethodSettings: false } : undefined;
+  });
 
   readonly documentStore = viewChild.required(GuestbookEntryDocumentStore);
 

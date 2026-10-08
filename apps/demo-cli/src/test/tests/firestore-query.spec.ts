@@ -4,6 +4,7 @@ import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
 import { oAuthAuthorizedSuperTestContextFactory } from '@dereekb/firebase-server/test';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- demo-api fixture is intentionally shared with demo-cli specs (see apps/demo-cli/src/test/fixture.ts for the established pattern).
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoGuestbookContext, demoGuestbookEntryContext } from 'demo-api/test';
+import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST } from '../../lib/manifest/query.manifest.generated';
 import { withDemoTestCli } from '../fixture';
 
 vi.setConfig({ hookTimeout: 60000, testTimeout: 60000 });
@@ -86,13 +87,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               expect(result.stdoutText).toContain('profile-with-username-query');
             });
 
-            it('emits three parseable entries under --json, all invocable', async () => {
+            it('emits one parseable entry per manifest query under --json, the guestbook/profile ones invocable', async () => {
               const result = await runCli(['firestore-queries', '--json']);
               const envelope = parseEnvelope(result.stdoutText);
+              const invocableSlugs = envelope.data.filter((e: { readonly invocable: boolean }) => e.invocable).map((e: { readonly slug: string }) => e.slug);
 
               expect(envelope.ok).toBe(true);
-              expect(envelope.data).toHaveLength(3);
-              expect(envelope.data.every((e: { readonly invocable: boolean }) => e.invocable)).toBe(true);
+              expect(envelope.data).toHaveLength(DEMO_CLI_FIRESTORE_QUERY_MANIFEST.length);
+              expect(invocableSlugs).toEqual(expect.arrayContaining(['published-guestbooks-query', 'published-guestbook-entries-query', 'profile-with-username-query']));
             });
           });
 
@@ -311,7 +313,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               const check = envelope.data.checks.find((c: { readonly name: string }) => c.name === 'firestore-session');
 
               expect(check).toBeDefined();
-              expect(check.detail.readRouting).toMatchObject({ getFirestoreModels: true, invocableQueryEntries: 3, totalQueryEntries: 3 });
+              expect(check.detail.readRouting).toMatchObject({ getFirestoreModels: true, totalQueryEntries: DEMO_CLI_FIRESTORE_QUERY_MANIFEST.length });
+              expect(check.detail.readRouting.invocableQueryEntries).toBeGreaterThanOrEqual(3);
+              expect(check.detail.readRouting.invocableQueryEntries).toBeLessThanOrEqual(DEMO_CLI_FIRESTORE_QUERY_MANIFEST.length);
               expect(['firestore', 'api']).toContain(check.detail.readRouting.readPreference);
               expect(check.detail.readRouting.serverOnlyModels).toBeGreaterThan(0);
             });

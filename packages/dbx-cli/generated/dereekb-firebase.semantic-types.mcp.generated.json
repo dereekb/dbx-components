@@ -299,6 +299,20 @@
       "notes": "Names one upload \"slot\" within a FormSpace — the resume, the cover letter, the photo of the ID.\n\nA slot is stored on the uploaded {@link StorageFile} as its `pg` (purposeSubgroup), which is what makes\n\"replace the file in this slot\" the existing `flagPreviousForDelete` behaviour rather than new machinery."
     },
     {
+      "name": "NotificationTemplateTypeInfoGroupKey",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.details",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "notes": "Key of a {@link NotificationTemplateTypeInfoGroup}. Template types whose groups share a key are shown together."
+    },
+    {
       "name": "NotificationTemplateType",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/notification/notification.id",

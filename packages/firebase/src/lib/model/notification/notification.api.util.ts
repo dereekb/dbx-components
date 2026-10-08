@@ -4,13 +4,17 @@
  * Utility functions for applying {@link UpdateNotificationUserParams} changes to notification config objects.
  * Used by the server action service when processing user config update requests.
  */
-import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
+import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, filterUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import {
+  NotificationBoxRecipientFlag,
+  type NotificationBoxRecipientTemplateConfig,
   type NotificationBoxRecipientTemplateConfigRecord,
+  type NotificationDeliveryMethod,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationUserNotificationBoxRecipientConfig,
   notificationBoxRecipientTemplateConfigArrayToRecord,
   notificationBoxRecipientTemplateConfigRecordToArray,
+  toCanonicalNotificationDeliveryMethods,
   updateNotificationRecipient
 } from './notification.config';
 import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
@@ -18,8 +22,12 @@ import { type AppNotificationTemplateTypeInfoRecordService } from './notificatio
 import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
 
 /**
- * Applies an array of config entry params to a {@link NotificationBoxRecipientTemplateConfigRecord},
- * inserting new entries, merging updates, and removing entries marked with `remove: true`.
+ * Applies an array of config entry params to a {@link NotificationBoxRecipientTemplateConfigRecord}.
+ *
+ * Only what the entries set is changed:
+ * - an entry's defined values are merged into its type's config, and its undefined values keep the existing ones
+ * - types without an entry are kept as they are
+ * - a type marked with `remove: true`, or whose entry clears its last set values, is removed
  *
  * @param a - Existing config record.
  * @param b - Array of update params to apply.
@@ -28,14 +36,20 @@ import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } fr
  */
 export function updateNotificationBoxRecipientTemplateConfigRecord(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigArrayEntryParam[], limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationBoxRecipientTemplateConfigRecord> {
   const cArray = notificationBoxRecipientTemplateConfigRecordToArray(a);
-  let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, merge: (x, y) => ({ ...x, ...y }) });
+  let updatedC = ModelRelationUtility.insertCollection(cArray, b, { readKey: (x) => x.type, merge: (x, y) => ({ ...x, ...filterUndefinedValues(y) }) });
 
-  // remove types marked as remove
-  updatedC = ModelRelationUtility.removeKeysFromCollection(
-    updatedC,
-    b.filter((x) => x.remove).map((x) => x.type),
-    (x) => x.type
-  );
+  const hasNoValues = (x: NotificationBoxRecipientTemplateConfig) => [x.sd, x.se, x.st, x.sp, x.sn].every((value) => value == null);
+  const setsValues = (x: NotificationBoxRecipientTemplateConfig) => [x.sd, x.se, x.st, x.sp, x.sn].some((value) => value !== undefined);
+  const typesSetByUpdate = new Set(b.filter(setsValues).map((x) => x.type));
+  const removedTypes = new Set(b.filter((x) => x.remove).map((x) => x.type));
+
+  updatedC.forEach((x) => {
+    if (typesSetByUpdate.has(x.type) && hasNoValues(x)) {
+      removedTypes.add(x.type);
+    }
+  });
+
+  updatedC = ModelRelationUtility.removeKeysFromCollection(updatedC, Array.from(removedTypes), (x) => x.type);
 
   let c = notificationBoxRecipientTemplateConfigArrayToRecord(updatedC);
 
@@ -51,6 +65,10 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
  * Applies {@link UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams} to an existing
  * {@link NotificationUserDefaultNotificationBoxRecipientConfig}, producing an updated config.
  *
+ * The config is rebuilt from its known keys:
+ * - `dm` is kept when the update leaves it undefined, cleared by null, and otherwise replaced by the canonicalized list (an empty list is stored as null).
+ * - `tcat` is server-managed, so it is always kept from the existing config, even if the update carries one.
+ *
  * @param a - Existing config.
  * @param b - Update params to apply.
  * @param limitToAllowedConfigTypes - When provided, filters config types to only allowed template types.
@@ -61,16 +79,48 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
   b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams,
   limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>
 ): NotificationUserDefaultNotificationBoxRecipientConfig {
-  const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk } = b;
+  const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk, dm: inputDm } = b;
   const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
+
+  let dm: Maybe<NotificationDeliveryMethod[]>;
+
+  if (inputDm === undefined) {
+    dm = a.dm;
+  } else {
+    const canonicalDm = toCanonicalNotificationDeliveryMethods(inputDm);
+    dm = canonicalDm.length > 0 ? canonicalDm : null;
+  }
 
   return {
     ...updateNotificationRecipient(a, b),
     c,
     f: updateMaybeValue(a.f, inputF),
     bk: updateMaybeValue(a.bk, inputBk),
-    lk: updateMaybeValue(a.lk, inputLk)
+    lk: updateMaybeValue(a.lk, inputLk),
+    dm,
+    tcat: a.tcat
   };
+}
+
+/**
+ * Applies a user's opt-out change to the flag of one of their box configs.
+ *
+ * The user owns {@link NotificationBoxRecipientFlag.OPT_OUT}: they can set it, or clear it with `null` or {@link NotificationBoxRecipientFlag.ENABLED}.
+ * A cleared flag is unset rather than ENABLED, since ENABLED is never stored. {@link NotificationBoxRecipientFlag.DISABLED} belongs to the box, so
+ * a DISABLED config is never changed, and an input of DISABLED is ignored.
+ *
+ * @param current - The config's current flag.
+ * @param input - The flag from the update params. Undefined keeps the current flag.
+ * @returns The next flag.
+ */
+export function updateNotificationUserNotificationBoxRecipientFlag(current: Maybe<NotificationBoxRecipientFlag>, input: Maybe<NotificationBoxRecipientFlag>): Maybe<NotificationBoxRecipientFlag> {
+  let result = current;
+
+  if (input !== undefined && current !== NotificationBoxRecipientFlag.DISABLED && input !== NotificationBoxRecipientFlag.DISABLED) {
+    result = input === NotificationBoxRecipientFlag.OPT_OUT ? NotificationBoxRecipientFlag.OPT_OUT : undefined;
+  }
+
+  return result;
 }
 
 /**
@@ -79,13 +129,16 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(
  *
  * Automatically sets `ns = true` (needs sync) when changes are detected and the recipient has been indexed.
  *
+ * The params' `f` opts the user out of (or back in to) the box. See {@link updateNotificationUserNotificationBoxRecipientFlag}. The exclusion
+ * flag (`x`) is server-managed and never changed.
+ *
  * @param a - Existing per-box recipient config.
  * @param b - Update params to apply.
  * @param limitToAllowedConfigTypes - When provided, filters template config types to only allowed types.
  * @returns The updated config if changes were detected, or undefined if no changes occurred.
  */
 export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationUserNotificationBoxRecipientConfig> {
-  const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
+  const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk, f: inputF } = b;
   const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
 
   const nextConfig: Building<NotificationUserNotificationBoxRecipientConfig> = {
@@ -94,7 +147,10 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
     rm: updateMaybeValue(a.rm, inputRm),
     lk: updateMaybeValue(a.lk, inputLk),
     bk: updateMaybeValue(a.bk, inputBk),
+    f: updateNotificationUserNotificationBoxRecipientFlag(a.f, inputF),
     // values remain the same
+    // the update does not change the recipient's exclusion
+    x: a.x,
     ns: a.ns,
     nb: a.nb,
     i: a.i

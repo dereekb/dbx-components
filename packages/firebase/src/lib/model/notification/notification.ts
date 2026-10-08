@@ -51,6 +51,7 @@ import {
   firestoreObjectArray,
   firestoreString,
   firestoreUID,
+  optionalFirestoreArray,
   optionalFirestoreBoolean,
   optionalFirestoreEnum,
   snapshotConverterFunctions,
@@ -153,7 +154,7 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    *
    * Supports prefix matching: excluding `ab_123` also excludes child boxes like `ab_123_cd_456`.
    * Populated by server-side model logic (e.g., when a user loses access to a resource).
-   * Exclusions are synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
+   * Exclusions are applied live at send time, and are also synced to the corresponding `bc` configs, which then propagate to the NotificationBoxes.
    *
    * Non-matching entries (where the user isn't associated with a matching box) are automatically removed.
    *
@@ -163,7 +164,18 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Global config override. Overrides all other configs (both per-box `bc` and direct/default `dc`) at send time.
    *
-   * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply as a final override during notification delivery.
+   * It is an override, not a default: wherever `gc.c` sets a delivery method for a template type (directly or through the type's `sd`), that
+   * value is used for every box, and the box's own `bc` setting for that method is ignored. A method `gc.c` leaves unset falls through to the
+   * box's setting. So configuring the same template type in both `gc.c` and `bc[].c` rarely does what a user expects, and an app should pick one
+   * place for per-type settings:
+   * - global: per-type settings live in `gc.c`, and each box only has an on/off switch (`bc[].f`). This is the usual setup.
+   * - per box: per-type settings live in `bc[].c`, and `gc.c` leaves those template types unset.
+   *
+   * Opting out of a box (`bc[].f`) is not overridden by `gc.c`: the box's entry is skipped entirely. `gc.f` turns off every notification.
+   *
+   * Unlike `dc`/`bc`, changes to `gc` are NOT copied to other config fields — they apply live as a final override during notification delivery.
+   * Only its lock flag (`lk`) is synced to the boxes. Its `dm` disables delivery methods account-wide, and its `e`/`t` override the user's
+   * auth email and phone number for every notification.
    *
    * @dbxModelVariable globalConfig
    */
@@ -171,7 +183,7 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
    * Direct/default config. Used when a recipient is added ad-hoc (by uid) to a notification that isn't associated with any of their subscribed boxes.
    *
-   * Acts as the fallback config when no per-box config (`bc`) matches.
+   * Acts as the fallback config when no per-box config (`bc`) matches. Ranks below `gc` and above the notification's own recipient config.
    *
    * @dbxModelVariable defaultConfig
    */
@@ -180,6 +192,9 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * Per-box recipient configurations. Each entry corresponds to one of the user's subscribed notification boxes.
    *
    * These configs are synced bidirectionally with the {@link NotificationBoxRecipient} entries on the corresponding {@link NotificationBox}.
+   *
+   * An entry's `f` opts the user out of that box entirely. An entry's per-type settings (`c`) only decide the delivery methods the global
+   * config (`gc.c`) leaves unset, since `gc` overrides them. See {@link NotificationUser.gc}.
    *
    * @dbxModelVariable boxConfigs
    */
@@ -200,6 +215,17 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    * @dbxModelVariable healthCheck
    */
   hc?: Maybe<NotificationHealthCheck>;
+  /**
+   * Phone numbers that replied STOP to a text. Texts to a number in this list resolve to off, at send time and in the health check.
+   *
+   * Managed by the server — set only by the text opt-out sync (`applyNotificationUserTextOptOut`), which adds the number when it replies
+   * STOP and removes it when it replies START. Clients and admins can't edit it directly; only a START from that number turns its texts back on.
+   *
+   * An opt-out belongs to the number, not the user: saving a texting number (`gc.t`) another user already stopped adds it to this list too.
+   *
+   * @dbxModelVariable textStoppedPhoneNumbers
+   */
+  tso?: Maybe<E164PhoneNumber[]>;
 }
 
 export type NotificationUserRoles = 'sync' | GrantedUpdateRole | GrantedReadRole;
@@ -224,7 +250,8 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
       objectField: firestoreNotificationUserNotificationBoxRecipientConfig
     }),
     ns: optionalFirestoreBoolean(),
-    hc: optionalFirestoreNotificationHealthCheck
+    hc: optionalFirestoreNotificationHealthCheck,
+    tso: optionalFirestoreArray<E164PhoneNumber>({ filterUnique: true, dontStoreIfEmpty: true })
   }
 });
 
@@ -776,9 +803,9 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
   /**
    * Additional per-notification recipients with inline config overrides.
    *
-   * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution.
+   * Any `NotificationBoxRecipientTemplateConfig` values on these recipients affect opt-in/opt-out resolution, as the lowest config level.
    * For example, setting `st: true` opts a user into text/SMS for this notification's template type,
-   * unless overridden by the user's own {@link NotificationUser} config.
+   * unless overridden by the user's own {@link NotificationUser} config or their box recipient entry.
    *
    * @dbxModelVariable recipients
    */

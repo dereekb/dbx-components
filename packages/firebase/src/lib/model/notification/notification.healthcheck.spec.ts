@@ -4,9 +4,9 @@ import {
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES,
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS,
   type NotificationDeliveryHealthCheckResult,
-  NotificationDeliveryMethod,
   type NotificationHealthCheck,
   type NotificationHealthCheckIssue,
+  NotificationHealthCheckIssueAutofixType,
   NotificationHealthCheckStatus,
   KnownNotificationHealthCheckIssueCode,
   allNotificationHealthCheckIssues,
@@ -24,6 +24,7 @@ import {
   rollupNotificationHealthCheckResultStatus,
   rollupNotificationHealthCheckStatus
 } from './notification.healthcheck';
+import { NotificationDeliveryMethod } from './notification.config';
 
 describe('rollupNotificationHealthCheckStatus()', () => {
   it('should return SKIPPED for an empty set of statuses', () => {
@@ -77,6 +78,12 @@ describe('notificationHealthCheckIssue()', () => {
 
     expect(issue.f).toBe('turn it on');
     expect(issue.d).toEqual({ scope: 'global' });
+    expect(issue.af).toBeUndefined();
+  });
+
+  it('should mark the issue fixable when an autofix type is provided', () => {
+    const issue = notificationHealthCheckIssue('mailgunSuppressedComplaint', NotificationHealthCheckStatus.ERROR, { message: 'reported as spam', autofix: NotificationHealthCheckIssueAutofixType.EXPLICIT });
+    expect(issue.af).toBe(NotificationHealthCheckIssueAutofixType.EXPLICIT);
   });
 });
 
@@ -222,6 +229,18 @@ describe('firestoreNotificationHealthCheck', () => {
     expect(text.pr).toBeUndefined();
     expect(text.pb).toBeUndefined();
     expect(text.is.length).toBe(1);
+  });
+
+  it('should round-trip whether an issue can be fixed automatically', () => {
+    const healthCheck = makeTestHealthCheck();
+    const fixableIssue = notificationHealthCheckIssue('mailgunSuppressedUnsubscribe', NotificationHealthCheckStatus.WARNING, { message: 'unsubscribed', autofix: NotificationHealthCheckIssueAutofixType.STANDARD });
+    const fixableHealthCheck: NotificationHealthCheck = { ...healthCheck, m: [{ ...healthCheck.m[0], is: [...healthCheck.m[0].is, fixableIssue] }, healthCheck.m[1]] };
+
+    const restored = firestoreNotificationHealthCheck.mapFunctions.from(firestoreNotificationHealthCheck.mapFunctions.to(fixableHealthCheck));
+    const [unfixable, fixable] = restored.m[0].is;
+
+    expect(unfixable.af).toBeUndefined();
+    expect(fixable.af).toBe(NotificationHealthCheckIssueAutofixType.STANDARD);
   });
 });
 

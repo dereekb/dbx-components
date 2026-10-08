@@ -5,22 +5,29 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
   type NotificationHealthCheckIssue,
   type NotificationHealthCheckProbe,
+  type NotificationUserHealthCheckAutofixParams,
+  type NotificationUserHealthCheckAutofixResult,
   type NotificationUserHealthCheckParams,
   type NotificationUserHealthCheckResult,
   type UpdateNotificationUserParams,
+  FORBIDDEN_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
   NotificationBoxRecipientFlag,
   NotificationDeliveryMethod,
+  NotificationHealthCheckIssueAutofixType,
   NotificationHealthCheckStatus,
   KnownNotificationHealthCheckIssueCode,
   notificationDeliveryHealthCheckResultForMethod,
+  notificationHealthCheckIssue,
   notificationUserIdentity,
   onCallInvokeModelParams,
   onCallUpdateModelParams
 } from '@dereekb/firebase';
-import { type NotificationSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
+import { type NotificationSendServiceHealthCheckAutofixRequest, type NotificationSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { addMinutes, addSeconds } from 'date-fns';
 import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';
@@ -244,11 +251,40 @@ demoApiFunctionContextFactory((f) => {
             });
           });
 
+          describe('with a phone number only on the default config', () => {
+            it('should report that there is no delivery target for text, since the default config override only applies to direct sends', async () => {
+              await updateNotificationUser({ dc: { t: '+12088888888' } });
+
+              const { healthCheck } = await runHealthCheck();
+
+              const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+              expect(textResult?.tg).toBeUndefined();
+              expect(issueCodes(textResult?.is ?? [])).toContain(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET);
+            });
+          });
+
+          describe('with texts switched off', () => {
+            it('should report the method as disabled instead of a missing delivery target', async () => {
+              await updateNotificationUser({ gc: { dm: [NotificationDeliveryMethod.TEXT] } });
+
+              const { healthCheck } = await runHealthCheck();
+
+              const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+              const issue = issueForCode(textResult?.is ?? [], KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_GLOBALLY);
+
+              expect(textResult?.s).toBe(NotificationHealthCheckStatus.ERROR);
+              expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
+              expect(issue?.d?.['disabledDeliveryMethod']).toBe(true);
+              expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.NO_DELIVERY_TARGET);
+            });
+          });
+
           describe('with a phone number configured', () => {
             const t = '+12088888888';
 
             beforeEach(async () => {
-              await updateNotificationUser({ dc: { t } });
+              await updateNotificationUser({ gc: { t } });
             });
 
             it('should resolve the configured phone number as the delivery target', async () => {
@@ -270,7 +306,7 @@ demoApiFunctionContextFactory((f) => {
             });
 
             it('should not report an opt-in problem once text is turned on for the template type', async () => {
-              await updateNotificationUser({ dc: { t, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+              await updateNotificationUser({ dc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
 
               const { healthCheck } = await runHealthCheck();
 
@@ -279,10 +315,31 @@ demoApiFunctionContextFactory((f) => {
               expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE);
             });
 
+            describe('without a template type', () => {
+              it('should report that no notification type sends texts', async () => {
+                const { healthCheck } = await runHealthCheck({ notificationTemplateType: undefined });
+
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).toContain(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_TEMPLATE);
+              });
+
+              it('should not report an opt-in problem once texts are turned on for any notification type', async () => {
+                await updateNotificationUser({ gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+
+                const { healthCheck } = await runHealthCheck({ notificationTemplateType: undefined });
+
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_NOT_ENABLED_FOR_ANY_TEMPLATE);
+              });
+            });
+
             it('should report the global config turning a method off as the decisive one', async () => {
               await updateNotificationUser({
                 gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false }] },
-                dc: { t, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] }
+                dc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] }
               });
 
               const { healthCheck } = await runHealthCheck();
@@ -430,7 +487,7 @@ demoApiFunctionContextFactory((f) => {
             const setTextHealthCheckService = (healthCheckService: NotificationTextSendServiceHealthCheckService) => setSendServiceHealthCheckService(f.notificationSendService.textSendService, healthCheckService);
 
             beforeEach(async () => {
-              await updateNotificationUser({ dc: { t: TEST_PHONE_NUMBER } });
+              await updateNotificationUser({ gc: { t: TEST_PHONE_NUMBER } });
             });
 
             it('should report that a channel with no provider health check could not be verified', async () => {
@@ -803,6 +860,144 @@ demoApiFunctionContextFactory((f) => {
                 expect(notificationDeliveryHealthCheckResultForMethod(second.healthCheck, NotificationDeliveryMethod.TEXT)?.pr?.s).toBe(NotificationHealthCheckStatus.OK);
               });
             });
+
+            describe('autofix', () => {
+              const FIXABLE_CODE = 'testFixable';
+              const EXPLICIT_FIXABLE_CODE = 'testExplicitFixable';
+              const UNFIXABLE_CODE = 'testUnfixable';
+
+              async function runHealthCheckAutofix(params: Omit<NotificationUserHealthCheckAutofixParams, 'key' | 'method'>): Promise<NotificationUserHealthCheckAutofixResult> {
+                const fullParams: NotificationUserHealthCheckAutofixParams = { key: nu.documentKey, method: NotificationDeliveryMethod.TEXT, ...params };
+                return u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, fullParams, 'healthCheckAutofix')) as Promise<NotificationUserHealthCheckAutofixResult>;
+              }
+
+              /**
+               * The codes the provider has fixed. It stops reporting an issue once it is fixed, the way a
+               * removed suppression stops showing up at the email provider.
+               */
+              let fixedCodes: Set<string>;
+              let autofixRequests: NotificationSendServiceHealthCheckAutofixRequest<string>[];
+
+              beforeEach(() => {
+                fixedCodes = new Set();
+                autofixRequests = [];
+
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    const issues = [
+                      notificationHealthCheckIssue(FIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Fixable.', autofix: NotificationHealthCheckIssueAutofixType.STANDARD }),
+                      notificationHealthCheckIssue(EXPLICIT_FIXABLE_CODE, NotificationHealthCheckStatus.ERROR, { message: 'Fixable when explicitly allowed.', autofix: NotificationHealthCheckIssueAutofixType.EXPLICIT }),
+                      notificationHealthCheckIssue(UNFIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Not fixable.' })
+                    ];
+
+                    return { issues: issues.filter((x) => !fixedCodes.has(x.c)) };
+                  },
+                  async runAutofix(request) {
+                    autofixRequests.push(request);
+                    request.codes.forEach((x) => fixedCodes.add(x));
+                    return { results: request.codes.map((code) => ({ code, fixed: true, message: 'Fixed.' })) };
+                  }
+                });
+              });
+
+              it('should fix the issue and check the delivery method again', async () => {
+                await runHealthCheck();
+
+                const result = await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+                const textIssueCodes = issueCodes(notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? []);
+
+                expect(result.results).toEqual([{ code: FIXABLE_CODE, fixed: true, message: 'Fixed.' }]);
+                expect(textIssueCodes).not.toContain(FIXABLE_CODE);
+                expect(textIssueCodes).toContain(UNFIXABLE_CODE);
+              });
+
+              it('should persist the check the fix ran afterwards', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                const { hc } = await assertSnapshotData(nu.document);
+                expect(issueCodes(notificationDeliveryHealthCheckResultForMethod(hc, NotificationDeliveryMethod.TEXT)?.is ?? [])).not.toContain(FIXABLE_CODE);
+              });
+
+              it('should apply the fix to the delivery target the stored check recorded', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                expect(autofixRequests).toHaveLength(1);
+                expect(autofixRequests[0].target).toBe(TEST_PHONE_NUMBER);
+                expect(autofixRequests[0].codes).toEqual([FIXABLE_CODE]);
+              });
+
+              it('should fix an explicit-only issue when it is explicitly allowed', async () => {
+                await runHealthCheck();
+
+                const result = await runHealthCheckAutofix({ codes: [EXPLICIT_FIXABLE_CODE], allowExplicitAutofix: true });
+
+                expect(result.results[0].fixed).toBe(true);
+                expect(issueCodes(notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? [])).not.toContain(EXPLICIT_FIXABLE_CODE);
+              });
+
+              it('should report a fix the provider did not answer for as not fixed', async () => {
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    return { issues: [notificationHealthCheckIssue(FIXABLE_CODE, NotificationHealthCheckStatus.WARNING, { message: 'Fixable.', autofix: NotificationHealthCheckIssueAutofixType.STANDARD })] };
+                  },
+                  async runAutofix() {
+                    return { results: [] };
+                  }
+                });
+
+                await runHealthCheck();
+                const result = await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                expect(result.results).toHaveLength(1);
+                expect(result.results[0].code).toBe(FIXABLE_CODE);
+                expect(result.results[0].fixed).toBe(false);
+              });
+
+              it('should fix nothing when an explicit-only fix in the request is not explicitly allowed', async () => {
+                await runHealthCheck();
+
+                // asserts state after the rejection, so it uses rejects.toThrow() rather than expectFail()
+                await expect(runHealthCheckAutofix({ codes: [FIXABLE_CODE, EXPLICIT_FIXABLE_CODE] })).rejects.toThrow();
+                expect(autofixRequests).toHaveLength(0);
+              });
+
+              itShouldFail('when an explicit-only fix is not explicitly allowed', async () => {
+                await runHealthCheck();
+                await expectFail(() => runHealthCheckAutofix({ codes: [EXPLICIT_FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE));
+              });
+
+              itShouldFail('when the issue is not marked as fixable', async () => {
+                await runHealthCheck();
+                await expectFail(() => runHealthCheckAutofix({ codes: [UNFIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the issue is no longer on the stored check', async () => {
+                await runHealthCheck();
+                await runHealthCheckAutofix({ codes: [FIXABLE_CODE] });
+
+                // the fix's own re-check no longer reports it, so there is nothing left to fix
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the delivery method has not been checked yet', async () => {
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+
+              itShouldFail('when the provider cannot fix issues', async () => {
+                await runHealthCheck();
+
+                // the stored check still marks the issue fixable, but the provider no longer offers a fix
+                setTextHealthCheckService({
+                  async runHealthCheck() {
+                    return { issues: [] };
+                  }
+                });
+
+                await expectFail(() => runHealthCheckAutofix({ codes: [FIXABLE_CODE] }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE));
+              });
+            });
           });
 
           // scoped to its own describe: a model test context registers its beforeEach in the enclosing
@@ -857,6 +1052,16 @@ demoApiFunctionContextFactory((f) => {
                 expect(issue?.d?.['notificationBoxIds']).toEqual([nb.documentId]);
               });
 
+              it('should not report a delivery method switched off for a subscription when the global config overrides it', async () => {
+                await nb.updateRecipient({ uid: u.uid, insert: true, configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: false }] });
+                await updateNotificationUser({ gc: { configs: [{ type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, st: true }] } });
+
+                const { healthCheck } = await runHealthCheck();
+                const textResult = notificationDeliveryHealthCheckResultForMethod(healthCheck, NotificationDeliveryMethod.TEXT);
+
+                expect(issueCodes(textResult?.is ?? [])).not.toContain(KnownNotificationHealthCheckIssueCode.METHOD_DISABLED_FOR_BOX);
+              });
+
               it('should drop every subscription finding when subscription checks are skipped', async () => {
                 await nb.document.update({ fi: true });
 
@@ -889,6 +1094,12 @@ demoApiFunctionContextFactory((f) => {
 
                 return u.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, fullParams, 'healthCheck')) as Promise<NotificationUserHealthCheckResult>;
               }
+
+              itShouldFail('to fix delivery issues when the caller is not an admin', async () => {
+                // the user's own NotificationUser, so the only thing missing is admin access
+                const params: NotificationUserHealthCheckAutofixParams = { key: nu2.documentKey, method: NotificationDeliveryMethod.TEXT, codes: ['testFixable'] };
+                await expectFail(() => u2.callWrappedFunction(demoCallModelWrappedFn, onCallInvokeModelParams(notificationUserIdentity, params, 'healthCheckAutofix')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              });
 
               it('should report a disabled sign-in account as an account-wide problem', async () => {
                 await f.authService.userContext(u2.uid).updateUser({ disabled: true });

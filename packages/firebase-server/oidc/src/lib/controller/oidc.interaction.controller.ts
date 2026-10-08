@@ -1,13 +1,14 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body, Logger, Optional } from '@nestjs/common';
 import { type Request, type Response } from 'express';
+import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { OidcProviderConfigService } from '../service';
-import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, maxSessionTtlForOidcProviderProfileScopes, scopesForOidcProviderProfiles } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
 import { adminOnlyScopesForOidcProviderConfig, oidcClientProviderProfileScopes } from '../profile';
 import { reconsiderRejectedValues, requestedOIDCClaimNames, requestedResourceIndicators, unrejectOIDCClaims, unrejectOIDCScopes, unrejectResourceScopes } from '../service/oidc.grant';
-import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
+import { capExistingGrantExpiration, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
 import { OIDC_ANALYTICS_SERVICE, emitOidcAnalyticsEvent, noopOidcAnalyticsService, type OidcAnalyticsService } from '../service/analytics';
 
 /**
@@ -274,9 +275,14 @@ export class OidcInteractionController {
       // newly-created grants so they persist with the correct (tiered) TTL.
       const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
       const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
-      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl }, { isAdmin, hasServiceScope: requestsServiceToken });
+      // A provider profile unlocking a consented scope may cap the grant's lifetime (`maxSessionTtl`).
+      const maxSessionTtl = maxSessionTtlForOidcProviderProfileScopes(this.accountService.providerConfig.providerProfiles ?? [], consentedOIDCScopeSet);
+      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl }, { isAdmin, hasServiceScope: requestsServiceToken, maxSessionTtl });
 
       const grant = existingGrant ?? (await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId, expiresInSeconds));
+
+      // An existing grant keeps the lifetime it was created with, so a capped scope consented onto it shortens it.
+      capExistingGrantExpiration(existingGrant, maxSessionTtl, unixDateTimeSecondsNumberForNow());
 
       if (missingOIDCScope.length > 0) {
         const { granted, rejected } = effectiveOIDCScopes;

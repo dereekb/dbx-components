@@ -1,4 +1,6 @@
-import { NotificationBoxRecipientFlag } from './notification.config';
+import { type Maybe } from '@dereekb/util';
+import { NotificationBoxRecipientFlag, NotificationDeliveryMethod, type NotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
+import { type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams } from './notification.api';
 import { updateNotificationUserDefaultNotificationBoxRecipientConfig, updateNotificationUserNotificationBoxRecipientConfigIfChanged } from './notification.api.util';
 
 describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => {
@@ -109,6 +111,75 @@ describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => 
       a: expectedConfig
     });
   });
+
+  describe('configs', () => {
+    const existing: NotificationUserDefaultNotificationBoxRecipientConfig = { c: { a: { se: false, sn: true }, b: { st: true } } };
+
+    it('should only change the values an entry sets', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', st: true }] });
+      expect(result.c).toEqual({ a: { se: false, sn: true, st: true }, b: { st: true } });
+    });
+
+    it('should keep the existing value when an entry leaves it undefined', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: undefined, st: true }] });
+      expect(result.c['a']).toEqual({ se: false, sn: true, st: true });
+    });
+
+    it('should clear a value set to null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: null }] });
+      expect(result.c).toEqual({ a: { se: null, sn: true }, b: { st: true } });
+    });
+
+    it('should remove a type the update leaves with no values set', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'a', se: null, sn: null }] });
+      expect(result.c).toEqual({ b: { st: true } });
+    });
+
+    it('should not add a new type with no values set', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { configs: [{ type: 'c', st: null }] });
+      expect(result.c).toEqual(existing.c);
+    });
+  });
+
+  describe('dm', () => {
+    const existing: NotificationUserDefaultNotificationBoxRecipientConfig = { c: {}, dm: [NotificationDeliveryMethod.TEXT] };
+
+    it('should keep the existing dm when the update leaves it undefined', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, {});
+      expect(result.dm).toEqual([NotificationDeliveryMethod.TEXT]);
+    });
+
+    it('should clear dm when the update passes null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: null });
+      expect(result.dm).toBeNull();
+    });
+
+    it('should store an empty dm as null', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: [] });
+      expect(result.dm).toBeNull();
+    });
+
+    it('should replace dm with the canonicalized list', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig(existing, { dm: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY, NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.EMAIL] });
+      expect(result.dm).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.NOTIFICATION_SUMMARY]);
+    });
+  });
+
+  describe('tcat', () => {
+    const tcat = new Date('2026-01-02T03:04:05Z');
+
+    it('should keep the existing tcat', () => {
+      const result = updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {}, tcat }, { configs: [{ type: 'a', st: true }] });
+      expect(result.tcat).toBe(tcat);
+    });
+
+    it('should ignore a tcat passed in through a cast', () => {
+      const forged = { tcat: new Date('2020-01-01T00:00:00Z') } as UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams;
+
+      expect(updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {}, tcat }, forged).tcat).toBe(tcat);
+      expect(updateNotificationUserDefaultNotificationBoxRecipientConfig({ c: {} }, forged).tcat).toBeUndefined();
+    });
+  });
 });
 
 describe('updateNotificationUserNotificationBoxRecipientConfigIfChanged()', () => {
@@ -133,5 +204,109 @@ describe('updateNotificationUserNotificationBoxRecipientConfigIfChanged()', () =
     );
 
     expect(result).toBeUndefined();
+  });
+
+  it('should keep the flag and exclusion of the config when updating it', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        x: true,
+        c: {}
+      },
+      {
+        nb: 'a',
+        configs: [{ type: 'a', se: true }]
+      }
+    );
+
+    expect(result).toBeDefined();
+    expect(result?.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+    expect(result?.x).toBe(true);
+  });
+
+  it('should return undefined for an empty update on a config with a flag and exclusion', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        x: true,
+        c: {}
+      },
+      {
+        nb: 'a'
+      }
+    );
+
+    expect(result).toBeUndefined();
+  });
+
+  it('should only change the template configs of an opted-out config and flag it for sync', () => {
+    const result = updateNotificationUserNotificationBoxRecipientConfigIfChanged(
+      {
+        nb: 'a',
+        i: 0,
+        f: NotificationBoxRecipientFlag.OPT_OUT,
+        c: {
+          b: { sn: false }
+        }
+      },
+      {
+        nb: 'a',
+        configs: [{ type: 'a', se: true }]
+      }
+    );
+
+    expect(result).toEqual({
+      nb: 'a',
+      i: 0,
+      f: NotificationBoxRecipientFlag.OPT_OUT,
+      ns: true,
+      c: {
+        a: { se: true },
+        b: { sn: false }
+      }
+    });
+  });
+
+  describe('f', () => {
+    function updateFlag(currentFlag: Maybe<NotificationBoxRecipientFlag>, inputFlag: Maybe<NotificationBoxRecipientFlag>) {
+      return updateNotificationUserNotificationBoxRecipientConfigIfChanged({ nb: 'a', i: 0, f: currentFlag, c: {} }, { nb: 'a', f: inputFlag });
+    }
+
+    it('should opt out of the box and flag the config for sync', () => {
+      const result = updateFlag(undefined, NotificationBoxRecipientFlag.OPT_OUT);
+      expect(result?.f).toBe(NotificationBoxRecipientFlag.OPT_OUT);
+      expect(result?.ns).toBe(true);
+    });
+
+    it('should unset the flag when opting back in with ENABLED', () => {
+      const result = updateFlag(NotificationBoxRecipientFlag.OPT_OUT, NotificationBoxRecipientFlag.ENABLED);
+      expect(result).toBeDefined();
+      expect(result?.f).toBeUndefined();
+      expect(result?.ns).toBe(true);
+    });
+
+    it('should unset the flag when opting back in with null', () => {
+      const result = updateFlag(NotificationBoxRecipientFlag.OPT_OUT, null);
+      expect(result).toBeDefined();
+      expect(result?.f).toBeUndefined();
+    });
+
+    it('should return undefined when opting in to a box that is not opted out', () => {
+      expect(updateFlag(undefined, NotificationBoxRecipientFlag.ENABLED)).toBeUndefined();
+    });
+
+    it('should not change a config the box disabled', () => {
+      expect(updateFlag(NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.ENABLED)).toBeUndefined();
+      expect(updateFlag(NotificationBoxRecipientFlag.DISABLED, NotificationBoxRecipientFlag.OPT_OUT)).toBeUndefined();
+    });
+
+    it('should ignore an input of DISABLED', () => {
+      expect(updateFlag(undefined, NotificationBoxRecipientFlag.DISABLED)).toBeUndefined();
+      expect(updateFlag(NotificationBoxRecipientFlag.OPT_OUT, NotificationBoxRecipientFlag.DISABLED)).toBeUndefined();
+    });
   });
 });

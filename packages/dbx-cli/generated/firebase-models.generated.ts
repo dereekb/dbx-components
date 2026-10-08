@@ -640,10 +640,18 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         tsType: 'Maybe<NotificationHealthCheck>',
         optional: true,
         description: 'The result of the most recent notification delivery health check run for this user.'
+      },
+      {
+        name: 'tso',
+        longName: 'textStoppedPhoneNumbers',
+        converter: 'optionalFirestoreArray<E164PhoneNumber>({ filterUnique: true, dontStoreIfEmpty: true })',
+        tsType: 'Maybe<E164PhoneNumber[]>',
+        optional: true,
+        description: 'Phone numbers that replied STOP to a text. Texts to a number in this list resolve to off, at send time and in the health check.'
       }
     ],
     enums: [],
-    detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns', 'hc'],
+    detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns', 'hc', 'tso'],
     description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
     modelGroup: 'Notification',
     collectionKind: 'root',

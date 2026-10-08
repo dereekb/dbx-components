@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, model, untracked } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes, type DbxButtonEcho } from '@dereekb/dbx-core';
 import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
@@ -104,9 +104,19 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly bar = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly type = input<Maybe<DbxButtonType>>();
-  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
+  /**
+   * Style of the button. Individual style inputs (e.g. {@link color}, {@link raised}) take precedence.
+   *
+   * Declared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.
+   */
+  readonly buttonStyle = model<Maybe<DbxButtonStyle>>();
 
-  readonly color = input<Maybe<ThemePalette | DbxColorInput>>();
+  /**
+   * Color of the button. Takes precedence over the {@link buttonStyle} color.
+   *
+   * Declared as a `model` so a directive composed onto the button (e.g. `dbxRotatingButton`) can set it.
+   */
+  readonly color = model<Maybe<ThemePalette | DbxColorInput>>();
   readonly spinnerColor = input<Maybe<ThemePalette | DbxThemeColor>>();
 
   readonly customTextColor = input<Maybe<string>>();
