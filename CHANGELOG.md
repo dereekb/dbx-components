@@ -1,3 +1,49 @@
+# [14.15.0](https://github.com/dereekb/dbx-components/compare/v14.14.0-dev...v14.15.0) (2026-10-08)
+
+### Bug Fixes
+
+- **dbx-firebase,dbx-form,dbx-web:** finish notification settings UI ([2797b512](https://github.com/dereekb/dbx-components/commit/2797b512d22bd4e7571acaf972959d942050e2fa))
+- **dbx-web,dbx-firebase,demo:** rotating order and text consent hints ([285b401e](https://github.com/dereekb/dbx-components/commit/285b401ed6974f8cbab89cd2399446cb01f0710e))
+- **dbx-web:** put Save Changes in the unsaved changes button row ([f0814b73](https://github.com/dereekb/dbx-components/commit/f0814b733b91e09baeb647be6b437f6f3971fa73))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([67d90bbe](https://github.com/dereekb/dbx-components/commit/67d90bbe5b36fec3c0a1c1dc03e942fd2f4ccacf))
+
+### Code Refactoring
+
+- **dbx-firebase:** rewrite notification settings as ComponentStore ([c8a8d60a](https://github.com/dereekb/dbx-components/commit/c8a8d60aefa10f55c6c5d0cbc28e65ef30d00e01))
+- **dbx-web,dbx-firebase:** limit rotating skip to default state ([64e6d617](https://github.com/dereekb/dbx-components/commit/64e6d617dd2a5abe59a14df50a3fdac1a28ed783))
+
+### Documentation
+
+- **dbx-cli:** document external connection tokens ([b8cfa438](https://github.com/dereekb/dbx-components/commit/b8cfa4382a961fef32603004029c662a200aa2d1))
+
+### Features
+
+- **dbx-cli,dbx-components-mcp,demo:** notification manifest generator ([93d66f1a](https://github.com/dereekb/dbx-components/commit/93d66f1a6aba073ceba943c6f9031fde0728fc71))
+- **dbx-cli,demo:** notification CLI commands ([c5d0dac2](https://github.com/dereekb/dbx-components/commit/c5d0dac22b309fbc8b3b307f99b7dd0726b1e3f3))
+- **dbx-firebase,demo:** add notification user settings UI ([1243c766](https://github.com/dereekb/dbx-components/commit/1243c7663b14323636d287471514a63bc7dba22d))
+- **dbx-firebase,demo:** hide notification delivery method columns ([58e2ad11](https://github.com/dereekb/dbx-components/commit/58e2ad113c0d192b25fd3e8a73091abe7137f07c))
+- **dbx-form:** match source-select filter against keywords ([7af5994e](https://github.com/dereekb/dbx-components/commit/7af5994e1fdff91d7429a036bf61ef82088651bd))
+- **dbx-web:** add dbxRotatingButton directive for multi-state buttons ([cf9a447a](https://github.com/dereekb/dbx-components/commit/cf9a447a55e31b35e9cc9272a55012dbc6ec2376))
+- **demo-api,firebase-server,nestjs:** send texts via Twilio ([68e209a2](https://github.com/dereekb/dbx-components/commit/68e209a2508d6e0ed8243d4e0f3fad169c0124a8))
+- **firebase-server,dbx-firebase:** external connection token mint ([13a531cc](https://github.com/dereekb/dbx-components/commit/13a531ccd870a1d26f596a4193c51c77b5fc0ccc))
+- **firebase-server:** apply notification gc live at send time ([17389557](https://github.com/dereekb/dbx-components/commit/17389557233615ef689ab58c4fea54389579f0ef))
+- **firebase,dbx-cli,zoho,demo:** external token mint for zoho-cli ([474666d3](https://github.com/dereekb/dbx-components/commit/474666d337cb4839a69d56490a33e2572fd5657a))
+- **firebase,dbx-firebase,dbx-cli:** share notification settings core ([0cf05a95](https://github.com/dereekb/dbx-components/commit/0cf05a9582ca6c66640cfe2c5adf70592c41cc9e))
+- **firebase,dbx-firebase,demo:** add notification box settings modes ([abe85fd7](https://github.com/dereekb/dbx-components/commit/abe85fd7020eb104b926daff9b8e5ad13e34d3a4))
+- **firebase,dbx-firebase,demo:** scope notification settings to a box ([22b5d2bc](https://github.com/dereekb/dbx-components/commit/22b5d2bc1c53faf80c4e052f76f4c59c2623558d))
+- **firebase,dbx-firebase,demo:** scope notification settings to groups ([cb046b54](https://github.com/dereekb/dbx-components/commit/cb046b54f08fe5d24b5a1cc5e2f1c030da3f576d))
+- **firebase,demo-api:** let users create their own NotificationUser ([ec76b12f](https://github.com/dereekb/dbx-components/commit/ec76b12f5f88f814f309d8cf799d0bc30259fc28))
+- **firebase,firebase-server,demo:** validate notification type wiring ([944ea3bc](https://github.com/dereekb/dbx-components/commit/944ea3bcea610b405fc9a6f76fbb90088104eee7))
+- **firebase,firebase-server,nestjs,dbx-firebase,demo:** twilio stop ([94564645](https://github.com/dereekb/dbx-components/commit/9456464556252aa3818d1e8f381769f9697f9edf))
+- **firebase:** add notification delivery method primitives ([46fb1c58](https://github.com/dereekb/dbx-components/commit/46fb1c5807886eb958eb71aa1ab8b32ae2522856))
+- **firebase:** add notification health check autofix ([dbb38fc3](https://github.com/dereekb/dbx-components/commit/dbb38fc3a729903edd97e7abb85da2db183d764e))
+- **nestjs,firebase-server,demo:** wire twilio webhooks into demo-api ([5c3eead6](https://github.com/dereekb/dbx-components/commit/5c3eead657b4af9b7bf2dee9ccd6c3527eccb010))
+- **nestjs,firebase,firebase-server,dbx-firebase,demo:** twilio check ([c69ae426](https://github.com/dereekb/dbx-components/commit/c69ae426b7d33eaded2c646aae891930b5ab42c0))
+- **zoho-cli:** add auth login browser flow ([0c0fe061](https://github.com/dereekb/dbx-components/commit/0c0fe0613a79c0475405700c15bf5946f5fadc98))
+
 # [14.14.0](https://github.com/dereekb/dbx-components/compare/v14.13.0-dev...v14.14.0) (2026-09-30)
 
 ### Build System
