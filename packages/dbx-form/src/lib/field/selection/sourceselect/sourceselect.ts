@@ -29,7 +29,30 @@ export interface SourceSelectValueGroup<T extends PrimativeKey = PrimativeKey, M
 /**
  * Display value configuration for a SourceSelectValue.
  */
-export type SourceSelectDisplayValue<T extends PrimativeKey = PrimativeKey, M = unknown> = Omit<SelectionDisplayValue<T, M>, 'meta'> & Pick<SourceSelectValue<T, M>, 'meta'>;
+export type SourceSelectDisplayValue<T extends PrimativeKey = PrimativeKey, M = unknown> = Omit<SelectionDisplayValue<T, M>, 'meta'> & Pick<SourceSelectValue<T, M>, 'meta'> & SourceSelectDisplayValueKeywordsRef;
+
+/**
+ * Extra filter terms for a SourceSelectDisplayValue.
+ */
+export interface SourceSelectDisplayValueKeywordsRef {
+  /**
+   * Additional terms the filter input matches against, without being displayed.
+   *
+   * Useful for abbreviations and aliases, e.g. "HGA" for "Houston Gateway Academy".
+   */
+  readonly keywords?: Maybe<string[]>;
+}
+
+/**
+ * Returns true if the display value's label or one of its keywords contains the filter text.
+ *
+ * @param displayValue - The display value to test.
+ * @param lowerCaseFilterText - The filter text, already lower-cased.
+ * @returns Whether the display value matches the filter text.
+ */
+export function sourceSelectDisplayValueMatchesFilterText(displayValue: Pick<SourceSelectDisplayValue, 'label' | 'keywords'>, lowerCaseFilterText: string): boolean {
+  return displayValue.label.toLowerCase().includes(lowerCaseFilterText) || (displayValue.keywords?.some((keyword) => keyword.toLowerCase().includes(lowerCaseFilterText)) ?? false);
+}
 
 /**
  * Display value configuration for a SourceSelectValue.
