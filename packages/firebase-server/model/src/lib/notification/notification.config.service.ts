@@ -1,6 +1,6 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, unique } from '@dereekb/util';
 import { Inject, Optional } from '@nestjs/common';
-import { noContentNotificationMessageFunctionFactory, type NotificationMessageFunction, type NotificationMessageFunctionFactory, type NotificationMessageFunctionFactoryConfig, type NotificationTemplateType } from '@dereekb/firebase';
+import { type AppNotificationTemplateTypeInfoRecordServiceRef, noContentNotificationMessageFunctionFactory, type NotificationMessageFunction, type NotificationMessageFunctionFactory, type NotificationMessageFunctionFactoryConfig, type NotificationTemplateType } from '@dereekb/firebase';
 import { type NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, type NotificationTemplateServiceTypeConfigArray, type NotificationTemplateServiceDefaultsRecord } from './notification.config';
 
 /**
@@ -50,6 +50,15 @@ export class NotificationTemplateService {
    */
   configPairForType(type: NotificationTemplateType): [NotificationMessageFunctionFactory, Maybe<NotificationTemplateServiceTypeConfig>] {
     return [this._defaults[type], this._config.get(type)];
+  }
+
+  /**
+   * Returns every template type that has a message factory, from the type configs or the defaults.
+   *
+   * @returns The configured template types.
+   */
+  configuredTemplateTypes(): NotificationTemplateType[] {
+    return unique([...Object.keys(this._defaults), ...Array.from(this._config.keys())]);
   }
 
   /**
@@ -127,4 +136,67 @@ export function notificationTemplateServiceInstance(service: NotificationTemplat
       return factory(config);
     }
   };
+}
+
+// MARK: Validation
+/**
+ * Input for {@link notificationTemplateServiceTemplateTypeMismatches}.
+ */
+export type NotificationTemplateServiceTemplateTypeMismatchesInput = NotificationTemplateServiceRef & AppNotificationTemplateTypeInfoRecordServiceRef;
+
+/**
+ * The template types that a {@link NotificationTemplateService} and the app's `NotificationTemplateTypeInfo` record disagree on.
+ */
+export interface NotificationTemplateServiceTemplateTypeMismatches {
+  /**
+   * Template types that have a message factory, but no `NotificationTemplateTypeInfo`. They would send with the default opt-in rules, and
+   * never show in the users' notification settings.
+   */
+  readonly unknownTemplateTypes: NotificationTemplateType[];
+  /**
+   * Template types that have a `NotificationTemplateTypeInfo`, but no message factory. Their notifications would never send.
+   */
+  readonly unconfiguredTemplateTypes: NotificationTemplateType[];
+}
+
+/**
+ * Compares the template types that a {@link NotificationTemplateService} has message factories for with the app's `NotificationTemplateTypeInfo` record.
+ *
+ * @param input - The template service and the app's template type info.
+ * @returns The template types that have a message factory but no info, and the ones that have info but no message factory.
+ */
+export function notificationTemplateServiceTemplateTypeMismatches(input: NotificationTemplateServiceTemplateTypeMismatchesInput): NotificationTemplateServiceTemplateTypeMismatches {
+  const { notificationTemplateService, appNotificationTemplateTypeInfoRecordService } = input;
+  const { appNotificationTemplateTypeInfoRecord } = appNotificationTemplateTypeInfoRecordService;
+  const configuredTemplateTypes = notificationTemplateService.configuredTemplateTypes();
+  const configured = new Set(configuredTemplateTypes);
+
+  return {
+    unknownTemplateTypes: configuredTemplateTypes.filter((type) => appNotificationTemplateTypeInfoRecord[type] == null),
+    unconfiguredTemplateTypes: appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypes().filter((type) => !configured.has(type))
+  };
+}
+
+/**
+ * Asserts that every template type with a message factory has a `NotificationTemplateTypeInfo`, and that every template type with a
+ * `NotificationTemplateTypeInfo` has a message factory. See {@link notificationTemplateServiceTemplateTypeMismatches}.
+ *
+ * @param input - The template service and the app's template type info.
+ * @throws {Error} When a template type has a message factory but no info, or info but no message factory.
+ */
+export function assertNotificationTemplateServiceTemplateTypes(input: NotificationTemplateServiceTemplateTypeMismatchesInput): void {
+  const { unknownTemplateTypes, unconfiguredTemplateTypes } = notificationTemplateServiceTemplateTypeMismatches(input);
+  const problems: string[] = [];
+
+  if (unknownTemplateTypes.length) {
+    problems.push(`message factories without a NotificationTemplateTypeInfo: ${unknownTemplateTypes.join(', ')}`);
+  }
+
+  if (unconfiguredTemplateTypes.length) {
+    problems.push(`NotificationTemplateTypeInfo without a message factory: ${unconfiguredTemplateTypes.join(', ')}`);
+  }
+
+  if (problems.length) {
+    throw new Error(`assertNotificationTemplateServiceTemplateTypes(): the NotificationTemplateService does not match the app's NotificationTemplateTypeInfo record. Found ${problems.join('; ')}.`);
+  }
 }

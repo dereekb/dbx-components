@@ -1,0 +1,28 @@
+import { describe, expect, it } from 'vitest';
+import { NotificationDeliveryMethod } from './notification.config';
+import { notificationMessageUnlistedDeliveryMethods } from './notification.message';
+
+const { EMAIL, TEXT, NOTIFICATION_SUMMARY } = NotificationDeliveryMethod;
+const CONTENT = { title: 'Title' };
+
+describe('notificationMessageUnlistedDeliveryMethods()', () => {
+  it('should return the delivery methods the message has content for that the template type does not list', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT, textContent: CONTENT, notificationSummaryContent: {} }, { userConfigurableDeliveryMethods: [EMAIL] });
+    expect(result).toEqual([TEXT, NOTIFICATION_SUMMARY]);
+  });
+
+  it('should return nothing when the template type lists every delivery method the message has content for', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT }, { userConfigurableDeliveryMethods: [EMAIL] });
+    expect(result).toEqual([]);
+  });
+
+  it('should compare against the default delivery methods when the template type lists none', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({ emailContent: CONTENT, textContent: CONTENT, notificationSummaryContent: {} }, {});
+    expect(result).toEqual([]);
+  });
+
+  it('should ignore delivery methods the message has no content for', () => {
+    const result = notificationMessageUnlistedDeliveryMethods({}, { userConfigurableDeliveryMethods: [] });
+    expect(result).toEqual([]);
+  });
+});

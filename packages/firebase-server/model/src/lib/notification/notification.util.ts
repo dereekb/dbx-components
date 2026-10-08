@@ -36,7 +36,11 @@ import {
   NotificationUidRecipientSuppression,
   notificationDeliveryMethodDecisionsToTemplateConfig,
   resolveNotificationDeliveryMethodDecisions,
-  resolveNotificationUidRecipientDelivery
+  resolveNotificationUidRecipientDelivery,
+  type NotificationId,
+  type NotificationMessageFunctionWithoutExtras,
+  notificationMessageUnlistedDeliveryMethods,
+  type NotificationTemplateTypeInfo
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, UNSET_INDEX_NUMBER, type ModelKey } from '@dereekb/util';
@@ -711,4 +715,61 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
     updatedBc,
     updatedNotificationBoxRecipient
   };
+}
+
+// MARK: Message Function
+/**
+ * Input for {@link notificationMessageFunctionWithUnlistedDeliveryMethodsWarning}.
+ */
+export interface NotificationMessageFunctionWithUnlistedDeliveryMethodsWarningInput {
+  /**
+   * The message function to wrap.
+   */
+  readonly messageFunction: NotificationMessageFunctionWithoutExtras;
+  /**
+   * The info of the notification's template type. Without it there is nothing to compare the messages against, so they are not checked.
+   */
+  readonly templateTypeInfo?: Maybe<Pick<NotificationTemplateTypeInfo, 'type' | 'userConfigurableDeliveryMethods'>>;
+  /**
+   * Id of the notification the messages are for, named in the warning.
+   */
+  readonly notificationId?: Maybe<NotificationId>;
+}
+
+/**
+ * Wraps a message function so it warns, once, when a message it returns has content for a delivery method that the template type does not
+ * list in `userConfigurableDeliveryMethods`. See {@link notificationMessageUnlistedDeliveryMethods}.
+ *
+ * The warning points at a message factory that disagrees with its template type's info, such as one that returns `textContent` for a type
+ * the users can't configure texts for. The messages are returned unchanged.
+ *
+ * @param input - The message function, the template type info and the notification id.
+ * @returns The wrapped message function, or the message function itself when there is no template type info.
+ */
+export function notificationMessageFunctionWithUnlistedDeliveryMethodsWarning(input: NotificationMessageFunctionWithUnlistedDeliveryMethodsWarningInput): NotificationMessageFunctionWithoutExtras {
+  const { messageFunction, templateTypeInfo, notificationId } = input;
+  let result = messageFunction;
+
+  if (templateTypeInfo) {
+    let warned = false;
+
+    result = async (inputContext) => {
+      const message = await messageFunction(inputContext);
+
+      if (!warned) {
+        const unlistedDeliveryMethods = notificationMessageUnlistedDeliveryMethods(message, templateTypeInfo);
+
+        if (unlistedDeliveryMethods.length) {
+          warned = true;
+          console.warn(
+            `Notification "${notificationId}" with type "${templateTypeInfo.type}" has message content for delivery methods its NotificationTemplateTypeInfo does not list in userConfigurableDeliveryMethods: ${unlistedDeliveryMethods.join(', ')}. Users can't configure these delivery methods for the type, so its message factory likely should not return content for them.`
+          );
+        }
+      }
+
+      return message;
+    };
+  }
+
+  return result;
 }

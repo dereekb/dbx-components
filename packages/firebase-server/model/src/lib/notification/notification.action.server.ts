@@ -145,7 +145,7 @@ import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { notificationUserHealthCheckAutofixFactory, notificationUserHealthCheckFactory } from './notification.healthcheck';
-import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
@@ -1805,6 +1805,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return messages.filter((x) => !x.flag);
               }
 
+              const buildMessage = notificationMessageFunctionWithUnlistedDeliveryMethodsWarning({
+                messageFunction,
+                templateTypeInfo: notificationTemplateType ? appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType] : undefined,
+                notificationId: notification.id
+              });
+
               // expand recipients
               const {
                 emails: emailRecipients,
@@ -1844,7 +1850,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                     return context;
                   });
 
-                const emailMessages = await Promise.all(emailInputContexts.map(messageFunction))
+                const emailMessages = await Promise.all(emailInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
@@ -1910,7 +1916,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                     return context;
                   });
 
-                const textMessages = await Promise.all(textInputContexts.map(messageFunction))
+                const textMessages = await Promise.all(textInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
@@ -1973,7 +1979,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   return context;
                 });
 
-                const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction))
+                const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(buildMessage))
                   .then(filterOutNoContentNotificationMessages)
                   .catch((e) => {
                     console.error(`Failed building message function for type ${notificationTemplateType}: `, e);

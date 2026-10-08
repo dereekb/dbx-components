@@ -237,8 +237,8 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
       const calendar = await calendarCollection.documentAccessor().loadDocumentForId(calendarId).snapshotData();
       const event = calendar && eventId ? calendarEventItemForId(calendar, eventId) : undefined;
       const method: NotificationMessageCalendarAttachmentMethod = cancel ? 'CANCEL' : 'REQUEST';
+      // no textContent: the type only lists email in its userConfigurableDeliveryMethods, since the invite is the email's calendar part
       const actionUrl = `${context.mailgunService.mailgunApi.clientUrl}/demo/app/calendar`;
-      const textContent = demoNotificationTextContent(cancel ? 'An event was removed from your calendar.' : 'You were added to a calendar event.', actionUrl);
 
       // ONE factory per notification, closing over the loaded event. The sending service calls it with the
       // address it resolved for each recipient, so the ICS is rendered only for the recipients actually
@@ -279,7 +279,6 @@ export function demoCalendarEventInviteNotificationFactory(context: DemoFirebase
           item,
           content,
           emailContent,
-          textContent,
           flag: event ? undefined : NotificationMessageFlag.NO_CONTENT
         };
 
