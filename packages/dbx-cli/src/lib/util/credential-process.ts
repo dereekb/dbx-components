@@ -16,7 +16,9 @@ export const DBX_CLI_CREDENTIAL_PROCESS_ENV_VAR = 'DBX_CLI_CREDENTIAL_PROCESS';
 /**
  * Default time a credential process may run before it is killed.
  *
- * Generous enough to cover an interactive re-login prompt the child surfaces on stderr.
+ * Generous enough to cover the child refreshing its own login and the server renewing the connection's
+ * credentials before it mints. The child's stdin is ignored, so it cannot prompt for input — it can only
+ * report on stderr.
  */
 export const DEFAULT_CLI_CREDENTIAL_PROCESS_TIMEOUT_MS: Milliseconds = 60_000;
 

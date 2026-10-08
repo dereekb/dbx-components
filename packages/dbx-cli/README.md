@@ -492,6 +492,117 @@ Every command supports three output modes:
   lives in that model's box, so pass the model key: `pr/<uid>` lists `nb/pr_<uid>`. The `[box]`
   argument also takes a box key (`nb/<id>`) or a bare box id.
 
+## External connection tokens
+
+A `dbx-cli`-built CLI can mint a short-lived access token for one of the signed-in user's external
+connections (for example, the Zoho account they connected in the app) and hand it to another CLI. That
+lets `zoho-cli` work without its own OAuth login, and it never holds the OAuth client secret or a
+refresh token. Only the access token leaves the server, and only for the caller's own connection.
+
+### Wiring
+
+Turn the command on in `runCli`, then give it a dedicated env preset:
+
+```ts
+// src/index.ts
+runCli({
+  cliName: 'demo-cli',
+  defaultEnvs: DEFAULT_DEMO_CLI_ENVS,
+  // the `external-token <providerType>` command
+  externalConnectionToken: true
+});
+
+// src/lib/env.defaults.ts: a separate login whose grant can mint and do nothing else
+export const DEMO_CLI_EXTERNAL_TOKEN_SCOPES = `${OPENID_OIDC_SCOPE} ${OFFLINE_ACCESS_OIDC_SCOPE} ${EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}`;
+
+export const DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV: CliEnvDefault = {
+  names: ['external-token', 'dev-external-token'],
+  env: {
+    apiBaseUrl: DEMO_LOCAL_API_BASE_URL,
+    oidcIssuer: DEMO_LOCAL_OIDC_ISSUER,
+    scopes: DEMO_CLI_EXTERNAL_TOKEN_SCOPES,
+    // static, non-secret values the consuming CLI needs, keyed by provider type
+    externalConnectionHints: { zoho_admin: { zohoDeskOrgId: '<org id>', zohoAnalyticsOrgId: '<org id>' } }
+  }
+};
+```
+
+Keep `token.external` out of the CLI's default scopes. If an everyday login carried it, any agent
+holding that login could mint third-party tokens.
+
+`externalConnectionHints` are emitted next to the token as `hints`. A stored env's hints merge over
+the preset's, one provider and one key at a time. `env show` prints them unmasked, so never put a
+secret in a hint.
+
+On the server, the API mounts `userExternalConnectionTokenApiModuleMetadata` from
+`@dereekb/firebase-server/model` (`GET /api/session/external/:providerType`). Minting then needs
+three things: an app-supplied `USER_EXTERNAL_CONNECTION_TOKEN_PREDICATE` (with none, nobody can mint),
+`tokenExport: true` in that provider's policy, and an OIDC login that carries the `token.external`
+scope (`EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE`), made through a client that `allowedClientIds` accepts
+when that option is set. In the demo, an admin-only OIDC provider profile unlocks the scope and caps
+the grant at 8 hours.
+
+### Commands
+
+```sh
+# once: log in with the dedicated env (a client an admin assigned the external-token profile to)
+demo-cli auth setup --env external-token --client-id <id>
+demo-cli auth login --env external-token
+
+# check that minting works; the token comes back redacted
+demo-cli external-token zoho_admin --env external-token
+```
+
+| Status | `code` | What it means |
+|---|---|---|
+| 401 | `AUTH_UNAUTHORIZED` | The login expired. Run `auth login` again. |
+| 403 | `AUTH_FORBIDDEN` | Several causes: the login lacks `token.external`, the client is not allowed, the user is not permitted, or the provider is not exported. The server's code is in the message. |
+| 404 / 409 | `NOT_FOUND` / `API_ERROR` | The user has not connected that provider in the app. |
+
+### Output modes
+
+- **Run directly**, the command prints the normal `{ ok: true, data, meta }` envelope.
+  `data.accessToken` is masked with `maskSecret` (the first four characters, then `***`), and
+  `meta.redacted` is `true`.
+- **As a credential process** (`DBX_CLI_CREDENTIAL_PROCESS=1` or `true`), the command writes exactly
+  one raw JSON line, the `CliExternalConnectionTokenBundle`: the minted token, its `scopes`,
+  `expiresAt` and `extra`, plus the env's `hints`. It writes that line with `process.stdout.write`,
+  never through `outputResult`, so `--dump-dir`, `--pick` and `--pretty` never see the raw token. The
+  command also never touches the dataset cache.
+- **Errors** print the `{ ok: false, error, code, suggestion? }` envelope on stdout in both modes.
+
+### Consuming the token from another CLI
+
+`zoho-cli` supports this out of the box:
+
+```sh
+zoho-cli auth token-source set "demo-cli external-token zoho_admin --env external-token"
+zoho-cli auth check
+```
+
+Every Zoho product that the token's scopes cover uses the minted token and its datacenter. The other
+products keep `zoho-cli`'s own credentials. `zoho-cli auth token-source clear` puts things back.
+
+To consume the token from any other tool, use `runCliCredentialProcess`:
+
+```ts
+const bundle = await runCliCredentialProcess<CliExternalConnectionTokenBundle>({
+  command: 'demo-cli external-token zoho_admin --env external-token'
+});
+```
+
+It runs the command through the shell with `DBX_CLI_CREDENTIAL_PROCESS=1` set. Stdin is ignored,
+stderr goes straight to your terminal, and stdout is captured in-process. Stdout can be a bare JSON
+object or a `{ ok: true, data }` envelope; if the whole output doesn't parse, the last non-empty line
+is tried. An `{ ok: false, error, code }` envelope is thrown as the child's own `CliError`, and this is
+checked before the exit code.
+
+Anything else throws `CREDENTIAL_PROCESS_FAILED` (the process could not start, or exited non-zero),
+`CREDENTIAL_PROCESS_TIMEOUT` (it ran past `timeoutMs`: 60s by default, `0` disables it) or
+`CREDENTIAL_PROCESS_INVALID_OUTPUT` (stdout held no usable JSON object). These errors never echo
+stdout. A command that hands out a secret should check `isCliCredentialProcess()` and print a
+redacted value whenever it is false.
+
 ## Build-time notification wiring check
 
 `dbx-cli-generate-notification-manifest` checks an app's notification wiring during the build and
