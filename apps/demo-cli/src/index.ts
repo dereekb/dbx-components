@@ -1,10 +1,11 @@
-import { buildManifestCommands, runCli } from '@dereekb/dbx-cli';
+import { buildManifestCommands, buildNotificationModelCommands, runCli } from '@dereekb/dbx-cli';
 import { DEMO_CLI_ACTION_COMMANDS } from './lib/actions';
 import { DEMO_DOCTOR_CHECKS } from './lib/doctor.checks';
 import { DEFAULT_DEMO_CLI_ENVS } from './lib/env.defaults';
 import { demoCliFirestore } from './lib/firestore';
 import { DEMO_CLI_API_MANIFEST, DEMO_CLI_MODEL_MANIFEST } from './lib/manifest/api.manifest.generated';
 import { DEMO_CLI_FIRESTORE_QUERY_MANIFEST, DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP } from './lib/manifest/query.manifest.generated';
+import { DEMO_CLI_NOTIFICATION_CONFIG } from './lib/notification';
 
 void runCli({
   cliName: 'demo-cli',
@@ -22,6 +23,9 @@ void runCli({
   // the generator version the committed manifests were emitted by, so `doctor`'s `cli-build-not-stale`
   // check can also catch manifests left behind by a `@dereekb/*` bump that skipped regeneration
   manifestGeneratorVersion: DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP.generatorVersion,
-  apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST }),
+  // the auth-free `notification types` / `notification task-types` catalog group
+  notification: DEMO_CLI_NOTIFICATION_CONFIG,
+  // `modelCommands` adds the `model notificationUser settings` and `model notification tasks` / `task` leaves
+  apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, { modelManifest: DEMO_CLI_MODEL_MANIFEST, modelCommands: buildNotificationModelCommands(DEMO_CLI_NOTIFICATION_CONFIG) }),
   actionCommands: DEMO_CLI_ACTION_COMMANDS
 });

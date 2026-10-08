@@ -14,18 +14,20 @@ demo-specific.
 npx nx build demo-cli
 ```
 
-`build` depends on two codegen targets, so a stale manifest can never ship:
+`build` depends on three codegen targets, so a stale manifest can never ship:
 
 | Target | Output |
 | --- | --- |
 | `generate-api-manifest` | `src/lib/manifest/api.manifest.generated.ts` — the API command tree + the model manifest (`--emit-models`) |
 | `generate-firestore-query-manifest` | `src/lib/manifest/query.manifest.generated.ts` — the per-model Firestore query catalog |
+| `generate-notification-manifest` | `src/lib/manifest/notification.manifest.generated.ts` — the notification template + task type catalog (task checkpoints) for the [notification commands](#notifications) |
 
-Run either by hand after touching a `*.api.ts` or a `*.query.ts`:
+Run any of them by hand after touching a `*.api.ts`, a `*.query.ts` or the notification wiring:
 
 ```bash
 npx nx run demo-cli:generate-api-manifest              # prints [unchanged] when nothing moved
 npx nx run demo-cli:generate-firestore-query-manifest
+npx nx run demo-cli:generate-notification-manifest     # after touching the notification wiring
 ```
 
 ## Wiring (`src/lib/firestore.ts` + `src/index.ts`)
@@ -165,6 +167,32 @@ Expected today: **0 errors, 0 warnings** — every model's tag, runtime flag, an
 
 `apps/demo-api/src/test/tests/firestore.rules.spec.ts` is the dynamic oracle for the same semantics —
 it drives the real rules engine via `@firebase/rules-unit-testing`.
+
+## Notifications
+
+`src/lib/notification.ts` holds `DEMO_CLI_NOTIFICATION_CONFIG`: the demo's template type info record,
+the committed `src/lib/manifest/notification.manifest.generated.ts`, and `hiddenDeliveryMethods: []`
+to match the demo app's settings page (demo-api sends texts through Twilio). `src/index.ts` passes it to
+`runCli` as `notification` and to `buildManifestCommands` through
+`modelCommands: buildNotificationModelCommands(...)`. Refresh the manifest with
+`npx nx run demo-cli:generate-notification-manifest` (`build` and `typecheck` depend on it).
+
+```bash
+# no login needed
+demo-cli notification types
+demo-cli notification types --all --json   # includes TEST
+demo-cli notification task-types E --expanded
+
+# after `auth login`
+demo-cli model notificationUser settings
+demo-cli model notificationUser settings <uid> --json --expanded
+demo-cli model notification tasks pr/<uid>    # sys admin; lists nb/pr_<uid>
+demo-cli model notification task nb/pr_<uid>/nbn/<id> --expanded
+```
+
+The example task types are `E` (checkpoints `part_a` → `part_b` → `part_c`), `EU` (unique; `part_a` →
+`part_b`) and `EH` (one step). See [Notifications](../../packages/dbx-cli/README.md#notifications) for
+every flag and output mode.
 
 ## The one-hour session cache
 

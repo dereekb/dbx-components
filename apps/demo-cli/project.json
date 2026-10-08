@@ -51,11 +51,26 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "generate-notification-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/src/lib/manifest/notification.manifest.generated.ts"],
+      "dependsOn": [
+        {
+          "projects": ["dbx-cli"],
+          "target": "build"
+        }
+      ],
+      "inputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-notification-manifest/main.js", "{workspaceRoot}/components/demo-firebase/src/lib/model/notification/**/*.ts", "{workspaceRoot}/apps/demo-api/src/app/common/model/notification/**/*.ts", "{workspaceRoot}/apps/demo-api/src/app/common/firebase/**/*.ts"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-notification-manifest/main.js --component-dir=components/demo-firebase --api-dir=apps/demo-api --project=demo-cli --cli-output=apps/demo-cli/src/lib/manifest/notification.manifest.generated.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
-      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest"],
+      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest", "generate-notification-manifest"],
       "options": {
         "outputPath": "dist/apps/demo-cli",
         "main": "apps/demo-cli/src/index.ts",
@@ -92,7 +107,7 @@
       "//": "The single self-contained artifact shipped through the API's signed asset-download path. `thirdParty: true` is what makes it runnable outside the workspace - the default build leaves yargs/rxjs/firebase/date-fns as bare imports against a `private: true` package.json full of peerDependencies, so downloading that file alone gets you a CLI that cannot start. The externals below are oxfmt's OPTIONAL prettier plugins (Astro/Twig/Pug/Liquid/Marko/...), reached only through lazy import() for languages this CLI never formats; they are not installed, so bundling them is a hard resolve error. oxfmt itself is reached only by the codegen scan-helpers, never by a CLI command. Exposed as its own target rather than a `build` configuration because apps/demo-api's copy-cli-artifact needs it as a dependsOn edge, and TargetDependencyConfig has no `configuration` field (node_modules/nx/dist/src/config/workspace-json-project-json.d.ts:150). Invoking it as a nested `npx nx run demo-cli:build:standalone` instead is what deadlocked `demo-api:serve`: demo-cli -> demo-api is a static graph edge, so the nested process re-entered demo-api while serve/build-watch were registered running and blocked on \"Waiting for demo-api:serve in another nx process\".",
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest"],
+      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest", "generate-notification-manifest"],
       "options": {
         "outputPath": "dist/apps/demo-cli-standalone",
         "main": "apps/demo-cli/src/index.ts",
@@ -126,7 +141,7 @@
       "cache": true,
       "inputs": ["default", "^production"],
       "outputs": [],
-      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest"],
+      "dependsOn": ["generate-api-manifest", "generate-firestore-query-manifest", "generate-notification-manifest"],
       "options": {
         "commands": ["npx tsc -p apps/demo-cli/tsconfig.lib.json --noEmit", "npx tsc -p apps/demo-cli/tsconfig.spec.json --noEmit"],
         "cwd": "{workspaceRoot}",

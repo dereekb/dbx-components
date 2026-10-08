@@ -367,6 +367,131 @@ The two read paths authorize independently, and this is by design:
 So `--via api` and `--via firestore` can legitimately disagree about a specific document while
 agreeing about every model.
 
+## Notifications
+
+A `dbx-cli`-built CLI can show an app's notification catalog, a user's notification settings and the
+notification tasks in a NotificationBox:
+
+| Command | Auth | Reads |
+|---|---|---|
+| `notification types [type]` | none | the runtime template type info record |
+| `notification task-types [type]` | none | the generated notification manifest |
+| `model notificationUser settings [uid-or-key]` | login | `nu/<uid>` (`--via auto\|firestore\|api`) |
+| `model notification tasks [box]` | login, direct Firestore (sys admin) | `nb/<box>/nbn` |
+| `model notification task <key>` | login | `nb/<box>/nbn/<id>` (`--via auto\|firestore\|api`) |
+
+### Wiring
+
+There are two wiring points, both fed by one `CliNotificationConfig`:
+
+```ts
+// src/lib/notification.ts
+export const DEMO_CLI_NOTIFICATION_CONFIG: CliNotificationConfig = {
+  // the same record the settings page renders
+  templateTypeInfoRecord: DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD,
+  // emitted by `dbx-cli-generate-notification-manifest --cli-output`
+  manifest: DEMO_CLI_NOTIFICATION_MANIFEST,
+  // match the app's notification settings config
+  hiddenDeliveryMethods: []
+};
+
+// src/index.ts
+runCli({
+  cliName: 'demo-cli',
+  // 1. the auth-free `notification` catalog group
+  notification: DEMO_CLI_NOTIFICATION_CONFIG,
+  // 2. the model-tree leaves
+  apiCommands: buildManifestCommands(DEMO_CLI_API_MANIFEST, {
+    modelManifest: DEMO_CLI_MODEL_MANIFEST,
+    modelCommands: buildNotificationModelCommands(DEMO_CLI_NOTIFICATION_CONFIG)
+  })
+});
+```
+
+- `notification` registers the `notification` group with the auth-free config commands, like
+  `model-info`. `disableNotificationCommands` suppresses it.
+- The app builds the `model` tree itself, so the leaves go through `buildManifestCommands`'
+  `modelCommands` option. `modelCommands` is the general hook for app-specific per-model leaves: a
+  record of model type to extra `CommandModule`s, registered next to the model's API actions under
+  `model <model>`. A model with no API actions still gets its own `model <model>` group.
+- The display options mirror the front-end's notification settings config: `hiddenTemplateTypes`,
+  `deliveryMethods`, `hiddenDeliveryMethods`, `fallbackGroupBy` and `defaultGroup`. `commandName`
+  (default `notification`) and `modelCommandName` (default `model`) rename the commands.
+- `manifest` is optional. Without it `notification task-types` fails with `NOTIFICATION_MANIFEST_MISSING`,
+  and tasks show their completed checkpoints but not the remaining ones.
+
+Generate the manifest with the [build-time wiring check](#build-time-notification-wiring-check)'s
+`--cli-output=<file.ts> --project=<name>` flags. They emit `<NS>_NOTIFICATION_MANIFEST` and
+`<NS>_NOTIFICATION_MANIFEST_STAMP` (`<NS>` is the project name in SCREAMING_SNAKE_CASE), the same way
+the API and query manifests are emitted. Unlike `--output`, it is meant to be committed. See `apps/demo-cli/project.json`'s
+`generate-notification-manifest` target.
+
+### Commands
+
+```sh
+# the template types the settings page shows, with each delivery method's default
+demo-cli notification types
+demo-cli notification types GBE_C --expanded
+# include the types marked hideFromUserSettings
+demo-cli notification types --all
+
+# the task types and their checkpoint flows
+demo-cli notification task-types
+demo-cli notification task-types E --expanded
+
+# the logged-in user's settings: each type × delivery method, resolved to on/off
+demo-cli model notificationUser settings
+demo-cli model notificationUser settings <uid> --expanded
+demo-cli model notificationUser settings nu/<uid> --json
+
+# the tasks in a NotificationBox, newest first
+demo-cli model notification tasks
+demo-cli model notification tasks pr/<uid> --state pending --type E
+demo-cli model notification tasks nb/pr_<uid> --limit 50
+
+# one task: its state, attempts and checkpoint progress
+demo-cli model notification task nb/pr_<uid>/nbn/<id> --expanded
+```
+
+`model notificationUser settings` defaults to the logged-in user, read from the OIDC userinfo `sub`. Each
+cell shows whether the type is on for that method, and why: an explicit `gc` value, the type's `sd`
+(all methods) value, the type's default, or a method turned off account-wide in `gc.dm`. `--expanded`
+adds the direct (`dc`) and NotificationBox (`bc`) configs, excluded boxes (`x`), box memberships (`b`),
+the sync flag (`ns`), the last health check (`hc`), and ready-to-run `model notificationUser update`
+payloads for changing a setting.
+
+`model notification task` shows whether a task is `done`, `ready` (its send time has passed) or
+`scheduled`, its attempts out of `NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS`, its send time, and its
+completed checkpoints (`tpr`) against the manifest's flow, including the next one. A task type the
+manifest doesn't know and a notification that isn't a task are both flagged.
+
+`model notification tasks` filters by `--type` and `--state pending|done|all` (`pending` is `ready` and
+`scheduled`) client-side, after reading `--limit` notifications (default 200).
+
+### Output modes
+
+Every command supports three output modes:
+
+- **Compact** (the default): a one-line header and a table.
+- **`--expanded`**: the full human-readable detail.
+- **`--json`**: the `outputResult` envelope with the compact view model. Add `--expanded` to get the
+  expanded view model instead.
+
+### Auth and the per-box limitation
+
+- `notification types` and `notification task-types` read only what the CLI was built with, so they
+  run without a login.
+- `model notificationUser settings` and `model notification task` read like `get`: `--via auto` goes
+  direct to Firestore when a session is available, else the model API (see
+  [`--via auto|firestore|api`](#--via-autofirestoreapi)).
+- `model notification tasks` lists a subcollection, which the model API can't do, so it always reads
+  Firestore directly. It needs the `session.firestore` scope and a login whose rules allow reading
+  `nb/<box>/nbn`, which is usually a sys admin.
+- Tasks are listed one NotificationBox at a time. Framework tasks (and tasks created without a model)
+  live in the framework task box, `nb/not_not`, which is the default. A task created for a model
+  lives in that model's box, so pass the model key: `pr/<uid>` lists `nb/pr_<uid>`. The `[box]`
+  argument also takes a box key (`nb/<id>`) or a bare box id.
+
 ## Build-time notification wiring check
 
 `dbx-cli-generate-notification-manifest` checks an app's notification wiring during the build and
@@ -410,7 +535,9 @@ Only non-spec `.ts` files are read.
 |---|---|
 | `--component-dir=<path>` | required; the app's `-firebase` component root (workspace-relative or absolute) |
 | `--api-dir=<path>` | required; the API app root |
-| `--output=<path>` | required; manifest JSON path |
+| `--output=<path>` | manifest JSON path; required unless `--cli-output` is given |
+| `--cli-output=<file.ts>` | optional; also emit the TypeScript notification manifest the CLI's [notification commands](#notifications) read |
+| `--project=<name>` | optional, for `--cli-output`; names the emitted constants (`demo-cli` → `DEMO_CLI_NOTIFICATION_MANIFEST`, default `CLI_`) |
 | `--app=<name>` | optional; stamped as `app.name`, defaults to the basename of `--api-dir` |
 | `--strict` | treat every warning as blocking |
 | `--allow-warning=<CODE>` | repeatable; never block on that warning code (error codes can't be allowed) |

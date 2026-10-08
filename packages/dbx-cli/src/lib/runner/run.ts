@@ -28,6 +28,8 @@ import { closeAllCliFirebaseApps } from '../firestore/firestore.session';
 import { cliBuildDriftDescription, inspectCliBuildDrift } from './build-stamp';
 import { type CliLifecycleHooks, type CliLifecycleRunner, cliLifecycleRunner } from './lifecycle';
 import { createOutputMiddleware } from '../middleware/output.middleware';
+import { createNotificationCommand } from '../notification/notification.command.factory';
+import { type CliNotificationConfig } from '../notification/notification.config';
 import { createOutputCommand } from '../output/output.command.factory';
 import { CLI_EXIT_CODE_HANDLER, appendCliErrorMapper, outputError } from '../util/output';
 import { setCliRawArgv } from '../util/stdin';
@@ -155,6 +157,17 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly disableFirestoreGet?: boolean;
   /**
+   * The app's notification wiring. Enables the auth-free `notification` catalog group (`notification types`, `notification task-types`).
+   *
+   * The model-tree leaves (`model notificationUser settings`, `model notification tasks` / `task`) are wired by the app itself, through
+   * `buildManifestCommands(manifest, { modelCommands: buildNotificationModelCommands(config) })`, because the app builds the `model` tree.
+   */
+  readonly notification?: CliNotificationConfig;
+  /**
+   * Disable the built-in `notification` catalog group even when {@link notification} is provided.
+   */
+  readonly disableNotificationCommands?: boolean;
+  /**
    * Enables the recorded query/export dataset cache: the auth-free `cache` command group, and the
    * `--cache` / `--refresh` global flags that `firestore-query` and app actions honour.
    *
@@ -265,6 +278,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.firestoreQueryManifest) {
     builtInConfigCommands.push(buildFirestoreQueriesCommand(input.firestoreQueryManifest));
+  }
+
+  if (input.notification && input.disableNotificationCommands !== true) {
+    builtInConfigCommands.push(createNotificationCommand(input.notification));
   }
 
   // ONE cache instance for the whole invocation, shared by the `cache` group and every command that

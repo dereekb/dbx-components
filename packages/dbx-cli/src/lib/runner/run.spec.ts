@@ -4,6 +4,7 @@ import { createCli, runCli } from './run';
 import { getCliContext } from '../context/cli.context';
 import type { CliContext } from '../context/cli.context';
 import type { CliModelManifest } from '../manifest/types';
+import { firestoreModelIdentity, notificationTemplateTypeInfoRecord } from '@dereekb/firebase';
 
 const MODEL_MANIFEST: CliModelManifest = [
   {
@@ -63,6 +64,42 @@ describe('createCli() model-decode auto-wiring', () => {
   it('does NOT register model-decode when disableModelDecode is true', async () => {
     const help = await getRootHelp({ cliName: 'demo-cli', modelManifest: MODEL_MANIFEST, disableModelDecode: true });
     expect(help).not.toContain('model-decode');
+  });
+});
+
+describe('createCli() notification auto-wiring', () => {
+  const notification = { templateTypeInfoRecord: notificationTemplateTypeInfoRecord([{ type: 'A', name: 'Alpha', description: 'Alpha notification.', notificationModelIdentity: firestoreModelIdentity('profile', 'pr') }]) };
+
+  it('registers the notification group when notification is provided', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', notification })).toContain('notification');
+  });
+
+  it('does NOT register the notification group when disableNotificationCommands is true', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', notification, disableNotificationCommands: true })).not.toContain('notification');
+  });
+
+  it('runs `notification types` without a login', async () => {
+    const lines: string[] = [];
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation((arg: unknown) => {
+      lines.push(String(arg));
+    });
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
+      throw new Error(`process.exit:${code ?? 0}`);
+    });
+
+    try {
+      // a cliName with no config dir, so there are no tokens on disk: the auth middleware would exit if it ran
+      await createCli({ cliName: 'dbx-cli-notification-spec-no-tokens', notification, argv: ['notification', 'types', '--json'] })
+        .exitProcess(false)
+        .parseAsync(['notification', 'types', '--json']);
+    } finally {
+      consoleSpy.mockRestore();
+      exitSpy.mockRestore();
+    }
+
+    const parsed = JSON.parse(lines.join(''));
+    expect(parsed.ok).toBe(true);
+    expect(parsed.data.types.map((x: { type: string }) => x.type)).toEqual(['A']);
   });
 });
 
