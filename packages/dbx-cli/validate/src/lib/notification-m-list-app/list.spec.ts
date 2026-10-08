@@ -191,7 +191,9 @@ describe('listAppNotifications', () => {
     const template = report.templates[0];
     expect(template.forcedDeliveryMethodsSource).toBe('declared');
     expect(template.forcedDeliveryMethods).toEqual(['EMAIL']);
-    expect(formatReportAsMarkdown(report)).toContain('- Forced (always on) delivery methods: EMAIL');
+    const md = formatReportAsMarkdown(report);
+    expect(md).toContain('- Forced (always on) delivery methods: EMAIL');
+    expect(md).toContain('- User-configurable delivery methods: _none_ (the default when the info forces a method)');
   });
 
   it('formats the report as JSON', () => {

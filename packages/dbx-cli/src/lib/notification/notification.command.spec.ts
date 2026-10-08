@@ -78,7 +78,7 @@ describe('createNotificationCommand()', () => {
       const text = stdout.join('');
 
       expect(text).toContain('always means the method is always on and cannot be changed');
-      expect(text).toMatch(/F\s+Forced\s+Notifications\s+always\s+off\s+on/);
+      expect(text).toMatch(/F\s+Forced\s+Notifications\s+always\s+-\s+-/);
     });
 
     it('prints the always on line with --expanded', async () => {

@@ -66,7 +66,8 @@ export type NotificationDeliveryMethodName = 'EMAIL' | 'TEXT' | 'PUSH' | 'NOTIFI
 /**
  * Where a template info's `userConfigurableDeliveryMethods` came from.
  *
- * - `default` — the property is absent (or `undefined` / `null`), so the runtime defaults apply.
+ * - `default` — the property is absent (or `undefined` / `null`), so the runtime default applies: the default methods, or none when the
+ *   info forces a method.
  * - `declared` — an array the extractor read statically.
  * - `unresolved` — present, but not statically readable (an import, a call, an unknown element, ...).
  */

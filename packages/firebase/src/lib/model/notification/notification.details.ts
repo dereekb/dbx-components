@@ -142,14 +142,19 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
   /**
    * The delivery methods a user can configure for this template type.
    *
-   * Defaults to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
+   * Defaults to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}, or to none when the type forces a delivery method
+   * (`forcedDeliveryMethods`), so a type that only sets `forcedDeliveryMethods` is only sent by its forced methods.
    */
   readonly userConfigurableDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
   /**
    * Delivery methods that are always on for this template type, for every user.
    *
-   * A forced method is locked at Default, and that Default is On. A forced method is never user-configurable, even when it is listed in
-   * `userConfigurableDeliveryMethods`, and is shown as an always-on cell in the user's notification settings.
+   * A forced method is locked at Default, and that Default is On. A forced method is one of the type's delivery methods without being listed
+   * in `userConfigurableDeliveryMethods`. It is never user-configurable, even when it is also listed there, and is shown as an always-on cell
+   * in the user's notification settings.
+   *
+   * Forcing a method changes the default of `userConfigurableDeliveryMethods` to none. List only the methods the user can still configure
+   * there, such as `[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]` to keep the in-app summary configurable next to a forced email.
    *
    * The send pipeline skips the recipient's own per-type settings for a forced method:
    * - their global config for the type (`NotificationUser.gc.c[type]`), including the type's master toggle (`sd`)
@@ -176,13 +181,14 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
 /**
  * Returns the delivery methods a user can configure for the template type.
  *
- * Forced methods are not removed here. See {@link notificationTemplateTypeInfoForcedDeliveryMethods}.
+ * Forced methods are not removed from a configured list. See {@link notificationTemplateTypeInfoForcedDeliveryMethods}.
  *
  * @param info - The template type info.
- * @returns The configured `userConfigurableDeliveryMethods`, or {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
+ * @returns The configured `userConfigurableDeliveryMethods`. Otherwise none when the type forces a delivery method, or
+ * {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
  */
-export function notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods'>): NotificationDeliveryMethod[] {
-  return info.userConfigurableDeliveryMethods ?? DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS;
+export function notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info: Pick<NotificationTemplateTypeInfo, 'userConfigurableDeliveryMethods' | 'forcedDeliveryMethods'>): NotificationDeliveryMethod[] {
+  return info.userConfigurableDeliveryMethods ?? (notificationTemplateTypeInfoForcedDeliveryMethods(info).length > 0 ? [] : DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS);
 }
 
 /**

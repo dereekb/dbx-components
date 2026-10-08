@@ -6,7 +6,7 @@
 
 import { pushIoViolations, type IoViolationCodes, type IoViolationMessages } from '../_core/_validate/io-violations.js';
 import { attachRemediation } from '../_core/rule-catalog/index.js';
-import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, Violation, ViolationCode, ViolationSeverity } from './types.js';
+import type { AppNotificationsInspection, ExtractedAppNotifications, ExtractedTaskHandlerEntry, ExtractedTemplateHandlerEntry, ExtractedTemplateTypeInfo, NotificationDeliveryMethodName, Violation, ViolationCode, ViolationSeverity } from './types.js';
 
 const IO_VIOLATION_CODES: IoViolationCodes<ViolationCode> = {
   componentDirNotFound: 'NOTIF_COMPONENT_DIR_NOT_FOUND',
@@ -239,10 +239,10 @@ function checkTemplateHandlerFactory(extracted: ExtractedAppNotifications, viola
  * Build-time counterpart of the send pipeline's unlisted-delivery-method
  * warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`):
  * flags a handler factory that builds channel content for a delivery method
- * its info's explicit `userConfigurableDeliveryMethods` and
- * `forcedDeliveryMethods` leave out. Infos without a statically read list are
- * skipped (the defaults cover every content channel), as are infos whose
- * `forcedDeliveryMethods` cannot be read.
+ * its info's `userConfigurableDeliveryMethods` and `forcedDeliveryMethods`
+ * leave out. Infos that set neither list are skipped (the defaults cover every
+ * content channel), as are lists that cannot be read statically. See
+ * {@link staticUserConfigurableDeliveryMethods}.
  *
  * @param extracted - The extraction to inspect.
  * @param violations - Mutable buffer that receives the warnings.
@@ -254,21 +254,45 @@ function checkTemplateDeliveryMethods(extracted: ExtractedAppNotifications, viol
   }
   for (const entry of extracted.templateHandlerEntries) {
     const info = infoByTypeConstant.get(entry.typeIdentifier);
-    const userConfigurable = info?.userConfigurableDeliveryMethodsSource === 'declared' ? info.userConfigurableDeliveryMethods : undefined;
-    if (!info || !userConfigurable || info.forcedDeliveryMethodsSource === 'unresolved') continue;
+    const userConfigurable = info ? staticUserConfigurableDeliveryMethods(info) : undefined;
+    if (!info || !userConfigurable) continue;
     const forced = info.forcedDeliveryMethods ?? [];
     const listed = [...userConfigurable, ...forced.filter((method) => !userConfigurable.includes(method))];
     const unlisted = entry.contentDeliveryMethods.filter((method) => !listed.includes(method));
     if (unlisted.length === 0) continue;
     const listedText = listed.length > 0 ? listed.join(', ') : 'none';
+    const forcedSuffix = forced.length > 0 ? ' and `forcedDeliveryMethods`' : '';
+    const listedIn = info.userConfigurableDeliveryMethodsSource === 'declared' ? `\`userConfigurableDeliveryMethods\`${forcedSuffix}` : '`forcedDeliveryMethods` (it leaves `userConfigurableDeliveryMethods` out, so it is only sent by its forced methods)';
     pushViolation(violations, {
       code: 'NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD',
       severity: 'warning',
-      message: `Template handler factory \`${entry.factoryFunctionName ?? '<anonymous>'}\` for \`${entry.typeIdentifier}\` builds content for ${unlisted.join(', ')}, but \`${info.symbolName}\` only lists ${listedText} in \`userConfigurableDeliveryMethods\`${forced.length > 0 ? ' and `forcedDeliveryMethods`' : ''}. This is the build-time counterpart of the send pipeline's runtime unlisted-delivery-method warning.`,
+      message: `Template handler factory \`${entry.factoryFunctionName ?? '<anonymous>'}\` for \`${entry.typeIdentifier}\` builds content for ${unlisted.join(', ')}, but \`${info.symbolName}\` only lists ${listedText} in ${listedIn}. This is the build-time counterpart of the send pipeline's runtime unlisted-delivery-method warning.`,
       side: 'api',
       file: entry.sourceFile
     });
   }
+}
+
+/**
+ * Static counterpart of `notificationTemplateTypeInfoUserConfigurableDeliveryMethods()`:
+ * the info's declared `userConfigurableDeliveryMethods`, or none when the info
+ * leaves them out and forces a method, since forcing a method changes their
+ * default to none.
+ *
+ * @param info - The info to read.
+ * @returns The user-configurable delivery methods, or `undefined` when they are
+ * the runtime defaults or either list cannot be read statically.
+ */
+function staticUserConfigurableDeliveryMethods(info: ExtractedTemplateTypeInfo): readonly NotificationDeliveryMethodName[] | undefined {
+  let result: readonly NotificationDeliveryMethodName[] | undefined;
+  if (info.forcedDeliveryMethodsSource !== 'unresolved') {
+    if (info.userConfigurableDeliveryMethodsSource === 'declared') {
+      result = info.userConfigurableDeliveryMethods;
+    } else if (info.userConfigurableDeliveryMethodsSource === 'default' && (info.forcedDeliveryMethods ?? []).some((method) => method !== 'TEXT')) {
+      result = [];
+    }
+  }
+  return result;
 }
 
 /**

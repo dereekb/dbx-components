@@ -22,7 +22,7 @@ const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
 const TYPE_INFOS: NotificationTemplateTypeInfo[] = [
   { type: 'E', name: 'Example', description: 'Example notification.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 } },
   { type: 'CAL_INV', name: 'Calendar Invite', description: 'Calendar invite.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 }, userConfigurableDeliveryMethods: [EMAIL] },
-  { type: 'FRC', name: 'Forced Notice', description: 'Always emailed.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 }, forcedDeliveryMethods: [EMAIL] },
+  { type: 'FRC', name: 'Forced Notice', description: 'Always emailed.', notificationModelIdentity: profileIdentity, group: { key: 'profile', name: 'Your Profile', sortOrder: 0 }, userConfigurableDeliveryMethods: [TEXT, NOTIFICATION_SUMMARY], forcedDeliveryMethods: [EMAIL] },
   { type: 'GBE_C', name: 'Guestbook Entry Created', description: 'Created.', notificationModelIdentity: guestbookIdentity, group: { key: 'guestbook', name: 'Guestbooks', sortOrder: 1 } }
 ];
 

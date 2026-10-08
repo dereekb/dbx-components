@@ -2161,9 +2161,9 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     title: "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods` or `forcedDeliveryMethods`",
     whatItFlags: "A template's message factory returns channel content for a delivery method its `NotificationTemplateTypeInfo` does not list in `userConfigurableDeliveryMethods` or `forcedDeliveryMethods`.",
     whenItApplies:
-      'Template types whose info declares an explicit `userConfigurableDeliveryMethods` array and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method neither that array nor `forcedDeliveryMethods` lists.',
+      'Template types whose info declares an explicit `userConfigurableDeliveryMethods` array, or only a `forcedDeliveryMethods` array (forcing a method changes the `userConfigurableDeliveryMethods` default to none), and whose handler factory (or the function its `factory:` names) builds an object literal with `emailContent`, `textContent` or `notificationSummaryContent` for a method neither array lists.',
     whenItDoesNotApply:
-      "Infos without `userConfigurableDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically (including a `forcedDeliveryMethods` it cannot read), and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.",
+      "Infos with neither `userConfigurableDeliveryMethods` nor `forcedDeliveryMethods` (the defaults list email, text and notification summary), lists the scanner cannot read statically (including a `forcedDeliveryMethods` it cannot read), and content built outside the factory's own source — the send pipeline's runtime warning (`notificationMessageFunctionWithUnlistedDeliveryMethodsWarning`) still covers those.",
     canonicalFix: "Stop returning the unlisted content from the factory, or add the delivery method to the info's `userConfigurableDeliveryMethods` (or `forcedDeliveryMethods`).",
     seeAlso: [
       {

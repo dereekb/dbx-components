@@ -154,6 +154,18 @@ describe('notificationTemplateTypeInfoUserConfigurableDeliveryMethods()', () => 
   it('should return the configured methods', () => {
     expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL]);
   });
+
+  it('should return no methods when the type forces a method and configures none', () => {
+    expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([]);
+  });
+
+  it('should return the configured methods when the type also forces a method', () => {
+    expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ userConfigurableDeliveryMethods: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY], forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.NOTIFICATION_SUMMARY]);
+  });
+
+  it('should return the default methods when the forced list is empty', () => {
+    expect(notificationTemplateTypeInfoUserConfigurableDeliveryMethods({ forcedDeliveryMethods: [] })).toBe(DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS);
+  });
 });
 
 describe('notificationTemplateTypeInfoForcedDeliveryMethods()', () => {
@@ -177,6 +189,10 @@ describe('notificationTemplateTypeInfoDeliveryMethods()', () => {
 
   it('should return the default methods when none are configured or forced', () => {
     expect(notificationTemplateTypeInfoDeliveryMethods({})).toEqual(DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS);
+  });
+
+  it('should return only the forced methods when the type configures none', () => {
+    expect(notificationTemplateTypeInfoDeliveryMethods({ forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] })).toEqual([NotificationDeliveryMethod.EMAIL]);
   });
 });
 

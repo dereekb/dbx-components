@@ -76,8 +76,8 @@ describe('notificationTypesView()', () => {
 const FORCED_CONFIG: CliNotificationConfig = {
   templateTypeInfoRecord: notificationTemplateTypeInfoRecord([
     { type: 'A', name: 'Alpha', description: 'Alpha notification.', notificationModelIdentity: profileIdentity },
-    { type: 'F', name: 'Always Email', description: 'Forced notification.', notificationModelIdentity: profileIdentity, forcedDeliveryMethods: [EMAIL] },
-    { type: 'O', name: 'Aa Only Forced', description: 'Only forced notification.', notificationModelIdentity: profileIdentity, userConfigurableDeliveryMethods: [EMAIL], forcedDeliveryMethods: [EMAIL] }
+    { type: 'F', name: 'Always Email', description: 'Forced notification.', notificationModelIdentity: profileIdentity, userConfigurableDeliveryMethods: [TEXT, NOTIFICATION_SUMMARY], forcedDeliveryMethods: [EMAIL] },
+    { type: 'O', name: 'Aa Only Forced', description: 'Only forced notification.', notificationModelIdentity: profileIdentity, forcedDeliveryMethods: [EMAIL] }
   ])
 };
 

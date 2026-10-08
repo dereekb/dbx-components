@@ -245,8 +245,7 @@ export const CALENDAR_EVENT_INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO: Notification
   notificationModelIdentity: profileIdentity, // delivered to the profile's notification box
   targetModelIdentity: calendarIdentity, // targets the profile's calendar
   group: DEMO_NOTIFICATION_PROFILE_SETTINGS_GROUP,
-  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL], // the iTIP calendar attachment only works by email
-  forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] // invites are always emailed, whatever the user's settings for the type
+  forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL] // invites are always emailed, whatever the user's settings for the type, and only emailed, since the iTIP calendar attachment only works by email
 };
 
 /**

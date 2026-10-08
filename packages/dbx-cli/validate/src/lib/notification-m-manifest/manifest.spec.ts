@@ -23,7 +23,7 @@ export const INVITE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInf
   description: 'An invite notification.',
   notificationModelIdentity: testIdentity,
   targetModelIdentity: calendarIdentity,
-  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.EMAIL],
+  userConfigurableDeliveryMethods: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY],
   forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]
 };
 
@@ -150,7 +150,7 @@ describe('buildNotificationManifest', () => {
     expect(test.userConfigurableDeliveryMethods).toBeUndefined();
     expect(test.factoryContentDeliveryMethods).toEqual(['TEXT']);
     expect(invite.userConfigurableDeliveryMethodsSource).toBe('declared');
-    expect(invite.userConfigurableDeliveryMethods).toEqual(['EMAIL']);
+    expect(invite.userConfigurableDeliveryMethods).toEqual(['NOTIFICATION_SUMMARY']);
     expect(invite.factoryContentDeliveryMethods).toEqual(['EMAIL']);
     expect(test.forcedDeliveryMethodsSource).toBe('default');
     expect(test.forcedDeliveryMethods).toBeUndefined();

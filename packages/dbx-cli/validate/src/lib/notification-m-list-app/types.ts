@@ -19,7 +19,7 @@ export interface TemplateSummary {
    */
   readonly userConfigurableDeliveryMethods: readonly NotificationDeliveryMethodName[] | undefined;
   /**
-   * `default` (property absent, runtime defaults apply), `declared`, or `unresolved` (not statically readable). `undefined` when the template has no info.
+   * `default` (property absent, so the runtime default applies: the default methods, or none when the info forces a method), `declared`, or `unresolved` (not statically readable). `undefined` when the template has no info.
    */
   readonly userConfigurableDeliveryMethodsSource: UserConfigurableDeliveryMethodsSource | undefined;
   /**

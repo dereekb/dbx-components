@@ -825,6 +825,16 @@ describe('validateAppNotifications — forced delivery methods', () => {
 
   it('skips NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD when forcedDeliveryMethods is unresolved', () => {
     expect(unlistedDeliveryMethodViolations({ deliveryMethods: '[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]', extraInfoProperties: 'forcedDeliveryMethods: FORCED_METHODS', factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
+    expect(unlistedDeliveryMethodViolations({ extraInfoProperties: 'forcedDeliveryMethods: FORCED_METHODS', factoryReturn: TEXT_CONTENT_RETURN })).toHaveLength(0);
+  });
+
+  it('only lists the forced methods for NOTIF_TEMPLATE_FACTORY_UNLISTED_DELIVERY_METHOD when the info leaves userConfigurableDeliveryMethods out', () => {
+    const extraInfoProperties = 'forcedDeliveryMethods: [NotificationDeliveryMethod.EMAIL]';
+    const violations = unlistedDeliveryMethodViolations({ extraInfoProperties, factoryReturn: TEXT_CONTENT_RETURN });
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0].message).toContain('only lists EMAIL in `forcedDeliveryMethods`');
+    expect(unlistedDeliveryMethodViolations({ extraInfoProperties, factoryReturn: EMAIL_CONTENT_RETURN })).toHaveLength(0);
   });
 });
 

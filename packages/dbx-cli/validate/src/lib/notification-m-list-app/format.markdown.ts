@@ -72,7 +72,7 @@ function formatUserConfigurableDeliveryMethods(t: TemplateSummary): string | und
       result = t.userConfigurableDeliveryMethods && t.userConfigurableDeliveryMethods.length > 0 ? t.userConfigurableDeliveryMethods.join(', ') : '_none_';
       break;
     case 'default':
-      result = 'default';
+      result = t.forcedDeliveryMethodsSource === 'declared' && (t.forcedDeliveryMethods ?? []).some((method) => method !== 'TEXT') ? '_none_ (the default when the info forces a method)' : 'default';
       break;
     case 'unresolved':
       result = '_unresolved_';

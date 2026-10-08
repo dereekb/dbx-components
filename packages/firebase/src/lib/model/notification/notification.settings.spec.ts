@@ -22,8 +22,8 @@ const typeInfos: NotificationTemplateTypeInfo[] = [
 ];
 
 const forcedTypeInfos: NotificationTemplateTypeInfo[] = [
-  { type: 'F', name: 'Forced', description: 'Forced.', notificationModelIdentity: profileIdentity, group: profileGroup, forcedDeliveryMethods: [EMAIL] },
-  { type: 'F_ONLY', name: 'Forced Only', description: 'Forced only.', notificationModelIdentity: profileIdentity, group: profileGroup, userConfigurableDeliveryMethods: [EMAIL], forcedDeliveryMethods: [EMAIL] }
+  { type: 'F', name: 'Forced', description: 'Forced.', notificationModelIdentity: profileIdentity, group: profileGroup, userConfigurableDeliveryMethods: COLUMNS, forcedDeliveryMethods: [EMAIL] },
+  { type: 'F_ONLY', name: 'Forced Only', description: 'Forced only.', notificationModelIdentity: profileIdentity, group: profileGroup, forcedDeliveryMethods: [EMAIL] }
 ];
 
 describe('notificationSettingsListItemValues()', () => {
@@ -103,7 +103,7 @@ describe('notificationSettingsListItemValues() forced delivery methods', () => {
     expect(item?.forcedDeliveryMethods).toEqual([EMAIL]);
   });
 
-  it('should keep a row whose only shown column is forced', () => {
+  it('should keep a row for a type that only forces methods, with no configurable methods', () => {
     const item = items.find((x) => x.type === 'F_ONLY');
     expect(item?.deliveryMethods).toEqual([]);
     expect(item?.forcedDeliveryMethods).toEqual([EMAIL]);
