@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { notificationManifest, notificationValidateApp } from '@dereekb/dbx-cli/validate';
-import { countNotificationManifestGenerationErrors, formatNotificationManifestFinding, renderNotificationManifest } from './render';
+import { cliNotificationManifestFromManifest, cliNotificationManifestNamespace, countNotificationManifestGenerationErrors, formatNotificationManifestFinding, renderCliNotificationManifestSource, renderNotificationManifest } from './render';
 
 const FIXED_NOW = new Date('2026-05-25T00:00:00.000Z');
 const COMPONENT_DIR = 'components/demo-firebase';
@@ -148,6 +148,39 @@ describe('renderNotificationManifest', () => {
     expect(manifest.findings).toContainEqual(expect.objectContaining({ code: 'NOTIF_TEMPLATE_FACTORY_MISSING', severity: 'error', side: 'api', file: FACTORY_PATH }));
     expect(validation.violations.find((v) => v.code === 'NOTIF_TEMPLATE_FACTORY_MISSING')?.remediation?.fix).toBeTruthy();
     expect(countNotificationManifestGenerationErrors({ findings: manifest.findings, strict: false })).toBe(manifest.errorCount);
+  });
+});
+
+describe('cliNotificationManifestFromManifest', () => {
+  it('maps the tasks and templates to the CLI manifest', () => {
+    const { manifest } = render();
+    const cliManifest = cliNotificationManifestFromManifest(manifest);
+
+    expect(cliManifest.tasks).toEqual([expect.objectContaining({ type: 'E', symbolName: 'EXAMPLE_NOTIFICATION_TASK_TYPE', dataInterfaceName: 'ExampleNotificationTaskData', checkpoints: ['part_a'], hasHandler: true })]);
+    expect(cliManifest.templates).toEqual([expect.objectContaining({ type: 'TEST', symbolName: 'TEST_NOTIFICATION_TEMPLATE_TYPE', factoryFunctionName: 'demoTestNotificationFactory', factoryContentDeliveryMethods: ['t'] })]);
+  });
+
+  it('skips entries without a type code', () => {
+    const { manifest } = render();
+    const cliManifest = cliNotificationManifestFromManifest({ templates: [], tasks: [...manifest.tasks, { ...manifest.tasks[0], typeCode: undefined }] });
+    expect(cliManifest.tasks.map((x) => x.type)).toEqual(['E']);
+  });
+});
+
+describe('renderCliNotificationManifestSource', () => {
+  it('renders the stamp and manifest constants with the project namespace', () => {
+    const { manifest } = render();
+    const source = renderCliNotificationManifestSource({ manifest: cliNotificationManifestFromManifest(manifest), projectName: 'demo-cli', namespace: cliNotificationManifestNamespace('demo-cli'), generatorVersion: '1.2.3' });
+
+    expect(source).toContain('npx nx run demo-cli:generate-notification-manifest');
+    expect(source).toContain("import { type CliGeneratedManifestStamp, type CliNotificationManifest } from '@dereekb/dbx-cli';");
+    expect(source).toContain('export const DEMO_CLI_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: "1.2.3" };');
+    expect(source).toContain('export const DEMO_CLI_NOTIFICATION_MANIFEST: CliNotificationManifest = {');
+    expect(source).toContain('"checkpoints": [\n');
+  });
+
+  it('defaults the namespace to CLI', () => {
+    expect(cliNotificationManifestNamespace(undefined)).toBe('CLI');
   });
 });
 

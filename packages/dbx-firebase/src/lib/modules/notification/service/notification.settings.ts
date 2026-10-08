@@ -1,9 +1,15 @@
 import {
+  DEFAULT_NOTIFICATION_SETTINGS_BOX_OVERRIDE_DESCRIPTION,
+  DEFAULT_NOTIFICATION_SETTINGS_GROUP,
   DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS,
-  effectiveNotificationBoxRecipientTemplateConfig,
+  notificationSettingsCellStates,
+  type NotificationSettingsCellEdits,
+  type NotificationSettingsCellStatesInput,
+  type NotificationSettingsFallbackGroupBy,
+  notificationSettingsListItemValues,
+  type NotificationSettingsListItemValuesInput,
   type FirestoreModelKey,
   inferNotificationBoxRelatedModelKey,
-  isNotificationDeliveryMethodEnabledByDefault,
   type NotificationBoxId,
   notificationBoxIdForModel,
   NotificationBoxRecipientFlag,
@@ -13,12 +19,9 @@ import {
   type NotificationBoxRecipientTemplateConfigArrayEntryParam,
   type NotificationBoxRecipientTemplateConfigDeliveryMethodKey,
   NOTIFICATION_DELIVERY_METHOD_TEMPLATE_CONFIG_KEY,
-  type NotificationDeliveryMethodMap,
   type NotificationTemplateType,
-  type NotificationTemplateTypeInfo,
   type NotificationTemplateTypeInfoGroup,
   type NotificationTemplateTypeInfoGroupKey,
-  notificationTemplateTypeInfoUserConfigurableDeliveryMethods,
   type NotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationUserNotificationBoxRecipientConfig,
   readNotificationDeliveryMethodFlag,
@@ -29,7 +32,7 @@ import {
 } from '@dereekb/firebase';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type E164PhoneNumber, type Maybe } from '@dereekb/util';
-import { compareNotificationTemplateTypeInfoGroups, type DbxFirebaseNotificationSettingsCellOverride, type DbxFirebaseNotificationSettingsCellStates, type DbxFirebaseNotificationSettingsListItemValue, type DbxFirebaseNotificationSettingsRowCellStates } from '../component/notification.settings.list';
+import { type DbxFirebaseNotificationSettingsCellStates, type DbxFirebaseNotificationSettingsListItemValue } from '../component/notification.settings.list';
 
 /**
  * Default text message disclosure shown beside the text message settings.
@@ -49,7 +52,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS: Noti
 /**
  * Group for template types that have no group, when not grouping by notification model.
  */
-export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP: NotificationTemplateTypeInfoGroup = { key: '_', name: 'Notifications' };
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP: NotificationTemplateTypeInfoGroup = DEFAULT_NOTIFICATION_SETTINGS_GROUP;
 
 /**
  * How to group template types that have no group.
@@ -57,7 +60,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP: NotificationTempl
  * - `none` — use the default group
  * - `notificationModel` — group by the model the notification is attached to
  */
-export type DbxFirebaseNotificationSettingsFallbackGroupBy = 'none' | 'notificationModel';
+export type DbxFirebaseNotificationSettingsFallbackGroupBy = NotificationSettingsFallbackGroupBy;
 
 /**
  * Where a user's per-template-type notification settings live, which decides how the settings for one NotificationBox work.
@@ -236,7 +239,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_GLOBAL_HINT = 'Click
 /**
  * Default tooltip of a NotificationBox cell that the global settings override, when the box's model has no name.
  */
-export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION = 'Your general setting for this notification takes priority over this.';
+export const DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION = DEFAULT_NOTIFICATION_SETTINGS_BOX_OVERRIDE_DESCRIPTION;
 
 /**
  * Default message shown when the user does not receive a NotificationBox's notifications, when the box's model has no name.
@@ -411,25 +414,16 @@ export function dbxFirebaseNotificationUserSettingsTexts(input: DbxFirebaseNotif
 /**
  * Pending cell edits, keyed by template type then delivery method. A null value clears the cell back to its default.
  */
-export type DbxFirebaseNotificationSettingsCellEdits = Record<NotificationTemplateType, NotificationDeliveryMethodMap<Maybe<boolean>>>;
+export type DbxFirebaseNotificationSettingsCellEdits = NotificationSettingsCellEdits;
 
 // MARK: List Items
 /**
  * Input for {@link dbxFirebaseNotificationSettingsListItemValues}.
  */
-export interface DbxFirebaseNotificationSettingsListItemValuesInput extends Pick<DbxFirebaseNotificationUserSettingsConfig, 'groups' | 'templateTypes' | 'hiddenTemplateTypes' | 'fallbackGroupBy' | 'defaultGroup'> {
-  /**
-   * All of the app's template type infos.
-   */
-  readonly typeInfos: NotificationTemplateTypeInfo[];
-  /**
-   * Delivery method columns, in order.
-   */
-  readonly deliveryMethods: NotificationDeliveryMethod[];
-}
+export type DbxFirebaseNotificationSettingsListItemValuesInput = NotificationSettingsListItemValuesInput;
 
 /**
- * Builds the settings list rows from the app's template type infos.
+ * Builds the settings list rows from the app's template type infos. See {@link notificationSettingsListItemValues}.
  *
  * Drops hidden types and types with no configurable column, intersects each type's configurable methods with the columns,
  * applies the group fallback, keeps only the selected groups and types when any are set, and sorts the rows by `sortOrder`
@@ -439,81 +433,19 @@ export interface DbxFirebaseNotificationSettingsListItemValuesInput extends Pick
  * @returns The list rows.
  */
 export function dbxFirebaseNotificationSettingsListItemValues(input: DbxFirebaseNotificationSettingsListItemValuesInput): DbxFirebaseNotificationSettingsListItemValue[] {
-  const { typeInfos, deliveryMethods: columns, hiddenTemplateTypes, fallbackGroupBy, defaultGroup } = input;
-  const hidden = new Set(hiddenTemplateTypes ?? []);
-  const selectedGroups = new Set(input.groups ?? []);
-  const selectedTemplateTypes = new Set(input.templateTypes ?? []);
-  const isSelectionSet = input.groups != null || input.templateTypes != null;
-
-  const values: DbxFirebaseNotificationSettingsListItemValue[] = [];
-
-  typeInfos.forEach((info) => {
-    if (!info.hideFromUserSettings && !hidden.has(info.type)) {
-      const configurable = new Set(notificationTemplateTypeInfoUserConfigurableDeliveryMethods(info));
-      const deliveryMethods = columns.filter((method) => configurable.has(method));
-
-      if (deliveryMethods.length) {
-        let group: NotificationTemplateTypeInfoGroup;
-
-        if (info.group) {
-          group = info.group;
-        } else if (fallbackGroupBy === 'notificationModel') {
-          const modelType = info.notificationModelIdentity.modelType;
-          group = { key: modelType, name: modelType };
-        } else {
-          group = defaultGroup ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_GROUP;
-        }
-
-        if (!isSelectionSet || selectedGroups.has(group.key) || selectedTemplateTypes.has(info.type)) {
-          values.push({ type: info.type, name: info.name, description: info.description, group, deliveryMethods, info });
-        }
-      }
-    }
-  });
-
-  return values.sort((a, b) => compareNotificationTemplateTypeInfoGroups({ name: a.name, sortOrder: a.info.sortOrder }, { name: b.name, sortOrder: b.info.sortOrder }));
+  return notificationSettingsListItemValues(input);
 }
 
 // MARK: Cell States
 /**
  * Input for {@link dbxFirebaseNotificationSettingsCellStates}.
  */
-export interface DbxFirebaseNotificationSettingsCellStatesInput {
-  /**
-   * The list rows.
-   */
-  readonly items: DbxFirebaseNotificationSettingsListItemValue[];
-  /**
-   * Delivery method columns, in order.
-   */
-  readonly deliveryMethods: NotificationDeliveryMethod[];
-  /**
-   * The saved global config (`gc`).
-   */
-  readonly gc?: Maybe<Partial<Pick<NotificationUserDefaultNotificationBoxRecipientConfig, 'c' | 'dm'>>>;
-  /**
-   * Pending cell edits.
-   */
-  readonly edits?: Maybe<DbxFirebaseNotificationSettingsCellEdits>;
-  /**
-   * Pending account-wide disabled delivery methods. Defaults to the saved `gc.dm`.
-   */
-  readonly disabledDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
-  /**
-   * The saved config of the targeted NotificationBox (the user's `bc` entry). When set, the cells are the box's cells: they read from this
-   * config, and a cell that `gc` decides is overridden.
-   */
-  readonly boxConfig?: Maybe<Partial<Pick<NotificationUserNotificationBoxRecipientConfig, 'c'>>>;
-  /**
-   * Tooltip of a box cell that `gc` overrides. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION}.
-   */
-  readonly overrideDescription?: Maybe<string>;
-}
+export type DbxFirebaseNotificationSettingsCellStatesInput = NotificationSettingsCellStatesInput;
 
 /**
- * Computes the state of every template type × delivery method cell.
+ * Computes the state of every template type × delivery method cell. See {@link notificationSettingsCellStates}.
  *
- * A cell's default is the row's `sd` when set, otherwise {@link isNotificationDeliveryMethodEnabledByDefault} for the type.
+ * A cell's default is the row's `sd` when set, otherwise the type's default for the method.
  * A cell is disabled when its method is in the pending disabled methods.
  *
  * With a `boxConfig`, the cells read from the box's config instead of `gc`, so "Default" falls through to the global setting or the type's
@@ -524,43 +456,7 @@ export interface DbxFirebaseNotificationSettingsCellStatesInput {
  * @returns The cell states keyed by template type then delivery method.
  */
 export function dbxFirebaseNotificationSettingsCellStates(input: DbxFirebaseNotificationSettingsCellStatesInput): DbxFirebaseNotificationSettingsCellStates {
-  const { items, deliveryMethods, gc, edits, boxConfig } = input;
-  const disabledMethods = new Set(input.disabledDeliveryMethods ?? gc?.dm ?? []);
-  const overrideDescription = input.overrideDescription ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_BOX_SETTINGS_OVERRIDE_DESCRIPTION;
-  const result: DbxFirebaseNotificationSettingsCellStates = {};
-
-  items.forEach((item) => {
-    const { type, info } = item;
-    const savedConfig = boxConfig ? boxConfig.c?.[type] : gc?.c?.[type];
-    const overridingConfig = boxConfig ? effectiveNotificationBoxRecipientTemplateConfig(gc?.c?.[type] ?? {}) : undefined;
-    const typeEdits = edits?.[type];
-    const available = new Set(item.deliveryMethods);
-    const row: DbxFirebaseNotificationSettingsRowCellStates = {};
-
-    deliveryMethods.forEach((method) => {
-      const savedValue = readNotificationDeliveryMethodFlag(savedConfig, method) ?? null;
-      const editValue = typeEdits?.[method];
-      const hasEdit = editValue !== undefined;
-      const value = hasEdit ? editValue : savedValue;
-
-      const overrideValue = readNotificationDeliveryMethodFlag(overridingConfig, method);
-      const override: Maybe<DbxFirebaseNotificationSettingsCellOverride> = overrideValue == null ? undefined : { value: overrideValue, description: overrideDescription };
-
-      row[method] = {
-        method,
-        available: available.has(method),
-        value,
-        defaultValue: savedConfig?.sd ?? isNotificationDeliveryMethodEnabledByDefault(method, info),
-        disabled: disabledMethods.has(method),
-        modified: hasEdit && editValue !== savedValue,
-        ...(override ? { override } : {})
-      };
-    });
-
-    result[type] = row;
-  });
-
-  return result;
+  return notificationSettingsCellStates(input);
 }
 
 // MARK: Update Params

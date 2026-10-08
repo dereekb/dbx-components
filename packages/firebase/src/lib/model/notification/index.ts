@@ -17,6 +17,7 @@ export * from './notification.id';
 export * from './notification.message';
 export * from './notification.query';
 export * from './notification.send';
+export * from './notification.settings';
 export * from './notification.task';
 export * from './notification.task.subtask';
 export * from './notification.util';

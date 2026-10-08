@@ -273,3 +273,8 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
    */
   readonly allCompletedSubTasks?: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
 }
+
+/**
+ * Number of times a task notification is sent before the server gives up on it and deletes it.
+ */
+export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;

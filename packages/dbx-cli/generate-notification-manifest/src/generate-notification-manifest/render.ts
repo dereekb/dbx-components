@@ -10,6 +10,7 @@
  */
 
 import { notificationManifest, type notificationValidateApp } from '@dereekb/dbx-cli/validate';
+import { type CliNotificationManifest, type CliNotificationManifestTask, type CliNotificationManifestTemplate } from '@dereekb/dbx-cli';
 
 /**
  * Renders the notification manifest from a prepared inspection.
@@ -93,4 +94,112 @@ export function countNotificationManifestGenerationErrors(input: CountNotificati
   const exceedsMax = input.maxWarnings !== undefined && blockableWarnings.length > input.maxWarnings;
   const blockingWarningCount = input.strict || exceedsMax ? blockableWarnings.length : 0;
   return errorCount + blockingWarningCount;
+}
+
+// MARK: CLI Manifest
+/**
+ * Delivery method code (the `NotificationDeliveryMethod` enum value in `@dereekb/firebase`) for each enum member name the extractor reports.
+ */
+const NOTIFICATION_DELIVERY_METHOD_CODES: Readonly<Record<notificationValidateApp.NotificationDeliveryMethodName, string>> = {
+  EMAIL: 'e',
+  TEXT: 't',
+  PUSH: 'p',
+  NOTIFICATION_SUMMARY: 'n'
+};
+
+/**
+ * Maps the build-time notification manifest to the structural {@link CliNotificationManifest} an app CLI ships.
+ *
+ * Entries without a type code are skipped, delivery method enum member names become codes, and both lists are sorted by type.
+ *
+ * @param manifest - The manifest from {@link renderNotificationManifest}.
+ * @returns The CLI manifest.
+ */
+export function cliNotificationManifestFromManifest(manifest: Pick<notificationManifest.NotificationManifest, 'tasks' | 'templates'>): CliNotificationManifest {
+  const tasks: CliNotificationManifestTask[] = [];
+  const templates: CliNotificationManifestTemplate[] = [];
+
+  for (const task of manifest.tasks) {
+    if (task.typeCode) {
+      tasks.push({
+        type: task.typeCode,
+        symbolName: task.symbolName,
+        ...(task.dataInterfaceName ? { dataInterfaceName: task.dataInterfaceName } : {}),
+        checkpoints: [...task.checkpoints],
+        hasHandler: task.hasHandler,
+        ...(task.handlerFlowStepCount == null ? {} : { handlerFlowStepCount: task.handlerFlowStepCount }),
+        sourceFile: task.sourceFile
+      });
+    }
+  }
+
+  for (const template of manifest.templates) {
+    if (template.typeCode) {
+      templates.push({
+        type: template.typeCode,
+        symbolName: template.symbolName,
+        ...(template.factoryFunctionName ? { factoryFunctionName: template.factoryFunctionName } : {}),
+        factoryContentDeliveryMethods: template.factoryContentDeliveryMethods.map((name) => NOTIFICATION_DELIVERY_METHOD_CODES[name]),
+        sourceFile: template.sourceFile
+      });
+    }
+  }
+
+  const byType = (a: { readonly type: string }, b: { readonly type: string }) => a.type.localeCompare(b.type);
+  return { tasks: tasks.sort(byType), templates: templates.sort(byType) };
+}
+
+/**
+ * Input to {@link renderCliNotificationManifestSource}.
+ */
+export interface RenderCliNotificationManifestSourceInput {
+  readonly manifest: CliNotificationManifest;
+  /**
+   * Project name shown in the regenerate banner.
+   */
+  readonly projectName: string;
+  /**
+   * Prefix of the emitted constants, e.g. `DEMO_CLI` for `DEMO_CLI_NOTIFICATION_MANIFEST`.
+   */
+  readonly namespace: string;
+  /**
+   * This generator's version, emitted as `<namespace>_NOTIFICATION_MANIFEST_STAMP.generatorVersion`.
+   */
+  readonly generatorVersion: string;
+}
+
+/**
+ * Renders the unformatted TS module for `--cli-output`. `main.ts` formats it with the workspace oxfmt config before writing.
+ *
+ * @param input - The CLI manifest, project name, constant prefix and generator version.
+ * @returns The module source.
+ *
+ * @example
+ * ```ts
+ * renderCliNotificationManifestSource({ manifest, projectName: 'demo-cli', namespace: 'DEMO_CLI', generatorVersion: '14.0.0' });
+ * // => "... export const DEMO_CLI_NOTIFICATION_MANIFEST: CliNotificationManifest = { ... };"
+ * ```
+ */
+export function renderCliNotificationManifestSource(input: RenderCliNotificationManifestSourceInput): string {
+  const { manifest, projectName, namespace, generatorVersion } = input;
+
+  return `// AUTO-GENERATED — DO NOT EDIT.
+// Run \`npx nx run ${projectName}:generate-notification-manifest\` to refresh.
+
+import { type CliGeneratedManifestStamp, type CliNotificationManifest } from '@dereekb/dbx-cli';
+
+export const ${namespace}_NOTIFICATION_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: ${JSON.stringify(generatorVersion)} };
+
+export const ${namespace}_NOTIFICATION_MANIFEST: CliNotificationManifest = ${JSON.stringify(manifest, null, 2)};
+`;
+}
+
+/**
+ * Derives the constant prefix from the project name, e.g. `demo-cli` → `DEMO_CLI`.
+ *
+ * @param projectName - The `--project` flag.
+ * @returns The prefix; `CLI` when no project is given.
+ */
+export function cliNotificationManifestNamespace(projectName: string | undefined): string {
+  return (projectName ?? 'cli').replaceAll(/[^a-zA-Z0-9]+/g, '_').toUpperCase();
 }

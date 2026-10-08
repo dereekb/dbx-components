@@ -109,7 +109,8 @@ import {
   notificationUsersWithTextPhoneNumberQuery,
   notificationUsersWithStoppedTextPhoneNumberQuery,
   isNotificationUserTextPhoneNumberStopped,
-  type FirebaseAuthUserId
+  type FirebaseAuthUserId,
+  NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -1283,7 +1284,8 @@ export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
  */
 export const NOTIFICATION_TASK_MINIMUM_SET_AT_THROTTLE_TIME_MINUTES = 1;
 
-export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
+// Defined in @dereekb/firebase so the CLI can read it. Re-exported here for existing imports.
+export { NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS };
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
 

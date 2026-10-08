@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { type, type Type } from 'arktype';
-import yargs from 'yargs';
-import { buildManifestCommands, detectDataHelpFormat, resolvePerModelGetKey, type ManifestHelpDataFormat } from './build-manifest-commands';
+import yargs, { type CommandModule } from 'yargs';
+import { buildManifestCommands, type CliModelCommands, detectDataHelpFormat, resolvePerModelGetKey, type ManifestHelpDataFormat } from './build-manifest-commands';
 import { type CliApiManifest, type CliModelManifest } from './types';
 
 interface SampleParams {
@@ -33,6 +33,7 @@ interface HelpForOptions {
   readonly format?: ManifestHelpDataFormat;
   readonly apiManifest?: CliApiManifest;
   readonly modelManifest?: CliModelManifest;
+  readonly modelCommands?: CliModelCommands;
 }
 
 function helpFor(args: readonly string[], formatOrOptions?: ManifestHelpDataFormat | HelpForOptions): Promise<string> {
@@ -53,7 +54,8 @@ function helpFor(args: readonly string[], formatOrOptions?: ManifestHelpDataForm
       buildManifestCommands(apiManifest, {
         argv: args,
         ...(options.format ? { dataHelpFormat: options.format } : {}),
-        ...(options.modelManifest ? { modelManifest: options.modelManifest } : {})
+        ...(options.modelManifest ? { modelManifest: options.modelManifest } : {}),
+        ...(options.modelCommands ? { modelCommands: options.modelCommands } : {})
       })
     )
     .exitProcess(false)
@@ -80,6 +82,45 @@ describe('buildManifestCommands', () => {
 
   it('returns an empty command list when the manifest has no callable entries', () => {
     expect(buildManifestCommands([])).toEqual([]);
+  });
+
+  describe('modelCommands', () => {
+    function extensionCommand(onRun: (args: Record<string, unknown>) => void): CommandModule {
+      return {
+        command: 'settings [key]',
+        describe: 'Show the settings',
+        handler: (args) => onRun(args as Record<string, unknown>)
+      };
+    }
+
+    it('registers the extension leaves next to the generated actions', async () => {
+      const help = await helpFor(['model', 'guestbookEntry', '--help'], { modelCommands: { guestbookEntry: [extensionCommand(() => undefined)] } });
+      expect(help).toContain('update-insert');
+      expect(help).toContain('settings');
+      expect(help).toContain('Show the settings');
+    });
+
+    it('creates the model group for a model with only extension commands', async () => {
+      const help = await helpFor(['model', 'notificationUser', '--help'], { modelCommands: { notificationUser: [extensionCommand(() => undefined)] } });
+      expect(help).toContain('Show the settings');
+      expect(help).toContain('Read a single notificationUser');
+    });
+
+    it('creates the model tree when the API manifest is empty', () => {
+      expect(buildManifestCommands([], { modelCommands: { notificationUser: [extensionCommand(() => undefined)] } })).toHaveLength(1);
+    });
+
+    it('runs an extension leaf', async () => {
+      let ranWith: Record<string, unknown> | undefined;
+
+      await yargs(['model', 'notificationUser', 'settings', 'abc'])
+        .command(buildManifestCommands(MANIFEST, { argv: [], modelCommands: { notificationUser: [extensionCommand((args) => (ranWith = args))] } }))
+        .exitProcess(false)
+        .fail(false)
+        .parseAsync();
+
+      expect(ranWith?.['key']).toBe('abc');
+    });
   });
 
   it('appends a synthetic `get <key>` sub-command to every model so any model can be read by key', async () => {

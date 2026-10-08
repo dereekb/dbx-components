@@ -13,6 +13,9 @@
  *      the `dbx_notification_m_validate_app` rules.
  *   3. Write the result to `<output>.tmp`, then rename it to `<output>` so partial
  *      files never land on disk.
+ *   4. With `--cli-output`, also write a committed TS module exporting
+ *      `<NS>_NOTIFICATION_MANIFEST` (a `CliNotificationManifest`) for an app CLI's
+ *      `notification task-types` / `model notification task` commands.
  *
  * Each finding is logged with a severity-aware prefix. Validator `error`
  * findings (a template type without a message factory, a factory without an
@@ -26,7 +29,9 @@
  * Flags:
  *   --component-dir=<path>   (required) the app's `-firebase` component root (workspace-relative or absolute).
  *   --api-dir=<path>         (required) the API app root.
- *   --output=<path>          (required) destination JSON path (workspace-relative ok).
+ *   --output=<path>          destination JSON path (workspace-relative ok). Required unless --cli-output is given.
+ *   --cli-output=<path>      destination TS module for an app CLI (workspace-relative ok). Skipped when the bytes are unchanged.
+ *   --project=<name>         (optional) project name for the TS module's banner; also derives the constant names.
  *   --app=<name>             (optional) app name stamped onto the manifest; defaults to the basename of --api-dir.
  *   --strict                 (optional) promote all warnings to errors for the exit decision.
  *   --allow-warning=<CODE>   (optional, repeatable) tolerate a warning rule code (never fails generation,
@@ -39,12 +44,16 @@ import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
 import { notificationValidateApp } from '@dereekb/dbx-cli/validate';
-import { countNotificationManifestGenerationErrors, formatNotificationManifestFinding, renderNotificationManifest } from './render';
+import { formatGeneratedTs, writeGeneratedTsFile } from '../../../src/lib/scan-helpers/emit-generated-ts.js';
+import packageJson from '../../package.json' with { type: 'json' };
+import { cliNotificationManifestFromManifest, cliNotificationManifestNamespace, countNotificationManifestGenerationErrors, formatNotificationManifestFinding, renderCliNotificationManifestSource, renderNotificationManifest } from './render';
 
 interface Flags {
   readonly componentDir: string | undefined;
   readonly apiDir: string | undefined;
   readonly output: string | undefined;
+  readonly cliOutput: string | undefined;
+  readonly project: string | undefined;
   readonly app: string | undefined;
   /**
    * When true, all warnings are promoted to errors for the exit decision, so any
@@ -69,15 +78,15 @@ const WORKSPACE_ROOT = process.cwd();
 async function main(): Promise<void> {
   const flags = parseFlags(process.argv.slice(2));
 
-  if (flags.componentDir == null || flags.apiDir == null || flags.output == null) {
+  if (flags.componentDir == null || flags.apiDir == null || (flags.output == null && flags.cliOutput == null)) {
     printUsageAndExit();
     return;
   }
 
   const componentPath = resolveWorkspacePath(flags.componentDir);
   const apiPath = resolveWorkspacePath(flags.apiDir);
-  const outputPath = resolveWorkspacePath(flags.output);
-  const outputDisplay = toDisplayPath(outputPath);
+  const outputPaths = [flags.output, flags.cliOutput].filter((x): x is string => x != null).map(resolveWorkspacePath);
+  const outputDisplay = outputPaths.map(toDisplayPath).join(', ');
 
   const inspection = await notificationValidateApp.inspectAppNotifications(componentPath, apiPath);
   const app = { name: flags.app ?? basename(apiPath) };
@@ -92,18 +101,32 @@ async function main(): Promise<void> {
   // wrote, so no stale "clean" manifest survives. `--strict` / `--max-warnings` escalate warnings.
   const blockingCount = countNotificationManifestGenerationErrors({ findings: manifest.findings, strict: flags.strict, allowWarning: flags.allowWarning, ...(flags.maxWarnings == null ? {} : { maxWarnings: flags.maxWarnings }) });
   if (blockingCount > 0) {
-    await rm(outputPath, { force: true });
+    await Promise.all(outputPaths.map((path) => rm(path, { force: true })));
     console.error(`generate-notification-manifest: ${blockingCount} blocking issue(s)${describeGate(flags)}; not writing ${outputDisplay}. dbx_notification_m_validate_app reports the same findings with remediation.`);
     process.exit(1);
   }
 
-  const serialized = `${JSON.stringify(manifest, null, 2)}\n`;
-  await ensureOutputDir(dirname(outputPath));
-  const tmpPath = `${outputPath}.tmp`;
-  await writeFile(tmpPath, serialized);
-  await rename(tmpPath, outputPath);
+  if (flags.output != null) {
+    const outputPath = resolveWorkspacePath(flags.output);
+    const serialized = `${JSON.stringify(manifest, null, 2)}\n`;
+    await ensureOutputDir(dirname(outputPath));
+    const tmpPath = `${outputPath}.tmp`;
+    await writeFile(tmpPath, serialized);
+    await rename(tmpPath, outputPath);
 
-  console.log(`[wrote] ${outputDisplay} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.warningCount} warning(s)`);
+    console.log(`[wrote] ${toDisplayPath(outputPath)} — ${manifest.templates.length} templates, ${manifest.tasks.length} tasks, ${manifest.warningCount} warning(s)`);
+  }
+
+  if (flags.cliOutput != null) {
+    const cliOutputPath = resolveWorkspacePath(flags.cliOutput);
+    const cliManifest = cliNotificationManifestFromManifest(manifest);
+    const source = renderCliNotificationManifestSource({ manifest: cliManifest, projectName: flags.project ?? '<cli>', namespace: cliNotificationManifestNamespace(flags.project), generatorVersion: packageJson.version });
+    const formatted = await formatGeneratedTs(source, cliOutputPath);
+    await ensureOutputDir(dirname(cliOutputPath));
+    const outcome = writeGeneratedTsFile({ outputFile: cliOutputPath, contents: formatted });
+
+    console.log(`[${outcome}] ${toDisplayPath(cliOutputPath)} — ${cliManifest.templates.length} templates, ${cliManifest.tasks.length} tasks`);
+  }
 }
 
 function describeGate(flags: Flags): string {
@@ -144,6 +167,8 @@ function parseFlags(argv: readonly string[]): Flags {
   let componentDir: string | undefined;
   let apiDir: string | undefined;
   let output: string | undefined;
+  let cliOutput: string | undefined;
+  let project: string | undefined;
   let app: string | undefined;
   let strict = false;
   let maxWarnings: number | undefined;
@@ -155,6 +180,10 @@ function parseFlags(argv: readonly string[]): Flags {
       apiDir = arg.slice('--api-dir='.length);
     } else if (arg.startsWith('--output=')) {
       output = arg.slice('--output='.length);
+    } else if (arg.startsWith('--cli-output=')) {
+      cliOutput = arg.slice('--cli-output='.length);
+    } else if (arg.startsWith('--project=')) {
+      project = arg.slice('--project='.length);
     } else if (arg.startsWith('--app=')) {
       app = arg.slice('--app='.length);
     } else if (arg.startsWith('--allow-warning=')) {
@@ -170,7 +199,7 @@ function parseFlags(argv: readonly string[]): Flags {
     }
   }
 
-  return { componentDir, apiDir, output, app, strict, allowWarning, maxWarnings };
+  return { componentDir, apiDir, output, cliOutput, project, app, strict, allowWarning, maxWarnings };
 }
 
 function printUsageAndExit(): void {
@@ -189,8 +218,12 @@ Required flags:
   --api-dir=<path>           The API app root. Scans src/app/common/model/notification/** and
                              src/app/common/firebase/**.
   --output=<path>            Path to the notification manifest JSON to write (workspace-relative ok).
+  --cli-output=<path>        Path to a TS module exporting <PROJECT>_NOTIFICATION_MANIFEST for an app CLI
+                             (workspace-relative ok). At least one of --output / --cli-output is required.
 
 Optional:
+  --project=<name>           Project name for the --cli-output banner; also derives the constant names
+                             (demo-cli -> DEMO_CLI_NOTIFICATION_MANIFEST).
   --app=<name>               App name stamped onto the manifest (default: basename of --api-dir).
   --strict                   Promote all warnings to errors for the exit decision
                              (any finding then fails generation).
