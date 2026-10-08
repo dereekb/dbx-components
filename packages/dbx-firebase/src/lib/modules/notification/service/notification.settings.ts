@@ -94,7 +94,15 @@ export abstract class DbxFirebaseNotificationUserSettingsConfig {
    */
   abstract readonly deliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
   /**
+   * Delivery methods to hide from the settings, such as texts in an app that does not send them. Applies after {@link deliveryMethods}.
+   *
+   * A hidden method has no column, no account-wide switch, and, for texts, no phone number for texts.
+   */
+  abstract readonly hiddenDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
    * Delivery methods that get an account-wide on/off switch. Defaults to {@link DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS}.
+   *
+   * Only the methods that are also columns get a switch.
    */
   abstract readonly switchableDeliveryMethods?: Maybe<NotificationDeliveryMethod[]>;
   /**
@@ -793,11 +801,14 @@ export function dbxFirebaseNotificationUserTextPhoneNumberUpdateParams(input: Db
 }
 
 /**
- * Returns the configured delivery method columns, defaulting to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}.
+ * Returns the configured delivery method columns, defaulting to {@link DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS}, without the
+ * hidden delivery methods.
  *
  * @param config - The settings config.
  * @returns The delivery method columns.
  */
-export function dbxFirebaseNotificationSettingsDeliveryMethods(config: Maybe<Pick<DbxFirebaseNotificationUserSettingsConfig, 'deliveryMethods'>>): NotificationDeliveryMethod[] {
-  return config?.deliveryMethods ?? DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS;
+export function dbxFirebaseNotificationSettingsDeliveryMethods(config: Maybe<Pick<DbxFirebaseNotificationUserSettingsConfig, 'deliveryMethods' | 'hiddenDeliveryMethods'>>): NotificationDeliveryMethod[] {
+  const deliveryMethods = config?.deliveryMethods ?? DEFAULT_USER_CONFIGURABLE_NOTIFICATION_DELIVERY_METHODS;
+  const hidden = new Set(config?.hiddenDeliveryMethods ?? []);
+  return hidden.size ? deliveryMethods.filter((method) => !hidden.has(method)) : deliveryMethods;
 }

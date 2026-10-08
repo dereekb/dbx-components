@@ -410,6 +410,9 @@ export const APP_CONFIG: ApplicationConfig = {
           verifyThrottleSeconds: DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS
         },
         userSettings: {
+          // demo-api sends texts through Twilio, so every delivery method shows. An app that doesn't send texts passes
+          // [NotificationDeliveryMethod.TEXT], which also drops the text message switch and the phone number for texts
+          hiddenDeliveryMethods: [],
           textMessageDisclosure: DEMO_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE,
           phoneNumberPreferredCountries: ['US', 'CA'],
           settingsAnchor: { ref: 'demo.app.notification.settings' },

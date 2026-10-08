@@ -21,6 +21,8 @@ import { DbxFirebaseNotificationUserSettingsDeliveryComponent } from './notifica
 export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxFirebaseNotificationUserSettingsStoreConfig {
   /**
    * Whether to show the account-wide delivery settings: the delivery method switches and the text message phone number. True by default.
+   *
+   * They are not shown while there are none, such as when texts are hidden with `hiddenDeliveryMethods`.
    */
   readonly showDeliveryMethodSettings?: Maybe<boolean>;
   /**
@@ -95,7 +97,7 @@ export interface DbxFirebaseNotificationUserSettingsComponentConfig extends DbxF
             }
           </div>
         }
-        @if (showDeliveryMethodSettingsSignal()) {
+        @if (showDeliveryMethodSettingsSignal() && hasDeliveryMethodSettingsSignal()) {
           <dbx-firebase-notification-user-settings-delivery></dbx-firebase-notification-user-settings-delivery>
         }
         <dbx-firebase-notification-settings-list [state]="store.listState$" [dbxListTitleGroup]="groupDelegate"></dbx-firebase-notification-settings-list>
@@ -160,6 +162,7 @@ export class DbxFirebaseNotificationUserSettingsComponent {
   readonly hasNotificationBoxTargetSignal = toSignal(this.store.hasNotificationBoxTarget$, { initialValue: false });
   readonly boxSwitchSignal = toSignal(this.store.boxSwitch$);
   readonly disabledSignal = toSignal(this.store.disabled$, { initialValue: true });
+  readonly hasDeliveryMethodSettingsSignal = toSignal(this.store.hasDeliveryMethodSettings$, { initialValue: false });
 
   readonly updateParams$ = this.store.updateParams$;
   readonly isUpdateParamsModified: IsModifiedFunction<Maybe<DbxFirebaseNotificationUserSettingsUpdateParams>> = (params) => of(params != null);

@@ -223,6 +223,43 @@ describe('DbxFirebaseNotificationUserSettingsStore', () => {
     expect(await firstValueFrom(store.textConsentAt$)).toBeUndefined();
   });
 
+  describe('with texts hidden', () => {
+    beforeEach(() => {
+      store.setConfig({ hiddenDeliveryMethods: [TEXT] });
+    });
+
+    it('should not show a text column', async () => {
+      setNotificationUser({});
+
+      expect(await firstValueFrom(store.columns$)).not.toContain(TEXT);
+      expect((await firstValueFrom(store.cellStates$))['E'][TEXT]).toBeUndefined();
+    });
+
+    it('should not show the text switch or the phone number for texts', async () => {
+      setNotificationUser({});
+
+      expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([]);
+      expect(await firstValueFrom(store.textPhoneNumberFormOpen$)).toBe(false);
+      expect(await firstValueFrom(store.hasDeliveryMethodSettings$)).toBe(false);
+    });
+
+    it('should still show the switches of the other delivery methods', async () => {
+      store.setConfig({ hiddenDeliveryMethods: [TEXT], switchableDeliveryMethods: [EMAIL, TEXT] });
+      setNotificationUser({});
+
+      expect((await firstValueFrom(store.deliveryMethodSwitches$)).map((x) => x.method)).toEqual([EMAIL]);
+      expect(await firstValueFrom(store.hasDeliveryMethodSettings$)).toBe(true);
+    });
+  });
+
+  it('should not show a switch for a delivery method that is not a column', async () => {
+    store.setConfig({ deliveryMethods: [EMAIL] });
+    setNotificationUser({});
+
+    expect(await firstValueFrom(store.deliveryMethodSwitches$)).toEqual([]);
+    expect(await firstValueFrom(store.hasDeliveryMethodSettings$)).toBe(false);
+  });
+
   describe('without a phone number for texts', () => {
     it('should show texts as off and disable the text column', async () => {
       setNotificationUser({});

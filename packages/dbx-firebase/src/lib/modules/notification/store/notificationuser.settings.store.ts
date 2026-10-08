@@ -222,7 +222,11 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
   );
 
   readonly columns$ = this.select(this.config$, (config) => dbxFirebaseNotificationSettingsDeliveryMethods(config));
-  readonly switchableDeliveryMethods$ = this.select(this.config$, (config) => config.switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS);
+
+  /**
+   * Delivery methods that get an account-wide on/off switch. Only the methods that are also columns get one, so a hidden method has no switch.
+   */
+  readonly switchableDeliveryMethods$ = this.select(this.config$, this.columns$, (config, columns) => (config.switchableDeliveryMethods ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_SWITCHABLE_DELIVERY_METHODS).filter((method) => columns.includes(method)));
   readonly textMessageDisclosure$ = this.select(this.config$, (config) => config.textMessageDisclosure ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_MESSAGE_DISCLOSURE);
   readonly textStoppedMessage$ = this.select(this.config$, (config) => config.textStoppedMessage ?? DEFAULT_DBX_FIREBASE_NOTIFICATION_TEXT_STOPPED_MESSAGE);
 
@@ -493,6 +497,11 @@ export class DbxFirebaseNotificationUserSettingsStore extends ComponentStore<Dbx
       return columns.includes(NotificationDeliveryMethod.TEXT) && (!switchable.includes(NotificationDeliveryMethod.TEXT) || textSwitchOn);
     }
   );
+
+  /**
+   * Whether there are any account-wide delivery settings to show: a delivery method switch, or the phone number for texts.
+   */
+  readonly hasDeliveryMethodSettings$ = this.select(this.switchableDeliveryMethods$, this.textPhoneNumberFormOpen$, (switchable, textPhoneNumberFormOpen) => switchable.length > 0 || textPhoneNumberFormOpen);
 
   // MARK: Cells
   readonly cellStates$ = this.select(

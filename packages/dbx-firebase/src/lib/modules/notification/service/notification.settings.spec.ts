@@ -13,6 +13,7 @@ import {
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_HINT,
   DEFAULT_DBX_FIREBASE_NOTIFICATION_SETTINGS_PER_BOX_MODE_HINT,
   dbxFirebaseNotificationSettingsCellStates,
+  dbxFirebaseNotificationSettingsDeliveryMethods,
   dbxFirebaseNotificationSettingsListItemValues,
   dbxFirebaseNotificationUserBoxConfigUpdateParams,
   dbxFirebaseNotificationUserGlobalConfigUpdateParams,
@@ -38,6 +39,20 @@ const typeInfos: NotificationTemplateTypeInfo[] = [
   { type: 'GBE_L', name: 'Guestbook Entry Liked', description: 'Liked.', notificationModelIdentity: guestbookIdentity, group: guestbookGroup, sortOrder: 0, onlySendToExplicitlyEnabledRecipients: true },
   { type: 'X', name: 'Ungrouped', description: 'Ungrouped.', notificationModelIdentity: guestbookIdentity }
 ];
+
+describe('dbxFirebaseNotificationSettingsDeliveryMethods()', () => {
+  it('should default to the user configurable delivery methods', () => {
+    expect(dbxFirebaseNotificationSettingsDeliveryMethods(undefined)).toEqual(COLUMNS);
+  });
+
+  it('should drop the hidden delivery methods', () => {
+    expect(dbxFirebaseNotificationSettingsDeliveryMethods({ hiddenDeliveryMethods: [TEXT] })).toEqual([EMAIL, NOTIFICATION_SUMMARY]);
+  });
+
+  it('should drop the hidden delivery methods from the configured delivery methods', () => {
+    expect(dbxFirebaseNotificationSettingsDeliveryMethods({ deliveryMethods: [TEXT, EMAIL], hiddenDeliveryMethods: [TEXT] })).toEqual([EMAIL]);
+  });
+});
 
 describe('dbxFirebaseNotificationSettingsListItemValues()', () => {
   const items = dbxFirebaseNotificationSettingsListItemValues({ typeInfos, deliveryMethods: COLUMNS });
