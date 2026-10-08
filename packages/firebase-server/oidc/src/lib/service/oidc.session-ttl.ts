@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import type { KoaContextWithOIDC } from 'oidc-provider';
 
 /**
@@ -74,6 +75,43 @@ export function resolveLoginDurationSeconds(input: ResolveLoginDurationInput): n
   const raw = input.requestedSeconds ?? input.defaultSeconds;
   const ceiling = Math.min(input.serverMaxSeconds, input.clientMaxSeconds ?? Infinity);
   return Math.max(input.serverMinSeconds, Math.min(raw, ceiling));
+}
+
+// MARK: Profile cap
+/**
+ * Applies a provider-profile `maxSessionTtl` cap to an already-resolved login duration.
+ *
+ * Runs AFTER {@link resolveLoginDurationSeconds}, so the cap wins over the server minimum as well as
+ * every ceiling — the floor would otherwise lift a short cap back up.
+ *
+ * @param seconds - The resolved login duration.
+ * @param maxSessionTtl - The cap from the grant's provider profiles, if any.
+ * @returns The capped login duration.
+ */
+export function capLoginDurationSeconds(seconds: number, maxSessionTtl: Maybe<number>): number {
+  return maxSessionTtl == null ? seconds : Math.min(seconds, maxSessionTtl);
+}
+
+/**
+ * Shortens an existing grant to a provider-profile `maxSessionTtl` cap.
+ *
+ * An existing grant keeps the lifetime it was created with, so a consent that adds a capped scope to it
+ * has to shorten it — otherwise a long-lived grant could pick up the capped scope for its full lifetime.
+ * A grant already expiring within the cap is left untouched.
+ *
+ * @param grant - The existing grant, if any, mutated in place. Its new `exp` persists on the next `grant.save()`.
+ * @param grant.exp - The grant's current expiration, in unix seconds.
+ * @param maxSessionTtl - The cap from the grant's provider profiles, if any.
+ * @param nowSeconds - The current unix time in seconds.
+ */
+export function capExistingGrantExpiration(grant: Maybe<{ exp?: number }>, maxSessionTtl: Maybe<number>, nowSeconds: number): void {
+  if (grant != null && maxSessionTtl != null) {
+    const cappedExp = nowSeconds + maxSessionTtl;
+
+    if (grant.exp == null || grant.exp > cappedExp) {
+      grant.exp = cappedExp;
+    }
+  }
 }
 
 // MARK: Tiered server max

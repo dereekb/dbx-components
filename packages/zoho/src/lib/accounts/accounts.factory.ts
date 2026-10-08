@@ -96,12 +96,15 @@ function zohoAccountsClientFetch(baseFetch: ConfiguredFetch, logZohoServerErrorF
  * handles OAuth token refresh via the configured `refreshToken`, `clientId`, and `clientSecret`,
  * with in-memory caching and optional external {@link ZohoAccessTokenCache} support.
  *
+ * When the config carries a `tokenRefresher`, that external source supplies the access tokens
+ * instead of the refresh exchange, and no client credentials or refresh token are required.
+ *
  * The Accounts client is the foundation for CRM, Recruit, and Sign clients, as it provides
  * the {@link ZohoAccountsContext} needed for OAuth token management.
  *
  * @param factoryConfig - Configuration providing optional fetch and logging overrides.
  * @returns A factory function that creates authenticated Zoho Accounts clients.
- * @throws {Error} If `refreshToken`, `clientId`, or `clientSecret` are missing from the config.
+ * @throws {Error} If `refreshToken`, `clientId`, or `clientSecret` are missing from a config that has no `tokenRefresher`.
  *
  * @example
  * ```typescript
@@ -118,6 +121,15 @@ function zohoAccountsClientFetch(baseFetch: ConfiguredFetch, logZohoServerErrorF
  * const crmFactory = zohoCrmFactory({
  *   accountsContext: zohoAccounts.accountsContext
  * });
+ *
+ * // Or use access tokens handed out by an external source:
+ * const externalZohoAccounts = factory({
+ *   refreshToken: '',
+ *   clientId: '',
+ *   clientSecret: '',
+ *   apiUrl: 'eu',
+ *   tokenRefresher: myExternalTokenRefresher
+ * });
  * ```
  *
  * @__NO_SIDE_EFFECTS__
@@ -128,12 +140,17 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
   const { logZohoServerErrorFunction, fetchFactory = defaultZohoAccountsFetchFactory(fetchHandler) } = factoryConfig;
 
   return (config: ZohoAccountsConfig) => {
-    if (!config.refreshToken) {
-      throw new Error('ZohoAccountsConfig missing refreshToken.');
-    } else if (!config.clientId) {
-      throw new Error('ZohoAccountsConfig missing clientId.');
-    } else if (!config.clientSecret) {
-      throw new Error('ZohoAccountsConfig missing clientSecret.');
+    const externalTokenRefresher = config.tokenRefresher;
+
+    // an external token source replaces the refresh exchange, so the credentials it needs are not required
+    if (externalTokenRefresher == null) {
+      if (!config.refreshToken) {
+        throw new Error('ZohoAccountsConfig missing refreshToken.');
+      } else if (!config.clientId) {
+        throw new Error('ZohoAccountsConfig missing clientId.');
+      } else if (!config.clientSecret) {
+        throw new Error('ZohoAccountsConfig missing clientSecret.');
+      }
     }
 
     const apiUrl = zohoAccountsConfigApiUrl(config.apiUrl ?? 'us');
@@ -141,28 +158,37 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
 
     const { fetch, fetchJson } = zohoAccountsClientFetch(baseFetch, logZohoServerErrorFunction);
 
-    const tokenRefresher: ZohoAccessTokenRefresher = async () => {
-      const createdAt = Date.now();
-      const { access_token, api_domain, scope, expires_in } = await zohoAccountsAccessToken(accountsContext)();
+    let tokenRefresher: ZohoAccessTokenRefresher;
 
-      const result: ZohoAccessToken = {
-        accessToken: access_token,
-        apiDomain: api_domain,
-        expiresIn: expires_in,
-        expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
-        scope
+    if (externalTokenRefresher == null) {
+      const refreshTokenRefresher: ZohoAccessTokenRefresher = async () => {
+        const createdAt = Date.now();
+        const { access_token, api_domain, scope, expires_in } = await zohoAccountsAccessToken(accountsContext)();
+
+        const result: ZohoAccessToken = {
+          accessToken: access_token,
+          apiDomain: api_domain,
+          expiresIn: expires_in,
+          expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
+          scope
+        };
+
+        return result;
       };
 
-      return result;
-    };
+      refreshTokenRefresher.resetAccessToken = async () => {
+        return config.accessTokenCache?.clearCachedToken();
+      };
 
-    tokenRefresher.resetAccessToken = async () => {
-      return config.accessTokenCache?.clearCachedToken();
-    };
+      tokenRefresher = refreshTokenRefresher;
+    } else {
+      tokenRefresher = externalTokenRefresher;
+    }
 
     const loadAccessToken: ZohoAccessTokenFactory = zohoAccountsZohoAccessTokenFactory({
       tokenRefresher,
-      accessTokenCache: config.accessTokenCache
+      accessTokenCache: config.accessTokenCache,
+      resetTokenSourcesOnReset: externalTokenRefresher != null
     });
 
     const accountsContext: ZohoAccountsContext = {
@@ -291,6 +317,16 @@ export interface ZohoAccountsZohoAccessTokenFactoryConfig {
    * to the in-memory cache.
    */
   readonly accessTokenCache?: Maybe<ZohoAccessTokenCache>;
+  /**
+   * Whether `resetAccessToken()` also clears the {@link accessTokenCache} and calls the
+   * {@link tokenRefresher}'s own `resetAccessToken()`, rather than only dropping the in-memory token.
+   *
+   * Needed when the refresher is an external source that caches tokens itself: without it, a token
+   * the API rejected would be read back from a cache on the next load instead of re-running the source.
+   *
+   * Defaults to false.
+   */
+  readonly resetTokenSourcesOnReset?: Maybe<boolean>;
 }
 
 /**
@@ -303,7 +339,8 @@ export interface ZohoAccountsZohoAccessTokenFactoryConfig {
  * 3. Fetch a fresh token via the {@link ZohoAccessTokenRefresher}
  *
  * The returned function also exposes a `resetAccessToken()` method to invalidate
- * the current cached token, typically called on {@link ZohoInvalidTokenError}.
+ * the current cached token, typically called on {@link ZohoInvalidTokenError}. With
+ * `resetTokenSourcesOnReset`, it also clears the external cache and resets the refresher.
  *
  * @param config - Token refresh, caching, and expiration buffer configuration.
  * @returns A token factory function with `resetAccessToken` for cache invalidation.
@@ -312,7 +349,7 @@ export interface ZohoAccountsZohoAccessTokenFactoryConfig {
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAccessTokenFactoryConfig): ZohoAccessTokenFactory {
-  const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer } = config;
+  const { tokenRefresher, accessTokenCache, tokenExpirationBuffer: inputTokenExpirationBuffer, resetTokenSourcesOnReset } = config;
   const tokenExpirationBuffer = inputTokenExpirationBuffer ?? MS_IN_MINUTE;
 
   /**
@@ -322,6 +359,10 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
 
   const resetAccessToken = async () => {
     currentToken = null;
+
+    if (resetTokenSourcesOnReset) {
+      await Promise.allSettled([accessTokenCache?.clearCachedToken(), tokenRefresher.resetAccessToken()]);
+    }
   };
 
   const fn = async () => {

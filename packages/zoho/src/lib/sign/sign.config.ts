@@ -1,7 +1,7 @@
-import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type ZohoApiUrl, type ZohoApiUrlKey, type ZohoConfig, type ZohoApiServiceName } from '../zoho.config';
-import { type ZohoAccessTokenStringFactory, type ZohoServiceAccessTokenKey } from '../accounts';
+import { type ZohoAccessTokenStringFactory, type ZohoDatacenterApiUrlInput, type ZohoServiceAccessTokenKey, zohoDatacenterDomain } from '../accounts';
 import { type ZohoRateLimiterRef } from '../zoho.limit';
 
 export const ZOHO_SIGN_SERVICE_NAME: ZohoApiServiceName | ZohoServiceAccessTokenKey = 'sign';
@@ -43,6 +43,26 @@ export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiU
       break;
   }
   return result;
+}
+
+/**
+ * Resolves the Zoho Sign API URL of a datacenter (e.g. `https://sign.zoho.eu/api/v1`, or the
+ * `signsandbox` host in sandbox mode).
+ *
+ * {@link zohoSignConfigApiUrl}'s keys always target the `us` datacenter; use this for an account
+ * that lives in another one.
+ *
+ * @param input - The datacenter (default `us`) and mode (default `production`).
+ * @returns The full Zoho Sign API base URL for that datacenter.
+ *
+ * @example
+ * ```typescript
+ * zohoSignConfigApiUrlForDatacenter({ datacenter: 'au' }); // 'https://sign.zoho.com.au/api/v1'
+ * ```
+ */
+export function zohoSignConfigApiUrlForDatacenter(input?: Maybe<ZohoDatacenterApiUrlInput>): ZohoSignApiUrl {
+  const host = input?.mode === 'sandbox' ? 'signsandbox' : 'sign';
+  return `https://${host}.${zohoDatacenterDomain(input)}/api/v1`;
 }
 
 /**

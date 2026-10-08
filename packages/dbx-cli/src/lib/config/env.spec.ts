@@ -1,5 +1,19 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { applyEnvVarOverrides, cliFirebaseEmulatorsInUse, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, isCliFirebaseConfigComplete, mergeCliEnvWithDefault, readEnvTokenEntry, resolveActiveEnvName, withServiceTokenScopes, type CliEnvDefault } from './env';
+import {
+  applyEnvVarOverrides,
+  cliFirebaseEmulatorsInUse,
+  DEFAULT_CLI_OIDC_SCOPES,
+  filterReadOnlyModelScopes,
+  findCliEnvDefault,
+  isCliEnvConfigComplete,
+  isCliFirebaseConfigComplete,
+  mergeCliEnvWithDefault,
+  mergeCliExternalConnectionHints,
+  readEnvTokenEntry,
+  resolveActiveEnvName,
+  withServiceTokenScopes,
+  type CliEnvDefault
+} from './env';
 
 describe('resolveActiveEnvName', () => {
   const ENV_VAR = '__TEST_RESOLVE_ACTIVE_ENV_VAR__';
@@ -56,6 +70,11 @@ describe('applyEnvVarOverrides', () => {
       env: { apiBaseUrl: 'a', oidcIssuer: 'o', appClientUrl: 'http://stored-client', clientId: 'i', clientSecret: 's', redirectUri: 'r' }
     });
     expect(result?.appClientUrl).toBe('http://override-client');
+  });
+
+  it('carries the stored externalConnectionHints through', () => {
+    const externalConnectionHints = { zoho_admin: { recruitOrgId: '1' } };
+    expect(applyEnvVarOverrides({ cliName: 'my-cli', env: { apiBaseUrl: 'a', oidcIssuer: 'o', externalConnectionHints } })?.externalConnectionHints).toEqual(externalConnectionHints);
   });
 });
 
@@ -155,6 +174,23 @@ describe('mergeCliEnvWithDefault', () => {
     });
     expect(merged?.clientId).toBe('user-id');
     expect(merged?.clientSecret).toBe('def-secret');
+  });
+
+  it('carries the default externalConnectionHints, letting the stored env override single hints', () => {
+    const hintsDefault = { ...defaultEnv, externalConnectionHints: { zoho_admin: { recruitOrgId: '1', crmOrgId: '2' } } };
+
+    expect(mergeCliEnvWithDefault({ defaultEnv: hintsDefault, env: { apiBaseUrl: 'http://user', oidcIssuer: '' } })?.externalConnectionHints).toEqual({ zoho_admin: { recruitOrgId: '1', crmOrgId: '2' } });
+    expect(mergeCliEnvWithDefault({ defaultEnv: hintsDefault, env: { apiBaseUrl: 'http://user', oidcIssuer: '', externalConnectionHints: { zoho_admin: { recruitOrgId: '9' } } } })?.externalConnectionHints).toEqual({ zoho_admin: { recruitOrgId: '9', crmOrgId: '2' } });
+  });
+});
+
+describe('mergeCliExternalConnectionHints', () => {
+  it('returns undefined when neither side has hints', () => {
+    expect(mergeCliExternalConnectionHints(undefined, undefined)).toBeUndefined();
+  });
+
+  it('merges provider by provider, stored values winning', () => {
+    expect(mergeCliExternalConnectionHints({ zoho_admin: { a: 'stored' }, calcom: { c: '3' } }, { zoho_admin: { a: 'default', b: '2' } })).toEqual({ zoho_admin: { a: 'stored', b: '2' }, calcom: { c: '3' } });
   });
 });
 

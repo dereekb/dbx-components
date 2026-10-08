@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CalcomUserExternalConnectionOAuthService } from '@dereekb/firebase-server/calcom';
 import { DiscordUserExternalConnectionOAuthService } from '@dereekb/firebase-server/discord';
-import { ZohoUserExternalConnectionOAuthService } from '@dereekb/firebase-server/zoho';
+import { ZohoUserExternalConnectionOAuthService, zohoUserExternalConnectionOAuthServiceToken } from '@dereekb/firebase-server/zoho';
 import { UserExternalConnectionOAuthProviderRegistry, UserExternalConnectionReader, userExternalConnectionOAuthProviderRegistryProvider, userExternalConnectionReaderProvider } from '@dereekb/firebase-server/model';
+import { DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 import { UserExternalConnectionModule } from '../common/model/userexternalconnection';
 import { DemoApiStripeModule } from './stripe/stripe.module';
 import { DemoApiZoomModule } from './zoom/zoom.module';
@@ -20,8 +21,11 @@ import { DemoApiZohoModule } from './zoho';
  *
  * The registry is built FROM these, so `read:authorizeState` cannot offer a provider whose module
  * was never imported. Registering a provider is one module import above plus one token here.
+ *
+ * The second Zoho connection (`zoho_admin`) is listed by its own token: both Zoho modules provide the
+ * same service class, so the extra one is exported under a provider-type-specific alias instead.
  */
-export const DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES = [CalcomUserExternalConnectionOAuthService, DiscordUserExternalConnectionOAuthService, ZohoUserExternalConnectionOAuthService];
+export const DEMO_API_EXTERNAL_CONNECTION_OAUTH_SERVICES = [CalcomUserExternalConnectionOAuthService, DiscordUserExternalConnectionOAuthService, ZohoUserExternalConnectionOAuthService, zohoUserExternalConnectionOAuthServiceToken(DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE)];
 
 @Module({
   // UserExternalConnectionModule is imported for the accessor and actions the reader is built from.

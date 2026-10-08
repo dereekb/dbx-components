@@ -1,10 +1,14 @@
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { CLI_CONFIG_FILE_MODE, type CliCommandOutputConfig, type CliOutputConfig, mergeOutputConfig as dbxMergeOutputConfig } from '@dereekb/dbx-cli';
 import { readJsonFile, removeFile, writeJsonFile } from '@dereekb/nestjs';
+import { type ZohoAccountsApiUrlKey, type ZohoProduct } from '@dereekb/zoho';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign' | 'analytics';
+/**
+ * A Zoho product the CLI has commands for (the {@link ZohoProduct}s of `@dereekb/zoho`).
+ */
+export type ZohoCliProduct = ZohoProduct;
 
 export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign', 'analytics'];
 
@@ -74,11 +78,27 @@ export type ZohoCliCommandOutputConfig = CliCommandOutputConfig;
 export type ZohoCliOutputConfig = CliOutputConfig;
 
 /**
+ * A saved token source: a command that prints a short-lived Zoho access token bundle when run as a
+ * dbx-cli credential process (e.g. `demo-cli external-token zoho_admin`).
+ *
+ * Holds no secret itself. The bundle it prints is captured in-process and never echoed.
+ */
+export interface ZohoCliTokenSourceConfig {
+  /**
+   * Shell command to run, e.g. `demo-cli external-token zoho_admin`.
+   */
+  readonly command: string;
+}
+
+/**
  * Full CLI config file structure.
  *
  * Shared credentials are used as fallback when a product doesn't have its own, except for
  * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`) which always require their own credentials.
  * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`, `analytics`.
+ *
+ * `tokenSource` is a separate block: when a token source is active, it overrides the credentials of
+ * every product its token's scopes cover, and the credential blocks are left untouched underneath.
  */
 export interface ZohoCliConfig {
   readonly shared: ZohoCliSharedConfig;
@@ -88,6 +108,11 @@ export interface ZohoCliConfig {
   readonly sign?: ZohoCliProductConfig;
   readonly analytics?: ZohoCliProductConfig;
   readonly output?: ZohoCliOutputConfig;
+  /**
+   * The token source. In a config returned by {@link loadCliConfig} this is the ACTIVE source
+   * ({@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} over the saved block); in the file it is the saved block.
+   */
+  readonly tokenSource?: ZohoCliTokenSourceConfig;
 }
 
 /**
@@ -139,6 +164,116 @@ export function getTokenCachePath(): string {
 function envVar(key: string, servicePrefix?: string): Maybe<string> {
   const serviceSpecific = servicePrefix ? process.env[`ZOHO_${servicePrefix}_${key}`] : undefined;
   const result: Maybe<string> = serviceSpecific ?? process.env[`ZOHO_${key}`];
+  return result;
+}
+
+// MARK: Token Source
+/**
+ * Environment variable that sets the token source command for one run, winning over the saved
+ * `tokenSource` block.
+ */
+export const ZOHO_CLI_TOKEN_COMMAND_ENV_VAR = 'ZOHO_CLI_TOKEN_COMMAND';
+
+/**
+ * Where the active token source came from: the {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override or the saved block.
+ */
+export type ZohoCliTokenSourceOrigin = 'env' | 'config';
+
+/**
+ * The token source in effect for a run, and where it came from.
+ */
+export interface ZohoCliActiveTokenSource extends ZohoCliTokenSourceConfig {
+  readonly origin: ZohoCliTokenSourceOrigin;
+}
+
+/**
+ * Returns the command set by the {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, if any.
+ *
+ * @returns The trimmed command, or undefined when the variable is unset or blank.
+ */
+export function zohoCliTokenCommandFromEnv(): Maybe<string> {
+  return process.env[ZOHO_CLI_TOKEN_COMMAND_ENV_VAR]?.trim() || undefined;
+}
+
+/**
+ * Resolves the active token source: the {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, else the
+ * saved `tokenSource` block — the same "one selected source wins" rule dbx-cli applies to envs.
+ *
+ * @param fileConfig - The raw config file, from {@link loadCliConfigFile}.
+ * @returns The active source with its origin, or undefined when neither is set.
+ */
+export function resolveZohoCliActiveTokenSource(fileConfig: Maybe<Pick<ZohoCliConfig, 'tokenSource'>>): Maybe<ZohoCliActiveTokenSource> {
+  const envCommand = zohoCliTokenCommandFromEnv();
+  const savedCommand = fileConfig?.tokenSource?.command?.trim();
+  let result: Maybe<ZohoCliActiveTokenSource>;
+
+  if (envCommand) {
+    result = { command: envCommand, origin: 'env' };
+  } else if (savedCommand) {
+    result = { command: savedCommand, origin: 'config' };
+  }
+
+  return result;
+}
+
+/**
+ * What an active token source covers, resolved from the token it produced.
+ */
+export interface ZohoCliTokenSourceCoverage {
+  /**
+   * Products the token's scopes cover. These use the token source instead of their own credentials.
+   */
+  readonly products: readonly ZohoCliProduct[];
+  /**
+   * Datacenter the token was issued by, which the covered products' API urls are built for.
+   */
+  readonly datacenter: ZohoAccountsApiUrlKey;
+  /**
+   * Static, non-secret values the app that minted the token declared for it (e.g. org ids).
+   */
+  readonly hints?: Maybe<Readonly<Record<string, string>>>;
+}
+
+/**
+ * The token-source hint that carries each org-scoped product's org id.
+ */
+export const ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS: Readonly<Partial<Record<ZohoCliProduct, string>>> = {
+  desk: 'zohoDeskOrgId',
+  analytics: 'zohoAnalyticsOrgId'
+};
+
+/**
+ * Input for {@link zohoCliProductOrgId}.
+ */
+export interface ZohoCliProductOrgIdInput {
+  readonly config: ZohoCliConfig;
+  readonly product: ZohoCliProduct;
+  /**
+   * The active token source's coverage, when one is active.
+   */
+  readonly tokenSource?: Maybe<ZohoCliTokenSourceCoverage>;
+}
+
+/**
+ * Resolves the org id a product's API is created with.
+ *
+ * Order: the config/env org id, then — only for a product the token source covers — the token
+ * source's org id hint ({@link ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS}). Without either, the id has to be
+ * supplied on demand (e.g. discovered with `analytics orgs list`).
+ *
+ * @param input - The loaded config, the product, and the token source coverage.
+ * @returns The org id, or undefined when the product is not org-scoped or none is known.
+ */
+export function zohoCliProductOrgId(input: ZohoCliProductOrgIdInput): Maybe<string> {
+  const { config, product, tokenSource } = input;
+  let result: Maybe<string>;
+
+  if (ZOHO_CLI_ORG_ID_PRODUCTS.has(product)) {
+    const hintKey = ZOHO_CLI_TOKEN_SOURCE_ORG_ID_HINTS[product];
+    const hintOrgId = hintKey != null && tokenSource?.products.includes(product) ? tokenSource.hints?.[hintKey] : undefined;
+    result = config[product]?.orgId || hintOrgId || undefined;
+  }
+
   return result;
 }
 
@@ -299,16 +434,19 @@ export function loadCliConfigFile(): Promise<Maybe<ZohoCliConfig>> {
  * Credentials resolve per block as a unit — a block whose stored refresh token is set uses the stored
  * client and region, and only otherwise the env triple (see {@link resolveZohoCliCredentialBlock}).
  * The remaining settings (`apiMode`, `apiUrl`, `orgId`) likewise prefer the file and fall back to env.
+ * `tokenSource` is the ACTIVE token source ({@link resolveZohoCliActiveTokenSource}); its token is
+ * not loaded here.
  *
- * @returns The resolved {@link ZohoCliConfig}, or `undefined` when no config file exists and no shared or per-product credential env var is set.
+ * @returns The resolved {@link ZohoCliConfig}, or `undefined` when no config file exists and neither a credential env var nor {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} is set.
  */
 export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   const fileConfig = await loadCliConfigFile();
   const envCredentials = Object.fromEntries(ZOHO_CLI_CREDENTIAL_BLOCK_KEYS.map((block) => [block, readZohoCliEnvCredentials(block)])) as Record<ZohoCliCredentialBlockKey, ZohoCliCredentialBlock>;
   const hasEnvCredentials = Object.values(envCredentials).some((x) => x.clientId != null || x.clientSecret != null || x.refreshToken != null);
+  const activeTokenSource = resolveZohoCliActiveTokenSource(fileConfig);
   let result: Maybe<ZohoCliConfig>;
 
-  if (!fileConfig && !hasEnvCredentials) {
+  if (!fileConfig && !hasEnvCredentials && !activeTokenSource) {
     result = undefined;
   } else {
     const sharedCredentials = resolveZohoCliCredentialBlock(fileConfig?.shared, envCredentials.shared);
@@ -359,7 +497,8 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
       desk: productConfig('desk'),
       sign: productConfig('sign'),
       analytics: productConfig('analytics'),
-      output: fileConfig?.output
+      output: fileConfig?.output,
+      tokenSource: activeTokenSource ? { command: activeTokenSource.command } : undefined
     };
   }
 
@@ -475,11 +614,37 @@ export async function mergeCliConfig(updates: ZohoCliConfigUpdate): Promise<Zoho
     desk: mergeConfigBlock(existing?.desk, updates.desk),
     sign: mergeConfigBlock(existing?.sign, updates.sign),
     analytics: mergeConfigBlock(existing?.analytics, updates.analytics),
-    output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
+    output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output),
+    // carried over verbatim: only saveCliTokenSourceConfig() writes the token source block
+    tokenSource: existing?.tokenSource
   };
 
   await saveCliConfig(merged);
   return merged;
+}
+
+/**
+ * Saves (or, with `undefined`, removes) the `tokenSource` block of the stored config file.
+ *
+ * Writes the raw file back with ONLY that block changed, so the `shared` and per-product credential
+ * blocks are never read for credentials nor rewritten — not even padded with the empty credentials
+ * {@link mergeCliConfig} writes for a missing shared block. Nothing is written when there is no
+ * config file and no block to save.
+ *
+ * @param tokenSource - The block to save, or `undefined` to remove it.
+ * @returns The config file as written, or `undefined` when nothing was written.
+ */
+export async function saveCliTokenSourceConfig(tokenSource: Maybe<ZohoCliTokenSourceConfig>): Promise<Maybe<ZohoCliConfig>> {
+  const existing = await loadCliConfigFile();
+  let result: Maybe<ZohoCliConfig>;
+
+  if (existing != null || tokenSource != null) {
+    // without an existing file the result holds only the token source; every reader treats `shared` as optional on disk
+    result = { ...existing, tokenSource: tokenSource ?? undefined } as ZohoCliConfig;
+    await saveCliConfig(result);
+  }
+
+  return result;
 }
 
 /**
@@ -515,8 +680,9 @@ export async function clearCliConfig(): Promise<void> {
 /**
  * Returns the list of products that have resolvable credentials.
  *
- * A product is considered configured when {@link resolveProductCredentials} returns a value; Desk
- * additionally requires `orgId` to be present.
+ * A product is considered configured when {@link resolveProductCredentials} returns a value — or,
+ * when a token source is active, when its token covers the product (the token source then replaces
+ * the product's own credentials). Desk additionally requires an org id ({@link zohoCliProductOrgId}).
  *
  * The org-id requirement is deliberately desk-only rather than generalized over
  * {@link ZOHO_CLI_ORG_ID_PRODUCTS}: every Desk endpoint is org-scoped, so Desk without an org id can
@@ -525,12 +691,13 @@ export async function clearCliConfig(): Promise<void> {
  * is what reports an org-scoped product that is configured but has no org id.
  *
  * @param config - Loaded CLI configuration to inspect.
+ * @param tokenSource - The active token source's coverage, when one is active and its token loaded.
  * @returns Subset of {@link ZOHO_CLI_PRODUCTS} for which the CLI can construct an authenticated API client.
  */
-export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
-  return ZOHO_CLI_PRODUCTS.filter((p) => {
-    const resolved = resolveProductCredentials(config, p);
-    return resolved != null && (p !== 'desk' || resolved.orgId != null);
+export function configuredProducts(config: ZohoCliConfig, tokenSource?: Maybe<ZohoCliTokenSourceCoverage>): ZohoCliProduct[] {
+  return ZOHO_CLI_PRODUCTS.filter((product) => {
+    const hasAccess = tokenSource?.products.includes(product) || resolveProductCredentials(config, product) != null;
+    return hasAccess && (product !== 'desk' || zohoCliProductOrgId({ config, product, tokenSource }) != null);
   });
 }
 

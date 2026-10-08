@@ -1,6 +1,6 @@
 import { type InjectionToken, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
+import { DEMO_DISCORD_EXTERNAL_CONNECTION_PROVIDER_TYPE, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE, DemoFirestoreCollections } from 'demo-firebase';
 import { type UserExternalConnectionSignInDelegate, appUserExternalConnectionModuleMetadata, autoCreateUserSignInDelegate } from '@dereekb/firebase-server/model';
 import { DemoApiAuthModule, DemoApiAuthService, DemoApiFirestoreModule } from '../../firebase';
 
@@ -56,6 +56,11 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
  * Discord is the demo's one SIGN-IN provider: it is the only adapter in the workspace that reads a
  * stable external account id plus an email out of its token exchange, which is what the identity
  * rules below need.
+ *
+ * `zoho_admin` is the demo's one ADMIN-ONLY and one EXPORTABLE provider: only an admin may connect it,
+ * and its access token may be minted out to its owner through `DemoExternalConnectionTokenApiModule`
+ * (for `zoho-cli`). The plain `zoho` connection has no policy, so it stays open to every user and its
+ * token never leaves the server.
  */
 @Module(
   appUserExternalConnectionModuleMetadata({
@@ -74,6 +79,15 @@ export const DEMO_USER_EXTERNAL_CONNECTION_SIGN_IN_DELEGATE: InjectionToken = 'D
         // narrower grant. It is also what makes the settings page's two Discord buttons independently
         // meaningful — one manages the login link, the other the connected app
         onCollision: 'block'
+      },
+      {
+        providerType: DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE,
+        // the connection carries Zoho module scopes for the CLI, so only an admin may consent to it.
+        // Enforced where the connect state is minted (`read:authorizeState`).
+        adminOnly: true,
+        // the reason this connection exists: its access token is minted out to zoho-cli. The token API
+        // adds its own gates on top (admin predicate, `token.external` scope, allowlisted OIDC client).
+        tokenExport: true
       }
     ],
     signIn: {

@@ -1,6 +1,6 @@
-import { type CliEnvDefault, type CliFirebaseConfig } from '@dereekb/dbx-cli';
-import { FIRESTORE_SESSION_OIDC_SCOPE } from '@dereekb/firebase';
-import { DEMO_FIREBASE_CLIENT_CONFIG } from 'demo-firebase';
+import { type CliEnvDefault, type CliExternalConnectionHints, type CliFirebaseConfig } from '@dereekb/dbx-cli';
+import { EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE } from '@dereekb/firebase';
+import { DEMO_FIREBASE_CLIENT_CONFIG, DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE } from 'demo-firebase';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- firebase.json is workspace configuration, not an nx project; `apps/demo/src/environments/base.ts` reads its emulator ports the same way.
 import firebaseInfo from '../../../../firebase.json';
 
@@ -22,9 +22,38 @@ const DEMO_PROD_OIDC_ISSUER = `${DEMO_PROD_APP_CLIENT_URL}/oidc`;
  * consent screen withholds admin-only scopes from a non-admin entirely, so the scope lands in the
  * consent submit's rejected set and login still succeeds without it.
  *
- * Keep in sync with `DEMO_OIDC_AVAILABLE_SCOPES` in `@dereekb/demo-firebase`.
+ * Keep in sync with `DEMO_OIDC_AVAILABLE_SCOPES` in `@dereekb/demo-firebase`. Deliberately WITHOUT
+ * `token.external`: an everyday login must not be able to mint third-party tokens — that is the
+ * {@link DEMO_CLI_EXTERNAL_TOKEN_SCOPES} env's job alone.
  */
 export const DEFAULT_DEMO_CLI_SCOPES = `openid profile email demo offline_access model.create model.read model.update model.delete model.query ${FIRESTORE_SESSION_OIDC_SCOPE}`;
+
+/**
+ * The ONLY scopes the dedicated `external-token` envs request: enough to sign in and mint external
+ * connection tokens, and nothing else.
+ *
+ * A separate grant rather than an extra scope on {@link DEFAULT_DEMO_CLI_SCOPES}: the grant that can
+ * mint a third-party token cannot read or write any demo data, and the one that can never mints. The
+ * `token.external` scope is unlocked only for an OIDC client an admin assigned the admin-only
+ * `external-token` provider profile to, which also caps this grant at 8 hours.
+ */
+export const DEMO_CLI_EXTERNAL_TOKEN_SCOPES = `${OPENID_OIDC_SCOPE} ${OFFLINE_ACCESS_OIDC_SCOPE} ${EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE}`;
+
+/**
+ * Non-secret values `zoho-cli` needs alongside a minted `zoho_admin` token, emitted as the token
+ * bundle's `hints` by `demo-cli external-token zoho_admin`, so zoho-cli need not be told the org ids
+ * itself (its own configured org ids still win).
+ *
+ * PLACEHOLDERS: the demo ships no real Zoho org. A deployment replaces them with its Zoho Desk / Zoho
+ * Analytics organization ids — here, or per machine in the stored env. They are printed unmasked by
+ * `env show`, so never put a secret in a hint.
+ */
+export const DEMO_CLI_EXTERNAL_CONNECTION_HINTS: CliExternalConnectionHints = {
+  [DEMO_ZOHO_ADMIN_EXTERNAL_CONNECTION_PROVIDER_TYPE]: {
+    zohoDeskOrgId: 'REPLACE_WITH_ZOHO_DESK_ORG_ID',
+    zohoAnalyticsOrgId: 'REPLACE_WITH_ZOHO_ANALYTICS_ORG_ID'
+  }
+};
 
 /**
  * Firebase client config for the demo project, shared by both env defaults.
@@ -83,4 +112,45 @@ export const DEFAULT_DEMO_PROD_ENV: CliEnvDefault = {
   }
 };
 
-export const DEFAULT_DEMO_CLI_ENVS: readonly CliEnvDefault[] = [DEFAULT_DEMO_LOCAL_ENV, DEFAULT_DEMO_PROD_ENV];
+/**
+ * The local `external-token` env: a separate login against the local emulators whose grant carries
+ * only {@link DEMO_CLI_EXTERNAL_TOKEN_SCOPES}, so it can mint external connection tokens and do nothing
+ * else. Hints ({@link DEMO_CLI_EXTERNAL_CONNECTION_HINTS}) live only on the external-token envs — the
+ * only ones whose grant can mint.
+ *
+ * One-time setup, with an OIDC client an admin assigned the `external-token` provider profile to (and
+ * whose id the server lists in `DEMO_EXTERNAL_CONNECTION_TOKEN_OIDC_CLIENT_IDS` when deployed):
+ *
+ * ```
+ * demo-cli auth setup --env external-token --client-id <id>
+ * demo-cli auth login --env external-token
+ * zoho-cli auth token-source set "demo-cli external-token zoho_admin --env external-token"
+ * ```
+ */
+export const DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV: CliEnvDefault = {
+  names: ['external-token', 'dev-external-token'],
+  env: {
+    apiBaseUrl: DEMO_LOCAL_API_BASE_URL,
+    oidcIssuer: DEMO_LOCAL_OIDC_ISSUER,
+    appClientUrl: DEMO_LOCAL_APP_CLIENT_URL,
+    scopes: DEMO_CLI_EXTERNAL_TOKEN_SCOPES,
+    externalConnectionHints: DEMO_CLI_EXTERNAL_CONNECTION_HINTS
+  }
+};
+
+/**
+ * The production counterpart of {@link DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV}; the token command is
+ * `demo-cli external-token zoho_admin --env prod-external-token`.
+ */
+export const DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV: CliEnvDefault = {
+  names: ['prod-external-token'],
+  env: {
+    apiBaseUrl: DEMO_PROD_API_BASE_URL,
+    oidcIssuer: DEMO_PROD_OIDC_ISSUER,
+    appClientUrl: DEMO_PROD_APP_CLIENT_URL,
+    scopes: DEMO_CLI_EXTERNAL_TOKEN_SCOPES,
+    externalConnectionHints: DEMO_CLI_EXTERNAL_CONNECTION_HINTS
+  }
+};
+
+export const DEFAULT_DEMO_CLI_ENVS: readonly CliEnvDefault[] = [DEFAULT_DEMO_LOCAL_ENV, DEFAULT_DEMO_PROD_ENV, DEFAULT_DEMO_LOCAL_EXTERNAL_TOKEN_ENV, DEFAULT_DEMO_PROD_EXTERNAL_TOKEN_ENV];

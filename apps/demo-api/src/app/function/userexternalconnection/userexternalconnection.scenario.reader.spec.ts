@@ -185,6 +185,61 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(refreshInputs).toHaveLength(1);
               });
 
+              describe('minimumRemaining', () => {
+                // live for another two minutes: outside the reader's own one-minute leeway, so an ordinary
+                // read hands them back as-is — but not enough for a caller that KEEPS the token, like the
+                // external connection token API minting it out to a CLI
+                function shortLivedTestCredentials(): UserExternalConnectionCredentials {
+                  return demoUserExternalConnectionTestCredentials({ expiresAt: new Date(Date.now() + MS_IN_MINUTE * 2).toISOString() });
+                }
+
+                it('should NOT refresh credentials that outlast the leeway window when no minimum is asked for', async () => {
+                  await uec.connect({ providerType: CALCOM, credentials: shortLivedTestCredentials() });
+
+                  const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-access-token' }) });
+                  const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials();
+
+                  expect(result.accessToken).toBe('access-token');
+                  expect(refreshInputs).toHaveLength(0);
+                });
+
+                it('should force a refresh of credentials that expire before the requested minimum', async () => {
+                  await uec.connect({ providerType: CALCOM, credentials: shortLivedTestCredentials() });
+
+                  const refreshedExpiresAt = new Date(Date.now() + MS_IN_MINUTE * 60).toISOString();
+                  const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-access-token', expiresAt: refreshedExpiresAt }) });
+                  const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials({ minimumRemaining: MS_IN_MINUTE * 5 });
+
+                  expect(result.accessToken).toBe('refreshed-access-token');
+                  expect(result.expiresAt).toBe(refreshedExpiresAt);
+                  expect(refreshInputs).toHaveLength(1);
+                  // renewed through the real paired write, exactly like an expiry-driven refresh
+                  expect((await uec.loadUserExternalConnectionPrivate())?.cr[CALCOM].accessToken).toBe('refreshed-access-token');
+                });
+
+                it('should not refresh credentials that already outlast the requested minimum', async () => {
+                  // the default test credentials live for 30 minutes
+                  await uec.connect({ providerType: CALCOM });
+
+                  const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-access-token' }) });
+                  const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials({ minimumRemaining: MS_IN_MINUTE * 5 });
+
+                  expect(result.accessToken).toBe('access-token');
+                  expect(refreshInputs).toHaveLength(0);
+                });
+
+                it('should never NARROW the reader’s own leeway window', async () => {
+                  // expiring inside the one-minute leeway: a smaller minimum must not make them read as usable
+                  await uec.connect({ providerType: CALCOM, credentials: demoUserExternalConnectionTestCredentials({ expiresAt: new Date(Date.now() + MS_IN_SECOND * 10).toISOString() }) });
+
+                  const { reader, refreshInputs } = uecp.testReader({ refreshResult: refreshedTestCredentials({ accessToken: 'refreshed-access-token' }) });
+                  const result = await uecp.readerFor(reader).readUsableUserExternalConnectionCredentials({ minimumRemaining: MS_IN_SECOND });
+
+                  expect(result.accessToken).toBe('refreshed-access-token');
+                  expect(refreshInputs).toHaveLength(1);
+                });
+              });
+
               it('should record the connection as errored when the credentials expired and no refresher was configured', async () => {
                 await uec.connect({ providerType: CALCOM, credentials: expiredTestCredentials() });
 

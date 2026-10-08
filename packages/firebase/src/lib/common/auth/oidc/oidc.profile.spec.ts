@@ -3,6 +3,7 @@ import {
   adminOnlyScopesForOidcProviderProfiles,
   assignmentOnlyScopesForOidcProviderProfiles,
   defaultOidcProviderProfiles,
+  maxSessionTtlForOidcProviderProfileScopes,
   defaultUnlockedScopesForOidcProviderProfiles,
   OIDC_PROVIDER_PROFILE_DEFAULT_DESCRIPTION_SUFFIX,
   type OidcProviderProfile,
@@ -170,6 +171,30 @@ describe('adminOnlyScopesForOidcProviderProfiles()', () => {
 
   it('should return an empty set when no profile is marked adminOnly', () => {
     expect(adminOnlyScopesForOidcProviderProfiles(TEST_PROFILES)).toEqual(new Set());
+  });
+});
+
+describe('maxSessionTtlForOidcProviderProfileScopes()', () => {
+  const CAPPED_PROFILES: OidcProviderProfile[] = [
+    ...TEST_PROFILES,
+    { key: 'external', label: 'External Token', adminOnly: true, maxSessionTtl: 8 * 60 * 60, scopes: [{ scope: 'token.external' }] },
+    { key: 'external-short', label: 'External Token (Short)', maxSessionTtl: 60 * 60, scopes: [{ scope: 'token.external.short' }, { scope: 'token.external' }] }
+  ];
+
+  it('should return the cap of a profile that unlocks one of the scopes', () => {
+    expect(maxSessionTtlForOidcProviderProfileScopes(CAPPED_PROFILES.slice(0, 3), ['openid', 'token.external'])).toBe(8 * 60 * 60);
+  });
+
+  it('should return the smallest cap when several profiles cap the grant', () => {
+    expect(maxSessionTtlForOidcProviderProfileScopes(CAPPED_PROFILES, ['openid', 'token.external'])).toBe(60 * 60);
+  });
+
+  it('should return undefined when no capped profile unlocks one of the scopes', () => {
+    expect(maxSessionTtlForOidcProviderProfileScopes(CAPPED_PROFILES, ['openid', 'lms'])).toBeUndefined();
+  });
+
+  it('should return undefined when no profile declares a cap', () => {
+    expect(maxSessionTtlForOidcProviderProfileScopes(TEST_PROFILES, ['lms', 'reports'])).toBeUndefined();
   });
 });
 

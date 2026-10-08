@@ -1,7 +1,7 @@
 import { Logger, Module } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { AUTH_ADMIN_ROLE, type AuthClaims, cachedGetter } from '@dereekb/util';
-import { CLI_TOKEN_OIDC_SCOPE, type CreateOidcClientParams, EMAIL_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
+import { CLI_TOKEN_OIDC_SCOPE, type CreateOidcClientParams, EMAIL_OIDC_SCOPE, EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE, FIRESTORE_SESSION_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import {
   CLI_TOKEN_ADMIN_PREDICATE,
   CliTokenApiModuleConfig,
@@ -68,6 +68,12 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     // below — that array ALSO selects the 365-day service-token TTL tier, and a scope whose whole
     // point is a <=1h credential must never widen the session that carries it.
     [CLI_TOKEN_OIDC_SCOPE]: [],
+    // token.external confers authorization for `GET /api/session/external/:providerType` (see
+    // DemoExternalConnectionTokenApiModule) and adds no extra ID-token claims. Gated the same way as
+    // token.cli — by the admin-only `external-token` provider profile, which also caps the grant at
+    // 8 hours — and deliberately NOT in `adminOnlyScopes` below, whose 365-day service-token TTL tier
+    // would otherwise turn a grant that can mint third-party tokens into a year-long one.
+    [EXTERNAL_CONNECTION_TOKEN_OIDC_SCOPE]: [],
     // lms / reports are provider-profile-gated (see DEMO_OIDC_PROVIDER_PROFILES) — supported/issuable but
     // only obtainable by a client whose assigned profile unlocks them. They add no extra ID-token claims.
     lms: [],
@@ -86,7 +92,8 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
   // Only token.service disables refresh-token rotation. A session.firestore grant is an ordinary
   // interactive grant that happens to be admin-only.
   nonRotatingScopes: [SERVICE_TOKEN_OIDC_SCOPE],
-  // Provider profiles gate the lms/reports scopes to clients an admin has assigned the profile to.
+  // Provider profiles gate the lms/reports/token.cli/token.external scopes to clients an admin has
+  // assigned the profile to.
   providerProfiles: DEMO_OIDC_PROVIDER_PROFILES
 };
 

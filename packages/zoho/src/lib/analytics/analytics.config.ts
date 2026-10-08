@@ -1,7 +1,7 @@
 import { type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { type ConfiguredFetch, type FetchJsonFunction } from '@dereekb/util/fetch';
 import { type ZohoApiUrl, type ZohoApiUrlKey, type ZohoConfig, type ZohoApiServiceName } from '../zoho.config';
-import { type ZohoAccessTokenStringFactory, type ZohoServiceAccessTokenKey } from '../accounts';
+import { type ZohoAccessTokenStringFactory, type ZohoDatacenterApiUrlInput, type ZohoServiceAccessTokenKey, zohoDatacenterDomain } from '../accounts';
 import { type ZohoRateLimiterRef } from '../zoho.limit';
 import { type ZohoAnalyticsOrgId } from './analytics';
 
@@ -65,6 +65,23 @@ export function zohoAnalyticsConfigApiUrl(input: ZohoAnalyticsConfigApiUrlInput)
   }
 
   return result;
+}
+
+/**
+ * Resolves the Zoho Analytics API URL of a datacenter (e.g. `https://analyticsapi.zoho.eu/restapi/v2`).
+ *
+ * Analytics has no sandbox, so both modes resolve to the production host, matching {@link zohoAnalyticsConfigApiUrl}.
+ *
+ * @param input - The datacenter (default `us`); the mode is ignored.
+ * @returns The full Zoho Analytics API base URL for that datacenter.
+ *
+ * @example
+ * ```typescript
+ * zohoAnalyticsConfigApiUrlForDatacenter({ datacenter: 'jp' }); // 'https://analyticsapi.zoho.jp/restapi/v2'
+ * ```
+ */
+export function zohoAnalyticsConfigApiUrlForDatacenter(input?: Maybe<ZohoDatacenterApiUrlInput>): ZohoAnalyticsApiUrl {
+  return `https://analyticsapi.${zohoDatacenterDomain(input)}/restapi/v2`;
 }
 
 /**

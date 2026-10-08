@@ -1,4 +1,4 @@
-import { type LabeledValueWithDescription } from '@dereekb/util';
+import { type LabeledValueWithDescription, type Maybe, type Seconds } from '@dereekb/util';
 import { type OidcScope } from './oidc.base';
 
 // MARK: Provider Profiles
@@ -101,6 +101,19 @@ export interface OidcProviderProfile<S extends OidcScope = OidcScope> {
    * @see adminOnlyScopesForOidcProviderProfiles
    */
   readonly adminOnly?: boolean;
+  /**
+   * Maximum lifetime (seconds) of a grant carrying any scope this profile unlocks.
+   *
+   * Applied after every other login-duration rule — the requested duration, the per-client
+   * `dbx_max_session_ttl`, the tiered server maximum, and the server minimum — so it wins over the
+   * server floor too. Lets a profile that unlocks a sensitive scope (e.g. one that mints third-party
+   * access tokens) keep its grants short-lived regardless of the login duration the client asked for.
+   *
+   * When several profiles cap the same grant, the smallest cap wins.
+   *
+   * @see maxSessionTtlForOidcProviderProfileScopes
+   */
+  readonly maxSessionTtl?: Maybe<Seconds>;
   /**
    * The scopes this profile unlocks, each with an optional require mode.
    */
@@ -250,6 +263,31 @@ export function assignmentOnlyScopesForOidcProviderProfiles<S extends OidcScope 
  */
 export function adminOnlyScopesForOidcProviderProfiles<S extends OidcScope = OidcScope>(profiles: readonly OidcProviderProfile<S>[]): Set<S> {
   return scopesForOidcProviderProfiles(profiles.filter((profile) => profile.adminOnly === true));
+}
+
+/**
+ * Resolves the {@link OidcProviderProfile.maxSessionTtl} cap for a grant carrying the given scopes.
+ *
+ * A profile caps the grant when it declares a `maxSessionTtl` and unlocks at least one of the scopes.
+ * When several profiles cap the grant, the smallest cap wins.
+ *
+ * @param profiles - The full provider-profile registry.
+ * @param scopes - The scopes the grant carries.
+ * @returns The cap in seconds, or `undefined` when no profile caps the grant.
+ */
+export function maxSessionTtlForOidcProviderProfileScopes<S extends OidcScope = OidcScope>(profiles: readonly OidcProviderProfile<S>[], scopes: Iterable<string>): Maybe<Seconds> {
+  const scopeSet = new Set<string>(scopes);
+  let result: Maybe<Seconds>;
+
+  for (const profile of profiles) {
+    const cap = profile.maxSessionTtl;
+
+    if (cap != null && profile.scopes.some((x) => scopeSet.has(x.scope))) {
+      result = result == null ? cap : Math.min(result, cap);
+    }
+  }
+
+  return result;
 }
 
 /**

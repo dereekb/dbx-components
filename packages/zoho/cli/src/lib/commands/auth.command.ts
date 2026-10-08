@@ -10,6 +10,10 @@ import {
   getTokenCachePath,
   zohoCliCredentialSources,
   zohoCliRefreshTokenEnvVarName,
+  zohoCliTokenCommandFromEnv,
+  resolveZohoCliActiveTokenSource,
+  saveCliTokenSourceConfig,
+  ZOHO_CLI_TOKEN_COMMAND_ENV_VAR,
   ZOHO_CLI_PRODUCTS,
   ZOHO_CLI_ORG_ID_PRODUCTS,
   ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS,
@@ -18,8 +22,10 @@ import {
   type ZohoCliCredentials,
   type ZohoCliProductConfig,
   type ZohoCliCredentialBlockKey,
-  type ZohoCliCredentialSource
+  type ZohoCliCredentialSource,
+  type ZohoCliActiveTokenSource
 } from '../config/cli.config';
+import { clearCachedZohoCliTokenSourceToken, loadCachedZohoCliTokenSourceToken, loadZohoCliTokenSourceStatus, zohoCliTokenSourceCoverage, zohoCliTokenSourceReport, type ZohoCliTokenSourceStatus } from '../config/token.source';
 import { DEFAULT_AUTH_LOGIN_REDIRECT_URI, ZOHO_CLI_REGION_CHOICES, exchangeZohoAuthorizationCode, loadZohoAuthUserEmail, parseZohoAuthRedirect, zohoCliScopesForProducts } from '../config/cli.oauth';
 import { noop, generateOAuthState, type Maybe } from '@dereekb/util';
 import { parseDurationStringToMilliseconds } from '@dereekb/date';
@@ -768,11 +774,15 @@ function maskProductConfig(product: ZohoCliProduct, productConfig: Maybe<ZohoCli
  * `credentialSources`, when given, reports per block whether the credentials came from the config file
  * or env vars — a stored login wins over env, which is otherwise invisible here.
  *
+ * `tokenSource`, when a token source is active, is reported (command, origin, covered products,
+ * datacenter, expiry, scopes — never the token) and counted in `configuredProducts`.
+ *
  * @param config - Loaded CLI configuration.
  * @param credentialSources - Per-block credential sources, from `zohoCliCredentialSources`.
+ * @param tokenSource - The active token source's status, from `loadZohoCliTokenSourceStatus`.
  * @returns Result object with every secret masked, and `null` for each product with no stored block.
  */
-export function buildAuthShowResult(config: ZohoCliConfig, credentialSources?: Maybe<Record<ZohoCliCredentialBlockKey, ZohoCliCredentialSource>>): Record<string, unknown> {
+export function buildAuthShowResult(config: ZohoCliConfig, credentialSources?: Maybe<Record<ZohoCliCredentialBlockKey, ZohoCliCredentialSource>>, tokenSource?: Maybe<ZohoCliTokenSourceStatus>): Record<string, unknown> {
   const productResults = Object.fromEntries(ZOHO_CLI_PRODUCTS.map((product) => [product, maskProductConfig(product, config[product])]));
 
   return {
@@ -783,8 +793,9 @@ export function buildAuthShowResult(config: ZohoCliConfig, credentialSources?: M
       apiMode: config.shared?.apiMode ?? 'production'
     },
     ...productResults,
-    configuredProducts: configuredProducts(config),
-    ...(credentialSources ? { credentialSources } : {})
+    configuredProducts: configuredProducts(config, tokenSource?.resolved),
+    ...(credentialSources ? { credentialSources } : {}),
+    ...(tokenSource ? { tokenSource: zohoCliTokenSourceReport(tokenSource) } : {})
   };
 }
 
@@ -795,7 +806,8 @@ const authShowCommand: CommandModule = {
   handler: async () => {
     try {
       const config = await loadCliConfig();
-      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(await loadCliConfigFile())) : { configured: false });
+      const fileConfig = await loadCliConfigFile();
+      outputResult(config ? buildAuthShowResult(config, zohoCliCredentialSources(fileConfig), await loadZohoCliTokenSourceStatus(fileConfig)) : { configured: false });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -813,13 +825,16 @@ const authCheckCommand: CommandModule = {
       const config = await loadCliConfig();
 
       if (config) {
-        const products = configuredProducts(config);
+        const tokenSourceStatus = await loadZohoCliTokenSourceStatus(await loadCliConfigFile());
+        const tokenSource = tokenSourceStatus?.resolved;
+        const tokenSourceResult = tokenSourceStatus ? { tokenSource: zohoCliTokenSourceReport(tokenSourceStatus) } : {};
+        const products = configuredProducts(config, tokenSource);
 
         if (products.length === 0) {
-          outputResult({ authenticated: false, error: 'No products have complete credentials. Run: zoho-cli auth login' });
+          outputResult({ authenticated: false, error: 'No products have complete credentials or a token source covering them. Run: zoho-cli auth login, or zoho-cli auth token-source set "<command>"', ...tokenSourceResult });
         } else {
           // Try token exchange for each configured product
-          const context = createCliContext(config);
+          const context = createCliContext(config, tokenSource);
           const productApis = toZohoCliProductApis(context);
           const results: Record<string, unknown> = {};
 
@@ -832,18 +847,25 @@ const authCheckCommand: CommandModule = {
                 continue;
               }
 
-              // Exchange through the product's own accounts API so the reported scope is the grant
-              // that product actually authenticates with. Only the scope and lifetime are echoed —
-              // never the access token itself.
-              const tokenResponse = await api.zohoAccountsApi.accessToken();
-              results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
+              if (tokenSource?.products.includes(product)) {
+                // A token-source product has no refresh token to exchange: load the token through the
+                // product's accounts API, which runs the token source. Never echo the token itself.
+                const token = await api.zohoAccountsApi.accountsContext.loadAccessToken();
+                results[product] = { authenticated: true, source: 'tokenSource', scope: token.scope, expiresAt: token.expiresAt.toISOString() };
+              } else {
+                // Exchange through the product's own accounts API so the reported scope is the grant
+                // that product actually authenticates with. Only the scope and lifetime are echoed —
+                // never the access token itself.
+                const tokenResponse = await api.zohoAccountsApi.accessToken();
+                results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
+              }
             } catch (e) {
               const message = e instanceof Error ? e.message : String(e);
               results[product] = { authenticated: false, error: message };
             }
           }
 
-          outputResult({ products: results });
+          outputResult({ products: results, ...tokenSourceResult });
         }
       } else {
         outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth login' });
@@ -853,6 +875,179 @@ const authCheckCommand: CommandModule = {
       process.exit(1);
     }
   }
+};
+
+// MARK: Token Source
+/**
+ * Result of {@link setAuthTokenSource}.
+ */
+export interface SetAuthTokenSourceResult {
+  readonly saved: true;
+  readonly command: string;
+  /**
+   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, when set — it wins over the saved one for runs where it is set.
+   */
+  readonly envOverride?: string;
+}
+
+/**
+ * Saves the token source command (`auth token-source set`).
+ *
+ * Writes only the `tokenSource` block — the `shared` and product credential blocks are left as they
+ * are, and take over again for every product once the source is cleared. The cached token of a
+ * replaced command is removed from the token file.
+ *
+ * @param command - The token source command, e.g. `demo-cli external-token zoho_admin`.
+ * @returns What was saved.
+ * @throws {Error} When the command is blank.
+ */
+export async function setAuthTokenSource(command: string): Promise<SetAuthTokenSourceResult> {
+  const trimmed = command.trim();
+
+  if (!trimmed) {
+    throw new Error('The token source command cannot be empty.');
+  }
+
+  const previous = (await loadCliConfigFile())?.tokenSource?.command;
+  await saveCliTokenSourceConfig({ command: trimmed });
+
+  if (previous && previous !== trimmed) {
+    await clearCachedZohoCliTokenSourceToken({ command: previous });
+  }
+
+  const envOverride = zohoCliTokenCommandFromEnv();
+  return { saved: true, command: trimmed, ...(envOverride ? { envOverride } : {}) };
+}
+
+/**
+ * Result of {@link clearAuthTokenSource}.
+ */
+export interface ClearAuthTokenSourceResult {
+  readonly cleared: boolean;
+  /**
+   * The command that was removed, when one was saved.
+   */
+  readonly command?: string;
+  /**
+   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, when set — it still applies to runs where it is set.
+   */
+  readonly envOverride?: string;
+}
+
+/**
+ * Removes the saved token source (`auth token-source clear`) and its cached token.
+ *
+ * Only the `tokenSource` block is removed, so the stored credentials apply again to every product.
+ *
+ * @returns What was cleared.
+ */
+export async function clearAuthTokenSource(): Promise<ClearAuthTokenSourceResult> {
+  const previous = (await loadCliConfigFile())?.tokenSource?.command;
+
+  if (previous) {
+    await saveCliTokenSourceConfig(undefined);
+    await clearCachedZohoCliTokenSourceToken({ command: previous });
+  }
+
+  const envOverride = zohoCliTokenCommandFromEnv();
+  return { cleared: previous != null, ...(previous ? { command: previous } : {}), ...(envOverride ? { envOverride } : {}) };
+}
+
+/**
+ * Result of {@link buildAuthTokenSourceShowResult}.
+ */
+export interface AuthTokenSourceShowResult {
+  /**
+   * The saved command, or null.
+   */
+  readonly saved: Maybe<string>;
+  /**
+   * The {@link ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} command, or null.
+   */
+  readonly envOverride: Maybe<string>;
+  /**
+   * The source in effect, or null when none is.
+   */
+  readonly active: Maybe<ZohoCliActiveTokenSource>;
+  /**
+   * What the active source's cached token covers, or null when no token is cached. Never the token.
+   */
+  readonly cached: Maybe<Record<string, unknown>>;
+}
+
+/**
+ * Builds the `auth token-source show` result. Does NOT run the command: only a token already cached
+ * in the token file is described (use `auth check` to run it).
+ *
+ * @returns The saved and env commands, the active source, and the cached token's coverage.
+ */
+export async function buildAuthTokenSourceShowResult(): Promise<AuthTokenSourceShowResult> {
+  const fileConfig = await loadCliConfigFile();
+  const active = resolveZohoCliActiveTokenSource(fileConfig);
+  const cachedToken = active ? await loadCachedZohoCliTokenSourceToken({ command: active.command }) : undefined;
+  let cached: Maybe<Record<string, unknown>> = null;
+
+  if (cachedToken) {
+    const { products, datacenter } = zohoCliTokenSourceCoverage(cachedToken);
+    cached = { products, datacenter, expiresAt: cachedToken.expiresAt, scopes: cachedToken.scopes };
+  }
+
+  return {
+    saved: fileConfig?.tokenSource?.command ?? null,
+    envOverride: zohoCliTokenCommandFromEnv() ?? null,
+    active: active ?? null,
+    cached
+  };
+}
+
+const authTokenSourceSetCommand: CommandModule = {
+  command: 'set <token-command>',
+  describe: 'Save a command that prints a Zoho access token bundle (e.g. "demo-cli external-token zoho_admin")',
+  builder: (yargs: Argv) => yargs.positional('token-command', { type: 'string', demandOption: true, describe: 'The command to run (quote it as one argument)' }).example([['$0 auth token-source set "demo-cli external-token zoho_admin"', 'Use tokens minted by demo-cli for every product their scopes cover']]),
+  handler: async (argv: any) => {
+    try {
+      const result = await setAuthTokenSource(String(argv.tokenCommand ?? ''));
+      outputResult({ ...result, nextStep: 'zoho-cli auth check' });
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
+const authTokenSourceShowCommand: CommandModule = {
+  command: 'show',
+  describe: `Show the saved token source, the ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR} override, and the cached token's coverage (never the token)`,
+  builder: (yargs: Argv) => yargs,
+  handler: async () => {
+    try {
+      outputResult(await buildAuthTokenSourceShowResult());
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
+const authTokenSourceClearCommand: CommandModule = {
+  command: 'clear',
+  describe: 'Remove the saved token source; stored credentials apply again',
+  builder: (yargs: Argv) => yargs,
+  handler: async () => {
+    try {
+      outputResult(await clearAuthTokenSource());
+    } catch (e) {
+      outputError(e);
+      process.exit(1);
+    }
+  }
+};
+
+const authTokenSourceCommand: CommandModule = {
+  command: 'token-source',
+  describe: `Use a command that mints Zoho access tokens instead of stored credentials (per run: ${ZOHO_CLI_TOKEN_COMMAND_ENV_VAR})`,
+  builder: (yargs: Argv) => yargs.command(authTokenSourceSetCommand).command(authTokenSourceShowCommand).command(authTokenSourceClearCommand).demandCommand(1, 'Please specify a token-source subcommand.'),
+  handler: noop
 };
 
 // MARK: Clear
@@ -875,6 +1070,6 @@ const authClearCommand: CommandModule = {
 export const AUTH_COMMAND: CommandModule = {
   command: 'auth',
   describe: 'Manage Zoho API credentials',
-  builder: (yargs: Argv) => yargs.command(authLoginCommand).command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),
+  builder: (yargs: Argv) => yargs.command(authLoginCommand).command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authTokenSourceCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),
   handler: noop
 };

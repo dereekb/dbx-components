@@ -40,9 +40,17 @@ export interface ProvideAppZohoUserExternalConnectionOAuthMetadataConfig extends
    * An app may register several Zoho connections, each its own module with its own provider type,
    * scopes and (through {@link dependencyModule}) OAuth client — e.g. a minimal `zoho` connection the
    * server calls Zoho with, and a full-scope `zoho_admin` connection only ever minted out to a CLI.
-   * Each mounts at `/oauth/<providerType>`, so its callback must be registered with Zoho and excluded
-   * from any global route prefix, and its service is exported under
-   * {@link zohoUserExternalConnectionOAuthServiceToken}.
+   * Each mounts at `/oauth/<providerType>`, and its service is exported under
+   * {@link zohoUserExternalConnectionOAuthServiceToken}. Every extra instance needs:
+   *
+   * - its redirect URI (`<apiUrl>/oauth/<providerType>/callback`) registered with the Zoho OAuth client;
+   * - its routes excluded from the app's global route prefix, through
+   *   `userExternalConnectionOAuthRoutesForGlobalRouteExclude(providerType)` from `@dereekb/firebase-server/model`;
+   * - its service token added to the app's `UserExternalConnectionOAuthProviderRegistry` list.
+   *
+   * Instances share one Zoho OAuth client by default. To use a different client, pass a second module
+   * built with `appZohoAccountsOAuthModuleMetadata({ zohoAccountsOAuthServiceConfigFactory })`
+   * (`@dereekb/zoho/nestjs`) as this instance's {@link dependencyModule}.
    */
   readonly providerType?: Maybe<UserExternalConnectionProviderType>;
   /**

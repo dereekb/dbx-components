@@ -20,6 +20,11 @@ void runCli({
   // `cache` group plus the `--cache` / `--refresh` flags. Recording is automatic; READING a recorded
   // build back is opt-in per run, so a plain command never returns data that is not live.
   dataCache: true,
+  // `external-token <providerType>`: mints a short-lived access token for one of the signed-in admin's
+  // exportable connections (demo-api opts `zoho_admin` in) so zoho-cli can run without its own login —
+  // `zoho-cli auth token-source set "demo-cli external-token zoho_admin --env external-token"`. Needs the
+  // dedicated `external-token` env, whose grant is the only one carrying the `token.external` scope.
+  externalConnectionToken: true,
   // the generator version the committed manifests were emitted by, so `doctor`'s `cli-build-not-stale`
   // check can also catch manifests left behind by a `@dereekb/*` bump that skipped regeneration
   manifestGeneratorVersion: DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP.generatorVersion,

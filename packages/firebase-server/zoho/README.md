@@ -36,3 +36,39 @@ resolution error rather than something a bundler can tree-shake away.
 
 Rotating `ZOHO_ACCESS_TOKEN_ENCRYPTION_SECRET` is survivable: entries written under the old key
 degrade to a cache miss and the next Zoho call re-mints a token.
+
+## Several Zoho connections per server
+
+An app may mount more than one Zoho connection, each with its own provider type, scopes and —
+optionally — OAuth client. A typical split is a minimal `zoho` connection the server itself calls Zoho
+with, plus a full-scope `zoho_admin` connection that only exists to be minted out to a CLI through the
+external connection token API.
+
+```ts
+@Module(
+  appZohoUserExternalConnectionOAuthModuleMetadata({
+    providerType: 'zoho_admin',
+    scopes: ['ZohoCRM.modules.ALL', 'ZohoRecruit.modules.ALL'],
+    successPath: '/app/settings',
+    dependencyModule: AppZohoAccountsOAuthModule,
+    imports: [AppUserExternalConnectionModule]
+  })
+)
+export class AppZohoAdminOAuthCallbackModule {}
+```
+
+Each extra instance needs:
+
+- its redirect URI, `<apiUrl>/oauth/<providerType>/callback`, registered with the Zoho OAuth client;
+- its routes excluded from the app's global route prefix, through
+  `userExternalConnectionOAuthRoutesForGlobalRouteExclude(providerType)` from
+  `@dereekb/firebase-server/model`;
+- its service token, `zohoUserExternalConnectionOAuthServiceToken(providerType)`, added to the app's
+  `UserExternalConnectionOAuthProviderRegistry` list.
+
+Instances share one Zoho OAuth client unless told otherwise. For a different client, build a second
+module with `appZohoAccountsOAuthModuleMetadata({ zohoAccountsOAuthServiceConfigFactory })` from
+`@dereekb/zoho/nestjs` and pass it as that instance's `dependencyModule`.
+
+A minted Zoho token carries `apiDomain` and `location` in its `extra`, so a client can call the
+datacenter the connection was authorized against.

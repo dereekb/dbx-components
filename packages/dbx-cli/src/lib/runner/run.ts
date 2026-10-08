@@ -7,6 +7,7 @@ import { type CreateCacheCommandInput, createCacheCommand } from '../cache/cache
 import { type CliDataCache, createCliDataCache } from '../cache/data-cache';
 import { CLI_DATA_CACHE_GLOBAL_OPTION_NAMES, DEFAULT_CLI_DATA_CACHE_MAX_AGE_HOURS, checkCliDataCacheArgv } from '../cache/data-cache.options';
 import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
+import { buildExternalTokenCommand } from '../api/external-token.command';
 import { GET_COMMAND } from '../api/get.command';
 import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type Maybe } from '@dereekb/util';
@@ -177,6 +178,17 @@ export interface CreateCliInput extends CliLifecycleHooks {
    */
   readonly dataCache?: boolean | Omit<CreateCacheCommandInput, 'cliName'>;
   /**
+   * Enables the built-in `external-token <providerType>` command, which mints a short-lived access
+   * token for one of the signed-in user's external connections (e.g. `zoho_admin`) from the API's
+   * `/session/external/<providerType>` endpoint.
+   *
+   * Run directly it prints a redacted token; the raw token is written only for a credential process
+   * (`DBX_CLI_CREDENTIAL_PROCESS=1`), so another CLI can use it via e.g.
+   * `zoho-cli auth token-source set "<cli> external-token zoho_admin"`. The server must mount the token
+   * API and opt the provider in.
+   */
+  readonly externalConnectionToken?: boolean;
+  /**
    * Test-only override that bypasses the auth middleware entirely and attaches the supplied
    * {@link CliContext} on every command invocation.
    *
@@ -250,6 +262,7 @@ export interface CreateCliInput extends CliLifecycleHooks {
  * @param input.firestore - The app-supplied direct-Firestore binding; enables `firestore-get` / `firestore-query`.
  * @param input.firestoreQueryManifest - The generated Firestore query catalog; enables `firestore-queries`.
  * @param input.dataCache - Enables the recorded dataset cache: the `cache` command group plus the `--cache` / `--refresh` global flags.
+ * @param input.externalConnectionToken - Enables the `external-token <providerType>` command.
  * @param input.manifestGeneratorVersion - The `@dereekb/dbx-cli` version that emitted the app's generated
  *   manifests, for the built-in `cli-build-not-stale` doctor check.
  * @param input.setup - App hook run once before the command's handler; a throw aborts the command.
@@ -314,6 +327,10 @@ export function createCli(input: CreateCliInput): Argv {
 
   if (input.firestore && input.disableFirestoreGet !== true) {
     builtInApiCommands.push(buildFirestoreGetCommand());
+  }
+
+  if (input.externalConnectionToken) {
+    builtInApiCommands.push(buildExternalTokenCommand({ cliName }));
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);

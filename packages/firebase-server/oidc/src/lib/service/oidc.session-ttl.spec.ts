@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import type { KoaContextWithOIDC } from 'oidc-provider';
-import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, REFRESH_TOKEN_ROTATION_MAX_LIFETIME_SECONDS, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds, resolveTieredServerMaxSeconds, shouldRotateRefreshToken } from './oidc.session-ttl';
+import {
+  capExistingGrantExpiration,
+  capLoginDurationSeconds,
+  DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM,
+  REFRESH_TOKEN_ROTATION_MAX_LIFETIME_SECONDS,
+  readRemainingGrantSeconds,
+  readRequestedSessionTtlSeconds,
+  resolveLoginDurationSeconds,
+  resolveTieredServerMaxSeconds,
+  shouldRotateRefreshToken
+} from './oidc.session-ttl';
 
 const SERVER_MAX = 90 * 24 * 60 * 60; // 90 days
 const SERVER_MIN = 60 * 60; // 1 hour
@@ -117,6 +127,64 @@ describe('resolveTieredServerMaxSeconds()', () => {
     const clientCap = 7 * 24 * 60 * 60;
     const serverMaxSeconds = resolveTieredServerMaxSeconds({ isAdmin: true, hasServiceScope: true, nonAdminMax: NONADMIN_MAX, adminMax: ADMIN_MAX, serviceTokenMax: SERVICE_TOKEN_MAX });
     expect(resolveLoginDurationSeconds({ requestedSeconds: SERVICE_TOKEN_MAX, clientMaxSeconds: clientCap, serverMaxSeconds, serverMinSeconds: SERVER_MIN, defaultSeconds: DEFAULT })).toBe(clientCap);
+  });
+});
+
+describe('capLoginDurationSeconds()', () => {
+  const NONADMIN_MAX = 30 * 24 * 60 * 60;
+  const ADMIN_MAX = 90 * 24 * 60 * 60;
+  const SERVICE_TOKEN_MAX = 365 * 24 * 60 * 60;
+  const SERVER_MIN = 60 * 60;
+  const DEFAULT = 7 * 24 * 60 * 60;
+  const PROFILE_CAP = 8 * 60 * 60;
+
+  it('returns the resolved duration unchanged when no cap applies', () => {
+    expect(capLoginDurationSeconds(DEFAULT, undefined)).toBe(DEFAULT);
+    expect(capLoginDurationSeconds(DEFAULT, null)).toBe(DEFAULT);
+  });
+
+  it('caps the resolved duration', () => {
+    expect(capLoginDurationSeconds(DEFAULT, PROFILE_CAP)).toBe(PROFILE_CAP);
+  });
+
+  it('keeps a resolved duration already below the cap', () => {
+    expect(capLoginDurationSeconds(SERVER_MIN, PROFILE_CAP)).toBe(SERVER_MIN);
+  });
+
+  it('wins over the service-token tier for an admin', () => {
+    const serverMaxSeconds = resolveTieredServerMaxSeconds({ isAdmin: true, hasServiceScope: true, nonAdminMax: NONADMIN_MAX, adminMax: ADMIN_MAX, serviceTokenMax: SERVICE_TOKEN_MAX });
+    const resolved = resolveLoginDurationSeconds({ requestedSeconds: SERVICE_TOKEN_MAX, clientMaxSeconds: undefined, serverMaxSeconds, serverMinSeconds: SERVER_MIN, defaultSeconds: DEFAULT });
+    expect(capLoginDurationSeconds(resolved, PROFILE_CAP)).toBe(PROFILE_CAP);
+  });
+
+  it('wins over the server floor', () => {
+    const capBelowFloor = 30 * 60;
+    const resolved = resolveLoginDurationSeconds({ requestedSeconds: 60, clientMaxSeconds: undefined, serverMaxSeconds: ADMIN_MAX, serverMinSeconds: SERVER_MIN, defaultSeconds: DEFAULT });
+    expect(resolved).toBe(SERVER_MIN);
+    expect(capLoginDurationSeconds(resolved, capBelowFloor)).toBe(capBelowFloor);
+  });
+});
+
+describe('capExistingGrantExpiration()', () => {
+  const NOW = 1_700_000_000;
+  const PROFILE_CAP = 8 * 60 * 60;
+
+  it('shortens a grant that outlives the cap', () => {
+    const grant = { exp: NOW + 30 * 24 * 60 * 60 };
+    capExistingGrantExpiration(grant, PROFILE_CAP, NOW);
+    expect(grant.exp).toBe(NOW + PROFILE_CAP);
+  });
+
+  it('leaves a grant expiring within the cap untouched', () => {
+    const grant = { exp: NOW + 60 * 60 };
+    capExistingGrantExpiration(grant, PROFILE_CAP, NOW);
+    expect(grant.exp).toBe(NOW + 60 * 60);
+  });
+
+  it('does nothing when no cap applies', () => {
+    const grant = { exp: NOW + 30 * 24 * 60 * 60 };
+    capExistingGrantExpiration(grant, undefined, NOW);
+    expect(grant.exp).toBe(NOW + 30 * 24 * 60 * 60);
   });
 });
 

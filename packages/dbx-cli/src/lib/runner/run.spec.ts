@@ -67,6 +67,16 @@ describe('createCli() model-decode auto-wiring', () => {
   });
 });
 
+describe('createCli() external-token opt-in', () => {
+  it('registers the external-token command when externalConnectionToken is true', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli', externalConnectionToken: true })).toContain('external-token');
+  });
+
+  it('does NOT register external-token by default', async () => {
+    expect(await getRootHelp({ cliName: 'demo-cli' })).not.toContain('external-token');
+  });
+});
+
 describe('createCli() notification auto-wiring', () => {
   const notification = { templateTypeInfoRecord: notificationTemplateTypeInfoRecord([{ type: 'A', name: 'Alpha', description: 'Alpha notification.', notificationModelIdentity: firestoreModelIdentity('profile', 'pr') }]) };
 
