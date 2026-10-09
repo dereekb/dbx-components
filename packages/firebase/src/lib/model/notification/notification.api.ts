@@ -14,11 +14,12 @@ import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, 
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
-import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import { type NotificationBoxId, type NotificationSummaryId, type NotificationTaskBotEntryId, type NotificationTaskKey, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
+import { NotificationTaskBotEntryState, NotificationTaskBotRunTrigger } from './notification.taskbot';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -651,6 +652,132 @@ export interface CleanupOldNotificationLoggedEventDaysResult {
   readonly pagesDeleted: number;
 }
 
+// MARK: NotificationTaskBot
+/**
+ * arktype validator for a {@link NotificationTaskBotEntryId}.
+ */
+export const notificationTaskBotEntryIdType = /* @__PURE__ */ type('/^[a-z0-9-]{1,40}$/');
+
+/**
+ * Base params targeting a single entry on a {@link NotificationTaskBot}.
+ */
+export interface NotificationTaskBotEntryTargetParams extends TargetModelParams {
+  /**
+   * The entry id.
+   */
+  readonly i: NotificationTaskBotEntryId;
+}
+
+export const notificationTaskBotEntryTargetParamsType = targetModelParamsType.merge({
+  i: notificationTaskBotEntryIdType
+}) as Type<NotificationTaskBotEntryTargetParams>;
+
+/**
+ * Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.
+ *
+ * @dbxModelApiParams
+ */
+export interface UpdateNotificationTaskBotEntryParams extends NotificationTaskBotEntryTargetParams {
+  /**
+   * Enables or disables the entry. Disabling cancels the live run.
+   */
+  readonly s?: Maybe<NotificationTaskBotEntryState>;
+  /**
+   * True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it and schedules a run.
+   */
+  readonly pause?: Maybe<boolean>;
+  /**
+   * Reschedules the entry. A date schedules a run at that explicit time; null schedules a run due now, letting the
+   * script compute the real due time.
+   */
+  readonly nextRunAt?: Maybe<Date>;
+  /**
+   * Sets the entry's last submitted at time. Null clears it.
+   */
+  readonly lsat?: Maybe<Date>;
+  /**
+   * Runs the entry's live run immediately after the update, if it has one.
+   */
+  readonly runImmediately?: Maybe<boolean>;
+}
+
+export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
+  's?': clearable(type.enumerated(NotificationTaskBotEntryState.ENABLED, NotificationTaskBotEntryState.DISABLED)),
+  'pause?': clearable('boolean'),
+  'nextRunAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'lsat?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'runImmediately?': clearable('boolean')
+}) as Type<UpdateNotificationTaskBotEntryParams>;
+
+/**
+ * Result of updating a {@link NotificationTaskBot} entry.
+ */
+export interface UpdateNotificationTaskBotEntryResult {
+  /**
+   * Key of the entry's live run task, if it has one.
+   */
+  readonly taskKey?: Maybe<NotificationTaskKey>;
+  /**
+   * Result of running the live run immediately, if requested.
+   */
+  readonly runResult?: Maybe<SendNotificationResult>;
+}
+
+/**
+ * Used for running a single entry on a {@link NotificationTaskBot} on demand.
+ *
+ * The live run is superseded by a new run due now. Disabled and paused entries are refused.
+ *
+ * @dbxModelApiParams
+ */
+export interface RunNotificationTaskBotEntryParams extends NotificationTaskBotEntryTargetParams {
+  /**
+   * MANUAL runs still apply the script's due check; FORCED runs skip it. Defaults to MANUAL.
+   */
+  readonly trigger?: Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>;
+  /**
+   * Whether to run the new run immediately. Defaults to true.
+   */
+  readonly runImmediately?: Maybe<boolean>;
+}
+
+export const runNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
+  'trigger?': clearable(type.enumerated(NotificationTaskBotRunTrigger.MANUAL, NotificationTaskBotRunTrigger.FORCED)),
+  'runImmediately?': clearable('boolean')
+}) as Type<RunNotificationTaskBotEntryParams>;
+
+/**
+ * Result of running a {@link NotificationTaskBot} entry.
+ */
+export interface RunNotificationTaskBotEntryResult {
+  /**
+   * Key of the new run task.
+   */
+  readonly taskKey: NotificationTaskKey;
+  /**
+   * Result of running the new run, if it was run immediately.
+   */
+  readonly runResult?: Maybe<SendNotificationResult>;
+}
+
+/**
+ * Aggregate result of the `repairAllNotificationTaskBots` action.
+ */
+export interface RepairAllNotificationTaskBotsResult {
+  /**
+   * Number of overdue bots that were checked.
+   */
+  readonly botsChecked: number;
+  /**
+   * Number of overdue entries whose run was still pending, and only had their `nat` synced.
+   */
+  readonly entriesSynced: number;
+  /**
+   * Number of overdue entries whose run was lost and was rescheduled or paused.
+   */
+  readonly entriesRepaired: number;
+}
+
 // MARK: Functions
 /**
  * Custom (non-CRUD) function type map for notifications. Currently empty — all operations use the CRUD pattern.
@@ -696,13 +823,20 @@ export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationWeek: null;
   readonly notificationLoggedEventDay: null;
   readonly notificationLoggedEventDayPage: null;
+  readonly notificationTaskBot: {
+    update: {
+      entry: [UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult];
+      run: [RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult];
+    };
+  };
 };
 
 export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
   notificationUser: ['create', 'update:_,resync', 'invoke:healthCheck,healthCheckAutofix'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
-  notification: ['update:send']
+  notification: ['update:send'],
+  notificationTaskBot: ['update:entry,run']
 };
 
 /**
@@ -737,6 +871,12 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
   abstract notification: {
     updateNotification: {
       send: ModelFirebaseCrudFunction<SendNotificationParams, SendNotificationResult>;
+    };
+  };
+  abstract notificationTaskBot: {
+    updateNotificationTaskBot: {
+      entry: ModelFirebaseCrudFunction<UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult>;
+      run: ModelFirebaseCrudFunction<RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult>;
     };
   };
 }

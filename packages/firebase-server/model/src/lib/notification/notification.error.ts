@@ -16,9 +16,12 @@ import {
   type NotificationDeliveryMethod,
   type NotificationHealthCheckIssueCode,
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
-  NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
+  NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
+  type NotificationTaskBotEntryId
 } from '@dereekb/firebase';
-import { preconditionConflictError } from '@dereekb/firebase-server';
+import { notFoundError, preconditionConflictError } from '@dereekb/firebase-server';
 
 /**
  * Creates an error indicating that a required notification ID was missing during creation.
@@ -298,5 +301,35 @@ export function notificationUserLockedConfigFromBeingUpdatedError(uid: FirebaseA
     data: {
       uid
     }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} or one of its entries does not exist.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id that was not found.
+ * @returns A not-found error with the entry does not exist error code.
+ */
+export function notificationTaskBotEntryDoesNotExistError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId) {
+  return notFoundError({
+    message: `The NotificationTaskBot "${key}" has no entry "${entryId}".`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
+    data: { key, entryId }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} entry cannot run because it is disabled or paused.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id.
+ * @returns A precondition conflict error with the entry not runnable error code.
+ */
+export function notificationTaskBotEntryNotRunnableError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId) {
+  return preconditionConflictError({
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" is disabled or paused and cannot run.`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
+    data: { key, entryId }
   });
 }

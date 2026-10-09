@@ -1048,6 +1048,65 @@
       ]
     },
     {
+      "slug": "notification-task-bots-due-for-repair-query",
+      "name": "notificationTaskBotsDueForRepairQuery",
+      "module": "@dereekb/firebase",
+      "subpath": "model/notification/notification.query",
+      "signature": "notificationTaskBotsDueForRepairQuery(before: Date): FirestoreQueryConstraint[]",
+      "description": "Query constraints for finding {@link NotificationTaskBot} documents whose soonest live run (`nat`) is at or before the given time.\n\nUsed by the repair sweep to find bots with an overdue run, whose run task may have gone missing.",
+      "model": "NotificationTaskBot",
+      "collection": "ntb",
+      "isNested": false,
+      "scope": "COLLECTION",
+      "manual": false,
+      "skip": false,
+      "category": "sweep",
+      "params": [
+        {
+          "name": "before",
+          "type": "Date",
+          "description": "- Bots with a `nat` at or before this time are returned.",
+          "optional": false
+        }
+      ],
+      "returns": "Array of Firestore query constraints filtering for overdue bots.",
+      "tags": [
+        "sweep",
+        "notificationtaskbot",
+        "notification",
+        "task",
+        "bots",
+        "due",
+        "for",
+        "repair",
+        "query",
+        "notificationtaskbotsdueforrepairquery",
+        "bot",
+        "constraints",
+        "finding",
+        "link",
+        "documents",
+        "whose",
+        "soonest",
+        "live",
+        "run"
+      ],
+      "constraintSequences": [
+        {
+          "pathLabel": "all",
+          "entries": [
+            {
+              "kind": "where",
+              "fieldPath": "nat",
+              "operator": "<="
+            }
+          ]
+        }
+      ],
+      "derivedComposites": [],
+      "derivedFieldOverrides": []
+    },
+    {
       "slug": "oidc-entries-with-type-query",
       "name": "oidcEntriesWithTypeQuery",
       "module": "@dereekb/firebase",

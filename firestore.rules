@@ -127,6 +127,10 @@ service cloud.firestore {
       allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }
 
+    match /ntb/{notificationTaskBot} {
+      allow get, list: if userClaimsIsSysAdmin(); // system admins can read
+    }
+
     match /nb/{notificationBox} {
       allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read
 

@@ -480,6 +480,39 @@ describe('firestore.rules', () => {
      * The `gb` / `gbe` pair is the whole matrix: both are listable on their own path, and only
      * `gbe` declares the collection-group block.
      */
+    describe('ntb (NotificationTaskBot)', () => {
+      const ADMIN_UID = 'rulestestsysadmin';
+      const ADMIN_TOKEN = { a: 1 };
+      const BOT_ID = 'pr_rulestestprofile';
+
+      beforeEach(async () => {
+        await f.withSecurityRulesDisabled(async (firestore) => {
+          await setDoc(doc(firestore, 'ntb', BOT_ID), { cat: new Date(), m: 'pr/rulestestprofile', rc: 0, e: [] });
+        });
+      });
+
+      it('should allow a sys admin to read a bot', async () => {
+        await assertSucceeds(getDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'ntb', BOT_ID)));
+      });
+
+      it('should allow a sys admin to list bots', async () => {
+        await assertSucceeds(getDocs(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'ntb')));
+      });
+
+      it('should deny a non-admin read', async () => {
+        await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'ntb', BOT_ID)));
+      });
+
+      it('should deny an unauthenticated read', async () => {
+        await assertFails(getDoc(doc(f.unauthenticatedFirestore(), 'ntb', BOT_ID)));
+      });
+
+      it('should deny a sys admin writing a bot', async () => {
+        // the grant is read-only: bots are written by the server inside transactions
+        await assertFails(setDoc(doc(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'ntb', BOT_ID), { rc: 5 }));
+      });
+    });
+
     describe('collection group queries', () => {
       const GUESTBOOK_ID = 'rulestestguestbook';
 

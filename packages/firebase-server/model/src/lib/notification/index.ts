@@ -13,6 +13,8 @@ export * from './notification.send';
 export * from './notification.task.service';
 export * from './notification.task.service.handler';
 export * from './notification.task.subtask.handler';
+export * from './notification.taskbot.action.server';
+export * from './notification.taskbot.task.service.handler';
 export * from './notification.error';
 export * from './notification.expedite.service';
 export * from './notification.util';

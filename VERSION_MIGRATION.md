@@ -1,4 +1,44 @@
 
+## Migration to v14.17.x — NotificationTaskBot
+
+v14.17 adds `NotificationTaskBot` (`ntb`) to the `notification` model group: a generic per-model bot whose embedded
+script entries each run as a series of unique `NTBR` NotificationTasks, fenced by run number. Most of it is opt-in,
+but two changes require an update in every app that implements the notification collections.
+
+### Required
+- **`NotificationFirestoreCollections` gains `notificationTaskBotCollection`.** Add the member to your app's
+  `FirestoreCollections` class and its factory:
+  ```ts
+  abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
+  // ...
+  notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
+  ```
+- **`NotificationTypes` now includes `notificationTaskBotIdentity`,** and `NotificationFunctions` gains
+  `notificationTaskBot.updateNotificationTaskBot.{entry,run}` (`notificationTaskBot: ['update:entry,run']`). Register
+  a model service factory (system admin only is a good default) and the two CRUD functions:
+  ```ts
+  export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServiceFactory<AppFirebaseContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>({
+    roleMapForModel: (output, context) => grantModelRolesIfAdmin(context, fullAccessRoleMap()),
+    getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
+  });
+  // crud functions: notificationTaskBot: onCallSpecifierHandler({ entry: ..., run: ... }) calling
+  // nest.notificationActions.updateNotificationTaskBotEntry / runNotificationTaskBotEntry with useModel('notificationTaskBot', { roles: 'update' | 'run' })
+  ```
+
+### Optional (to use bots)
+- **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`
+  to the `require-firestore-rule-for-service-model` allowlist).
+- **Script registry:** declare `NotificationTaskBotScriptConfig`s and set `appNotificationTaskBotScriptConfigService`
+  on your server actions context (it is optional on `BaseNotificationServerActionsContext`; an empty registry is used
+  otherwise).
+- **Run handler:** add `notificationTaskBotRunNotificationTaskHandler({ processors, validate, notificationTaskBotContext })`
+  to your `NotificationTaskService` handlers and `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` to its `validate` list.
+- **Repair cron:** call `notificationActions.repairAllNotificationTaskBots()` from your notification schedule, after
+  `sendQueuedNotifications`.
+- **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat`; regenerate your indexes.
+- **Client:** `NotificationTaskBotDocumentStore` / `NotificationTaskBotCollectionStore` (and their directives) are
+  available in `@dereekb/dbx-firebase`.
+
 ## Migration to v13.39.x — the publishable packages are ESM-only
 
 ### Overview

@@ -313,6 +313,35 @@
       "notes": "Key of a {@link NotificationTemplateTypeInfoGroup}. Template types whose groups share a key are shown together."
     },
     {
+      "name": "NotificationTaskBotEntryId",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "guards": [
+        "isNotificationTaskBotEntryId"
+      ],
+      "notes": "Identifier of a {@link NotificationTaskBotEmbeddedScriptEntry}, unique within its bot.\n\nMust match {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX}."
+    },
+    {
+      "name": "NotificationTaskBotRunNumber",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.id",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": [
+        "number",
+        "dereekb-firebase:notification"
+      ],
+      "notes": "Run number of a single NotificationTaskBot run. Taken from the bot's monotonic run counter, so it never repeats within a bot."
+    },
+    {
       "name": "NotificationTemplateType",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/notification/notification.id",
@@ -380,6 +409,32 @@
         "dereekb-firebase:notification"
       ],
       "notes": "Discriminator string that routes the subtask to the correct processing configuration."
+    },
+    {
+      "name": "NotificationTaskBotScriptType",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.taskbot",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "notes": "Type of a NotificationTaskBot script, registered by the app. Selects the server-side processor that runs an entry."
+    },
+    {
+      "name": "NotificationTaskBotPauseReason",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.taskbot",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "notes": "Reason an entry was paused. The library defines {@link NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL} and\n{@link NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED}; scripts may add their own (e.g. `'no_progress'`)."
     },
     {
       "name": "NotificationTaskCheckpointString",

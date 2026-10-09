@@ -14,6 +14,7 @@ import { profileCreate } from '../profile/profile.create';
 import { profileDelete } from '../profile/profile.delete';
 import { notificationCreate } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
+import { notificationTaskBotUpdateEntry, notificationTaskBotUpdateRun } from '../notification/notificationtaskbot.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
@@ -126,6 +127,10 @@ export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   }),
   notification: onCallSpecifierHandler({
     send: notificationSend
+  }),
+  notificationTaskBot: onCallSpecifierHandler({
+    entry: notificationTaskBotUpdateEntry,
+    run: notificationTaskBotUpdateRun
   }),
   storageFile: onCallSpecifierHandler({
     _: storageFileUpdate,

@@ -16,6 +16,7 @@ import {
   notificationsPastSendAtTimeQuery,
   notificationsReadyForCleanupQuery,
   notificationSummariesFlaggedForNeedsInitializationQuery,
+  notificationTaskBotsDueForRepairQuery,
   notificationUserHasExclusionQuery,
   notificationUsersFlaggedForNeedsSyncQuery,
   notificationUsersWithStoppedTextPhoneNumberQuery,
@@ -42,7 +43,7 @@ import { openRouterPromptsWithStateQuery, openRouterRunTasksExpiredQuery, openRo
 import { profileWithUsernameQuery, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
 import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.15.0' };
+export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.16.0' };
 
 export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
   {
@@ -236,6 +237,24 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
     queryMode: 'model',
     rules: { list: 'allowed', collectionGroup: false },
     factory: notificationSummariesFlaggedForNeedsInitializationQuery
+  },
+  {
+    slug: 'notification-task-bots-due-for-repair-query',
+    name: 'notificationTaskBotsDueForRepairQuery',
+    module: '@dereekb/firebase',
+    subpath: 'model/notification/notification.query',
+    model: 'NotificationTaskBot',
+    collection: 'ntb',
+    isNested: false,
+    scope: 'COLLECTION',
+    signature: 'notificationTaskBotsDueForRepairQuery(before: Date): FirestoreQueryConstraint[]',
+    params: [{ name: 'before', type: 'Date', description: '- Bots with a `nat` at or before this time are returned.', optional: false }],
+    description: 'Query constraints for finding {@link NotificationTaskBot} documents whose soonest live run (`nat`) is at or before the given time.\n\nUsed by the repair sweep to find bots with an overdue run, whose run task may have gone missing.',
+    category: 'sweep',
+    tags: ['sweep', 'notificationtaskbot', 'notification', 'task', 'bots', 'due', 'for', 'repair', 'query', 'notificationtaskbotsdueforrepairquery', 'bot', 'constraints', 'finding', 'link', 'documents', 'whose', 'soonest', 'live', 'run'],
+    queryMode: 'model',
+    rules: { list: 'allowed', collectionGroup: false },
+    factory: notificationTaskBotsDueForRepairQuery
   },
   {
     slug: 'notification-user-has-exclusion-query',

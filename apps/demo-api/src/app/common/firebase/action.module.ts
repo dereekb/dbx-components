@@ -1,13 +1,13 @@
 import { DemoApiAuthModule } from './auth.module';
 import { DemoApiFirestoreModule } from './firestore.module';
-import { DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DemoFirestoreCollections } from 'demo-firebase';
+import { DEMO_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DemoFirestoreCollections } from 'demo-firebase';
 import { firebaseServerActionsContext, FirebaseServerStorageService, FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { DemoFirebaseServerActionsContext } from './action.context';
 import { DemoApiAuthService } from './auth.service';
 import { DemoApiStorageModule } from './storage.module';
 import { MailgunService, MailgunServiceModule } from '@dereekb/nestjs/mailgun';
-import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
+import { appNotificationTaskBotScriptConfigService, appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { NotificationExpediteService } from '@dereekb/firebase-server/model';
 
@@ -28,6 +28,7 @@ const demoFirebaseServerActionsContextFactory = (
     mailgunService,
     notificationExpediteService,
     appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD),
+    appNotificationTaskBotScriptConfigService: appNotificationTaskBotScriptConfigService(DEMO_FIREBASE_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG_RECORD),
     analyticsService
   };
 };

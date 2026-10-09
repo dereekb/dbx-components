@@ -3,6 +3,7 @@ import { type OpenRouterRunTaskService } from '@dereekb/openrouter/firebase-serv
 import { type DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoExampleHandledNotificationTaskHandler } from './handlers/task.handler.example.handled';
 import { demoFormSpaceSubmissionNotificationTaskHandler } from './handlers/formspace/task.handler.formspace.submission';
+import { demoNotificationTaskBotRunNotificationTaskHandler } from './handlers/taskbot/task.handler.taskbot';
 import { demoCalendarIcsFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.calendar';
 import { demoFormSpaceFileValidationStorageFileProcessor } from './handlers/storagefile/task.handler.storagefile.formspace';
 import { demoUserResumeFileProcessingSubtaskProcessor } from './handlers/storagefile/task.handler.storagefile.resume';
@@ -24,7 +25,7 @@ import {
 } from 'demo-firebase';
 import { filterUndefinedValues, type Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
-import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES, ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
 /**
  * Builds the NotificationTaskService for the demo API, registering all task handlers
@@ -137,11 +138,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
   const storageFileHandler = demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext, openRouterRunTaskService);
   const exampleHandledHandler = demoExampleHandledNotificationTaskHandler(demoFirebaseServerActionsContext);
   const formSpaceHandler = demoFormSpaceSubmissionNotificationTaskHandler(demoFirebaseServerActionsContext);
+  const notificationTaskBotHandler = demoNotificationTaskBotRunNotificationTaskHandler(demoFirebaseServerActionsContext);
 
-  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler, formSpaceHandler];
+  const handlers: NotificationTaskServiceTaskHandlerConfig<any>[] = [exampleNotificationTaskHandler, exampleUniqueNotificationTaskHandler, storageFileHandler, exampleHandledHandler, formSpaceHandler, notificationTaskBotHandler];
 
   const notificationSendService: NotificationTaskService = notificationTaskService({
-    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES],
+    validate: [...ALL_NOTIFICATION_TASK_TYPES, ...ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, ...ALL_FORM_SPACE_NOTIFICATION_TASK_TYPES, ...ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES],
     handlers
   });
 

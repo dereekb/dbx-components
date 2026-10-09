@@ -31,6 +31,7 @@ import {
   resyncNotificationUserParamsType,
   rotateCalendarIcsParamsType,
   rotateOidcClientSecretParamsType,
+  runNotificationTaskBotEntryParamsType,
   sendNotificationParamsType,
   submitFormSpaceParamsType,
   syncStorageFileWithGroupsParamsType,
@@ -39,6 +40,7 @@ import {
   updateNotificationBoxParamsType,
   updateNotificationBoxRecipientParamsType,
   updateNotificationSummaryParamsType,
+  updateNotificationTaskBotEntryParamsType,
   updateNotificationUserParamsType,
   updateOidcClientParamsType,
   updateStorageFileGroupParamsType,
@@ -65,7 +67,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.15.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.16.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -391,6 +393,49 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'flagAllRead', typeText: 'Maybe<boolean>' },
       { name: 'setReadAtTime', typeText: 'Maybe<Date>' }
+    ]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'entry',
+    paramsTypeName: 'UpdateNotificationTaskBotEntryParams',
+    paramsValidator: updateNotificationTaskBotEntryParamsType,
+    resultTypeName: 'UpdateNotificationTaskBotEntryResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription: 'Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.',
+    paramsFields: [
+      { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
+      { name: 'pause', typeText: 'Maybe<boolean>', description: "True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it and schedules a run." },
+      { name: 'nextRunAt', typeText: 'Maybe<Date>', description: 'Reschedules the entry. A date schedules a run at that explicit time; null schedules a run due now, letting the\nscript compute the real due time.' },
+      { name: 'lsat', typeText: 'Maybe<Date>', description: "Sets the entry's last submitted at time. Null clears it." },
+      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: "Runs the entry's live run immediately after the update, if it has one." }
+    ],
+    resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',
+    resultFields: [
+      { name: 'taskKey', typeText: 'Maybe<NotificationTaskKey>', description: "Key of the entry's live run task, if it has one." },
+      { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the live run immediately, if requested.' }
+    ]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'run',
+    paramsTypeName: 'RunNotificationTaskBotEntryParams',
+    paramsValidator: runNotificationTaskBotEntryParamsType,
+    resultTypeName: 'RunNotificationTaskBotEntryResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    paramsTypeDescription: 'Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled and paused entries are refused.',
+    paramsFields: [
+      { name: 'trigger', typeText: 'Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>', description: "MANUAL runs still apply the script's due check; FORCED runs skip it. Defaults to MANUAL." },
+      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Whether to run the new run immediately. Defaults to true.' }
+    ],
+    resultTypeDescription: 'Result of running a {@link NotificationTaskBot} entry.',
+    resultFields: [
+      { name: 'taskKey', typeText: 'NotificationTaskKey', description: 'Key of the new run task.' },
+      { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the new run, if it was run immediately.' }
     ]
   },
   {
@@ -1440,6 +1485,65 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     compositeKey: { from: '*', encoding: 'two-way' }
   },
   {
+    modelType: 'notificationTaskBot',
+    modelName: 'NotificationTaskBot',
+    identityConst: 'notificationTaskBotIdentity',
+    collectionPrefix: 'ntb',
+    exampleKey: 'ntb/<notificationTaskBotId>',
+    description: 'A generic per-model bot. Attaches to any model and holds embedded script entries that each run as a series of unique NotificationTasks, fenced by run number.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.taskbot.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Creation date of this bot document.' },
+      { name: 'm', longName: 'modelKey', tsType: 'FirestoreModelKey', optional: false, description: 'Model key of the model this bot is attached to.' },
+      { name: 'rc', longName: 'runCounter', tsType: 'number', optional: false, description: 'Run counter for the whole bot. Only ever goes up, so run ids and external keys never repeat, even when an entry is removed and re-added.' },
+      {
+        name: 'e',
+        longName: 'entries',
+        tsType: 'NotificationTaskBotEmbeddedScriptEntry[]',
+        optional: false,
+        description: "The bot's script entries.",
+        nestedFields: [
+          { name: 'i', longName: 'entryId', tsType: 'NotificationTaskBotEntryId', optional: false, description: 'Entry id, unique within the bot. Must match `NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX`.' },
+          { name: 't', longName: 'scriptType', tsType: 'NotificationTaskBotScriptType', optional: false, description: 'Script type that runs this entry.' },
+          { name: 's', longName: 'state', tsType: 'NotificationTaskBotEntryState', optional: false, description: 'Enabled/disabled state.', enumRef: 'NotificationTaskBotEntryState' },
+          { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'When the entry was created.' },
+          { name: 'd', longName: 'data', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary permanent data owned by the script.' },
+          { name: 'pat', longName: 'pausedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the entry was paused. A paused entry has no live run.' },
+          { name: 'pr', longName: 'pauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'Why the entry was paused.' },
+          { name: 'rn', longName: 'runNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.' },
+          { name: 'nk', longName: 'runTaskKey', tsType: 'Maybe<NotificationTaskKey>', optional: true, description: "Key of the live run's NotificationTask." },
+          { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the live run is next due to run.' },
+          { name: 'lat', longName: 'lastRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last run finished.' },
+          { name: 'lsat', longName: 'lastSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last submission happened. The cadence anchor for scripts.' },
+          { name: 'lsr', longName: 'lastSubmittedRunNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the last submission. Used as an idempotency marker so a re-run step never submits twice.' },
+          { name: 'sc', longName: 'submissionCount', tsType: 'number', optional: false, description: 'Lifetime submission count.' },
+          { name: 'fc', longName: 'failureCount', tsType: 'number', optional: false, description: 'Consecutive failure count. Reset whenever a run completes.' },
+          {
+            name: 'h',
+            longName: 'history',
+            tsType: 'NotificationTaskBotEntryHistoryItem<HD>[]',
+            optional: false,
+            description: 'Bounded run history, oldest first.',
+            nestedFields: [
+              { name: 'at', longName: 'at', tsType: 'Date', optional: false, description: 'When the run finished.' },
+              { name: 'rn', longName: 'runNumber', tsType: 'NotificationTaskBotRunNumber', optional: false, description: 'Run number of the run.' },
+              { name: 'tr', longName: 'trigger', tsType: 'NotificationTaskBotRunTrigger', optional: false, description: 'What triggered the run.', enumRef: 'NotificationTaskBotRunTrigger' },
+              { name: 'o', longName: 'outcome', tsType: 'NotificationTaskBotRunOutcome', optional: false, description: 'Outcome of the run.', enumRef: 'NotificationTaskBotRunOutcome' },
+              { name: 'd', longName: 'data', tsType: 'Maybe<HD>', optional: true, description: 'Script-specific data for the run. Keep it small: document size grows with entries × history.' }
+            ],
+            nestedIsArray: true
+          }
+        ],
+        nestedIsArray: true
+      },
+      { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.' }
+    ],
+    read: 'admin-only',
+    serviceFactory: { exportName: 'notificationTaskBotFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' },
+    compositeKey: { from: '*', encoding: 'two-way' }
+  },
+  {
     modelType: 'notificationUser',
     modelName: 'NotificationUser',
     identityConst: 'notificationUserIdentity',
@@ -1872,6 +1976,35 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'LOGGED_EVENT', value: 4, description: 'A write-only logged event notification.' }
     ],
     description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
+  },
+  NotificationTaskBotEntryState: {
+    name: 'NotificationTaskBotEntryState',
+    values: [
+      { name: 'ENABLED', value: 0, description: 'The entry is enabled and runs on its schedule.' },
+      { name: 'DISABLED', value: 1, description: 'The entry is disabled and never runs.' }
+    ],
+    description: 'Stored enabled/disabled state of a {@link NotificationTaskBotEmbeddedScriptEntry}.'
+  },
+  NotificationTaskBotRunOutcome: {
+    name: 'NotificationTaskBotRunOutcome',
+    values: [
+      { name: 'COMPLETED', value: 0, description: 'The run completed without submitting anything.' },
+      { name: 'SUBMITTED', value: 1, description: 'The run submitted its side effect (e.g. sent an email).' },
+      { name: 'SUPPRESSED', value: 2, description: 'The run decided a submission should be suppressed.' },
+      { name: 'SKIPPED', value: 3, description: 'The run was skipped.' },
+      { name: 'FAILED', value: 4, description: 'The run failed.' },
+      { name: 'LOST', value: 5, description: "The run's task went missing before it could finish (found by the repair sweep)." }
+    ],
+    description: "Outcome of a single run, recorded in the entry's history."
+  },
+  NotificationTaskBotRunTrigger: {
+    name: 'NotificationTaskBotRunTrigger',
+    values: [
+      { name: 'SCHEDULED', value: 0, description: 'The run was scheduled by the bot itself.' },
+      { name: 'MANUAL', value: 1, description: "The run was requested manually. The script's due check still applies." },
+      { name: 'FORCED', value: 2, description: "The run was forced. The script's due check is skipped." }
+    ],
+    description: 'What triggered a single run.'
   },
   OpenRouterPromptState: {
     name: 'OpenRouterPromptState',

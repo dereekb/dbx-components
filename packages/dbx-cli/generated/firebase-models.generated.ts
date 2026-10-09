@@ -572,6 +572,65 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     archetypes: ['root-singleton-aggregate', 'composite-key-root']
   },
   {
+    name: 'NotificationTaskBot',
+    identityConst: 'notificationTaskBotIdentity',
+    modelType: 'notificationTaskBot',
+    collectionPrefix: 'ntb',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.taskbot.ts',
+    fields: [
+      {
+        name: 'cat',
+        longName: 'createdAt',
+        converter: 'firestoreDate()',
+        tsType: 'Date',
+        optional: false,
+        description: 'Creation date of this bot document.'
+      },
+      {
+        name: 'm',
+        longName: 'modelKey',
+        converter: 'firestoreModelKeyString',
+        tsType: 'FirestoreModelKey',
+        optional: false,
+        description: 'Model key of the model this bot is attached to.'
+      },
+      {
+        name: 'rc',
+        longName: 'runCounter',
+        converter: 'firestoreNumber({ default: 0 })',
+        tsType: 'number',
+        optional: false,
+        description: 'Run counter for the whole bot. Only ever goes up, so run ids and external keys never repeat, even when an entry is removed and re-added.'
+      },
+      {
+        name: 'e',
+        longName: 'entries',
+        converter: 'firestoreObjectArray({ objectField: firestoreNotificationTaskBotEmbeddedScriptEntry })',
+        tsType: 'NotificationTaskBotEmbeddedScriptEntry[]',
+        optional: false,
+        description: "The bot's script entries."
+      },
+      {
+        name: 'nat',
+        longName: 'nextRunAt',
+        converter: 'optionalFirestoreDate()',
+        tsType: 'Maybe<Date>',
+        optional: true,
+        description: 'The soonest {@link NotificationTaskBotEmbeddedScriptEntry.nat} among entries with a live run. Kept for the repair query and for display.'
+      }
+    ],
+    enums: [],
+    detectionHints: ['m', 'rc', 'e', 'nat'],
+    description: 'A generic per-model bot. Attaches to any model and holds embedded script entries that each run as a series of unique NotificationTasks, fenced by run number.',
+    collectionKind: 'root',
+    compositeKey: {
+      from: '*',
+      encoding: 'two-way'
+    },
+    archetypes: ['composite-key-root', 'embedded-sub-objects']
+  },
+  {
     name: 'NotificationUser',
     identityConst: 'notificationUserIdentity',
     modelType: 'notificationUser',
@@ -1579,7 +1638,7 @@ export const FIREBASE_MODEL_GROUPS: readonly FirebaseModelGroup[] = [
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
     description: 'Abstract class providing access to all notification-related Firestore collections.',
-    modelNames: ['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationSummary', 'NotificationUser', 'NotificationWeek']
+    modelNames: ['Notification', 'NotificationBox', 'NotificationLoggedEventDay', 'NotificationLoggedEventDayPage', 'NotificationLoggedEventDayPagedItems', 'NotificationSummary', 'NotificationTaskBot', 'NotificationUser', 'NotificationWeek']
   },
   {
     name: 'OidcModel',

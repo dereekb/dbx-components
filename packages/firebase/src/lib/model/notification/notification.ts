@@ -10,6 +10,7 @@
  * - {@link NotificationBox} — Root notification container for a model, holds recipients and spawns child notifications (top-level collection)
  * - {@link Notification} — Individual notification or async task, child of NotificationBox (subcollection)
  * - {@link NotificationWeek} — Weekly archive of sent notification items, child of NotificationBox (subcollection)
+ * - {@link NotificationTaskBot} — Generic per-model bot holding script entries that run as NotificationTasks (top-level collection)
  *
  * Server-side processing is handled by the `NotificationServerActions` service in `@dereekb/firebase-server/model`.
  *
@@ -66,6 +67,7 @@ import {
 } from '../../common';
 import { type NotificationHealthCheck, optionalFirestoreNotificationHealthCheck } from './notification.healthcheck';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
+import { type NotificationTaskBotFirestoreCollection, type notificationTaskBotIdentity } from './notification.taskbot';
 
 /**
  * Abstract class providing access to all notification-related Firestore collections.
@@ -89,12 +91,21 @@ export abstract class NotificationFirestoreCollections {
   abstract readonly notificationLoggedEventDayCollectionGroup: NotificationLoggedEventDayFirestoreCollectionGroup;
   abstract readonly notificationLoggedEventDayPagedItemsCollectionFactory: NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory;
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
+  abstract readonly notificationTaskBotCollection: NotificationTaskBotFirestoreCollection;
 }
 
 /**
  * Union of all notification model identity types, used for type-safe identity discrimination.
  */
-export type NotificationTypes = typeof notificationUserIdentity | typeof notificationSummaryIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity | typeof notificationLoggedEventDayIdentity | typeof notificationLoggedEventDayPageIdentity;
+export type NotificationTypes =
+  | typeof notificationUserIdentity
+  | typeof notificationSummaryIdentity
+  | typeof notificationBoxIdentity
+  | typeof notificationIdentity
+  | typeof notificationWeekIdentity
+  | typeof notificationLoggedEventDayIdentity
+  | typeof notificationLoggedEventDayPageIdentity
+  | typeof notificationTaskBotIdentity;
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.

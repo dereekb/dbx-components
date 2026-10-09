@@ -1,5 +1,12 @@
 import { findMaxDate, isSameDate, yearWeekCode } from '@dereekb/date';
 import {
+  type AppNotificationTaskBotScriptConfigServiceRef,
+  type NotificationTaskBotDocument,
+  type RepairAllNotificationTaskBotsResult,
+  type RunNotificationTaskBotEntryParams,
+  type RunNotificationTaskBotEntryResult,
+  type UpdateNotificationTaskBotEntryParams,
+  type UpdateNotificationTaskBotEntryResult,
   type AsyncNotificationSummaryCreateAction,
   type AsyncNotificationUserCreateAction,
   type AsyncNotificationUserUpdateAction,
@@ -149,6 +156,7 @@ import { notificationUserHealthCheckAutofixFactory, notificationUserHealthCheckF
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, notificationMessageFunctionWithUnlistedDeliveryMethodsWarning, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { type NotificationTaskServiceRef, type NotificationTaskServiceTaskHandler } from './notification.task.service';
 import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
+import { type NotificationTaskBotApiServerActionsContext, type RepairAllNotificationTaskBotsParams, repairAllNotificationTaskBotsFactory, runNotificationTaskBotEntryFactory, updateNotificationTaskBotEntryFactory } from './notification.taskbot.action.server';
 
 /**
  * NestJS injection token for the {@link BaseNotificationServerActionsContext}, which provides
@@ -168,7 +176,7 @@ export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFIC
  * Minimal context providing Firebase infrastructure, Firestore notification collections,
  * auth service, and Firestore context needed by all notification server actions.
  */
-export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
+export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference, Partial<AppNotificationTaskBotScriptConfigServiceRef> {}
 
 /**
  * App-level tuning for the NotificationUser delivery health check.
@@ -274,6 +282,9 @@ export abstract class NotificationServerActions {
   abstract sendQueuedNotifications(params: SendQueuedNotificationsParams): Promise<TransformAndValidateFunctionResult<SendQueuedNotificationsParams, (sendQueuedNotificationsInput?: Maybe<SendQueuedNotificationsInput>) => Promise<SendQueuedNotificationsResult>>>;
   abstract cleanupSentNotifications(params: CleanupSentNotificationsParams): Promise<TransformAndValidateFunctionResult<CleanupSentNotificationsParams, () => Promise<CleanupSentNotificationsResult>>>;
   abstract cleanupOldNotificationLoggedEventDays(params: CleanupOldNotificationLoggedEventDaysParams): Promise<TransformAndValidateFunctionResult<CleanupOldNotificationLoggedEventDaysParams, () => Promise<CleanupOldNotificationLoggedEventDaysResult>>>;
+  abstract updateNotificationTaskBotEntry(params: UpdateNotificationTaskBotEntryParams): Promise<TransformAndValidateFunctionResult<UpdateNotificationTaskBotEntryParams, (notificationTaskBotDocument: NotificationTaskBotDocument) => Promise<UpdateNotificationTaskBotEntryResult>>>;
+  abstract runNotificationTaskBotEntry(params: RunNotificationTaskBotEntryParams): Promise<TransformAndValidateFunctionResult<RunNotificationTaskBotEntryParams, (notificationTaskBotDocument: NotificationTaskBotDocument) => Promise<RunNotificationTaskBotEntryResult>>>;
+  abstract repairAllNotificationTaskBots(params?: Maybe<RepairAllNotificationTaskBotsParams>): Promise<RepairAllNotificationTaskBotsResult>;
 }
 
 /**
@@ -291,6 +302,9 @@ export abstract class NotificationServerActions {
  * ```
  */
 export function notificationServerActions(context: NotificationServerActionsContext): NotificationServerActions {
+  const sendNotification = sendNotificationFactory(context);
+  const notificationTaskBotApiContext: NotificationTaskBotApiServerActionsContext = { ...context, sendNotification };
+
   return {
     createNotificationUser: createNotificationUserFactory(context),
     updateNotificationUser: updateNotificationUserFactory(context),
@@ -304,10 +318,13 @@ export function notificationServerActions(context: NotificationServerActionsCont
     createNotificationBox: createNotificationBoxFactory(context),
     updateNotificationBox: updateNotificationBoxFactory(context),
     updateNotificationBoxRecipient: updateNotificationBoxRecipientFactory(context),
-    sendNotification: sendNotificationFactory(context),
+    sendNotification,
     sendQueuedNotifications: sendQueuedNotificationsFactory(context),
     cleanupSentNotifications: cleanupSentNotificationsFactory(context),
-    cleanupOldNotificationLoggedEventDays: cleanupOldNotificationLoggedEventDaysFactory(context)
+    cleanupOldNotificationLoggedEventDays: cleanupOldNotificationLoggedEventDaysFactory(context),
+    updateNotificationTaskBotEntry: updateNotificationTaskBotEntryFactory(notificationTaskBotApiContext),
+    runNotificationTaskBotEntry: runNotificationTaskBotEntryFactory(notificationTaskBotApiContext),
+    repairAllNotificationTaskBots: repairAllNotificationTaskBotsFactory(context)
   };
 }
 

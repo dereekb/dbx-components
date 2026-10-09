@@ -79,3 +79,13 @@ export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_UNAVAILABLE_ERROR_CODE = 'NO
  * {@link NotificationHealthCheckIssueAutofixType.EXPLICIT} without setting `allowExplicitAutofix`.
  */
 export const NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_AUTOFIX_NOT_ALLOWED';
+
+/**
+ * Thrown when a NotificationTaskBot or one of its entries does not exist.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST';
+
+/**
+ * Thrown when a NotificationTaskBot entry is asked to run while it is disabled or paused.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE';
