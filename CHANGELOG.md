@@ -1,3 +1,18 @@
+# [14.16.0](https://github.com/dereekb/dbx-components/compare/v14.15.0-dev...v14.16.0) (2026-10-08)
+
+### Bug Fixes
+
+- **firebase-server:** replace slashes in zip entry names ([72053cf8](https://github.com/dereekb/dbx-components/commit/72053cf8ac7d8a4b8120335bf2518b0559a4a9c9))
+- **firebase,dbx-cli:** forced delivery methods imply the type's methods ([e505ac1b](https://github.com/dereekb/dbx-components/commit/e505ac1bb6e54f0843208e89e93bacba8d2fcc26))
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([787f1a6c](https://github.com/dereekb/dbx-components/commit/787f1a6c3a3913d6899d85f242e6953c32a8ec95))
+
+### Features
+
+- **firebase,dbx-firebase,dbx-cli:** forced delivery methods ([8138b4bb](https://github.com/dereekb/dbx-components/commit/8138b4bb5f295eb57b1390165acf8539a896bba5))
+
 # [14.15.0](https://github.com/dereekb/dbx-components/compare/v14.14.0-dev...v14.15.0) (2026-10-08)
 
 ### Bug Fixes
