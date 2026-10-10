@@ -1617,6 +1617,7 @@ demoApiFunctionContextFactory((f) => {
                               storageFileGroup = await assertSnapshotData(sfg.document);
                               expect(storageFileGroup.zsf).toBe(sf_zip.documentId);
                               expect(storageFileGroup.zat).toBeDefined();
+                              expect(storageFileGroup.f[0].zat).toBeDefined(); // the embedded file was stamped when added to the zip
                             });
                           }
                         );

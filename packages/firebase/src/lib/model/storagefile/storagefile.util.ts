@@ -60,16 +60,23 @@ export function loadStorageFileGroupDocumentForReferencePair(input: StorageFileG
 
 /**
  * Input for {@link calculateStorageFileGroupEmbeddedFileUpdate}, specifying the current group state
- * and files to insert/remove.
+ * and files to insert/update/remove.
  */
 export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
   readonly storageFileGroup: Pick<StorageFileGroup, 'f' | 're' | 'z' | 'zat'>;
   readonly insert?: Maybe<(Pick<StorageFileGroupEmbeddedFile, 's'> & Partial<Omit<StorageFileGroupEmbeddedFile, 's'>>)[]>;
+  /**
+   * Display name updates for files already in the group. Files not in the group are ignored.
+   *
+   * An undefined `n` keeps the current name, null clears it. Only `n` is copied.
+   */
+  readonly update?: Maybe<(Pick<StorageFileGroupEmbeddedFile, 's'> & Partial<Pick<StorageFileGroupEmbeddedFile, 'n'>>)[]>;
   readonly remove?: Maybe<StorageFileId[]>;
   /**
    * Whether or not to allow recalculating the regenerate flag even if the current "re" value is true.
    *
-   * Regenerate will always be true if any files are removed.
+   * Removals and display name changes always flag regeneration. Otherwise, when true, an existing `re` is replaced by
+   * the value derived from the embedded files, which drops any pending manual request.
    *
    * Defaults to false.
    */
@@ -78,13 +85,13 @@ export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
 
 /**
  * Calculates the updated embedded file list and regeneration flag for a StorageFileGroup
- * after inserting and/or removing files.
+ * after inserting, updating and/or removing files.
  *
  * Handles deduplication via {@link ModelRelationUtility.insertCollection}, merging new entries
- * with existing ones by StorageFile ID. Automatically flags regeneration when files are removed
- * or when new files haven't been added to the zip yet.
+ * with existing ones by StorageFile ID. Always flags regeneration when files are removed or when the display
+ * name of a file already in the group changes, and otherwise flags it when new files haven't been added to the zip yet.
  *
- * @param input - Current group state, files to insert/remove, and regeneration options.
+ * @param input - Current group state, files to insert/update/remove, and regeneration options.
  * @returns Updated `f` (embedded files) and `re` (regeneration flag)
  *
  * @example
@@ -92,14 +99,15 @@ export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
  * const update = calculateStorageFileGroupEmbeddedFileUpdate({
  *   storageFileGroup: group,
  *   insert: [{ s: 'newFileId' }],
+ *   update: [{ s: 'existingFileId', n: 'New Name' }],
  *   remove: ['oldFileId']
  * });
  * // update.f = [...updated file list]
- * // update.re = true (because a file was removed)
+ * // update.re = true (because a file was removed and a display name changed)
  * ```
  */
 export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStorageFileGroupEmbeddedFileUpdateInput): Pick<StorageFileGroup, 'f' | 're'> {
-  const { storageFileGroup, insert, remove, allowRecalculateRegenerateFlag } = input;
+  const { storageFileGroup, insert, update, remove, allowRecalculateRegenerateFlag } = input;
   const { f: currentF, re: currentRe, z: currentZ, zat: currentZat } = storageFileGroup;
 
   const removeSet = new Set(remove);
@@ -107,15 +115,25 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
   const fWithRemovedTargetsRemoved = currentF.filter((x) => !removeSet.has(x.s));
   const oneOrMoreItemsWereRemoved = fWithRemovedTargetsRemoved.length < currentF.length;
 
-  const f = ModelRelationUtility.insertCollection(fWithRemovedTargetsRemoved, (insert ?? []) as StorageFileGroupEmbeddedFile[], {
+  const fWithInsertedTargets = ModelRelationUtility.insertCollection(fWithRemovedTargetsRemoved, (insert ?? []) as StorageFileGroupEmbeddedFile[], {
     readKey: (x) => x.s,
     merge: (a, b) => mergeFunction([a, b]) as StorageFileGroupEmbeddedFile
   });
 
-  let re = currentRe ?? oneOrMoreItemsWereRemoved; // flag removed if any items were removed
+  // only the display name of entries already in the group can be updated
+  const f = ModelRelationUtility.updateCollection(fWithInsertedTargets, (update ?? []) as StorageFileGroupEmbeddedFile[], {
+    readKey: (x) => x.s,
+    merge: (existing, x) => ({ ...existing, n: x.n === undefined ? existing.n : x.n })
+  });
 
-  // recalculate re if it is false or the retain flag is false
-  if (!re || allowRecalculateRegenerateFlag) {
+  // a changed display name changes the zip's content
+  const previousDisplayNames = new Map(fWithRemovedTargetsRemoved.map((x) => [x.s, x.n ?? undefined]));
+  const oneOrMoreDisplayNamesChanged = f.some((x) => previousDisplayNames.has(x.s) && previousDisplayNames.get(x.s) !== (x.n ?? undefined));
+
+  let re = oneOrMoreItemsWereRemoved || oneOrMoreDisplayNamesChanged || (Boolean(currentRe) && !allowRecalculateRegenerateFlag);
+
+  if (!re) {
+    // derived from the embedded files. The projection deliberately leaves out re, since this decides whether to set it.
     const { flagRegenerate } = calculateStorageFileGroupRegeneration({ storageFileGroup: { f, z: currentZ, zat: currentZat } });
     re = flagRegenerate;
   }
@@ -130,7 +148,13 @@ export function calculateStorageFileGroupEmbeddedFileUpdate(input: CalculateStor
  * Input for {@link calculateStorageFileGroupRegeneration}.
  */
 export interface CalculateStorageFileGroupRegenerationInput {
-  readonly storageFileGroup: Pick<StorageFileGroup, 'f' | 'z' | 'zat'>;
+  /**
+   * The group's current state.
+   *
+   * When `re` is set the regeneration was explicitly requested and is honored. Callers deciding whether to SET `re`
+   * (e.g. {@link calculateStorageFileGroupEmbeddedFileUpdate}) must leave it out.
+   */
+  readonly storageFileGroup: Pick<StorageFileGroup, 'f' | 'z' | 'zat' | 'zsf' | 're'>;
   /**
    * If true, will force regenerating applicable derived files, even if all content is up to date.
    */
@@ -153,8 +177,9 @@ export interface CalculateStorageFileGroupRegenerationResult {
  *
  * The zip needs regeneration when:
  * - `force` is true
- * - The zip has never been generated (`zat` is unset) and files exist
+ * - `re` is set (regeneration was requested) and files exist or a zip already exists. Rebuilding an existing zip with no files removes the files that were previously in it.
  * - Any embedded file has never been included in the zip (`zat` is unset on the entry)
+ * - The zip has never been generated (`zat` is unset) and files exist
  *
  * @param input - Group state and optional force flag.
  * @returns The regeneration result indicating whether the zip or other derived files need to be regenerated.
@@ -169,7 +194,7 @@ export interface CalculateStorageFileGroupRegenerationResult {
  */
 export function calculateStorageFileGroupRegeneration(input: CalculateStorageFileGroupRegenerationInput): CalculateStorageFileGroupRegenerationResult {
   const { storageFileGroup, force } = input;
-  const { f, z, zat } = storageFileGroup;
+  const { f, z, zat, zsf, re } = storageFileGroup;
 
   let regenerateZip: Maybe<boolean> = undefined;
 
@@ -177,6 +202,9 @@ export function calculateStorageFileGroupRegeneration(input: CalculateStorageFil
   if (z) {
     if (force) {
       regenerateZip = true;
+    } else if (re) {
+      // requested (file removed, display name changed, manual/code-change rebuild). Rebuild when there is anything to zip, or a zip that may still contain removed files.
+      regenerateZip = f.length > 0 || zsf != null || zat != null;
     } else if (zat) {
       // check that each of the entries have a zat value. If not set, then they've never been added to the archive
       regenerateZip = f.some((x) => !x.zat);
@@ -185,10 +213,10 @@ export function calculateStorageFileGroupRegeneration(input: CalculateStorageFil
     }
   }
 
-  const re = regenerateZip ?? false;
+  const flagRegenerate = regenerateZip ?? false;
 
   return {
-    flagRegenerate: re,
+    flagRegenerate,
     regenerateZip
   };
 }

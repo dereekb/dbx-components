@@ -585,6 +585,9 @@ export interface StorageFileGroupEmbeddedFile {
   /**
    * The first time the StorageFile's file was added to the zip, if applicable.
    *
+   * Set by the zip processing subtask the first time the file is appended to the zip; later rebuilds keep the original value.
+   * While unset, the file is treated as missing from the zip and the next regeneration rebuilds it.
+   *
    * @dbxModelVariable zippedAt
    */
   zat?: Maybe<Date>;
@@ -659,6 +662,11 @@ export interface StorageFileGroup extends InitializedStorageFileModel {
   zat?: Maybe<Date>;
   /**
    * True if this StorageFileGroup should flag regeneration of output StorageFiles/content.
+   *
+   * While set, the next regeneration (`regenerateStorageFileGroupContent` / `regenerateAllFlaggedStorageFileGroupsContent`) always
+   * rebuilds the zip, even if every embedded file has already been zipped. It is set automatically when files are added, removed,
+   * or have their group display name changed. Set it yourself after any other change that affects the derived content, such as
+   * renaming a StorageFile, changing the zip display-name factory's inputs, or changing zip configuration.
    *
    * @dbxModelVariable shouldRegenerate
    */
