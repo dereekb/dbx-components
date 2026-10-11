@@ -2,7 +2,7 @@
   "version": 1,
   "kind": "dbx-components",
   "project": "dbx-components",
-  "capabilities": ["audit", "dbx-components"],
+  "capabilities": ["audit", "dbx-components", "circleci"],
   "commit": {
     "autoCommit": {
       "enabled": true,
@@ -17,6 +17,19 @@
   },
   "capabilityConfig": {
     "block-nx-build": { "options": { "enabled": true } },
+    "circleci": {
+      "options": {
+        "projectSlug": "gh/dereekb/dbx-components",
+        "defaultBranch": "develop",
+        "triggers": {
+          "release": { "branch": "release", "description": "build + test, then run-release-and-push-to-main" },
+          "release-only": { "branch": "release", "parameters": { "run_build": false }, "description": "skip build/test; rerun only run-release-and-push-to-main" },
+          "main": { "branch": "main", "description": "main pipeline; publish + deploy workflows wait on approval" }
+        },
+        "approvals": ["hold-publish-npm", "hold-deploy-to-firebase"],
+        "rerunBranches": ["develop", "release", "main"]
+      }
+    },
     "docker": {
       "options": {
         "serve": {
