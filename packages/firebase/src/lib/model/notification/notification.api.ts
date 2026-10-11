@@ -14,7 +14,7 @@ import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, 
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
-import { type NotificationBoxId, type NotificationSummaryId, type NotificationTaskBotEntryId, type NotificationTaskKey, type NotificationTemplateType } from './notification.id';
+import { NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH, NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX, type NotificationBoxId, type NotificationSummaryId, type NotificationTaskBotEntryId, type NotificationTaskKey, type NotificationTemplateType } from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
@@ -655,8 +655,10 @@ export interface CleanupOldNotificationLoggedEventDaysResult {
 // MARK: NotificationTaskBot
 /**
  * arktype validator for a {@link NotificationTaskBotEntryId}.
+ *
+ * Built from {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX} and {@link NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH}, the same rules `isNotificationTaskBotEntryId()` checks.
  */
-export const notificationTaskBotEntryIdType = /* @__PURE__ */ type('/^[a-z0-9-]{1,40}$/');
+export const notificationTaskBotEntryIdType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX).atMostLength(NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH);
 
 /**
  * Base params targeting a single entry on a {@link NotificationTaskBot}.

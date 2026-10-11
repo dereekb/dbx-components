@@ -57,7 +57,7 @@ export const notificationTaskBotIdentity = firestoreModelIdentity('notificationT
  * ```
  */
 export function notificationTaskBotKeyForModel(model: ReadFirestoreModelKeyInput): NotificationTaskBotKey {
-  return firestoreModelKey(notificationTaskBotIdentity, notificationTaskBotIdForModel(readFirestoreModelKey(model) as FirestoreModelKey));
+  return firestoreModelKey(notificationTaskBotIdentity, notificationTaskBotIdForModel(readFirestoreModelKey(model, true)));
 }
 
 // MARK: Types

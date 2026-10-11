@@ -13,12 +13,15 @@ import {
   type NotificationTaskBot,
   type NotificationTaskBotChange,
   type NotificationTaskBotDocument,
+  notificationTaskBotEntry,
   type NotificationTaskBotEntryData,
   type NotificationTaskBotEntryDataUpdate,
   type NotificationTaskBotEntryId,
   type NotificationTaskBotEnsureSchedule,
   type NotificationTaskBotEntryState,
   type NotificationTaskBotRepairChange,
+  type NotificationTaskBotRunNotificationTaskData,
+  type NotificationTaskBotRunNumber,
   NotificationTaskBotRunTrigger,
   type NotificationTaskBotScriptType,
   NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL,
@@ -30,18 +33,16 @@ import {
   type RunNotificationTaskBotEntryParams,
   type RunNotificationTaskBotEntryResult,
   runNotificationTaskBotEntryParamsType,
-  type SendNotificationParams,
   type SendNotificationResult,
   type Transaction,
   type UpdateNotificationTaskBotEntryParams,
   type UpdateNotificationTaskBotEntryResult,
   updateNotificationTaskBotEntryParamsType,
-  type NotificationDocument,
   firestoreDummyKey
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
+import { addMilliseconds, filterMaybeArrayValues, type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
+import { type NotificationServerActions } from './notification.action.server';
 import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotRunnableError } from './notification.error';
 
 /**
@@ -333,17 +334,10 @@ export function deleteNotificationTaskBotFactory(context: NotificationTaskBotSer
     firestoreContext.runTransaction(async (transaction) => {
       const botDocument = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationTaskBotIdForModel(input.model));
       const bot = await getDocumentSnapshotData(botDocument);
-      const deletedTaskKeys: NotificationTaskKey[] = [];
+      const deletedTaskKeys: NotificationTaskKey[] = filterMaybeArrayValues(bot?.e.map((x) => x.nk) ?? []);
 
       if (bot) {
         const notificationAccessor = notificationCollectionGroup.documentAccessorForTransaction(transaction);
-
-        bot.e.forEach((x) => {
-          if (x.nk) {
-            deletedTaskKeys.push(x.nk);
-          }
-        });
-
         await Promise.all(deletedTaskKeys.map((key) => notificationAccessor.loadDocumentForKey(key).accessor.delete()));
         await botDocument.accessor.delete();
       }
@@ -354,9 +348,9 @@ export function deleteNotificationTaskBotFactory(context: NotificationTaskBotSer
 
 // MARK: API Actions
 /**
- * Function that sends/runs a notification. Matches `NotificationServerActions.sendNotification`.
+ * Function that sends/runs a notification. Same as `NotificationServerActions.sendNotification`.
  */
-export type NotificationTaskBotSendNotificationFunction = (params: SendNotificationParams) => Promise<TransformAndValidateFunctionResult<SendNotificationParams, (notificationDocument: NotificationDocument) => Promise<SendNotificationResult>>>;
+export type NotificationTaskBotSendNotificationFunction = NotificationServerActions['sendNotification'];
 
 /**
  * Context for the NotificationTaskBot API actions.
@@ -415,9 +409,8 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
       const result = await firestoreContext.runTransaction(async (transaction) => {
         const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
         const bot = await getDocumentSnapshotData(botDocumentInTransaction);
-        const entryExists = bot?.e.some((x) => x.i === entryId);
 
-        if (!bot || !entryExists) {
+        if (!bot || !notificationTaskBotEntry(bot, entryId)) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
         }
 
@@ -455,7 +448,7 @@ export function runNotificationTaskBotEntryFactory(context: NotificationTaskBotA
       const result = await firestoreContext.runTransaction(async (transaction) => {
         const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
         const bot = await getDocumentSnapshotData(botDocumentInTransaction);
-        const entry = bot?.e.find((x) => x.i === entryId);
+        const entry = notificationTaskBotEntry(bot, entryId);
 
         if (!bot || !entry) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
@@ -511,7 +504,7 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
 
   return async (params?: Maybe<RepairAllNotificationTaskBotsParams>): Promise<RepairAllNotificationTaskBotsResult> => {
     const now = params?.now ?? new Date();
-    const overdueBefore = new Date(now.getTime() - (params?.overdueThreshold ?? DEFAULT_NOTIFICATION_TASK_BOT_REPAIR_OVERDUE_THRESHOLD));
+    const overdueBefore = addMilliseconds(now, -(params?.overdueThreshold ?? DEFAULT_NOTIFICATION_TASK_BOT_REPAIR_OVERDUE_THRESHOLD));
 
     let entriesSynced = 0;
     let entriesRepaired = 0;
@@ -553,9 +546,9 @@ export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBo
               return {
                 type: 'repair',
                 entryId: entry.i,
-                runNumber: entry.rn as number,
+                runNumber: entry.rn as NotificationTaskBotRunNumber,
                 pendingTaskSendAt,
-                trigger: (task?.n.d as Maybe<{ tr?: NotificationTaskBotRunTrigger }>)?.tr,
+                trigger: (task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.tr,
                 maxConsecutiveFailures: scriptConfig.maxConsecutiveFailures,
                 historyLimit: scriptConfig.historyLimit
               };

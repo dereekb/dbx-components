@@ -1,5 +1,6 @@
 import { createNotificationDocument, type NotificationTaskBotRunNotificationTaskData } from '@dereekb/firebase';
 import { type NotificationTaskBotScriptProcessorConfig, type NotificationTaskServiceTaskHandlerConfig, notificationTaskBotDelayUntilDue, notificationTaskBotRunNotificationTaskHandler, runNotificationTaskBotEntryTransaction } from '@dereekb/firebase-server/model';
+import { addMilliseconds } from '@dereekb/util';
 import { DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL, DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, type DemoPingNotificationTaskBotEntryData, exampleNotificationTemplate } from 'demo-firebase';
 import { type DemoFirebaseServerActionsContext } from '../../../../firebase/action.context';
 
@@ -33,7 +34,7 @@ export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerAct
         subtask: DEMO_PING_NOTIFICATION_TASK_BOT_WAIT_SUBTASK,
         fn: async (input) => {
           const { lsat, d } = input.entry;
-          const due = lsat ? new Date(lsat.getTime() + (d?.iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL)) : undefined;
+          const due = addMilliseconds(lsat, d?.iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL);
           return (await notificationTaskBotDelayUntilDue(input, due)) ?? { completion: DEMO_PING_NOTIFICATION_TASK_BOT_WAIT_SUBTASK };
         }
       },
@@ -57,7 +58,7 @@ export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerAct
     cleanup: (input) => {
       const { c, iv, pa } = input.entry.d ?? {};
 
-      return pa != null && (c ?? 0) >= pa ? { pause: { reason: DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT } } : { nextRunAt: new Date(Date.now() + (iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL)) };
+      return pa != null && (c ?? 0) >= pa ? { pause: { reason: DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT } } : { nextRunAt: addMilliseconds(new Date(), iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL) };
     }
   };
 }

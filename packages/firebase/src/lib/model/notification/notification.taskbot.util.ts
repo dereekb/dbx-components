@@ -7,7 +7,8 @@
  * applies one or more changes, creates the requested run tasks, deletes the superseded ones, and writes the bot back.
  * Keeping the transitions pure keeps the fence, the run counter and the `nat` bookkeeping in one testable place.
  */
-import { type Maybe, type Milliseconds, takeLast } from '@dereekb/util';
+import { addMilliseconds, type ClearableObjectUpdate, type Maybe, mergeClearableObjectUpdate, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
+import { earliestDate, isSameDate, latestDate } from '@dereekb/date';
 import { type FirestoreModelKey } from '../../common';
 import { type NotificationTaskBotEntryId, type NotificationTaskBotRunNumber, type NotificationTaskKey, isNotificationTaskBotEntryId, notificationTaskBotIdForModel } from './notification.id';
 import {
@@ -77,48 +78,24 @@ export function isNotificationTaskBotEntryRunnable(entry: Pick<NotificationTaskB
  * @returns The soonest next run date, or undefined when no entry has a live run.
  */
 export function notificationTaskBotNextRunAt(entries: Pick<NotificationTaskBotEmbeddedScriptEntry, 'rn' | 'nat'>[]): Maybe<Date> {
-  let next: Maybe<Date>;
-
-  entries.forEach((x) => {
-    if (x.rn != null && x.nat != null && (next == null || x.nat.getTime() < next.getTime())) {
-      next = x.nat;
-    }
-  });
-
-  return next;
+  return earliestDate(entries.map((x) => (x.rn == null ? undefined : x.nat)));
 }
 
 /**
- * Merges a data update into an entry's data. A `null` value deletes the key; `undefined` values are ignored.
+ * Merges a data update into an entry's data using {@link mergeClearableObjectUpdate}. A `null` value deletes the key; `undefined` values are ignored.
  *
  * @param current - The current data.
  * @param update - The update to merge in.
- * @returns The merged data, or undefined when no keys remain.
+ * @returns The merged data, or undefined when no keys remain. The current data is returned as-is when there is no update.
  */
 export function mergeNotificationTaskBotEntryData<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData>(current: Maybe<D>, update: Maybe<NotificationTaskBotEntryDataUpdate<D>>): Maybe<D> {
-  let result: Maybe<D> = current;
-
-  if (update != null) {
-    const merged: Record<string, unknown> = { ...current };
-
-    Object.entries(update).forEach(([key, value]) => {
-      if (value === null) {
-        delete merged[key];
-      } else if (value !== undefined) {
-        merged[key] = value;
-      }
-    });
-
-    result = Object.keys(merged).length > 0 ? (merged as D) : undefined;
-  }
-
-  return result;
+  return update == null ? current : (stripObject(mergeClearableObjectUpdate<D>(current, update), false) as Maybe<D>);
 }
 
 /**
  * An update to an entry's data. A `null` value deletes the key.
  */
-export type NotificationTaskBotEntryDataUpdate<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> = { readonly [K in keyof D]?: Maybe<D[K]> };
+export type NotificationTaskBotEntryDataUpdate<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> = ClearableObjectUpdate<D>;
 
 /**
  * Appends a history item, keeping at most `limit` items (oldest are dropped).
@@ -617,8 +594,8 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
           const requestedAt = change.nextRunAtExplicit ?? change.nextRunAt;
 
           if (requestedAt != null && isNotificationTaskBotEntryRunnable(x)) {
-            const minimumAt = change.minimumRunInterval ? now.getTime() + change.minimumRunInterval : now.getTime();
-            const sendAt = new Date(Math.max(requestedAt.getTime(), minimumAt));
+            // never sooner than now plus the minimum run interval
+            const sendAt = latestDate([requestedAt, addMilliseconds(now, change.minimumRunInterval)], requestedAt);
             issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, sendAt, change.nextRunAtExplicit != null);
           }
 
@@ -640,7 +617,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
       case 'syncNat':
         if (x.rn !== change.runNumber) {
           fenced = true;
-        } else if (x.nat?.getTime() !== change.nat.getTime()) {
+        } else if (!isSameDate(x.nat, change.nat)) {
           x.nat = change.nat;
           changed = true;
         }
@@ -663,11 +640,9 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
           }
 
           changed = true;
-        } else {
-          if (x.nat?.getTime() !== change.pendingTaskSendAt.getTime()) {
-            x.nat = change.pendingTaskSendAt;
-            changed = true;
-          }
+        } else if (!isSameDate(x.nat, change.pendingTaskSendAt)) {
+          x.nat = change.pendingTaskSendAt;
+          changed = true;
         }
         break;
     }
