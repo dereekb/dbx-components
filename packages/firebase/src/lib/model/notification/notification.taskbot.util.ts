@@ -7,8 +7,9 @@
  * applies one or more changes, creates the requested run tasks, deletes the superseded ones, and writes the bot back.
  * Keeping the transitions pure keeps the fence, the run counter and the `nat` bookkeeping in one testable place.
  */
-import { addMilliseconds, type ClearableObjectUpdate, type Maybe, mergeClearableObjectUpdate, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
+import { addMilliseconds, type Maybe, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
 import { earliestDate, isSameDate, latestDate } from '@dereekb/date';
+import { type ClearableObjectUpdate, mergeClearableObjectUpdate } from '@dereekb/model';
 import { type FirestoreModelKey } from '../../common';
 import { type NotificationTaskBotEntryId, type NotificationTaskBotRunNumber, type NotificationTaskKey, isNotificationTaskBotEntryId, notificationTaskBotIdForModel } from './notification.id';
 import {

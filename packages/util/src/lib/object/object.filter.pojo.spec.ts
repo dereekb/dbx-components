@@ -1,22 +1,6 @@
 import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import {
-  filterFromPOJO,
-  allNonUndefinedKeys,
-  allMaybeSoKeys,
-  countPOJOKeys,
-  countPOJOKeysFunction,
-  findPOJOKeys,
-  overrideInObject,
-  assignValuesToPOJOFunction,
-  filterKeysOnPOJOFunction,
-  mergeClearableObjectUpdate,
-  mergeObjectsFunction,
-  valuesFromPOJO,
-  valuesFromPOJOFunction,
-  stripObject,
-  stripObjectFunction
-} from './object.filter.pojo';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, countPOJOKeysFunction, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction, mergeObjectsFunction, valuesFromPOJO, valuesFromPOJOFunction, stripObject, stripObjectFunction } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -145,49 +129,6 @@ describe('mergeObjects', () => {
     expect(result['1']).toBe(true);
     expect(result[2]).toBeDefined();
     expect(result[2]).toBe(2);
-  });
-});
-
-describe('mergeClearableObjectUpdate()', () => {
-  it('should set the update values', () => {
-    const result = mergeClearableObjectUpdate<{ a: number; b: number }>({ a: 1 }, { b: 2 });
-    expect(result).toEqual({ a: 1, b: 2 });
-  });
-
-  it('should delete keys set to null', () => {
-    const result = mergeClearableObjectUpdate<{ a: number; b: number }>({ a: 1, b: 2 }, { b: null });
-    expect(result).toEqual({ a: 1 });
-    expect(objectHasKey(result, 'b')).toBe(false);
-  });
-
-  it('should leave keys set to undefined unchanged', () => {
-    const result = mergeClearableObjectUpdate<{ a: number; b: number }>({ a: 1, b: 2 }, { a: undefined, b: 3 });
-    expect(result).toEqual({ a: 1, b: 3 });
-  });
-
-  it('should treat a null or undefined current object as empty', () => {
-    expect(mergeClearableObjectUpdate<{ a: number; b: number }>(undefined, { a: 1, b: null })).toEqual({ a: 1 });
-    expect(mergeClearableObjectUpdate<{ a: number; b: number }>(null, { a: 1 })).toEqual({ a: 1 });
-  });
-
-  it('should return a copy of the current values when there is no update', () => {
-    const current = { a: 1 };
-    const result = mergeClearableObjectUpdate(current, null);
-    expect(result).toEqual({ a: 1 });
-    expect(result).not.toBe(current);
-  });
-
-  it('should return an empty object when every key is cleared', () => {
-    const result = mergeClearableObjectUpdate<{ a: number }>({ a: 1 }, { a: null });
-    expect(result).toEqual({});
-  });
-
-  it('should not modify the inputs', () => {
-    const current = { a: 1, b: 2 };
-    const update = { b: null, c: 3 };
-    mergeClearableObjectUpdate<{ a: number; b: number; c: number }>(current, update);
-    expect(current).toEqual({ a: 1, b: 2 });
-    expect(update).toEqual({ b: null, c: 3 });
   });
 });
 

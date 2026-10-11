@@ -277,38 +277,6 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
   return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
 }
 
-/**
- * An update to an object's values where every key is optional.
- *
- * A `null` value clears the key, and an `undefined` value leaves it unchanged. Apply it with {@link mergeClearableObjectUpdate}.
- */
-export type ClearableObjectUpdate<T extends object> = { readonly [K in keyof T]?: Maybe<T[K]> };
-
-/**
- * Merges a {@link ClearableObjectUpdate} into the current object and returns the result as a new object.
- *
- * A `null` value in the update deletes the key, and an `undefined` value leaves the current value unchanged.
- * `null` and `undefined` values already on the current object are dropped too, so the result only holds set values.
- *
- * @param current - The current object. Null/undefined is treated as an empty object.
- * @param update - The update to merge in. Null/undefined returns a copy of the current values.
- * @returns A new object with the update applied. Neither input is modified.
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilTags object, merge, update, patch, clear, clearable, null, delete
- * @dbxUtilRelated merge-objects, strip-object
- *
- * @example
- * ```ts
- * mergeClearableObjectUpdate({ a: 1, b: 2 }, { b: null, c: 3, d: undefined });
- * // { a: 1, c: 3 }
- * ```
- */
-export function mergeClearableObjectUpdate<T extends object>(current: Maybe<Partial<T>>, update: Maybe<ClearableObjectUpdate<T>>): Partial<T> {
-  return filterNullAndUndefinedValues(mergeObjects<T>([current, update as Maybe<Partial<T>>]));
-}
-
 // MARK: POJO
 /**
  * Returns a copy of the input object with all `undefined` values removed.

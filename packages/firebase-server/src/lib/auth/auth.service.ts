@@ -24,7 +24,6 @@ import {
   type AuthRoleSet,
   cachedGetter,
   filterNullAndUndefinedValues,
-  mergeClearableObjectUpdate,
   type ArrayOrValue,
   type AuthRole,
   forEachKeyValue,
@@ -41,6 +40,7 @@ import {
   type PasswordString,
   isThrottled
 } from '@dereekb/util';
+import { mergeClearableObjectUpdate } from '@dereekb/model';
 import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
 import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, minutesToMs, toISODateString } from '@dereekb/date';
