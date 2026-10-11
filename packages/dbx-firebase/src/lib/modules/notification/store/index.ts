@@ -22,3 +22,4 @@ export * from './notificationuser.document.store';
 export * from './notificationuser.healthcheck.store';
 export * from './notification.box.context';
 export * from './notificationuser.settings.store';
+export * from './notificationtaskbot.settings.store';

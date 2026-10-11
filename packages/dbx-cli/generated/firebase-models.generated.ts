@@ -596,6 +596,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         description: 'Model key of the model this bot is attached to.'
       },
       {
+        name: 'o',
+        longName: 'ownerKey',
+        converter: 'optionalFirestoreString()',
+        tsType: 'Maybe<FirebaseAuthOwnershipKey>',
+        optional: true,
+        description: "Ownership key of the bot's owner: the same key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)."
+      },
+      {
         name: 'rc',
         longName: 'runCounter',
         converter: 'firestoreNumber({ default: 0 })',

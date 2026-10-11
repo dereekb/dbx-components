@@ -487,7 +487,8 @@ describe('firestore.rules', () => {
 
       beforeEach(async () => {
         await f.withSecurityRulesDisabled(async (firestore) => {
-          await setDoc(doc(firestore, 'ntb', BOT_ID), { cat: new Date(), m: 'pr/rulestestprofile', rc: 0, e: [] });
+          // owned by OWNER_UID: the owner manages opt-outs through the read:optOuts API and still can't read the bot directly
+          await setDoc(doc(firestore, 'ntb', BOT_ID), { cat: new Date(), m: 'pr/rulestestprofile', o: `pr/${OWNER_UID}`, rc: 0, e: [] });
         });
       });
 
@@ -499,7 +500,7 @@ describe('firestore.rules', () => {
         await assertSucceeds(getDocs(collection(f.firestoreForUser(ADMIN_UID, ADMIN_TOKEN), 'ntb')));
       });
 
-      it('should deny a non-admin read', async () => {
+      it("should deny a non-admin read, even by the bot's owner", async () => {
         await assertFails(getDoc(doc(f.firestoreForUser(OWNER_UID), 'ntb', BOT_ID)));
       });
 

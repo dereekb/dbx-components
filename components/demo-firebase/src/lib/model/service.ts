@@ -433,7 +433,20 @@ export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebas
  */
 export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationTaskBot, NotificationTaskBotDocument>, context: DemoFirebaseContext, _model: NotificationTaskBotDocument): PromiseOrValue<GrantedRoleMap<NotificationTaskBotRoles>> {
-    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+    // The bot's owner (`o`, the same key its profile's NotificationBox uses) gets ONLY `optOut`, never `read`: they
+    // manage their opt-outs through `read:optOuts` / `update:optOut` and never see the bot document itself.
+    //
+    // `optOut` must be granted explicitly; the opt-out update refuses full access, since an admin can't undo an owner's
+    // opt-out. An admin who owns the bot still gets it merged in, or they couldn't manage their own bot.
+    const uid = context.auth?.uid;
+    const ownerKey = uid == null ? undefined : firestoreModelKey(profileIdentity, uid);
+    const isOwner = ownerKey != null && output.data?.o === ownerKey;
+
+    return grantModelRolesIfAdmin(
+      context,
+      () => (isOwner ? ({ ...fullAccessRoleMap(), optOut: true } as GrantedRoleMap<NotificationTaskBotRoles>) : fullAccessRoleMap<NotificationTaskBotRoles>()),
+      () => grantedRoleKeysMapFromArray<NotificationTaskBotRoles>(isOwner ? ['optOut'] : [])
+    );
   },
   getFirestoreCollection: (c) => c.app.notificationTaskBotCollection
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type NotificationTaskBot, NotificationTaskBotEntryState, NotificationTaskBotEntryStatus, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { type Maybe } from '@dereekb/util';
+import { type NotificationTaskBot, type NotificationTaskBotEmbeddedScriptEntry, NotificationTaskBotEntryState, NotificationTaskBotEntryStatus, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
 import { appendNotificationTaskBotEntryHistoryItem, applyNotificationTaskBotChange, applyNotificationTaskBotChanges, type NotificationTaskBotChange, mergeNotificationTaskBotEntryData, notificationTaskBotEntry, notificationTaskBotEntryStatus, notificationTaskBotNextRunAt } from './notification.taskbot.util';
 
 const model = 'profile/abc';
@@ -328,5 +329,271 @@ describe('utilities', () => {
   it('appendNotificationTaskBotEntryHistoryItem() should keep the newest items', () => {
     const item = (rn: number) => ({ at: now, rn, tr: NotificationTaskBotRunTrigger.SCHEDULED, o: NotificationTaskBotRunOutcome.COMPLETED });
     expect(appendNotificationTaskBotEntryHistoryItem([item(1), item(2)], item(3), 2).map((x) => x.rn)).toEqual([2, 3]);
+  });
+});
+
+describe('owner opt-outs', () => {
+  const group = 'reminders';
+  const optOutGroupKeyForScriptType = (t: string) => (t === 'optional' || t === 'optional_b' ? group : undefined);
+
+  function deepFreeze<T>(value: T): T {
+    if (value != null && typeof value === 'object' && !(value instanceof Date)) {
+      Object.values(value).forEach(deepFreeze);
+      Object.freeze(value);
+    }
+
+    return value;
+  }
+
+  function applyWith(bot: Maybe<NotificationTaskBot>, change: NotificationTaskBotChange, at = now) {
+    return applyNotificationTaskBotChange({ bot, model, change, now: at, optOutGroupKeyForScriptType });
+  }
+
+  function applyAllWith(bot: Maybe<NotificationTaskBot>, changes: NotificationTaskBotChange[], at = now) {
+    return applyNotificationTaskBotChanges({ bot, model, changes, now: at, optOutGroupKeyForScriptType });
+  }
+
+  /**
+   * A bot with an opt-out-able entry (`a`), a second opt-out-able entry in the same group (`b`) and a required entry in
+   * the same topic (`r`), each with a live run.
+   */
+  function groupBot() {
+    return applyAllWith(undefined, [
+      { type: 'ensure', entryId: 'a', scriptType: 'optional' },
+      { type: 'ensure', entryId: 'b', scriptType: 'optional_b' },
+      { type: 'ensure', entryId: 'r', scriptType: 'required' }
+    ]).bot as NotificationTaskBot;
+  }
+
+  function optedOutBot() {
+    return applyWith(groupBot(), { type: 'optOut', group, optOut: true }, later).bot as NotificationTaskBot;
+  }
+
+  function expectInvariant(bot: Maybe<NotificationTaskBot>) {
+    bot?.e.forEach((x) => {
+      if (x.oat != null) {
+        expect(x.rn ?? null).toBeNull();
+        expect(x.nk ?? null).toBeNull();
+      }
+    });
+  }
+
+  describe('optOut', () => {
+    it("should set oat on the group's opt-out-able entries and cancel their runs", () => {
+      const bot = deepFreeze(groupBot());
+      const result = applyWith(bot, { type: 'optOut', group, optOut: true }, later);
+
+      expect(result.changed).toBe(true);
+      expect(notificationTaskBotEntry(result.bot, 'a')?.oat).toEqual(later);
+      expect(notificationTaskBotEntry(result.bot, 'b')?.oat).toEqual(later);
+      expect(notificationTaskBotEntry(result.bot, 'a')?.rn).toBeNull();
+      expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_a_r1', 'nb/profile_abc/nbn/profile_abc_b_r2']);
+      expect(result.createRuns).toHaveLength(0);
+      expectInvariant(result.bot);
+    });
+
+    it('should leave the required entry in the same topic untouched', () => {
+      const bot = groupBot();
+      const result = applyWith(bot, { type: 'optOut', group, optOut: true }, later);
+      const required = notificationTaskBotEntry(result.bot, 'r');
+
+      expect(required).toBe(notificationTaskBotEntry(bot, 'r'));
+      expect(required?.oat).toBeUndefined();
+      expect(required?.rn).toBe(3);
+      expect(result.bot?.nat).toEqual(now);
+    });
+
+    it('should report a bot-level result', () => {
+      const result = applyWith(groupBot(), { type: 'optOut', group, optOut: true });
+
+      expect(result.entry).toBeUndefined();
+      expect(result.unknownEntry).toBe(false);
+      expect(result.fenced).toBe(false);
+    });
+
+    it('should report OPTED_OUT as the entry status', () => {
+      const entry = notificationTaskBotEntry(optedOutBot(), 'a');
+      expect(notificationTaskBotEntryStatus(entry as NonNullable<typeof entry>)).toBe(NotificationTaskBotEntryStatus.OPTED_OUT);
+    });
+
+    it('should be a no-op on a missing bot', () => {
+      const result = applyWith(undefined, { type: 'optOut', group, optOut: true });
+
+      expect(result.changed).toBe(false);
+      expect(result.bot).toBeUndefined();
+    });
+
+    it('should be a no-op without the resolver', () => {
+      const result = apply(groupBot(), { type: 'optOut', group, optOut: true });
+
+      expect(result.changed).toBe(false);
+      expect(result.deleteTaskKeys).toHaveLength(0);
+    });
+
+    it('should be a no-op when the group is already opted out', () => {
+      const result = applyWith(optedOutBot(), { type: 'optOut', group, optOut: true });
+      expect(result.changed).toBe(false);
+    });
+  });
+
+  describe('optIn', () => {
+    it('should clear oat and schedule a run due now', () => {
+      const bot = deepFreeze(optedOutBot());
+      const result = applyWith(bot, { type: 'optOut', group, optOut: false }, later);
+      const entry = notificationTaskBotEntry(result.bot, 'a');
+
+      expect(entry?.oat).toBeNull();
+      expect(entry?.rn).toBe(4);
+      expect(result.createRuns.map((x) => x.entryId)).toEqual(['a', 'b']);
+      expect(result.createRuns[0]).toMatchObject({ trigger: NotificationTaskBotRunTrigger.SCHEDULED, sendAt: later, explicit: false });
+    });
+
+    it('should not schedule a paused or disabled entry', () => {
+      let bot = optedOutBot();
+      bot = applyWith(bot, { type: 'pause', entryId: 'a', pause: { reason: 'manual' } }).bot as NotificationTaskBot;
+      bot = applyWith(bot, { type: 'state', entryId: 'b', state: NotificationTaskBotEntryState.DISABLED }).bot as NotificationTaskBot;
+
+      const result = applyWith(bot, { type: 'optOut', group, optOut: false });
+
+      expect(result.changed).toBe(true);
+      expect(result.createRuns).toHaveLength(0);
+      expect(notificationTaskBotEntry(result.bot, 'a')?.oat).toBeNull();
+      expect(notificationTaskBotEntryStatus(notificationTaskBotEntry(result.bot, 'a') as NotificationTaskBotEmbeddedScriptEntry)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+    });
+  });
+
+  describe('ensure', () => {
+    it('should create a new entry opted out when a sibling in its group is opted out', () => {
+      const bot = deepFreeze(optedOutBot());
+      const result = applyWith(bot, { type: 'ensure', entryId: 'c', scriptType: 'optional' });
+
+      expect(result.entry?.oat).toEqual(later);
+      expect(result.entry?.rn).toBeUndefined();
+      expect(result.createRuns).toHaveLength(0);
+      expect(result.deleteTaskKeys).toHaveLength(0);
+      expectInvariant(result.bot);
+    });
+
+    it('should not opt out a new entry whose group has no opted-out sibling', () => {
+      const result = applyWith(groupBot(), { type: 'ensure', entryId: 'c', scriptType: 'optional' });
+
+      expect(result.entry?.oat).toBeUndefined();
+      expect(result.createRuns).toHaveLength(1);
+    });
+
+    it('should clear the opt-out of an entry whose script no longer allows owner opt-out', () => {
+      const bot = optedOutBot();
+      const result = applyNotificationTaskBotChange({ bot, model, now, change: { type: 'ensure', entryId: 'a', scriptType: 'optional' }, optOutGroupKeyForScriptType: () => undefined });
+
+      expect(result.entry?.oat).toBeNull();
+      expect(result.entry?.rn).toBe(4);
+    });
+
+    it('should set the owner when provided', () => {
+      const result = applyWith(undefined, { type: 'ensure', entryId: 'a', scriptType: 'optional', owner: 'pr/abc' });
+      expect(result.bot?.o).toBe('pr/abc');
+    });
+
+    it('should leave the owner alone when not provided', () => {
+      const bot = applyWith(undefined, { type: 'ensure', entryId: 'a', scriptType: 'optional', owner: 'pr/abc' }).bot as NotificationTaskBot;
+      const result = applyWith(bot, { type: 'ensure', entryId: 'a', scriptType: 'optional' });
+
+      expect(result.changed).toBe(false);
+      expect(result.bot?.o).toBe('pr/abc');
+    });
+  });
+
+  describe('owner', () => {
+    it('should set the owner and keep every oat', () => {
+      const bot = deepFreeze(optedOutBot());
+      const result = applyWith(bot, { type: 'owner', owner: 'pr/other' });
+
+      expect(result.changed).toBe(true);
+      expect(result.bot?.o).toBe('pr/other');
+      expect(result.bot?.e).toEqual(bot.e);
+      expect(result.entry).toBeUndefined();
+      expect(result.unknownEntry).toBe(false);
+    });
+
+    it('should be a no-op on a missing bot', () => {
+      expect(applyWith(undefined, { type: 'owner', owner: 'pr/abc' }).bot).toBeUndefined();
+    });
+  });
+
+  describe('runnability', () => {
+    it('should never issue a run for an opted-out entry', () => {
+      const bot = optedOutBot();
+      const changes: NotificationTaskBotChange[] = [
+        { type: 'schedule', entryId: 'a' },
+        { type: 'schedule', entryId: 'a', at: later },
+        { type: 'state', entryId: 'a', state: NotificationTaskBotEntryState.ENABLED },
+        { type: 'pause', entryId: 'a', pause: false },
+        { type: 'completeRun', entryId: 'a', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: later },
+        { type: 'repair', entryId: 'a', runNumber: 1 },
+        { type: 'ensure', entryId: 'a', scriptType: 'optional', schedule: 'now' }
+      ];
+
+      changes.forEach((change) => {
+        const result = applyWith(bot, change);
+        expect(result.createRuns).toHaveLength(0);
+        expect(notificationTaskBotEntry(result.bot, 'a')?.oat).toEqual(later);
+        expectInvariant(result.bot);
+      });
+    });
+
+    it('should not issue a repair run for an entry that is no longer runnable', () => {
+      // an entry with a live run whose oat was set out of band, which repair must never revive
+      const bot = groupBot();
+      const corrupted: NotificationTaskBot = { ...bot, e: bot.e.map((x) => (x.i === 'a' ? { ...x, oat: later } : x)) };
+      const result = applyWith(corrupted, { type: 'repair', entryId: 'a', runNumber: 1 });
+
+      expect(result.changed).toBe(true);
+      expect(result.createRuns).toHaveLength(0);
+      expect(notificationTaskBotEntry(result.bot, 'a')?.rn).toBeNull();
+    });
+  });
+
+  describe('batches', () => {
+    it('[ensure, optOut] should create and delete no runs', () => {
+      const result = applyAllWith(groupBot(), [
+        { type: 'ensure', entryId: 'c', scriptType: 'optional' },
+        { type: 'optOut', group, optOut: true }
+      ]);
+
+      expect(result.createRuns).toHaveLength(0);
+      expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_a_r1', 'nb/profile_abc/nbn/profile_abc_b_r2']);
+    });
+
+    it('[ensure, optOut] on a new bot should create and delete no runs', () => {
+      const result = applyAllWith(undefined, [
+        { type: 'ensure', entryId: 'a', scriptType: 'optional' },
+        { type: 'optOut', group, optOut: true }
+      ]);
+
+      expect(result.createRuns).toHaveLength(0);
+      expect(result.deleteTaskKeys).toHaveLength(0);
+    });
+
+    it('[optOut, optIn] should delete the old task and create a new one', () => {
+      const result = applyAllWith(groupBot(), [
+        { type: 'optOut', group, optOut: true },
+        { type: 'optOut', group, optOut: false }
+      ]);
+
+      expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_a_r1', 'nb/profile_abc/nbn/profile_abc_b_r2']);
+      expect(result.createRuns.map((x) => x.runNumber)).toEqual([4, 5]);
+    });
+
+    it('should keep the entry result of the last entry-level change when a bot-level change trails it', () => {
+      const result = applyAllWith(groupBot(), [
+        { type: 'schedule', entryId: 'a' },
+        { type: 'optOut', group, optOut: true }
+      ]);
+
+      expect(result.entry?.i).toBe('a');
+      expect(result.entry?.oat).toEqual(now);
+      expect(result.entry?.rn).toBeNull();
+      expect(result.unknownEntry).toBe(false);
+    });
   });
 });

@@ -15,6 +15,12 @@
     min-width: 0;
   }
 
+  // a bot settings row with an unsaved change
+  .dbx-firebase-notification-task-bot-settings-row.dbx-firebase-notification-task-bot-settings-row-modified {
+    border-radius: var(--dbx-firebase-notification-task-bot-settings-row-modified-radius, var(--mat-sys-corner-small, 8px));
+    background-color: var(--dbx-firebase-notification-task-bot-settings-row-modified-background, var(--mat-sys-surface-container-high, rgba(0, 0, 0, 0.04)));
+  }
+
   .dbx-firebase-notification-settings-cell {
     display: flex;
     flex: 0 0 auto;

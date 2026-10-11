@@ -33,7 +33,7 @@ import {
   notificationTaskSubTaskMissingRequiredDataTermination,
   notificationTaskSubtaskNotificationTaskHandlerFactory
 } from './notification.task.subtask.handler';
-import { applyNotificationTaskBotChangesInTransactionFactory, type NotificationTaskBotServerActionsContext, notificationTaskBotScriptConfigServiceForContext } from './notification.taskbot.action.server';
+import { applyNotificationTaskBotChangesInTransactionFactory, type NotificationTaskBotServerActionsContext } from './notification.taskbot.action.server';
 
 /**
  * @module notification.taskbot.task.service.handler
@@ -175,7 +175,7 @@ export const notificationTaskBotRunNotificationTaskHandlerDefaultCleanup = (): N
 export function notificationTaskBotRunNotificationTaskHandler(config: NotificationTaskBotRunNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<NotificationTaskBotRunNotificationTaskData> {
   const { notificationTaskBotContext, processors: inputProcessors } = config;
   const { notificationTaskBotCollection } = notificationTaskBotContext;
-  const scriptConfigService = notificationTaskBotScriptConfigServiceForContext(notificationTaskBotContext);
+  const scriptConfigService = notificationTaskBotContext.appNotificationTaskBotScriptConfigService;
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(notificationTaskBotContext);
 
   // wrap every processor so the cleanup always receives the subtask data, even when a script defines no cleanup of its own

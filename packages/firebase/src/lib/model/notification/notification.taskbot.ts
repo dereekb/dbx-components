@@ -17,6 +17,7 @@ import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import {
   AbstractFirestoreDocument,
   type CollectionReference,
+  type FirebaseAuthOwnershipKey,
   type FirestoreCollection,
   type FirestoreContext,
   type FirestoreModelKey,
@@ -163,6 +164,10 @@ export enum NotificationTaskBotRunOutcome {
  * Computed status of an entry. Never stored; see `notificationTaskBotEntryStatus()`.
  */
 export enum NotificationTaskBotEntryStatus {
+  /**
+   * The bot's owner opted out of the entry's script group. See {@link NotificationTaskBotEmbeddedScriptEntry.oat}.
+   */
+  OPTED_OUT = 'opted_out',
   DISABLED = 'disabled',
   PAUSED = 'paused',
   SCHEDULED = 'scheduled',
@@ -277,6 +282,15 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
    */
   pr?: Maybe<NotificationTaskBotPauseReason>;
   /**
+   * When the bot's owner opted out of this entry's script group. Set means opted out; this is the only opt-out state.
+   *
+   * An opted-out entry has no live run and is never scheduled. Only the owner's opt-out API and the ensure rules set or
+   * clear it, and only for entries whose script sets `allowOwnerOptOut`.
+   *
+   * @dbxModelVariable optOutAt
+   */
+  oat?: Maybe<Date>;
+  /**
    * Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.
    *
    * @dbxModelVariable runNumber
@@ -345,6 +359,7 @@ export const firestoreNotificationTaskBotEmbeddedScriptEntry = firestoreSubObjec
       d: optionalFirestorePassthroughJsonField(),
       pat: optionalFirestoreDate(),
       pr: optionalFirestoreString(),
+      oat: optionalFirestoreDate(),
       rn: optionalFirestoreNumber(),
       nk: optionalFirestoreString(),
       nat: optionalFirestoreDate(),
@@ -389,6 +404,15 @@ export interface NotificationTaskBot {
    */
   m: FirestoreModelKey;
   /**
+   * Ownership key of the bot's owner: the same key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`).
+   *
+   * Only the owner may opt out of (or back into) the bot's script groups. With no owner, nobody can opt out and the
+   * bot keeps running.
+   *
+   * @dbxModelVariable ownerKey
+   */
+  o?: Maybe<FirebaseAuthOwnershipKey>;
+  /**
    * Run counter for the whole bot. Only ever goes up, so run ids and external keys never repeat, even when an entry is
    * removed and re-added.
    *
@@ -416,9 +440,20 @@ export interface NotificationTaskBot {
 export type NotificationTaskBotRunRole = 'run';
 
 /**
+ * Role required to read and change the bot's owner opt-outs.
+ *
+ * Granted to the bot's owner only, and never implied by admin access: an admin has no way to undo an owner's opt-out,
+ * so admins may read opt-outs but never change them. The owner gets ONLY this role (no `read`), so the full bot
+ * document is never returned to them.
+ *
+ * Kept separate from `'owner'`, which is treated as an admin-level role.
+ */
+export type NotificationTaskBotOptOutRole = 'optOut';
+
+/**
  * NotificationTaskBot roles.
  */
-export type NotificationTaskBotRoles = GrantedReadRole | GrantedUpdateRole | NotificationTaskBotRunRole;
+export type NotificationTaskBotRoles = GrantedReadRole | GrantedUpdateRole | NotificationTaskBotRunRole | NotificationTaskBotOptOutRole;
 
 export class NotificationTaskBotDocument extends AbstractFirestoreDocument<NotificationTaskBot, NotificationTaskBotDocument, typeof notificationTaskBotIdentity> {
   get modelIdentity() {
@@ -433,6 +468,7 @@ export const notificationTaskBotConverter = snapshotConverterFunctions<Notificat
   fields: {
     cat: firestoreDate(),
     m: firestoreModelKeyString,
+    o: optionalFirestoreString(),
     rc: firestoreNumber({ default: 0 }),
     e: firestoreObjectArray({ objectField: firestoreNotificationTaskBotEmbeddedScriptEntry }),
     nat: optionalFirestoreDate()

@@ -10,8 +10,8 @@
 import { addMilliseconds, type Maybe, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
 import { earliestDate, isSameDate, latestDate } from '@dereekb/date';
 import { type ClearableObjectUpdate, mergeClearableObjectUpdate } from '@dereekb/model';
-import { type FirestoreModelKey } from '../../common';
-import { type NotificationTaskBotEntryId, type NotificationTaskBotRunNumber, type NotificationTaskKey, isNotificationTaskBotEntryId, notificationTaskBotIdForModel } from './notification.id';
+import { type FirebaseAuthOwnershipKey, type FirestoreModelKey } from '../../common';
+import { type NotificationTaskBotEntryId, type NotificationTaskBotRunNumber, type NotificationTaskBotScriptGroupKey, type NotificationTaskKey, isNotificationTaskBotEntryId, notificationTaskBotIdForModel } from './notification.id';
 import {
   type NotificationTaskBot,
   type NotificationTaskBotEmbeddedScriptEntry,
@@ -44,12 +44,14 @@ export function notificationTaskBotEntry<D extends NotificationTaskBotEntryData 
  * Computes the status of an entry.
  *
  * @param entry - The entry.
- * @returns DISABLED, PAUSED, SCHEDULED (has a live run) or IDLE.
+ * @returns OPTED_OUT, DISABLED, PAUSED, SCHEDULED (has a live run) or IDLE.
  */
-export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat' | 'rn'>): NotificationTaskBotEntryStatus {
+export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat' | 'rn' | 'oat'>): NotificationTaskBotEntryStatus {
   let status: NotificationTaskBotEntryStatus;
 
-  if (entry.s === NotificationTaskBotEntryState.DISABLED) {
+  if (entry.oat != null) {
+    status = NotificationTaskBotEntryStatus.OPTED_OUT;
+  } else if (entry.s === NotificationTaskBotEntryState.DISABLED) {
     status = NotificationTaskBotEntryStatus.DISABLED;
   } else if (entry.pat != null) {
     status = NotificationTaskBotEntryStatus.PAUSED;
@@ -63,13 +65,13 @@ export function notificationTaskBotEntryStatus(entry: Pick<NotificationTaskBotEm
 }
 
 /**
- * Returns true if the entry is enabled and not paused, meaning it may have a live run.
+ * Returns true if the entry is enabled, not paused and not opted out, meaning it may have a live run.
  *
  * @param entry - The entry.
  * @returns True if the entry is runnable.
  */
-export function isNotificationTaskBotEntryRunnable(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat'>): boolean {
-  return entry.s !== NotificationTaskBotEntryState.DISABLED && entry.pat == null;
+export function isNotificationTaskBotEntryRunnable(entry: Pick<NotificationTaskBotEmbeddedScriptEntry, 's' | 'pat' | 'oat'>): boolean {
+  return entry.s !== NotificationTaskBotEntryState.DISABLED && entry.pat == null && entry.oat == null;
 }
 
 /**
@@ -124,7 +126,13 @@ export function appendNotificationTaskBotEntryHistoryItem<HD extends Notificatio
 export type NotificationTaskBotEnsureSchedule = 'ifIdle' | 'now' | Date | false;
 
 /**
- * Creates the entry when it does not exist, then optionally schedules it.
+ * Creates the entry when it does not exist, reconciles its owner opt-out, then optionally schedules it.
+ *
+ * When {@link ApplyNotificationTaskBotChangeInput.optOutGroupKeyForScriptType} is provided:
+ * - an entry whose script allows owner opt-out joins its group opted out when another entry in the group is opted out
+ *   (a new entry is then created with no run), so the owner's group toggle holds as entries come and go;
+ * - an entry whose script no longer allows owner opt-out has its `oat` cleared, since neither the owner nor an admin
+ *   could otherwise reach it.
  */
 export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
   readonly type: 'ensure';
@@ -142,6 +150,11 @@ export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEn
    * Defaults to `'ifIdle'`.
    */
   readonly schedule?: Maybe<NotificationTaskBotEnsureSchedule>;
+  /**
+   * When provided, sets the bot's owner key (`o`), so each ensure keeps the owner in sync with the attached model's
+   * owner. Null clears it.
+   */
+  readonly owner?: Maybe<FirebaseAuthOwnershipKey>;
 }
 
 /**
@@ -324,6 +337,56 @@ export interface NotificationTaskBotRepairChange {
 }
 
 /**
+ * Opts every entry in the group out (or back in), on behalf of the bot's owner.
+ *
+ * Applies to every entry whose resolved opt-out group (see {@link ApplyNotificationTaskBotChangeInput.optOutGroupKeyForScriptType})
+ * is {@link group}. Opting out sets `oat` and cancels the live run; opting in clears `oat` and schedules a run due now
+ * when the entry is enabled, not paused and idle (the script's due check still applies).
+ *
+ * Bot-level: a no-op on a missing bot, and a no-op without the resolver.
+ */
+export interface NotificationTaskBotOptOutChange {
+  readonly type: 'optOut';
+  readonly group: NotificationTaskBotScriptGroupKey;
+  /**
+   * True to opt out, false to opt back in.
+   */
+  readonly optOut: boolean;
+}
+
+/**
+ * Sets or clears the bot's owner key (`o`). Leaves every `oat` alone, since an opt-out does not record who made it.
+ *
+ * Bot-level: a no-op on a missing bot.
+ */
+export interface NotificationTaskBotOwnerChange {
+  readonly type: 'owner';
+  readonly owner: Maybe<FirebaseAuthOwnershipKey>;
+}
+
+/**
+ * A change that applies to the whole bot rather than a single entry.
+ */
+export type NotificationTaskBotBotLevelChange = NotificationTaskBotOptOutChange | NotificationTaskBotOwnerChange;
+
+/**
+ * Returns true if the change applies to the whole bot rather than a single entry.
+ *
+ * @param change - The change.
+ * @returns True for {@link NotificationTaskBotBotLevelChange} values.
+ */
+export function isNotificationTaskBotBotLevelChange(change: NotificationTaskBotChange): change is NotificationTaskBotBotLevelChange {
+  return change.type === 'optOut' || change.type === 'owner';
+}
+
+/**
+ * Resolves the group key the owner can opt out of for a script type, or undefined when the script can't be opted out of.
+ *
+ * Usually `AppNotificationTaskBotScriptConfigService.optOutGroupKeyForScriptType`.
+ */
+export type NotificationTaskBotOptOutGroupKeyForScriptTypeFunction = (scriptType: NotificationTaskBotScriptType) => Maybe<NotificationTaskBotScriptGroupKey>;
+
+/**
  * Any change that can be applied with {@link applyNotificationTaskBotChange}.
  */
 export type NotificationTaskBotChange =
@@ -338,7 +401,9 @@ export type NotificationTaskBotChange =
   | NotificationTaskBotCompleteRunChange
   | NotificationTaskBotMarkSubmittedChange
   | NotificationTaskBotSyncNextRunAtChange
-  | NotificationTaskBotRepairChange;
+  | NotificationTaskBotRepairChange
+  | NotificationTaskBotOptOutChange
+  | NotificationTaskBotOwnerChange;
 
 /**
  * A run that must be created as a result of a change.
@@ -367,6 +432,12 @@ export interface ApplyNotificationTaskBotChangeInput {
   readonly model: FirestoreModelKey;
   readonly change: NotificationTaskBotChange;
   readonly now?: Maybe<Date>;
+  /**
+   * Resolves the owner opt-out group of a script type. The server always passes it from the script registry.
+   *
+   * Without it, `oat` is never touched: `ensure` does not reconcile opt-outs and `optOut` changes are no-ops.
+   */
+  readonly optOutGroupKeyForScriptType?: Maybe<NotificationTaskBotOptOutGroupKeyForScriptTypeFunction>;
 }
 
 /**
@@ -382,11 +453,11 @@ export interface ApplyNotificationTaskBotChangeResult {
    */
   readonly changed: boolean;
   /**
-   * The affected entry after the change, if it exists.
+   * The affected entry after the change, if it exists. Always undefined for a bot-level change.
    */
   readonly entry: Maybe<NotificationTaskBotEmbeddedScriptEntry>;
   /**
-   * True if the change targeted an entry that does not exist.
+   * True if the change targeted an entry that does not exist. Always false for a bot-level change.
    */
   readonly unknownEntry: boolean;
   /**
@@ -414,21 +485,33 @@ export interface ApplyNotificationTaskBotChangeResult {
  * @throws {Error} When an `ensure` change uses an invalid entry id.
  */
 export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotChangeInput): ApplyNotificationTaskBotChangeResult {
-  const { bot: inputBot, model, change } = input;
+  const { bot: inputBot, model, change, optOutGroupKeyForScriptType } = input;
   const now = input.now ?? new Date();
   const botId = notificationTaskBotIdForModel(model);
+  const botLevelChange = isNotificationTaskBotBotLevelChange(change) ? change : undefined;
+  const entryChange = botLevelChange ? undefined : (change as Exclude<NotificationTaskBotChange, NotificationTaskBotBotLevelChange>);
 
   const createRuns: NotificationTaskBotRunRequest[] = [];
   const deleteTaskKeys: NotificationTaskKey[] = [];
 
   let rc = inputBot?.rc ?? 0;
   let entries: NotificationTaskBotEmbeddedScriptEntry[] = [...(inputBot?.e ?? [])];
-  let entryIndex = entries.findIndex((x) => x.i === change.entryId);
+  let entryIndex = entryChange ? entries.findIndex((x) => x.i === entryChange.entryId) : -1;
   let entry: Maybe<NotificationTaskBotEmbeddedScriptEntry> = entryIndex === -1 ? undefined : { ...entries[entryIndex] };
+  let owner: Maybe<FirebaseAuthOwnershipKey> = inputBot?.o;
+  let ownerChanged = false;
   let createBot = false;
   let changed = false;
   let fenced = false;
   let removed = false;
+
+  function setOwner(nextOwner: Maybe<FirebaseAuthOwnershipKey>) {
+    if ((owner ?? null) !== (nextOwner ?? null)) {
+      owner = nextOwner ?? null;
+      ownerChanged = true;
+      changed = true;
+    }
+  }
 
   function cancelRun(x: NotificationTaskBotEmbeddedScriptEntry) {
     if (x.nk) {
@@ -466,6 +549,21 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     }
   }
 
+  function optOutEntry(x: NotificationTaskBotEmbeddedScriptEntry, at: Date) {
+    x.oat = at;
+    changed = true;
+
+    if (x.rn != null || x.nk != null) {
+      cancelRun(x);
+    }
+  }
+
+  function optInEntry(x: NotificationTaskBotEmbeddedScriptEntry) {
+    x.oat = null;
+    changed = true;
+    scheduleIfIdle(x);
+  }
+
   function appendHistory(x: NotificationTaskBotEmbeddedScriptEntry, item: Omit<NotificationTaskBotEntryHistoryItem, 'at'>, limit: Maybe<number>, replaceLast?: Maybe<boolean>) {
     x.h = appendNotificationTaskBotEntryHistoryItem(x.h ?? [], { at: now, ...item }, limit ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, replaceLast);
   }
@@ -491,6 +589,29 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
       entryIndex = entries.length - 1;
       createBot = inputBot == null;
       changed = true;
+    }
+
+    if (change.owner !== undefined) {
+      setOwner(change.owner);
+    }
+
+    if (optOutGroupKeyForScriptType) {
+      const groupKey = optOutGroupKeyForScriptType(entry.t);
+
+      if (groupKey == null) {
+        // the script no longer allows owner opt-out, so nobody could clear the opt-out
+        if (entry.oat != null) {
+          entry.oat = null;
+          changed = true;
+        }
+      } else if (entry.oat == null) {
+        // join the group's opt-out so the owner's toggle holds as entries come and go
+        const siblingOptOutAt = earliestDate(entries.filter((x, i) => i !== entryIndex && x.oat != null && optOutGroupKeyForScriptType(x.t) === groupKey).map((x) => x.oat));
+
+        if (siblingOptOutAt != null) {
+          optOutEntry(entry, siblingOptOutAt);
+        }
+      }
     }
 
     const schedule = change.schedule ?? 'ifIdle';
@@ -636,7 +757,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
           if (x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES)) {
             x.pat = now;
             x.pr = NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED;
-          } else {
+          } else if (isNotificationTaskBotEntryRunnable(x)) {
             issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, undefined, false);
           }
 
@@ -646,27 +767,64 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
           changed = true;
         }
         break;
+      case 'optOut':
+      case 'owner':
+        // bot-level changes are applied below
+        break;
+    }
+  } else if (botLevelChange && inputBot) {
+    switch (botLevelChange.type) {
+      case 'optOut':
+        if (optOutGroupKeyForScriptType) {
+          entries = entries.map((x) => {
+            let result = x;
+
+            if (optOutGroupKeyForScriptType(x.t) === botLevelChange.group) {
+              if (botLevelChange.optOut && x.oat == null) {
+                result = { ...x };
+                optOutEntry(result, now);
+              } else if (!botLevelChange.optOut && x.oat != null) {
+                result = { ...x };
+                optInEntry(result);
+              }
+            }
+
+            return result;
+          });
+        }
+        break;
+      case 'owner':
+        setOwner(botLevelChange.owner);
+        break;
     }
   }
 
   let bot: Maybe<NotificationTaskBot> = inputBot;
 
-  if (changed && entry) {
-    if (removed) {
-      entries = entries.filter((_, i) => i !== entryIndex);
-    } else {
-      entries[entryIndex] = entry;
+  if (changed) {
+    if (entry) {
+      if (removed) {
+        entries = entries.filter((_, i) => i !== entryIndex);
+      } else {
+        entries[entryIndex] = entry;
+      }
     }
 
     const base: NotificationTaskBot = createBot || !inputBot ? { cat: now, m: model, rc: 0, e: [] } : inputBot;
-    bot = { ...base, rc, e: entries, nat: notificationTaskBotNextRunAt(entries) ?? null };
+    const nextBot: NotificationTaskBot = { ...base, rc, e: entries, nat: notificationTaskBotNextRunAt(entries) ?? null };
+
+    if (ownerChanged) {
+      nextBot.o = owner ?? null;
+    }
+
+    bot = nextBot;
   }
 
   return {
     bot,
     changed,
     entry: removed ? undefined : entry,
-    unknownEntry: entry == null,
+    unknownEntry: entryChange != null && entry == null,
     fenced,
     createRuns,
     deleteTaskKeys
@@ -680,18 +838,28 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
  * `deleteTaskKeys`, since it was never written.
  *
  * @param input - The bot, the attached model key, the changes and the current time.
- * @returns The combined result. `entry`, `unknownEntry` and `fenced` describe the last change.
+ * @returns The combined result. `unknownEntry` and `fenced` describe the last entry-level change, and `entry` is that
+ * change's entry as it is after every change.
  */
 export function applyNotificationTaskBotChanges(input: Omit<ApplyNotificationTaskBotChangeInput, 'change'> & { readonly changes: NotificationTaskBotChange[] }): ApplyNotificationTaskBotChangeResult {
-  const { model, changes, now } = input;
+  const { model, changes, now, optOutGroupKeyForScriptType } = input;
 
   let result: ApplyNotificationTaskBotChangeResult = { bot: input.bot, changed: false, entry: undefined, unknownEntry: false, fenced: false, createRuns: [], deleteTaskKeys: [] };
+  let entryResult: Pick<ApplyNotificationTaskBotChangeResult, 'entry' | 'unknownEntry' | 'fenced'> = { entry: undefined, unknownEntry: false, fenced: false };
   let createRuns: NotificationTaskBotRunRequest[] = [];
   let deleteTaskKeys: NotificationTaskKey[] = [];
   let changed = false;
 
   changes.forEach((change) => {
-    const next = applyNotificationTaskBotChange({ bot: result.bot, model, change, now });
+    const next = applyNotificationTaskBotChange({ bot: result.bot, model, change, now, optOutGroupKeyForScriptType });
+
+    if (isNotificationTaskBotBotLevelChange(change)) {
+      // a trailing bot-level change may have touched the entry, so read it back from the new bot
+      entryResult = { ...entryResult, entry: entryResult.entry ? notificationTaskBotEntry(next.bot, entryResult.entry.i) : undefined };
+    } else {
+      entryResult = { entry: next.entry, unknownEntry: next.unknownEntry, fenced: next.fenced };
+    }
+
     const pendingCreatedKeys = new Set(createRuns.map((x) => x.taskKey));
 
     next.deleteTaskKeys.forEach((key) => {
@@ -707,5 +875,5 @@ export function applyNotificationTaskBotChanges(input: Omit<ApplyNotificationTas
     result = next;
   });
 
-  return { ...result, changed, createRuns, deleteTaskKeys };
+  return { ...result, ...entryResult, changed, createRuns, deleteTaskKeys };
 }

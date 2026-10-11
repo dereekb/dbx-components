@@ -89,3 +89,21 @@ export const NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE = 'NOTIFICATI
  * Thrown when a NotificationTaskBot entry is asked to run while it is disabled or paused.
  */
 export const NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE';
+
+/**
+ * Thrown when a NotificationTaskBot entry is asked to run or resume while the bot's owner has opted out of its script
+ * group. Only the owner can undo an opt-out.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT';
+
+/**
+ * Thrown when a NotificationTaskBot opt-out update names a group the owner can't change: one not listed by
+ * `read:optOuts`, or a group that appears in both the opt-out and the opt-in lists.
+ */
+export const NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED';
+
+/**
+ * Thrown when someone other than the bot's owner tries to change a NotificationTaskBot's opt-outs. Admins included: an
+ * admin has no way to undo an owner's opt-out, so only the owner may change it, in both directions.
+ */
+export const NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE = 'NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER';

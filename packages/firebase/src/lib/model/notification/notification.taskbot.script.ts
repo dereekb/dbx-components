@@ -9,6 +9,7 @@
  */
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type NotificationTaskBotScriptType } from './notification.taskbot';
+import { isNotificationTaskBotScriptGroupKey, type NotificationTaskBotScriptGroupKey } from './notification.id';
 
 /**
  * Default for {@link NotificationTaskBotScriptConfig.historyLimit}.
@@ -19,6 +20,34 @@ export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT = 20;
  * Default for {@link NotificationTaskBotScriptConfig.maxConsecutiveFailures}.
  */
 export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES = 3;
+
+/**
+ * A topic that groups NotificationTaskBot scripts, e.g. "Email reminders".
+ *
+ * The bot's owner opts out of a group at once, which stops every entry in the group whose script sets
+ * {@link NotificationTaskBotScriptConfig.allowOwnerOptOut}.
+ *
+ * Same shape as NotificationTemplateTypeInfoGroup. Every script config that references a group key must use the same
+ * definition.
+ */
+export interface NotificationTaskBotScriptGroup {
+  /**
+   * Unique key of the group.
+   */
+  readonly key: NotificationTaskBotScriptGroupKey;
+  /**
+   * Human-readable group name shown to the owner.
+   */
+  readonly name: string;
+  /**
+   * Optional description shown to the owner with the group name.
+   */
+  readonly description?: Maybe<string>;
+  /**
+   * Sort order of the group relative to the other groups. Lower values are shown first.
+   */
+  readonly sortOrder?: Maybe<number>;
+}
 
 /**
  * Configuration for a single {@link NotificationTaskBotScriptType}.
@@ -51,6 +80,16 @@ export interface NotificationTaskBotScriptConfig {
    * `'failed'` reason. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES}.
    */
   readonly maxConsecutiveFailures?: Maybe<number>;
+  /**
+   * The group (topic) this script belongs to.
+   */
+  readonly group?: Maybe<NotificationTaskBotScriptGroup>;
+  /**
+   * Whether the bot's owner may opt out of this script by turning off its {@link group}. Requires {@link group}.
+   *
+   * Defaults to false. A script in a group without this flag keeps running when the owner turns that group off.
+   */
+  readonly allowOwnerOptOut?: Maybe<boolean>;
 }
 
 /**
@@ -63,7 +102,8 @@ export type NotificationTaskBotScriptConfigRecord = Record<NotificationTaskBotSc
  *
  * @param configs - The configs to index.
  * @returns A record keyed by script type.
- * @throws {Error} When two configs declare the same {@link NotificationTaskBotScriptType}.
+ * @throws {Error} When two configs declare the same {@link NotificationTaskBotScriptType}, a config sets
+ * `allowOwnerOptOut` without a group, a group key is invalid, or two configs define the same group key differently.
  *
  * @example
  * ```ts
@@ -72,12 +112,31 @@ export type NotificationTaskBotScriptConfigRecord = Record<NotificationTaskBotSc
  */
 export function notificationTaskBotScriptConfigRecord(configs: NotificationTaskBotScriptConfig[]): NotificationTaskBotScriptConfigRecord {
   const record: NotificationTaskBotScriptConfigRecord = {};
+  const groupsByKey = new Map<NotificationTaskBotScriptGroupKey, NotificationTaskBotScriptGroup>();
 
   configs.forEach((x) => {
-    const { scriptType } = x;
+    const { scriptType, group, allowOwnerOptOut } = x;
 
     if (record[scriptType]) {
       throw new Error(`notificationTaskBotScriptConfigRecord(): duplicate NotificationTaskBotScriptType in record: ${scriptType}`);
+    }
+
+    if (allowOwnerOptOut && group == null) {
+      throw new Error(`notificationTaskBotScriptConfigRecord(): NotificationTaskBotScriptType "${scriptType}" sets allowOwnerOptOut without a group.`);
+    }
+
+    if (group != null) {
+      if (!isNotificationTaskBotScriptGroupKey(group.key)) {
+        throw new Error(`notificationTaskBotScriptConfigRecord(): invalid NotificationTaskBotScriptGroupKey "${group.key}" on NotificationTaskBotScriptType "${scriptType}".`);
+      }
+
+      const existingGroup = groupsByKey.get(group.key);
+
+      if (existingGroup == null) {
+        groupsByKey.set(group.key, group);
+      } else if (existingGroup !== group && (existingGroup.name !== group.name || existingGroup.description !== group.description || existingGroup.sortOrder !== group.sortOrder)) {
+        throw new Error(`notificationTaskBotScriptConfigRecord(): conflicting NotificationTaskBotScriptGroup definitions for group key "${group.key}" on NotificationTaskBotScriptType "${scriptType}".`);
+      }
     }
 
     record[scriptType] = x;
@@ -120,6 +179,21 @@ export abstract class AppNotificationTaskBotScriptConfigService {
    * Returns every registered {@link NotificationTaskBotScriptConfig}.
    */
   abstract getAllKnownScriptConfigs(): NotificationTaskBotScriptConfig[];
+
+  /**
+   * Returns the group key the owner can opt out of for the given script type, or undefined when the script is not
+   * registered, has no group, or does not set {@link NotificationTaskBotScriptConfig.allowOwnerOptOut}.
+   *
+   * @param scriptType - The script type to look up.
+   */
+  abstract optOutGroupKeyForScriptType(scriptType: NotificationTaskBotScriptType): Maybe<NotificationTaskBotScriptGroupKey>;
+
+  /**
+   * Returns the group for the given key when at least one registered script allows the owner to opt out of it.
+   *
+   * @param groupKey - The group key to look up.
+   */
+  abstract optOutGroupForKey(groupKey: NotificationTaskBotScriptGroupKey): Maybe<NotificationTaskBotScriptGroup>;
 }
 
 /**
@@ -146,6 +220,17 @@ export interface AppNotificationTaskBotScriptConfigServiceRef {
 export function appNotificationTaskBotScriptConfigService(appNotificationTaskBotScriptConfigRecord: NotificationTaskBotScriptConfigRecord = {}): AppNotificationTaskBotScriptConfigService {
   const allKnownScriptTypes = Object.keys(appNotificationTaskBotScriptConfigRecord);
   const allKnownScriptConfigs = allKnownScriptTypes.map((x) => appNotificationTaskBotScriptConfigRecord[x]);
+  const optOutGroupKeysByScriptType = new Map<NotificationTaskBotScriptType, NotificationTaskBotScriptGroupKey>();
+  const optOutGroupsByKey = new Map<NotificationTaskBotScriptGroupKey, NotificationTaskBotScriptGroup>();
+
+  allKnownScriptConfigs.forEach((config) => {
+    const { group } = config;
+
+    if (config.allowOwnerOptOut && group != null) {
+      optOutGroupKeysByScriptType.set(config.scriptType, group.key);
+      optOutGroupsByKey.set(group.key, group);
+    }
+  });
 
   return {
     appNotificationTaskBotScriptConfigRecord,
@@ -160,6 +245,12 @@ export function appNotificationTaskBotScriptConfigService(appNotificationTaskBot
     },
     getAllKnownScriptConfigs() {
       return [...allKnownScriptConfigs];
+    },
+    optOutGroupKeyForScriptType(scriptType: NotificationTaskBotScriptType) {
+      return optOutGroupKeysByScriptType.get(scriptType);
+    },
+    optOutGroupForKey(groupKey: NotificationTaskBotScriptGroupKey) {
+      return optOutGroupsByKey.get(groupKey);
     }
   };
 }

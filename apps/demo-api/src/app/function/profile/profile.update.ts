@@ -1,6 +1,7 @@
 import {
   type FinishOnboardingProfileParams,
   type ProfileCreateTestCalendarEventParams,
+  type ProfileCreateTestNotificationTaskBotParams,
   type ProfileCreateTestNotificationParams,
   type ProfileDocument,
   type ResetProfilePasswordParams,
@@ -8,6 +9,7 @@ import {
   type UpdateProfileParams,
   finishOnboardingProfileParamsType,
   profileCreateTestCalendarEventParamsType,
+  profileCreateTestNotificationTaskBotParamsType,
   profileCreateTestNotificationParamsType,
   profileIdentity,
   resetProfilePasswordParamsType,
@@ -145,5 +147,23 @@ export const profileUpdateCreateTestCalendarEvent: DemoUpdateModelFunction<Profi
 
     const createTestCalendarEvent = await nest.profileActions.createTestCalendarEvent(data);
     await createTestCalendarEvent(profileDocument);
+  }
+});
+
+export const profileUpdateCreateTestNotificationTaskBot: DemoUpdateModelFunction<ProfileCreateTestNotificationTaskBotParams> = withApiDetails({
+  inputType: profileCreateTestNotificationTaskBotParamsType,
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const uid = auth.uid;
+
+    const profileDocument = await nest.useModel('profile', {
+      request,
+      key: firestoreModelKey(profileIdentity, uid),
+      roles: 'owner',
+      use: (x) => x.document
+    });
+
+    const createTestNotificationTaskBot = await nest.profileActions.createTestNotificationTaskBot(data);
+    await createTestNotificationTaskBot(profileDocument);
   }
 });

@@ -11,6 +11,32 @@ describe('notificationTaskBotScriptConfigRecord()', () => {
   it('should throw on a duplicate script type', () => {
     expect(() => notificationTaskBotScriptConfigRecord([{ scriptType: 'a' }, { scriptType: 'a' }])).toThrow();
   });
+
+  it('should throw when allowOwnerOptOut is set without a group', () => {
+    expect(() => notificationTaskBotScriptConfigRecord([{ scriptType: 'a', allowOwnerOptOut: true }])).toThrow();
+  });
+
+  it('should throw on an invalid group key', () => {
+    expect(() => notificationTaskBotScriptConfigRecord([{ scriptType: 'a', group: { key: 'Bad Key', name: 'Bad' } }])).toThrow();
+  });
+
+  it('should throw on conflicting definitions of one group key', () => {
+    expect(() =>
+      notificationTaskBotScriptConfigRecord([
+        { scriptType: 'a', group: { key: 'g', name: 'G' } },
+        { scriptType: 'b', group: { key: 'g', name: 'Other' } }
+      ])
+    ).toThrow();
+  });
+
+  it('should allow equal definitions of one group key', () => {
+    expect(() =>
+      notificationTaskBotScriptConfigRecord([
+        { scriptType: 'a', group: { key: 'g', name: 'G' } },
+        { scriptType: 'b', group: { key: 'g', name: 'G' } }
+      ])
+    ).not.toThrow();
+  });
 });
 
 describe('appNotificationTaskBotScriptConfigService()', () => {
@@ -33,5 +59,26 @@ describe('appNotificationTaskBotScriptConfigService()', () => {
 
   it('should default to an empty registry', () => {
     expect(appNotificationTaskBotScriptConfigService().getAllKnownScriptTypes()).toEqual([]);
+  });
+});
+
+describe('appNotificationTaskBotScriptConfigService() opt-out lookups', () => {
+  const group = { key: 'reminders', name: 'Reminders' };
+  const otherGroup = { key: 'other', name: 'Other' };
+  const service = appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([{ scriptType: 'optional', group, allowOwnerOptOut: true }, { scriptType: 'required', group }, { scriptType: 'required_other', group: otherGroup }, { scriptType: 'ungrouped' }]));
+
+  it('should return the group key of a script that allows owner opt-out', () => {
+    expect(service.optOutGroupKeyForScriptType('optional')).toBe('reminders');
+  });
+
+  it('should return undefined for scripts that do not allow owner opt-out', () => {
+    expect(service.optOutGroupKeyForScriptType('required')).toBeUndefined();
+    expect(service.optOutGroupKeyForScriptType('ungrouped')).toBeUndefined();
+    expect(service.optOutGroupKeyForScriptType('unknown')).toBeUndefined();
+  });
+
+  it('should only return groups that have an opt-out-able script', () => {
+    expect(service.optOutGroupForKey('reminders')).toBe(group);
+    expect(service.optOutGroupForKey('other')).toBeUndefined();
   });
 });

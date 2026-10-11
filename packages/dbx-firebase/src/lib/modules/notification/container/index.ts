@@ -9,3 +9,4 @@ export * from './notification.user.settings.delivery.component';
 export * from './notification.user.settings.dialog.button.component';
 export * from './notification.user.settings.dialog.component';
 export * from './notification.user.settings.phone.component';
+export * from './notification.task.bot.settings.component';

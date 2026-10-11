@@ -23,6 +23,7 @@ import {
   notificationUserHealthCheckParamsType,
   processStorageFileParamsType,
   readMultipleStorageFilesMetadataParamsType,
+  readNotificationTaskBotOptOutsParamsType,
   readStorageFileMetadataParamsType,
   readUserExternalConnectionAuthorizeStateParamsType,
   regenerateStorageFileGroupContentParamsType,
@@ -41,6 +42,7 @@ import {
   updateNotificationBoxRecipientParamsType,
   updateNotificationSummaryParamsType,
   updateNotificationTaskBotEntryParamsType,
+  updateNotificationTaskBotOptOutParamsType,
   updateNotificationUserParamsType,
   updateOidcClientParamsType,
   updateStorageFileGroupParamsType,
@@ -59,6 +61,7 @@ import {
   likeGuestbookEntryParamsType,
   profileCreateTestCalendarEventParamsType,
   profileCreateTestNotificationParamsType,
+  profileCreateTestNotificationTaskBotParamsType,
   publishGuestbookParamsType,
   resetProfilePasswordParamsType,
   setProfileUsernameParamsType,
@@ -397,6 +400,21 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   },
   {
     model: 'notificationTaskBot',
+    verb: 'read',
+    specifier: 'optOuts',
+    paramsTypeName: 'ReadNotificationTaskBotOptOutsParams',
+    paramsValidator: readNotificationTaskBotOptOutsParamsType,
+    resultTypeName: 'NotificationTaskBotOptOutsResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Lists the script groups the bot's owner can opt out of, with their opt-out state. Never returns entries.\n\nCallable by the bot's owner and by admins.",
+    paramsTypeDescription:
+      "Used for reading the owner opt-outs of a {@link NotificationTaskBot}.\n\nThe `key` is the bot's key (see `notificationTaskBotKeyForModel()`). Lists only the script groups the bot's owner can\nopt out of; the bot's entries and script types are never returned.\n\nCallable by the bot's owner and by admins (read-only for admins).",
+    resultTypeDescription: 'Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.',
+    resultFields: [{ name: 'groups', typeText: 'NotificationTaskBotOwnerOptOutGroup[]', description: 'The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.' }]
+  },
+  {
+    model: 'notificationTaskBot',
     verb: 'update',
     specifier: 'entry',
     paramsTypeName: 'UpdateNotificationTaskBotEntryParams',
@@ -404,6 +422,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'UpdateNotificationTaskBotEntryResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Admin-only. Enables/disables, pauses/resumes or reschedules a single entry. Reports `opted_out` when the owner\nopted out of the entry's group, which only the owner can undo.",
     paramsTypeDescription: 'Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.',
     paramsFields: [
       { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
@@ -414,9 +433,29 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ],
     resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',
     resultFields: [
+      { name: 'status', typeText: 'NotificationTaskBotEntryStatus', description: "Status of the entry after the update.\n\nA resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports\n`opted_out`. Admins can't undo an owner's opt-out." },
       { name: 'taskKey', typeText: 'Maybe<NotificationTaskKey>', description: "Key of the entry's live run task, if it has one." },
       { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the live run immediately, if requested.' }
     ]
+  },
+  {
+    model: 'notificationTaskBot',
+    verb: 'update',
+    specifier: 'optOut',
+    paramsTypeName: 'UpdateNotificationTaskBotOptOutParams',
+    paramsValidator: updateNotificationTaskBotOptOutParamsType,
+    resultTypeName: 'NotificationTaskBotOptOutsResult',
+    groupName: 'NotificationBox',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
+    description: "Owner-only. Opts the bot's owner out of (or back into) script groups listed by `read:optOuts`. Admins can't\nchange an owner's opt-outs in either direction.",
+    paramsTypeDescription:
+      "Used for opting the bot's owner out of (or back into) script groups on a {@link NotificationTaskBot}.\n\nThe `key` is the bot's key. Only groups listed by `read:optOuts` can change, and only the bot's owner can change\nthem, in both directions. Admins can't: an admin has no way to undo an owner's opt-out. A group may not appear in\nboth lists.\n\nOpting out stops every opt-out-able entry in the group and deletes its pending run. Opting back in schedules a run\ndue now for each idle, enabled and unpaused entry, the same as an admin resume.",
+    paramsFields: [
+      { name: 'optOut', typeText: 'Maybe<NotificationTaskBotScriptGroupKey[]>', description: 'Groups to opt out of.' },
+      { name: 'optIn', typeText: 'Maybe<NotificationTaskBotScriptGroupKey[]>', description: 'Groups to opt back into.' }
+    ],
+    resultTypeDescription: 'Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.',
+    resultFields: [{ name: 'groups', typeText: 'NotificationTaskBotOwnerOptOutGroup[]', description: 'The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.' }]
   },
   {
     model: 'notificationTaskBot',
@@ -427,7 +466,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'RunNotificationTaskBotEntryResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
-    paramsTypeDescription: 'Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled and paused entries are refused.',
+    description: 'Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries.',
+    paramsTypeDescription: "Used for running a single entry on a {@link NotificationTaskBot} on demand.\n\nThe live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted\nout when the bot's owner turned off its script group, which only the owner can undo.",
     paramsFields: [
       { name: 'trigger', typeText: 'Maybe<NotificationTaskBotRunTrigger.MANUAL | NotificationTaskBotRunTrigger.FORCED>', description: "MANUAL runs still apply the script's due check; FORCED runs skip it. Defaults to MANUAL." },
       { name: 'runImmediately', typeText: 'Maybe<boolean>', description: 'Whether to run the new run immediately. Defaults to true.' }
@@ -810,6 +850,21 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsFields: [
       { name: 'skipSend', typeText: 'Maybe<boolean>', description: 'When true, the notification is created in the database but not enqueued\nfor sending. Useful for inspecting the persisted record without consuming\na delivery slot.' },
       { name: 'expediteSend', typeText: 'Maybe<boolean>', description: 'When true, the notification is sent immediately via the expedite service\nrather than waiting for the regular send window.' }
+    ]
+  },
+  {
+    model: 'profile',
+    verb: 'update',
+    specifier: 'createTestNotificationTaskBot',
+    paramsTypeName: 'ProfileCreateTestNotificationTaskBotParams',
+    paramsValidator: profileCreateTestNotificationTaskBotParamsType,
+    groupName: 'Profile',
+    sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
+    description: "Starts the demo ping NotificationTaskBot on the current user's profile\n(`ntb/pr_<uid>`), owned by the profile so the user can opt out of it.\n\nIdempotent: an existing ping entry is left as-is.",
+    paramsTypeDescription: "Params for starting the demo ping NotificationTaskBot on the current user's profile.\n\nEnsures the `demo_ping` entry on `ntb/pr_<uid>`, owned by the profile (`pr/<uid>`), so the user can turn it off from\ntheir notification settings. Idempotent: an existing entry is left as-is.",
+    paramsFields: [
+      { name: 'interval', typeText: 'Maybe<Milliseconds>', description: 'Interval between pings, in milliseconds. Defaults to one minute. Only used when the entry is created.' },
+      { name: 'pauseAfter', typeText: 'Maybe<number>', description: 'Pauses the entry after this many pings. Defaults to 3. Only used when the entry is created.' }
     ]
   },
   {
@@ -1496,6 +1551,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     fields: [
       { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Creation date of this bot document.' },
       { name: 'm', longName: 'modelKey', tsType: 'FirestoreModelKey', optional: false, description: 'Model key of the model this bot is attached to.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: "Ownership key of the bot's owner: the same key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)." },
       { name: 'rc', longName: 'runCounter', tsType: 'number', optional: false, description: 'Run counter for the whole bot. Only ever goes up, so run ids and external keys never repeat, even when an entry is removed and re-added.' },
       {
         name: 'e',
@@ -1511,6 +1567,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 'd', longName: 'data', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary permanent data owned by the script.' },
           { name: 'pat', longName: 'pausedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the entry was paused. A paused entry has no live run.' },
           { name: 'pr', longName: 'pauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'Why the entry was paused.' },
+          { name: 'oat', longName: 'optOutAt', tsType: 'Maybe<Date>', optional: true, description: "When the bot's owner opted out of this entry's script group. Set means opted out; this is the only opt-out state." },
           { name: 'rn', longName: 'runNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.' },
           { name: 'nk', longName: 'runTaskKey', tsType: 'Maybe<NotificationTaskKey>', optional: true, description: "Key of the live run's NotificationTask." },
           { name: 'nat', longName: 'nextRunAt', tsType: 'Maybe<Date>', optional: true, description: 'When the live run is next due to run.' },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isFirestoreModelId } from '../../common';
-import { isNotificationTaskBotEntryId, notificationTaskBotRunNotificationTaskUniqueId } from './notification.id';
+import { isNotificationTaskBotEntryId, isNotificationTaskBotScriptGroupKey, notificationTaskBotRunNotificationTaskUniqueId } from './notification.id';
 import { type NotificationTaskBot, notificationTaskBotConverter, notificationTaskBotKeyForModel, NotificationTaskBotEntryState, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
 import { NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE, notificationTaskBotRunNotificationTaskKey, notificationTaskBotRunNotificationTaskTemplate } from './notification.taskbot.task';
 
@@ -63,12 +63,22 @@ describe('notificationTaskBotConverter', () => {
     expect(entry.h[0].d).toEqual({ x: 'y' });
   });
 
+  it('should round-trip the owner key and the entry opt-out date', () => {
+    const optedOut: NotificationTaskBot = { ...model, o: 'pr/abc_123', e: [{ ...model.e[0], rn: null, nk: null, nat: null, oat: runAt }] };
+    const restored = notificationTaskBotConverter.mapFunctions.from(notificationTaskBotConverter.mapFunctions.to(optedOut));
+
+    expect(restored.o).toBe('pr/abc_123');
+    expect(restored.e[0].oat).toEqual(runAt);
+  });
+
   it('should not store unset optional entry fields', () => {
     const data = notificationTaskBotConverter.mapFunctions.to({ cat: createdAt, m: 'profile/abc', rc: 0, e: [{ i: 'a', t: 't', s: NotificationTaskBotEntryState.ENABLED, cat: createdAt, sc: 0, fc: 0, h: [] }] }) as any;
     const entry = data.e[0];
 
     expect(entry.rn).toBeUndefined();
     expect(entry.nk).toBeUndefined();
+    expect(entry.oat).toBeUndefined();
+    expect(data.o).toBeNull(); // top-level optional fields store null, unlike sub-object fields
   });
 });
 
@@ -88,6 +98,20 @@ describe('isNotificationTaskBotEntryId()', () => {
     expect(isNotificationTaskBotEntryId('follow_up')).toBe(false);
     expect(isNotificationTaskBotEntryId('Ping')).toBe(false);
     expect(isNotificationTaskBotEntryId('')).toBe(false);
+  });
+});
+
+describe('isNotificationTaskBotScriptGroupKey()', () => {
+  it('should accept lowercase letters, digits, underscores and dashes', () => {
+    expect(isNotificationTaskBotScriptGroupKey('ping_reminders')).toBe(true);
+    expect(isNotificationTaskBotScriptGroupKey('email-2')).toBe(true);
+  });
+
+  it('should reject uppercase, spaces, empty and overlong keys', () => {
+    expect(isNotificationTaskBotScriptGroupKey('Ping')).toBe(false);
+    expect(isNotificationTaskBotScriptGroupKey('a b')).toBe(false);
+    expect(isNotificationTaskBotScriptGroupKey('')).toBe(false);
+    expect(isNotificationTaskBotScriptGroupKey('a'.repeat(41))).toBe(false);
   });
 });
 

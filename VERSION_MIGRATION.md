@@ -14,7 +14,8 @@ but two changes require an update in every app that implements the notification 
   notificationTaskBotCollection: notificationTaskBotFirestoreCollection(firestoreContext),
   ```
 - **`NotificationTypes` now includes `notificationTaskBotIdentity`,** and `NotificationFunctions` gains
-  `notificationTaskBot.updateNotificationTaskBot.{entry,run}` (`notificationTaskBot: ['update:entry,run']`). Register
+  `notificationTaskBot.readNotificationTaskBot.optOuts` and `notificationTaskBot.updateNotificationTaskBot.{entry,run,optOut}`
+  (`notificationTaskBot: ['read:optOuts', 'update:entry,run,optOut']`). Register
   a model service factory (system admin only is a good default) and the two CRUD functions:
   ```ts
   export const notificationTaskBotFirebaseModelServiceFactory = firebaseModelServiceFactory<AppFirebaseContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>({
@@ -23,21 +24,53 @@ but two changes require an update in every app that implements the notification 
   });
   // crud functions: notificationTaskBot: onCallSpecifierHandler({ entry: ..., run: ... }) calling
   // nest.notificationActions.updateNotificationTaskBotEntry / runNotificationTaskBotEntry with useModel('notificationTaskBot', { roles: 'update' | 'run' })
+  // read: notificationTaskBot: onCallSpecifierHandler({ optOuts: ... }) and update optOut: ... calling
+  // nest.notificationActions.readNotificationTaskBotOptOuts / updateNotificationTaskBotOptOut with
+  // useModel('notificationTaskBot', { roles: 'optOut', use: (x) => action(x) }) — pass the roles reader itself, not x.document
   ```
+- **The bot helpers now REQUIRE the script registry.** `NotificationTaskBotServerActionsContext` requires
+  `appNotificationTaskBotScriptConfigService` (every write resolves each entry's owner opt-out group from it).
+  `notificationServerActions()` fills in an empty registry when your context has none, but a context you pass straight
+  to `ensureNotificationTaskBotEntryFactory()` and the other helpers must carry it.
 
 ### Optional (to use bots)
 - **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`
   to the `require-firestore-rule-for-service-model` allowlist).
 - **Script registry:** declare `NotificationTaskBotScriptConfig`s and set `appNotificationTaskBotScriptConfigService`
-  on your server actions context (it is optional on `BaseNotificationServerActionsContext`; an empty registry is used
-  otherwise).
+  on your server actions context. It is optional on `BaseNotificationServerActionsContext` (`notificationServerActions()`
+  uses an empty registry otherwise) but required by the bot helpers, see above.
 - **Run handler:** add `notificationTaskBotRunNotificationTaskHandler({ processors, validate, notificationTaskBotContext })`
   to your `NotificationTaskService` handlers and `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` to its `validate` list.
 - **Repair cron:** call `notificationActions.repairAllNotificationTaskBots()` from your notification schedule, after
   `sendQueuedNotifications`.
 - **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat`; regenerate your indexes.
 - **Client:** `NotificationTaskBotDocumentStore` / `NotificationTaskBotCollectionStore` (and their directives) are
-  available in `@dereekb/dbx-firebase`.
+  available in `@dereekb/dbx-firebase`. The admin store also has `readOptOuts` / `updateOptOut`.
+
+### Optional (owner opt-outs)
+The bot's **owner** can turn off groups of scripts, which stops those bots entirely (not just their notifications).
+- **Owner key:** a bot has an owner key `o`, the same ownership key the attached model's `NotificationBox.o` uses
+  (e.g. `pr/<uid>`). Pass `owner` to `ensureNotificationTaskBotEntryFactory()` on every ensure to keep it in sync, or
+  use `setNotificationTaskBotOwnerFactory()`. A bot without an owner can't be opted out of.
+- **Opt-out-able scripts:** give a `NotificationTaskBotScriptConfig` a `group` (`NotificationTaskBotScriptGroup`, the
+  topic shown to the owner) and `allowOwnerOptOut: true`. A script in the group without the flag keeps running when the
+  owner turns the group off. Opting out sets `oat` (`optOutAt`) on each opt-out-able entry in the group and deletes its
+  pending run; opting back in clears it and schedules a run due now. The entry status is `opted_out` meanwhile.
+- **The `optOut` role:** grant the owner ONLY `optOut` (never `read`, so the bot document is never returned to them).
+  The update refuses full access, so admins can read opt-outs but never change them in either direction — an admin has
+  no way to undo an owner's opt-out. For an admin who is the owner, merge it in:
+  ```ts
+  const isOwner = ownerKey != null && output.data?.o === ownerKey;
+  return grantModelRolesIfAdmin(
+    context,
+    () => (isOwner ? ({ ...fullAccessRoleMap(), optOut: true } as GrantedRoleMap<NotificationTaskBotRoles>) : fullAccessRoleMap()),
+    () => grantedRoleKeysMapFromArray<NotificationTaskBotRoles>(isOwner ? ['optOut'] : [])
+  );
+  ```
+- **Firestore rules:** leave `ntb` admin-only; owners read their opt-outs through `read:optOuts` on purpose.
+- **Settings component:** `dbx-firebase-notification-task-bot-settings` (`[modelKey]` = the attached model's key) shows
+  the owner one switch per group. Place a user's own model's bot (e.g. their profile) on their notification settings
+  page, and a shared model's bot (e.g. a guestbook) on that model's own page.
 
 ## Migration to v13.39.x — the publishable packages are ESM-only
 

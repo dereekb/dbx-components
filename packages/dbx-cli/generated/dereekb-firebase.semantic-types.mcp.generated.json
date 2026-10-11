@@ -329,6 +329,23 @@
       "notes": "Identifier of a {@link NotificationTaskBotEmbeddedScriptEntry}, unique within its bot.\n\nMust match {@link NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX}."
     },
     {
+      "name": "NotificationTaskBotScriptGroupKey",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/notification/notification.id",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:notification"
+      ],
+      "guards": [
+        "isNotificationTaskBotScriptGroupKey"
+      ],
+      "notes": "Key of a NotificationTaskBotScriptGroup, the topic a script belongs to (e.g. \"Email reminders\").\n\nThe bot's owner opts out of a whole group at once rather than individual entries.\n\nMust match {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX}."
+    },
+    {
       "name": "NotificationTaskBotRunNumber",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/notification/notification.id",

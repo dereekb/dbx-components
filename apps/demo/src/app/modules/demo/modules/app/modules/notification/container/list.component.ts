@@ -53,4 +53,9 @@ export class DemoNotificationListPageComponent {
   readonly handleCreateTestNotification: WorkUsingContext = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.createTestNotification({}));
   };
+
+  // starts the demo ping bot on the profile, which the user can then turn off under Notification Settings > Bot Settings
+  readonly handleCreateTestNotificationTaskBot: WorkUsingContext = (form, context) => {
+    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.createTestNotificationTaskBot({}));
+  };
 }

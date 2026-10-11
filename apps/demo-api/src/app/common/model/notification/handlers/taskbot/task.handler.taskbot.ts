@@ -1,7 +1,15 @@
-import { createNotificationDocument, type NotificationTaskBotRunNotificationTaskData } from '@dereekb/firebase';
+import { createNotificationDocument, type NotificationTaskBotRunNotificationTaskData, type NotificationTaskBotScriptType } from '@dereekb/firebase';
 import { type NotificationTaskBotScriptProcessorConfig, type NotificationTaskServiceTaskHandlerConfig, notificationTaskBotDelayUntilDue, notificationTaskBotRunNotificationTaskHandler, runNotificationTaskBotEntryTransaction } from '@dereekb/firebase-server/model';
 import { addMilliseconds } from '@dereekb/util';
-import { DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL, DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, type DemoPingNotificationTaskBotEntryData, exampleNotificationTemplate } from 'demo-firebase';
+import {
+  DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL,
+  DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS,
+  DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT,
+  DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+  DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+  type DemoPingNotificationTaskBotEntryData,
+  exampleNotificationTemplate
+} from 'demo-firebase';
 import { type DemoFirebaseServerActionsContext } from '../../../../firebase/action.context';
 
 /**
@@ -15,20 +23,21 @@ export const DEMO_PING_NOTIFICATION_TASK_BOT_WAIT_SUBTASK = 'wait';
 export const DEMO_PING_NOTIFICATION_TASK_BOT_PING_SUBTASK = 'ping';
 
 /**
- * Builds the processor for the demo `demo_ping` NotificationTaskBot script.
+ * Builds the processor for a demo ping NotificationTaskBot script (`demo_ping` or `demo_ping_required`).
  *
  * - wait: delays the run until `lsat + iv`, unless the run is FORCED or explicit.
  * - ping: in a fenced transaction, creates an example notification for the profile, marks the run submitted and counts it.
  * - cleanup: schedules the next run after `iv`, or pauses the entry once `c` reaches `pa`.
  *
  * @param demoFirebaseServerActionsContext - Server actions context providing the Profile and Notification collections.
+ * @param target - The ping script type to process. Defaults to `demo_ping`.
  * @returns The script processor.
  */
-export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskBotScriptProcessorConfig<DemoPingNotificationTaskBotEntryData> {
+export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext, target: NotificationTaskBotScriptType = DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE): NotificationTaskBotScriptProcessorConfig<DemoPingNotificationTaskBotEntryData> {
   const { profileCollection } = demoFirebaseServerActionsContext;
 
   return {
-    target: DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE,
+    target,
     flow: [
       {
         subtask: DEMO_PING_NOTIFICATION_TASK_BOT_WAIT_SUBTASK,
@@ -71,7 +80,7 @@ export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerAct
  */
 export function demoNotificationTaskBotRunNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskServiceTaskHandlerConfig<NotificationTaskBotRunNotificationTaskData> {
   return notificationTaskBotRunNotificationTaskHandler({
-    processors: [demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerActionsContext)],
+    processors: [demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerActionsContext), demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerActionsContext, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE)],
     validate: DEMO_NOTIFICATION_TASK_BOT_SCRIPT_CONFIGS.map((x) => x.scriptType),
     notificationTaskBotContext: demoFirebaseServerActionsContext
   });

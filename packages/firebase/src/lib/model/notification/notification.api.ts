@@ -10,16 +10,28 @@ import { type, type Type } from 'arktype';
 import { type TargetModelParams, type FirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { firestoreModelIdType, firestoreModelKeyType } from '../../common/model/model/model.validator';
 import { targetModelParamsType } from '../../common/model/model/model.param';
-import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseReadFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationDeliveryMethod } from './notification.config';
-import { NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH, NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX, type NotificationBoxId, type NotificationSummaryId, type NotificationTaskBotEntryId, type NotificationTaskKey, type NotificationTemplateType } from './notification.id';
+import {
+  NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH,
+  NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX,
+  NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH,
+  NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX,
+  type NotificationBoxId,
+  type NotificationSummaryId,
+  type NotificationTaskBotEntryId,
+  type NotificationTaskBotScriptGroupKey,
+  type NotificationTaskKey,
+  type NotificationTemplateType
+} from './notification.id';
 import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/model';
 import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
-import { NotificationTaskBotEntryState, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { NotificationTaskBotEntryState, type NotificationTaskBotEntryStatus, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { type NotificationTaskBotOwnerOptOutGroup } from './notification.taskbot.optout';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -661,6 +673,18 @@ export interface CleanupOldNotificationLoggedEventDaysResult {
 export const notificationTaskBotEntryIdType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_ENTRY_ID_REGEX).atMostLength(NOTIFICATION_TASK_BOT_ENTRY_ID_MAX_LENGTH);
 
 /**
+ * arktype validator for a {@link NotificationTaskBotScriptGroupKey}.
+ *
+ * Built from {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX} and {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH}, the same rules `isNotificationTaskBotScriptGroupKey()` checks.
+ */
+export const notificationTaskBotScriptGroupKeyType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX).atMostLength(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH);
+
+/**
+ * Maximum number of group keys in each list of {@link UpdateNotificationTaskBotOptOutParams}.
+ */
+export const UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS = 50;
+
+/**
  * Base params targeting a single entry on a {@link NotificationTaskBot}.
  */
 export interface NotificationTaskBotEntryTargetParams extends TargetModelParams {
@@ -716,6 +740,13 @@ export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntry
  */
 export interface UpdateNotificationTaskBotEntryResult {
   /**
+   * Status of the entry after the update.
+   *
+   * A resume, enable or reschedule that could not take effect because the owner opted out of the entry's group reports
+   * `opted_out`. Admins can't undo an owner's opt-out.
+   */
+  readonly status: NotificationTaskBotEntryStatus;
+  /**
    * Key of the entry's live run task, if it has one.
    */
   readonly taskKey?: Maybe<NotificationTaskKey>;
@@ -728,7 +759,8 @@ export interface UpdateNotificationTaskBotEntryResult {
 /**
  * Used for running a single entry on a {@link NotificationTaskBot} on demand.
  *
- * The live run is superseded by a new run due now. Disabled and paused entries are refused.
+ * The live run is superseded by a new run due now. Disabled, paused and opted-out entries are refused; an entry is opted
+ * out when the bot's owner turned off its script group, which only the owner can undo.
  *
  * @dbxModelApiParams
  */
@@ -760,6 +792,58 @@ export interface RunNotificationTaskBotEntryResult {
    * Result of running the new run, if it was run immediately.
    */
   readonly runResult?: Maybe<SendNotificationResult>;
+}
+
+/**
+ * Used for reading the owner opt-outs of a {@link NotificationTaskBot}.
+ *
+ * The `key` is the bot's key (see `notificationTaskBotKeyForModel()`). Lists only the script groups the bot's owner can
+ * opt out of; the bot's entries and script types are never returned.
+ *
+ * Callable by the bot's owner and by admins (read-only for admins).
+ *
+ * @dbxModelApiParams
+ */
+export interface ReadNotificationTaskBotOptOutsParams extends TargetModelParams {}
+
+export const readNotificationTaskBotOptOutsParamsType = targetModelParamsType as Type<ReadNotificationTaskBotOptOutsParams>;
+
+/**
+ * Used for opting the bot's owner out of (or back into) script groups on a {@link NotificationTaskBot}.
+ *
+ * The `key` is the bot's key. Only groups listed by `read:optOuts` can change, and only the bot's owner can change
+ * them, in both directions. Admins can't: an admin has no way to undo an owner's opt-out. A group may not appear in
+ * both lists.
+ *
+ * Opting out stops every opt-out-able entry in the group and deletes its pending run. Opting back in schedules a run
+ * due now for each idle, enabled and unpaused entry, the same as an admin resume.
+ *
+ * @dbxModelApiParams
+ */
+export interface UpdateNotificationTaskBotOptOutParams extends TargetModelParams {
+  /**
+   * Groups to opt out of.
+   */
+  readonly optOut?: Maybe<NotificationTaskBotScriptGroupKey[]>;
+  /**
+   * Groups to opt back into.
+   */
+  readonly optIn?: Maybe<NotificationTaskBotScriptGroupKey[]>;
+}
+
+export const updateNotificationTaskBotOptOutParamsType = targetModelParamsType.merge({
+  'optOut?': clearable(notificationTaskBotScriptGroupKeyType.array().atMostLength(UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS)),
+  'optIn?': clearable(notificationTaskBotScriptGroupKeyType.array().atMostLength(UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS))
+}) as Type<UpdateNotificationTaskBotOptOutParams>;
+
+/**
+ * Result of reading or updating the owner opt-outs of a {@link NotificationTaskBot}.
+ */
+export interface NotificationTaskBotOptOutsResult {
+  /**
+   * The groups the owner can opt out of, with their opt-out state. A set `optOutAt` means the group is opted out.
+   */
+  readonly groups: NotificationTaskBotOwnerOptOutGroup[];
 }
 
 /**
@@ -826,9 +910,29 @@ export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationLoggedEventDay: null;
   readonly notificationLoggedEventDayPage: null;
   readonly notificationTaskBot: {
+    read: {
+      /**
+       * Lists the script groups the bot's owner can opt out of, with their opt-out state. Never returns entries.
+       *
+       * Callable by the bot's owner and by admins.
+       */
+      optOuts: [ReadNotificationTaskBotOptOutsParams, NotificationTaskBotOptOutsResult];
+    };
     update: {
+      /**
+       * Admin-only. Enables/disables, pauses/resumes or reschedules a single entry. Reports `opted_out` when the owner
+       * opted out of the entry's group, which only the owner can undo.
+       */
       entry: [UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult];
+      /**
+       * Admin-only. Runs a single entry on demand. Refused for disabled, paused and opted-out entries.
+       */
       run: [RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult];
+      /**
+       * Owner-only. Opts the bot's owner out of (or back into) script groups listed by `read:optOuts`. Admins can't
+       * change an owner's opt-outs in either direction.
+       */
+      optOut: [UpdateNotificationTaskBotOptOutParams, NotificationTaskBotOptOutsResult];
     };
   };
 };
@@ -838,7 +942,7 @@ export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunc
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
   notification: ['update:send'],
-  notificationTaskBot: ['update:entry,run']
+  notificationTaskBot: ['read:optOuts', 'update:entry,run,optOut']
 };
 
 /**
@@ -876,9 +980,13 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
     };
   };
   abstract notificationTaskBot: {
+    readNotificationTaskBot: {
+      optOuts: ModelFirebaseReadFunction<ReadNotificationTaskBotOptOutsParams, NotificationTaskBotOptOutsResult>;
+    };
     updateNotificationTaskBot: {
       entry: ModelFirebaseCrudFunction<UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult>;
       run: ModelFirebaseCrudFunction<RunNotificationTaskBotEntryParams, RunNotificationTaskBotEntryResult>;
+      optOut: ModelFirebaseCrudFunction<UpdateNotificationTaskBotOptOutParams, NotificationTaskBotOptOutsResult>;
     };
   };
 }

@@ -168,6 +168,40 @@ export function isNotificationTaskBotEntryId(entryId: string): entryId is Notifi
 }
 
 /**
+ * Key of a NotificationTaskBotScriptGroup, the topic a script belongs to (e.g. "Email reminders").
+ *
+ * The bot's owner opts out of a whole group at once rather than individual entries.
+ *
+ * Must match {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX}.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:notification
+ */
+export type NotificationTaskBotScriptGroupKey = string;
+
+/**
+ * Pattern every {@link NotificationTaskBotScriptGroupKey} must match: lowercase letters, digits, underscores and dashes.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX = /^[a-z0-9_-]+$/;
+
+/**
+ * Maximum length of a {@link NotificationTaskBotScriptGroupKey}.
+ */
+export const NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH = 40;
+
+/**
+ * Returns true if the input is a valid {@link NotificationTaskBotScriptGroupKey}.
+ *
+ * @param groupKey - The candidate group key.
+ * @returns True when the key matches {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX} and is within {@link NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH}.
+ */
+export function isNotificationTaskBotScriptGroupKey(groupKey: string): groupKey is NotificationTaskBotScriptGroupKey {
+  return groupKey.length > 0 && groupKey.length <= NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH && NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX.test(groupKey);
+}
+
+/**
  * Run number of a single NotificationTaskBot run. Taken from the bot's monotonic run counter, so it never repeats within a bot.
  *
  * @semanticType

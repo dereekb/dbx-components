@@ -19,9 +19,13 @@ import {
   NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
-  type NotificationTaskBotEntryId
+  NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE,
+  type NotificationTaskBotEntryId,
+  type NotificationTaskBotScriptGroupKey
 } from '@dereekb/firebase';
-import { notFoundError, preconditionConflictError } from '@dereekb/firebase-server';
+import { forbiddenError, notFoundError, preconditionConflictError } from '@dereekb/firebase-server';
 
 /**
  * Creates an error indicating that a required notification ID was missing during creation.
@@ -331,5 +335,52 @@ export function notificationTaskBotEntryNotRunnableError(key: FirestoreModelKey,
     message: `The NotificationTaskBot "${key}" entry "${entryId}" is disabled or paused and cannot run.`,
     code: NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
     data: { key, entryId }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} entry cannot run because the bot's owner opted out of
+ * its script group. Only the owner can undo the opt-out.
+ *
+ * @param key - The bot's model key.
+ * @param entryId - The entry id.
+ * @param oat - When the owner opted out.
+ * @returns A precondition conflict error with the entry opted out error code.
+ */
+export function notificationTaskBotEntryOptedOutError(key: FirestoreModelKey, entryId: NotificationTaskBotEntryId, oat: Date) {
+  return preconditionConflictError({
+    message: `The NotificationTaskBot "${key}" entry "${entryId}" was opted out by the bot's owner and cannot run.`,
+    code: NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
+    data: { key, entryId, oat }
+  });
+}
+
+/**
+ * Creates an error indicating that a {@link NotificationTaskBot} opt-out update named groups the owner can't change.
+ *
+ * @param key - The bot's model key.
+ * @param groups - The groups that can't be changed.
+ * @returns A forbidden error with the opt-out not allowed error code.
+ */
+export function notificationTaskBotOptOutNotAllowedError(key: FirestoreModelKey, groups: NotificationTaskBotScriptGroupKey[]) {
+  return forbiddenError({
+    message: `The NotificationTaskBot "${key}" opt-out groups "${groups.join(', ')}" can't be changed.`,
+    code: NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE,
+    data: { key, groups }
+  });
+}
+
+/**
+ * Creates an error indicating that someone other than the bot's owner tried to change a {@link NotificationTaskBot}'s
+ * opt-outs. Admins included, since an admin has no way to undo an owner's opt-out.
+ *
+ * @param key - The bot's model key.
+ * @returns A forbidden error with the opt-out requires owner error code.
+ */
+export function notificationTaskBotOptOutRequiresOwnerError(key: FirestoreModelKey) {
+  return forbiddenError({
+    message: `Only the owner of the NotificationTaskBot "${key}" can change its opt-outs.`,
+    code: NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE,
+    data: { key }
   });
 }

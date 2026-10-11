@@ -21,6 +21,7 @@ export * from './notification.settings';
 export * from './notification.task';
 export * from './notification.task.subtask';
 export * from './notification.taskbot';
+export * from './notification.taskbot.optout';
 export * from './notification.taskbot.script';
 export * from './notification.taskbot.task';
 export * from './notification.taskbot.util';

@@ -1,6 +1,17 @@
 import {
   type AppNotificationTaskBotScriptConfigServiceRef,
   type ApplyNotificationTaskBotChangeResult,
+  type ContextGrantedModelRolesReader,
+  type FirebaseAuthOwnershipKey,
+  type FirebasePermissionErrorContext,
+  type NotificationTaskBotOptOutsResult,
+  type NotificationTaskBotRoles,
+  notificationTaskBotEntryStatus,
+  notificationTaskBotOwnerOptOutGroups,
+  type ReadNotificationTaskBotOptOutsParams,
+  readNotificationTaskBotOptOutsParamsType,
+  type UpdateNotificationTaskBotOptOutParams,
+  updateNotificationTaskBotOptOutParamsType,
   appNotificationTaskBotScriptConfigService,
   applyNotificationTaskBotChanges,
   createNotificationDocument,
@@ -43,7 +54,7 @@ import {
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { addMilliseconds, filterMaybeArrayValues, type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
 import { type NotificationServerActions } from './notification.action.server';
-import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotRunnableError } from './notification.error';
+import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotRunnableError, notificationTaskBotEntryOptedOutError, notificationTaskBotOptOutNotAllowedError, notificationTaskBotOptOutRequiresOwnerError } from './notification.error';
 
 /**
  * @module notification.taskbot.action.server
@@ -59,17 +70,22 @@ import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotR
 // MARK: Context
 /**
  * Narrow context the NotificationTaskBot actions need.
+ *
+ * The script registry is required: every write resolves each entry's owner opt-out group from it, so opt-outs are
+ * reconciled on every write path.
  */
-export interface NotificationTaskBotServerActionsContext extends FirestoreContextReference, Pick<NotificationFirestoreCollections, 'notificationTaskBotCollection' | 'notificationBoxCollection' | 'notificationCollectionFactory' | 'notificationCollectionGroup'>, Partial<AppNotificationTaskBotScriptConfigServiceRef> {}
+export interface NotificationTaskBotServerActionsContext extends FirestoreContextReference, Pick<NotificationFirestoreCollections, 'notificationTaskBotCollection' | 'notificationBoxCollection' | 'notificationCollectionFactory' | 'notificationCollectionGroup'>, AppNotificationTaskBotScriptConfigServiceRef {}
 
 /**
- * Returns the script config service from the context, falling back to an empty registry.
+ * Returns a ref to the script config service from the context, falling back to an empty registry.
+ *
+ * Spread it into a context that only optionally carries the registry to build a {@link NotificationTaskBotServerActionsContext}.
  *
  * @param context - The context.
- * @returns The script config service.
+ * @returns The script config service ref.
  */
-export function notificationTaskBotScriptConfigServiceForContext(context: Partial<AppNotificationTaskBotScriptConfigServiceRef>) {
-  return context.appNotificationTaskBotScriptConfigService ?? appNotificationTaskBotScriptConfigService();
+export function notificationTaskBotScriptConfigServiceForContext(context: Partial<AppNotificationTaskBotScriptConfigServiceRef>): AppNotificationTaskBotScriptConfigServiceRef {
+  return { appNotificationTaskBotScriptConfigService: context.appNotificationTaskBotScriptConfigService ?? appNotificationTaskBotScriptConfigService() };
 }
 
 // MARK: Apply Changes
@@ -110,7 +126,8 @@ export type ApplyNotificationTaskBotChangesInTransactionFunction = (input: Apply
  * @returns The function.
  */
 export function applyNotificationTaskBotChangesInTransactionFactory(context: NotificationTaskBotServerActionsContext): ApplyNotificationTaskBotChangesInTransactionFunction {
-  const { notificationTaskBotCollection, notificationCollectionGroup } = context;
+  const { notificationTaskBotCollection, notificationCollectionGroup, appNotificationTaskBotScriptConfigService } = context;
+  const optOutGroupKeyForScriptType = (scriptType: NotificationTaskBotScriptType) => appNotificationTaskBotScriptConfigService.optOutGroupKeyForScriptType(scriptType);
 
   return async (input) => {
     const { transaction, model, changes, now: inputNow } = input;
@@ -118,7 +135,7 @@ export function applyNotificationTaskBotChangesInTransactionFactory(context: Not
     const botDocument = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationTaskBotIdForModel(model));
     const bot = input.bot === undefined ? await getDocumentSnapshotData(botDocument) : input.bot;
 
-    const result = applyNotificationTaskBotChanges({ bot, model, changes, now });
+    const result = applyNotificationTaskBotChanges({ bot, model, changes, now, optOutGroupKeyForScriptType });
 
     if (result.changed && result.bot) {
       const nextBot = result.bot;
@@ -194,8 +211,18 @@ export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskB
    * When to schedule a run. Defaults to `'ifIdle'`.
    */
   readonly schedule?: Maybe<NotificationTaskBotEnsureSchedule>;
+  /**
+   * When provided, sets the bot's owner key. Pass the key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)
+   * on every ensure so the owner stays in sync. Null clears it.
+   */
+  readonly owner?: Maybe<FirebaseAuthOwnershipKey>;
   readonly now?: Maybe<Date>;
 }
+
+/**
+ * Input for {@link ensureNotificationTaskBotEntryInTransactionFactory}.
+ */
+export interface EnsureNotificationTaskBotEntryInTransactionInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> extends EnsureNotificationTaskBotEntryInput<D>, Pick<ApplyNotificationTaskBotChangesInTransactionInput, 'transaction' | 'bot'> {}
 
 /**
  * Creates a function that ensures an entry exists inside an existing transaction.
@@ -206,9 +233,9 @@ export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskB
 export function ensureNotificationTaskBotEntryInTransactionFactory(context: NotificationTaskBotServerActionsContext) {
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
-  return (input: EnsureNotificationTaskBotEntryInput & { readonly transaction: Transaction }) => {
-    const { transaction, model, entryId, scriptType, data, state, schedule, now } = input;
-    return applyInTransaction({ transaction, model, now, changes: [{ type: 'ensure', entryId, scriptType, data, state, schedule }] });
+  return (input: EnsureNotificationTaskBotEntryInTransactionInput) => {
+    const { transaction, bot, model, entryId, scriptType, data, state, schedule, owner, now } = input;
+    return applyInTransaction({ transaction, bot, model, now, changes: [{ type: 'ensure', entryId, scriptType, data, state, schedule, owner }] });
   };
 }
 
@@ -302,6 +329,32 @@ export interface RemoveNotificationTaskBotEntryInput {
 export function removeNotificationTaskBotEntryFactory(context: NotificationTaskBotServerActionsContext) {
   const applyChanges = applyNotificationTaskBotChangesFactory(context);
   return (input: RemoveNotificationTaskBotEntryInput) => applyChanges({ model: input.model, changes: [{ type: 'remove', entryId: input.entryId }] });
+}
+
+/**
+ * Input for {@link setNotificationTaskBotOwnerFactory}.
+ */
+export interface SetNotificationTaskBotOwnerInput {
+  readonly model: FirestoreModelKey;
+  /**
+   * The new owner key, or null to clear it. Existing opt-outs are kept.
+   */
+  readonly owner: Maybe<FirebaseAuthOwnershipKey>;
+  readonly now?: Maybe<Date>;
+}
+
+/**
+ * Creates a function that sets or clears the owner key of the bot attached to a model. A no-op when the bot does not
+ * exist.
+ *
+ * Existing opt-outs are kept, since an opt-out does not record who made it.
+ *
+ * @param context - The NotificationTaskBot context.
+ * @returns The function.
+ */
+export function setNotificationTaskBotOwnerFactory(context: NotificationTaskBotServerActionsContext) {
+  const applyChanges = applyNotificationTaskBotChangesFactory(context);
+  return (input: SetNotificationTaskBotOwnerInput) => applyChanges({ model: input.model, now: input.now, changes: [{ type: 'owner', owner: input.owner }] });
 }
 
 /**
@@ -406,25 +459,29 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
         changes.push({ type: 'schedule', entryId, at: nextRunAt });
       }
 
-      const result = await firestoreContext.runTransaction(async (transaction) => {
+      const entry = await firestoreContext.runTransaction(async (transaction) => {
         const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
         const bot = await getDocumentSnapshotData(botDocumentInTransaction);
+        const currentEntry = notificationTaskBotEntry(bot, entryId);
 
-        if (!bot || !notificationTaskBotEntry(bot, entryId)) {
+        if (!bot || !currentEntry) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
         }
 
-        return applyInTransaction({ transaction, model: bot.m, bot, changes });
+        const result = await applyInTransaction({ transaction, model: bot.m, bot, changes });
+        return result.entry ?? currentEntry;
       });
 
-      const taskKey = result.entry?.nk;
+      // an opted-out entry reports opted_out, since a resume, enable or reschedule can't take effect until the owner opts back in
+      const status = notificationTaskBotEntryStatus(entry);
+      const taskKey = entry.nk;
       let runResult: Maybe<SendNotificationResult>;
 
       if (runImmediately && taskKey) {
         runResult = await runNotificationTaskBotRunTaskImmediately(context, taskKey);
       }
 
-      return { taskKey, runResult };
+      return { status, taskKey, runResult };
     };
   });
 }
@@ -452,6 +509,8 @@ export function runNotificationTaskBotEntryFactory(context: NotificationTaskBotA
 
         if (!bot || !entry) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
+        } else if (entry.oat != null) {
+          throw notificationTaskBotEntryOptedOutError(botDocument.key, entryId, entry.oat);
         } else if (!isNotificationTaskBotEntryRunnable(entry)) {
           throw notificationTaskBotEntryNotRunnableError(botDocument.key, entryId);
         }
@@ -467,6 +526,90 @@ export function runNotificationTaskBotEntryFactory(context: NotificationTaskBotA
       }
 
       return { taskKey, runResult };
+    };
+  });
+}
+
+// MARK: Owner Opt-Outs
+/**
+ * The roles reader the opt-out actions take, as produced by the app's `useModel('notificationTaskBot', ...)`.
+ *
+ * The actions take the reader rather than the bare document so a handler can't forge ownership: the `optOut` role is
+ * checked against the reader's granted roles, and the reader's already-loaded data is reused.
+ */
+export type NotificationTaskBotOptOutRolesReader = Pick<ContextGrantedModelRolesReader<FirebasePermissionErrorContext, NotificationTaskBot, NotificationTaskBotDocument, NotificationTaskBotRoles>, 'data' | 'document' | 'containsRoles'>;
+
+/**
+ * Creates the `readNotificationTaskBotOptOuts` API action: lists the script groups the bot's owner can opt out of.
+ *
+ * Built from the roles reader's already-loaded data, so there is no second read. Use it with the `optOut` role, which
+ * the owner holds explicitly and admins hold through full access.
+ *
+ * @param context - The API context.
+ * @returns The transform-and-validate action.
+ */
+export function readNotificationTaskBotOptOutsFactory(context: NotificationTaskBotApiServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, appNotificationTaskBotScriptConfigService: scriptConfigService } = context;
+
+  return firebaseServerActionTransformFunctionFactory(readNotificationTaskBotOptOutsParamsType, async (_params: ReadNotificationTaskBotOptOutsParams) => {
+    return async (rolesReader: NotificationTaskBotOptOutRolesReader): Promise<NotificationTaskBotOptOutsResult> => {
+      return { groups: notificationTaskBotOwnerOptOutGroups({ bot: rolesReader.data, scriptConfigService }) };
+    };
+  });
+}
+
+/**
+ * Creates the `updateNotificationTaskBotOptOut` API action: opts the bot's owner out of (or back into) script groups.
+ *
+ * Requires the `optOut` role to be granted EXPLICITLY (full access doesn't count), so admins can read opt-outs but never
+ * change them in either direction: an admin has no way to undo an owner's opt-out.
+ *
+ * Inside one transaction it re-reads the bot, validates each group against the owner view of that bot, applies one
+ * `optOut` change per group and returns the new view.
+ *
+ * - A notification created before the opt-out commits is still delivered.
+ * - Opting in wakes idle entries, the same as an admin resume.
+ * - Removing an entry drops its opt-out; a later ensure only re-applies it while a sibling in the group is opted out.
+ *
+ * @param context - The API context.
+ * @returns The transform-and-validate action.
+ */
+export function updateNotificationTaskBotOptOutFactory(context: NotificationTaskBotApiServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, firestoreContext, notificationTaskBotCollection, appNotificationTaskBotScriptConfigService: scriptConfigService } = context;
+  const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(updateNotificationTaskBotOptOutParamsType, async (params: UpdateNotificationTaskBotOptOutParams) => {
+    const optOut = params.optOut ?? [];
+    const optIn = params.optIn ?? [];
+
+    return async (rolesReader: NotificationTaskBotOptOutRolesReader): Promise<NotificationTaskBotOptOutsResult> => {
+      const botDocument = rolesReader.document;
+
+      if (!rolesReader.containsRoles('any', 'optOut')) {
+        throw notificationTaskBotOptOutRequiresOwnerError(botDocument.key);
+      }
+
+      return firestoreContext.runTransaction(async (transaction) => {
+        const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
+        const bot = await getDocumentSnapshotData(botDocumentInTransaction);
+        const allowedGroupKeys = new Set(notificationTaskBotOwnerOptOutGroups({ bot, scriptConfigService }).map((x) => x.key));
+        const optInSet = new Set(optIn);
+        const notAllowed = [...optOut.filter((x) => optInSet.has(x)), ...[...optOut, ...optIn].filter((x) => !allowedGroupKeys.has(x))];
+
+        if (notAllowed.length > 0) {
+          throw notificationTaskBotOptOutNotAllowedError(botDocument.key, Array.from(new Set(notAllowed)));
+        }
+
+        let nextBot: Maybe<NotificationTaskBot> = bot;
+
+        if (bot && (optOut.length > 0 || optIn.length > 0)) {
+          const changes: NotificationTaskBotChange[] = [...optOut.map((group) => ({ type: 'optOut' as const, group, optOut: true })), ...optIn.map((group) => ({ type: 'optOut' as const, group, optOut: false }))];
+          const result = await applyInTransaction({ transaction, model: bot.m, bot, changes });
+          nextBot = result.bot;
+        }
+
+        return { groups: notificationTaskBotOwnerOptOutGroups({ bot: nextBot, scriptConfigService }) };
+      });
     };
   });
 }
@@ -498,8 +641,7 @@ export const DEFAULT_NOTIFICATION_TASK_BOT_REPAIR_OVERDUE_THRESHOLD: Millisecond
  * @returns The repair function.
  */
 export function repairAllNotificationTaskBotsFactory(context: NotificationTaskBotServerActionsContext) {
-  const { firestoreContext, notificationTaskBotCollection, notificationCollectionGroup } = context;
-  const scriptConfigService = notificationTaskBotScriptConfigServiceForContext(context);
+  const { firestoreContext, notificationTaskBotCollection, notificationCollectionGroup, appNotificationTaskBotScriptConfigService: scriptConfigService } = context;
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
   return async (params?: Maybe<RepairAllNotificationTaskBotsParams>): Promise<RepairAllNotificationTaskBotsResult> => {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { isSameDate } from '@dereekb/date';
-import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreReadFunction, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
 import { NotificationFirestoreCollections, NotificationFunctions, type NotificationTaskBot, type NotificationTaskBotDocument, type NotificationTaskBotEmbeddedScriptEntry, type NotificationTaskBotEntryId, notificationTaskBotEntry } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { map, shareReplay, distinctUntilChanged, type Observable } from 'rxjs';
@@ -43,4 +43,14 @@ export class NotificationTaskBotDocumentStore extends AbstractDbxFirebaseDocumen
 
   readonly updateEntry = firebaseDocumentStoreUpdateFunction(this, this.notificationFunctions.notificationTaskBot.updateNotificationTaskBot.entry);
   readonly runEntry = firebaseDocumentStoreUpdateFunction(this, this.notificationFunctions.notificationTaskBot.updateNotificationTaskBot.run);
+
+  /**
+   * Reads the owner opt-outs. Admins may read them, but only the bot's owner can change them.
+   */
+  readonly readOptOuts = firebaseDocumentStoreReadFunction(this, this.notificationFunctions.notificationTaskBot.readNotificationTaskBot.optOuts);
+
+  /**
+   * Changes the owner opt-outs. Refused for anyone but the bot's owner, admins included.
+   */
+  readonly updateOptOut = firebaseDocumentStoreUpdateFunction(this, this.notificationFunctions.notificationTaskBot.updateNotificationTaskBot.optOut);
 }

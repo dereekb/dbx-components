@@ -128,6 +128,7 @@ service cloud.firestore {
     }
 
     match /ntb/{notificationTaskBot} {
+      // owners (`o`) deliberately can't read the bot: they see only their opt-out groups, through the read:optOuts callable
       allow get, list: if userClaimsIsSysAdmin(); // system admins can read
     }
 

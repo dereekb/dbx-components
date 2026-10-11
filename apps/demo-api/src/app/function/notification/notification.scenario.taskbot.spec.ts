@@ -4,7 +4,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { createNotificationDocument, getDocumentSnapshotData, type NotificationTaskBotEntryData, notificationTaskBotEntry, NotificationTaskBotEntryState, NotificationTaskBotRunOutcome, notificationTaskBotRunNotificationTaskTemplate, NotificationTaskBotRunTrigger, type NotificationTaskKey } from '@dereekb/firebase';
 import { applyNotificationTaskBotChangesFactory, ensureNotificationTaskBotEntryFactory, removeNotificationTaskBotEntryFactory, scheduleNotificationTaskBotEntryFactory } from '@dereekb/firebase-server/model';
-import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
+import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
 import { MS_IN_HOUR } from '@dereekb/util';
 
 const entryId = DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID;
@@ -196,6 +196,72 @@ demoApiFunctionContextFactory((f) => {
               expect(bot.e).toHaveLength(2);
               expect(notificationTaskBotEntry(bot, 'other')?.d).toEqual({ iv: 5 });
               expect(notificationTaskBotEntry(bot, entryId)?.sc).toBe(1);
+            });
+          });
+
+          describe('owner opt-out', () => {
+            async function optOut(value: boolean) {
+              return applyNotificationTaskBotChangesFactory(f.serverActionsContext)({ model: model(), changes: [{ type: 'optOut', group: DEMO_PING_NOTIFICATION_TASK_BOT_GROUP.key, optOut: value }] });
+            }
+
+            it('should delete the pending run so it never sends', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              const before = await loadEntry();
+
+              const result = await optOut(true);
+              const entry = await loadEntry();
+
+              expect(result.deleteTaskKeys).toEqual([before.nk]);
+              expect(await loadTask(before.nk as string)).toBeUndefined();
+              expect(entry.oat).toBeDefined();
+              expect(entry.rn).toBeFalsy();
+              expect(entry.sc).toBe(0);
+            });
+
+            it('should fence a recreated run of an opted-out entry so it writes nothing', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              const before = await loadEntry();
+              await optOut(true);
+
+              const recreated = await createNotificationDocument({
+                context: f.demoFirestoreCollections,
+                template: notificationTaskBotRunNotificationTaskTemplate({ model: model(), botKey: ntb.documentKey, botId: ntb.documentId, entryId, scriptType, runNumber: before.rn as number, trigger: NotificationTaskBotRunTrigger.FORCED, sendAt: new Date() })
+              });
+
+              await sendRun(recreated.notificationDocument.key);
+
+              const entry = await loadEntry();
+              expect(entry.sc).toBe(0);
+              expect(entry.h).toHaveLength(0);
+              expect(entry.rn).toBeFalsy();
+              expect(entry.oat).toBeDefined();
+              expect((await loadTask(recreated.notificationDocument.key))?.d).toBe(true);
+            });
+
+            it('should be ignored by repair', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              await optOut(true);
+
+              const result = await f.notificationServerActions.repairAllNotificationTaskBots({ now: addHours(new Date(), 2) });
+              expect(result.entriesRepaired).toBe(0);
+
+              const entry = await loadEntry();
+              expect(entry.rn).toBeFalsy();
+              expect(entry.h).toHaveLength(0);
+            });
+
+            it('should schedule a new run when opted back in', async () => {
+              await ensure({ iv: MS_IN_HOUR });
+              const before = await loadEntry();
+              await optOut(true);
+
+              const result = await optOut(false);
+              const entry = await loadEntry();
+
+              expect(result.createRuns).toHaveLength(1);
+              expect(entry.oat).toBeFalsy();
+              expect(entry.rn).toBeGreaterThan(before.rn as number);
+              expect(await loadTask(entry.nk as string)).toBeDefined();
             });
           });
 

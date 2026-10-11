@@ -120,7 +120,8 @@ import {
   type NotificationTaskBotEntryData,
   type NotificationTaskBotEntryId,
   type NotificationTaskBotEnsureSchedule,
-  type NotificationTaskBotScriptType
+  type NotificationTaskBotScriptType,
+  type FirebaseAuthOwnershipKey
 } from '@dereekb/firebase';
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type ContentTypeMimeType, type SlashPathFile, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory, type Milliseconds, MS_IN_MINUTE, waitForMs } from '@dereekb/util';
@@ -1364,6 +1365,10 @@ export interface DemoApiNotificationTaskBotTestContextParams {
    * Entries to ensure on the bot. The bot is only created when at least one entry is provided.
    */
   readonly entries?: Maybe<DemoApiNotificationTaskBotTestContextEntryParams[]>;
+  /**
+   * The bot's owner key, set on every ensured entry. Pass the attached profile's key (`pr/<uid>`) to let that user opt out.
+   */
+  readonly owner?: Maybe<FirebaseAuthOwnershipKey | ModelTestContextFixture<any, any, any, any, any>>;
 }
 
 export class DemoApiNotificationTaskBotTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<
@@ -1399,9 +1404,10 @@ export const demoNotificationTaskBotContextFactory = () =>
 
       if (entries.length > 0) {
         const ensureEntry = ensureNotificationTaskBotEntryFactory(instance.testContext.serverActionsContext);
+        const owner = params.owner == null ? undefined : typeof params.owner === 'string' ? params.owner : params.owner.documentKey;
 
         for (const entry of entries) {
-          await ensureEntry({ model: params.for.documentKey, entryId: entry.entryId, scriptType: entry.scriptType, data: entry.data, schedule: entry.schedule });
+          await ensureEntry({ model: params.for.documentKey, entryId: entry.entryId, scriptType: entry.scriptType, data: entry.data, schedule: entry.schedule, owner });
         }
       }
     }
