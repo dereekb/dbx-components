@@ -30,6 +30,19 @@
         "rerunBranches": ["develop", "release", "main"]
       }
     },
+    "release": {
+      "options": {
+        "prepare": [
+          { "name": "regenerate dbx-components-mcp files", "command": ["./regenerate-dbx-components-mcp.sh"] },
+          { "name": "regenerate firestore.indexes.json", "command": ["./regenerate-firestore-indexes.sh"] },
+          { "name": "sync internal peer dependency versions", "command": ["node", "tools/scripts/sync-peer-deps.mjs"] },
+          { "name": "lint-fix", "command": ["./lint-fix-all.sh"], "allowFailure": true }
+        ],
+        "prepareCommitMessage": "build: lint fix + mcp regeneration + firestore indexes + peer dep sync",
+        "versionPreview": { "command": ["node", "tools/scripts/release.mjs", "--dry-run=true", "--skip-publish", "--verbose"] },
+        "pipeline": { "releasePreset": "release", "releaseOnlyPreset": "release-only", "mainPreset": "main" }
+      }
+    },
     "docker": {
       "options": {
         "serve": {
