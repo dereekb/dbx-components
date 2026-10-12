@@ -636,7 +636,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
       from: '*',
       encoding: 'two-way'
     },
-    archetypes: ['composite-key-root', 'embedded-sub-objects']
+    archetypes: ['composite-key-root', 'embedded-sub-objects'],
+    modelGroup: 'Notification'
   },
   {
     name: 'NotificationUser',

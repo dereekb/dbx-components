@@ -353,7 +353,7 @@
       "definition": "number",
       "baseType": "number",
       "topics": [
-        "number",
+        "numeric",
         "dereekb-firebase:notification"
       ],
       "notes": "Run number of a single NotificationTaskBot run. Taken from the bot's monotonic run counter, so it never repeats within a bot."

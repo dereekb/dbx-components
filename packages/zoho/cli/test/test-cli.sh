@@ -172,8 +172,9 @@ echo ""
 # Phase 3: Doctor (no config)
 # ============================
 echo "Phase 3: Doctor (no config)"
-# Clear ZOHO env vars so loadCliConfig finds neither file config nor env config
-DOCTOR_OUTPUT=$(HOME="$TEST_HOME" ZOHO_ACCOUNTS_CLIENT_ID="" ZOHO_ACCOUNTS_CLIENT_SECRET="" ZOHO_ACCOUNTS_REFRESH_TOKEN="" ZOHO_DESK_ORG_ID="" $CLI doctor 2>&1 || true)
+# Strip every ZOHO_* var (shared, per-product, ZOHO_CLI_TOKEN_COMMAND) so loadCliConfig finds neither file config nor env config.
+# Runs inside the $(...) subshell, so later phases keep their vars.
+DOCTOR_OUTPUT=$(unset $(compgen -e | grep '^ZOHO_'); HOME="$TEST_HOME" $CLI doctor 2>&1 || true)
 check_json_valid "doctor outputs valid JSON" "$DOCTOR_OUTPUT"
 check_json_field "doctor reports config fail" "$DOCTOR_OUTPUT" ".data.checks[0].status" "fail"
 

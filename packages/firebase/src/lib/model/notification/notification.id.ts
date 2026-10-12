@@ -205,7 +205,7 @@ export function isNotificationTaskBotScriptGroupKey(groupKey: string): groupKey 
  * Run number of a single NotificationTaskBot run. Taken from the bot's monotonic run counter, so it never repeats within a bot.
  *
  * @semanticType
- * @semanticTopic number
+ * @semanticTopic numeric
  * @semanticTopic dereekb-firebase:notification
  */
 export type NotificationTaskBotRunNumber = number;

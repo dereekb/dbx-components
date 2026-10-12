@@ -77,6 +77,7 @@ async function main() {
     for (const g of extracted.modelGroups) modelGroups.push(g);
   }
 
+  applyCrossFileModelGroups(models, modelGroups);
   applyArchetypePostPass(models);
 
   // Sort for stable output: root collections first, then subcollections; alphabetical within.
@@ -362,6 +363,24 @@ function inferArchetype(entry) {
     result = [{ slug: 'root-entity', axes: {} }];
   }
   return result;
+}
+
+/**
+ * Mirrors `applyCrossFileModelGroupPostPass` in `src/scan/extract-models/index.ts`.
+ * Assigns `modelGroup` in place to models whose `@dbxModelGroup` container lives in
+ * a different file (e.g. `notification.taskbot.ts` models referenced by the container
+ * in `notification.ts`); `extractFromFile` only sees containers in the model's own file.
+ */
+function applyCrossFileModelGroups(models, modelGroups) {
+  const groupByModelName = new Map();
+  for (const group of modelGroups) {
+    for (const modelName of group.modelNames) groupByModelName.set(modelName, group.name);
+  }
+  for (const m of models) {
+    if (m.modelGroup) continue;
+    const groupName = groupByModelName.get(m.name);
+    if (groupName) m.modelGroup = groupName;
+  }
 }
 
 /**
