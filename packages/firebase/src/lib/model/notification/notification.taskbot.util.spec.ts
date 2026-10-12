@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationTaskBot, type NotificationTaskBotEmbeddedScriptEntry, NotificationTaskBotEntryState, NotificationTaskBotEntryStatus, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL } from './notification.taskbot.script';
 import { appendNotificationTaskBotEntryHistoryItem, applyNotificationTaskBotChange, applyNotificationTaskBotChanges, type NotificationTaskBotChange, mergeNotificationTaskBotEntryData, notificationTaskBotEntry, notificationTaskBotEntryStatus, notificationTaskBotNextRunAt } from './notification.taskbot.util';
 
 const model = 'profile/abc';
@@ -49,8 +50,13 @@ describe('applyNotificationTaskBotChange()', () => {
       expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_ping_r1']);
     });
 
-    it('should schedule an explicit run at a date', () => {
+    it('should schedule a not-before run at a date by default', () => {
       const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', schedule: later });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: later, explicit: false });
+    });
+
+    it('should schedule an explicit run at a date', () => {
+      const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', schedule: later, explicit: true });
       expect(result.createRuns[0]).toMatchObject({ sendAt: later, explicit: true });
     });
 
@@ -62,6 +68,72 @@ describe('applyNotificationTaskBotChange()', () => {
 
     it('should throw on an invalid entry id', () => {
       expect(() => apply(undefined, { type: 'ensure', entryId: 'bad_id', scriptType: 'demo_ping' })).toThrow();
+    });
+
+    describe('seed', () => {
+      const seedLsat = new Date('2026-01-01T12:00:00.000Z');
+      const seedLat = new Date('2026-01-01T12:01:00.000Z');
+      const historyItem = (hour: number) => ({ at: new Date(`2026-01-01T0${hour}:00:00.000Z`), tr: NotificationTaskBotRunTrigger.SCHEDULED, o: NotificationTaskBotRunOutcome.SUBMITTED, d: { n: hour } });
+
+      it('should create the entry with the seeded lsat, lat and sc', () => {
+        const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { lsat: seedLsat, lat: seedLat, sc: 5 } });
+        const entry = result.entry!;
+
+        expect(entry.lsat).toEqual(seedLsat);
+        expect(entry.lat).toEqual(seedLat);
+        expect(entry.sc).toBe(5);
+        expect(entry.lsr).toBeUndefined();
+      });
+
+      it('should sort the seeded history, cap it to the limit and stamp it with run number 0', () => {
+        const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', historyLimit: 3, seed: { h: [historyItem(4), historyItem(1), historyItem(5), historyItem(2), historyItem(3)] } });
+        const entry = result.entry!;
+
+        expect(entry.h.map((x) => x.d?.['n'])).toEqual([3, 4, 5]);
+        expect(entry.h.every((x) => x.rn === 0)).toBe(true);
+      });
+
+      it('should take the run counter and the fence only from the schedule', () => {
+        const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { sc: 5, h: [historyItem(1)] } });
+
+        expect(result.bot?.rc).toBe(1);
+        expect(result.entry?.rn).toBe(1);
+        expect(result.entry?.nk).toBe('nb/profile_abc/nbn/profile_abc_ping_r1');
+      });
+
+      it('should ignore the seed on an existing entry', () => {
+        const result = apply(ensured(), { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { lsat: seedLsat, sc: 5, h: [historyItem(1)], pause: { reason: 'no_progress' } } });
+
+        expect(result.changed).toBe(false);
+        expect(result.entry?.sc).toBe(0);
+        expect(result.entry?.h).toHaveLength(0);
+        expect(result.entry?.pat).toBeUndefined();
+      });
+
+      it('should create a paused entry with no run', () => {
+        const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { pause: { reason: 'no_progress', at: seedLat } } });
+
+        expect(result.entry?.pat).toEqual(seedLat);
+        expect(result.entry?.pr).toBe('no_progress');
+        expect(result.entry?.rn).toBeUndefined();
+        expect(result.createRuns).toHaveLength(0);
+        expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+      });
+
+      it('should create a paused entry with its resume run when the pause has an until time', () => {
+        const result = apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { pause: { reason: 'no_progress', until: later } } });
+
+        expect(result.entry?.pat).toEqual(now);
+        expect(result.entry?.pu).toEqual(later);
+        expect(result.createRuns).toHaveLength(1);
+        expect(result.createRuns[0]).toMatchObject({ runNumber: 1, sendAt: later, explicit: false, trigger: NotificationTaskBotRunTrigger.SCHEDULED });
+        expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+      });
+
+      it('should throw on an invalid sc', () => {
+        expect(() => apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { sc: -1 } })).toThrow();
+        expect(() => apply(undefined, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping', seed: { sc: 1.5 } })).toThrow();
+      });
     });
   });
 
@@ -88,6 +160,16 @@ describe('applyNotificationTaskBotChange()', () => {
       const paused = apply(ensured(), { type: 'pause', entryId: 'ping', pause: { reason: 'manual' } }).bot as NotificationTaskBot;
       const result = apply(paused, { type: 'schedule', entryId: 'ping' });
       expect(result.createRuns).toHaveLength(0);
+    });
+
+    it('should schedule a not-before run at a date by default', () => {
+      const result = apply(ensured(), { type: 'schedule', entryId: 'ping', at: later });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: later, explicit: false });
+    });
+
+    it('should schedule an explicit run when requested', () => {
+      const result = apply(ensured(), { type: 'schedule', entryId: 'ping', at: later, explicit: true });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: later, explicit: true });
     });
   });
 
@@ -131,7 +213,143 @@ describe('applyNotificationTaskBotChange()', () => {
 
       expect(resumed.entry?.pat).toBeNull();
       expect(resumed.entry?.fc).toBe(0);
+      expect(resumed.entry?.rpr).toBe('manual');
       expect(resumed.createRuns[0].runNumber).toBe(2);
+    });
+
+    describe('until', () => {
+      function pausedUntil(until = later) {
+        return apply(ensured(), { type: 'pause', entryId: 'ping', pause: { reason: 'manual', until } });
+      }
+
+      it('should cancel the live run and issue a resume run at the until time', () => {
+        const result = pausedUntil();
+
+        expect(result.entry?.pu).toEqual(later);
+        expect(result.entry?.rn).toBe(2);
+        expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_ping_r1']);
+        expect(result.createRuns[0]).toMatchObject({ runNumber: 2, sendAt: later, explicit: false, trigger: NotificationTaskBotRunTrigger.SCHEDULED });
+        expect(result.bot?.nat).toEqual(later);
+        expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+      });
+
+      it('should clear pu and cancel the resume run when paused again without an until time', () => {
+        const result = apply(pausedUntil().bot as NotificationTaskBot, { type: 'pause', entryId: 'ping', pause: { reason: 'manual' } });
+
+        expect(result.entry?.pu).toBeNull();
+        expect(result.entry?.rn).toBeNull();
+        expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_ping_r2']);
+        expect(result.createRuns).toHaveLength(0);
+      });
+
+      it('should cancel the resume run and schedule a run due now when resumed', () => {
+        const result = apply(pausedUntil().bot as NotificationTaskBot, { type: 'pause', entryId: 'ping', pause: false });
+
+        expect(result.entry?.pat).toBeNull();
+        expect(result.entry?.pu).toBeNull();
+        expect(result.entry?.rpr).toBe('manual');
+        expect(result.deleteTaskKeys).toEqual(['nb/profile_abc/nbn/profile_abc_ping_r2']);
+        expect(result.createRuns[0]).toMatchObject({ runNumber: 3, sendAt: now, explicit: false });
+      });
+
+      it('should re-issue the resume run when the entry is enabled again', () => {
+        const disabled = apply(pausedUntil().bot as NotificationTaskBot, { type: 'state', entryId: 'ping', state: NotificationTaskBotEntryState.DISABLED });
+
+        expect(disabled.entry?.rn).toBeNull();
+        expect(disabled.entry?.pu).toEqual(later);
+
+        const enabled = apply(disabled.bot as NotificationTaskBot, { type: 'state', entryId: 'ping', state: NotificationTaskBotEntryState.ENABLED });
+
+        expect(enabled.createRuns).toHaveLength(1);
+        expect(enabled.createRuns[0]).toMatchObject({ runNumber: 3, sendAt: later, explicit: false });
+        expect(notificationTaskBotEntryStatus(enabled.entry!)).toBe(NotificationTaskBotEntryStatus.PAUSED);
+      });
+
+      it('should re-issue a missing resume run on ensure', () => {
+        const cancelled = apply(pausedUntil().bot as NotificationTaskBot, { type: 'cancel', entryId: 'ping' });
+        const result = apply(cancelled.bot as NotificationTaskBot, { type: 'ensure', entryId: 'ping', scriptType: 'demo_ping' });
+
+        expect(result.createRuns[0]).toMatchObject({ runNumber: 3, sendAt: later });
+      });
+
+      it('should re-issue a lost resume run on repair without recording LOST or a failure', () => {
+        const result = apply(pausedUntil().bot as NotificationTaskBot, { type: 'repair', entryId: 'ping', runNumber: 2 });
+
+        expect(result.entry?.h).toHaveLength(0);
+        expect(result.entry?.fc).toBe(0);
+        expect(result.entry?.pat).toEqual(now);
+        expect(result.createRuns[0]).toMatchObject({ runNumber: 3, sendAt: later });
+        expect(result.deleteTaskKeys).toHaveLength(0);
+      });
+    });
+  });
+
+  describe('expirePause', () => {
+    const until = new Date(now.getTime() + 60000);
+
+    function pausedUntil() {
+      return apply(ensured(), { type: 'pause', entryId: 'ping', pause: { reason: 'limit', until } }).bot as NotificationTaskBot;
+    }
+
+    it('should resume the entry and keep the live run when the pause expired', () => {
+      const result = apply(pausedUntil(), { type: 'expirePause', entryId: 'ping', runNumber: 2 }, later);
+
+      expect(result.changed).toBe(true);
+      expect(result.entry?.pat).toBeNull();
+      expect(result.entry?.pu).toBeNull();
+      expect(result.entry?.pr).toBeNull();
+      expect(result.entry?.rpr).toBe('limit');
+      expect(result.entry?.rn).toBe(2);
+      expect(result.createRuns).toHaveLength(0);
+      expect(result.deleteTaskKeys).toHaveLength(0);
+      expect(notificationTaskBotEntryStatus(result.entry!)).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
+    });
+
+    it('should be a no-op before the until time', () => {
+      const result = apply(pausedUntil(), { type: 'expirePause', entryId: 'ping', runNumber: 2 }, now);
+
+      expect(result.changed).toBe(false);
+      expect(result.entry?.pat).toEqual(now);
+    });
+
+    it('should be fenced off when the run number does not match', () => {
+      const result = apply(pausedUntil(), { type: 'expirePause', entryId: 'ping', runNumber: 1 }, later);
+
+      expect(result.fenced).toBe(true);
+      expect(result.changed).toBe(false);
+    });
+  });
+
+  describe('deferRun', () => {
+    it('should end the live run without history and hand over to a SCHEDULED not-before run', () => {
+      const manual = apply(ensured(), { type: 'schedule', entryId: 'ping', trigger: NotificationTaskBotRunTrigger.MANUAL }).bot as NotificationTaskBot;
+      const result = apply(manual, { type: 'deferRun', entryId: 'ping', runNumber: 2, at: later });
+
+      expect(result.entry?.h).toHaveLength(0);
+      expect(result.entry?.rn).toBe(3);
+      expect(result.createRuns).toHaveLength(1);
+      expect(result.createRuns[0]).toMatchObject({ runNumber: 3, trigger: NotificationTaskBotRunTrigger.SCHEDULED, sendAt: later, explicit: false });
+      expect(result.deleteTaskKeys).toHaveLength(0); // the deferred run's own task is marked done by the handler
+      expect(result.bot?.nat).toEqual(later);
+    });
+
+    it('should keep rpr and the failure count', () => {
+      let bot = apply(ensured(), { type: 'pause', entryId: 'ping', pause: { reason: 'limit' } }).bot as NotificationTaskBot;
+      bot = apply(bot, { type: 'pause', entryId: 'ping', pause: false }).bot as NotificationTaskBot;
+      bot = { ...bot, e: bot.e.map((x) => ({ ...x, fc: 2 })) };
+
+      const result = apply(bot, { type: 'deferRun', entryId: 'ping', runNumber: 2, at: later });
+
+      expect(result.entry?.rpr).toBe('limit');
+      expect(result.entry?.fc).toBe(2);
+    });
+
+    it('should be fenced off when the run number does not match', () => {
+      const result = apply(ensured(), { type: 'deferRun', entryId: 'ping', runNumber: 7, at: later });
+
+      expect(result.fenced).toBe(true);
+      expect(result.changed).toBe(false);
+      expect(result.createRuns).toHaveLength(0);
     });
   });
 
@@ -192,6 +410,104 @@ describe('applyNotificationTaskBotChange()', () => {
     it('should apply the minimum run interval', () => {
       const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAtExplicit: now, minimumRunInterval: 60000 });
       expect(result.createRuns[0]).toMatchObject({ sendAt: new Date(now.getTime() + 60000), explicit: true });
+    });
+
+    it('should apply the default minimum run interval', () => {
+      const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: now });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: new Date(now.getTime() + DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL), explicit: false });
+    });
+
+    it('should apply the default minimum run interval to an explicit next run', () => {
+      const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAtExplicit: now });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: new Date(now.getTime() + DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL), explicit: true });
+    });
+
+    it('should schedule at now when the minimum run interval is 0', () => {
+      const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: now, minimumRunInterval: 0 });
+      expect(result.createRuns[0]).toMatchObject({ sendAt: now });
+    });
+
+    describe('failures', () => {
+      function completeFailed(bot: NotificationTaskBot, extra?: Partial<NotificationTaskBotChange>) {
+        const rn = bot.e[0].rn as number;
+        return apply(bot, { type: 'completeRun', entryId: 'ping', runNumber: rn, trigger: NotificationTaskBotRunTrigger.SCHEDULED, outcome: NotificationTaskBotRunOutcome.FAILED, nextRunAt: later, maxConsecutiveFailures: 2, ...extra } as NotificationTaskBotChange);
+      }
+
+      it('should add 1 to the failure count', () => {
+        const result = completeFailed(ensured());
+
+        expect(result.entry?.fc).toBe(1);
+        expect(result.entry?.pat).toBeUndefined();
+        expect(result.createRuns).toHaveLength(1);
+      });
+
+      it('should pause with the failed reason at the failure budget and issue no run', () => {
+        const result = completeFailed(completeFailed(ensured()).bot as NotificationTaskBot);
+
+        expect(result.entry?.fc).toBe(2);
+        expect(result.entry?.pr).toBe('failed');
+        expect(result.entry?.rn).toBeNull();
+        expect(result.createRuns).toHaveLength(0);
+      });
+
+      it("should keep the script's own pause reason", () => {
+        const result = completeFailed(completeFailed(ensured()).bot as NotificationTaskBot, { pause: { reason: 'no_progress' } });
+        expect(result.entry?.pr).toBe('no_progress');
+      });
+
+      it('should reset the failure count on any other outcome', () => {
+        const failed = completeFailed(ensured()).bot as NotificationTaskBot;
+        const result = apply(failed, { type: 'completeRun', entryId: 'ping', runNumber: 2, trigger: NotificationTaskBotRunTrigger.SCHEDULED, outcome: NotificationTaskBotRunOutcome.SUBMITTED });
+
+        expect(result.entry?.fc).toBe(0);
+      });
+    });
+
+    it('should pause until a time with a resume run instead of a next run', () => {
+      const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: now, pause: { reason: 'limit', until: later } });
+
+      expect(result.entry?.pu).toEqual(later);
+      expect(result.createRuns).toHaveLength(1);
+      expect(result.createRuns[0]).toMatchObject({ runNumber: 2, sendAt: later });
+    });
+
+    it('should issue no resume run when it also disables the entry', () => {
+      const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, pause: { reason: 'limit', until: later }, disable: true });
+
+      expect(result.entry?.pu).toEqual(later);
+      expect(result.entry?.rn).toBeNull();
+      expect(result.createRuns).toHaveLength(0);
+    });
+
+    it('should clear rpr', () => {
+      let bot = apply(ensured(), { type: 'pause', entryId: 'ping', pause: { reason: 'limit' } }).bot as NotificationTaskBot;
+      bot = apply(bot, { type: 'pause', entryId: 'ping', pause: false }).bot as NotificationTaskBot;
+
+      expect(bot.e[0].rpr).toBe('limit');
+
+      const result = apply(bot, { type: 'completeRun', entryId: 'ping', runNumber: 2, trigger: NotificationTaskBotRunTrigger.SCHEDULED });
+      expect(result.entry?.rpr).toBeNull();
+    });
+
+    describe('remove', () => {
+      it('should remove the entry without history or a next run', () => {
+        const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 1, trigger: NotificationTaskBotRunTrigger.SCHEDULED, nextRunAt: later, remove: true });
+
+        expect(result.changed).toBe(true);
+        expect(result.bot?.e).toHaveLength(0);
+        expect(result.bot?.rc).toBe(1);
+        expect(result.bot?.nat).toBeNull();
+        expect(result.entry).toBeUndefined();
+        expect(result.createRuns).toHaveLength(0);
+        expect(result.deleteTaskKeys).toHaveLength(0); // the run's own task is marked done by the handler
+      });
+
+      it('should be fenced off when the run number does not match', () => {
+        const result = apply(ensured(), { type: 'completeRun', entryId: 'ping', runNumber: 7, trigger: NotificationTaskBotRunTrigger.SCHEDULED, remove: true });
+
+        expect(result.fenced).toBe(true);
+        expect(result.bot?.e).toHaveLength(1);
+      });
     });
 
     it('should pause instead of scheduling when requested', () => {
@@ -446,6 +762,22 @@ describe('owner opt-outs', () => {
       expect(entry?.rn).toBe(4);
       expect(result.createRuns.map((x) => x.entryId)).toEqual(['a', 'b']);
       expect(result.createRuns[0]).toMatchObject({ trigger: NotificationTaskBotRunTrigger.SCHEDULED, sendAt: later, explicit: false });
+    });
+
+    it('should re-issue the resume run of an entry paused until a time', () => {
+      let bot = groupBot();
+      bot = applyWith(bot, { type: 'pause', entryId: 'a', pause: { reason: 'manual', until: later } }).bot as NotificationTaskBot;
+      bot = applyWith(bot, { type: 'optOut', group, optOut: true }).bot as NotificationTaskBot;
+
+      const optedOut = notificationTaskBotEntry(bot, 'a');
+      expect(optedOut?.rn).toBeNull();
+      expect(optedOut?.pu).toEqual(later);
+
+      const result = applyWith(bot, { type: 'optOut', group, optOut: false });
+      const run = result.createRuns.find((x) => x.entryId === 'a');
+
+      expect(run).toMatchObject({ sendAt: later, explicit: false });
+      expect(notificationTaskBotEntryStatus(notificationTaskBotEntry(result.bot, 'a') as NotificationTaskBotEmbeddedScriptEntry)).toBe(NotificationTaskBotEntryStatus.PAUSED);
     });
 
     it('should not schedule a paused or disabled entry', () => {

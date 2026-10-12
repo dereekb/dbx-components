@@ -1,5 +1,13 @@
-import { createNotificationDocument, type NotificationTaskBotRunNotificationTaskData, type NotificationTaskBotScriptType } from '@dereekb/firebase';
-import { type NotificationTaskBotScriptProcessorConfig, type NotificationTaskServiceTaskHandlerConfig, notificationTaskBotDelayUntilDue, notificationTaskBotRunNotificationTaskHandler, runNotificationTaskBotEntryTransaction } from '@dereekb/firebase-server/model';
+import { createNotificationDocument, getDocumentSnapshotData, type NotificationTaskBotRunNotificationTaskData, type NotificationTaskBotScriptType, notificationTaskFailed } from '@dereekb/firebase';
+import {
+  type NotificationTaskBotRunCleanupInstructions,
+  type NotificationTaskBotRunSubtaskResult,
+  type NotificationTaskBotScriptProcessorConfig,
+  type NotificationTaskServiceTaskHandlerConfig,
+  notificationTaskBotDelayUntilDue,
+  notificationTaskBotRunNotificationTaskHandler,
+  runNotificationTaskBotEntryTransaction
+} from '@dereekb/firebase-server/model';
 import { addMilliseconds } from '@dereekb/util';
 import {
   DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL,
@@ -26,8 +34,11 @@ export const DEMO_PING_NOTIFICATION_TASK_BOT_PING_SUBTASK = 'ping';
  * Builds the processor for a demo ping NotificationTaskBot script (`demo_ping` or `demo_ping_required`).
  *
  * - wait: delays the run until `lsat + iv`, unless the run is FORCED or explicit.
- * - ping: in a fenced transaction, creates an example notification for the profile, marks the run submitted and counts it.
- * - cleanup: schedules the next run after `iv`, or pauses the entry once `c` reaches `pa`.
+ * - ping: reports a failure when `f` is set. Otherwise, in a fenced transaction, creates an example notification for the
+ *   profile, marks the run submitted and counts it. The count restarts when the entry resumes from the `'limit'` pause
+ *   (`rpr`). Nothing is sent when the profile no longer exists.
+ * - cleanup: removes the entry when the profile no longer exists. Otherwise schedules the next run after `iv`, or pauses
+ *   the entry once `c` reaches `pa`.
  *
  * @param demoFirebaseServerActionsContext - Server actions context providing the Profile and Notification collections.
  * @param target - The ping script type to process. Defaults to `demo_ping`.
@@ -50,24 +61,50 @@ export function demoPingNotificationTaskBotScriptProcessor(demoFirebaseServerAct
       {
         subtask: DEMO_PING_NOTIFICATION_TASK_BOT_PING_SUBTASK,
         fn: async (input) => {
-          await runNotificationTaskBotEntryTransaction<void, DemoPingNotificationTaskBotEntryData>(input, async ({ transaction, entry, alreadySubmitted, markSubmitted, updateEntryData }) => {
-            // a re-run of this step after a crash finds the run already submitted, and does not send twice
-            if (!alreadySubmitted) {
-              const profileDocument = profileCollection.documentAccessorForTransaction(transaction).loadDocumentForKey(input.model);
-              await createNotificationDocument({ context: demoFirebaseServerActionsContext, transaction, template: exampleNotificationTemplate({ profileDocument }) });
-              markSubmitted();
-              updateEntryData({ c: (entry.d?.c ?? 0) + 1 });
-            }
-          });
+          let result: NotificationTaskBotRunSubtaskResult;
 
-          return { completion: DEMO_PING_NOTIFICATION_TASK_BOT_PING_SUBTASK };
+          if (input.entry.d?.f) {
+            // a failed step is retried after the failure delay, then lost and repaired
+            result = notificationTaskFailed();
+          } else {
+            await runNotificationTaskBotEntryTransaction<void, DemoPingNotificationTaskBotEntryData>(input, async ({ transaction, entry, alreadySubmitted, markSubmitted, updateEntryData }) => {
+              const profileDocument = profileCollection.documentAccessorForTransaction(transaction).loadDocumentForKey(input.model);
+              const profile = await getDocumentSnapshotData(profileDocument);
+
+              // a re-run of this step after a crash finds the run already submitted, and does not send twice
+              if (!alreadySubmitted && profile) {
+                await createNotificationDocument({ context: demoFirebaseServerActionsContext, transaction, template: exampleNotificationTemplate({ profileDocument }) });
+                markSubmitted();
+
+                // the count restarts when an admin resumes the entry from the limit pause
+                const count = entry.rpr === DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT ? 0 : (entry.d?.c ?? 0);
+                updateEntryData({ c: count + 1 });
+              }
+            });
+
+            result = { completion: DEMO_PING_NOTIFICATION_TASK_BOT_PING_SUBTASK };
+          }
+
+          return result;
         }
       }
     ],
-    cleanup: (input) => {
+    cleanup: async (input) => {
       const { c, iv, pa } = input.entry.d ?? {};
+      const profile = await getDocumentSnapshotData(profileCollection.documentAccessor().loadDocumentForKey(input.model));
 
-      return pa != null && (c ?? 0) >= pa ? { pause: { reason: DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT } } : { nextRunAt: addMilliseconds(new Date(), iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL) };
+      let result: NotificationTaskBotRunCleanupInstructions<DemoPingNotificationTaskBotEntryData>;
+
+      if (!profile) {
+        // the attached profile was deleted, so the entry ends itself
+        result = { remove: true };
+      } else if (pa != null && (c ?? 0) >= pa) {
+        result = { pause: { reason: DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT } };
+      } else {
+        result = { nextRunAt: addMilliseconds(new Date(), iv ?? DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL) };
+      }
+
+      return result;
     }
   };
 }

@@ -709,20 +709,36 @@ export interface UpdateNotificationTaskBotEntryParams extends NotificationTaskBo
    */
   readonly s?: Maybe<NotificationTaskBotEntryState>;
   /**
-   * True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it and schedules a run.
+   * True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it (also when it was paused until
+   * a time) and schedules a run. False wins over {@link pauseUntil}.
    */
   readonly pause?: Maybe<boolean>;
   /**
-   * Reschedules the entry. A date schedules a run at that explicit time; null schedules a run due now, letting the
-   * script compute the real due time.
+   * Pauses the entry (reason `'manual'`) until this time; it then resumes on its own. A time in the past resumes it on
+   * the next queue pass. Null is ignored. `pause: false` in the same request wins and resumes the entry.
+   */
+  readonly pauseUntil?: Maybe<Date>;
+  /**
+   * Reschedules the entry. A date schedules a run that starts no sooner than that time, and the script's due check
+   * still applies; null schedules a run due now, letting the script compute the real due time.
    */
   readonly nextRunAt?: Maybe<Date>;
+  /**
+   * Reschedules the entry with an explicit run that starts at exactly this time and skips the script's due check. Wins
+   * over {@link nextRunAt}. Null is ignored.
+   */
+  readonly nextRunAtExplicit?: Maybe<Date>;
   /**
    * Sets the entry's last submitted at time. Null clears it.
    */
   readonly lsat?: Maybe<Date>;
   /**
    * Runs the entry's live run immediately after the update, if it has one.
+   *
+   * Skipped when this same request scheduled the live run in the future ({@link nextRunAt} or {@link nextRunAtExplicit}
+   * after now, or {@link pauseUntil} given); the result then has no `runResult`. Any other live run that is scheduled in
+   * the future still waits for its time. To re-evaluate an entry now, pass `nextRunAt: null` (optionally with
+   * `lsat: null`).
    */
   readonly runImmediately?: Maybe<boolean>;
 }
@@ -730,7 +746,9 @@ export interface UpdateNotificationTaskBotEntryParams extends NotificationTaskBo
 export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
   's?': clearable(type.enumerated(NotificationTaskBotEntryState.ENABLED, NotificationTaskBotEntryState.DISABLED)),
   'pause?': clearable('boolean'),
+  'pauseUntil?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'nextRunAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
+  'nextRunAtExplicit?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'lsat?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'runImmediately?': clearable('boolean')
 }) as Type<UpdateNotificationTaskBotEntryParams>;
@@ -785,7 +803,10 @@ export const runNotificationTaskBotEntryParamsType = notificationTaskBotEntryTar
  */
 export interface RunNotificationTaskBotEntryResult {
   /**
-   * Key of the new run task.
+   * Key of the new run task this call created.
+   *
+   * When the due check found a MANUAL run not due yet, that run handed over to a SCHEDULED run at the due time; the
+   * entry's live run (`nk`) is then that hand-over, not this task.
    */
   readonly taskKey: NotificationTaskKey;
   /**

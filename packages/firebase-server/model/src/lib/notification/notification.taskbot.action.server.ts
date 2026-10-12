@@ -28,6 +28,7 @@ import {
   type NotificationTaskBotEntryData,
   type NotificationTaskBotEntryDataUpdate,
   type NotificationTaskBotEntryId,
+  type NotificationTaskBotEntrySeed,
   type NotificationTaskBotEnsureSchedule,
   type NotificationTaskBotEntryState,
   type NotificationTaskBotRepairChange,
@@ -52,7 +53,7 @@ import {
   firestoreDummyKey
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { addMilliseconds, filterMaybeArrayValues, type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
+import { addMilliseconds, filterMaybeArrayValues, isPast, type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
 import { type NotificationServerActions } from './notification.action.server';
 import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotRunnableError, notificationTaskBotEntryOptedOutError, notificationTaskBotOptOutNotAllowedError, notificationTaskBotOptOutRequiresOwnerError } from './notification.error';
 
@@ -208,9 +209,19 @@ export interface EnsureNotificationTaskBotEntryInput<D extends NotificationTaskB
    */
   readonly state?: Maybe<NotificationTaskBotEntryState>;
   /**
-   * When to schedule a run. Defaults to `'ifIdle'`.
+   * When to schedule a run. Defaults to `'ifIdle'`. A Date schedules a run that starts no sooner than that time, and the
+   * script's due check still applies, unless {@link explicit} is true.
    */
   readonly schedule?: Maybe<NotificationTaskBotEnsureSchedule>;
+  /**
+   * When true and {@link schedule} is a Date, the run starts at exactly that time and skips the script's due check.
+   */
+  readonly explicit?: Maybe<boolean>;
+  /**
+   * Values the entry is created with, for carrying over the state of an earlier, app-specific bot. Ignored when the
+   * entry already exists, so a migration can be re-run safely. Seeded history is capped to the script's history limit.
+   */
+  readonly seed?: Maybe<NotificationTaskBotEntrySeed>;
   /**
    * When provided, sets the bot's owner key. Pass the key the attached model's NotificationBox uses (e.g. `'pr/<uid>'`)
    * on every ensure so the owner stays in sync. Null clears it.
@@ -231,11 +242,13 @@ export interface EnsureNotificationTaskBotEntryInTransactionInput<D extends Noti
  * @returns The function.
  */
 export function ensureNotificationTaskBotEntryInTransactionFactory(context: NotificationTaskBotServerActionsContext) {
+  const { appNotificationTaskBotScriptConfigService } = context;
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
   return (input: EnsureNotificationTaskBotEntryInTransactionInput) => {
-    const { transaction, bot, model, entryId, scriptType, data, state, schedule, owner, now } = input;
-    return applyInTransaction({ transaction, bot, model, now, changes: [{ type: 'ensure', entryId, scriptType, data, state, schedule, owner }] });
+    const { transaction, bot, model, entryId, scriptType, data, state, schedule, explicit, seed, owner, now } = input;
+    const historyLimit = appNotificationTaskBotScriptConfigService.configForScriptType(scriptType).historyLimit; // caps the seeded history
+    return applyInTransaction({ transaction, bot, model, now, changes: [{ type: 'ensure', entryId, scriptType, data, state, schedule, explicit, seed, historyLimit, owner }] });
   };
 }
 
@@ -258,9 +271,14 @@ export interface ScheduleNotificationTaskBotEntryInput {
   readonly model: FirestoreModelKey;
   readonly entryId: NotificationTaskBotEntryId;
   /**
-   * Explicit time to run at. When unset the run is due now.
+   * When to run. The run starts no sooner than this time and the script's due check still applies, unless
+   * {@link explicit} is true. When unset the run is due now.
    */
   readonly at?: Maybe<Date>;
+  /**
+   * When true and {@link at} is set, the run starts at exactly that time and skips the script's due check.
+   */
+  readonly explicit?: Maybe<boolean>;
   readonly trigger?: Maybe<NotificationTaskBotRunTrigger>;
   /**
    * Only schedules when the entry has no live run.
@@ -278,8 +296,8 @@ export interface ScheduleNotificationTaskBotEntryInput {
 export function scheduleNotificationTaskBotEntryFactory(context: NotificationTaskBotServerActionsContext) {
   const applyChanges = applyNotificationTaskBotChangesFactory(context);
   return (input: ScheduleNotificationTaskBotEntryInput) => {
-    const { model, entryId, at, trigger, ifIdle, now } = input;
-    return applyChanges({ model, now, changes: [{ type: 'schedule', entryId, at, trigger, ifIdle }] });
+    const { model, entryId, at, explicit, trigger, ifIdle, now } = input;
+    return applyChanges({ model, now, changes: [{ type: 'schedule', entryId, at, explicit, trigger, ifIdle }] });
   };
 }
 
@@ -430,6 +448,10 @@ async function runNotificationTaskBotRunTaskImmediately(context: NotificationTas
 /**
  * Creates the `updateNotificationTaskBotEntry` API action: changes an entry's state, pause, schedule and last submitted at.
  *
+ * Changes apply in order: state, pause, last submitted at, then schedule. `nextRunAtExplicit` wins over `nextRunAt`, and
+ * `pause: false` wins over `pauseUntil`. `runImmediately` is skipped when this same request scheduled the live run in the
+ * future.
+ *
  * @param context - The API context.
  * @returns The transform-and-validate action.
  */
@@ -438,7 +460,7 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(updateNotificationTaskBotEntryParamsType, async (params: UpdateNotificationTaskBotEntryParams) => {
-    const { i: entryId, s, pause, nextRunAt, lsat, runImmediately } = params;
+    const { i: entryId, s, pause, pauseUntil, nextRunAt, nextRunAtExplicit, lsat, runImmediately } = params;
 
     return async (botDocument: NotificationTaskBotDocument): Promise<UpdateNotificationTaskBotEntryResult> => {
       const changes: NotificationTaskBotChange[] = [];
@@ -447,17 +469,27 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
         changes.push({ type: 'state', entryId, state: s });
       }
 
-      if (pause != null) {
-        changes.push({ type: 'pause', entryId, pause: pause ? { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL } : false });
+      if (pause === false) {
+        changes.push({ type: 'pause', entryId, pause: false });
+      } else if (pauseUntil != null) {
+        changes.push({ type: 'pause', entryId, pause: { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL, until: pauseUntil } });
+      } else if (pause === true) {
+        changes.push({ type: 'pause', entryId, pause: { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL } });
       }
 
       if (lsat !== undefined) {
         changes.push({ type: 'lsat', entryId, lsat });
       }
 
-      if (nextRunAt !== undefined) {
-        changes.push({ type: 'schedule', entryId, at: nextRunAt });
+      if (nextRunAtExplicit != null) {
+        changes.push({ type: 'schedule', entryId, at: nextRunAtExplicit, explicit: true });
+      } else if (nextRunAt !== undefined) {
+        changes.push({ type: 'schedule', entryId, at: nextRunAt, explicit: false });
       }
+
+      // a run this request scheduled in the future must wait for its time
+      const requestedNextRunAt = nextRunAtExplicit ?? nextRunAt;
+      const scheduledInTheFuture = (requestedNextRunAt != null && !isPast(requestedNextRunAt)) || (pause !== false && pauseUntil != null);
 
       const entry = await firestoreContext.runTransaction(async (transaction) => {
         const botDocumentInTransaction = notificationTaskBotCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(botDocument);
@@ -477,7 +509,7 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
       const taskKey = entry.nk;
       let runResult: Maybe<SendNotificationResult>;
 
-      if (runImmediately && taskKey) {
+      if (runImmediately && taskKey && !scheduledInTheFuture) {
         runResult = await runNotificationTaskBotRunTaskImmediately(context, taskKey);
       }
 

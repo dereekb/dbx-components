@@ -35,7 +35,7 @@ export const DEFAULT_DEMO_PING_NOTIFICATION_TASK_BOT_INTERVAL: Milliseconds = MS
  */
 export interface DemoPingNotificationTaskBotEntryData {
   /**
-   * Number of pings sent.
+   * Number of pings sent. Restarts when the entry resumes from the {@link DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT} pause.
    */
   readonly c?: Maybe<number>;
   /**
@@ -46,6 +46,10 @@ export interface DemoPingNotificationTaskBotEntryData {
    * Pause the entry after this many pings.
    */
   readonly pa?: Maybe<number>;
+  /**
+   * When true, the ping step reports a failure instead of pinging. Shows how a failed step is retried, then lost and repaired.
+   */
+  readonly f?: Maybe<boolean>;
 }
 
 /**

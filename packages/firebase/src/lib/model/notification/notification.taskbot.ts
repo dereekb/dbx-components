@@ -122,6 +122,9 @@ export enum NotificationTaskBotRunTrigger {
   SCHEDULED = 0,
   /**
    * The run was requested manually. The script's due check still applies.
+   *
+   * History only records MANUAL for a run that went ahead right away. When the due check finds a MANUAL run not due yet,
+   * the run hands over to a SCHEDULED run at the due time, so the run that later goes ahead on cadence records SCHEDULED.
    */
   MANUAL = 1,
   /**
@@ -147,11 +150,11 @@ export enum NotificationTaskBotRunOutcome {
    */
   SUPPRESSED = 2,
   /**
-   * The run was skipped.
+   * The run was skipped. Also recorded for an entry whose script has no processor.
    */
   SKIPPED = 3,
   /**
-   * The run failed.
+   * The run failed. Counts toward the script's `maxConsecutiveFailures`, the same as a LOST run.
    */
   FAILED = 4,
   /**
@@ -270,7 +273,10 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
    */
   d?: Maybe<D>;
   /**
-   * When the entry was paused. A paused entry has no live run.
+   * When the entry was paused.
+   *
+   * A paused entry's only possible live run is its resume run at {@link pu}. A paused entry without {@link pu} has no
+   * live run.
    *
    * @dbxModelVariable pausedAt
    */
@@ -281,6 +287,26 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
    * @dbxModelVariable pauseReason
    */
   pr?: Maybe<NotificationTaskBotPauseReason>;
+  /**
+   * When a paused entry resumes on its own. Only set together with {@link pat}.
+   *
+   * The entry keeps a not-before resume run at this time. When that run starts, the entry is resumed and the run goes
+   * ahead as a normal SCHEDULED run.
+   *
+   * @dbxModelVariable pausedUntil
+   */
+  pu?: Maybe<Date>;
+  /**
+   * The pause reason the entry was last resumed from, kept until the next run completes.
+   *
+   * Set by every resume (an admin resume, a pause that expired at {@link pu}), and cleared when the next run completes.
+   * A script checks it in its first step to undo what its own pause did (e.g. reset a counter or remove a tag), inside
+   * `runNotificationTaskBotEntryTransaction()`. Make that idempotent: the first step re-runs when the due check delays
+   * the run.
+   *
+   * @dbxModelVariable resumedPauseReason
+   */
+  rpr?: Maybe<NotificationTaskBotPauseReason>;
   /**
    * When the bot's owner opted out of this entry's script group. Set means opted out; this is the only opt-out state.
    *
@@ -333,7 +359,8 @@ export interface NotificationTaskBotEmbeddedScriptEntry<D extends NotificationTa
    */
   sc: number;
   /**
-   * Consecutive failure count. Reset whenever a run completes.
+   * Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED,
+   * and is reset by a run that completes with any other outcome, or by a resume.
    *
    * @dbxModelVariable failureCount
    */
@@ -359,6 +386,8 @@ export const firestoreNotificationTaskBotEmbeddedScriptEntry = firestoreSubObjec
       d: optionalFirestorePassthroughJsonField(),
       pat: optionalFirestoreDate(),
       pr: optionalFirestoreString(),
+      pu: optionalFirestoreDate(),
+      rpr: optionalFirestoreString(),
       oat: optionalFirestoreDate(),
       rn: optionalFirestoreNumber(),
       nk: optionalFirestoreString(),

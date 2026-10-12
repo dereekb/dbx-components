@@ -32,6 +32,9 @@ but two changes require an update in every app that implements the notification 
   `appNotificationTaskBotScriptConfigService` (every write resolves each entry's owner opt-out group from it).
   `notificationServerActions()` fills in an empty registry when your context has none, but a context you pass straight
   to `ensureNotificationTaskBotEntryFactory()` and the other helpers must carry it.
+- **Subtask handlers now enforce `validate`.** The StorageFile, FormSpace and NotificationTaskBot subtask handlers
+  (anything built on `notificationTaskSubtaskNotificationTaskHandlerFactory()`) now throw at creation when a target
+  listed in their `validate` list has no processor. Before, the list was never read. Fix the list or add the processor.
 
 ### Optional (to use bots)
 - **Firestore rules:** `match /ntb/{id} { allow get, list: if userClaimsIsSysAdmin(); }` (or add `notificationTaskBot`
@@ -41,11 +44,58 @@ but two changes require an update in every app that implements the notification 
   uses an empty registry otherwise) but required by the bot helpers, see above.
 - **Run handler:** add `notificationTaskBotRunNotificationTaskHandler({ processors, validate, notificationTaskBotContext })`
   to your `NotificationTaskService` handlers and `ALL_NOTIFICATION_TASK_BOT_NOTIFICATION_TASK_TYPES` to its `validate` list.
+  The handler throws at creation unless the processors match the context's script registry both ways: every registered
+  script type needs a processor, and every processor's target must be a registered script type. At runtime, an entry
+  whose script has no processor (e.g. a removed script) records a SKIPPED run and goes idle.
 - **Repair cron:** call `notificationActions.repairAllNotificationTaskBots()` from your notification schedule, after
   `sendQueuedNotifications`.
 - **Firestore index:** `notificationTaskBotsDueForRepairQuery` queries `ntb` by `nat`; regenerate your indexes.
 - **Client:** `NotificationTaskBotDocumentStore` / `NotificationTaskBotCollectionStore` (and their directives) are
   available in `@dereekb/dbx-firebase`. The admin store also has `readOptOuts` / `updateOptOut`.
+- **Run timing.** Every run has a scheduled time (`sa`), and no run except a FORCED one starts its first step before
+  it; the run handler enforces this even for scripts that never call `notificationTaskBotDelayUntilDue()`, and even when
+  a run is woken early (`ignoreSendAtThrottle`). A run is either **not before** (the default: it starts at `sa` or later
+  and the script's due check still applies) or **explicit** (it starts at `sa` and skips the due check). A Date alone
+  always means not before; explicit is opt-in with `explicit: true` on `ensure` / `scheduleNotificationTaskBotEntryFactory()`
+  and `nextRunAtExplicit` on cleanup instructions and `update:entry`. When the due check finds a MANUAL run not due yet,
+  the run hands over to a SCHEDULED run at the due time and ends (a new `deferRun` change), so history only records
+  MANUAL for a run that went ahead right away. The next run a cleanup schedules, explicit or not, is never sooner than
+  now plus the script's `minimumRunInterval`, which now defaults to 5 minutes
+  (`DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL`; `0` turns it off).
+- **`update:entry` params.** `nextRunAt` schedules a not-before run (a Date) or a run due now (null).
+  `nextRunAtExplicit` schedules an explicit run and wins over `nextRunAt`. `pauseUntil` pauses the entry (reason
+  `'manual'`) until a time; `pause: false` in the same request wins. `runImmediately` is skipped when the same request
+  scheduled the live run in the future; to re-evaluate an entry now, pass `{ nextRunAt: null, runImmediately: true }`.
+- **Pause until.** A pause may carry `until` (the `pause` change, cleanup's `pause`, a seed pause, `pauseUntil` on
+  `update:entry`). The entry stores it in `pu` (`pausedUntil`) and keeps a not-before resume run at that time, which
+  resumes the entry when it starts. The status stays `paused` meanwhile and `update:run` stays refused. Disabling or
+  opting out cancels the resume run; enabling, opting in, `ensure` and the repair sweep re-issue it.
+- **Failures.** A step that returns `notificationTaskFailed()` is now a real failure: the attempt is counted, the run
+  retries after the failure delay, and once the task runs out of attempts the repair sweep records the run as LOST. On
+  a failed step, `updateMetadata` and `removeFromCompletedCheckpoints` are ignored and the same step retries; read
+  `input.notificationTask.totalSendAttempts` to see how many times the run has failed. A cleanup that reports
+  `outcome: FAILED` now adds 1 to the entry's `fc` (any other outcome resets it) and pauses the entry with `'failed'` at
+  the script's `maxConsecutiveFailures`, unless the cleanup requested its own pause.
+- **Resume side effects.** Every resume stamps the cleared pause reason on the entry's `rpr` (`resumedPauseReason`)
+  until the next run completes. Enabling a disabled entry and an owner opt-in do not stamp it. In the first step, check
+  `entry.rpr` and undo what the pause did inside `runNotificationTaskBotEntryTransaction()` (e.g. reset a counter with
+  `updateEntryData({ npc: null })`); make it idempotent, since the first step re-runs when the due check delays the run.
+- **Cleanup can remove its entry.** Return `{ remove: true }` from a script's cleanup (e.g. when the attached model was
+  deleted). The entry is removed with no history and no next run.
+- **Migrating an earlier bot.** `ensureNotificationTaskBotEntryFactory()` takes a creation-only `seed` (`lsat`, `lat`,
+  `sc`, `h`, `pause`), ignored when the entry already exists so a migration can be re-run. Seeded history is sorted,
+  capped to the script's `historyLimit` and stamped with run number `0`; `lsr` is not seedable. For example, a
+  hellosubs-style bot maps `fuh`/`exh` → `seed.h`, `fuat`/`exat` → `seed.lsat`, OFF → `state: DISABLED`,
+  NO_PROGRESS_DETECTED → `seed.pause: { reason: 'no_progress' }`, and the legacy task's `sat` → `schedule: <Date>`
+  (not before):
+  ```ts
+  await ensureNotificationTaskBotEntryFactory(context)({
+    model, entryId: 'follow-up', scriptType: 'jwrs_follow_up', data, owner,
+    state: legacy.off ? NotificationTaskBotEntryState.DISABLED : undefined,
+    schedule: legacy.taskSat ?? 'ifIdle',
+    seed: { lsat: legacy.fuat, sc: legacy.fuh.length, h: legacy.fuh.map(toHistoryItem), pause: legacy.noProgress ? { reason: 'no_progress' } : undefined }
+  });
+  ```
 
 ### Optional (owner opt-outs)
 The bot's **owner** can turn off groups of scripts, which stops those bots entirely (not just their notifications).

@@ -7,7 +7,7 @@
  * This is pure data. The server-side PROCESSING of a script is registered separately, as a
  * `NotificationTaskBotScriptProcessorConfig` keyed by the same script type, the same split `FormSpaceTypeConfig` uses.
  */
-import { arrayToObject, type Maybe, type Milliseconds, typedConfigRegistry } from '@dereekb/util';
+import { arrayToObject, type Maybe, type Milliseconds, MS_IN_MINUTE, typedConfigRegistry } from '@dereekb/util';
 import { type NotificationTaskBotScriptType } from './notification.taskbot';
 import { isNotificationTaskBotScriptGroupKey, type NotificationTaskBotScriptGroupKey } from './notification.id';
 
@@ -20,6 +20,11 @@ export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT = 20;
  * Default for {@link NotificationTaskBotScriptConfig.maxConsecutiveFailures}.
  */
 export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES = 3;
+
+/**
+ * Default for {@link NotificationTaskBotScriptConfig.minimumRunInterval}.
+ */
+export const DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL: Milliseconds = 5 * MS_IN_MINUTE;
 
 /**
  * A topic that groups NotificationTaskBot scripts, e.g. "Email reminders".
@@ -70,14 +75,19 @@ export interface NotificationTaskBotScriptConfig {
    */
   readonly historyLimit?: Maybe<number>;
   /**
-   * Minimum time between the end of one run and the start of the next run scheduled by cleanup.
+   * Minimum time between the end of a run and the start of the next run its cleanup schedules, explicit or not.
    *
-   * Does not apply to runs requested through the API or scheduled explicitly.
+   * Keeps a script whose cleanup and due check both say "now" from running over and over within one
+   * `sendQueuedNotifications` call. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL}; `0`
+   * turns it off.
+   *
+   * Does not apply to runs scheduled through the API, `ensure`, or the other helpers.
    */
   readonly minimumRunInterval?: Maybe<Milliseconds>;
   /**
-   * Number of consecutive failures (e.g. lost runs found by the repair sweep) before the entry is paused with the
-   * `'failed'` reason. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES}.
+   * Number of consecutive failures before the entry is paused with the `'failed'` reason. Counts runs whose cleanup
+   * reports FAILED, as well as lost runs found by the repair sweep. Defaults to
+   * {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES}.
    */
   readonly maxConsecutiveFailures?: Maybe<number>;
   /**

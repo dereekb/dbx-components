@@ -6,6 +6,24 @@
  * Every bot write goes through {@link applyNotificationTaskBotChange}: the server reads the bot inside a transaction,
  * applies one or more changes, creates the requested run tasks, deletes the superseded ones, and writes the bot back.
  * Keeping the transitions pure keeps the fence, the run counter and the `nat` bookkeeping in one testable place.
+ *
+ * Run timing. Every run has a scheduled time (`sa` on the run task, also its first send time):
+ * - No run except a FORCED one starts its first step before `sa`. The run handler enforces this before the first step,
+ *   so it holds even for scripts that never call the due-check helper.
+ * - A run is either "not before" (the default) or explicit. A not-before run starts at `sa` or later and the script's
+ *   due check still applies. An explicit run starts at `sa` and skips the due check. A run with no time is due now and
+ *   also runs the due check.
+ * - A Date alone always means "not before". Explicit is opt-in: `explicit: true` on `ensure` and `schedule`, and
+ *   `nextRunAtExplicit` on cleanup instructions and the `update:entry` API.
+ * - MANUAL runs are always due now. When the due check finds one not due, it hands over to a SCHEDULED not-before run at
+ *   the due time ({@link NotificationTaskBotDeferRunChange}).
+ * - The next run a cleanup schedules is never sooner than now plus the script's `minimumRunInterval`.
+ *
+ * Pausing. A paused entry has no live run, except when it is paused until a time (`pu`): it then keeps a not-before
+ * resume run at `pu`, which resumes the entry when it starts ({@link NotificationTaskBotExpirePauseChange}).
+ *
+ * Resuming. Every resume stamps the cleared pause reason on the entry (`rpr`) until the next run completes, so a
+ * script can undo its own pause's side effects (e.g. reset a counter) in its first step.
  */
 import { addMilliseconds, type Maybe, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
 import { earliestDate, isSameDate, latestDate } from '@dereekb/date';
@@ -25,7 +43,7 @@ import {
   NotificationTaskBotRunTrigger,
   type NotificationTaskBotScriptType
 } from './notification.taskbot';
-import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES } from './notification.taskbot.script';
+import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL } from './notification.taskbot.script';
 import { notificationTaskBotRunNotificationTaskKey } from './notification.taskbot.task';
 
 // MARK: Entry Utilities
@@ -42,6 +60,8 @@ export function notificationTaskBotEntry<D extends NotificationTaskBotEntryData 
 
 /**
  * Computes the status of an entry.
+ *
+ * A paused entry reports PAUSED even while it holds its resume run (see {@link NotificationTaskBotEmbeddedScriptEntry.pu}).
  *
  * @param entry - The entry.
  * @returns OPTED_OUT, DISABLED, PAUSED, SCHEDULED (has a live run) or IDLE.
@@ -116,17 +136,81 @@ export function appendNotificationTaskBotEntryHistoryItem<HD extends Notificatio
 
 // MARK: Changes
 /**
+ * A pause applied to an entry.
+ */
+export interface NotificationTaskBotPause {
+  readonly reason: NotificationTaskBotPauseReason;
+  /**
+   * When set, the entry resumes on its own at this time. A time in the past resumes it on the next queue pass.
+   */
+  readonly until?: Maybe<Date>;
+}
+
+/**
+ * A history item seeded by {@link NotificationTaskBotEntrySeed}. Seeded items are stamped with run number `0`, which
+ * never collides with a real run.
+ *
+ * @template HD - history item data type
+ */
+export type NotificationTaskBotEntrySeedHistoryItem<HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> = Omit<NotificationTaskBotEntryHistoryItem<HD>, 'rn'>;
+
+/**
+ * A pause seeded by {@link NotificationTaskBotEntrySeed}.
+ */
+export interface NotificationTaskBotEntrySeedPause extends NotificationTaskBotPause {
+  /**
+   * When the entry was paused. Defaults to now.
+   */
+  readonly at?: Maybe<Date>;
+}
+
+/**
+ * Values an entry is created with, only used when `ensure` creates the entry. For carrying over the state of an
+ * earlier, app-specific bot. Never touches the fence (`rn`/`nk`) or the bot's run counter.
+ *
+ * `lsr` is not seedable: it is the per-run idempotency marker, so a seeded value would either mean nothing or make a
+ * future run think it already submitted.
+ *
+ * @template HD - history item data type
+ */
+export interface NotificationTaskBotEntrySeed<HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
+  /**
+   * The cadence anchor (last submitted at).
+   */
+  readonly lsat?: Maybe<Date>;
+  /**
+   * When the last run finished.
+   */
+  readonly lat?: Maybe<Date>;
+  /**
+   * Lifetime submission count. Must be a non-negative integer.
+   */
+  readonly sc?: Maybe<number>;
+  /**
+   * History, in any order. Sorted by `at`, capped to the history limit (newest kept) and stamped with run number `0`.
+   */
+  readonly h?: Maybe<NotificationTaskBotEntrySeedHistoryItem<HD>[]>;
+  /**
+   * Creates the entry paused. With `until`, the entry also gets its resume run.
+   */
+  readonly pause?: Maybe<NotificationTaskBotEntrySeedPause>;
+}
+
+/**
  * When to schedule a run as part of {@link NotificationTaskBotEnsureChange}.
  *
  * - `'ifIdle'`: schedule a run due now only if the entry is enabled, not paused, and has no live run.
  * - `'now'`: supersede any live run with a run due now.
- * - `Date`: supersede any live run with a run at the explicit time.
+ * - `Date`: supersede any live run with a run that starts no sooner than that time. The script's due check still
+ *   applies, unless {@link NotificationTaskBotEnsureChange.explicit} is true.
  * - `false`: do not schedule.
  */
 export type NotificationTaskBotEnsureSchedule = 'ifIdle' | 'now' | Date | false;
 
 /**
  * Creates the entry when it does not exist, reconciles its owner opt-out, then optionally schedules it.
+ *
+ * Also re-issues the resume run of an entry paused until a time when that run went missing.
  *
  * When {@link ApplyNotificationTaskBotChangeInput.optOutGroupKeyForScriptType} is provided:
  * - an entry whose script allows owner opt-out joins its group opted out when another entry in the group is opted out
@@ -151,6 +235,20 @@ export interface NotificationTaskBotEnsureChange<D extends NotificationTaskBotEn
    */
   readonly schedule?: Maybe<NotificationTaskBotEnsureSchedule>;
   /**
+   * When true and {@link schedule} is a Date, the run is explicit: it starts at that time and skips the script's due
+   * check. Defaults to false (not before).
+   */
+  readonly explicit?: Maybe<boolean>;
+  /**
+   * Values the entry is created with. Ignored when the entry already exists, so a migration can be re-run safely.
+   */
+  readonly seed?: Maybe<NotificationTaskBotEntrySeed>;
+  /**
+   * Caps the seeded history. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT}. The server fills
+   * it from the script registry.
+   */
+  readonly historyLimit?: Maybe<number>;
+  /**
    * When provided, sets the bot's owner key (`o`), so each ensure keeps the owner in sync with the attached model's
    * owner. Null clears it.
    */
@@ -164,9 +262,15 @@ export interface NotificationTaskBotScheduleChange {
   readonly type: 'schedule';
   readonly entryId: NotificationTaskBotEntryId;
   /**
-   * Explicit time to run at. When unset the run is due now and the script computes the real due time.
+   * When to run. The run starts no sooner than this time and the script's due check still applies, unless
+   * {@link explicit} is true. When unset the run is due now and the script computes the real due time.
    */
   readonly at?: Maybe<Date>;
+  /**
+   * When true and {@link at} is set, the run is explicit: it starts at {@link at} and skips the script's due check.
+   * Defaults to false.
+   */
+  readonly explicit?: Maybe<boolean>;
   /**
    * Defaults to SCHEDULED.
    */
@@ -186,7 +290,8 @@ export interface NotificationTaskBotCancelChange {
 }
 
 /**
- * Enables or disables the entry. Disabling cancels the live run; enabling schedules a run when the entry becomes idle.
+ * Enables or disables the entry. Disabling cancels the live run; enabling schedules a run when the entry becomes idle,
+ * and re-issues the resume run of an entry paused until a time.
  */
 export interface NotificationTaskBotStateChange {
   readonly type: 'state';
@@ -199,7 +304,13 @@ export interface NotificationTaskBotStateChange {
 }
 
 /**
- * Pauses or resumes the entry. Pausing cancels the live run; resuming resets the failure count and schedules a run.
+ * Pauses or resumes the entry.
+ *
+ * Pausing cancels the live run. With `until`, the entry also gets a resume run at that time; a plain pause on an entry
+ * paused until a time clears `pu` and cancels its resume run.
+ *
+ * Resuming cancels the resume run, if any, resets the failure count, stamps the cleared reason on `rpr`, and schedules a
+ * run due now.
  */
 export interface NotificationTaskBotPauseChange {
   readonly type: 'pause';
@@ -207,7 +318,7 @@ export interface NotificationTaskBotPauseChange {
   /**
    * The pause to apply, or false to resume.
    */
-  readonly pause: { readonly reason: NotificationTaskBotPauseReason } | false;
+  readonly pause: NotificationTaskBotPause | false;
   /**
    * Whether to schedule a run due now when resuming leaves the entry idle. Defaults to true.
    */
@@ -253,6 +364,10 @@ export interface NotificationTaskBotCompleteRunHistory<HD extends NotificationTa
 
 /**
  * Records the outcome of the live run and optionally schedules the next one. Fenced on the run number.
+ *
+ * Applies, in order: the data update and history, `disable`, `pause`, a `'failed'` pause when a FAILED outcome spends
+ * the failure budget, then the next run. A disabled entry never gets a resume run, and a paused one never gets a next
+ * run. Clears `rpr`: the run had its chance to react to the resume.
  */
 export interface NotificationTaskBotCompleteRunChange<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData, HD extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
   readonly type: 'completeRun';
@@ -261,6 +376,8 @@ export interface NotificationTaskBotCompleteRunChange<D extends NotificationTask
   readonly trigger: NotificationTaskBotRunTrigger;
   /**
    * Defaults to COMPLETED.
+   *
+   * FAILED adds 1 to the entry's failure count; any other outcome resets it.
    */
   readonly outcome?: Maybe<NotificationTaskBotRunOutcome>;
   /**
@@ -269,23 +386,62 @@ export interface NotificationTaskBotCompleteRunChange<D extends NotificationTask
   readonly history?: Maybe<false | NotificationTaskBotCompleteRunHistory<HD>>;
   readonly updateData?: Maybe<NotificationTaskBotEntryDataUpdate<D>>;
   /**
-   * When to schedule the next run. The script computes the real due time when it runs.
+   * When to schedule the next run. It starts no sooner than this time and the script computes the real due time when
+   * it runs.
    */
   readonly nextRunAt?: Maybe<Date>;
   /**
    * Explicit time for the next run. Takes priority over {@link nextRunAt}.
    */
   readonly nextRunAtExplicit?: Maybe<Date>;
-  readonly pause?: Maybe<{ readonly reason: NotificationTaskBotPauseReason }>;
+  readonly pause?: Maybe<NotificationTaskBotPause>;
   readonly disable?: Maybe<boolean>;
+  /**
+   * Removes the entry, e.g. when the attached model was deleted. Every other instruction is ignored: no history is
+   * recorded and no next run is scheduled.
+   */
+  readonly remove?: Maybe<boolean>;
   /**
    * Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT}.
    */
   readonly historyLimit?: Maybe<number>;
   /**
-   * The next run is scheduled no sooner than now plus this interval.
+   * The next run, explicit or not, is scheduled no sooner than now plus this interval. Defaults to
+   * {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL}; `0` turns it off.
    */
   readonly minimumRunInterval?: Maybe<Milliseconds>;
+  /**
+   * The failure count at which a FAILED outcome pauses the entry with the `'failed'` reason. A pause requested by the
+   * script wins. Defaults to {@link DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES}.
+   */
+  readonly maxConsecutiveFailures?: Maybe<number>;
+}
+
+/**
+ * Ends the live run without history and hands over to a SCHEDULED run that starts no sooner than `at`. Fenced on the run
+ * number.
+ *
+ * Used when the due check finds a MANUAL run not due yet, so the run that later goes ahead on cadence records
+ * SCHEDULED. The failure count and `rpr` are kept. The deferred run's own task is marked done by the handler, never
+ * deleted here.
+ */
+export interface NotificationTaskBotDeferRunChange {
+  readonly type: 'deferRun';
+  readonly entryId: NotificationTaskBotEntryId;
+  readonly runNumber: NotificationTaskBotRunNumber;
+  readonly at: Date;
+}
+
+/**
+ * Resumes an entry whose pause expired, when its resume run starts. Fenced on the run number.
+ *
+ * Resumes the entry (stamping `rpr`) and keeps the live run going when `pu` is now or in the past. A no-op while `pu`
+ * is still in the future.
+ */
+export interface NotificationTaskBotExpirePauseChange {
+  readonly type: 'expirePause';
+  readonly entryId: NotificationTaskBotEntryId;
+  readonly runNumber: NotificationTaskBotRunNumber;
 }
 
 /**
@@ -313,6 +469,8 @@ export interface NotificationTaskBotSyncNextRunAtChange {
  * - When the task is still pending, the entry's `nat` is synced to the task's send time.
  * - When the task is missing or done, the run is recorded as LOST, the failure count goes up, and a new run due now is
  *   scheduled, unless the failure count reached the maximum, in which case the entry is paused with the `'failed'` reason.
+ * - When the missing run was the resume run of an entry paused until a time, the resume run is re-issued instead. A lost
+ *   resume run is not a script failure: nothing is recorded and the failure count is unchanged.
  */
 export interface NotificationTaskBotRepairChange {
   readonly type: 'repair';
@@ -341,7 +499,8 @@ export interface NotificationTaskBotRepairChange {
  *
  * Applies to every entry whose resolved opt-out group (see {@link ApplyNotificationTaskBotChangeInput.optOutGroupKeyForScriptType})
  * is {@link group}. Opting out sets `oat` and cancels the live run; opting in clears `oat` and schedules a run due now
- * when the entry is enabled, not paused and idle (the script's due check still applies).
+ * when the entry is enabled, not paused and idle (the script's due check still applies), or re-issues the resume run of
+ * an entry paused until a time.
  *
  * Bot-level: a no-op on a missing bot, and a no-op without the resolver.
  */
@@ -399,6 +558,8 @@ export type NotificationTaskBotChange =
   | NotificationTaskBotDataChange
   | NotificationTaskBotRemoveChange
   | NotificationTaskBotCompleteRunChange
+  | NotificationTaskBotDeferRunChange
+  | NotificationTaskBotExpirePauseChange
   | NotificationTaskBotMarkSubmittedChange
   | NotificationTaskBotSyncNextRunAtChange
   | NotificationTaskBotRepairChange
@@ -482,7 +643,13 @@ export interface ApplyNotificationTaskBotChangeResult {
  *
  * @param input - The bot, the attached model key, the change and the current time.
  * @returns The new bot, plus the runs to create and the tasks to delete.
- * @throws {Error} When an `ensure` change uses an invalid entry id.
+ * @throws {Error} When an `ensure` change that creates the entry uses an invalid entry id or seeds an invalid `sc`.
+ *
+ * @example
+ * ```ts
+ * const result = applyNotificationTaskBotChange({ bot, model: 'profile/abc', change: { type: 'pause', entryId: 'ping', pause: { reason: 'manual', until: tomorrow } } });
+ * // result.createRuns holds the resume run at `tomorrow`; result.deleteTaskKeys holds the cancelled live run
+ * ```
  */
 export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotChangeInput): ApplyNotificationTaskBotChangeResult {
   const { bot: inputBot, model, change, optOutGroupKeyForScriptType } = input;
@@ -549,6 +716,35 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     }
   }
 
+  function issueResumeRunIfNeeded(x: NotificationTaskBotEmbeddedScriptEntry) {
+    if (x.pat != null && x.pu != null && x.rn == null && x.s !== NotificationTaskBotEntryState.DISABLED && x.oat == null) {
+      // a not-before run; the run handler resumes the entry when it starts
+      issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, x.pu, false);
+    }
+  }
+
+  function applyPause(x: NotificationTaskBotEmbeddedScriptEntry, pause: NotificationTaskBotPause) {
+    x.pat = x.pat ?? now;
+    x.pr = pause.reason;
+    x.pu = pause.until ?? null;
+    changed = true;
+
+    if (x.rn != null || x.nk != null) {
+      cancelRun(x); // also the old resume run, when re-pausing
+    }
+
+    issueResumeRunIfNeeded(x);
+  }
+
+  function resumeEntry(x: NotificationTaskBotEmbeddedScriptEntry) {
+    x.rpr = x.pr ?? null;
+    x.pat = null;
+    x.pr = null;
+    x.pu = null;
+    x.fc = 0;
+    changed = true;
+  }
+
   function optOutEntry(x: NotificationTaskBotEmbeddedScriptEntry, at: Date) {
     x.oat = at;
     changed = true;
@@ -562,6 +758,7 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     x.oat = null;
     changed = true;
     scheduleIfIdle(x);
+    issueResumeRunIfNeeded(x);
   }
 
   function appendHistory(x: NotificationTaskBotEmbeddedScriptEntry, item: Omit<NotificationTaskBotEntryHistoryItem, 'at'>, limit: Maybe<number>, replaceLast?: Maybe<boolean>) {
@@ -574,16 +771,42 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
         throw new Error(`applyNotificationTaskBotChange(): invalid entry id "${change.entryId}".`);
       }
 
+      const { seed } = change;
+      const seedSc = seed?.sc;
+
+      if (seedSc != null && (!Number.isInteger(seedSc) || seedSc < 0)) {
+        throw new Error(`applyNotificationTaskBotChange(): invalid seed sc "${seedSc}" for entry "${change.entryId}". It must be a non-negative integer.`);
+      }
+
+      const seedHistory: NotificationTaskBotEntryHistoryItem[] = takeLast(
+        [...(seed?.h ?? [])].sort((a, b) => a.at.getTime() - b.at.getTime()).map((x) => ({ ...x, rn: 0 })),
+        Math.max(0, change.historyLimit ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT)
+      );
+
       entry = {
         i: change.entryId,
         t: change.scriptType,
         s: change.state ?? NotificationTaskBotEntryState.ENABLED,
         cat: now,
         d: mergeNotificationTaskBotEntryData(undefined, change.data),
-        sc: 0,
+        sc: seedSc ?? 0,
         fc: 0,
-        h: []
+        h: seedHistory
       };
+
+      if (seed?.lsat != null) {
+        entry.lsat = seed.lsat;
+      }
+
+      if (seed?.lat != null) {
+        entry.lat = seed.lat;
+      }
+
+      if (seed?.pause != null) {
+        entry.pat = seed.pause.at ?? now;
+        entry.pr = seed.pause.reason;
+        entry.pu = seed.pause.until ?? null;
+      }
 
       entries = [...entries, entry];
       entryIndex = entries.length - 1;
@@ -619,16 +842,19 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
     if (schedule === 'ifIdle') {
       scheduleIfIdle(entry);
     } else if (schedule !== false && isNotificationTaskBotEntryRunnable(entry)) {
-      const explicitAt = schedule === 'now' ? undefined : schedule;
-      issueRun(entry, NotificationTaskBotRunTrigger.SCHEDULED, explicitAt, explicitAt != null);
+      const at = schedule === 'now' ? undefined : schedule;
+      issueRun(entry, NotificationTaskBotRunTrigger.SCHEDULED, at, at != null && Boolean(change.explicit));
     }
+
+    // re-issues a resume run that went missing; a no-op otherwise
+    issueResumeRunIfNeeded(entry);
   } else if (entry) {
     const x = entry;
 
     switch (change.type) {
       case 'schedule':
         if (isNotificationTaskBotEntryRunnable(x) && !(change.ifIdle && x.rn != null)) {
-          issueRun(x, change.trigger ?? NotificationTaskBotRunTrigger.SCHEDULED, change.at, change.at != null);
+          issueRun(x, change.trigger ?? NotificationTaskBotRunTrigger.SCHEDULED, change.at, change.at != null && Boolean(change.explicit));
         }
         break;
       case 'cancel':
@@ -646,25 +872,24 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
           if (x.rn != null || x.nk != null) {
             cancelRun(x);
           }
-        } else if (change.reschedule !== false) {
-          scheduleIfIdle(x);
+        } else {
+          if (change.reschedule !== false) {
+            scheduleIfIdle(x);
+          }
+
+          issueResumeRunIfNeeded(x);
         }
         break;
       case 'pause':
         if (change.pause) {
-          x.pat = x.pat ?? now;
-          x.pr = change.pause.reason;
-          changed = true;
-
-          if (x.rn != null || x.nk != null) {
-            cancelRun(x);
-          }
+          applyPause(x, change.pause);
         } else {
           if (x.pat != null || x.pr != null) {
-            x.pat = null;
-            x.pr = null;
-            x.fc = 0;
-            changed = true;
+            if (x.rn != null || x.nk != null) {
+              cancelRun(x); // a paused entry's only live run is its resume run
+            }
+
+            resumeEntry(x);
           }
 
           if (change.reschedule !== false) {
@@ -690,40 +915,74 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
         break;
       case 'completeRun':
         if (x.rn === change.runNumber) {
-          x.lat = now;
-          x.fc = 0;
           x.rn = null;
           x.nk = null; // the run's own task is marked done by the handler, never deleted here
           x.nat = null;
-
-          if (change.updateData) {
-            x.d = mergeNotificationTaskBotEntryData(x.d, change.updateData) ?? null;
-          }
-
-          if (change.history !== false) {
-            appendHistory(x, { rn: change.runNumber, tr: change.trigger, o: change.outcome ?? NotificationTaskBotRunOutcome.COMPLETED, d: change.history?.d }, change.historyLimit, change.history?.replaceLast);
-          }
-
-          if (change.pause) {
-            x.pat = now;
-            x.pr = change.pause.reason;
-          }
-
-          if (change.disable) {
-            x.s = NotificationTaskBotEntryState.DISABLED;
-          }
-
-          const requestedAt = change.nextRunAtExplicit ?? change.nextRunAt;
-
-          if (requestedAt != null && isNotificationTaskBotEntryRunnable(x)) {
-            // never sooner than now plus the minimum run interval
-            const sendAt = latestDate([requestedAt, addMilliseconds(now, change.minimumRunInterval)], requestedAt);
-            issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, sendAt, change.nextRunAtExplicit != null);
-          }
-
           changed = true;
+
+          if (change.remove) {
+            removed = true;
+          } else {
+            const outcome = change.outcome ?? NotificationTaskBotRunOutcome.COMPLETED;
+            const failed = outcome === NotificationTaskBotRunOutcome.FAILED;
+
+            x.lat = now;
+            x.fc = failed ? (x.fc ?? 0) + 1 : 0;
+            x.rpr = null; // the run had its chance to react to the resume
+
+            if (change.updateData) {
+              x.d = mergeNotificationTaskBotEntryData(x.d, change.updateData) ?? null;
+            }
+
+            if (change.history !== false) {
+              appendHistory(x, { rn: change.runNumber, tr: change.trigger, o: outcome, d: change.history?.d }, change.historyLimit, change.history?.replaceLast);
+            }
+
+            if (change.disable) {
+              x.s = NotificationTaskBotEntryState.DISABLED;
+            }
+
+            if (change.pause) {
+              applyPause(x, change.pause);
+            }
+
+            // the script's own pause reason wins, since it is more specific
+            if (failed && x.pat == null && x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES)) {
+              applyPause(x, { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED });
+            }
+
+            const requestedAt = change.nextRunAtExplicit ?? change.nextRunAt;
+
+            if (requestedAt != null && isNotificationTaskBotEntryRunnable(x)) {
+              // never sooner than now plus the minimum run interval, explicit or not
+              const sendAt = latestDate([requestedAt, addMilliseconds(now, change.minimumRunInterval ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL)], requestedAt);
+              issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, sendAt, change.nextRunAtExplicit != null);
+            }
+          }
         } else {
           fenced = true;
+        }
+        break;
+      case 'deferRun':
+        if (x.rn === change.runNumber) {
+          // clear the fence first, so issueRun does not delete the deferred run's own task
+          x.rn = null;
+          x.nk = null;
+          x.nat = null;
+          changed = true;
+
+          if (isNotificationTaskBotEntryRunnable(x)) {
+            issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, change.at, false);
+          }
+        } else {
+          fenced = true;
+        }
+        break;
+      case 'expirePause':
+        if (x.rn !== change.runNumber) {
+          fenced = true;
+        } else if (x.pat != null && x.pu != null && x.pu.getTime() <= now.getTime()) {
+          resumeEntry(x); // the live run keeps going as a normal run
         }
         break;
       case 'markSubmitted':
@@ -748,20 +1007,24 @@ export function applyNotificationTaskBotChange(input: ApplyNotificationTaskBotCh
         if (x.rn !== change.runNumber) {
           fenced = true;
         } else if (change.pendingTaskSendAt == null) {
-          appendHistory(x, { rn: change.runNumber, tr: change.trigger ?? NotificationTaskBotRunTrigger.SCHEDULED, o: NotificationTaskBotRunOutcome.LOST }, change.historyLimit);
-          x.fc = (x.fc ?? 0) + 1;
           x.rn = null;
           x.nk = null; // the task is already missing or done
           x.nat = null;
-
-          if (x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES)) {
-            x.pat = now;
-            x.pr = NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED;
-          } else if (isNotificationTaskBotEntryRunnable(x)) {
-            issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, undefined, false);
-          }
-
           changed = true;
+
+          if (x.pat == null) {
+            appendHistory(x, { rn: change.runNumber, tr: change.trigger ?? NotificationTaskBotRunTrigger.SCHEDULED, o: NotificationTaskBotRunOutcome.LOST }, change.historyLimit);
+            x.fc = (x.fc ?? 0) + 1;
+
+            if (x.fc >= (change.maxConsecutiveFailures ?? DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES)) {
+              applyPause(x, { reason: NOTIFICATION_TASK_BOT_PAUSE_REASON_FAILED });
+            } else if (isNotificationTaskBotEntryRunnable(x)) {
+              issueRun(x, NotificationTaskBotRunTrigger.SCHEDULED, undefined, false);
+            }
+          } else {
+            // a lost resume run is not a script failure
+            issueResumeRunIfNeeded(x);
+          }
         } else if (!isSameDate(x.nat, change.pendingTaskSendAt)) {
           x.nat = change.pendingTaskSendAt;
           changed = true;

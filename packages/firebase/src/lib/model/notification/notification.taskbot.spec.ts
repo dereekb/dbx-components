@@ -72,6 +72,14 @@ describe('notificationTaskBotConverter', () => {
     expect(restored.e[0].oat).toEqual(runAt);
   });
 
+  it('should round-trip the paused until date and the resumed pause reason', () => {
+    const pausedUntil: NotificationTaskBot = { ...model, e: [{ ...model.e[0], pat: createdAt, pr: 'manual', pu: runAt, rpr: 'limit' }] };
+    const restored = notificationTaskBotConverter.mapFunctions.from(notificationTaskBotConverter.mapFunctions.to(pausedUntil));
+
+    expect(restored.e[0].pu).toEqual(runAt);
+    expect(restored.e[0].rpr).toBe('limit');
+  });
+
   it('should not store unset optional entry fields', () => {
     const data = notificationTaskBotConverter.mapFunctions.to({ cat: createdAt, m: 'profile/abc', rc: 0, e: [{ i: 'a', t: 't', s: NotificationTaskBotEntryState.ENABLED, cat: createdAt, sc: 0, fc: 0, h: [] }] }) as any;
     const entry = data.e[0];
@@ -79,6 +87,8 @@ describe('notificationTaskBotConverter', () => {
     expect(entry.rn).toBeUndefined();
     expect(entry.nk).toBeUndefined();
     expect(entry.oat).toBeUndefined();
+    expect(entry.pu).toBeUndefined();
+    expect(entry.rpr).toBeUndefined();
     expect(data.o).toBeNull(); // top-level optional fields store null, unlike sub-object fields
   });
 });

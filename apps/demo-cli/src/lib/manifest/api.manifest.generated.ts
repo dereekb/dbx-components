@@ -426,10 +426,17 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsTypeDescription: 'Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.',
     paramsFields: [
       { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
-      { name: 'pause', typeText: 'Maybe<boolean>', description: "True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it and schedules a run." },
-      { name: 'nextRunAt', typeText: 'Maybe<Date>', description: 'Reschedules the entry. A date schedules a run at that explicit time; null schedules a run due now, letting the\nscript compute the real due time.' },
+      { name: 'pause', typeText: 'Maybe<boolean>', description: "True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it (also when it was paused until\na time) and schedules a run. False wins over {@link pauseUntil}." },
+      { name: 'pauseUntil', typeText: 'Maybe<Date>', description: "Pauses the entry (reason `'manual'`) until this time; it then resumes on its own. A time in the past resumes it on\nthe next queue pass. Null is ignored. `pause: false` in the same request wins and resumes the entry." },
+      { name: 'nextRunAt', typeText: 'Maybe<Date>', description: "Reschedules the entry. A date schedules a run that starts no sooner than that time, and the script's due check\nstill applies; null schedules a run due now, letting the script compute the real due time." },
+      { name: 'nextRunAtExplicit', typeText: 'Maybe<Date>', description: "Reschedules the entry with an explicit run that starts at exactly this time and skips the script's due check. Wins\nover {@link nextRunAt}. Null is ignored." },
       { name: 'lsat', typeText: 'Maybe<Date>', description: "Sets the entry's last submitted at time. Null clears it." },
-      { name: 'runImmediately', typeText: 'Maybe<boolean>', description: "Runs the entry's live run immediately after the update, if it has one." }
+      {
+        name: 'runImmediately',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Runs the entry's live run immediately after the update, if it has one.\n\nSkipped when this same request scheduled the live run in the future ({@link nextRunAt} or {@link nextRunAtExplicit}\nafter now, or {@link pauseUntil} given); the result then has no `runResult`. Any other live run that is scheduled in\nthe future still waits for its time. To re-evaluate an entry now, pass `nextRunAt: null` (optionally with\n`lsat: null`)."
+      }
     ],
     resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',
     resultFields: [
@@ -474,7 +481,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ],
     resultTypeDescription: 'Result of running a {@link NotificationTaskBot} entry.',
     resultFields: [
-      { name: 'taskKey', typeText: 'NotificationTaskKey', description: 'Key of the new run task.' },
+      { name: 'taskKey', typeText: 'NotificationTaskKey', description: "Key of the new run task this call created.\n\nWhen the due check found a MANUAL run not due yet, that run handed over to a SCHEDULED run at the due time; the\nentry's live run (`nk`) is then that hand-over, not this task." },
       { name: 'runResult', typeText: 'Maybe<SendNotificationResult>', description: 'Result of running the new run, if it was run immediately.' }
     ]
   },
@@ -1565,8 +1572,10 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 's', longName: 'state', tsType: 'NotificationTaskBotEntryState', optional: false, description: 'Enabled/disabled state.', enumRef: 'NotificationTaskBotEntryState' },
           { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'When the entry was created.' },
           { name: 'd', longName: 'data', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary permanent data owned by the script.' },
-          { name: 'pat', longName: 'pausedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the entry was paused. A paused entry has no live run.' },
+          { name: 'pat', longName: 'pausedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the entry was paused.' },
           { name: 'pr', longName: 'pauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'Why the entry was paused.' },
+          { name: 'pu', longName: 'pausedUntil', tsType: 'Maybe<Date>', optional: true, description: 'When a paused entry resumes on its own. Only set together with {@link pat}.' },
+          { name: 'rpr', longName: 'resumedPauseReason', tsType: 'Maybe<NotificationTaskBotPauseReason>', optional: true, description: 'The pause reason the entry was last resumed from, kept until the next run completes.' },
           { name: 'oat', longName: 'optOutAt', tsType: 'Maybe<Date>', optional: true, description: "When the bot's owner opted out of this entry's script group. Set means opted out; this is the only opt-out state." },
           { name: 'rn', longName: 'runNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the live run. This is the fence: only a run with this number may write back. Null when idle.' },
           { name: 'nk', longName: 'runTaskKey', tsType: 'Maybe<NotificationTaskKey>', optional: true, description: "Key of the live run's NotificationTask." },
@@ -1575,7 +1584,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 'lsat', longName: 'lastSubmittedAt', tsType: 'Maybe<Date>', optional: true, description: 'When the last submission happened. The cadence anchor for scripts.' },
           { name: 'lsr', longName: 'lastSubmittedRunNumber', tsType: 'Maybe<NotificationTaskBotRunNumber>', optional: true, description: 'Run number of the last submission. Used as an idempotency marker so a re-run step never submits twice.' },
           { name: 'sc', longName: 'submissionCount', tsType: 'number', optional: false, description: 'Lifetime submission count.' },
-          { name: 'fc', longName: 'failureCount', tsType: 'number', optional: false, description: 'Consecutive failure count. Reset whenever a run completes.' },
+          { name: 'fc', longName: 'failureCount', tsType: 'number', optional: false, description: 'Consecutive failure count. Goes up for each lost run (found by repair) and each run whose cleanup reports FAILED, and is reset by a run that completes with any other outcome, or by a resume.' },
           {
             name: 'h',
             longName: 'history',
@@ -2048,8 +2057,8 @@ export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
       { name: 'COMPLETED', value: 0, description: 'The run completed without submitting anything.' },
       { name: 'SUBMITTED', value: 1, description: 'The run submitted its side effect (e.g. sent an email).' },
       { name: 'SUPPRESSED', value: 2, description: 'The run decided a submission should be suppressed.' },
-      { name: 'SKIPPED', value: 3, description: 'The run was skipped.' },
-      { name: 'FAILED', value: 4, description: 'The run failed.' },
+      { name: 'SKIPPED', value: 3, description: 'The run was skipped. Also recorded for an entry whose script has no processor.' },
+      { name: 'FAILED', value: 4, description: "The run failed. Counts toward the script's `maxConsecutiveFailures`, the same as a LOST run." },
       { name: 'LOST', value: 5, description: "The run's task went missing before it could finish (found by the repair sweep)." }
     ],
     description: "Outcome of a single run, recorded in the entry's history."

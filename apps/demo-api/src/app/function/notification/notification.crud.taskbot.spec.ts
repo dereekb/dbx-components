@@ -86,8 +86,37 @@ demoApiFunctionContextFactory((f) => {
                 const entry = await loadEntry();
 
                 expect(entry.pat).toBeFalsy();
+                expect(entry.rpr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
                 expect(result.taskKey).toBe(entry.nk);
                 expect(await loadTask(result.taskKey as string)).toBeDefined();
+              });
+
+              it('should pause the entry until a time', async () => {
+                const pauseUntil = addHours(new Date(), 2);
+                const result = await callUpdate({ pauseUntil });
+                const entry = await loadEntry();
+                const task = await loadTask(result.taskKey as string);
+
+                expect(result.status).toBe(NotificationTaskBotEntryStatus.PAUSED);
+                expect(entry.pr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
+                expect(entry.pu?.getTime()).toBe(pauseUntil.getTime());
+                expect(result.taskKey).toBe(entry.nk);
+                expect(task?.sat.getTime()).toBe(pauseUntil.getTime());
+              });
+
+              it('should resume a paused-until entry early', async () => {
+                const paused = await callUpdate({ pauseUntil: addHours(new Date(), 2) });
+                const result = await callUpdate({ pause: false });
+                const entry = await loadEntry();
+                const task = await loadTask(result.taskKey as string);
+
+                expect(result.status).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
+                expect(entry.pat).toBeFalsy();
+                expect(entry.pu).toBeFalsy();
+                expect(entry.rpr).toBe(NOTIFICATION_TASK_BOT_PAUSE_REASON_MANUAL);
+                expect(await loadTask(paused.taskKey as string)).toBeUndefined();
+                expect(result.taskKey).not.toBe(paused.taskKey);
+                expect(task?.sat.getTime()).toBeLessThanOrEqual(Date.now());
               });
 
               it('should disable the entry', async () => {
@@ -98,7 +127,7 @@ demoApiFunctionContextFactory((f) => {
                 expect(entry.rn).toBeFalsy();
               });
 
-              it('should reschedule the entry at an explicit time', async () => {
+              it('should schedule a not-before run at nextRunAt', async () => {
                 const nextRunAt = addHours(new Date(), 5);
                 const result = await callUpdate({ nextRunAt });
                 const entry = await loadEntry();
@@ -106,7 +135,30 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(entry.nat?.getTime()).toBe(nextRunAt.getTime());
                 expect(task?.sat.getTime()).toBe(nextRunAt.getTime());
+                expect((task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.x).toBeFalsy();
+              });
+
+              it('should reschedule the entry at an explicit time', async () => {
+                const nextRunAtExplicit = addHours(new Date(), 5);
+                const result = await callUpdate({ nextRunAtExplicit });
+                const entry = await loadEntry();
+                const task = await loadTask(result.taskKey as string);
+
+                expect(entry.nat?.getTime()).toBe(nextRunAtExplicit.getTime());
+                expect(task?.sat.getTime()).toBe(nextRunAtExplicit.getTime());
                 expect((task?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.x).toBe(true);
+              });
+
+              it('should not run a run scheduled in the future immediately', async () => {
+                const nextRunAtExplicit = addHours(new Date(), 5);
+                const result = await callUpdate({ nextRunAtExplicit, runImmediately: true });
+                const entry = await loadEntry();
+                const task = await loadTask(result.taskKey as string);
+
+                expect(result.runResult).toBeFalsy();
+                expect(entry.sc).toBe(0);
+                expect(task?.d).toBe(false);
+                expect(task?.sat.getTime()).toBe(nextRunAtExplicit.getTime());
               });
 
               it('should set and clear the last submitted at time', async () => {
@@ -140,6 +192,18 @@ demoApiFunctionContextFactory((f) => {
                 expect(await loadTask(before.nk as string)).toBeUndefined();
               });
 
+              it('should hand a MANUAL run that is not due over to a SCHEDULED run', async () => {
+                await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED }); // sets lsat
+                const result = await callRun({});
+                const entry = await loadEntry();
+                const liveTask = await loadTask(entry.nk as string);
+
+                expect(result.runResult?.success).toBe(true);
+                expect(entry.h).toHaveLength(1);
+                expect(entry.nk).not.toBe(result.taskKey);
+                expect((liveTask?.n.d as Maybe<NotificationTaskBotRunNotificationTaskData>)?.tr).toBe(NotificationTaskBotRunTrigger.SCHEDULED);
+              });
+
               it('should create and run a FORCED run', async () => {
                 const result = await callRun({ trigger: NotificationTaskBotRunTrigger.FORCED });
                 const entry = await loadEntry();
@@ -152,6 +216,11 @@ demoApiFunctionContextFactory((f) => {
 
               itShouldFail('for a paused entry', async () => {
                 await callUpdate({ pause: true });
+                await expectFail(() => callRun({}), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE));
+              });
+
+              itShouldFail('for an entry paused until a time', async () => {
+                await callUpdate({ pauseUntil: addHours(new Date(), 2) });
                 await expectFail(() => callRun({}), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE));
               });
 

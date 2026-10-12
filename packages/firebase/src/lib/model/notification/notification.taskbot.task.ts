@@ -66,11 +66,13 @@ export interface NotificationTaskBotRunNotificationTaskData<M extends Notificati
    */
   readonly tr: NotificationTaskBotRunTrigger;
   /**
-   * When the run was scheduled to run.
+   * When the run was scheduled to run. No run except a FORCED one starts its first step before this time.
    */
   readonly sa: UnixDateTimeMillisecondsNumber;
   /**
-   * True if {@link sa} is an explicit time. The script's due check is skipped for explicit runs.
+   * True if {@link sa} is an explicit time: the run starts at {@link sa} and the script's due check is skipped.
+   *
+   * Otherwise the run is "not before": it starts at {@link sa} or later, and the script's due check still applies.
    */
   readonly x?: Maybe<boolean>;
 }
