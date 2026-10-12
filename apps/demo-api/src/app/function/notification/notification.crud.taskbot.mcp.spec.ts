@@ -1,4 +1,5 @@
-import { notificationTaskBotIdentity } from '@dereekb/firebase';
+import { notificationTaskBotEntry, notificationTaskBotIdentity } from '@dereekb/firebase';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 import { buildMcpToolName, MODEL_ROLES_TOOL_NAME } from '@dereekb/firebase-server/mcp';
 import { MS_IN_HOUR } from '@dereekb/util';
 import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE } from 'demo-firebase';
@@ -15,7 +16,7 @@ interface RolesResponse {
 }
 
 /**
- * MCP coverage for the NotificationTaskBot owner opt-outs.
+ * MCP coverage for the NotificationTaskBot owner opt-outs and the admin entry tool's data patch.
  *
  * The bot's owner is granted ONLY the `optOut` role (never `read`), and the admin-only `update:entry` / `update:run`
  * tools are hidden from non-admins, while the owner-facing `read:optOuts` / `update:optOut` tools stay listed.
@@ -35,6 +36,37 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           expect(result.isError).toBeUndefined();
           const structured = result.structuredContent as unknown as RolesResponse;
           expect(structured.results[0]).toEqual({ key: ntb.documentKey, exists: true, fullAccess: false, roles: ['optOut'] });
+        });
+
+        demoAuthorizedUserAdminContext({ f }, (au) => {
+          describe('entry tool data patch', () => {
+            async function loadEntry() {
+              const bot = await assertSnapshotData(ntb.document);
+              return notificationTaskBotEntry(bot, DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID)!;
+            }
+
+            it('advertises updateData on the entry tool', async () => {
+              const tool = (await listMcpTools(f, au)).find((t) => t.name === entryToolName);
+              const inputSchema = tool?.inputSchema as { readonly properties?: Record<string, unknown> };
+
+              expect(inputSchema.properties?.['updateData']).toBeDefined();
+            });
+
+            it('patches entry data through the entry tool', async () => {
+              const result = await callMcpTool({ f, u: au, name: entryToolName, args: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { pa: 5 } } });
+              const entry = await loadEntry();
+
+              expect(result.isError).toBeUndefined();
+              expect(entry.d?.pa).toBe(5);
+            });
+
+            it('reports a refused patch as a tool error naming the problem', async () => {
+              const result = await callMcpTool({ f, u: au, name: entryToolName, args: { key: ntb.documentKey, i: DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, updateData: { iv: -5 } } });
+
+              expect(result.isError).toBe(true);
+              expect(JSON.stringify(result.content)).toContain('iv');
+            });
+          });
         });
       });
 

@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { type NotificationTaskBot, type NotificationTaskBotEmbeddedScriptEntry, NotificationTaskBotEntryState, NotificationTaskBotEntryStatus, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
 import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL } from './notification.taskbot.script';
-import { appendNotificationTaskBotEntryHistoryItem, applyNotificationTaskBotChange, applyNotificationTaskBotChanges, type NotificationTaskBotChange, mergeNotificationTaskBotEntryData, notificationTaskBotEntry, notificationTaskBotEntryStatus, notificationTaskBotNextRunAt } from './notification.taskbot.util';
+import {
+  appendNotificationTaskBotEntryHistoryItem,
+  applyNotificationTaskBotChange,
+  assertNotificationTaskBotEntryDataPatchAllowed,
+  applyNotificationTaskBotChanges,
+  type NotificationTaskBotChange,
+  mergeNotificationTaskBotEntryData,
+  notificationTaskBotEntry,
+  notificationTaskBotEntryStatus,
+  notificationTaskBotNextRunAt
+} from './notification.taskbot.util';
 
 const model = 'profile/abc';
 const now = new Date('2026-01-02T00:00:00.000Z');
@@ -926,6 +937,74 @@ describe('owner opt-outs', () => {
       expect(result.entry?.oat).toEqual(now);
       expect(result.entry?.rn).toBeNull();
       expect(result.unknownEntry).toBe(false);
+    });
+  });
+});
+
+describe('assertNotificationTaskBotEntryDataPatchAllowed()', () => {
+  const dataType = type({ 'c?': 'number.integer >= 0', 'iv?': 'number.integer > 0' }).onUndeclaredKey('reject');
+  const requiredType = type({ iv: 'number.integer > 0' });
+
+  it('should refuse a patch when the script sets no dataType', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: {}, data: { c: 1 }, update: { iv: 2 } });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('not_allowed');
+    expect(result.problems).toBeUndefined();
+    expect(result.data).toEqual({ c: 1, iv: 2 });
+  });
+
+  it('should allow a valid patch and return the merged data', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: { c: 1, iv: 1 }, update: { iv: 2 } });
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBeUndefined();
+    expect(result.data).toEqual({ c: 1, iv: 2 });
+  });
+
+  it('should delete a key set to null', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: { c: 1, iv: 1 }, update: { c: null } });
+    expect(result.allowed).toBe(true);
+    expect(result.data).toEqual({ iv: 1 });
+  });
+
+  it('should validate an empty object when every key is deleted', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: { c: 1 }, update: { c: null } });
+    expect(result.allowed).toBe(true);
+    expect(result.data).toBeUndefined();
+  });
+
+  it('should refuse an invalid value', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: undefined, update: { iv: -1 } });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('invalid');
+    expect(result.problems).toContain('iv');
+  });
+
+  it('should refuse an unknown key', () => {
+    const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: undefined, update: { ivv: 1 } });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('invalid');
+    expect(result.problems).toContain('ivv');
+  });
+
+  describe('merged data', () => {
+    it('should refuse a patch when the stored data is invalid', () => {
+      const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: { c: -1 }, update: { iv: 2 } });
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe('invalid');
+      expect(result.problems).toContain('c');
+    });
+
+    it('should allow a patch that fixes the stored data', () => {
+      const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType }, data: { c: -1 }, update: { c: 0 } });
+      expect(result.allowed).toBe(true);
+      expect(result.data).toEqual({ c: 0 });
+    });
+
+    it('should refuse a patch that deletes a required key', () => {
+      const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: { dataType: requiredType }, data: { iv: 1 }, update: { iv: null } });
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe('invalid');
+      expect(result.problems).toContain('iv');
     });
   });
 });

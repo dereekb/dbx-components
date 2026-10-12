@@ -30,7 +30,8 @@ import { ARKTYPE_DATE_DTO_TYPE, clearable, e164PhoneNumberType } from '@dereekb/
 import { type NotificationHealthCheck, type NotificationHealthCheckIssueAutofixResult, type NotificationHealthCheckIssueCode } from './notification.healthcheck';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 import { type NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
-import { NotificationTaskBotEntryState, type NotificationTaskBotEntryStatus, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { type NotificationTaskBotEntryData, NotificationTaskBotEntryState, type NotificationTaskBotEntryStatus, NotificationTaskBotRunTrigger } from './notification.taskbot';
+import { type NotificationTaskBotEntryDataUpdate } from './notification.taskbot.util';
 import { type NotificationTaskBotOwnerOptOutGroup } from './notification.taskbot.optout';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
@@ -680,6 +681,15 @@ export const notificationTaskBotEntryIdType = /* @__PURE__ */ type(NOTIFICATION_
 export const notificationTaskBotScriptGroupKeyType = /* @__PURE__ */ type(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_REGEX).atMostLength(NOTIFICATION_TASK_BOT_SCRIPT_GROUP_KEY_MAX_LENGTH);
 
 /**
+ * arktype validator for a {@link NotificationTaskBotEntryDataUpdate}: a JSON object whose top-level keys are merged
+ * into an entry's data.
+ *
+ * Arrays are refused, since an array would merge in as numbered keys. The values are checked by the server against the
+ * script's `NotificationTaskBotScriptConfig.dataType`, not here.
+ */
+export const notificationTaskBotEntryDataUpdateType = /* @__PURE__ */ type('Record<string, unknown>').narrow((x, ctx) => !Array.isArray(x) || ctx.mustBe('an object'));
+
+/**
  * Maximum number of group keys in each list of {@link UpdateNotificationTaskBotOptOutParams}.
  */
 export const UPDATE_NOTIFICATION_TASK_BOT_OPT_OUT_MAX_GROUPS = 50;
@@ -699,11 +709,14 @@ export const notificationTaskBotEntryTargetParamsType = targetModelParamsType.me
 }) as Type<NotificationTaskBotEntryTargetParams>;
 
 /**
- * Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.
+ * Used for updating the state, schedule and data of a single entry on a {@link NotificationTaskBot}.
+ *
+ * All changes apply in one transaction, in this order: data, state, pause, last submitted at, schedule. A refused data
+ * patch refuses the whole request.
  *
  * @dbxModelApiParams
  */
-export interface UpdateNotificationTaskBotEntryParams extends NotificationTaskBotEntryTargetParams {
+export interface UpdateNotificationTaskBotEntryParams<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> extends NotificationTaskBotEntryTargetParams {
   /**
    * Enables or disables the entry. Disabling cancels the live run.
    */
@@ -741,6 +754,17 @@ export interface UpdateNotificationTaskBotEntryParams extends NotificationTaskBo
    * `lsat: null`).
    */
   readonly runImmediately?: Maybe<boolean>;
+  /**
+   * Merges into the entry's script data (`d`). Only top-level keys merge: a key set to null is deleted, a key that is
+   * not listed is kept, and a nested object replaces the stored one. Null or an empty object is ignored.
+   *
+   * Only scripts that set `NotificationTaskBotScriptConfig.dataType` accept a patch, and the data after the patch must
+   * satisfy it. Otherwise the whole request is refused.
+   *
+   * A patch never issues, cancels or supersedes a run. A run already in progress may still use the data it read. To
+   * run again now with the new data, also pass `nextRunAt: null` and `runImmediately: true`.
+   */
+  readonly updateData?: Maybe<NotificationTaskBotEntryDataUpdate<D>>;
 }
 
 export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntryTargetParamsType.merge({
@@ -750,7 +774,8 @@ export const updateNotificationTaskBotEntryParamsType = notificationTaskBotEntry
   'nextRunAt?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'nextRunAtExplicit?': clearable(ARKTYPE_DATE_DTO_TYPE),
   'lsat?': clearable(ARKTYPE_DATE_DTO_TYPE),
-  'runImmediately?': clearable('boolean')
+  'runImmediately?': clearable('boolean'),
+  'updateData?': clearable(notificationTaskBotEntryDataUpdateType)
 }) as Type<UpdateNotificationTaskBotEntryParams>;
 
 /**
@@ -941,8 +966,9 @@ export type NotificationBoxModelCrudFunctionsConfig = {
     };
     update: {
       /**
-       * Admin-only. Enables/disables, pauses/resumes or reschedules a single entry. Reports `opted_out` when the owner
-       * opted out of the entry's group, which only the owner can undo.
+       * Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must
+       * satisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out
+       * of the entry's group, which only the owner can undo.
        */
       entry: [UpdateNotificationTaskBotEntryParams, UpdateNotificationTaskBotEntryResult];
       /**

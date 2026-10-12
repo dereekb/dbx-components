@@ -422,8 +422,8 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeName: 'UpdateNotificationTaskBotEntryResult',
     groupName: 'NotificationBox',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.api.ts',
-    description: "Admin-only. Enables/disables, pauses/resumes or reschedules a single entry. Reports `opted_out` when the owner\nopted out of the entry's group, which only the owner can undo.",
-    paramsTypeDescription: 'Used for updating the state and schedule of a single entry on a {@link NotificationTaskBot}.',
+    description: "Admin-only. Enables/disables, pauses/resumes, reschedules or patches the data of a single entry. A data patch must\nsatisfy the script's `dataType`, and scripts without one refuse it. Reports `opted_out` when the owner opted out\nof the entry's group, which only the owner can undo.",
+    paramsTypeDescription: 'Used for updating the state, schedule and data of a single entry on a {@link NotificationTaskBot}.\n\nAll changes apply in one transaction, in this order: data, state, pause, last submitted at, schedule. A refused data\npatch refuses the whole request.',
     paramsFields: [
       { name: 's', typeText: 'Maybe<NotificationTaskBotEntryState>', description: 'Enables or disables the entry. Disabling cancels the live run.' },
       { name: 'pause', typeText: 'Maybe<boolean>', description: "True pauses the entry (reason `'manual'`) and cancels the live run. False resumes it (also when it was paused until\na time) and schedules a run. False wins over {@link pauseUntil}." },
@@ -436,6 +436,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
         typeText: 'Maybe<boolean>',
         description:
           "Runs the entry's live run immediately after the update, if it has one.\n\nSkipped when this same request scheduled the live run in the future ({@link nextRunAt} or {@link nextRunAtExplicit}\nafter now, or {@link pauseUntil} given); the result then has no `runResult`. Any other live run that is scheduled in\nthe future still waits for its time. To re-evaluate an entry now, pass `nextRunAt: null` (optionally with\n`lsat: null`)."
+      },
+      {
+        name: 'updateData',
+        typeText: 'Maybe<NotificationTaskBotEntryDataUpdate<D>>',
+        description:
+          "Merges into the entry's script data (`d`). Only top-level keys merge: a key set to null is deleted, a key that is\nnot listed is kept, and a nested object replaces the stored one. Null or an empty object is ignored.\n\nOnly scripts that set `NotificationTaskBotScriptConfig.dataType` accept a patch, and the data after the patch must\nsatisfy it. Otherwise the whole request is refused.\n\nA patch never issues, cancels or supersedes a run. A run already in progress may still use the data it read. To\nrun again now with the new data, also pass `nextRunAt: null` and `runImmediately: true`."
       }
     ],
     resultTypeDescription: 'Result of updating a {@link NotificationTaskBot} entry.',

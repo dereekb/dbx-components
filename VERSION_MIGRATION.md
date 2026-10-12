@@ -66,6 +66,13 @@ but two changes require an update in every app that implements the notification 
   `nextRunAtExplicit` schedules an explicit run and wins over `nextRunAt`. `pauseUntil` pauses the entry (reason
   `'manual'`) until a time; `pause: false` in the same request wins. `runImmediately` is skipped when the same request
   scheduled the live run in the future; to re-evaluate an entry now, pass `{ nextRunAt: null, runImmediately: true }`.
+- **Admin data patches:** `update:entry` takes `updateData`, a `ClearableObjectUpdate` merged into the entry's data `d`
+  (top-level keys; null deletes a key). A script opts in by setting `dataType` (an arktype type of its entry data) on its
+  `NotificationTaskBotScriptConfig`, and the data after the patch must satisfy it. A script without one refuses every
+  patch (`NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED`), and invalid data is refused with
+  `NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID`. Either way the whole request is refused. `dataType` only validates
+  and its output is not stored; use `.onUndeclaredKey('reject')` to refuse unknown keys. Writes from server code are not
+  checked. The client can pre-check with `assertNotificationTaskBotEntryDataPatchAllowed()`.
 - **Pause until.** A pause may carry `until` (the `pause` change, cleanup's `pause`, a seed pause, `pauseUntil` on
   `update:entry`). The entry stores it in `pu` (`pausedUntil`) and keeps a not-before resume run at that time, which
   resumes the entry when it starts. The status stays `paused` meanwhile and `update:run` stays refused. Disabling or

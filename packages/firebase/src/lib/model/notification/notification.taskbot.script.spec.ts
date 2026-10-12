@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { type } from 'arktype';
 import { appNotificationTaskBotScriptConfigService, notificationTaskBotScriptConfigRecord } from './notification.taskbot.script';
 
 describe('notificationTaskBotScriptConfigRecord()', () => {
@@ -59,6 +60,12 @@ describe('appNotificationTaskBotScriptConfigService()', () => {
 
   it('should default to an empty registry', () => {
     expect(appNotificationTaskBotScriptConfigService().getAllKnownScriptTypes()).toEqual([]);
+  });
+
+  it('should keep the registered dataType instance', () => {
+    const dataType = type({ 'c?': 'number' });
+    const dataTypeService = appNotificationTaskBotScriptConfigService(notificationTaskBotScriptConfigRecord([{ scriptType: 'a', dataType }]));
+    expect(dataTypeService.configForScriptType('a').dataType).toBe(dataType);
   });
 });
 

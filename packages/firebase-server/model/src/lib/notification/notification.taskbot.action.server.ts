@@ -14,6 +14,7 @@ import {
   updateNotificationTaskBotOptOutParamsType,
   appNotificationTaskBotScriptConfigService,
   applyNotificationTaskBotChanges,
+  assertNotificationTaskBotEntryDataPatchAllowed,
   createNotificationDocument,
   type FirestoreContextReference,
   type FirestoreModelKey,
@@ -53,9 +54,17 @@ import {
   firestoreDummyKey
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { addMilliseconds, filterMaybeArrayValues, isPast, type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
+import { addMilliseconds, filterMaybeArrayValues, filterUndefinedValues, isPast, type Maybe, type Milliseconds, MS_IN_HOUR, objectHasNoKeys } from '@dereekb/util';
 import { type NotificationServerActions } from './notification.action.server';
-import { notificationTaskBotEntryDoesNotExistError, notificationTaskBotEntryNotRunnableError, notificationTaskBotEntryOptedOutError, notificationTaskBotOptOutNotAllowedError, notificationTaskBotOptOutRequiresOwnerError } from './notification.error';
+import {
+  notificationTaskBotEntryDataPatchInvalidError,
+  notificationTaskBotEntryDataPatchNotAllowedError,
+  notificationTaskBotEntryDoesNotExistError,
+  notificationTaskBotEntryNotRunnableError,
+  notificationTaskBotEntryOptedOutError,
+  notificationTaskBotOptOutNotAllowedError,
+  notificationTaskBotOptOutRequiresOwnerError
+} from './notification.error';
 
 /**
  * @module notification.taskbot.action.server
@@ -446,24 +455,35 @@ async function runNotificationTaskBotRunTaskImmediately(context: NotificationTas
 }
 
 /**
- * Creates the `updateNotificationTaskBotEntry` API action: changes an entry's state, pause, schedule and last submitted at.
+ * Creates the `updateNotificationTaskBotEntry` API action: changes an entry's data, state, pause, schedule and last
+ * submitted at.
  *
- * Changes apply in order: state, pause, last submitted at, then schedule. `nextRunAtExplicit` wins over `nextRunAt`, and
- * `pause: false` wins over `pauseUntil`. `runImmediately` is skipped when this same request scheduled the live run in the
- * future.
+ * Changes apply in order, all in one transaction: data, state, pause, last submitted at, then schedule.
+ * `nextRunAtExplicit` wins over `nextRunAt`, and `pause: false` wins over `pauseUntil`. `runImmediately` is skipped when
+ * this same request scheduled the live run in the future.
+ *
+ * A data patch (`updateData`) is checked with `assertNotificationTaskBotEntryDataPatchAllowed()` against the entry read
+ * inside the same transaction: the script must set a `dataType`, and the data after the patch must satisfy it. A refused
+ * patch refuses the whole request. A patch with no keys is ignored. A patch never issues, cancels or supersedes a run.
  *
  * @param context - The API context.
  * @returns The transform-and-validate action.
  */
 export function updateNotificationTaskBotEntryFactory(context: NotificationTaskBotApiServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, firestoreContext, notificationTaskBotCollection } = context;
+  const { firebaseServerActionTransformFunctionFactory, firestoreContext, notificationTaskBotCollection, appNotificationTaskBotScriptConfigService: scriptConfigService } = context;
   const applyInTransaction = applyNotificationTaskBotChangesInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(updateNotificationTaskBotEntryParamsType, async (params: UpdateNotificationTaskBotEntryParams) => {
-    const { i: entryId, s, pause, pauseUntil, nextRunAt, nextRunAtExplicit, lsat, runImmediately } = params;
+    const { i: entryId, s, pause, pauseUntil, nextRunAt, nextRunAtExplicit, lsat, runImmediately, updateData: inputUpdateData } = params;
+    const updateData = inputUpdateData == null ? undefined : filterUndefinedValues(inputUpdateData); // keeps the nulls, which delete keys
+    const dataPatch = updateData != null && !objectHasNoKeys(updateData) ? updateData : undefined; // a patch with no keys is ignored
 
     return async (botDocument: NotificationTaskBotDocument): Promise<UpdateNotificationTaskBotEntryResult> => {
       const changes: NotificationTaskBotChange[] = [];
+
+      if (dataPatch) {
+        changes.push({ type: 'data', entryId, data: dataPatch });
+      }
 
       if (s != null) {
         changes.push({ type: 'state', entryId, state: s });
@@ -498,6 +518,15 @@ export function updateNotificationTaskBotEntryFactory(context: NotificationTaskB
 
         if (!bot || !currentEntry) {
           throw notificationTaskBotEntryDoesNotExistError(botDocument.key, entryId);
+        }
+
+        if (dataPatch) {
+          const patch = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig: scriptConfigService.configForScriptType(currentEntry.t), data: currentEntry.d, update: dataPatch });
+
+          if (!patch.allowed) {
+            const errorInput = { key: botDocument.key, entryId, scriptType: currentEntry.t, problems: patch.problems };
+            throw patch.reason === 'not_allowed' ? notificationTaskBotEntryDataPatchNotAllowedError(errorInput) : notificationTaskBotEntryDataPatchInvalidError(errorInput);
+          }
         }
 
         const result = await applyInTransaction({ transaction, model: bot.m, bot, changes });

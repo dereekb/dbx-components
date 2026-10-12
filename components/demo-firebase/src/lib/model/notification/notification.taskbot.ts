@@ -1,3 +1,4 @@
+import { type, type Type } from 'arktype';
 import { type NotificationTaskBotEntryId, type NotificationTaskBotScriptConfig, type NotificationTaskBotScriptGroup, type NotificationTaskBotScriptType, notificationTaskBotScriptConfigRecord } from '@dereekb/firebase';
 import { type Maybe, type Milliseconds, MS_IN_HOUR } from '@dereekb/util';
 
@@ -53,6 +54,17 @@ export interface DemoPingNotificationTaskBotEntryData {
 }
 
 /**
+ * arktype type of {@link DemoPingNotificationTaskBotEntryData}. Set as the `dataType` of both ping scripts, so an admin can
+ * patch an entry's data through `update:entry`. Unknown keys are refused.
+ */
+export const demoPingNotificationTaskBotEntryDataType = type({
+  'c?': 'number.integer >= 0',
+  'iv?': 'number.integer > 0',
+  'pa?': 'number.integer > 0',
+  'f?': 'boolean'
+}).onUndeclaredKey('reject') as Type<DemoPingNotificationTaskBotEntryData>;
+
+/**
  * Pause reason used when the demo ping entry reaches its `pa` limit.
  */
 export const DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT = 'limit';
@@ -66,7 +78,8 @@ export const DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: NotificationTaskBotS
   description: 'Sends the profile an example notification on an interval.',
   historyLimit: 3,
   group: DEMO_PING_NOTIFICATION_TASK_BOT_GROUP,
-  allowOwnerOptOut: true
+  allowOwnerOptOut: true,
+  dataType: demoPingNotificationTaskBotEntryDataType
 };
 
 // MARK: Demo Ping Required
@@ -86,7 +99,8 @@ export const DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_CONFIG: Notificatio
   name: 'Demo Required Ping',
   description: 'Sends the profile an example notification on an interval. The owner cannot opt out of it.',
   historyLimit: 3,
-  group: DEMO_PING_NOTIFICATION_TASK_BOT_GROUP
+  group: DEMO_PING_NOTIFICATION_TASK_BOT_GROUP,
+  dataType: demoPingNotificationTaskBotEntryDataType
 };
 
 // MARK: Registry

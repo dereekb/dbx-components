@@ -4,9 +4,11 @@
  * The NotificationTaskBot script registry: the per-script-type configuration an app declares once and both the client
  * and the server read.
  *
- * This is pure data. The server-side PROCESSING of a script is registered separately, as a
- * `NotificationTaskBotScriptProcessorConfig` keyed by the same script type, the same split `FormSpaceTypeConfig` uses.
+ * This is pure data, plus an optional arktype `dataType` per script. Both the client and the server read the registry.
+ * The server-side PROCESSING of a script is registered separately, as a `NotificationTaskBotScriptProcessorConfig` keyed
+ * by the same script type, the same split `FormSpaceTypeConfig` uses.
  */
+import { type Type } from 'arktype';
 import { arrayToObject, type Maybe, type Milliseconds, MS_IN_MINUTE, typedConfigRegistry } from '@dereekb/util';
 import { type NotificationTaskBotScriptType } from './notification.taskbot';
 import { isNotificationTaskBotScriptGroupKey, type NotificationTaskBotScriptGroupKey } from './notification.id';
@@ -100,6 +102,23 @@ export interface NotificationTaskBotScriptConfig {
    * Defaults to false. A script in a group without this flag keeps running when the owner turns that group off.
    */
   readonly allowOwnerOptOut?: Maybe<boolean>;
+  /**
+   * arktype type of the entry data (`d`) this script keeps.
+   *
+   * Setting it opts the script in to data patches through the `update:entry` API (`updateData`). The patch is merged
+   * into the entry's data, and the result must satisfy this type; otherwise the request is refused. Without it,
+   * `update:entry` refuses every data patch for the script.
+   *
+   * - It only validates. The merged data is stored as-is, not arktype's output, so morphs, defaults and
+   *   `onUndeclaredKey('delete')` have no effect. Use `.onUndeclaredKey('reject')` to refuse unknown keys.
+   * - Entry data is stored as passthrough JSON, so keep it to JSON values. A stored Date reads back as a Firestore
+   *   Timestamp.
+   * - All entries share the bot document, so bound the length of strings and arrays here to keep a patch from bloating it.
+   * - Writes from server code (`ensure`, `updateNotificationTaskBotEntryDataFactory()`, a step's `updateEntryData()`,
+   *   cleanup `updateData`) are not checked against it.
+   * - The client can pre-check a patch with `assertNotificationTaskBotEntryDataPatchAllowed()`.
+   */
+  readonly dataType?: Maybe<Type<unknown>>;
 }
 
 /**

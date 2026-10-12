@@ -107,3 +107,15 @@ export const NOTIFICATION_TASK_BOT_OPT_OUT_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATIO
  * admin has no way to undo an owner's opt-out, so only the owner may change it, in both directions.
  */
 export const NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER_ERROR_CODE = 'NOTIFICATION_TASK_BOT_OPT_OUT_REQUIRES_OWNER';
+
+/**
+ * Thrown when `update:entry` patches the data of an entry whose script accepts no data patches, because its
+ * `NotificationTaskBotScriptConfig` sets no `dataType` (or the script is not registered).
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED';
+
+/**
+ * Thrown when `update:entry` patches an entry's data and the data after the patch does not satisfy the script's
+ * `dataType`. The message lists the problems.
+ */
+export const NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE = 'NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID';

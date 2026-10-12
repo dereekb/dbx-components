@@ -25,6 +25,7 @@
  * Resuming. Every resume stamps the cleared pause reason on the entry (`rpr`) until the next run completes, so a
  * script can undo its own pause's side effects (e.g. reset a counter) in its first step.
  */
+import { type } from 'arktype';
 import { addMilliseconds, type Maybe, type Milliseconds, stripObject, takeLast } from '@dereekb/util';
 import { earliestDate, isSameDate, latestDate } from '@dereekb/date';
 import { type ClearableObjectUpdate, mergeClearableObjectUpdate } from '@dereekb/model';
@@ -43,7 +44,7 @@ import {
   NotificationTaskBotRunTrigger,
   type NotificationTaskBotScriptType
 } from './notification.taskbot';
-import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL } from './notification.taskbot.script';
+import { DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_HISTORY_LIMIT, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MAX_CONSECUTIVE_FAILURES, DEFAULT_NOTIFICATION_TASK_BOT_SCRIPT_MINIMUM_RUN_INTERVAL, type NotificationTaskBotScriptConfig } from './notification.taskbot.script';
 import { notificationTaskBotRunNotificationTaskKey } from './notification.taskbot.task';
 
 // MARK: Entry Utilities
@@ -117,6 +118,8 @@ export function mergeNotificationTaskBotEntryData<D extends NotificationTaskBotE
 
 /**
  * An update to an entry's data. A `null` value deletes the key.
+ *
+ * Also the shape of `update:entry`'s `updateData`.
  */
 export type NotificationTaskBotEntryDataUpdate<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> = ClearableObjectUpdate<D>;
 
@@ -1139,4 +1142,98 @@ export function applyNotificationTaskBotChanges(input: Omit<ApplyNotificationTas
   });
 
   return { ...result, ...entryResult, changed, createRuns, deleteTaskKeys };
+}
+
+// MARK: Data Patch
+/**
+ * Why a data patch was refused by {@link assertNotificationTaskBotEntryDataPatchAllowed}.
+ *
+ * - `not_allowed`: the entry's script sets no `dataType`, so it accepts no data patches.
+ * - `invalid`: the entry's data after the patch does not satisfy the script's `dataType`.
+ */
+export type NotificationTaskBotEntryDataPatchRejectionReason = 'not_allowed' | 'invalid';
+
+/**
+ * Input for {@link assertNotificationTaskBotEntryDataPatchAllowed}.
+ */
+export interface AssertNotificationTaskBotEntryDataPatchAllowedInput<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
+  /**
+   * The entry's script config, usually `AppNotificationTaskBotScriptConfigService.configForScriptType(entry.t)`.
+   */
+  readonly scriptConfig: Pick<NotificationTaskBotScriptConfig, 'dataType'>;
+  /**
+   * The entry's current data.
+   */
+  readonly data: Maybe<D>;
+  /**
+   * The patch to merge into the entry's data.
+   */
+  readonly update: NotificationTaskBotEntryDataUpdate<D>;
+}
+
+/**
+ * Result of {@link assertNotificationTaskBotEntryDataPatchAllowed}.
+ */
+export interface NotificationTaskBotEntryDataPatchAllowedResult<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData> {
+  /**
+   * Whether the patch is allowed.
+   */
+  readonly allowed: boolean;
+  /**
+   * Why the patch was refused, when it was.
+   */
+  readonly reason?: Maybe<NotificationTaskBotEntryDataPatchRejectionReason>;
+  /**
+   * arktype's summary of the problems, for an `invalid` patch.
+   */
+  readonly problems?: Maybe<string>;
+  /**
+   * The entry's data after the patch, or undefined when no keys remain. Computed even when the patch is refused.
+   */
+  readonly data: Maybe<D>;
+}
+
+/**
+ * Decides whether a data patch may be applied to a NotificationTaskBot entry.
+ *
+ * THE single data patch rule. The patch is merged into the entry's data with {@link mergeNotificationTaskBotEntryData},
+ * and the merged data (`{}` when no keys remain) must satisfy the script's `dataType`. A script without a `dataType`
+ * accepts no patches. The client may call it to pre-check a patch, and the `update:entry` action calls it again —
+ * authoritatively, against the entry it reads inside its transaction — before writing. The client call is a courtesy;
+ * only the server call is a control.
+ *
+ * @param input - The script config, the entry's current data and the patch.
+ * @returns Whether the patch is allowed, why not when it is not, and the data after the patch.
+ *
+ * @example
+ * ```ts
+ * const result = assertNotificationTaskBotEntryDataPatchAllowed({ scriptConfig, data: entry.d, update: { pa: 5 } });
+ *
+ * if (!result.allowed) {
+ *   console.log(result.reason, result.problems);
+ * }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function assertNotificationTaskBotEntryDataPatchAllowed<D extends NotificationTaskBotEntryData = NotificationTaskBotEntryData>(input: AssertNotificationTaskBotEntryDataPatchAllowedInput<D>): NotificationTaskBotEntryDataPatchAllowedResult<D> {
+  const { scriptConfig, update } = input;
+  const { dataType } = scriptConfig;
+  const data = mergeNotificationTaskBotEntryData<D>(input.data, update);
+
+  let reason: Maybe<NotificationTaskBotEntryDataPatchRejectionReason>;
+  let problems: Maybe<string>;
+
+  if (dataType == null) {
+    reason = 'not_allowed';
+  } else {
+    const out = dataType(data ?? {});
+
+    if (out instanceof type.errors) {
+      reason = 'invalid';
+      problems = out.summary;
+    }
+  }
+
+  return { allowed: reason == null, reason, problems, data };
 }

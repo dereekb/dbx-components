@@ -8,6 +8,8 @@ import {
   firestoreModelKey,
   getDocumentSnapshotData,
   MODEL_NOT_AVAILABLE_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE,
+  NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_NOT_RUNNABLE_ERROR_CODE,
   NOTIFICATION_TASK_BOT_ENTRY_OPTED_OUT_ERROR_CODE,
@@ -32,7 +34,7 @@ import {
   type UpdateNotificationTaskBotEntryParams,
   type UpdateNotificationTaskBotEntryResult
 } from '@dereekb/firebase';
-import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, profileIdentity } from 'demo-firebase';
+import { DEMO_PING_NOTIFICATION_TASK_BOT_ENTRY_ID, DEMO_PING_NOTIFICATION_TASK_BOT_GROUP, DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT, DEMO_PING_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, profileIdentity } from 'demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { type Maybe, MS_IN_HOUR } from '@dereekb/util';
 
@@ -42,6 +44,9 @@ const pingEntries = [{ entryId, scriptType: DEMO_PING_NOTIFICATION_TASK_BOT_SCRI
 const requiredEntryId: NotificationTaskBotEntryId = 'ping-required';
 const requiredPingEntry = { entryId: requiredEntryId, scriptType: DEMO_PING_REQUIRED_NOTIFICATION_TASK_BOT_SCRIPT_TYPE, data: { iv: MS_IN_HOUR } };
 const ownedEntries = [...pingEntries, requiredPingEntry];
+
+const unknownScriptEntryId: NotificationTaskBotEntryId = 'unknown';
+const unknownScriptEntries = [{ entryId: unknownScriptEntryId, scriptType: 'demo_unknown', data: { a: 1 }, schedule: false as const }];
 const pingGroupKey = DEMO_PING_NOTIFICATION_TASK_BOT_GROUP.key;
 
 demoApiFunctionContextFactory((f) => {
@@ -177,6 +182,95 @@ demoApiFunctionContextFactory((f) => {
               itShouldFail('with an invalid entry id', async () => {
                 await expectFail(() => callUpdate({ i: 'Not_Valid', pause: true }), expectFailAssertHttpErrorServerErrorCode(FIREBASE_SERVER_VALIDATION_ERROR_CODE));
               });
+
+              describe('data patch', () => {
+                it('should merge a data patch without touching the live run', async () => {
+                  const before = await loadEntry();
+                  const result = await callUpdate({ updateData: { pa: 5 } });
+                  const entry = await loadEntry();
+
+                  expect(entry.d).toEqual({ iv: MS_IN_HOUR, pa: 5 });
+                  expect(entry.rn).toBe(before.rn);
+                  expect(entry.nk).toBe(before.nk);
+                  expect(result.taskKey).toBe(before.nk);
+                  expect(result.status).toBe(NotificationTaskBotEntryStatus.SCHEDULED);
+                });
+
+                it('should delete a data key set to null', async () => {
+                  await callUpdate({ updateData: { pa: 5 } });
+                  await callUpdate({ updateData: { pa: null, c: 2 } });
+                  const entry = await loadEntry();
+
+                  expect(entry.d).toEqual({ iv: MS_IN_HOUR, c: 2 });
+                });
+
+                it('should patch a disabled entry without scheduling a run', async () => {
+                  await callUpdate({ s: NotificationTaskBotEntryState.DISABLED });
+                  const result = await callUpdate({ updateData: { c: 0 } });
+                  const entry = await loadEntry();
+
+                  expect(entry.s).toBe(NotificationTaskBotEntryState.DISABLED);
+                  expect(entry.rn).toBeFalsy();
+                  expect(entry.d?.c).toBe(0);
+                  expect(result.status).toBe(NotificationTaskBotEntryStatus.DISABLED);
+                });
+
+                it('should patch the data and resume in one request', async () => {
+                  await callUpdate({ pause: true });
+                  const result = await callUpdate({ updateData: { c: 0 }, pause: false });
+                  const entry = await loadEntry();
+
+                  expect(entry.pat).toBeFalsy();
+                  expect(entry.d?.c).toBe(0);
+                  expect(result.taskKey).toBe(entry.nk);
+                  expect(await loadTask(result.taskKey as string)).toBeDefined();
+                });
+
+                it('should patch the data and reschedule in one request', async () => {
+                  const before = await loadEntry();
+                  await callUpdate({ updateData: { iv: 2 * MS_IN_HOUR }, nextRunAt: null });
+                  const entry = await loadEntry();
+
+                  expect(entry.rn).toBeGreaterThan(before.rn as number);
+                  expect(await loadTask(before.nk as string)).toBeUndefined();
+                  expect(entry.d?.iv).toBe(2 * MS_IN_HOUR);
+                });
+
+                it('should run the live run with the patched data', async () => {
+                  const result = await callUpdate({ updateData: { pa: 1 }, runImmediately: true });
+                  const entry = await loadEntry();
+
+                  expect(result.runResult?.success).toBe(true);
+                  expect(entry.sc).toBe(1);
+                  expect(entry.d).toEqual({ iv: MS_IN_HOUR, pa: 1, c: 1 });
+                  expect(entry.pr).toBe(DEMO_PING_NOTIFICATION_TASK_BOT_PAUSE_REASON_LIMIT);
+                });
+
+                itShouldFail('with DATA_PATCH_INVALID for data the script refuses', async () => {
+                  const before = await loadEntry();
+                  await expectFail(() => callUpdate({ updateData: { iv: -5 } }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE));
+                  const entry = await loadEntry();
+
+                  expect(entry.d).toEqual(before.d);
+                });
+
+                itShouldFail('with DATA_PATCH_INVALID for a key the script does not declare', async () => {
+                  await expectFail(() => callUpdate({ updateData: { ivv: 5 } }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE));
+                });
+
+                itShouldFail('with DATA_PATCH_INVALID and apply nothing else in the request', async () => {
+                  const before = await loadEntry();
+                  await expectFail(() => callUpdate({ updateData: { iv: -5 }, pause: true }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_INVALID_ERROR_CODE));
+                  const entry = await loadEntry();
+
+                  expect(entry.pat).toBeFalsy();
+                  expect(entry.nk).toBe(before.nk);
+                });
+
+                itShouldFail('with VALIDATION_ERROR for an array patch', async () => {
+                  await expectFail(() => callUpdate({ updateData: [1] as unknown as UpdateNotificationTaskBotEntryParams['updateData'] }), expectFailAssertHttpErrorServerErrorCode(FIREBASE_SERVER_VALIDATION_ERROR_CODE));
+                });
+              });
             });
 
             describe('update/run', () => {
@@ -243,6 +337,39 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with FORBIDDEN for a non-admin', async () => {
               await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: entryId, pause: true }, 'entry')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
               await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: entryId }, 'run')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+              await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: entryId, updateData: { c: 0 } }, 'entry')), expectFailAssertHttpErrorServerErrorCode(FORBIDDEN_ERROR_CODE));
+            });
+          });
+        });
+      });
+
+      describe('data patch for a script without a dataType', () => {
+        demoAuthorizedUserAdminContext({ f }, (u) => {
+          demoProfileContext({ f, u }, (p) => {
+            demoNotificationTaskBotContext({ f, for: p, entries: unknownScriptEntries }, (ntb) => {
+              function callUpdate(params: Omit<UpdateNotificationTaskBotEntryParams, 'key' | 'i'>): Promise<UpdateNotificationTaskBotEntryResult> {
+                return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationTaskBotIdentity, { key: ntb.documentKey, i: unknownScriptEntryId, ...params }, 'entry')) as Promise<UpdateNotificationTaskBotEntryResult>;
+              }
+
+              async function loadEntry() {
+                const bot = await assertSnapshotData(ntb.document);
+                return notificationTaskBotEntry(bot, unknownScriptEntryId)!;
+              }
+
+              itShouldFail('with DATA_PATCH_NOT_ALLOWED for a script without a dataType', async () => {
+                await expectFail(() => callUpdate({ updateData: { a: 2 } }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_TASK_BOT_ENTRY_DATA_PATCH_NOT_ALLOWED_ERROR_CODE));
+                const entry = await loadEntry();
+
+                expect(entry.d).toEqual({ a: 1 });
+              });
+
+              it('should ignore an empty patch', async () => {
+                const result = await callUpdate({ updateData: {} });
+                const entry = await loadEntry();
+
+                expect(result.status).toBe(NotificationTaskBotEntryStatus.IDLE);
+                expect(entry.d).toEqual({ a: 1 });
+              });
             });
           });
         });
