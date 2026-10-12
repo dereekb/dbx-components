@@ -1,4 +1,4 @@
-import { type ContentTypeMimeType, type Maybe, type Milliseconds, MS_IN_DAY } from '@dereekb/util';
+import { arrayToObject, type ContentTypeMimeType, type Maybe, type Milliseconds, MS_IN_DAY, typedConfigRegistry } from '@dereekb/util';
 import { type FormSpaceFileSlot, type FormSpaceType } from './formspace.id';
 
 /**
@@ -262,19 +262,10 @@ export type FormSpaceTypeConfigRecord = Record<FormSpaceType, FormSpaceTypeConfi
  * ```
  */
 export function formSpaceTypeConfigRecord(configs: FormSpaceTypeConfig[]): FormSpaceTypeConfigRecord {
-  const record: FormSpaceTypeConfigRecord = {};
-
-  configs.forEach((x) => {
-    const { formSpaceType } = x;
-
-    if (record[formSpaceType]) {
-      throw new Error(`formSpaceTypeConfigRecord(): duplicate FormSpaceType in record: ${formSpaceType}`);
-    }
-
-    record[formSpaceType] = x;
+  return arrayToObject(configs, {
+    readKey: (x) => x.formSpaceType,
+    throwOnDuplicateKey: (formSpaceType) => new Error(`formSpaceTypeConfigRecord(): duplicate FormSpaceType in record: ${formSpaceType}`)
   });
-
-  return record;
 }
 
 /**
@@ -325,6 +316,8 @@ export interface AppFormSpaceTypeConfigServiceRef {
 /**
  * Creates an {@link AppFormSpaceTypeConfigService} from the given record.
  *
+ * Built on {@link typedConfigRegistry}.
+ *
  * @param appFormSpaceTypeConfigRecord - The complete form space type registry for the application.
  * @param defaultConfig - Config used for an unregistered type. Defaults to {@link DEFAULT_FORM_SPACE_TYPE_CONFIG}.
  * @returns The service.
@@ -338,22 +331,13 @@ export interface AppFormSpaceTypeConfigServiceRef {
  * @__NO_SIDE_EFFECTS__
  */
 export function appFormSpaceTypeConfigService(appFormSpaceTypeConfigRecord: FormSpaceTypeConfigRecord, defaultConfig: FormSpaceTypeConfig = DEFAULT_FORM_SPACE_TYPE_CONFIG): AppFormSpaceTypeConfigService {
-  const allKnownFormSpaceTypes = Object.keys(appFormSpaceTypeConfigRecord);
-  const allKnownFormSpaceTypeConfigs = allKnownFormSpaceTypes.map((x) => appFormSpaceTypeConfigRecord[x]);
+  const registry = typedConfigRegistry({ configs: appFormSpaceTypeConfigRecord, defaultConfigForType: () => defaultConfig });
 
   return {
     appFormSpaceTypeConfigRecord,
-    configForFormSpaceType(formSpaceType: FormSpaceType) {
-      return appFormSpaceTypeConfigRecord[formSpaceType] ?? defaultConfig;
-    },
-    registeredConfigForFormSpaceType(formSpaceType: FormSpaceType) {
-      return appFormSpaceTypeConfigRecord[formSpaceType];
-    },
-    getAllKnownFormSpaceTypes() {
-      return [...allKnownFormSpaceTypes];
-    },
-    getAllKnownFormSpaceTypeConfigs() {
-      return [...allKnownFormSpaceTypeConfigs];
-    }
+    configForFormSpaceType: registry.configForType,
+    registeredConfigForFormSpaceType: registry.registeredConfigForType,
+    getAllKnownFormSpaceTypes: registry.getAllKnownTypes,
+    getAllKnownFormSpaceTypeConfigs: registry.getAllKnownConfigs
   };
 }

@@ -7,7 +7,7 @@
  * The {@link AppNotificationTemplateTypeInfoRecordService} provides runtime lookup of template types by model,
  * enabling the server to discover which notification types apply to a given Firestore model.
  */
-import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray } from '@dereekb/util';
+import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray, arrayToObject } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 import { NotificationDeliveryMethod, type NotificationExplicitOptInConfig, toCanonicalNotificationDeliveryMethods } from './notification.config';
@@ -250,20 +250,12 @@ export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType
  * ```
  */
 export function notificationTemplateTypeInfoRecord(infoArray: NotificationTemplateTypeInfo[]): NotificationTemplateTypeInfoRecord {
-  const record: NotificationTemplateTypeInfoRecord = {};
+  infoArray.forEach((x) => assertNotificationTemplateTypeInfo(x));
 
-  infoArray.forEach((x) => {
-    const { type } = x;
-
-    if (record[type]) {
-      throw new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`);
-    }
-
-    assertNotificationTemplateTypeInfo(x);
-    record[type] = x;
+  return arrayToObject(infoArray, {
+    readKey: (x) => x.type,
+    throwOnDuplicateKey: (type) => new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`)
   });
-
-  return record;
 }
 
 /**

@@ -1,7 +1,8 @@
 import { type Maybe } from '@dereekb/util';
 import { createNotificationTaskTemplate, type CreateNotificationTaskTemplate } from '../notification/notification.create.task';
 import { type NotificationTaskSubtaskCheckpointString, type NotificationTaskSubtaskData, type NotificationTaskSubtaskMetadata } from '../notification/notification.task.subtask';
-import { type NotificationTaskType, type NotificationTaskUniqueId, notificationTaskUniqueId } from '../notification/notification.id';
+import { uniqueNotificationTaskKey } from '../notification/notification.create';
+import { type NotificationTaskKey, type NotificationTaskType, type NotificationTaskUniqueId, notificationTaskUniqueId } from '../notification/notification.id';
 import { type FormSpaceDocument } from './formspace';
 import { type FormSpaceId, type FormSpaceType } from './formspace.id';
 
@@ -105,6 +106,7 @@ export interface FormSpaceSubmissionNotificationTaskUniqueIdInput {
  * created, or tooling inspecting a stuck submission — derives the id the same way the template does. The
  * reopen action deliberately does not need it: the superseded attempt's task is left alone, either already
  * done and awaiting the cleanup sweep or still queued and about to fence itself off.
+ * {@link formSpaceSubmissionNotificationTaskKey} returns the task's full key.
  *
  * @param input - The FormSpace id and the attempt's reopen count.
  * @returns The unique notification task id.
@@ -122,6 +124,31 @@ export function formSpaceSubmissionNotificationTaskUniqueId(input: FormSpaceSubm
   const reopenCount = input.reopenCount ?? 0;
   const baseId = notificationTaskUniqueId(formSpaceId, FORM_SPACE_SUBMISSION_NOTIFICATION_TASK_TYPE);
   return reopenCount > 0 ? `${baseId}_r${reopenCount}` : baseId;
+}
+
+/**
+ * Returns the full key of the NotificationTask processing one SUBMISSION ATTEMPT of a FormSpace.
+ *
+ * The task lives in the framework task box because {@link formSpaceSubmissionNotificationTaskTemplate} sets no notification model, and {@link uniqueNotificationTaskKey} applies the same default.
+ *
+ * @param input - The FormSpace id and the attempt's reopen count.
+ * @returns The unique notification task's full key.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firestore
+ * @dbxUtilTags formspace, notification, task, submission, attempt, key
+ * @dbxUtilRelated unique-notification-task-key
+ *
+ * @example
+ * ```ts
+ * formSpaceSubmissionNotificationTaskKey({ formSpaceId: 'abc' }); // 'nb/not_not/nbn/abc_FSPS'
+ * formSpaceSubmissionNotificationTaskKey({ formSpaceId: 'abc', reopenCount: 2 }); // 'nb/not_not/nbn/abc_FSPS_r2'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formSpaceSubmissionNotificationTaskKey(input: FormSpaceSubmissionNotificationTaskUniqueIdInput): NotificationTaskKey {
+  return uniqueNotificationTaskKey({ uniqueId: formSpaceSubmissionNotificationTaskUniqueId(input) });
 }
 
 /**

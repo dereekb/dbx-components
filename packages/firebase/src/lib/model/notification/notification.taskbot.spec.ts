@@ -3,6 +3,7 @@ import { isFirestoreModelId } from '../../common';
 import { isNotificationTaskBotEntryId, isNotificationTaskBotScriptGroupKey, notificationTaskBotRunNotificationTaskUniqueId } from './notification.id';
 import { type NotificationTaskBot, notificationTaskBotConverter, notificationTaskBotKeyForModel, NotificationTaskBotEntryState, NotificationTaskBotRunOutcome, NotificationTaskBotRunTrigger } from './notification.taskbot';
 import { NOTIFICATION_TASK_BOT_RUN_NOTIFICATION_TASK_TYPE, notificationTaskBotRunNotificationTaskKey, notificationTaskBotRunNotificationTaskTemplate } from './notification.taskbot.task';
+import { uniqueNotificationTaskKey } from './notification.create';
 
 const createdAt = new Date('2026-01-02T03:04:05.000Z');
 const runAt = new Date('2026-01-02T04:04:05.000Z');
@@ -146,5 +147,12 @@ describe('notificationTaskBotRunNotificationTaskTemplate()', () => {
 
   it('should compute the run task key', () => {
     expect(notificationTaskBotRunNotificationTaskKey({ model: 'profile/abc', botId: 'profile_abc', entryId: 'ping', runNumber: 3 })).toBe('nb/profile_abc/nbn/profile_abc_ping_r3');
+  });
+
+  it("the run task key is the template's unique task location", () => {
+    const input = { model: 'profile/abc', botKey: 'ntb/profile_abc', botId: 'profile_abc', entryId: 'ping', scriptType: 'demo_ping', runNumber: 3, trigger: NotificationTaskBotRunTrigger.MANUAL, sendAt: runAt };
+    const template = notificationTaskBotRunNotificationTaskTemplate(input);
+
+    expect(notificationTaskBotRunNotificationTaskKey(input)).toBe(uniqueNotificationTaskKey({ notificationModel: template.notificationModel, uniqueId: template.unique as string }));
   });
 });

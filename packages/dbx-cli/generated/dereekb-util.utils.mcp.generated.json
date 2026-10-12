@@ -1529,6 +1529,55 @@
       ]
     },
     {
+      "slug": "array-to-object",
+      "name": "arrayToObject",
+      "kind": "function",
+      "category": "array",
+      "module": "@dereekb/util",
+      "subpath": "array/array.map",
+      "signature": "arrayToObject(values: T[], keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V>",
+      "description": "Maps the values of the input array to a Record object, keyed by the result of a key function.\nItems with undefined keys are omitted. Optionally transforms each value using a value function.\n\nAlso accepts an {@link ArrayToObjectConfig} as the second argument, which can throw when two values share a key instead of letting the last value win.",
+      "params": [
+        {
+          "name": "values",
+          "type": "T[]",
+          "description": "- source array of items to map",
+          "optional": false
+        },
+        {
+          "name": "keyFnOrConfig",
+          "type": "ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "valueFn",
+          "type": "(t: T) => V",
+          "description": "- optional function to transform each item into the desired record value",
+          "optional": true
+        }
+      ],
+      "returns": "a Record of keys to values derived from the input array",
+      "tags": [
+        "array",
+        "object",
+        "record",
+        "index",
+        "key",
+        "lookup",
+        "duplicate",
+        "unique",
+        "registry",
+        "to",
+        "arraytoobject"
+      ],
+      "example": "const byId = arrayToObject([{ id: 'a' }, { id: 'b' }], (x) => x.id);\n// { a: { id: 'a' }, b: { id: 'b' } }\n\nconst registry = arrayToObject(configs, {\n  readKey: (x) => x.type,\n  throwOnDuplicateKey: (type) => new Error(`duplicate type in registry: ${type}`)\n});",
+      "relatedSlugs": [
+        "is-unique-keyed-function",
+        "key-value-map-factory"
+      ]
+    },
+    {
       "slug": "random-pick-factory",
       "name": "randomPickFactory",
       "kind": "factory",
@@ -10087,6 +10136,40 @@
       ],
       "relatedSlugs": [
         "handler-factory"
+      ]
+    },
+    {
+      "slug": "typed-config-registry",
+      "name": "typedConfigRegistry",
+      "kind": "factory",
+      "category": "service",
+      "module": "@dereekb/util",
+      "subpath": "service/typed.service",
+      "signature": "typedConfigRegistry(config: TypedConfigRegistrySetupConfig<C, T>): TypedConfigRegistry<C, T>",
+      "description": "Creates a {@link TypedConfigRegistry} over a record of configs.\n\nLookups read the passed record with an own-property check, so a type such as `constructor` never resolves to an `Object.prototype` member. The known types and configs are captured when the registry is created and returned as copies.",
+      "params": [
+        {
+          "name": "config",
+          "type": "TypedConfigRegistrySetupConfig<C, T>",
+          "description": "- The configs and the fallback for unregistered types.",
+          "optional": false
+        }
+      ],
+      "returns": "A registry whose members can be re-exposed under domain-specific names.",
+      "tags": [
+        "service",
+        "registry",
+        "config",
+        "type",
+        "lookup",
+        "fallback",
+        "default",
+        "typed",
+        "typedconfigregistry"
+      ],
+      "example": "const registry = typedConfigRegistry({\n  configs: { a: { type: 'a', label: 'A' } },\n  defaultConfigForType: (type) => ({ type, label: 'Unknown' })\n});\n\nregistry.configForType('a'); // { type: 'a', label: 'A' }\nregistry.configForType('b'); // { type: 'b', label: 'Unknown' }\nregistry.registeredConfigForType('b'); // undefined",
+      "relatedSlugs": [
+        "array-to-object"
       ]
     },
     {

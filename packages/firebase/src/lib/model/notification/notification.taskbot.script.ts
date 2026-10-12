@@ -7,7 +7,7 @@
  * This is pure data. The server-side PROCESSING of a script is registered separately, as a
  * `NotificationTaskBotScriptProcessorConfig` keyed by the same script type, the same split `FormSpaceTypeConfig` uses.
  */
-import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { arrayToObject, type Maybe, type Milliseconds, typedConfigRegistry } from '@dereekb/util';
 import { type NotificationTaskBotScriptType } from './notification.taskbot';
 import { isNotificationTaskBotScriptGroupKey, type NotificationTaskBotScriptGroupKey } from './notification.id';
 
@@ -111,15 +111,10 @@ export type NotificationTaskBotScriptConfigRecord = Record<NotificationTaskBotSc
  * ```
  */
 export function notificationTaskBotScriptConfigRecord(configs: NotificationTaskBotScriptConfig[]): NotificationTaskBotScriptConfigRecord {
-  const record: NotificationTaskBotScriptConfigRecord = {};
   const groupsByKey = new Map<NotificationTaskBotScriptGroupKey, NotificationTaskBotScriptGroup>();
 
   configs.forEach((x) => {
     const { scriptType, group, allowOwnerOptOut } = x;
-
-    if (record[scriptType]) {
-      throw new Error(`notificationTaskBotScriptConfigRecord(): duplicate NotificationTaskBotScriptType in record: ${scriptType}`);
-    }
 
     if (allowOwnerOptOut && group == null) {
       throw new Error(`notificationTaskBotScriptConfigRecord(): NotificationTaskBotScriptType "${scriptType}" sets allowOwnerOptOut without a group.`);
@@ -138,11 +133,12 @@ export function notificationTaskBotScriptConfigRecord(configs: NotificationTaskB
         throw new Error(`notificationTaskBotScriptConfigRecord(): conflicting NotificationTaskBotScriptGroup definitions for group key "${group.key}" on NotificationTaskBotScriptType "${scriptType}".`);
       }
     }
-
-    record[scriptType] = x;
   });
 
-  return record;
+  return arrayToObject(configs, {
+    readKey: (x) => x.scriptType,
+    throwOnDuplicateKey: (scriptType) => new Error(`notificationTaskBotScriptConfigRecord(): duplicate NotificationTaskBotScriptType in record: ${scriptType}`)
+  });
 }
 
 /**
@@ -206,6 +202,8 @@ export interface AppNotificationTaskBotScriptConfigServiceRef {
 /**
  * Creates an {@link AppNotificationTaskBotScriptConfigService} from the given record.
  *
+ * Built on {@link typedConfigRegistry}.
+ *
  * @param appNotificationTaskBotScriptConfigRecord - The complete script registry for the application. Defaults to an empty record.
  * @returns The service.
  *
@@ -218,12 +216,11 @@ export interface AppNotificationTaskBotScriptConfigServiceRef {
  * @__NO_SIDE_EFFECTS__
  */
 export function appNotificationTaskBotScriptConfigService(appNotificationTaskBotScriptConfigRecord: NotificationTaskBotScriptConfigRecord = {}): AppNotificationTaskBotScriptConfigService {
-  const allKnownScriptTypes = Object.keys(appNotificationTaskBotScriptConfigRecord);
-  const allKnownScriptConfigs = allKnownScriptTypes.map((x) => appNotificationTaskBotScriptConfigRecord[x]);
+  const registry = typedConfigRegistry<NotificationTaskBotScriptConfig, NotificationTaskBotScriptType>({ configs: appNotificationTaskBotScriptConfigRecord, defaultConfigForType: (scriptType) => ({ scriptType }) });
   const optOutGroupKeysByScriptType = new Map<NotificationTaskBotScriptType, NotificationTaskBotScriptGroupKey>();
   const optOutGroupsByKey = new Map<NotificationTaskBotScriptGroupKey, NotificationTaskBotScriptGroup>();
 
-  allKnownScriptConfigs.forEach((config) => {
+  registry.getAllKnownConfigs().forEach((config) => {
     const { group } = config;
 
     if (config.allowOwnerOptOut && group != null) {
@@ -234,18 +231,10 @@ export function appNotificationTaskBotScriptConfigService(appNotificationTaskBot
 
   return {
     appNotificationTaskBotScriptConfigRecord,
-    configForScriptType(scriptType: NotificationTaskBotScriptType) {
-      return appNotificationTaskBotScriptConfigRecord[scriptType] ?? { scriptType };
-    },
-    registeredConfigForScriptType(scriptType: NotificationTaskBotScriptType) {
-      return appNotificationTaskBotScriptConfigRecord[scriptType];
-    },
-    getAllKnownScriptTypes() {
-      return [...allKnownScriptTypes];
-    },
-    getAllKnownScriptConfigs() {
-      return [...allKnownScriptConfigs];
-    },
+    configForScriptType: registry.configForType,
+    registeredConfigForScriptType: registry.registeredConfigForType,
+    getAllKnownScriptTypes: registry.getAllKnownTypes,
+    getAllKnownScriptConfigs: registry.getAllKnownConfigs,
     optOutGroupKeyForScriptType(scriptType: NotificationTaskBotScriptType) {
       return optOutGroupKeysByScriptType.get(scriptType);
     },

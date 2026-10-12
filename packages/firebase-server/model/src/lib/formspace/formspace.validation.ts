@@ -27,7 +27,7 @@ import {
   delayCompletion,
   inferStorageFileGroupRelatedModelKey
 } from '@dereekb/firebase';
-import { filterUndefinedValues, type Getter, type Maybe, type Milliseconds, MS_IN_MINUTE, type SlashPathFile } from '@dereekb/util';
+import { arrayToObject, filterUndefinedValues, type Getter, type Maybe, type Milliseconds, MS_IN_MINUTE, type SlashPathFile } from '@dereekb/util';
 import { type NotificationTaskSubtaskResult } from '../notification/notification.task.subtask.handler';
 import { type StorageFileProcessingPurposeSubtaskCleanupOutput, type StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget } from '../storagefile/storagefile.task.service.handler';
 import { markStorageFileForDeleteTemplate } from '../storagefile/storagefile.util';
@@ -242,20 +242,15 @@ export function formSpaceFileValidationStorageFileProcessor(config: FormSpaceFil
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
   const maxAttempts = config.maxAttempts ?? DEFAULT_FORM_SPACE_FILE_VALIDATION_MAX_ATTEMPTS;
 
-  const validatorMap = new Map<string, FormSpaceFileValidator>();
-
-  validators.forEach((x) => {
-    const key = _formSpaceValidatorKey(x.formSpaceType, x.slot);
-
-    if (validatorMap.has(key)) {
-      throw new Error(`formSpaceFileValidationStorageFileProcessor(): duplicate validator registered for "${key}".`);
-    }
-
-    validatorMap.set(key, x.validate);
+  // keys always contain ':', so a lookup can never reach an Object.prototype member
+  const validatorRecord = arrayToObject(validators, {
+    readKey: (x) => _formSpaceValidatorKey(x.formSpaceType, x.slot),
+    readValue: (x) => x.validate,
+    throwOnDuplicateKey: (key) => new Error(`formSpaceFileValidationStorageFileProcessor(): duplicate validator registered for "${key}".`)
   });
 
   if (validateCoverage !== false) {
-    _assertFormSpaceValidatorCoverage(appFormSpaceTypeConfigService, validatorMap);
+    _assertFormSpaceValidatorCoverage(appFormSpaceTypeConfigService, validatorRecord);
   }
 
   /**
@@ -266,7 +261,7 @@ export function formSpaceFileValidationStorageFileProcessor(config: FormSpaceFil
    * @returns The validator to run, or null when the slot has none.
    */
   function validatorFor(formSpaceType: FormSpaceType, slot: FormSpaceFileSlot): Maybe<FormSpaceFileValidator> {
-    return validatorMap.get(_formSpaceValidatorKey(formSpaceType, slot)) ?? validatorMap.get(_formSpaceValidatorKey(formSpaceType, null));
+    return validatorRecord[_formSpaceValidatorKey(formSpaceType, slot)] ?? validatorRecord[_formSpaceValidatorKey(formSpaceType, null)];
   }
 
   return {
@@ -526,10 +521,10 @@ function _formSpaceValidatorKey(formSpaceType: FormSpaceType, slot: Maybe<FormSp
  * rather than silently accepting every file — the exact outcome a validator was added to prevent.
  *
  * @param appFormSpaceTypeConfigService - The registry to read the declared slots from.
- * @param validatorMap - The registered validators, keyed by {@link _formSpaceValidatorKey}.
+ * @param validatorRecord - The registered validators, keyed by {@link _formSpaceValidatorKey}.
  * @throws {Error} When a slot declaring `validationRequired` has no validator registered.
  */
-function _assertFormSpaceValidatorCoverage(appFormSpaceTypeConfigService: AppFormSpaceTypeConfigService, validatorMap: Map<string, unknown>): void {
+function _assertFormSpaceValidatorCoverage(appFormSpaceTypeConfigService: AppFormSpaceTypeConfigService, validatorRecord: Record<string, unknown>): void {
   const missing: string[] = [];
 
   appFormSpaceTypeConfigService.getAllKnownFormSpaceTypeConfigs().forEach((typeConfig) => {
@@ -537,7 +532,7 @@ function _assertFormSpaceValidatorCoverage(appFormSpaceTypeConfigService: AppFor
       if (slotConfig.validationRequired === true) {
         const key = _formSpaceValidatorKey(typeConfig.formSpaceType, slotConfig.slot);
 
-        if (!validatorMap.has(key) && !validatorMap.has(_formSpaceValidatorKey(typeConfig.formSpaceType, null))) {
+        if (validatorRecord[key] == null && validatorRecord[_formSpaceValidatorKey(typeConfig.formSpaceType, null)] == null) {
           missing.push(key);
         }
       }

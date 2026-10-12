@@ -14,10 +14,10 @@
  * `createOrRunUniqueNotificationDocument`: sending never checks `d`, so it would re-run a finished run.
  */
 import { type Maybe, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
-import { childFirestoreModelKey, type FirestoreModelKey, firestoreModelKey } from '../../common';
-import { notificationBoxIdentity, notificationIdentity } from './notification';
+import { type FirestoreModelKey } from '../../common';
+import { uniqueNotificationTaskKey } from './notification.create';
 import { createNotificationTaskTemplate, type CreateNotificationTaskTemplate } from './notification.create.task';
-import { notificationBoxIdForModel, type NotificationTaskBotEntryId, type NotificationTaskBotId, type NotificationTaskBotKey, type NotificationTaskBotRunNumber, notificationTaskBotRunNotificationTaskUniqueId, type NotificationTaskKey, type NotificationTaskType } from './notification.id';
+import { type NotificationTaskBotEntryId, type NotificationTaskBotId, type NotificationTaskBotKey, type NotificationTaskBotRunNumber, notificationTaskBotRunNotificationTaskUniqueId, type NotificationTaskKey, type NotificationTaskType } from './notification.id';
 import { type NotificationTaskBotRunTrigger, type NotificationTaskBotScriptType } from './notification.taskbot';
 import { type NotificationTaskSubtaskCheckpointString, type NotificationTaskSubtaskData, type NotificationTaskSubtaskMetadata } from './notification.task.subtask';
 
@@ -108,13 +108,14 @@ export interface NotificationTaskBotRunNotificationTaskTemplateInput {
 /**
  * Returns the key of the NotificationTask for a single run of a bot entry.
  *
+ * Built on {@link uniqueNotificationTaskKey}, the key createNotificationDocumentPair() loads the run task from.
+ *
  * @param input - The attached model key, bot id, entry id and run number.
  * @returns The run task's full model key.
  */
 export function notificationTaskBotRunNotificationTaskKey(input: Pick<NotificationTaskBotRunNotificationTaskTemplateInput, 'model' | 'botId' | 'entryId' | 'runNumber'>): NotificationTaskKey {
   const { model, botId, entryId, runNumber } = input;
-  const notificationBoxKey = firestoreModelKey(notificationBoxIdentity, notificationBoxIdForModel(model));
-  return childFirestoreModelKey(notificationBoxKey, notificationIdentity, notificationTaskBotRunNotificationTaskUniqueId(botId, entryId, runNumber));
+  return uniqueNotificationTaskKey({ notificationModel: model, uniqueId: notificationTaskBotRunNotificationTaskUniqueId(botId, entryId, runNumber) });
 }
 
 /**

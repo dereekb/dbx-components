@@ -24,6 +24,17 @@ describe('notificationTemplateTypeInfoRecord()', () => {
     void expectFail(() => notificationTemplateTypeInfoRecord([detail, detail]));
   });
 
+  it('should name the duplicate type', () => {
+    const detail: NotificationTemplateTypeInfo = {
+      type: 'test',
+      name: 'test',
+      description: 'test',
+      notificationModelIdentity: firestoreModelIdentity('test')
+    };
+
+    expect(() => notificationTemplateTypeInfoRecord([detail, detail])).toThrow('duplicate NotificationTemplateType in record: test');
+  });
+
   describe('forcedDeliveryMethods', () => {
     const baseDetail: NotificationTemplateTypeInfo = {
       type: 'forced',

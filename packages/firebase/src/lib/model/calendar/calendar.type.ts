@@ -1,4 +1,4 @@
-import { type Days, type Maybe, type Milliseconds, type Minutes, MS_IN_DAY } from '@dereekb/util';
+import { arrayToObject, type Days, type Maybe, type Milliseconds, type Minutes, MS_IN_DAY, typedConfigRegistry } from '@dereekb/util';
 import { type CalendarType } from './calendar.id';
 
 /**
@@ -154,19 +154,10 @@ export type CalendarTypeConfigRecord = Record<CalendarType, CalendarTypeConfig>;
  * ```
  */
 export function calendarTypeConfigRecord(configs: CalendarTypeConfig[]): CalendarTypeConfigRecord {
-  const record: CalendarTypeConfigRecord = {};
-
-  configs.forEach((x) => {
-    const { calendarType } = x;
-
-    if (record[calendarType]) {
-      throw new Error(`calendarTypeConfigRecord(): duplicate CalendarType in record: ${calendarType}`);
-    }
-
-    record[calendarType] = x;
+  return arrayToObject(configs, {
+    readKey: (x) => x.calendarType,
+    throwOnDuplicateKey: (calendarType) => new Error(`calendarTypeConfigRecord(): duplicate CalendarType in record: ${calendarType}`)
   });
-
-  return record;
 }
 
 /**
@@ -210,6 +201,8 @@ export interface AppCalendarTypeConfigServiceRef {
 /**
  * Creates an {@link AppCalendarTypeConfigService} from the given record.
  *
+ * Built on {@link typedConfigRegistry}.
+ *
  * @param appCalendarTypeConfigRecord - The complete calendar type registry for the application.
  * @param defaultConfig - Config used for an unregistered type. Defaults to {@link DEFAULT_CALENDAR_TYPE_CONFIG}.
  * @returns The service.
@@ -223,19 +216,12 @@ export interface AppCalendarTypeConfigServiceRef {
  * @__NO_SIDE_EFFECTS__
  */
 export function appCalendarTypeConfigService(appCalendarTypeConfigRecord: CalendarTypeConfigRecord, defaultConfig: CalendarTypeConfig = DEFAULT_CALENDAR_TYPE_CONFIG): AppCalendarTypeConfigService {
-  const allKnownCalendarTypes = Object.keys(appCalendarTypeConfigRecord);
-  const allKnownCalendarTypeConfigs = allKnownCalendarTypes.map((x) => appCalendarTypeConfigRecord[x]);
+  const registry = typedConfigRegistry({ configs: appCalendarTypeConfigRecord, defaultConfigForType: () => defaultConfig });
 
   return {
     appCalendarTypeConfigRecord,
-    configForCalendarType(calendarType: CalendarType) {
-      return appCalendarTypeConfigRecord[calendarType] ?? defaultConfig;
-    },
-    getAllKnownCalendarTypes() {
-      return [...allKnownCalendarTypes];
-    },
-    getAllKnownCalendarTypeConfigs() {
-      return [...allKnownCalendarTypeConfigs];
-    }
+    configForCalendarType: registry.configForType,
+    getAllKnownCalendarTypes: registry.getAllKnownTypes,
+    getAllKnownCalendarTypeConfigs: registry.getAllKnownConfigs
   };
 }

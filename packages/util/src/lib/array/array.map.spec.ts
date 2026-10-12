@@ -101,6 +101,92 @@ describe('arrayToObject', () => {
   });
 });
 
+describe('arrayToObject() config', () => {
+  it('should index the values by readKey', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'b', value: 2 }
+    ];
+
+    const result = arrayToObject(items, { readKey: (x) => x.id });
+
+    expect(result['a']).toBe(items[0]);
+    expect(result['b']).toBe(items[1]);
+  });
+
+  it('should map the stored value with readValue', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'b', value: 2 }
+    ];
+
+    const result = arrayToObject(items, { readKey: (x) => x.id, readValue: (x) => x.value });
+
+    expect(result).toEqual({ a: 1, b: 2 });
+  });
+
+  it('should skip values with a null or undefined key', () => {
+    const items = [{ id: 'a' }, { id: null }, { id: undefined }];
+
+    const result = arrayToObject(items, { readKey: (x) => x.id });
+
+    expect(Object.keys(result)).toEqual(['a']);
+  });
+
+  it('should let the last value win when throwOnDuplicateKey is not set', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'a', value: 2 }
+    ];
+
+    const result = arrayToObject(items, { readKey: (x) => x.id });
+
+    expect(result['a']).toBe(items[1]);
+  });
+
+  it('should not throw on a duplicate when throwOnDuplicateKey is false', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'a', value: 2 }
+    ];
+
+    expect(() => arrayToObject(items, { readKey: (x) => x.id, throwOnDuplicateKey: false })).not.toThrow();
+  });
+
+  it('should throw the default error on a duplicate when throwOnDuplicateKey is true', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'a', value: 2 }
+    ];
+
+    expect(() => arrayToObject(items, { readKey: (x) => x.id, throwOnDuplicateKey: true })).toThrow('arrayToObject(): duplicate key "a".');
+  });
+
+  it('should throw the error from the factory with the key and the later value', () => {
+    const items: TestItem[] = [
+      { id: 'a', value: 1 },
+      { id: 'a', value: 2 }
+    ];
+
+    const factory = vi.fn((key: string, value: TestItem) => new Error(`duplicate ${key} ${value.value}`));
+
+    expect(() => arrayToObject(items, { readKey: (x) => x.id, throwOnDuplicateKey: factory })).toThrow('duplicate a 2');
+    expect(factory).toHaveBeenCalledWith('a', items[1]);
+  });
+
+  it('should not treat Object.prototype member names as duplicates', () => {
+    const items: TestItem[] = [
+      { id: 'toString', value: 1 },
+      { id: 'constructor', value: 2 }
+    ];
+
+    const result = arrayToObject(items, { readKey: (x) => x.id, readValue: (x) => x.value, throwOnDuplicateKey: true });
+
+    expect(result['toString']).toBe(1);
+    expect(result['constructor']).toBe(2);
+  });
+});
+
 describe('generateIfDoesNotExist', () => {
   it('should return existing values for keys that exist', () => {
     const existing: TestItem[] = [

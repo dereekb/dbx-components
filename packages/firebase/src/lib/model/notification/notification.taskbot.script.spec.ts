@@ -9,7 +9,7 @@ describe('notificationTaskBotScriptConfigRecord()', () => {
   });
 
   it('should throw on a duplicate script type', () => {
-    expect(() => notificationTaskBotScriptConfigRecord([{ scriptType: 'a' }, { scriptType: 'a' }])).toThrow();
+    expect(() => notificationTaskBotScriptConfigRecord([{ scriptType: 'a' }, { scriptType: 'a' }])).toThrow('notificationTaskBotScriptConfigRecord(): duplicate NotificationTaskBotScriptType in record: a');
   });
 
   it('should throw when allowOwnerOptOut is set without a group', () => {
