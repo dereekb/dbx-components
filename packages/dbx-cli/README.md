@@ -708,3 +708,59 @@ cover `serve`. The dbx-components workspace itself runs the locally built bundle
 (`node dist/packages/dbx-cli/generate-notification-manifest/main.js`) with a `dependsOn` on
 `dbx-cli:build`; see `apps/demo-api/project.json`. `dbx_artifact_file_convention` for
 `notification-template` / `notification-task` shows the same target with your directories filled in.
+
+## Build-time docs manifest
+
+`dbx-cli-generate-docs-manifest` builds `docs.manifest.json` for an API app's audience-gated docs: the markdown under
+`apps/<app>-api/src/assets/docs/` that the `@dereekb/firebase-server` docs API (`/api/docs`) and the MCP documentation
+tools serve. The server only serves docs listed in the manifest, refuses any whose bytes no longer match it, and shows
+each doc only to callers holding one of its audiences.
+
+Each doc declares its audience in frontmatter. `any` means any authenticated caller; every other audience must be in
+`--audiences`:
+
+```md
+---
+title: Rotating keys
+description: How to rotate the signing keys.
+tags: [ops, security]
+audience: [admin]
+---
+# Rotating keys
+## Before you start
+```
+
+Sections are the H2/H3 headings (outside code fences), with slugged ids a client can read one at a time.
+
+### Flags and exit codes
+
+| Flag | |
+|---|---|
+| `--docs-dir=<path>` | (required) the docs folder |
+| `--output=<path>` | (required) the manifest to write. Put it next to `mcp.manifest.json`, never under `dist/.../assets/` |
+| `--audiences=<a,b>` | (required) the audience allow-list, recorded in the manifest |
+| `--app=<name>` | app name stamped onto the manifest |
+| `--default-audience=<a,b>` | audience for docs without one (there is no implicit default) |
+| `--strict` | treat warnings (unknown frontmatter keys, a missing title) as errors |
+| `--allow-empty` | allow a folder with no docs yet (the docs tools stay hidden) |
+
+A doc without an audience, an unknown audience, a non-`.md` file, a dotfile (Firebase drops `**/.*` at deploy) or a
+symlink that leaves the folder is an error: the generator exits 1 and deletes any stale manifest.
+
+### Adopting it in an app
+
+```json
+"generate-docs-manifest": {
+  "executor": "nx:run-commands",
+  "outputs": ["{workspaceRoot}/dist/apps/<app>-api/docs.manifest.json"],
+  "inputs": ["{workspaceRoot}/apps/<app>-api/src/assets/docs/**/*"],
+  "options": {
+    "command": "npx dbx-cli-generate-docs-manifest --docs-dir=apps/<app>-api/src/assets/docs --output=dist/apps/<app>-api/docs.manifest.json --app=<app>-api --audiences=admin,user",
+    "cwd": "{workspaceRoot}"
+  }
+}
+```
+
+List it in both `build.dependsOn` and `serve.dependsOn`: unlike the notification manifest, the server reads this one at
+runtime. Never point `docsRoot` at (or under) the download module's `secureAssetsRoot`, or every doc could be minted as a
+signed download regardless of its audience.

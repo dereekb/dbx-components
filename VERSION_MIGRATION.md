@@ -1,3 +1,58 @@
+## Migration to v14.17.x — compact (Stripe-like) MCP surface
+
+v14.17 changes the default tool surface of `@dereekb/firebase-server/mcp`. Instead of one tool per callModel
+(model, call, specifier) plus the built-ins, the server now lists a few **compact tools** named from a prefix:
+`<p>_mcp_search` (find methods by keyword), `<p>_mcp_details` (a method's parameter schema), `<p>_mcp_read` /
+`<p>_mcp_write` (call a read / write method with `{ method, params }`), `<p>_mcp_token` (the old `cli-token`) and,
+when the docs module is wired, `search_<p>_documentation`. Generation, visibility, scopes and dispatch are unchanged;
+the compact tools only ever resolve methods the caller could see before.
+
+### Required (pick one)
+- **Keep today's surface** with one line in your `McpModuleConfig`:
+  ```ts
+  tools: { compact: false, methodTools: true }
+  ```
+  This reproduces the old `tools/list` exactly (names, order and instructions).
+- **Adopt the compact surface.** Set `toolNamePrefix: '<app>'` (otherwise it is derived from `serverName`:
+  `hellosubs-api-mcp` → `hellosubs`) and, to also keep the per-method tools listed next to the compact ones (BOTH
+  mode), `tools: { methodTools: true }`. The boot log prints one `MCP tool surface: ...` line describing what is listed.
+
+### What changes for callers
+- **Tool name → method id.** A method is addressed by its id, `modelType.call[.specifier]` (`worker.create`,
+  `jobWorkerTimesheet.update.reopen`), or by its old tool name (`guestbook-create`), which stays an alias. Built-ins
+  keep their names as ids (`model-get`, `model-info`, `whoami`, `batch-execute`, ...). `cli-token` is the
+  `<p>_mcp_token` tool. A client calling an old tool name that is no longer listed gets an error naming the compact
+  call to make instead.
+- **Claude Code permission rules.** `mcp__<server>__<old-tool>` rules no longer match. Allow
+  `mcp__<server>__<p>_mcp_search`, `..._details` and `..._read`; leave `..._write` un-allowlisted, since one
+  "always allow" on it covers every write method. `tools.meta` can add `'anthropic/requiresUserInteraction': true` to
+  `write` or `token`.
+- **Analytics.** The Segment `tool` property is now the wire tool name (`<p>_mcp_write`). The executed method is in the
+  new `method` property (plus `routed`), and `call` / `modelType` / `specifier` / `toolKind` / `args` describe the
+  executed method, so breakdowns by model and call keep working.
+
+### Review: `readOnly` on invokes
+In compact mode the read/write split is a permission boundary: only methods with `mcp.readOnly: true` (or a
+`read`/`query` call) run through `<p>_mcp_read`, which clients tend to auto-approve. Every `invoke` is a write unless
+marked. Review read-like invokes for side effects (sync triggers, recomputes, analytics writes) before marking them
+`mcp: { readOnly: true }`.
+
+### Optional: audience-gated docs
+`@dereekb/firebase-server` adds a docs API (`GET /api/docs`, `/api/docs/search`, `/api/docs/read`) and the MCP
+documentation tools over a folder of markdown plus a generated manifest:
+1. Put docs under `apps/<app>-api/src/assets/docs/*.md` with frontmatter `audience: [admin]` (`any` = every
+   authenticated caller), plus optional `title`, `description`, `tags`.
+2. Add a `generate-docs-manifest` target that runs
+   `dbx-cli-generate-docs-manifest --docs-dir=apps/<app>-api/src/assets/docs --output=dist/apps/<app>-api/docs.manifest.json --app=<app>-api --audiences=admin,user`
+   (add `--allow-empty` while there is no content), and list it in `build.dependsOn` (and `serve.dependsOn`).
+3. Provide `DocsApiModuleConfig` (`docsRoot`, `docsManifestPath`, optionally `requiredScope`) and `DOCS_AUDIENCE_READER`
+   (see `docsAudienceReaderForRoles`) from a dependency module, and import a module built with
+   `docsApiModuleMetadata()`. To expose the docs over MCP, the MCP dependency module must import AND export it.
+4. Add `FIREBASE_SERVER_DOCS_API_PROTECTED_PATH` (`'/api/docs'`) to the OIDC module's `protectedPaths`.
+
+**Never put `docsRoot` under the download module's `secureAssetsRoot`** (e.g. `assets/secure/docs`): every file there
+can be minted as a signed download, which bypasses a doc's audience.
+
 
 ## Migration to v14.17.x — NotificationTaskBot
 

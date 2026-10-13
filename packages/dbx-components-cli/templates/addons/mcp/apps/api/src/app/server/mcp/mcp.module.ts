@@ -74,7 +74,10 @@ export function APP_CODE_PREFIX_CAMELMcpModuleConfigFactory(envService: Firebase
     mcpUrl,
     serverName: 'API_APP_NAME-mcp',
     serverVersion,
-    mcpManifestPath: MCP_MANIFEST_PATH
+    mcpManifestPath: MCP_MANIFEST_PATH,
+    // Names the compact tools (APP_CODE_PREFIX_LOWER_mcp_search, _details, _read, _write, ...). Add
+    // `tools: { methodTools: true }` to also list one tool per API method.
+    toolNamePrefix: 'APP_CODE_PREFIX_LOWER'
   };
 }
 

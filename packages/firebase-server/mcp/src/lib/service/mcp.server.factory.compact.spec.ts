@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpToolVisibility, type ModelApiDetailsResult } from '@dereekb/firebase-server';
-import { AUTH_ADMIN_ROLE } from '@dereekb/util';
+import { AUTH_ADMIN_ROLE, type Maybe } from '@dereekb/util';
 import { type McpAdditionalTools, type McpAuthRoleReader, type McpModuleConfig } from '../mcp.config';
 import { type McpAnalyticsEvent } from './analytics/mcp.analytics.handler';
 import { mcpAdditionalTool } from './mcp.compact';
@@ -48,6 +48,7 @@ interface MakeFactoryOptions {
   readonly getService?: unknown;
   readonly storage?: unknown;
   readonly minter?: unknown;
+  readonly docs?: unknown;
 }
 
 function makeFactory(options: MakeFactoryOptions = {}): McpServerFactoryService {
@@ -55,7 +56,7 @@ function makeFactory(options: MakeFactoryOptions = {}): McpServerFactoryService 
   const apiDetails = options.apiDetails ?? API_DETAILS;
   const dispatchService = { getApiDetails: () => apiDetails, dispatch: async (params: OnCallTypedModelParams) => (options.dispatch ?? (() => ({ ok: true })))(params) } as any;
   const analytics = options.events == null ? undefined : { handleMcpAnalyticsEvent: (event: McpAnalyticsEvent) => options.events?.push(event) };
-  return new McpServerFactoryService(config, dispatchService, options.getService as any, roleReader, analytics, options.storage as any, undefined, options.minter as any, options.additional);
+  return new McpServerFactoryService(config, dispatchService, options.getService as any, roleReader, analytics, options.storage as any, undefined, options.minter as any, options.additional, options.docs as any);
 }
 
 function firebaseAuth(claims: Record<string, unknown> = {}): FirebaseServerAuthData {
@@ -289,6 +290,68 @@ describe('McpServerFactoryService compact surface', () => {
 
       const legacy = await listNames(makeFactory({ storage, config: { tools: { compact: false, methodTools: true } } }));
       expect(legacy[legacy.length - 1]).toBe('batch-execute');
+    });
+  });
+
+  describe('documentation', () => {
+    function makeDocsService(docCount = 2) {
+      const reads: { id: string; section?: string }[] = [];
+      const service = {
+        docCount,
+        requiredScope: undefined,
+        reads,
+        // admins see both docs, other callers one, and callers flagged `noDocs` none
+        countVisibleDocs: (auth: Maybe<FirebaseServerAuthData>) => (auth == null || auth.token['noDocs'] === true ? 0 : auth.token['a'] === true ? 2 : 1),
+        searchDocs: (_auth: unknown, params: { query: string }) => ({ total: 1, results: [{ id: 'welcome', title: 'Welcome', snippet: params.query }] }),
+        readDoc: (_auth: unknown, params: { id: string; section?: string }) => {
+          reads.push(params);
+          return { id: params.id, title: 'Welcome', content: '# Welcome' };
+        }
+      };
+      return service;
+    }
+
+    it('should list the documentation tool for callers who can see a doc', async () => {
+      const factory = makeFactory({ docs: makeDocsService() });
+      expect(factory.compactToolNames.documentation).toBe('search_demo_documentation');
+      expect(await listNames(factory)).toEqual(['demo_mcp_search', 'demo_mcp_details', 'demo_mcp_read', 'demo_mcp_write', 'search_demo_documentation']);
+      expect(await listNames(factory, { auth: firebaseAuth({ noDocs: true }) })).not.toContain('search_demo_documentation');
+    });
+
+    it('should search docs without a reason parameter', async () => {
+      const factory = makeFactory({ docs: makeDocsService() });
+      const entry = (await dispatchMcpToolsList<WireToolEntry>(factory, USER)).find((x) => x.name === 'search_demo_documentation');
+      expect(entry?.inputSchema.properties?.['reason']).toBeUndefined();
+      expect(entry?._meta?.['anthropic/alwaysLoad']).toBe(true);
+
+      const result = await dispatchMcpToolCall<ToolResult>({ factory, ctx: USER, name: 'search_demo_documentation', args: { query: 'setup' } });
+      expect(result.structuredContent.results[0].snippet).toBe('setup');
+    });
+
+    it('should read a doc through the docs-read method', async () => {
+      const docs = makeDocsService();
+      const factory = makeFactory({ docs });
+      const result = await dispatchMcpMethodCall<ToolResult>({ factory, ctx: USER, kind: 'read', method: 'docs-read', params: { id: 'welcome', section: 'intro' } });
+      expect(result.isError).not.toBe(true);
+      expect(docs.reads).toEqual([{ id: 'welcome', section: 'intro' }]);
+    });
+
+    it('should mention the documentation tool in the instructions', async () => {
+      const discover = await dispatchMcpDiscover(makeFactory({ docs: makeDocsService() }), USER);
+      expect(discover.instructions).toContain('search_demo_documentation');
+    });
+
+    it('should leave docs off when no doc was loaded', async () => {
+      const factory = makeFactory({ docs: makeDocsService(0) });
+      expect(await listNames(factory)).not.toContain('search_demo_documentation');
+      expect((await search(factory, USER, { query: 'docs' })).methods.map((x) => x.method)).not.toContain('docs-read');
+      expect((await dispatchMcpDiscover(factory, USER)).instructions).not.toContain('search_demo_documentation');
+    });
+
+    it('should list the documentation and docs-read tools in legacy mode', async () => {
+      const names = await listNames(makeFactory({ docs: makeDocsService(), config: { tools: { compact: false, methodTools: true } } }));
+      expect(names).toContain('search_demo_documentation');
+      expect(names).toContain('docs-read');
     });
   });
 

@@ -5,7 +5,7 @@ import { type Request } from 'express';
 import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
-import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { DocsApiService, ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import {
   McpModuleConfig,
   DEFAULT_MCP_SERVER_NAME,
@@ -40,6 +40,8 @@ import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
 import { createWhoamiTool } from './tools/mcp.tool.whoami';
 import { CLI_TOKEN_TOOL_NAME, createCliTokenTool } from './tools/mcp.tool.cli-token';
 import { createUrlModelsTool } from './tools/mcp.tool.url-models';
+import { createMcpDocsSearchTool } from './tools/mcp.tool.docs-search';
+import { createMcpDocsReadTool, MCP_DOCS_READ_TOOL_NAME } from './tools/mcp.tool.docs-read';
 import { BATCH_EXECUTE_TOOL_NAME, createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
 
 /**
@@ -90,7 +92,8 @@ export class McpServerFactoryService {
     @Optional() @Inject(FirebaseServerStorageService) private readonly storageService?: FirebaseServerStorageService,
     @Optional() @Inject(MCP_MODEL_ROLES_TARGET_UID_PREDICATE) private readonly modelRolesTargetUidPredicate?: McpModelRolesTargetUidPredicate,
     @Optional() @Inject(MCP_CLI_TOKEN_MINTER) private readonly cliTokenMinter?: McpCliTokenMinter,
-    @Optional() @Inject(MCP_ADDITIONAL_TOOLS) private readonly additionalTools?: McpAdditionalTools
+    @Optional() @Inject(MCP_ADDITIONAL_TOOLS) private readonly additionalTools?: McpAdditionalTools,
+    @Optional() @Inject(DocsApiService) private readonly docsService?: DocsApiService
   ) {
     this._analyticsService = analyticsService ?? noopMcpAnalyticsService();
   }
@@ -130,7 +133,8 @@ export class McpServerFactoryService {
     const batchTool = this._resolveBatchTool(ctx, compact ? visible : promotedVisible);
     const batchListed: McpToolDefinition[] = batchTool != null && plan.batchPromoted ? [batchTool] : [];
     const view = plan.registry.view(batchTool == null ? visible : [...visible, batchTool]);
-    const standalone = this._filterToolsForRequest(plan.standaloneTools, filterContext);
+    const docsSearchTool = catalog.docsSearchTool;
+    const standalone = this._filterToolsForRequest(plan.standaloneTools, filterContext).filter((tool) => tool !== docsSearchTool || (this.docsService?.countVisibleDocs(ctx.auth) ?? 0) > 0);
     const listedAsTools = new Set<McpToolDefinition>([...promotedVisible, ...batchListed]);
     const compactTools = compact ? this._buildCompactTools({ catalog, view, ctx, scopes, listedAsTools }) : [];
     const listedTools: ReadonlyArray<McpToolDefinition> = compact ? [...compactTools, ...standalone, ...promotedVisible, ...batchListed] : [...promotedVisible, ...standalone, ...batchListed];
@@ -199,10 +203,12 @@ export class McpServerFactoryService {
       }
 
       const compactNames: McpCompactToolNames = compact ? resolvedNames : { ...resolvedNames, token: CLI_TOKEN_TOOL_NAME };
-      const builtins = this._resolveBuiltinMethodTools();
+      const builtins = this._resolveBuiltinMethodTools(prefix);
       const token = this.cliTokenMinter == null ? undefined : createCliTokenTool({ minter: this.cliTokenMinter, name: compactNames.token });
       const batchName = this.storageService == null ? undefined : BATCH_EXECUTE_TOOL_NAME;
-      const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, additional: this.additionalTools, batchName });
+      const docsSearchTool = this._resolveDocsSearchTool({ compact, compactNames, app: prefix });
+      const plan = planMcpToolSurface({ compact, methodTools, compactNames, generated: generation.tools, builtins, token, documentation: docsSearchTool, additional: this.additionalTools, batchName });
+      const listedDocsSearchTool = docsSearchTool != null && plan.standaloneTools.includes(docsSearchTool) ? docsSearchTool : undefined;
 
       plan.errors.forEach((line) => this._logger.error(line));
       plan.warnings.forEach((line) => this._logger.warn(line));
@@ -233,7 +239,7 @@ export class McpServerFactoryService {
 
       if (compact && toolsConfig?.instructions !== false) {
         const builtinReadMethods = builtins.filter((tool) => tool.filterMetadata.effectiveReadOnly === true).map((tool) => tool.name);
-        instructions = `${instructions}\n\n${buildMcpCompactInstructions({ app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: false, hasToken: token != null, methodToolsListed: plan.promoted.size > 0 })}`;
+        instructions = `${instructions}\n\n${buildMcpCompactInstructions({ app: prefix, names: compactNames, builtinReadMethods, hasDocumentation: listedDocsSearchTool != null, hasToken: token != null, methodToolsListed: plan.promoted.size > 0 })}`;
       }
 
       catalog = {
@@ -243,6 +249,7 @@ export class McpServerFactoryService {
         plan,
         searchEntries: buildMcpMethodSearchEntries(plan.registry.methods, this._cachedManifestModels),
         routerTools,
+        docsSearchTool: listedDocsSearchTool,
         routerKindByName,
         metaByName,
         instructions
@@ -269,7 +276,51 @@ export class McpServerFactoryService {
     const methodToolsLabel = methodTools == null || methodTools === false ? 'off' : `on (${plan.promoted.size} listed)`;
     const compactLabel = compact ? `on (prefix "${prefix}")` : 'off';
     const unsetHint = this.mcpConfig.tools == null ? ' McpModuleConfig.tools is unset, so the compact surface is the default; set tools: { compact: false, methodTools: true } for the legacy per-method tools.' : '';
-    this._logger.log(`MCP tool surface: compact=${compactLabel}, methodTools=${methodToolsLabel}, ${methods.length} methods (${callModelCount} callModel), ${additionalCount} additional tools, token=${this.cliTokenMinter == null ? 'off' : 'on'}, docs=off.${unsetHint}`);
+    this._logger.log(`MCP tool surface: compact=${compactLabel}, methodTools=${methodToolsLabel}, ${methods.length} methods (${callModelCount} callModel), ${additionalCount} additional tools, token=${this.cliTokenMinter == null ? 'off' : 'on'}, docs=${this._describeDocs()}.${unsetHint}`);
+  }
+
+  /**
+   * Whether the docs tools are offered: a docs service is injected and it loaded at least one doc.
+   *
+   * @returns True when docs are on.
+   */
+  private _isDocsOn(): boolean {
+    return this.docsService != null && this.docsService.docCount > 0;
+  }
+
+  /**
+   * Builds the documentation search tool when docs are on.
+   *
+   * @param input - The surface mode, resolved names, and app label.
+   * @param input.compact - Whether the compact surface is on (decides how the tool tells callers to read a doc).
+   * @param input.compactNames - The resolved compact names.
+   * @param input.app - The app label (the tool-name prefix).
+   * @returns The tool, or `undefined` when docs are off.
+   */
+  private _resolveDocsSearchTool(input: { readonly compact: boolean; readonly compactNames: McpCompactToolNames; readonly app: string }): Maybe<McpToolDefinition> {
+    const { compact, compactNames, app } = input;
+    const docsService = this.docsService;
+    let result: Maybe<McpToolDefinition>;
+
+    if (docsService != null && this._isDocsOn()) {
+      const readHint = compact ? `\`${compactNames.read}\` with \`method: "${MCP_DOCS_READ_TOOL_NAME}"\`` : `the \`${MCP_DOCS_READ_TOOL_NAME}\` tool`;
+      result = createMcpDocsSearchTool({ name: compactNames.documentation, app, readHint, docsService });
+    }
+
+    return result;
+  }
+
+  private _describeDocs(): string {
+    let result: string;
+
+    if (this.docsService == null) {
+      result = 'off (no DocsApiService injected)';
+    } else {
+      const count = this.docsService.docCount;
+      result = count > 0 ? `on (${count} docs)` : 'off (0 docs loaded)';
+    }
+
+    return result;
   }
 
   /**
@@ -428,12 +479,14 @@ export class McpServerFactoryService {
    *
    * Includes `model-get` and `model-roles` whenever {@link ModelApiGetService} is available (plus `url-models` when a
    * route manifest was loaded), `model-info` and `model-decode` whenever the boot-time MCP manifest provided a
-   * non-empty `models` catalog, `enum-info` for a non-empty `enums` block, and `whoami` for an `auth` block. The
-   * CLI token tool is not a method; the catalog builds it separately.
+   * non-empty `models` catalog, `enum-info` for a non-empty `enums` block, `whoami` for an `auth` block, and
+   * `docs-read` when a {@link DocsApiService} loaded at least one doc. The CLI token tool is not a method; the catalog
+   * builds it separately.
    *
+   * @param app - The app label used in tool descriptions (the tool-name prefix).
    * @returns The built-in method tool definitions.
    */
-  private _resolveBuiltinMethodTools(): McpToolDefinition[] {
+  private _resolveBuiltinMethodTools(app: string): McpToolDefinition[] {
     // Ensure the manifest has been loaded so its `models` array is available for the catalog tools.
     this._resolveManifest();
 
@@ -485,6 +538,10 @@ export class McpServerFactoryService {
 
     if (authManifest != null) {
       builtins.push(createWhoamiTool({ auth: authManifest, roleReader: this.roleReader }));
+    }
+
+    if (this._isDocsOn() && this.docsService != null) {
+      builtins.push(createMcpDocsReadTool({ app, docsService: this.docsService }));
     }
 
     return builtins;
@@ -1104,6 +1161,10 @@ interface McpToolCatalog {
   readonly plan: McpToolSurfacePlan;
   readonly searchEntries: McpMethodSearchEntries;
   readonly routerTools: Maybe<McpCompactRouterTools>;
+  /**
+   * The documentation search tool when it is listed; filtered per request to callers who can see at least one doc.
+   */
+  readonly docsSearchTool: Maybe<McpToolDefinition>;
   /**
    * Router tool names to their kind. Only routers are routed; every other listed tool runs directly.
    */

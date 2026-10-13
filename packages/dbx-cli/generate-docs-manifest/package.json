@@ -1,0 +1,10 @@
+{
+  "name": "@dereekb/dbx-cli-generate-docs-manifest",
+  "version": "14.16.0",
+  "sideEffects": false,
+  "private": true,
+  "type": "module",
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "14.16.0"
+  }
+}

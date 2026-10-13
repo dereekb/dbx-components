@@ -229,6 +229,10 @@ export interface PlanMcpToolSurfaceInput {
    */
   readonly builtins: readonly McpToolDefinition[];
   readonly token?: Maybe<McpToolDefinition>;
+  /**
+   * The standalone documentation search tool, when docs are on.
+   */
+  readonly documentation?: Maybe<McpToolDefinition>;
   readonly additional?: Maybe<McpAdditionalTools>;
   /**
    * The request-scoped batch tool name, reserved when a storage service is wired.
@@ -245,7 +249,8 @@ export interface McpToolSurfacePlan {
    */
   readonly methodCandidates: readonly McpToolDefinition[];
   /**
-   * Tools listed on their own regardless of methods: the token tool and additional `tool` tools.
+   * Tools listed on their own regardless of methods: the token tool, the documentation search tool, and additional
+   * `tool` tools.
    */
   readonly standaloneTools: readonly McpToolDefinition[];
   readonly registry: McpMethodRegistry;
@@ -274,15 +279,15 @@ export interface McpToolSurfacePlan {
 /**
  * Plans the advertised tool surface once at boot.
  *
- * Wire-name precedence: reserved compact names (compact mode) > generated > built-ins > the token tool (legacy mode) >
- * batch > additional. A method whose wire name is already taken stays a method but is not promoted. An additional tool
+ * Wire-name precedence: reserved compact names (compact mode) > generated > built-ins > the token and documentation tools
+ * (legacy mode) > batch > additional. A method whose wire name is already taken stays a method but is not promoted. An additional tool
  * whose name is invalid or collides with any method id, alias, or wire name is dropped.
  *
  * @param input - The tool sources and mode.
  * @returns The surface plan.
  */
 export function planMcpToolSurface(input: PlanMcpToolSurfaceInput): McpToolSurfacePlan {
-  const { compact, methodTools, compactNames, generated, builtins, token, batchName } = input;
+  const { compact, methodTools, compactNames, generated, builtins, token, documentation, batchName } = input;
   const errors: string[] = [];
   const warnings: string[] = [];
   const { methods: additionalMethods, tools: additionalTools } = partitionMcpAdditionalTools({ input, errors });
@@ -327,6 +332,18 @@ export function planMcpToolSurface(input: PlanMcpToolSurfaceInput): McpToolSurfa
   } else if (token != null) {
     wireNames.add(token.name);
     standaloneTools.push(token);
+  }
+
+  if (documentation != null && !compact && wireNames.has(documentation.name)) {
+    warnings.push(mcpStaticToolCollisionWarning(documentation.name));
+  } else if (documentation != null) {
+    wireNames.add(documentation.name);
+    standaloneTools.push(documentation);
+
+    // compact mode already marks (and lets tools.meta override) every compact tool, documentation included
+    if (!compact) {
+      alwaysLoad.add(documentation);
+    }
   }
 
   for (const additional of additionalTools) {
